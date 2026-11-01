@@ -38,6 +38,7 @@ jobs:
           cmake --build "$RUNNER_TEMP/nng-build"
           cmake --install "$RUNNER_TEMP/nng-build"
           echo "BACKPLANE_NNG_PREFIX=$RUNNER_TEMP/nng" >> "$GITHUB_ENV"
+          echo "BACKPLANE_NNG_SOURCE=$RUNNER_TEMP/nng-src" >> "$GITHUB_ENV"
       - uses: actions/cache/restore@v4
         id: compiler-cache
         with:

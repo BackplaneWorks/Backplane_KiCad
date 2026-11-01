@@ -8,6 +8,7 @@ prefix=$(brew --prefix)
 export PATH="$prefix/opt/protobuf@29/bin:$prefix/bin:$PATH"
 # KiCad uses the nng 1.x API; Homebrew's nng is 2.0, so CI builds 1.x separately.
 nng=${BACKPLANE_NNG_PREFIX:?set BACKPLANE_NNG_PREFIX to an nng 1.x install}
+nng_source=${BACKPLANE_NNG_SOURCE:?set BACKPLANE_NNG_SOURCE to its matching nng checkout}
 [ ! -e "$prefix/include/nng/nng.h" ] || { echo "Homebrew nng would shadow nng 1.x; brew uninstall nng" >&2; exit 2; }
 export PKG_CONFIG_PATH="$nng/lib/pkgconfig:$prefix/lib/pkgconfig:$prefix/opt/curl/lib/pkgconfig"
 version=$(tr -d '\r\n' < BACKPLANE_VERSION)
@@ -66,6 +67,10 @@ exec "$root/KiCad.app/Contents/MacOS/kicad-cli" "$@"
 LAUNCHER
 chmod +x "$root/bin/kicad-cli"
 cp LICENSE* COPYING* AUTHORS* "$root/licenses/" 2>/dev/null || true
+mkdir -p "$root/licenses/nng"
+cp "$nng_source/LICENSE.txt" "$root/licenses/nng/"
+git -C "$nng_source" rev-parse HEAD > "$root/licenses/nng/SOURCE_COMMIT"
+git -C "$nng_source" archive --format=tar.gz --output="$root/licenses/nng/matching-source.tar.gz" HEAD
 git archive HEAD | gzip > "$root/licenses/matching-source.tar.gz"
 printf '%s\n' "$(git rev-parse HEAD)" > "$root/SOURCE_COMMIT"
 cp BACKPLANE_UPSTREAM "$root/UPSTREAM_COMMIT"

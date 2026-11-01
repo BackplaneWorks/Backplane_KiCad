@@ -28,7 +28,11 @@ native helper shutdown.
 
 Protobuf 29.6 and Python protobuf 5.29.6 are paired. Other native dependencies
 are recorded from Homebrew in the artifact's license/package inventory.
-The candidate composes the published bp.5 source with the native Mac packaging
-and GLB temporary-file collision fix. Its version comes from BACKPLANE_VERSION;
+The separately built nng 1.x dependency includes its license, source revision
+and matching source archive under `licenses/nng`. The build requires both
+`BACKPLANE_NNG_PREFIX` and its matching `BACKPLANE_NNG_SOURCE` checkout; CI
+provides them from the same pinned build.
+The runtime follows BACKPLANE_UPSTREAM plus the maintained fork patch set.
+Its version comes from BACKPLANE_VERSION;
 the CMake suffix and live IPC version are checked against that exact value.
 Only the fork release owner publishes a new tag after the native gates pass.
