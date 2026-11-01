@@ -140,8 +140,9 @@ ApplyAutoResolutions( MERGE_PLAN&                          aPlan,
 
 
 /**
- * Build the list of conflict-action indices the dialog walks (i.e. the
- * positions in `plan.actions` whose ids appear in `plan.unresolved`).
+ * Build the list of conflict-action indices the dialog walks: the positions
+ * in `plan.actions` whose ids appear in `plan.unresolved`, plus the items the
+ * engine merged property by property, so the user can review that answer.
  *
  * Each entry carries the action index plus a human-readable label
  * truncated to 40 chars (an ellipsis + the right-most 39 chars if the
@@ -160,11 +161,10 @@ KICOMMON_API std::vector<CONFLICT_LIST_ENTRY> BuildConflictList( const MERGE_PLA
 
 
 /**
- * Return the subset of conflict actions whose `kind` is NOT one of the
- * concrete TAKE_OURS / TAKE_THEIRS / TAKE_ANCESTOR — the dialog uses
- * this to refuse Apply when the user hasn't picked a side on every
- * conflict. KEEP / MERGE_PROPS at that point mean the engine's default
- * is still in effect, which silently loses user intent.
+ * Return the conflict actions that still have no decision. The dialog refuses Apply until
+ * every conflict has one. TAKE_OURS, TAKE_THEIRS and TAKE_ANCESTOR are the user's choices,
+ * and MERGE_PROPS is the engine's own answer, which the dialog offers as a fourth. KEEP
+ * means nothing has decided the item, which would silently lose user intent.
  */
 KICOMMON_API std::vector<KIID_PATH>
 CollectUnresolvedConflicts( const MERGE_PLAN&                aPlan,

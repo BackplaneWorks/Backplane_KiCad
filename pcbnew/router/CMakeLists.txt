@@ -58,6 +58,7 @@ set( PCBNEW_PNS_SRCS
     pns_multi_dragger.cpp
     pns_sketch_router.cpp
     sketch_route_board.cpp
+    pns_tracks_spreader.cpp
     router_preview_item.cpp
     router_status_view_item.cpp
     router_tool.cpp

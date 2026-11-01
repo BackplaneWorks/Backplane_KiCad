@@ -21,6 +21,12 @@
 
 #include "dialog_drc.h"
 
+#include <wx/app.h>
+#include <wx/filedlg.h>
+#include <wx/msgdlg.h>
+#include <wx/statusbr.h>
+#include <wx/wupdlock.h>
+
 #include <bitmaps.h>
 #include <confirm.h>
 #include <core/throttle.h>
@@ -28,8 +34,10 @@
 #include <kiface_base.h>
 #include <macros.h>
 #include <pad.h>
+#include <drc/drc_engine.h>
 #include <drc/drc_item.h>
 #include <drc/drc_report.h>
+#include <drc/drc_rule.h>
 #include <connectivity/connectivity_data.h>
 #include <connectivity/connectivity_algo.h>
 #include <drawing_sheet/ds_proxy_view_item.h>
@@ -40,11 +48,6 @@
 #include <pcb_marker.h>
 #include <pcb_track.h>
 #include <pgm_base.h>
-#include <wx/app.h>
-#include <wx/filedlg.h>
-#include <wx/msgdlg.h>
-#include <wx/statusbr.h>
-#include <wx/wupdlock.h>
 #include <widgets/appearance_controls.h>
 #include <widgets/ui_common.h>
 #include <widgets/std_bitmap_button.h>
@@ -69,6 +72,18 @@ static bool    g_lastDRCRun = false;
 static bool    g_lastFootprintTestsRun = false;
 
 static std::vector<std::pair<wxString, int>> g_lastIgnored;
+
+
+static PCB_MARKER* findMarker( BOARD* aBoard, const std::shared_ptr<RC_ITEM>& aItem )
+{
+    for( PCB_MARKER* marker : aBoard->Markers() )
+    {
+        if( marker->GetRCItem() == aItem )
+            return marker;
+    }
+
+    return nullptr;
+}
 
 
 DIALOG_DRC::DIALOG_DRC( PCB_EDIT_FRAME* aEditorFrame, wxWindow* aParent ) :
@@ -495,12 +510,18 @@ void DIALOG_DRC::OnRunDRCClick( wxCommandEvent& aEvent )
 
     for( std::reference_wrapper<RC_ITEM>& item : violations )
     {
-        if( bds().GetSeverity( item.get().GetErrorCode() ) == RPT_SEVERITY_IGNORE )
+        const int code = item.get().GetErrorCode();
+
+        // Group headings carry code 0 and have no severity of their own.
+        if( code <= 0 )
+            continue;
+
+        if( bds().GetSeverity( code ) == RPT_SEVERITY_IGNORE )
         {
             wxListItem listItem;
             listItem.SetId( m_ignoredList->GetItemCount() );
             listItem.SetText( wxT( " • " ) + item.get().GetErrorText( true ) );
-            listItem.SetData( item.get().GetErrorCode() );
+            listItem.SetData( code );
 
             m_ignoredList->InsertItem( listItem );
         }
@@ -628,16 +649,7 @@ void DIALOG_DRC::OnDRCItemSelected( wxDataViewEvent& aEvent )
     // can dangle once the owning marker is deleted (board edited, DRC re-run, undo) while this
     // modeless dialog stays open.  Recover the still-live marker by matching the shared RC_ITEM
     // against the board's current markers instead of trusting the raw back-pointer.
-    PCB_MARKER* parentMarker = nullptr;
-
-    for( PCB_MARKER* marker : board->Markers() )
-    {
-        if( marker->GetRCItem() == rc_item )
-        {
-            parentMarker = marker;
-            break;
-        }
-    }
+    PCB_MARKER* parentMarker = findMarker( board, rc_item );
 
     if( rc_item->GetErrorCode() == DRCE_UNRESOLVED_VARIABLE && parentMarker
             && parentMarker->GetMarkerType() == MARKER_BASE::MARKER_DRAWING_SHEET )
@@ -657,10 +669,10 @@ void DIALOG_DRC::OnDRCItemSelected( wxDataViewEvent& aEvent )
         return;
     }
 
-    PCB_LAYER_ID principalLayer;
+    PCB_LAYER_ID principalLayer = UNDEFINED_LAYER;
     LSET         violationLayers;
-    BOARD_ITEM*  a = board->ResolveItem( rc_item->GetMainItemID(), true );
-    BOARD_ITEM*  b = board->ResolveItem( rc_item->GetAuxItemID(), true );
+    const BOARD_ITEM*  a = board->ResolveItem( rc_item->GetMainItemID(), true );
+    const BOARD_ITEM*  b = board->ResolveItem( rc_item->GetAuxItemID(), true );
 
     auto focus = [&]( BOARD_ITEM* aItem )
     {
@@ -799,8 +811,12 @@ void DIALOG_DRC::OnDRCItemRClick( wxDataViewEvent& aEvent )
     std::shared_ptr<RC_ITEM>           rcItem = node->m_RcItem;
     DRC_ITEM*                          drcItem = static_cast<DRC_ITEM*>( rcItem.get() );
     std::shared_ptr<CONNECTIVITY_DATA> conn = m_currentBoard->GetConnectivity();
+    PCB_MARKER*                        currentMarker = findMarker( m_currentBoard, rcItem );
     wxString                           listName;
     wxMenu                             menu;
+
+    if( !currentMarker )
+        return;
 
     switch( bds().m_DRCSeverities[ rcItem->GetErrorCode() ] )
     {
@@ -825,7 +841,7 @@ void DIALOG_DRC::OnDRCItemRClick( wxDataViewEvent& aEvent )
         ID_EDIT_SEVERITIES
     };
 
-    if( rcItem->GetParent()->IsExcluded() )
+    if( currentMarker->IsExcluded() )
     {
         menu.Append( ID_REMOVE_EXCLUSION,
                      _( "Remove exclusion for this violation" ),
@@ -905,14 +921,27 @@ void DIALOG_DRC::OnDRCItemRClick( wxDataViewEvent& aEvent )
     bool modified = false;
     int  command = GetPopupMenuSelectionFromUser( menu );
 
+    // A popup runs a nested event loop, so the marker may have been removed while it was open.
+    currentMarker = findMarker( m_currentBoard, rcItem );
+    node = RC_TREE_MODEL::ToNode( aEvent.GetItem() );
+
+    if( !currentMarker || !node )
+        return;
+
     switch( command )
     {
     case ID_EDIT_EXCLUSION_COMMENT:
-        if( PCB_MARKER* marker = dynamic_cast<PCB_MARKER*>( node->m_RcItem->GetParent() ) )
+        if( PCB_MARKER* marker = currentMarker )
         {
             WX_TEXT_ENTRY_DIALOG dlg( this, wxEmptyString, _( "Exclusion Comment" ), marker->GetComment(), true );
 
             if( dlg.ShowModal() == wxID_CANCEL )
+                break;
+
+            marker = findMarker( m_currentBoard, rcItem );
+            node = RC_TREE_MODEL::ToNode( aEvent.GetItem() );
+
+            if( !marker || !node )
                 break;
 
             marker->SetExcluded( true, dlg.GetValue() );
@@ -930,7 +959,7 @@ void DIALOG_DRC::OnDRCItemRClick( wxDataViewEvent& aEvent )
         break;
 
     case ID_REMOVE_EXCLUSION:
-        if( PCB_MARKER* marker = dynamic_cast<PCB_MARKER*>( rcItem->GetParent() ) )
+        if( PCB_MARKER* marker = currentMarker )
         {
             marker->SetExcluded( false );
             bds().m_DrcExclusions.erase( DRC_EXCLUSION::FromMarker( *marker ) );
@@ -954,7 +983,7 @@ void DIALOG_DRC::OnDRCItemRClick( wxDataViewEvent& aEvent )
 
     case ID_ADD_EXCLUSION:
     case ID_ADD_EXCLUSION_WITH_COMMENT:
-        if( PCB_MARKER* marker = dynamic_cast<PCB_MARKER*>( rcItem->GetParent() ) )
+        if( PCB_MARKER* marker = currentMarker )
         {
             wxString comment;
 
@@ -963,6 +992,12 @@ void DIALOG_DRC::OnDRCItemRClick( wxDataViewEvent& aEvent )
                 WX_TEXT_ENTRY_DIALOG dlg( this, wxEmptyString, _( "Exclusion Comment" ), wxEmptyString, true );
 
                 if( dlg.ShowModal() == wxID_CANCEL )
+                    break;
+
+                marker = findMarker( m_currentBoard, rcItem );
+                node = RC_TREE_MODEL::ToNode( aEvent.GetItem() );
+
+                if( !marker || !node )
                     break;
 
                 comment = dlg.GetValue();
@@ -1030,11 +1065,11 @@ void DIALOG_DRC::OnDRCItemRClick( wxDataViewEvent& aEvent )
         break;
 
     case ID_INSPECT_VIOLATION:
-        inspectionTool->InspectDRCError( node->m_RcItem );
+        inspectionTool->InspectDRCError( rcItem );
         break;
 
     case ID_FIX_VIOLATION:
-        drcTool->FixDRCError( node->m_RcItem );
+        drcTool->FixDRCError( rcItem );
         break;
 
     case ID_SET_SEVERITY_TO_ERROR:
@@ -1314,7 +1349,7 @@ void DIALOG_DRC::ExcludeMarker()
 
     if( node && node->m_RcItem )
     {
-        PCB_MARKER* marker = dynamic_cast<PCB_MARKER*>( node->m_RcItem->GetParent() );
+        PCB_MARKER* marker = findMarker( m_currentBoard, node->m_RcItem );
 
         if( marker && marker->GetSeverity() != RPT_SEVERITY_EXCLUSION )
         {

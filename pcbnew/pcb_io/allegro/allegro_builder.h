@@ -212,9 +212,11 @@ private:
 
     /**
      * Construct "pad" items for a given 0x1C PADSTACK block.
+     *
+     * @param aBackSide is true when the footprint is flipped to the bottom after its pads are built.
      */
     std::vector<std::unique_ptr<BOARD_ITEM>> buildPadItems( const BLK_0x1C_PADSTACK& aPadstack, FOOTPRINT& aFp,
-                                                            const wxString& aPadName, int aNetcode );
+                                                            const wxString& aPadName, int aNetcode, bool aBackSide );
     std::unique_ptr<FOOTPRINT>               buildFootprint( const BLK_0x2D_FOOTPRINT_INST& aFpInstance );
     std::vector<std::unique_ptr<BOARD_ITEM>> buildTrack( const BLK_0x05_TRACK& aBlock, int aNetcode );
     std::unique_ptr<BOARD_ITEM>              buildVia( const BLK_0x33_VIA& aBlock, int aNetcode );
@@ -286,6 +288,7 @@ private:
     void createBoardText();
     void createZones();
     void createTables();
+    void createPlaneVoidAreas();
     void applyZoneFills();
     void enablePadTeardrops();
     void applyConstraintSets();
@@ -328,6 +331,9 @@ private:
 
     // Keys that have been used as zone fills already
     std::unordered_set<uint32_t> m_usedZoneFillShapes;
+
+    // Void geometry drawn on negative plane layers, which the plane fill must keep clear
+    std::map<PCB_LAYER_ID, SHAPE_POLY_SET> m_planeVoids;
 
     std::unique_ptr<LAYER_MAPPER> m_layerMapper;
 

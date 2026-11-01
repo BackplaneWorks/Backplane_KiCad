@@ -146,6 +146,9 @@ message SchematicImage
   kiapi.common.types.LockedState locked = 6;
 
   repeated kiapi.common.types.CustomProperty custom_properties = 7;
+
+  kiapi.common.types.Angle orientation = 8;
+  double opacity = 9;
 }
 
 enum SchematicLabelShape
@@ -593,6 +596,12 @@ message SchematicSymbol
 
   // Distance between the pin and its name text; 0 means the name is inside the body outline
   kiapi.common.types.Distance pin_name_offset = 21;
+
+  // If present, the library symbol that this symbol is derived from; the parent must live in the
+  // same library as the derived symbol.  Symbols retrieved from a library are reported flattened,
+  // so the items above already contain the inherited content and this field is informational.
+  // Definitions returned with a placed symbol instance are snapshots and never set this field.
+  optional kiapi.common.types.LibraryIdentifier extends = 22;
 }
 
 message SchematicSymbolTransform
@@ -621,6 +630,9 @@ message SchematicSymbolInstance
 
   SchematicSymbol definition = 6;
 
+  // The reference as shown on this sheet path, which includes the path's reference suffix.  On a
+  // create or update request a trailing suffix of this path is stripped, and a suffix that belongs
+  // to another instance of the same sheet file is refused.
   SchematicField reference_field = 7;
   SchematicField value_field = 8;
   SchematicField footprint_field = 9;

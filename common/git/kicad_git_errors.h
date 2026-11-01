@@ -25,6 +25,15 @@
 
 #include <wx/translation.h>
 
+
+/// A summary the user can act on, with the raw text that explains it kept apart for the details.
+struct KIGIT_ERROR_MESSAGE
+{
+    wxString summary;
+    wxString details;
+};
+
+
 class APIEXPORT KIGIT_ERRORS
 {
 public:
@@ -37,14 +46,6 @@ public:
         return m_errorStrings;
     }
 
-    wxString PeekErrorString() const
-    {
-        if( m_errorStrings.empty() )
-            return _( "No error" );
-        else
-            return m_errorStrings.back();
-    }
-
     wxString GetErrorString()
     {
         if( m_errorStrings.empty() )
@@ -52,27 +53,45 @@ public:
 
         const wxString errorString( m_errorStrings.back() );
         m_errorStrings.pop_back();
+        m_errorDetails.pop_back();
         return errorString;
     }
 
+    /// Take the newest error with its details. Both are empty when none is queued.
+    KIGIT_ERROR_MESSAGE PopError()
+    {
+        if( m_errorStrings.empty() )
+            return {};
+
+        KIGIT_ERROR_MESSAGE message{ m_errorStrings.back(), m_errorDetails.back() };
+        m_errorStrings.pop_back();
+        m_errorDetails.pop_back();
+        return message;
+    }
+
+    /// A summary the user can act on, with the raw text that explains it kept apart for the details.
+    /// Both are shown, so any credentials in a URL inside either one are removed here.
+    void AddError( const wxString& aSummary, const wxString& aDetails );
+
+    void AddError( const KIGIT_ERROR_MESSAGE& aMessage ) { AddError( aMessage.summary, aMessage.details ); }
+
+    /// Queue the summary with libgit2's last error as its details.
+    void AddGitError( const wxString& aSummary );
+
     void AddErrorString( const wxString aErrorString )
     {
-        m_errorStrings.emplace_back( aErrorString );
+        AddError( aErrorString, wxEmptyString );
     }
 
     void AddErrorString( const std::string aErrorString )
     {
-        m_errorStrings.emplace_back( aErrorString );
-    }
-
-    void ClearErrorStrings()
-    {
-        m_errorStrings.clear();
+        AddError( wxString( aErrorString ), wxEmptyString );
     }
 
 private:
 
     std::vector<wxString> m_errorStrings;
+    std::vector<wxString> m_errorDetails; ///< One per entry in m_errorStrings
 
 };
 

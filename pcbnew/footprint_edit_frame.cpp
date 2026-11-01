@@ -345,6 +345,9 @@ FOOTPRINT_EDIT_FRAME::FOOTPRINT_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
 
     m_acceptedExts.emplace( FILEEXT::KiCadFootprintLibPathExtension, &ACTIONS::ddAddLibrary );
     m_acceptedExts.emplace( FILEEXT::KiCadFootprintFileExtension, &PCB_ACTIONS::ddImportFootprint );
+    m_acceptedExts.emplace( FILEEXT::PngFileExtension, &PCB_ACTIONS::ddPlaceReferenceImage );
+    m_acceptedExts.emplace( FILEEXT::JpegFileExtension, &PCB_ACTIONS::ddPlaceReferenceImage );
+    m_acceptedExts.emplace( wxS( "jpeg" ), &PCB_ACTIONS::ddPlaceReferenceImage );
     DragAcceptFiles( true );
 
     FinishAUIInitialization();
@@ -962,9 +965,15 @@ void FOOTPRINT_EDIT_FRAME::borrowBoardNonDestructive( BOARD* aBoard )
         return;
 
     // The only frame-owned board is the constructor's bootstrap board. Delete it when we first
-    // switch away so it does not leak; tab-owned boards are left to their contexts.
+    // switch away so it does not leak; tab-owned boards are left to their contexts. The view must
+    // release the bootstrap board's items before their owner is deleted.
     if( m_pcb && !activeBoardOwnedByTab() )
+    {
+        if( GetCanvas() )
+            GetCanvas()->GetView()->Clear();
+
         delete m_pcb;
+    }
 
     m_pcb = aBoard;
 
@@ -1080,6 +1089,13 @@ void FOOTPRINT_EDIT_FRAME::installFootprintTabBoard( FOOTPRINT_EDITOR_TAB_CONTEX
     GetCanvas()->UpdateColors();
 
     m_toolManager->ResetTools( TOOL_BASE::MODEL_RELOAD );
+
+    FOOTPRINT* activeFootprint = GetBoard()->GetFirstFootprint();
+
+    if( IsCurrentFPFromBoard() )
+        setFPWatcher( nullptr );
+    else
+        setFPWatcher( activeFootprint );
 
     if( !aCtx )
     {
@@ -1555,6 +1571,8 @@ void FOOTPRINT_EDIT_FRAME::RefreshLibraryFootprintTab( const FOOTPRINT& aFootpri
     if( ctx->IsModified() )
         return;
 
+    // We have to activate this footprint to work on it.  We'll switch back to the user-selected
+    // tab afterwards.
     activateFootprintTab( ctx );
 
     // The old history contains pointers into the footprint ReloadFootprint is about to delete.
@@ -1563,19 +1581,13 @@ void FOOTPRINT_EDIT_FRAME::RefreshLibraryFootprintTab( const FOOTPRINT& aFootpri
 
     FOOTPRINT* replacement = static_cast<FOOTPRINT*>( aFootprint.Clone() );
     replacement->SetParent( nullptr );
-    installFootprintOnActiveBoard( replacement );
+    ReloadFootprint( replacement );
     replacement->ClearFlags();
     ClearModify();
 
+    // Switch back to the user-selected tab.
     if( originalActive && originalActive != ctx )
         activateFootprintTab( originalActive );
-
-    FOOTPRINT* activeFootprint = GetBoard()->GetFirstFootprint();
-
-    if( IsCurrentFPFromBoard() )
-        setFPWatcher( nullptr );
-    else
-        setFPWatcher( activeFootprint );
 
     UpdateView();
     GetCanvas()->ForceRefresh();
@@ -2261,6 +2273,7 @@ void FOOTPRINT_EDIT_FRAME::setupUIConditions()
     mgr->SetConditions( PCB_ACTIONS::rotateCcw,          ENABLE( SELECTION_CONDITIONS::NotEmpty ).HotkeyEnable( cond.HasItems() ) );
     mgr->SetConditions( PCB_ACTIONS::mirrorH,            ENABLE( SELECTION_CONDITIONS::NotEmpty ).HotkeyEnable( cond.HasItems() ) );
     mgr->SetConditions( PCB_ACTIONS::mirrorV,            ENABLE( SELECTION_CONDITIONS::NotEmpty ).HotkeyEnable( cond.HasItems() ) );
+    mgr->SetConditions( PCB_ACTIONS::mirrorInteractive,  ENABLE( SELECTION_CONDITIONS::NotEmpty ).HotkeyEnable( cond.HasItems() ) );
     mgr->SetConditions( ACTIONS::group,                  ENABLE( SELECTION_CONDITIONS::MoreThan( 1 ) ) );
     mgr->SetConditions( ACTIONS::ungroup,                ENABLE( SELECTION_CONDITIONS::HasType( PCB_GROUP_T ) ) );
 
@@ -2364,6 +2377,10 @@ void FOOTPRINT_EDIT_FRAME::setupUIConditions()
     CURRENT_EDIT_TOOL( ACTIONS::measureTool );
     CURRENT_EDIT_TOOL( ACTIONS::embeddedFiles );
     CURRENT_EDIT_TOOL( PCB_ACTIONS::placePad );
+    CURRENT_EDIT_TOOL( PCB_ACTIONS::placeThtPad );
+    CURRENT_EDIT_TOOL( PCB_ACTIONS::placeSmdPad );
+    CURRENT_EDIT_TOOL( PCB_ACTIONS::placeNpthPad );
+    CURRENT_EDIT_TOOL( PCB_ACTIONS::placePasteAperturePad );
     CURRENT_EDIT_TOOL( PCB_ACTIONS::drawLine );
     CURRENT_EDIT_TOOL( PCB_ACTIONS::drawRectangle );
     CURRENT_EDIT_TOOL( PCB_ACTIONS::drawCircle );

@@ -98,7 +98,7 @@ public:
     /**
      * @return a reference to the child 3D viewer frame, when exists, or NULL
      */
-    EDA_3D_VIEWER_FRAME* Get3DViewerFrame();
+    EDA_3D_VIEWER_FRAME* GetOur3DViewerFrame();
 
     /**
      * Update the 3D view, if the viewer is opened by this frame.
@@ -285,7 +285,7 @@ public:
     void PlaceFootprint( FOOTPRINT* aFootprint, bool aRecreateRatsnest = true,
                          std::optional<VECTOR2I> aPosition = std::nullopt );
 
-    void ShowPadPropertiesDialog( PAD* aPad );
+    void ShowPadPropertiesDialog( PAD& aPad );
 
     /**
      * Open a dialog to select a footprint.

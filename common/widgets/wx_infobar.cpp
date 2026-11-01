@@ -121,10 +121,17 @@ WX_INFOBAR::WX_INFOBAR( wxWindow* aParent, wxWindowID aWinid, bool aOverlay )
 
     sizer->SetItemMinSize( (size_t) 0, iconSize.x, sy );
 
-    // Forcefully remove all existing buttons added by the wx constructors.
-    // The default close button doesn't work with the AUI manager update scheme, so this
-    // ensures any close button displayed is ours.
-    RemoveAllButtons();
+    // The default close button doesn't work with the AUI manager update scheme, so take it out
+    // of the layout to ensure any close button displayed is ours.  It must not be destroyed
+    // because wxInfoBarGeneric keeps a private pointer to it and recolors it on every system
+    // color change.
+    wxSizerItem* lastItem = sizer->GetItem( sizer->GetItemCount() - 1 );
+
+    if( wxWindow* defaultCloseButton = lastItem ? lastItem->GetWindow() : nullptr )
+    {
+        sizer->Detach( defaultCloseButton );
+        defaultCloseButton->Hide();
+    }
 
     Layout();
 
@@ -248,11 +255,17 @@ void WX_INFOBAR::onThemeChange( wxSysColourChangedEvent& aEvent )
     SetBackgroundColour( bg );
     SetForegroundColour( fg );
 
+    // The close button bitmaps are filled with the old background, so put a new button in its place
     if( wxBitmapButton* btn = GetCloseButton() )
     {
-        wxString tooltip = btn->GetToolTipText();
-        RemoveAllButtons();
-        AddCloseButton( tooltip );
+        wxBitmapButton* fresh = wxBitmapButton::NewCloseButton( this, ID_CLOSE_INFOBAR );
+#ifdef __WXMAC__
+        fresh->SetWindowVariant( wxWINDOW_VARIANT_SMALL );
+#endif
+        fresh->SetToolTip( btn->GetToolTipText() );
+        GetSizer()->Replace( btn, fresh, true );
+        btn->Destroy();
+        Layout();
     }
 }
 

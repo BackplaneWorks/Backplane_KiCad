@@ -14,8 +14,6 @@ include_directories(
     )
 
 set( DIALOGS_SRCS
-    dialogs/properties_frame.cpp
-    dialogs/properties_frame_base.cpp
     dialogs/dialogs_for_printing.cpp
     dialogs/dialog_new_dataitem_base.cpp
     dialogs/dialog_design_inspector_base.cpp
@@ -32,8 +30,12 @@ set( PL_EDITOR_SRCS
     pl_editor_settings.cpp
     pl_draw_panel_gal.cpp
     pl_editor_undo_redo.cpp
+    pl_properties.cpp
+    widgets/pl_properties_panel.cpp
     menubar.cpp
     toolbars_pl_editor.cpp
+
+    import_gfx/graphics_importer_pl_editor.cpp
 
     tools/pl_actions.cpp
     tools/pl_selection.cpp

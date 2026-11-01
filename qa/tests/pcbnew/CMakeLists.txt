@@ -30,6 +30,8 @@ set( QA_PCBNEW_SRCS
     drc/drc_test_utils.cpp
 
     # test compilation units (start test_)
+    test_dimension_zero_suppression.cpp
+    test_bbox_3d.cpp
     test_3d_viewer_layer_presets.cpp
     test_array_pad_name_provider.cpp
     test_barcode_load_save.cpp
@@ -62,6 +64,11 @@ set( QA_PCBNEW_SRCS
     test_convert_tool.cpp
     test_generator_load_save.cpp
     test_glb_utils.cpp
+    test_block_drag_capability.cpp
+    test_block_drag_dependents.cpp
+    test_block_drag_displacement.cpp
+    test_block_drag_pick.cpp
+    test_block_drag_validation.cpp
     test_graphics_load_save.cpp
     test_graphic_extend.cpp
     test_graphic_trim.cpp
@@ -75,19 +82,25 @@ set( QA_PCBNEW_SRCS
     test_footprint.cpp
     test_footprint_editor_tabs.cpp
     test_footprint_import_reconciler.cpp
+    test_import_design_rules.cpp
     test_footprint_library_adapter.cpp
     test_footprint_load_save.cpp
+    test_footprint_net_tie.cpp
+    test_footprint_pad_fixup.cpp
     test_footprint_realignment.cpp
     test_cross_probe_selection.cpp
     test_footprint_transform_sync.cpp
+    test_ref_suffix_split.cpp
     test_footprint_rescue_layer.cpp
     test_issue24735.cpp
     test_issue24901.cpp
     test_issue24967.cpp
     test_issue25010.cpp
+    test_issue25880.cpp
     test_issue25110_bezier_line_style.cpp
     test_issue25521.cpp
     test_issue25621_via_flashing_contact_layer.cpp
+    test_issue25650_collinear_arc.cpp
     test_fp_lib_load_save.cpp
     test_io_mgr.cpp
     test_ellipse_roundtrip.cpp
@@ -103,12 +116,15 @@ set( QA_PCBNEW_SRCS
     test_odb_soldermask_shape_export.cpp
     test_issue25074_odb_knockout_textbox.cpp
     test_pcb_control_rehatch.cpp
+    test_pcb_handle_key.cpp
     test_pns_basics.cpp
     test_pns_sketch_router.cpp
     test_assembly_model.cpp
     test_assembly_board_ops.cpp
+    test_pad_check.cpp
     test_pad_flashing.cpp
     test_pad_numbering.cpp
+    test_pad_roundtrip.cpp
     test_pcb_differ.cpp
     test_diff_canvas_context.cpp
     test_pcb_merge_applier.cpp
@@ -118,10 +134,11 @@ set( QA_PCBNEW_SRCS
     test_lib_table_diff_merge.cpp
     test_applier_helpers.cpp
     test_fp_lib_differ.cpp
-    test_pad_size_setters.cpp
+    test_pad_setters.cpp
     test_pad_swap_positions.cpp
     test_pad_tenting.cpp
     test_plot_edge_cuts_drill_marks.cpp
+    test_plot_job_layers.cpp
     test_plot_pad_mask.cpp
     test_plot_footprint_scaled_text.cpp
     test_pcb_textbox.cpp
@@ -130,6 +147,7 @@ set( QA_PCBNEW_SRCS
     test_libeval_compiler.cpp
     test_reference_image_load.cpp
     test_complex_padstack_export.cpp
+    test_padstack_clone.cpp
     test_gencad_export.cpp
     test_idf_export.cpp
     test_d356_export.cpp
@@ -224,6 +242,7 @@ set( QA_PCBNEW_SRCS
     drc/test_drc_unconnected_items_exclusion_loss.cpp
     drc/test_drc_via_dangling.cpp
     drc/test_drc_keepout_disallow.cpp
+    drc/test_drc_netclass_literal.cpp
     drc/test_drc_tuning_profiles.cpp
     drc/test_drc_creepage.cpp
     drc/test_drc_creepage_issue20480.cpp
@@ -246,6 +265,7 @@ set( QA_PCBNEW_SRCS
     drc/test_drc_creepage_circle_prune.cpp
     drc/test_creepage_engine_parity.cpp
     drc/test_creepage_engine_incremental.cpp
+    drc/test_drc_copper_outside_board_issue14650.cpp
     drc/test_drc_invalid_outline_issue24078.cpp
     drc/test_drc_invalid_outline_issue24241.cpp
     drc/test_drc_silk_rule_area_issue24177.cpp
@@ -566,6 +586,7 @@ set( PCBNEW_EXCLUDED_FROM_OTHER
 :!RegressionShallowArcZoneFill\
 :!RegressionIterativeRefillRespectsKeepouts\
 :!RegressionTHPadInnerLayerFlashing\
+:!RegressionThermalReliefAnnularRing45\
 :!RegressionRoundRectTeardropGeometry\
 :!OvalPadTeardropGeometry\
 :!LargeCircleTeardropGeometry\

@@ -233,6 +233,11 @@ public:
     void RefreshOperatingPointDisplay();
 
     /**
+     * Redraw the displayed symbols after a sheet suffix change made on another screen.
+     */
+    void RefreshComposedReferences();
+
+    /**
      * Automatically set the rotation of an item (if the item supports it).
      */
     void AutoRotateItem( SCH_SCREEN* aScreen, SCH_ITEM* aItem );
@@ -500,6 +505,14 @@ public:
     bool SaveProject( bool aSaveAs = false );
 
     bool OpenProjectFiles( const std::vector<wxString>& aFileSet, int aCtl = 0 ) override;
+
+    /**
+     * Reload the schematic and all its sheets from disk.
+     * The caller handles confirmation before unsaved edits are discarded.
+     *
+     * @return false when there is no filename or the reload fails.
+     */
+    bool ReloadFromDisk();
 
     void SetSchematic( SCHEMATIC* aSchematic );
 

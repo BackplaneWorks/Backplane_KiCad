@@ -19,6 +19,7 @@
  */
 
 #include <import_net_names.h>
+#include <diff_merge/merge_dispatch.h>
 #include <richio.h>
 #include <string_utils.h>
 #include <wx/crt.h>
@@ -64,6 +65,7 @@
 #include <jobs/job_export_pcb_drill.h>
 #include <jobs/job_export_pcb_dxf.h>
 #include <jobs/job_export_pcb_gencad.h>
+#include <jobs/job_export_pcb_specctra_dsn.h>
 #include <jobs/job_export_pcb_pdf.h>
 #include <jobs/job_export_pcb_png.h>
 #include <jobs/job_export_pcb_pos.h>
@@ -108,7 +110,7 @@
 #include <exporters/export_idf.h>
 #include <exporters/export_gencad_writer.h>
 #include <exporters/export_d356.h>
-#include <kiface_ids.h>
+#include <kiface_services.h>
 #include <netlist_reader/pcb_netlist.h>
 #include <netlist_reader/netlist_reader.h>
 #include <pcbnew_settings.h>
@@ -153,6 +155,8 @@
 #include <fstream>
 #include <paths.h>
 #include <streamwrapper.h>
+
+#include <specctra_import_export/specctra.h>
 #include <tools/zone_filler_tool.h>
 #include <jobs/job_pcb_structure.h>
 #include <exporters/step/exporter_step.h>
@@ -260,6 +264,12 @@ PCBNEW_JOBS_HANDLER::PCBNEW_JOBS_HANDLER( KIWAY* aKiway ) :
 
                   DIALOG_GENCAD_EXPORT_OPTIONS dlg( editFrame, gencadJob->GetSettingsDialogTitle(), gencadJob );
                   return dlg.ShowModal() == wxID_OK;
+              } );
+    Register( "specctra_dsn",
+              std::bind( &PCBNEW_JOBS_HANDLER::JobExportSpecctraDsn, this, std::placeholders::_1 ),
+              []( JOB* job, wxWindow* aParent ) -> bool
+              {
+                  return true;
               } );
     Register( "dxf", std::bind( &PCBNEW_JOBS_HANDLER::JobExportDxf, this, std::placeholders::_1 ),
               [aKiway]( JOB* job, wxWindow* aParent ) -> bool
@@ -1565,7 +1575,7 @@ int PCBNEW_JOBS_HANDLER::JobExportRender( JOB* aJob )
 
 
 bool PCBNEW_JOBS_HANDLER::preparePlotLayers( JOB_EXPORT_PCB_PLOT* aJob, BOARD* aBoard,
-                                            TOOL_MANAGER* aToolManager )
+                                            TOOL_MANAGER* aToolManager, LSEQ& aLayersToPlot )
 {
     if( aJob->m_checkZonesBeforePlot )
     {
@@ -1581,7 +1591,9 @@ bool PCBNEW_JOBS_HANDLER::preparePlotLayers( JOB_EXPORT_PCB_PLOT* aJob, BOARD* a
     if( aJob->m_argCommonLayers )
         aJob->m_plotOnAllLayersSequence = convertLayerArg( aJob->m_argCommonLayers.value(), aBoard );
 
-    if( aJob->m_plotLayerSequence.empty() )
+    aLayersToPlot = aJob->ResolvePlotLayers( aBoard->GetEnabledLayers() );
+
+    if( aLayersToPlot.empty() )
     {
         m_reporter->Report( _( "At least one layer must be specified\n" ), RPT_SEVERITY_ERROR );
         return false;
@@ -1606,8 +1618,8 @@ wxString PCBNEW_JOBS_HANDLER::resolvePlotOutputPath( JOB_EXPORT_PCB_PLOT* aJob, 
 
 
 // PDF single-document output need not use overrides; PNG never uses them.
-static int plotJob( JOB_EXPORT_PCB_PLOT* aJob, PCB_PLOTTER& aPlotter, const wxString& aOutPath,
-                    bool aSingleOutput, bool aUseOverrides )
+static int plotJob( JOB_EXPORT_PCB_PLOT* aJob, PCB_PLOTTER& aPlotter, const LSEQ& aLayersToPlot,
+                    const wxString& aOutPath, bool aSingleOutput, bool aUseOverrides )
 {
     std::optional<wxString> layerName;
     std::optional<wxString> sheetName;
@@ -1627,7 +1639,7 @@ static int plotJob( JOB_EXPORT_PCB_PLOT* aJob, PCB_PLOTTER& aPlotter, const wxSt
 
     std::vector<wxString> outputPaths;
 
-    if( !aPlotter.Plot( aOutPath, aJob->m_plotLayerSequence, aJob->m_plotOnAllLayersSequence, false,
+    if( !aPlotter.Plot( aOutPath, aLayersToPlot, aJob->m_plotOnAllLayersSequence, false,
                         aSingleOutput, layerName, sheetName, sheetPath, &outputPaths ) )
     {
         return CLI::EXIT_CODES::ERR_UNKNOWN;
@@ -1666,7 +1678,9 @@ int PCBNEW_JOBS_HANDLER::JobExportSvg( JOB* aJob )
         return CLI::EXIT_CODES::ERR_INVALID_OUTPUT_CONFLICT;
     }
 
-    if( !preparePlotLayers( aSvgJob, brd, toolManager ) )
+    LSEQ layersToPlot;
+
+    if( !preparePlotLayers( aSvgJob, brd, toolManager, layersToPlot ) )
         return CLI::EXIT_CODES::ERR_ARGS;
 
     PCB_PLOT_PARAMS plotOpts;
@@ -1674,7 +1688,7 @@ int PCBNEW_JOBS_HANDLER::JobExportSvg( JOB* aJob )
 
     PCB_PLOTTER plotter( brd, m_reporter, plotOpts );
 
-    return plotJob( aSvgJob, plotter, outPath, isSingle, isSingle );
+    return plotJob( aSvgJob, plotter, layersToPlot, outPath, isSingle, isSingle );
 }
 
 
@@ -1695,7 +1709,9 @@ int PCBNEW_JOBS_HANDLER::JobExportDxf( JOB* aJob )
 
     TOOL_MANAGER* toolManager = getToolManager( brd );
 
-    if( !preparePlotLayers( aDxfJob, brd, toolManager ) )
+    LSEQ layersToPlot;
+
+    if( !preparePlotLayers( aDxfJob, brd, toolManager, layersToPlot ) )
         return CLI::EXIT_CODES::ERR_ARGS;
 
     const bool isSingle = aDxfJob->m_genMode == JOB_EXPORT_PCB_DXF::GEN_MODE::SINGLE;
@@ -1713,7 +1729,7 @@ int PCBNEW_JOBS_HANDLER::JobExportDxf( JOB* aJob )
 
     PCB_PLOTTER plotter( brd, m_reporter, plotOpts );
 
-    return plotJob( aDxfJob, plotter, outPath, isSingle, isSingle );
+    return plotJob( aDxfJob, plotter, layersToPlot, outPath, isSingle, isSingle );
 }
 
 
@@ -1735,7 +1751,9 @@ int PCBNEW_JOBS_HANDLER::JobExportPdf( JOB* aJob )
 
     TOOL_MANAGER* toolManager = getToolManager( brd );
 
-    if( !preparePlotLayers( pdfJob, brd, toolManager ) )
+    LSEQ layersToPlot;
+
+    if( !preparePlotLayers( pdfJob, brd, toolManager, layersToPlot ) )
         return CLI::EXIT_CODES::ERR_ARGS;
 
     if( pdfJob->m_pdfGenMode == JOB_EXPORT_PCB_PDF::GEN_MODE::ALL_LAYERS_ONE_FILE )
@@ -1756,7 +1774,7 @@ int PCBNEW_JOBS_HANDLER::JobExportPdf( JOB* aJob )
         return CLI::EXIT_CODES::ERR_INVALID_OUTPUT_CONFLICT;
     }
 
-    return plotJob( pdfJob, pcbPlotter, outPath, outputIsSingle, plotAllLayersOneFile );
+    return plotJob( pdfJob, pcbPlotter, layersToPlot, outPath, outputIsSingle, plotAllLayersOneFile );
 }
 
 
@@ -1777,7 +1795,9 @@ int PCBNEW_JOBS_HANDLER::JobExportPng( JOB* aJob )
 
     TOOL_MANAGER* toolManager = getToolManager( brd );
 
-    if( !preparePlotLayers( pngJob, brd, toolManager ) )
+    LSEQ layersToPlot;
+
+    if( !preparePlotLayers( pngJob, brd, toolManager, layersToPlot ) )
         return CLI::EXIT_CODES::ERR_ARGS;
 
     bool isSingle = pngJob->m_genMode == JOB_EXPORT_PCB_PNG::GEN_MODE::SINGLE;
@@ -1795,7 +1815,7 @@ int PCBNEW_JOBS_HANDLER::JobExportPng( JOB* aJob )
         return CLI::EXIT_CODES::ERR_INVALID_OUTPUT_CONFLICT;
     }
 
-    return plotJob( pngJob, pcbPlotter, outPath, isSingle, false );
+    return plotJob( pngJob, pcbPlotter, layersToPlot, outPath, isSingle, false );
 }
 
 
@@ -1816,7 +1836,9 @@ int PCBNEW_JOBS_HANDLER::JobExportPs( JOB* aJob )
 
     TOOL_MANAGER* toolManager = getToolManager( brd );
 
-    if( !preparePlotLayers( psJob, brd, toolManager ) )
+    LSEQ layersToPlot;
+
+    if( !preparePlotLayers( psJob, brd, toolManager, layersToPlot ) )
         return CLI::EXIT_CODES::ERR_ARGS;
 
     bool isSingle = psJob->m_genMode == JOB_EXPORT_PCB_PS::GEN_MODE::SINGLE;
@@ -1834,7 +1856,7 @@ int PCBNEW_JOBS_HANDLER::JobExportPs( JOB* aJob )
 
     PCB_PLOTTER pcbPlotter( brd, m_reporter, plotOpts );
 
-    return plotJob( psJob, pcbPlotter, outPath, isSingle, isSingle );
+    return plotJob( psJob, pcbPlotter, layersToPlot, outPath, isSingle, isSingle );
 }
 
 
@@ -1910,20 +1932,17 @@ int PCBNEW_JOBS_HANDLER::JobExportGerbers( JOB* aJob )
     {
         // default to the board enabled layers, but only if the user has not specifed a layer list
         // ( m_plotLayerSequence can be empty with a broken user layer list)
-        if( aGerberJob->m_plotLayerSequence.empty() && !hasLayerListSpecified )
+        if( aGerberJob->m_plotLayerSequence.empty() && !hasLayerListSpecified
+            && !aGerberJob->m_plotAllCopperLayers )
+        {
             aGerberJob->m_plotLayerSequence = brd->GetEnabledLayers().SeqStackupForPlotting();
+        }
     }
 
     // Ensure layers to plot are restricted to enabled layers of the board to plot
-    LSET layersToPlot = LSET( { aGerberJob->m_plotLayerSequence } ) & brd->GetEnabledLayers();
+    LSET layersToPlot = LSET( aGerberJob->ResolvePlotLayers( brd->GetEnabledLayers() ) ) & brd->GetEnabledLayers();
 
-    // Once for the run, not per file, so an update rebuilds each chart once. Common layers
-    // included or a chart plotted as one is never looked at
-    LSET preflightLayers = layersToPlot;
-
-    for( PCB_LAYER_ID commonLayer : aGerberJob->m_plotOnAllLayersSequence )
-        preflightLayers.set( commonLayer );
-
+    // Once for the run, not per file, so an update rebuilds each chart once
     RefreshGeneratedTables( *brd );
 
     for( PCB_LAYER_ID layer : layersToPlot.UIOrder() )
@@ -2078,6 +2097,52 @@ int PCBNEW_JOBS_HANDLER::JobExportGencad( JOB* aJob )
 
     aJob->AddOutput( outPath );
     m_reporter->Report( _( "Successfully created genCAD file\n" ), RPT_SEVERITY_INFO );
+
+    return CLI::EXIT_CODES::OK;
+}
+
+
+int PCBNEW_JOBS_HANDLER::JobExportSpecctraDsn( JOB* aJob )
+{
+    JOB_EXPORT_PCB_SPECCTRA_DSN* specctraJob = dynamic_cast<JOB_EXPORT_PCB_SPECCTRA_DSN*>( aJob );
+
+    if( !specctraJob )
+        return CLI::EXIT_CODES::ERR_UNKNOWN;
+
+    BOARD* brd = getBoard( specctraJob->m_filename );
+
+    if( !brd )
+        return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
+
+    if( specctraJob->GetConfiguredOutputPath().IsEmpty() )
+    {
+        wxFileName fn = brd->GetFileName();
+        fn.SetExt( FILEEXT::SpecctraDsnFileExtension );
+
+        specctraJob->SetWorkingOutputPath( fn.GetFullName() );
+    }
+
+    wxString outPath = resolveJobOutputPath( aJob, brd );
+
+    if( !PATHS::EnsurePathExists( outPath, true ) )
+    {
+        m_reporter->Report( _( "Failed to create output directory\n" ), RPT_SEVERITY_ERROR );
+        return CLI::EXIT_CODES::ERR_INVALID_OUTPUT_CONFLICT;
+    }
+
+    try
+    {
+        DSN::ExportBoardToSpecctraFile( brd, outPath, m_reporter );
+    }
+    catch( const IO_ERROR& ioe )
+    {
+        m_reporter->Report( wxString::Format( _( "Export failed: %s\n" ), ioe.What() ),
+                            RPT_SEVERITY_ERROR );
+        return CLI::EXIT_CODES::ERR_UNKNOWN;
+    }
+
+    aJob->AddOutput( outPath );
+    m_reporter->Report( _( "Successfully created Specctra DSN file\n" ), RPT_SEVERITY_INFO );
 
     return CLI::EXIT_CODES::OK;
 }
@@ -2348,22 +2413,19 @@ int PCBNEW_JOBS_HANDLER::JobExportGerber( JOB* aJob )
 
     // We are feeding it one layer at the start here to silence a logic check
 
-    // It drives StartPlotBoard directly rather than PCB_PLOTTER::Plot, so it needs its own
-    // preflight or a FAIL policy would still emit a stale chart
-    {
-        LSET preflightLayers( { aGerberJob->m_plotLayerSequence } );
-
-        RefreshGeneratedTables( *brd );
-    }
+    // It drives StartPlotBoard directly rather than PCB_PLOTTER::Plot, so it refreshes on its own
+    RefreshGeneratedTables( *brd );
 
     PLOTTER* plotter = StartPlotBoard( brd, &plotOpts, layer, layerName, outPath, sheetName, sheetPath );
+    bool     success = false;
 
     if( plotter )
     {
         PlotBoardLayers( brd, plotter, aGerberJob->m_plotLayerSequence, plotOpts );
-        plotter->EndPlot();
+        success = plotter->EndPlot();
     }
-    else
+
+    if( !success )
     {
         m_reporter->Report( wxString::Format( _( "Failed to plot to '%s'.\n" ), outPath ), RPT_SEVERITY_ERROR );
         exitCode = CLI::EXIT_CODES::ERR_INVALID_OUTPUT_CONFLICT;
@@ -2425,14 +2487,17 @@ int PCBNEW_JOBS_HANDLER::JobExportDrill( JOB* aJob )
     }
 
 
-    if( aDrillJob->m_generateReport && aDrillJob->m_reportPath.IsEmpty() )
+    wxString reportPathSetting = aDrillJob->m_reportPath;
+
+    // Keep the generated default out of the job so it is not saved into the jobset
+    if( aDrillJob->m_generateReport && reportPathSetting.IsEmpty() )
     {
-        wxFileName fn = outPath;
+        wxFileName fn = wxFileName::DirName( outPath );
         fn.SetFullName( brd->GetFileName() );
         fn.SetName( fn.GetName() + "-drill" );
         fn.SetExt( FILEEXT::ReportFileExtension );
 
-        aDrillJob->m_reportPath = fn.GetFullPath();
+        reportPathSetting = fn.GetFullPath();
     }
 
     if( aDrillJob->m_format == JOB_EXPORT_PCB_DRILL::DRILL_FORMAT::EXCELLON )
@@ -2480,7 +2545,7 @@ int PCBNEW_JOBS_HANDLER::JobExportDrill( JOB* aJob )
 
         if( aDrillJob->m_generateReport )
         {
-            wxString reportPath = aDrillJob->ResolveOutputPath( aDrillJob->m_reportPath, true, brd->GetProject() );
+            wxString reportPath = aDrillJob->ResolveOutputPath( reportPathSetting, false, brd->GetProject() );
 
             if( !excellonWriter->GenDrillReportFile( reportPath ) )
             {
@@ -2515,7 +2580,7 @@ int PCBNEW_JOBS_HANDLER::JobExportDrill( JOB* aJob )
 
         if( aDrillJob->m_generateReport )
         {
-            wxString reportPath = aDrillJob->ResolveOutputPath( aDrillJob->m_reportPath, true, brd->GetProject() );
+            wxString reportPath = aDrillJob->ResolveOutputPath( reportPathSetting, false, brd->GetProject() );
 
             if( !gerberWriter->GenDrillReportFile( reportPath ) )
             {
@@ -2769,7 +2834,7 @@ int PCBNEW_JOBS_HANDLER::JobExportFpUpgrade( JOB* aJob )
 
         for( const auto& footprint : fpLib.GetFootprints() )
         {
-            if( footprint.second->GetFootprint()->GetFileFormatVersionAtLoad() < SEXPR_BOARD_FILE_VERSION )
+            if( footprint.second->GetFootprint()->GetFileFormatVersionAtLoad() < SEXPR_FOOTPRINT_LIB_FILE_VERSION )
                 shouldSave = true;
         }
 
@@ -2893,11 +2958,6 @@ int PCBNEW_JOBS_HANDLER::doFpExportSvg( JOB_FP_EXPORT_SVG* aSvgJob, const FOOTPR
     PCB_PLOT_PARAMS plotOpts;
     PCB_PLOTTER::PlotJobToPlotOpts( plotOpts, aSvgJob, *m_reporter );
 
-    if( plotOpts.GetSketchPadsOnFabLayers() )
-    {
-        plotOpts.SetPlotPadNumbers( true );
-    }
-
     if( !PlotFootprintToSVG( *aFootprint, *Pgm().GetSettingsManager().GetProject( "" ), &aSvgJob->GetVarOverrides(),
                              plotOpts, aSvgJob->m_plotLayerSequence, aSvgJob->m_plotOnAllLayersSequence,
                              outputFile.GetFullPath(), m_reporter ) )
@@ -3016,10 +3076,11 @@ int PCBNEW_JOBS_HANDLER::JobExportDrc( JOB* aJob )
             }
             else
             {
-                typedef bool ( *NETLIST_FN_PTR )( const wxString&, std::string&, KIWAY* );
-                KIFACE*        eeschema = m_kiway->KiFACE( KIWAY::FACE_SCH );
-                NETLIST_FN_PTR netlister = (NETLIST_FN_PTR) eeschema->IfaceOrAddress( KIFACE_NETLIST_SCHEMATIC );
-                ( *netlister )( schematicPath.GetFullPath(), netlist_str, m_kiway );
+                KIFACE_NETLIST_SCHEMATIC_SERVICE::Type netlister =
+                        GetKifaceService<KIFACE_NETLIST_SCHEMATIC_SERVICE>( m_kiway->KiFACE( KIWAY::FACE_SCH ) );
+
+                if( netlister )
+                    ( *netlister )( schematicPath.GetFullPath(), netlist_str, m_kiway );
             }
         }
 
@@ -3891,6 +3952,8 @@ int PCBNEW_JOBS_HANDLER::JobImport( JOB* aJob )
     case JOB_PCB_IMPORT::FORMAT::SOLIDWORKS: fileType = PCB_IO_MGR::SOLIDWORKS_PCB; break;
 
     case JOB_PCB_IMPORT::FORMAT::EASYPC: fileType = PCB_IO_MGR::EASYPC; break;
+
+    case JOB_PCB_IMPORT::FORMAT::TARGET3001: fileType = PCB_IO_MGR::TARGET3001; break;
     }
 
     // FindPluginTypeFromBoardPath returns FILE_TYPE_NONE (not PCB_FILE_UNKNOWN) when no plugin
@@ -4384,8 +4447,11 @@ int PCBNEW_JOBS_HANDLER::JobDiff( JOB* aJob )
 // ============================================================================
 #include <diff_merge/pcb_geometry_extractor.h>
 #include <diff_merge/pcb_merge_applier.h>
+#include <diff_merge/auto_resolution.h>
 #include <diff_merge/kicad_merge_engine.h>
+#include <diff_merge/pcb_diff_canvas_context.h>
 #include <dialogs/dialog_kicad_merge_3way.h>
+#include <widgets/widget_diff_canvas.h>
 
 
 int PCBNEW_JOBS_HANDLER::RunMerge( KICAD_DIFF::DOC_KIND aKind, const wxString& aAncestor,
@@ -4433,6 +4499,13 @@ int PCBNEW_JOBS_HANDLER::runPcbMerge( const wxString& aAncestor, const wxString&
         return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
     }
 
+    const wxString formatNotice =
+            KICAD_DIFF::OlderFormatNotice( ancestor->GetFileFormatVersionAtLoad(), ours->GetFileFormatVersionAtLoad(),
+                                           theirs->GetFileFormatVersionAtLoad(), SEXPR_BOARD_FILE_VERSION );
+
+    if( !formatNotice.IsEmpty() )
+        m_reporter->Report( formatNotice + wxS( "\n" ), RPT_SEVERITY_WARNING );
+
     KICAD_DIFF::PCB_DIFFER ourDiff( ancestor, ours );
     KICAD_DIFF::PCB_DIFFER theirDiff( ancestor, theirs );
 
@@ -4442,9 +4515,7 @@ int PCBNEW_JOBS_HANDLER::runPcbMerge( const wxString& aAncestor, const wxString&
     KICAD_DIFF::KICAD_MERGE_ENGINE engine;
     KICAD_DIFF::MERGE_PLAN         plan = engine.Plan( ourDocDiff, theirDocDiff );
 
-    // A cancelled dialog leaves plan unresolved and falls through to the
-    // marker flow below.
-    if( aInteractive && !plan.Resolved() )
+    if( aInteractive && !KICAD_DIFF::BuildConflictList( plan ).empty() )
     {
         if( !Pgm().IsGUI() )
         {
@@ -4458,6 +4529,7 @@ int PCBNEW_JOBS_HANDLER::runPcbMerge( const wxString& aAncestor, const wxString&
         // boards behind the conflict bbox highlight.
         const KICAD_DIFF::DIFF_COLOR_THEME        theme;
         DIALOG_KICAD_MERGE_3WAY::CONFLICT_CONTEXT ctx;
+        ctx.formatNotice = formatNotice;
         ctx.ancestorGeometry = KICAD_DIFF::ExtractBoardGeometry( *ancestor, theme.reference );
         ctx.oursGeometry = KICAD_DIFF::ExtractBoardGeometry( *ours, theme.reference );
         ctx.theirsGeometry = KICAD_DIFF::ExtractBoardGeometry( *theirs, theme.comparison );
@@ -4467,10 +4539,55 @@ int PCBNEW_JOBS_HANDLER::runPcbMerge( const wxString& aAncestor, const wxString&
         KICAD_DIFF::CollectChangeBBoxes( ourDocDiff, ctx.oursBBoxes );
         KICAD_DIFF::CollectChangeBBoxes( theirDocDiff, ctx.theirsBBoxes );
 
+        ctx.describeItem = [ours, theirs, ancestor]( const KIID_PATH& aId ) -> wxString
+        {
+            if( aId.empty() )
+                return wxEmptyString;
+
+            UNITS_PROVIDER units( pcbIUScale, EDA_UNITS::MM );
+
+            for( BOARD* board : { ours, theirs, ancestor } )
+            {
+                if( !board )
+                    continue;
+
+                if( BOARD_ITEM* item = board->ResolveItem( aId.back(), true ) )
+                    return item->GetItemDescription( &units, false );
+            }
+
+            return wxEmptyString;
+        };
+
+        ctx.drawSide = [ancestor, ours, theirs, theme]( WIDGET_DIFF_CANVAS&           aCanvas,
+                                                        DIALOG_KICAD_MERGE_3WAY::SIDE aSide,
+                                                        const std::optional<KIID_PATH>& )
+        {
+            BOARD*         board = nullptr;
+            KIGFX::COLOR4D colour = theme.reference;
+
+            switch( aSide )
+            {
+            case DIALOG_KICAD_MERGE_3WAY::SIDE::OURS: board = ours; break;
+
+            case DIALOG_KICAD_MERGE_3WAY::SIDE::THEIRS:
+                board = theirs;
+                colour = theme.comparison;
+                break;
+
+            case DIALOG_KICAD_MERGE_3WAY::SIDE::ANCESTOR: board = ancestor; break;
+            }
+
+            if( board )
+                KICAD_DIFF::ConfigurePcbDiffCanvasContext( aCanvas, board, nullptr, colour );
+        };
+
         DIALOG_KICAD_MERGE_3WAY dlg( wxTheApp->GetTopWindow(), plan, std::move( ctx ) );
 
-        if( dlg.ShowModal() == wxID_APPLY )
-            plan = dlg.GetResolvedPlan();
+        // Cancelling leaves the conflicts unresolved and the files untouched.
+        if( dlg.ShowModal() != wxID_APPLY )
+            return CLI::EXIT_CODES::ERR_CANCELLED;
+
+        plan = dlg.GetResolvedPlan();
     }
 
     // Snapshot of the plan before the applier moves it; drives the
@@ -4772,8 +4889,105 @@ int PCBNEW_JOBS_HANDLER::JobFpDiff( JOB* aJob )
 // ============================================================================
 #include <dialogs/dialog_kicad_diff.h>
 #include <diff_merge/pcb_diff_canvas_context.h>
+#include <widgets/widget_diff_canvas.h>
 #include <diff_merge/pcb_geometry_extractor.h>
 #include <jobs/scratch_doc.h>
+
+
+// Both boards of a diff, kept while the caller draws them.
+struct PCB_DIFF_SIDES
+{
+    SCRATCH_DOC<BOARD>        a;
+    SCRATCH_DOC<BOARD>        b;
+    BOARD                     emptyA;
+    BOARD                     emptyB;
+    BOARD*                    boardA = nullptr;
+    BOARD*                    boardB = nullptr;
+    KICAD_DIFF::DOCUMENT_DIFF diff;
+};
+
+
+static int loadPcbDiffSides( SETTINGS_MANAGER& aMgr, REPORTER& aReporter, const wxString& aFileA,
+                             const wxString& aFileB, PCB_DIFF_SIDES& aSides )
+{
+    aSides.a = loadScratchBoard( aMgr, aFileA, /* aInitializeAfterLoad */ false );
+    aSides.b = loadScratchBoard( aMgr, aFileB, /* aInitializeAfterLoad */ false );
+
+    if( !aSides.a.doc && !aFileA.IsEmpty() )
+    {
+        aReporter.Report( wxString::Format( _( "Failed to load %s\n" ), aFileA ), RPT_SEVERITY_ERROR );
+        return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
+    }
+
+    if( !aSides.b.doc && !aFileB.IsEmpty() )
+    {
+        aReporter.Report( wxString::Format( _( "Failed to load %s\n" ), aFileB ), RPT_SEVERITY_ERROR );
+        return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
+    }
+
+    // An ADDED or REMOVED side is an empty board, so the differ still produces a per-item
+    // list rather than failing on an empty input file.
+    aSides.boardA = aSides.a.doc ? aSides.a.doc.get() : &aSides.emptyA;
+    aSides.boardB = aSides.b.doc ? aSides.b.doc.get() : &aSides.emptyB;
+
+    KICAD_DIFF::PCB_DIFFER differ( aSides.boardA, aSides.boardB, aFileB );
+    aSides.diff = differ.Diff();
+
+    return CLI::EXIT_CODES::SUCCESS;
+}
+
+
+// The two boards a window outside the kiface shows, taken off their canvases before they go.
+class PCB_DIFF_CANVAS_CONTEXT : public KICAD_DIFF::DIFF_CANVAS_CONTEXT
+{
+public:
+    PCB_DIFF_CANVAS_CONTEXT( WIDGET_DIFF_CANVAS* aBefore, WIDGET_DIFF_CANVAS* aAfter ) :
+            m_before( aBefore ),
+            m_after( aAfter )
+    {
+    }
+
+    ~PCB_DIFF_CANVAS_CONTEXT() override
+    {
+        m_before->SetContextItems( {} );
+        m_after->SetContextItems( {} );
+    }
+
+    PCB_DIFF_SIDES m_sides;
+
+private:
+    WIDGET_DIFF_CANVAS* m_before;
+    WIDGET_DIFF_CANVAS* m_after;
+};
+
+
+KICAD_DIFF::DIFF_CANVAS_CONTEXT*
+PCBNEW_JOBS_HANDLER::AttachDiffCanvases( KICAD_DIFF::DOC_KIND aKind, const wxString& aFileA, const wxString& aFileB,
+                                         WIDGET_DIFF_CANVAS* aBefore, WIDGET_DIFF_CANVAS* aAfter,
+                                         KICAD_DIFF::DOCUMENT_DIFF& aDiff, REPORTER* aReporter )
+{
+    SCOPED_SET_RESET<REPORTER*> reporterGuard( m_reporter, aReporter ? aReporter : m_reporter );
+
+    if( aKind != KICAD_DIFF::DOC_KIND::PCB )
+        return nullptr;
+
+    auto context = std::make_unique<PCB_DIFF_CANVAS_CONTEXT>( aBefore, aAfter );
+
+    if( loadPcbDiffSides( Pgm().GetSettingsManager(), *m_reporter, aFileA, aFileB, context->m_sides )
+        != CLI::EXIT_CODES::SUCCESS )
+    {
+        return nullptr;
+    }
+
+    const KICAD_DIFF::DIFF_COLOR_THEME theme;
+
+    KICAD_DIFF::ConfigurePcbDiffCanvasContext( *aBefore, context->m_sides.boardA, nullptr, theme.reference, {}, {},
+                                               {} );
+    KICAD_DIFF::ConfigurePcbDiffCanvasContext( *aAfter, nullptr, context->m_sides.boardB, theme.reference, {}, {}, {} );
+
+    aDiff = context->m_sides.diff;
+    return context.release();
+}
 
 
 int PCBNEW_JOBS_HANDLER::OpenDiffDialog( KICAD_DIFF::DOC_KIND aKind, const wxString& aFileA,
@@ -4789,11 +5003,6 @@ int PCBNEW_JOBS_HANDLER::OpenDiffDialog( KICAD_DIFF::DOC_KIND aKind, const wxStr
     wxWindow* parent = aParent ? aParent : ( wxTheApp ? wxTheApp->GetTopWindow() : nullptr );
 
     SETTINGS_MANAGER& mgr = Pgm().GetSettingsManager();
-
-    auto loadBoardScratch = [&]( const wxString& aPath )
-    {
-        return loadScratchBoard( mgr, aPath, /* aInitializeAfterLoad */ false );
-    };
 
     KICAD_DIFF::DOCUMENT_DIFF     result;
     KICAD_DIFF::DOCUMENT_GEOMETRY refGeometry;
@@ -4820,36 +5029,17 @@ int PCBNEW_JOBS_HANDLER::OpenDiffDialog( KICAD_DIFF::DOC_KIND aKind, const wxStr
     {
     case KICAD_DIFF::DOC_KIND::PCB:
     {
-        SCRATCH_DOC<BOARD> a = loadBoardScratch( aFileA );
-        SCRATCH_DOC<BOARD> b = loadBoardScratch( aFileB );
+        PCB_DIFF_SIDES sides;
 
-        // Synthesize empty boards for ADDED / REMOVED sides so the differ
-        // can still produce a meaningful per-item list rather than failing
-        // on an empty input file.
-        BOARD emptyA;
-        BOARD emptyB;
+        if( int rc = loadPcbDiffSides( mgr, *m_reporter, aFileA, aFileB, sides ); rc != CLI::EXIT_CODES::SUCCESS )
+            return rc;
 
-        if( !a.doc && !aFileA.IsEmpty() )
-        {
-            m_reporter->Report( wxString::Format( _( "Failed to load %s\n" ), aFileA ), RPT_SEVERITY_ERROR );
-            return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
-        }
+        BOARD* boardA = sides.boardA;
+        BOARD* boardB = sides.boardB;
+        result = std::move( sides.diff );
 
-        if( !b.doc && !aFileB.IsEmpty() )
-        {
-            m_reporter->Report( wxString::Format( _( "Failed to load %s\n" ), aFileB ), RPT_SEVERITY_ERROR );
-            return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
-        }
-
-        BOARD* boardA = a.doc ? a.doc.get() : &emptyA;
-        BOARD* boardB = b.doc ? b.doc.get() : &emptyB;
-
-        KICAD_DIFF::PCB_DIFFER differ( boardA, boardB, aFileB );
-        result = differ.Diff();
-
-        // Extract background geometry so the dialog's canvas shows the
-        // actual board outline + footprint footprints beneath the diff
-        // bbox rectangles. Theme defaults: muted blue (ref) / gold (comp).
+        // Background geometry, so the dialog's canvas shows the board outline and footprints
+        // beneath the change rectangles.
         const KICAD_DIFF::DIFF_COLOR_THEME theme;
         refGeometry = KICAD_DIFF::ExtractBoardGeometry( *boardA, theme.reference );
         compGeometry = KICAD_DIFF::ExtractBoardGeometry( *boardB, theme.comparison );

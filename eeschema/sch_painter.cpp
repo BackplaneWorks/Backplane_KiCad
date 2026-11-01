@@ -35,6 +35,7 @@
 #include <geometry/roundrect.h>
 #include <geometry/shape_poly_set.h>
 #include <geometry/shape_utils.h>
+#include <font/glyph_types.h>
 #include <gr_text.h>
 #include <sch_pin.h>
 #include <math/util.h>
@@ -3673,6 +3674,8 @@ void SCH_PAINTER::draw( const SCH_BITMAP* aBitmap, int aLayer )
     m_gal->Save();
     m_gal->Translate( aBitmap->GetPosition() );
 
+    m_gal->Rotate( -refImage.GetOrientation().AsRadians() );
+
     // When the image scale factor is not 1.0, we need to modify the actual as the image scale
     // factor is similar to a local zoom
     const double img_scale = refImage.GetImageScale();
@@ -3681,7 +3684,17 @@ void SCH_PAINTER::draw( const SCH_BITMAP* aBitmap, int aLayer )
         m_gal->Scale( VECTOR2D( img_scale, img_scale ) );
 
     if( aLayer == LAYER_DRAW_BITMAPS )
-        m_gal->DrawBitmap( refImage.GetImage() );
+    {
+        double imageAlpha = refImage.GetOpacity();
+
+        if( aBitmap->IsSelected() || aBitmap->IsBrightened() )
+        {
+            // Give it a floor so you can't lose it too easily
+            imageAlpha = std::max( imageAlpha, 0.1 );
+        }
+
+        m_gal->DrawBitmap( refImage.GetImage(), imageAlpha );
+    }
 
     if( aLayer == LAYER_SELECTION_SHADOWS )
     {

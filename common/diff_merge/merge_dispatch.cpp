@@ -25,8 +25,10 @@
 
 #include <cli/exit_codes.h>
 #include <kiface_base.h>
-#include <kiface_ids.h>
+#include <kiface_services.h>
 #include <kiway.h>
+
+#include <wx/translation.h>
 
 
 namespace KICAD_DIFF
@@ -50,19 +52,30 @@ KIWAY::FACE_T faceForKind( DOC_KIND aKind )
 } // namespace
 
 
+wxString OlderFormatNotice( int aAncestorVersion, int aOursVersion, int aTheirsVersion, int aCurrentVersion )
+{
+    if( aAncestorVersion >= aCurrentVersion && aOursVersion >= aCurrentVersion && aTheirsVersion >= aCurrentVersion )
+    {
+        return wxEmptyString;
+    }
+
+    return _( "One of the files being merged was written by an older version of KiCad.\n\n"
+              "The merged file is written in the current file format, whichever side is kept. "
+              "KiCad cannot write the older format back." );
+}
+
+
 int DispatchMerge( KIWAY& aKiway, DOC_KIND aKind, const wxString& aAncestor, const wxString& aOurs,
                    const wxString& aTheirs, const wxString& aOutput, bool aInteractive,
                    bool aSingleFile, REPORTER* aReporter )
 {
-    typedef int ( *MERGE_FN )( int, const wxString&, const wxString&, const wxString&,
-                               const wxString&, bool, bool, REPORTER* );
-
     KIFACE* kiface = aKiway.KiFACE( faceForKind( aKind ) );
 
     if( !kiface )
         return CLI::EXIT_CODES::ERR_UNKNOWN;
 
-    MERGE_FN fn = reinterpret_cast<MERGE_FN>( kiface->IfaceOrAddress( KIFACE_MERGE_DOCUMENT ) );
+    KIFACE_MERGE_DOCUMENT_SERVICE::Type fn =
+            GetKifaceService<KIFACE_MERGE_DOCUMENT_SERVICE>( kiface );
 
     if( !fn )
         return CLI::EXIT_CODES::ERR_UNKNOWN;
@@ -76,20 +89,40 @@ int DispatchOpenDiffDialog( KIWAY& aKiway, DOC_KIND aKind, const wxString& aFile
                             const wxString& aFileB, const wxString& aLabelA, const wxString& aLabelB,
                             wxWindow* aParent, REPORTER* aReporter )
 {
-    typedef int ( *OPEN_FN )( int, const wxString&, const wxString&, const wxString&,
-                              const wxString&, wxWindow*, REPORTER* );
-
     KIFACE* kiface = aKiway.KiFACE( faceForKind( aKind ) );
 
     if( !kiface )
         return CLI::EXIT_CODES::ERR_UNKNOWN;
 
-    OPEN_FN fn = reinterpret_cast<OPEN_FN>( kiface->IfaceOrAddress( KIFACE_OPEN_DIFF_DIALOG ) );
+    KIFACE_OPEN_DIFF_DIALOG_SERVICE::Type fn =
+            GetKifaceService<KIFACE_OPEN_DIFF_DIALOG_SERVICE>( kiface );
 
     if( !fn )
         return CLI::EXIT_CODES::ERR_UNKNOWN;
 
     return fn( static_cast<int>( aKind ), aFileA, aFileB, aLabelA, aLabelB, aParent, aReporter );
 }
+
+
+std::unique_ptr<DIFF_CANVAS_CONTEXT> DispatchAttachDiffCanvases( KIWAY& aKiway, DOC_KIND aKind, const wxString& aFileA,
+                                                                 const wxString& aFileB, WIDGET_DIFF_CANVAS& aBefore,
+                                                                 WIDGET_DIFF_CANVAS& aAfter, DOCUMENT_DIFF& aDiff,
+                                                                 REPORTER* aReporter )
+{
+    KIFACE* kiface = aKiway.KiFACE( faceForKind( aKind ) );
+
+    if( !kiface )
+        return nullptr;
+
+    KIFACE_ATTACH_DIFF_CANVASES_SERVICE::Type fn =
+            GetKifaceService<KIFACE_ATTACH_DIFF_CANVASES_SERVICE>( kiface );
+
+    if( !fn )
+        return nullptr;
+
+    return std::unique_ptr<DIFF_CANVAS_CONTEXT>(
+            fn( static_cast<int>( aKind ), aFileA, aFileB, &aBefore, &aAfter, &aDiff, aReporter ) );
+}
+
 
 } // namespace KICAD_DIFF

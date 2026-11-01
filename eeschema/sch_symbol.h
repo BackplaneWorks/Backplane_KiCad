@@ -30,6 +30,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -53,6 +54,8 @@ class LEGACY_SYMBOL_LIBS;
 class SCH_SCREEN;
 class SCH_COMMIT;
 class SCH_SHAPE;
+class SCH_SYMBOL_FIELD_PROPERTY;
+
 
 namespace kiapi::schematic::types
 {
@@ -497,10 +500,38 @@ public:
     const SCH_FIELD* FindFieldCaseInsensitive( const wxString& aFieldName ) const;
 
     /**
-     * @return the reference for the instance on the given sheet.
+     * @return the reference for the instance on the given sheet, with the unit after the base and
+     *         the sheet path's reference suffix last, as in U12A_M4.
      */
     const wxString GetRef( const SCH_SHEET_PATH* aSheet,
                            bool aIncludeUnit = false ) const override;
+
+    /**
+     * @return the reference of \a aUnit of this symbol's package, with that unit's sheet suffix
+     *         when the package spans sheets.
+     */
+    wxString GetUnitRef( const SCH_SHEET_PATH* aSheet, int aUnit ) const;
+
+    /**
+     * Count of changes to any symbol's references, units, library links or placement.
+     *
+     * Caches built from references across the schematic rebuild when it moves.
+     */
+    static uint64_t RefGeneration();
+
+    /// Mark every cache built from references as stale.
+    static void BumpRefGeneration();
+
+    /**
+     * @return the stored reference for the instance on the given sheet, without the sheet path's
+     *         reference suffix.  This is what SetRef() takes and what annotation numbers.
+     */
+    wxString GetBaseRef( const SCH_SHEET_PATH* aSheet, bool aIncludeUnit = false ) const;
+
+    /**
+     * @return the reference shown on the current sheet, for descriptions that have no sheet path.
+     */
+    wxString GetCurrentSheetRef() const;
 
     /**
      * @return the value for the instance on the given sheet.
@@ -685,12 +716,33 @@ public:
     const std::vector<std::unique_ptr<SCH_PIN>>& GetRawPins() const { return m_pins; }
 
     /**
-     * Set the reference for the given sheet path for this symbol.
+     * Set the base reference for the given sheet path for this symbol.
      *
      * @param aSheet is the hierarchical path of the reference.
-     * @param aReference is the new reference for the symbol.
+     * @param aReference is the new base reference, without the sheet path's reference suffix.
      */
     void SetRef( const SCH_SHEET_PATH* aSheet, const wxString& aReference );
+
+    /**
+     * Convert a reference typed on \a aSheet to the base reference.  Text that ends in the path's own
+     * reference suffix loses it.  Text that ends in the suffix of another instance of this symbol's
+     * file is refused, since it names another channel.
+     *
+     * @param aBase receives the base reference.
+     * @param aSchematic stands in for Schematic() on a symbol that is not on a screen yet.
+     * @return an error message, or an empty string when \a aBase is valid.
+     */
+    wxString BaseRefFromUser( const SCH_SHEET_PATH& aSheet, const wxString& aText, wxString& aBase,
+                              const SCHEMATIC* aSchematic = nullptr ) const;
+
+    /**
+     * Set a base reference chosen by the user on \a aSheet.  In suffix annotation mode every
+     * instance of the symbol's file takes it, so the channels keep one base.
+     */
+    void SetUserRef( const SCH_SHEET_PATH& aSheet, const wxString& aBase );
+
+    /// Flag the reference loaded for @a aPath as saved without its sheet suffix.
+    void SetRefLacksSuffix( const KIID_PATH& aPath, bool aLacksSuffix = true );
 
     /**
      * Check if the symbol has a valid annotation (reference) for the given sheet path.
@@ -987,6 +1039,8 @@ public:
     bool IsPower() const override;
     bool IsNormal() const override;
 
+    void SetLocalPowerProp( bool aLocal );
+
     bool GetShowPinNames() const override;
     void SetShowPinNames( bool aShow ) override;
 
@@ -1029,11 +1083,23 @@ public:
     bool ClearVariantSymbolOverride( const SCH_SHEET_PATH& aPath, const wxString& aVariantName );
 
     /**
+     * @return the distinct alternate-symbol LIB_IDs referenced by any variant of any instance.
+     */
+    std::vector<LIB_ID> GetVariantSymbolOverrides() const;
+
+    /**
+     * Load a flattened copy of an alternate symbol from the project's symbol libraries.
+     *
+     * @return the symbol, or nullptr if the library or symbol cannot be found.
+     */
+    std::unique_ptr<LIB_SYMBOL> LoadAlternateFromLibrary( const LIB_ID& aLibId ) const;
+
+    /**
      * Resolve the alternate library symbol for a given variant.
      *
-     * Looks up the variant's symbol override and resolves the LIB_ID through
-     * the project's symbol library adapter. Returns nullptr if the variant has no
-     * override or if the LIB_ID cannot be resolved.
+     * Looks up the variant's symbol override and resolves the LIB_ID through the schematic's
+     * library symbols first, then the project's symbol library adapter. Returns nullptr if the
+     * variant has no override or if the LIB_ID cannot be resolved.
      *
      * @param aVariantName the variant to resolve.
      * @param aPath the sheet path for this instance.
@@ -1120,6 +1186,12 @@ private:
 
     void rebuildInstancePathIndex();
 
+    /**
+     * @param aUnit replaces the instance's own unit when given.
+     */
+    wxString refFor( const SCH_SHEET_PATH* aSheet, bool aIncludeUnit, bool aCompose,
+                     std::optional<int> aUnit = std::nullopt ) const;
+
 private:
     VECTOR2I              m_pos;
     LIB_ID                m_lib_id;       ///< Name and library the symbol was loaded from, i.e. 74xx:74LS00.
@@ -1139,10 +1211,13 @@ private:
 
     std::vector<SCH_FIELD>                 m_fields;        ///< Variable length list of fields.
 
-    /// Per-object cache of dynamic property descriptors for custom fields and
-    /// effective pin-map entries, keyed by descriptor name and populated
-    /// lazily.
-    mutable std::map<wxString, std::unique_ptr<PROPERTY_BASE>> m_dynamicPropertyCache;
+    /// Per-object cache of dynamic property descriptors for custom fields, keyed by descriptor name
+    /// and populated lazily.  Entries linger after a key is removed but are simply not enumerated.
+    mutable std::map<wxString, std::unique_ptr<SCH_SYMBOL_FIELD_PROPERTY>> m_fieldPropsStorageCache;
+
+    /// Same for effective pin-map entries.  We can't combine these because they're indexed by name
+    /// and could have collisions.  Entries linger after a key is removed but are simply not enumerated.
+    mutable std::map<wxString, std::unique_ptr<PROPERTY_BASE>> m_pinMapPropsStorageCache;
 
     std::unique_ptr<LIB_SYMBOL>            m_part;          ///< A flattened copy of the #LIB_SYMBOL from the
                                                             ///< #PROJECT object's libraries.

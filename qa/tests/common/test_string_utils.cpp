@@ -356,4 +356,25 @@ BOOST_AUTO_TEST_CASE( StringEscape )
 }
 
 
+BOOST_AUTO_TEST_CASE( RegexEscapeKeepsOrdinaryCharacters )
+{
+    BOOST_TEST( EscapeString( wxS( "DDR3_DQ0" ), CTX_REGEX ) == wxS( "DDR3_DQ0" ) );
+    BOOST_TEST( EscapeString( wxS( "+3.3V" ), CTX_REGEX ) == wxS( "\\+3\\.3V" ) );
+}
+
+
+BOOST_AUTO_TEST_CASE( SplitGraphemeClustersKeepsCharactersWhole )
+{
+    // e + combining acute, Thai "ko" + tone mark, then Devanagari "ksha" joined by a virama
+    const wxString accented = wxString::FromUTF8( "e\xCC\x81" );
+    const wxString thai = wxString::FromUTF8( "\xE0\xB8\x81\xE0\xB9\x88" );
+    const wxString ksha = wxString::FromUTF8( "\xE0\xA4\x95\xE0\xA5\x8D\xE0\xA4\xB7" );
+
+    const std::vector<wxString> expected = { wxS( "a" ), accented, thai, ksha };
+    const std::vector<wxString> clusters = SplitGraphemeClusters( wxS( "a" ) + accented + thai + ksha );
+
+    BOOST_TEST( clusters == expected, boost::test_tools::per_element() );
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

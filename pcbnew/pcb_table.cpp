@@ -23,7 +23,7 @@
 #include <footprint.h>
 #include <bitmaps.h>
 #include <board.h>
-#include <board_design_settings.h>
+#include <board_design_settings_defaults.h>
 #include <geometry/shape_simple.h>
 #include <geometry/shape_segment.h>
 #include <geometry/shape_compound.h>
@@ -97,6 +97,7 @@ void PCB_TABLE::CopyFrom( const BOARD_ITEM* aOther )
 {
     wxCHECK( aOther && aOther->Type() == PCB_TABLE_T, /* void */ );
 
+    BOARD*           board = GetBoard();
     const PCB_TABLE* other = static_cast<const PCB_TABLE*>( aOther );
 
     BOARD_ITEM::CopyFrom( aOther );
@@ -112,10 +113,16 @@ void PCB_TABLE::CopyFrom( const BOARD_ITEM* aOther )
     m_colWidths = other->m_colWidths;
     m_rowHeights = other->m_rowHeights;
 
+    if( board )
+        board->UncacheChildrenById( *this );
+
     ClearCells();
 
     for( PCB_TABLECELL* cell : other->m_cells )
         AddCell( static_cast<PCB_TABLECELL*>( cell->Clone() ) );
+
+    if( board )
+        board->CacheChildrenById( *this );
 }
 
 
@@ -448,8 +455,12 @@ void PCB_TABLE::Autosize()
 
         for( int col = 0; col < GetColCount(); ++col )
         {
+            PCB_TABLECELL* cell = GetCell( row, col );
             SHAPE_POLY_SET textPoly;
-            GetCell( row, col )->TransformTextToPolySet( textPoly, 0, ARC_LOW_DEF, ERROR_INSIDE );
+            cell->TransformTextToPolySet( textPoly, 0, ARC_LOW_DEF, ERROR_INSIDE );
+
+            // Measured in the cell's own frame, or a rotated table swaps its widths and heights
+            textPoly.Rotate( -cell->GetDrawRotation(), cell->GetDrawPos() );
             extents[row].push_back( textPoly.BBox() );
         }
     }
@@ -468,6 +479,8 @@ void PCB_TABLE::Autosize()
         SetColWidth( col, colWidth );
     }
 
+    std::vector<int> needed;
+
     for( int row = 0; row < GetRowCount(); ++row )
     {
         int rowHeight = 0;
@@ -475,14 +488,22 @@ void PCB_TABLE::Autosize()
         for( int col = 0; col < GetColCount(); ++col )
         {
             PCB_TABLECELL* cell = GetCell( row, col );
-            int            margins = cell->GetMarginLeft() + cell->GetMarginRight();
+            int            margins = cell->GetMarginTop() + cell->GetMarginBottom();
             rowHeight = std::max( rowHeight, (int) extents[row][col].GetHeight() + margins );
         }
 
-        SetRowHeight( row, rowHeight );
+        needed.push_back( rowHeight );
     }
 
+    setAutosizedRowHeights( needed );
     Normalize();
+}
+
+
+void PCB_TABLE::setAutosizedRowHeights( const std::vector<int>& aNeeded )
+{
+    for( int row = 0; row < static_cast<int>( aNeeded.size() ); ++row )
+        SetRowHeight( row, aNeeded[row] );
 }
 
 
@@ -613,17 +634,14 @@ void PCB_TABLE::Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
 {
     // Mirror is Flip with the layer restored. TOP_BOTTOM needs a 180 deg pre-rotation
     // because rotate-then-LR-flip equals TB-flip.
-    PCB_LAYER_ID              origLayer = GetLayer();
-    std::vector<PCB_LAYER_ID> origCellLayers;
-    std::vector<bool>         origMirrorSettings;
-
-    origCellLayers.reserve( m_cells.size() );
-    origMirrorSettings.reserve( m_cells.size() );
+    PCB_LAYER_ID                           origLayer = GetLayer();
+    std::map<PCB_TABLECELL*, PCB_LAYER_ID> origCellLayers;
+    std::map<PCB_TABLECELL*, bool>         origMirrorSettings;
 
     for( PCB_TABLECELL* cell : m_cells )
     {
-        origCellLayers.push_back( cell->GetLayer() );
-        origMirrorSettings.push_back( cell->IsMirrored() );
+        origCellLayers[cell] = cell->GetLayer();
+        origMirrorSettings[cell] = cell->IsMirrored();
     }
 
     if( aFlipDirection == FLIP_DIRECTION::TOP_BOTTOM )
@@ -633,10 +651,10 @@ void PCB_TABLE::Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
 
     SetLayer( origLayer );
 
-    for( size_t i = 0; i < m_cells.size(); ++i )
+    for( PCB_TABLECELL* cell : m_cells )
     {
-        m_cells[i]->SetLayer( origCellLayers[i] );
-        m_cells[i]->SetMirrored( origMirrorSettings[i] );
+        cell->SetLayer( origCellLayers[cell] );
+        cell->SetMirrored( origMirrorSettings[cell] );
     }
 }
 

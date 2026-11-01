@@ -112,12 +112,12 @@ public:
 
     bool HasHole() const override
     {
-        return GetDrillSizeX() > 0 && GetDrillSizeY() > 0;
+        return GetDrillSize().x > 0 && GetDrillSize().y > 0;
     }
 
     bool HasDrilledHole() const override
     {
-        return HasHole() && GetDrillSizeX() == GetDrillSizeY();
+        return HasHole() && GetDrillSize().x == GetDrillSize().y;
     }
 
     bool IsLocked() const override;
@@ -292,11 +292,11 @@ public:
     // in the GUI when the padstack mode is set to anything other than NORMAL, but so that the code
     // compiles, these are set up to work with the front layer (in other words, assume the mode is
     // NORMAL, where F_Cu stores the whole padstack data)
-    void SetSizeX( int aX );
-    int  GetSizeX() const;
+    void SetSizeXProp( int aX );
+    int  GetSizeXProp() const;
 
-    void SetSizeY( int aY );
-    int  GetSizeY() const;
+    void SetSizeYProp( int aY );
+    int  GetSizeYProp() const;
 
     void SetDelta( PCB_LAYER_ID aLayer, const VECTOR2I& aSize )
     {
@@ -318,10 +318,10 @@ public:
 
     void     SetDrillSize( const VECTOR2I& aSize ) { SetPrimaryDrillSize( aSize ); }
     VECTOR2I GetDrillSize() const { return GetPrimaryDrillSize(); }
-    void     SetDrillSizeX( int aX );
-    int      GetDrillSizeX() const { return GetPrimaryDrillSizeX(); }
-    void     SetDrillSizeY( int aY );
-    int      GetDrillSizeY() const { return GetPrimaryDrillSizeY(); }
+    void     SetDrillSizeXProp( int aX );
+    int      GetDrillSizeXProp() const { return GetPrimaryDrillSizeX(); }
+    void     SetDrillSizeYProp( int aY );
+    int      GetDrillSizeYProp() const { return GetPrimaryDrillSizeY(); }
 
     void     SetOffset( PCB_LAYER_ID aLayer, const VECTOR2I& aOffset );
     VECTOR2I GetOffset( PCB_LAYER_ID aLayer ) const;
@@ -378,6 +378,10 @@ public:
     }
 
     void Flip( const VECTOR2I& VECTOR2I, FLIP_DIRECTION aFlipDirection ) override;
+
+    void Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
+
+    void Mirror( const SEG& aAxis ) override;
 
     /**
      * Flip (mirror) the primitives left to right or top to bottom, around the anchor position
@@ -496,6 +500,24 @@ public:
      * @return the diameter to knockout on this layer, or 0 if layer is not affected
      */
     int GetPostMachiningKnockout( PCB_LAYER_ID aLayer ) const;
+
+    /**
+     * @see PADSTACK::MachiningKnockout
+     *
+     * A result of zero is equivalent to IsBackdrilledOrPostMachined() returning false.
+     */
+    int GetBackdrillOrPostMachiningKnockout( PCB_LAYER_ID aLayer ) const;
+
+    /**
+     * Check whether backdrilling or post-machining left no copper at all on a layer.
+     *
+     * A narrower operation only hollows the barrel and leaves an annular ring, which still
+     * conducts and whose outer edge is unmoved, so this is stricter than
+     * IsBackdrilledOrPostMachined().
+     *
+     * @param aLayer the copper layer to check
+     */
+    bool HasCopperRemoved( PCB_LAYER_ID aLayer ) const;
 
     void SetPrimaryDrillFilled( const std::optional<bool>& aFilled );
     void SetPrimaryDrillFilledFlag( bool aFilled );
@@ -798,8 +820,12 @@ public:
      * Using SetPosition() directly would swap anchor (hole) positions, which leaves each pad's
      * copper shape displaced by its own offset after the swap.  This helper computes the new
      * anchor for each pad so the visible shape centers (ShapePos) are exchanged.
+     *
+     * The downside is that swapping copper shape positions is ill-defined when there is more
+     * than one (ie: for complex padstackes).  In that case we swap based on the active layer's
+     * copper shape, following the principle of least surprise.
      */
-    static void SwapShapePositions( PAD* aLhs, PAD* aRhs );
+    static void SwapShapePositions( PAD* aLhs, PAD* aRhs, PCB_LAYER_ID aActiveLayer );
 
     /**
      * Has meaning only for rounded rectangle pads.
@@ -1056,9 +1082,6 @@ public:
 
     void SetZoneLayerOverride( PCB_LAYER_ID aLayer, ZONE_LAYER_OVERRIDE aOverride );
 
-    void CheckPad( UNITS_PROVIDER* aUnitsProvider, bool aForPadProperties,
-                   const std::function<void( int aErrorCode, const wxString& aMsg )>& aErrorHandler ) const;
-
     BACKDRILL_MODE GetBackdrillMode() const { return m_padStack.GetBackdrillMode(); }
     void SetBackdrillMode( BACKDRILL_MODE aMode ) { m_padStack.SetBackdrillMode( aMode ); }
 
@@ -1092,6 +1115,9 @@ private:
     // Scale a primitive's runtime geometry to the current footprint scale, in the pad frame.
     void rebakePrimitiveToFootprint( PCB_SHAPE* aPrimitive ) const;
 
+    // Move the chamfered-rectangle corner flags across for a mirror in the given direction.
+    void mirrorChamferPositions( FLIP_DIRECTION aFlipDirection );
+
     struct PAD_DRAW_CACHE_DATA
     {
         // Must be set to true to force rebuild shapes to draw (after geometry change for instance)
@@ -1107,8 +1133,7 @@ private:
 
     PAD_DRAW_CACHE_DATA& getDrawCache() const;
 
-    void doCheckPad( PCB_LAYER_ID aLayer, UNITS_PROVIDER* aUnitsProvider, bool aForPadProperties,
-                     const std::function<void( int aErrorCode, const wxString& aMsg )>& aErrorHandler ) const;
+    std::shared_ptr<SHAPE_COMPOUND> getMaskShape( PCB_LAYER_ID aLayer, int aExpansion ) const;
 
 private:
     wxString          m_number;             // Pad name (pin number in schematic)
@@ -1124,6 +1149,10 @@ private:
     mutable std::mutex m_dataMutex;
 
     mutable std::unique_ptr<PAD_DRAW_CACHE_DATA> m_drawCache;
+
+    // Mask apertures, keyed by expansion because that comes from settings, not geometry
+    mutable std::mutex                                                              m_maskShapeMutex;
+    mutable std::map<PCB_LAYER_ID, std::pair<int, std::shared_ptr<SHAPE_COMPOUND>>> m_maskShapes;
 
     mutable int       m_effectiveBoundingRadius;
 

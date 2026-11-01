@@ -23,6 +23,7 @@
 
 #include "pcb_base_edit_frame.h"
 #include "zones.h"
+#include <board.h>
 #include <mail_type.h>
 #include <settings/app_settings.h>
 #include <variant>
@@ -82,7 +83,7 @@ wxDECLARE_EVENT( EDA_EVT_PCB_LAST_SCH_SHEET_CHANGED, wxCommandEvent );
  *
  * See also class PCB_BASE_FRAME(): Basic class for Pcbnew and GerbView.
  */
-class PCB_EDIT_FRAME : public PCB_BASE_EDIT_FRAME
+class PCB_EDIT_FRAME : public PCB_BASE_EDIT_FRAME, public BOARD_LISTENER
 {
 public:
     virtual ~PCB_EDIT_FRAME();
@@ -292,6 +293,11 @@ public:
     void CommitBoardStructure( const BOARD_STRUCTURE& aStructure, const wxString& aDescription );
 
     /**
+     * Keep the selection and view in step with generated tables rebuilt outside a commit.
+     */
+    void OnBoardItemsChanged( BOARD& aBoard, std::vector<BOARD_ITEM*>& aItems ) override;
+
+    /**
      * Change the currently active layer to \a aLayer and also update the #APPEARANCE_CONTROLS.
      */
     void SetActiveLayer( PCB_LAYER_ID aLayer ) override
@@ -393,6 +399,14 @@ public:
                          bool aForceFileDialog = false );
      */
     bool OpenProjectFiles( const std::vector<wxString>& aFileSet, int aCtl = 0 ) override;
+
+    /**
+     * Reload the board from disk.
+     * The caller handles confirmation before unsaved edits are discarded.
+     *
+     * @return false when there is no filename or the reload fails.
+     */
+    bool ReloadFromDisk();
 
     /**
      * Write the board data structures to \a a aFileName.

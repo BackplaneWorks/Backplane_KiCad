@@ -901,11 +901,13 @@ void LIB_TREE::onHoverPreview()
 
 void LIB_TREE::onTreeCharHook( wxKeyEvent& aKeyStroke )
 {
-    // Bare Left/Right collapse/expand the focused node. Consume them here so they
-    // do not fall through to the global cursorLeft/cursorRight canvas actions. This
-    // is the tree-only hook, so the search box keeps normal caret movement.
+    // Bare Left/Right in the tree control collapse/expand the focused node. Consume them
+    // here so they do not fall through to the global cursorLeft/cursorRight canvas actions.
+    // Note that this handler is also bound to the m_query_ctrl, which does *not* want this
+    // behaviour, so we need to check the source of the event.
     if( aKeyStroke.GetModifiers() == wxMOD_NONE
-        && ( aKeyStroke.GetKeyCode() == WXK_LEFT || aKeyStroke.GetKeyCode() == WXK_RIGHT ) )
+        && ( aKeyStroke.GetKeyCode() == WXK_LEFT || aKeyStroke.GetKeyCode() == WXK_RIGHT )
+        && aKeyStroke.GetEventObject() == m_tree_ctrl )
     {
         wxDataViewItem sel = m_tree_ctrl->GetSelection();
 
@@ -1060,7 +1062,7 @@ void LIB_TREE::onItemContextMenu( wxDataViewEvent& aEvent )
     {
         LIB_TREE_NODE* current = GetCurrentTreeNode();
 
-        if( current && current->m_Type == LIB_TREE_NODE::TYPE::LIBRARY )
+        if( current && current->m_Type == LIB_TREE_NODE::TYPE::LIBRARY && m_adapter->CanPinLibraries() )
         {
             ACTION_MENU menu( true, nullptr );
 

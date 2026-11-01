@@ -32,7 +32,9 @@
 #include <properties/property.h>
 #include <zones.h>
 
+class BOARD;
 class BOARD_ITEM;
+class BOARD_STACKUP;
 class PCB_SHAPE;
 
 namespace kiapi::board::types
@@ -94,13 +96,16 @@ enum class BACKDRILL_MODE
  */
 enum class PAD_ATTRIB
 {
-    PTH,        ///< Plated through hole pad
-    SMD,        ///< Smd pad, appears on the solder paste layer (default)
-    CONN,       ///< Like smd, does not appear on the solder paste layer (default)
-                ///<   Note: also has a special attribute in Gerber X files
-                ///<   Used for edgecard connectors for instance
-    NPTH,       ///< like PAD_PTH, but not plated
-                ///<   mechanical use only, no connection allowed
+    PTH,           ///< Plated through hole pad
+    SMD,           ///< Smd pad, appears on the solder paste layer (default)
+    CONN,          ///< Like smd, does not appear on the solder paste layer (default)
+                   ///<   Note: also has a special attribute in Gerber X files
+                   ///<   Used for edgecard connectors for instance
+    NPTH,          ///< like PAD_PTH, but not plated
+                   ///<   mechanical use only, no connection allowed
+    NON_COMPONENT, ///< Pad with no hole that does not connect to a physical component,
+                   ///< but rather provides a connection point for nets.
+                   ///<   For example, net-ties or embedded component terminals.
 };
 
 
@@ -372,6 +377,30 @@ public:
 
     int GetMaxHoleSize() const;
 
+    /**
+     * Get the diameter the front and back post-machining operations cut into aLayer.
+     *
+     * Both surfaces can reach one layer, in which case the wider operation wins.
+     *
+     * @param aStackup supplies the depth of aLayer below each surface
+     * @param aLayer the copper layer to check
+     * @return the diameter cut on this layer, or 0 if neither operation reaches it
+     */
+    int PostMachiningKnockout( const BOARD_STACKUP& aStackup, PCB_LAYER_ID aLayer ) const;
+
+    /**
+     * Get the diameter of copper removed from aLayer by backdrilling or post-machining.
+     *
+     * This is the union of the secondary/tertiary drills and the post-machining knockout.  Only an
+     * oblong drill's narrow axis clears copper all the way round, so that is what it contributes.
+     * Copper survives on aLayer unless the result covers the pad or via extents there.
+     *
+     * @param aBoard supplies the stackup and the set of enabled layers
+     * @param aLayer the copper layer to check
+     * @return the diameter removed on this layer, or 0 if the layer is not affected
+     */
+    int MachiningKnockout( const BOARD& aBoard, PCB_LAYER_ID aLayer ) const;
+
     UNCONNECTED_LAYER_MODE UnconnectedLayerMode() const { return m_unconnectedLayerMode; }
     void SetUnconnectedLayerMode( UNCONNECTED_LAYER_MODE aMode ) { m_unconnectedLayerMode = aMode; }
 
@@ -584,10 +613,10 @@ private:
     ///! vias and pads (F_Cu to B_Cu for normal holes; a subset of layers for blind/buried vias)
     DRILL_PROPS            m_drill;
 
-    ///! Secondary drill, used to define back-drilling starting from the bottom side
+    ///! A back-drill, whose side is given by its start layer rather than by which slot it occupies
     DRILL_PROPS            m_secondaryDrill;
 
-    ///! Tertiary drill, used to define back-drilling starting from the top side
+    ///! The other back-drill; see findBackdrillDrill() for why either slot may hold either side
     DRILL_PROPS            m_tertiaryDrill;
 
     POST_MACHINING_PROPS   m_frontPostMachining;

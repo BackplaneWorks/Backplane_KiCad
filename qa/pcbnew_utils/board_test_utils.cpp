@@ -256,7 +256,7 @@ void LoadAndTestFootprintFile( const wxString& aLibRelativePath, const wxString&
                                          + aFpName.ToStdString() + ".kicad_mod";
 
     BOOST_TEST_MESSAGE( "Loading footprint to test: " << absFootprintPath );
-    std::unique_ptr<FOOTPRINT> fp1 = KI_TEST::ReadFootprintFromFileOrStream( absFootprintPath );
+    std::unique_ptr<FOOTPRINT> fp1 = KI_TEST::ReadFootprintFromFile( absFootprintPath, aFpName );
 
     // Should load - if it doesn't we're done for
     BOOST_REQUIRE( fp1 );
@@ -286,11 +286,11 @@ void LoadAndTestFootprintFile( const wxString& aLibRelativePath, const wxString&
 
         KI_TEST::DumpFootprintToFile( *fp1, libPath );
 
-        const auto fp2Path = libPath / fpFilename.ToStdString();
+        const std::filesystem::path fp2Path = libPath / fpFilename.ToStdString();
 
         BOOST_TEST_MESSAGE( "Re-reading footprint: " << fpFilename << " in " << libPath );
 
-        std::unique_ptr<FOOTPRINT> fp2 = KI_TEST::ReadFootprintFromFileOrStream( fp2Path.string() );
+        std::unique_ptr<FOOTPRINT> fp2 = KI_TEST::ReadFootprintFromFile( fp2Path, aFpName );
 
         // Should load again
         BOOST_REQUIRE( fp2 );

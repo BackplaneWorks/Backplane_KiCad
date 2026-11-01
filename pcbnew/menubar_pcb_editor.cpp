@@ -208,6 +208,7 @@ void PCB_EDIT_FRAME::doReCreateMenuBar()
     editMenu->Add( PCB_ACTIONS::trimGraphic );
     editMenu->Add( PCB_ACTIONS::editTracksAndVias );
     editMenu->Add( PCB_ACTIONS::editTextAndGraphics );
+    editMenu->Add( PCB_ACTIONS::mirrorInteractive );
     editMenu->Add( PCB_ACTIONS::editTeardrops );
     editMenu->Add( PCB_ACTIONS::changeFootprints );
     editMenu->Add( PCB_ACTIONS::swapLayers );
@@ -234,6 +235,7 @@ void PCB_EDIT_FRAME::doReCreateMenuBar()
     showHidePanels->Add( PCB_ACTIONS::showLayersManager,          ACTION_MENU::CHECK );
     showHidePanels->Add( PCB_ACTIONS::showNetInspector,           ACTION_MENU::CHECK );
     showHidePanels->Add( PCB_ACTIONS::showConstraintsPanel,       ACTION_MENU::CHECK );
+    showHidePanels->Add( ACTIONS::showGitCommitPane, ACTION_MENU::CHECK );
 
     if( ADVANCED_CFG::GetCfg().m_EnablePcbDesignBlocks )
         showHidePanels->Add( PCB_ACTIONS::showDesignBlockPanel, ACTION_MENU::CHECK, _( "Design Blocks" ) );
@@ -393,6 +395,7 @@ void PCB_EDIT_FRAME::doReCreateMenuBar()
     routeMenu->Add( PCB_ACTIONS::routeDiffPair );
     routeMenu->Add( PCB_ACTIONS::routerSketchRoute );
     routeMenu->Add( PCB_ACTIONS::routerSketchAutoroute );
+    routeMenu->Add( PCB_ACTIONS::routerSpreadTracks );
 
     routeMenu->AppendSeparator();
     routeMenu->Add( PCB_ACTIONS::tuneSingleTrack );
@@ -477,7 +480,11 @@ void PCB_EDIT_FRAME::doReCreateMenuBar()
     multichannelSubmenu->SetTitle( _( "Multi-Channel" ) );
     multichannelSubmenu->SetIcon( BITMAPS::mode_module );
     multichannelSubmenu->Add( PCB_ACTIONS::generatePlacementRuleAreas );
+    multichannelSubmenu->Add( PCB_ACTIONS::expandToMatchingTopology );
+    multichannelSubmenu->Add( PCB_ACTIONS::expandToLargestTopology );
     multichannelSubmenu->Add( PCB_ACTIONS::repeatLayout );
+    multichannelSubmenu->Add( PCB_ACTIONS::updateLinkedLayouts );
+    multichannelSubmenu->Add( PCB_ACTIONS::unlinkLayout );
 
     toolsMenu->Add( multichannelSubmenu );
 

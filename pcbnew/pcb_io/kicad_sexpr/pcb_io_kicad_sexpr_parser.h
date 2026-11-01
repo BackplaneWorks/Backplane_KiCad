@@ -45,9 +45,12 @@
 
 #include <chrono>
 #include <memory>
+#include <set>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include <boost/ptr_container/clone_allocator.hpp>
 
 
 class PCB_ARC;
@@ -83,7 +86,11 @@ class SHAPE_LINE_CHAIN;
 struct LAYER;
 class PROGRESS_REPORTER;
 class TEARDROP_PARAMETERS;
+class FP_CACHE_ENTRY;
 
+
+namespace boost { template<class Key, class T, class Compare, class CloneAllocator, class Allocator>
+                  class ptr_map; }
 
 /**
  * Read a Pcbnew s-expression formatted #LINE_READER object and returns the appropriate
@@ -124,6 +131,21 @@ public:
      *                         delete it even on exception.
      */
     FOOTPRINT* parseFOOTPRINT( wxArrayString* aInitialComments = nullptr );
+
+    /**
+     * Parse a footprint library file.
+     *
+     * This parses a .kicad_mod file containing one or more footprints and populates \a aFootprints.
+     *
+     * @note This parses both packed and unpacked file formats.  Starting with file version 20261028, all
+     *       *.kicad_mod files contain a header like all other KiCad s-expression file formats.
+     *
+     * @param[out] aFootprints Map to store parsed footprints (footprint name -> cache entry).
+     */
+    void ParseFootprintLib( boost::ptr_map<wxString, FP_CACHE_ENTRY,
+                            std::less<wxString>,
+                            boost::heap_clone_allocator,
+                            std::allocator<std::pair<const wxString,void*>>>& aFootprints );
 
     /**
      * Return whether a version number, if any was parsed, was too recent
@@ -292,7 +314,7 @@ private:
 
     PCB_SHAPE*           parsePCB_SHAPE( BOARD_ITEM* aParent );
     PCB_TEXT*            parsePCB_TEXT( BOARD_ITEM* aParent, PCB_TEXT* aBaseText = nullptr );
-    void                 parsePCB_TEXT_effects( PCB_TEXT* aText, PCB_TEXT* aBaseText = nullptr );
+    bool                 parsePCB_TEXT_effects( PCB_TEXT* aText, PCB_TEXT* aBaseText = nullptr );
     PCB_REFERENCE_IMAGE* parsePCB_REFERENCE_IMAGE( BOARD_ITEM* aParent );
     PCB_TEXTBOX*         parsePCB_TEXTBOX( BOARD_ITEM* aParent );
     PCB_BARCODE*         parsePCB_BARCODE( BOARD_ITEM* aParent );
@@ -333,7 +355,7 @@ private:
     void        parsePostMachining( PADSTACK::POST_MACHINING_PROPS& aProps );
     void        parsePadstack( PAD* aPad );
 
-    PCB_ARC*       parseARC();
+    PCB_TRACK*     parseARC();
     PCB_TRACK*     parsePCB_TRACK();
     PCB_VIA*       parsePCB_VIA();
     void           parseViastack( PCB_VIA* aVia );
@@ -511,6 +533,9 @@ private:
     void resolveGroups( BOARD_ITEM* aParent );
     void resolveConstraints( BOARD_ITEM* aParent );
 
+    /// Resolve the fonts, groups and constraints of a fully parsed board or footprint
+    void finishItem( BOARD_ITEM* aItem );
+
     /// The type of progress bar timeout
     using TIMEOUT = std::chrono::milliseconds;
 
@@ -534,6 +559,7 @@ private:
 
     /// if resetting UUIDs, record new ones to update groups with.
     KIID_MAP            m_resetKIIDMap;
+    std::set<KIID>      m_linkedZones;       ///< Zones read with a link set or anchor
 
     bool                m_showLegacySegmentZoneWarning;
     bool                m_showLegacy5ZoneWarning;

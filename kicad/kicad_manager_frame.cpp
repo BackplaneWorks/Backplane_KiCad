@@ -25,6 +25,7 @@
 #include "project_tree.h"
 #include "project_tree_pane.h"
 #include <dialogs/dialog_git_mr_review.h>
+#include <widgets/git_commit_pane.h>
 #include "local_history_pane.h"
 #include "widgets/bitmap_button.h"
 
@@ -124,6 +125,7 @@ BEGIN_EVENT_TABLE( KICAD_MANAGER_FRAME, EDA_BASE_FRAME )
     EVT_MENU( ID_IMPORT_GEDA_PROJECT, KICAD_MANAGER_FRAME::OnImportGedaFiles )
     EVT_MENU( ID_IMPORT_DIPTRACE_PROJECT, KICAD_MANAGER_FRAME::OnImportDipTraceFiles )
     EVT_MENU( ID_IMPORT_EASYPC_PROJECT, KICAD_MANAGER_FRAME::OnImportEasyPcFiles )
+    EVT_MENU( ID_IMPORT_TARGET3001_PROJECT, KICAD_MANAGER_FRAME::OnImportTarget3001Files )
     EVT_MENU( ID_IMPORT_ORCAD_PROJECT, KICAD_MANAGER_FRAME::OnImportOrcadFiles )
     EVT_MENU( ID_COMPARE_PROJECT_BRANCHES,
               KICAD_MANAGER_FRAME::OnCompareProjectBranches )
@@ -143,16 +145,18 @@ END_EVENT_TABLE()
 // See below the purpose of this include
 #include <wx/xml/xml.h>
 
-KICAD_MANAGER_FRAME::KICAD_MANAGER_FRAME( wxWindow* parent, const wxString& title,
-                                          const wxPoint& pos, const wxSize&   size ) :
+KICAD_MANAGER_FRAME::KICAD_MANAGER_FRAME( wxWindow* parent, const wxString& title, const wxPoint& pos,
+                                          const wxSize& size ) :
         EDA_BASE_FRAME( parent, KICAD_MAIN_FRAME_T, title, pos, size, KICAD_DEFAULT_DRAWFRAME_STYLE,
                         KICAD_MANAGER_FRAME_NAME, &::Kiway, unityScale ),
         m_openSavedWindows( false ),
         m_restoredFromHistory( false ),
         m_active_project( false ),
         m_showHistoryPanel( false ),
+        m_showGitCommitPanel( true ),
         m_projectTreePane( nullptr ),
         m_historyPane( nullptr ),
+        m_gitCommitPane( nullptr ),
         m_launcher( nullptr ),
         m_lastToolbarIconSize( 0 ),
         m_pcmButton( nullptr ),
@@ -249,6 +253,37 @@ KICAD_MANAGER_FRAME::KICAD_MANAGER_FRAME( wxWindow* parent, const wxString& titl
 
     if( m_showHistoryPanel )
         m_auimgr.GetPane( m_historyPane ).Show();
+
+    m_gitCommitPane = new GIT_COMMIT_PANE( this );
+    m_auimgr.AddPane( m_gitCommitPane, EDA_PANE()
+                                               .Palette()
+                                               .Name( GitCommitPaneName() )
+                                               .Left()
+                                               .Layer( 1 )
+                                               .Position( 2 )
+                                               .Caption( _( "Version Control" ) )
+                                               .MinSize( wxSize( m_gitCommitPane->GetMinDockWidth(), -1 ) )
+                                               .PaneBorder( false )
+                                               .Floatable( false )
+                                               .Movable( false )
+                                               .CloseButton( true )
+                                               .Hide() );
+
+    if( m_showGitCommitPanel )
+        m_auimgr.GetPane( m_gitCommitPane ).Show();
+
+    // Refresh the changed-file list when the user returns to the project manager, since
+    // edits are made in the separate editor windows.
+    Bind( wxEVT_ACTIVATE,
+          [this]( wxActivateEvent& aEvent )
+          {
+              aEvent.Skip();
+
+              // Reading the status walks the repository, so only do it for a pane the user can
+              // actually see. Showing the pane refreshes it, so the gate cannot leave it stale.
+              if( aEvent.GetActive() && GitCommitPaneShown() )
+                  m_gitCommitPane->RefreshFileList();
+          } );
 
     wxSize client_size = GetClientSize();
     m_notebook = new wxAuiNotebook( this, wxID_ANY, wxPoint( client_size.x, client_size.y ),
@@ -507,6 +542,13 @@ void KICAD_MANAGER_FRAME::setupUIConditions()
             };
 
     manager->SetConditions( KICAD_MANAGER_ACTIONS::showLocalHistory, ACTION_CONDITIONS().Check( historyCond ) );
+
+    auto gitCommitPaneCond = [this]( const SELECTION& )
+    {
+        return GitCommitPaneShown();
+    };
+
+    manager->SetConditions( ACTIONS::showGitCommitPane, ACTION_CONDITIONS().Check( gitCommitPaneCond ) );
 
     // These are just here for text boxes, search boxes, etc. in places such as the standard
     // file dialogs.
@@ -851,6 +893,9 @@ bool KICAD_MANAGER_FRAME::CloseProject( bool aSave )
         // dangling references
         Kiway().LocalHistory().UnregisterSaver( &Prj() );
 
+        // Must run before the unload below, which releases the git session without waiting.
+        m_projectTreePane->WaitForGitOperations();
+
         mgr.UnloadProject( &Prj() );
     }
 
@@ -1009,6 +1054,9 @@ bool KICAD_MANAGER_FRAME::LoadProject( const wxFileName& aProjectFileName )
     m_projectTreePane->ReCreateTreePrj();
     m_historyPane->RefreshHistory( Prj().GetProjectPath() );
 
+    if( GitCommitPaneShown() )
+        m_gitCommitPane->RefreshFileList();
+
     for( const wxString& jobset : Prj().GetLocalSettings().m_OpenJobSets )
     {
         wxFileName jobsetFn( jobset );
@@ -1152,9 +1200,8 @@ void KICAD_MANAGER_FRAME::CreateNewProject( const wxFileName& aProjectFileName, 
 
 void KICAD_MANAGER_FRAME::OnCompareProjectBranches( wxCommandEvent& event )
 {
-    git_repository* repo = ( m_projectTreePane && m_projectTreePane->m_TreeProject )
-                                   ? m_projectTreePane->m_TreeProject->GetGitRepo()
-                                   : nullptr;
+    std::shared_ptr<KIGIT_COMMON> gitCommon = Prj().GetGitCommon();
+    git_repository*               repo = gitCommon->GetRepo();
 
     if( !repo )
     {
@@ -1165,46 +1212,17 @@ void KICAD_MANAGER_FRAME::OnCompareProjectBranches( wxCommandEvent& event )
         return;
     }
 
-    // Seed the picker with the conventional "MR" pair: an integration branch
-    // (main/master) as the base, the current branch as the head. Resolve the
-    // current branch from HEAD so a checked-out feature branch lands at
-    // index 1 (where DIALOG_GIT_MR_REVIEW selects its head ref) instead of
-    // the literal "HEAD" string.
-    wxString currentBranch;
-    git_reference* head = nullptr;
-
-    if( git_repository_head( &head, repo ) == 0 )
-    {
-        const char* shorthand = git_reference_shorthand( head );
-
-        if( shorthand && *shorthand )
-            currentBranch = wxString::FromUTF8( shorthand );
-
-        git_reference_free( head );
-    }
-
     std::vector<wxString> refs;
 
-    auto pushUnique = [&]( const wxString& aRef )
-    {
-        if( aRef.IsEmpty() )
-            return;
+    // libgit2 is not safe for concurrent use of one repository, so read the refs under the git
+    // action lock. If a background operation holds it, fall back to HEAD.
+    if( std::unique_lock<std::mutex> lock = gitCommon->TryLockAction(); lock.owns_lock() )
+        refs = KIGIT::CompareBranchRefs( repo );
 
-        for( const wxString& existing : refs )
-        {
-            if( existing == aRef )
-                return;
-        }
+    if( refs.empty() )
+        refs.push_back( wxS( "HEAD" ) );
 
-        refs.push_back( aRef );
-    };
-
-    pushUnique( wxS( "main" ) );
-    pushUnique( wxS( "master" ) );
-    pushUnique( currentBranch );
-    pushUnique( wxS( "HEAD" ) );
-
-    DIALOG_GIT_MR_REVIEW dlg( this, repo, refs );
+    DIALOG_GIT_MR_REVIEW dlg( this, gitCommon.get(), refs );
     dlg.ShowModal();
 }
 
@@ -1285,6 +1303,13 @@ void KICAD_MANAGER_FRAME::CommonSettingsChanged( int aFlags )
     }
 
     m_projectTreePane->ReCreateTreePrj();
+
+    // The tree rebuild above does not reach the panel.
+    if( m_gitCommitPane )
+    {
+        m_gitCommitPane->RefreshFileList();
+        m_gitCommitPane->ReloadAdvancedWindow();
+    }
 }
 
 
@@ -1360,6 +1385,7 @@ void KICAD_MANAGER_FRAME::LoadSettings( APP_SETTINGS_BASE* aCfg )
 
     m_leftWinWidth = settings->m_LeftWinWidth;
     m_showHistoryPanel = settings->m_ShowHistoryPanel;
+    m_showGitCommitPanel = settings->m_ShowGitCommitPanel;
 }
 
 
@@ -1373,6 +1399,7 @@ void KICAD_MANAGER_FRAME::SaveSettings( APP_SETTINGS_BASE* aCfg )
 
     settings->m_LeftWinWidth = m_projectTreePane->GetSize().x;
     settings->m_ShowHistoryPanel = m_historyPane && m_auimgr.GetPane( m_historyPane ).IsShown();
+    settings->m_ShowGitCommitPanel = GitCommitPaneShown();
 
     if( !m_isClosing )
         settings->m_OpenProjects = GetSettingsManager()->GetOpenProjects();
@@ -1562,4 +1589,35 @@ void KICAD_MANAGER_FRAME::RestoreCommitFromHistory( const wxString& aHash )
 bool KICAD_MANAGER_FRAME::HistoryPanelShown()
 {
     return m_historyPane && m_auimgr.GetPane( m_historyPane ).IsShown();
+}
+
+
+void KICAD_MANAGER_FRAME::ToggleGitCommitPane()
+{
+    wxAuiPaneInfo& pane = m_auimgr.GetPane( m_gitCommitPane );
+    bool           show = !pane.IsShown();
+
+    pane.Show( show );
+
+    if( show )
+        m_gitCommitPane->RefreshFileList();
+
+    m_auimgr.Update();
+}
+
+
+bool KICAD_MANAGER_FRAME::GitCommitPaneShown()
+{
+    return m_gitCommitPane && m_auimgr.GetPane( m_gitCommitPane ).IsShown();
+}
+
+
+void KICAD_MANAGER_FRAME::ShowGitHistory()
+{
+    if( m_gitCommitPane )
+    {
+        // A hidden pane is not refreshed on project load, so it may still hold the previous session
+        m_gitCommitPane->RefreshFileList();
+        m_gitCommitPane->ShowHistory();
+    }
 }

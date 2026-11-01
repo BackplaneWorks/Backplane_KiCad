@@ -251,6 +251,35 @@ BOOST_AUTO_TEST_CASE( Apply_NoConflicts )
 }
 
 
+BOOST_AUTO_TEST_CASE( Apply_UncoveredMergedEditKeepsEngineAnswer )
+{
+    const KIID_PATH idA = MakePath( 2200 );
+    const KIID_PATH idB = MakePath( 2201 );
+
+    MERGE_PLAN plan;
+
+    ITEM_RESOLUTION a;
+    a.id = idA;
+    a.kind = ITEM_RES::MERGE_PROPS;
+    ITEM_RESOLUTION b;
+    b.id = idB;
+    b.kind = ITEM_RES::KEEP;
+    plan.actions.push_back( a );
+    plan.actions.push_back( b );
+    plan.unresolved.push_back( idB );
+
+    std::vector<std::size_t>     conflictIdx = { 0, 1 };
+    std::map<wxString, ITEM_RES> autoMap = { { idB.AsString(), ITEM_RES::TAKE_OURS } };
+
+    auto result = ApplyAutoResolutions( plan, conflictIdx, autoMap );
+
+    BOOST_CHECK( result.status == APPLY_AUTO_RESOLUTIONS_STATUS::COMPLETE );
+    BOOST_CHECK( plan.actions[0].kind == ITEM_RES::MERGE_PROPS );
+    BOOST_CHECK( plan.actions[1].kind == ITEM_RES::TAKE_OURS );
+    BOOST_CHECK( plan.unresolved.empty() );
+}
+
+
 // BuildConflictList ---------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE( BuildConflictList_OnlyUnresolvedActions )
@@ -332,6 +361,29 @@ BOOST_AUTO_TEST_CASE( BuildConflictList_EmptyPlan )
 }
 
 
+BOOST_AUTO_TEST_CASE( BuildConflictList_MergedEditsAreListed )
+{
+    const KIID_PATH idA = MakePath( 2100 );
+    const KIID_PATH idB = MakePath( 2101 );
+
+    MERGE_PLAN plan;
+
+    ITEM_RESOLUTION a;
+    a.id = idA;
+    a.kind = ITEM_RES::MERGE_PROPS;
+    ITEM_RESOLUTION b;
+    b.id = idB;
+    b.kind = ITEM_RES::TAKE_THEIRS;
+    plan.actions.push_back( a );
+    plan.actions.push_back( b );
+
+    auto entries = BuildConflictList( plan );
+    BOOST_REQUIRE_EQUAL( entries.size(), 1u );
+    BOOST_CHECK_EQUAL( entries[0].actionIndex, 0u );
+    BOOST_CHECK( entries[0].id == idA );
+}
+
+
 // CollectUnresolvedConflicts -----------------------------------------------
 
 BOOST_AUTO_TEST_CASE( CollectUnresolved_AllConcreteChoices_Empty )
@@ -363,7 +415,7 @@ BOOST_AUTO_TEST_CASE( CollectUnresolved_KeepIsUnresolved )
 }
 
 
-BOOST_AUTO_TEST_CASE( CollectUnresolved_MergePropsIsUnresolved )
+BOOST_AUTO_TEST_CASE( CollectUnresolved_MergePropsIsADecision )
 {
     const KIID_PATH idA = MakePath( 3200 );
 
@@ -371,9 +423,7 @@ BOOST_AUTO_TEST_CASE( CollectUnresolved_MergePropsIsUnresolved )
     ITEM_RESOLUTION a; a.id = idA; a.kind = ITEM_RES::MERGE_PROPS;
     plan.actions.push_back( a );
 
-    auto unresolved = CollectUnresolvedConflicts( plan, { 0 } );
-    BOOST_REQUIRE_EQUAL( unresolved.size(), 1u );
-    BOOST_CHECK( unresolved[0] == idA );
+    BOOST_CHECK( CollectUnresolvedConflicts( plan, { 0 } ).empty() );
 }
 
 
@@ -649,12 +699,13 @@ BOOST_AUTO_TEST_CASE( DetailText_KnownResolutionKindsProduceText )
         ITEM_RES::MERGE_PROPS, ITEM_RES::DELETE_ITEM, ITEM_RES::KEEP,
     };
 
-    // Format the expected count line through the same `_()` machinery the
+    // Format the expected count line through the same `wxPLURAL` machinery the
     // production code uses so the assertion stays locale-stable. A
     // translated harness ends up comparing translated against translated.
-    const wxString expectedCountLine = wxString::Format(
-            _( "%zu property edit(s) in this resolution.\n" ),
-            static_cast<std::size_t>( 0 ) );
+    const wxString expectedCountLine =
+            wxString::Format( wxPLURAL( "%zu property edit in this resolution.\n",
+                                        "%zu property edits in this resolution.\n", 0 ),
+                              static_cast<std::size_t>( 0 ) );
 
     for( ITEM_RES kind : kinds )
     {

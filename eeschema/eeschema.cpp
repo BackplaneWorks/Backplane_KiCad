@@ -65,7 +65,7 @@
 #include <string_utils.h>
 #include <trace_helpers.h>
 #include <thread_pool.h>
-#include <kiface_ids.h>
+#include <kiface_services.h>
 #include <symbol_library_query.h>
 #include <widgets/kistatusbar.h>
 #include <netlist_exporters/netlist_exporter_kicad.h>
@@ -110,7 +110,10 @@ static int eeschemaMergeExport( int aKind, const wxString& aAncestor, const wxSt
 static int eeschemaOpenDiffDialogExport( int aKind, const wxString& aFileA, const wxString& aFileB,
                                          const wxString& aLabelA, const wxString& aLabelB,
                                          wxWindow* aParent, REPORTER* aReporter );
-
+static KICAD_DIFF::DIFF_CANVAS_CONTEXT*
+eeschemaAttachDiffCanvasesExport( int aKind, const wxString& aFileA, const wxString& aFileB,
+                                  WIDGET_DIFF_CANVAS* aBefore, WIDGET_DIFF_CANVAS* aAfter,
+                                  KICAD_DIFF::DOCUMENT_DIFF* aDiff, REPORTER* aReporter );
 
 
 // TODO: This should move out of this file
@@ -745,22 +748,24 @@ static struct IFACE : public KIFACE_BASE, public UNITS_PROVIDER
         switch( aDataId )
         {
             case KIFACE_NETLIST_SCHEMATIC:
-                return (void*) generateSchematicNetlist;
+            return KifaceServiceAddress<KIFACE_NETLIST_SCHEMATIC_SERVICE>( &generateSchematicNetlist );
 
-            case KIFACE_FILTER_FOOTPRINT_USERS:
-                return reinterpret_cast<void*>( &filterFootprintUsers );
+        case KIFACE_FILTER_FOOTPRINT_USERS:
+            return KifaceServiceAddress<KIFACE_FILTER_FOOTPRINT_USERS_SERVICE>( &filterFootprintUsers );
 
-            case KIFACE_TRIGGER_SYMBOLS_LOAD:
-                return reinterpret_cast<void*>( &startSymbolLibraryLoad );
+        case KIFACE_TRIGGER_SYMBOLS_LOAD:
+            return KifaceServiceAddress<KIFACE_TRIGGER_SYMBOLS_LOAD_SERVICE>( &startSymbolLibraryLoad );
 
-            case KIFACE_SYMBOLS_LOAD_PROGRESS:
-                return reinterpret_cast<void*>( &symbolLibraryLoadProgress );
+        case KIFACE_SYMBOLS_LOAD_PROGRESS:
+            return KifaceServiceAddress<KIFACE_SYMBOLS_LOAD_PROGRESS_SERVICE>( &symbolLibraryLoadProgress );
 
-            case KIFACE_MERGE_DOCUMENT:
-                return reinterpret_cast<void*>( &eeschemaMergeExport );
+        case KIFACE_MERGE_DOCUMENT: return KifaceServiceAddress<KIFACE_MERGE_DOCUMENT_SERVICE>( &eeschemaMergeExport );
 
-            case KIFACE_OPEN_DIFF_DIALOG:
-                return reinterpret_cast<void*>( &eeschemaOpenDiffDialogExport );
+        case KIFACE_OPEN_DIFF_DIALOG:
+            return KifaceServiceAddress<KIFACE_OPEN_DIFF_DIALOG_SERVICE>( &eeschemaOpenDiffDialogExport );
+
+        case KIFACE_ATTACH_DIFF_CANVASES:
+            return KifaceServiceAddress<KIFACE_ATTACH_DIFF_CANVASES_SERVICE>( &eeschemaAttachDiffCanvasesExport );
         }
 
         return nullptr;
@@ -854,6 +859,17 @@ int eeschemaOpenDiffDialogExport( int aKind, const wxString& aFileA, const wxStr
                                                 aFileB, aLabelA, aLabelB, aParent, aReporter );
 }
 
+
+KICAD_DIFF::DIFF_CANVAS_CONTEXT* eeschemaAttachDiffCanvasesExport( int aKind, const wxString& aFileA,
+                                                                   const wxString& aFileB, WIDGET_DIFF_CANVAS* aBefore,
+                                                                   WIDGET_DIFF_CANVAS*        aAfter,
+                                                                   KICAD_DIFF::DOCUMENT_DIFF* aDiff,
+                                                                   REPORTER*                  aReporter )
+{
+    return kiface.JobHandler()->AttachDiffCanvases( static_cast<KICAD_DIFF::DOC_KIND>( aKind ), aFileA, aFileB, aBefore,
+                                                    aAfter, *aDiff, aReporter );
+}
+
 } // namespace
 
 using namespace SCH;
@@ -927,9 +943,6 @@ void IFACE::Reset()
 
 void IFACE::PreloadLibraries( KIWAY* aKiway )
 {
-    constexpr static int interval = 150;
-    constexpr static int timeLimit = 120000;
-
     wxCHECK( aKiway, /* void */ );
 
     // Use compare_exchange to atomically check and set the flag to prevent race conditions
@@ -953,51 +966,8 @@ void IFACE::PreloadLibraries( KIWAY* aKiway )
 
             SYMBOL_LIBRARY_ADAPTER* adapter = PROJECT_SCH::SymbolLibAdapter( &aKiway->Prj() );
 
-            int  elapsed = 0;
-            bool aborted = false;
-
             reporter->Report( _( "Loading Symbol Libraries" ) );
-            adapter->AsyncLoad();
-
-            while( true )
-            {
-                if( m_libraryPreloadAbort.load() )
-                {
-                    m_libraryPreloadAbort.store( false );
-                    aborted = true;
-                    break;
-                }
-
-                std::this_thread::sleep_for( std::chrono::milliseconds( interval ) );
-
-                if( std::optional<float> loadStatus = adapter->AsyncLoadProgress() )
-                {
-                    float progress = *loadStatus;
-                    reporter->SetCurrentProgress( progress );
-
-                    if( progress >= 1 )
-                        break;
-                }
-                else
-                {
-                    reporter->SetCurrentProgress( 1 );
-                    break;
-                }
-
-                elapsed += interval;
-
-                if( elapsed > timeLimit )
-                    break;
-            }
-
-            // AbortAsyncLoad() sets the adapter's worker abort flag and then blocks,
-            // so workers exit at their next checkpoint. BlockUntilLoaded() alone just
-            // waits for each future to complete naturally, which can hang indefinitely
-            // if a worker is stuck on a stalled network or filesystem operation.
-            if( aborted )
-                adapter->AbortAsyncLoad();
-            else
-                adapter->BlockUntilLoaded();
+            bool aborted = !adapter->RunPreload( *reporter, m_libraryPreloadAbort );
 
             // If aborted, skip operations that use the adapter since the project may have changed
             // and the adapter's project reference could be stale. This prevents use-after-free
@@ -1024,6 +994,8 @@ void IFACE::PreloadLibraries( KIWAY* aKiway )
                 aKiway->ExpressMail( FRAME_SCH_VIEWER, MAIL_RELOAD_LIB, payload, nullptr, true );
             }
 
+            // A cancel that came after the loop left the flag set, and it would end the next preload at once
+            m_libraryPreloadAbort.store( false );
             m_libraryPreloadInProgress.store( false );
         };
 
@@ -1039,7 +1011,12 @@ void IFACE::CancelPreload( bool aBlock )
         m_libraryPreloadAbort.store( true );
 
         if( aBlock )
+        {
             m_libraryPreloadReturn.wait();
+
+            // The preload has ended, so a flag it never read can only stop the next one
+            m_libraryPreloadAbort.store( false );
+        }
     }
 }
 

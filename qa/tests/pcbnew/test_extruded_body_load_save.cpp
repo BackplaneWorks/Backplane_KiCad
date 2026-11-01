@@ -1,6 +1,7 @@
 #include <qa_utils/file_utils.h>
 #include <boost/test/unit_test.hpp>
 #include <footprint.h>
+#include <pcb_3d_body.h>
 #include <pcbnew_utils/board_file_utils.h>
 #include <pcbnew_utils/board_test_utils.h>
 #include <settings/settings_manager.h>
@@ -13,7 +14,7 @@ BOOST_AUTO_TEST_CASE( FullRoundTrip )
     SETTINGS_MANAGER settingsManager;
 
     FOOTPRINT         footprint( nullptr );
-    EXTRUDED_3D_BODY& body = footprint.EnsureExtrudedBody();
+    EXTRUDED_3D_BODY& body = *footprint.EnsureBody().MutableExtruded();
     body.m_height = pcbIUScale.mmToIU( 2.5 );
     body.m_standoff = pcbIUScale.mmToIU( 0.1 );
     body.m_layer = F_CrtYd;
@@ -27,13 +28,15 @@ BOOST_AUTO_TEST_CASE( FullRoundTrip )
     KI_TEST::SCOPED_TEMP_DIR tempLib( "kicad_qa_extruded_body_roundtrip" );
     const auto libPath = tempLib.CreateChildDir( "extruded_body_roundtrip.pretty" );
     const auto savePath = libPath / "extruded_body_roundtrip.kicad_mod";
-    KI_TEST::DumpFootprintToFile( footprint, savePath.string() );
 
-    std::unique_ptr<FOOTPRINT> loaded = KI_TEST::ReadFootprintFromFileOrStream( savePath.string() );
+    footprint.SetFPID( LIB_ID( "", savePath.stem().string() ) );
+    KI_TEST::DumpFootprintToFile( footprint, savePath );
+
+    std::unique_ptr<FOOTPRINT> loaded = KI_TEST::ReadFootprintFromFile( savePath, savePath.stem().string() );
     BOOST_REQUIRE( loaded != nullptr );
 
-    BOOST_REQUIRE( loaded->HasExtrudedBody() );
-    const EXTRUDED_3D_BODY* lb = loaded->GetExtrudedBody();
+    BOOST_REQUIRE( loaded->HasBody() );
+    const EXTRUDED_3D_BODY* lb = loaded->GetBody()->GetExtruded();
 
     BOOST_CHECK_EQUAL( lb->m_height, body.m_height );
     BOOST_CHECK_EQUAL( lb->m_standoff, body.m_standoff );
@@ -62,20 +65,22 @@ BOOST_AUTO_TEST_CASE( DefaultsRoundTrip )
     SETTINGS_MANAGER settingsManager;
 
     FOOTPRINT         footprint( nullptr );
-    EXTRUDED_3D_BODY& body = footprint.EnsureExtrudedBody();
+    EXTRUDED_3D_BODY& body = *footprint.EnsureBody().MutableExtruded();
     body.m_height = pcbIUScale.mmToIU( 5.0 );
     // Leave everything else at defaults
 
     KI_TEST::SCOPED_TEMP_DIR tempLib( "kicad_qa_extruded_body_defaults_roundtrip" );
     const auto libPath = tempLib.CreateChildDir( "extruded_body_defaults_roundtrip.pretty" );
     const auto savePath = libPath / "extruded_body_defaults_roundtrip.kicad_mod";
-    KI_TEST::DumpFootprintToFile( footprint, savePath.string() );
+    footprint.SetFPID( LIB_ID( "", savePath.stem().string() ) );
 
-    std::unique_ptr<FOOTPRINT> loaded = KI_TEST::ReadFootprintFromFileOrStream( savePath.string() );
+    KI_TEST::DumpFootprintToFile( footprint, savePath );
+
+    std::unique_ptr<FOOTPRINT> loaded = KI_TEST::ReadFootprintFromFile( savePath, savePath.stem().string() );
     BOOST_REQUIRE( loaded != nullptr );
-    BOOST_REQUIRE( loaded->HasExtrudedBody() );
+    BOOST_REQUIRE( loaded->HasBody() );
 
-    const EXTRUDED_3D_BODY* lb = loaded->GetExtrudedBody();
+    const EXTRUDED_3D_BODY* lb = loaded->GetBody()->GetExtruded();
     BOOST_CHECK_EQUAL( lb->m_height, body.m_height );
     BOOST_CHECK_EQUAL( lb->m_standoff, 0 );
     BOOST_CHECK_EQUAL( lb->m_layer, UNDEFINED_LAYER );
@@ -104,11 +109,13 @@ BOOST_AUTO_TEST_CASE( NoExtrudedBodyRoundTrip )
     KI_TEST::SCOPED_TEMP_DIR tempLib( "kicad_qa_extruded_body_none_roundtrip" );
     const auto libPath = tempLib.CreateChildDir( "extruded_body_none_roundtrip.pretty" );
     const auto savePath = libPath / "extruded_body_none_roundtrip.kicad_mod";
-    KI_TEST::DumpFootprintToFile( footprint, savePath.string() );
+    footprint.SetFPID( LIB_ID( "", savePath.stem().string() ) );
 
-    std::unique_ptr<FOOTPRINT> loaded = KI_TEST::ReadFootprintFromFileOrStream( savePath.string() );
+    KI_TEST::DumpFootprintToFile( footprint, savePath );
+
+    std::unique_ptr<FOOTPRINT> loaded = KI_TEST::ReadFootprintFromFile( savePath, savePath.stem().string() );
     BOOST_REQUIRE( loaded != nullptr );
-    BOOST_CHECK( !loaded->HasExtrudedBody() );
+    BOOST_CHECK( !loaded->HasBody() );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

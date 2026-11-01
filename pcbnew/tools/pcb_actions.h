@@ -127,6 +127,7 @@ public:
     /// Mirroring of selected items
     static TOOL_ACTION mirrorH;
     static TOOL_ACTION mirrorV;
+    static TOOL_ACTION mirrorInteractive;
 
     /// Swapping of selected items
     static TOOL_ACTION swap;
@@ -235,6 +236,7 @@ public:
     static TOOL_ACTION drawBoardStructureStiffener;
     static TOOL_ACTION placePoint;
     static TOOL_ACTION placeReferenceImage;
+    static TOOL_ACTION convertImageToOutlines;
     static TOOL_ACTION placeText;
     static TOOL_ACTION drawTextBox;
     static TOOL_ACTION drawTable;
@@ -311,6 +313,8 @@ public:
     static TOOL_ACTION routerSketchRoute;
     static TOOL_ACTION routerSketchAutoroute;
     static TOOL_ACTION routerOptimizeSelected;
+    static TOOL_ACTION routerSpreadTracks;
+
     static TOOL_ACTION cancelCurrentItem;
 
     /// Activation of the Push and Shove settings dialogs
@@ -564,7 +568,6 @@ public:
     static TOOL_ACTION compareFpLibraryWithFile;
     static TOOL_ACTION showLibFootprintFieldsTable;
     static TOOL_ACTION footprintProperties;
-    static TOOL_ACTION defaultPadProperties;
     static TOOL_ACTION padTable;
 
     static TOOL_ACTION checkFootprint;
@@ -578,6 +581,10 @@ public:
 
     /// Activation of the drawing tool (placing a PAD)
     static TOOL_ACTION placePad;
+    static TOOL_ACTION placeThtPad;
+    static TOOL_ACTION placeSmdPad;
+    static TOOL_ACTION placeNpthPad;
+    static TOOL_ACTION placePasteAperturePad;
 
     static TOOL_ACTION explodePad;
     static TOOL_ACTION recombinePad;
@@ -720,8 +727,13 @@ public:
     static TOOL_ACTION ddAppendBoard;
     static TOOL_ACTION ddImportFootprint;
     static TOOL_ACTION ddImportGraphics;
+    static TOOL_ACTION ddPlaceReferenceImage;
 
     static TOOL_ACTION repeatLayout;
+    static TOOL_ACTION updateLinkedLayouts;
+    static TOOL_ACTION unlinkLayout;
+    static TOOL_ACTION expandToMatchingTopology;
+    static TOOL_ACTION expandToLargestTopology;
     static TOOL_ACTION generatePlacementRuleAreas;
 
     /// Footprint wizard frame actions:

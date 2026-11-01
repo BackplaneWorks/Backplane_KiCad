@@ -115,6 +115,10 @@ set( EESCHEMA_SCH_IO
     sch_io/easypc/easypc_sch_builder.cpp
     sch_io/easypc/easypc_sch_items.cpp
 
+    # TARGET 3001! IO plugin
+    sch_io/target3001/sch_io_target3001.cpp
+    sch_io/target3001/target3001_sch_builder.cpp
+
     # P-CAD 2006 ASCII IO plugin
     sch_io/pcad/sch_io_pcad.cpp
     sch_io/pcad/pcad_sch_parser.cpp
@@ -349,6 +353,7 @@ set( EESCHEMA_WIDGETS
     widgets/sch_search_pane.cpp
     widgets/search_handlers.cpp
     widgets/symbol_filter_combobox.cpp
+    widgets/db_lib_preview_panel.cpp
     widgets/symbol_preview_widget.cpp
     widgets/symbol_tree_pane.cpp
     )
@@ -370,8 +375,6 @@ set ( EESCHEMA_LIBEDIT_SRCS
     )
 
 set( EESCHEMA_IMPORT_GFX
-    import_gfx/dialog_import_gfx_sch_base.cpp
-    import_gfx/dialog_import_gfx_sch.cpp
     import_gfx/graphics_importer_lib_symbol.cpp
     import_gfx/graphics_importer_sch.cpp
     )
@@ -465,10 +468,12 @@ set( EESCHEMA_SRCS
     files-io.cpp
     generate_alias_info.cpp
     gfx_import_utils.cpp
+    import_local_symbol_libs.cpp
     import_net_map.cpp
     junction_helpers.cpp
     lib_fields_data_model.cpp
     lib_symbol.cpp
+    link_imported_footprints.cpp
     menubar.cpp
     net_navigator.cpp
     picksymbol.cpp
@@ -543,6 +548,7 @@ set( EESCHEMA_SRCS
     api/api_sch_utils.cpp
     api/api_handler_sch_libraries.cpp
     api/api_handler_sch.cpp
+    api/api_handler_sch_tasks.cpp
     api/api_handler_symbol.cpp
     api/headless_sch_context.cpp
     api/headless_symbol_editor_context.cpp

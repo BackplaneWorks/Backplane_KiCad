@@ -293,7 +293,9 @@ void FOOTPRINT_EDIT_FRAME::ExportFootprint( FOOTPRINT* aFootprint )
             aFootprint->SetOrientation( 0 );
         */
 
-        pcb_io.Format( aFootprint );
+        std::unique_ptr<FOOTPRINT> copy( static_cast<FOOTPRINT*>( aFootprint->Clone() ) );
+
+        pcb_io.FormatFootprintLibFile( copy.get() );
 
         FILE* fp = wxFopen( fn.GetFullPath(), wxT( "wt" ) );
 
@@ -1032,7 +1034,9 @@ bool FOOTPRINT_EDIT_FRAME::SaveFootprintToBoard( bool aAddNew )
     {
         // In the main board the new footprint replaces the old one (pos, orient, ref, value, connections
         // and properties are kept) and the sourceFootprint (old footprint) is deleted
-        mainpcb->ExchangeFootprint( sourceFootprint, newFootprint, commit, true /* match pad positions */ );
+        mainpcb->ExchangeFootprint( sourceFootprint, newFootprint, commit,
+                                    pcbframe->GetPcbNewSettings()->m_FlipDirection,
+                                    true /* match pad positions */ );
 
         commit.Push( _( "Update Footprint" ) );
     }
@@ -1270,8 +1274,12 @@ bool FOOTPRINT_EDIT_FRAME::RevertFootprint( bool aSkipConfirmation )
 {
     if( GetScreen()->IsContentModified() && m_originalFootprintCopy )
     {
-        wxString msg = wxString::Format( _( "Revert '%s' to last version saved?" ),
-                                         GetLoadedFPID().GetLibItemName().wx_str() );
+        wxString msg;
+
+        if( IsCurrentFPFromBoard() )
+            msg.Printf( _( "Revert '%s' to version from board?" ), m_originalFootprintCopy->GetReference() );
+        else
+            msg.Printf( _( "Revert '%s' to last version saved?" ), GetLoadedFPID().GetLibItemName().wx_str() );
 
         if( aSkipConfirmation || ConfirmRevertDialog( this, msg ) )
         {

@@ -102,6 +102,7 @@ public:
         int  properties_panel_width;
         float properties_splitter;
         bool show_properties;
+        bool    show_git_commit_pane;
         bool design_blocks_show;
         int  design_blocks_panel_docked_width;
         int  design_blocks_panel_float_width;
@@ -347,6 +348,9 @@ public:
     SIMULATOR                 m_Simulator;
 
     bool                      m_RescueNeverShow;
+
+    /// Database columns the user mapped to each library role, most recent first, used to autofill
+    std::map<std::string, std::vector<std::string>> m_DatabaseColumnChoices;
 
     wxString                  m_lastSymbolLibDir;
 };

@@ -118,7 +118,7 @@ void DRC_TEST_PROVIDER_SCHEMATIC_PARITY::testNetlist( NETLIST& aNetlist )
             {
                 wxString msg;
                 msg.Printf( _( "Value (%s) doesn't match symbol value (%s)" ),
-                            footprint->GetReference(), footprint->GetValue(),
+                            footprint->GetValue(),
                             component->GetValue() );
 
                 std::shared_ptr<DRC_ITEM> drcItem = DRC_ITEM::Create( DRCE_SCHEMATIC_PARITY );
@@ -233,6 +233,15 @@ void DRC_TEST_PROVIDER_SCHEMATIC_PARITY::testNetlist( NETLIST& aNetlist )
                 compFields.erase( GetDefaultFieldName( FIELD_T::FOOTPRINT, UNTRANSLATED ) );
                 compFields.erase( wxT( "Component Class" ) );
 
+                const wxString datasheetName = GetDefaultFieldName( FIELD_T::DATASHEET, UNTRANSLATED );
+
+                // Boards from 9.0.3+ store a "~" datasheet that the 10.0 schematic loader reads as empty
+                auto isBlank =
+                        []( const wxString& aText )
+                        {
+                            return aText.IsEmpty() || aText == wxS( "~" );
+                        };
+
                 bool fieldsMatch = true;
                 wxString mismatchDetail;
 
@@ -246,6 +255,9 @@ void DRC_TEST_PROVIDER_SCHEMATIC_PARITY::testNetlist( NETLIST& aNetlist )
                         mismatchDetail = wxString::Format( _( "Missing symbol field '%s' in footprint" ), name );
                         break;
                     }
+
+                    if( name == datasheetName && isBlank( it->second ) && isBlank( value ) )
+                        continue;
 
                     if( it->second != value )
                     {

@@ -121,6 +121,8 @@ ApplyAutoResolutions( MERGE_PLAN&                          aPlan,
     std::vector<std::pair<std::size_t, ITEM_RES>> staged;
     staged.reserve( aConflictActionIndices.size() );
 
+    const std::set<KIID_PATH> unresolved( aPlan.unresolved.begin(), aPlan.unresolved.end() );
+
     for( std::size_t actionIdx : aConflictActionIndices )
     {
         if( actionIdx >= aPlan.actions.size() )
@@ -137,6 +139,10 @@ ApplyAutoResolutions( MERGE_PLAN&                          aPlan,
 
         if( it == aResolutions.end() )
         {
+            // The engine's own property merge stands unless it left a property conflict
+            if( action.kind == ITEM_RES::MERGE_PROPS && !unresolved.contains( action.id ) )
+                continue;
+
             out.status         = APPLY_AUTO_RESOLUTIONS_STATUS::PARTIAL;
             out.firstMissingId = action.id;
             return out;
@@ -165,7 +171,7 @@ std::vector<CONFLICT_LIST_ENTRY> BuildConflictList( const MERGE_PLAN& aPlan )
     {
         const ITEM_RESOLUTION& action = aPlan.actions[i];
 
-        if( !unresolvedSet.count( action.id ) )
+        if( !unresolvedSet.count( action.id ) && action.kind != ITEM_RES::MERGE_PROPS )
             continue;
 
         wxString label = action.id.AsString();
@@ -200,8 +206,8 @@ CollectUnresolvedConflicts( const MERGE_PLAN&                aPlan,
 
         const ITEM_RESOLUTION& a = aPlan.actions[actionIdx];
 
-        if( a.kind != ITEM_RES::TAKE_OURS && a.kind != ITEM_RES::TAKE_THEIRS
-            && a.kind != ITEM_RES::TAKE_ANCESTOR )
+        if( a.kind != ITEM_RES::TAKE_OURS && a.kind != ITEM_RES::TAKE_THEIRS && a.kind != ITEM_RES::TAKE_ANCESTOR
+            && a.kind != ITEM_RES::MERGE_PROPS )
         {
             out.push_back( a.id );
         }
@@ -262,7 +268,8 @@ wxString BuildConflictDetailText( const ITEM_RESOLUTION& aResolution )
     }
 
     text << wxS( "\n\n" );
-    text << wxString::Format( _( "%zu property edit(s) in this resolution.\n" ),
+    text << wxString::Format( wxPLURAL( "%zu property edit in this resolution.\n",
+                                        "%zu property edits in this resolution.\n", aResolution.props.size() ),
                               aResolution.props.size() );
 
     return text;

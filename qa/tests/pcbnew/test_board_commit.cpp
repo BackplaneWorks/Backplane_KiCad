@@ -371,5 +371,72 @@ BOOST_AUTO_TEST_CASE( UpdateOutsideAnEditIsInert )
 }
 
 
+// A reverted commit must forget what it staged, or the next edit of the same item is skipped
+// and the commit pushes empty, leaving the change on the board with no undo entry.
+BOOST_AUTO_TEST_CASE( RevertedCommitStagesTheSameItemAgain )
+{
+    BOARD        board;
+    TOOL_MANAGER mgr;
+    mgr.SetEnvironment( &board, nullptr, nullptr, nullptr, nullptr );
+    KI_TEST::DUMMY_TOOL* dummyTool = new KI_TEST::DUMMY_TOOL();
+    mgr.RegisterTool( dummyTool );
+
+    PCB_SHAPE* shape = new PCB_SHAPE( &board, SHAPE_T::SEGMENT );
+    shape->SetStart( VECTOR2I( 0, 0 ) );
+    shape->SetEnd( VECTOR2I( 100000, 0 ) );
+    board.Add( shape );
+
+    BOARD_COMMIT commit( dummyTool );
+
+    commit.Modify( shape );
+    BOOST_REQUIRE( !commit.Empty() );
+
+    shape->SetEnd( VECTOR2I( 200000, 0 ) );
+    commit.Revert();
+    BOOST_REQUIRE( commit.Empty() );
+    BOOST_REQUIRE( shape->GetEnd() == VECTOR2I( 100000, 0 ) );
+
+    commit.Modify( shape );
+    BOOST_CHECK( !commit.Empty() );
+    BOOST_CHECK_EQUAL( commit.GetStatus( shape ), CHT_MODIFY );
+}
+
+
+// Rolling back to a checkpoint must leave the earlier changes staged and drop the later ones.
+// An item still staged after its change was dropped is skipped on the next edit, so that edit
+// gets no undo entry.
+BOOST_AUTO_TEST_CASE( RevertToCheckpointKeepsEarlierItemsStaged )
+{
+    BOARD board;
+    TOOL_MANAGER mgr;
+    mgr.SetEnvironment( &board, nullptr, nullptr, nullptr, nullptr );
+    KI_TEST::DUMMY_TOOL* dummyTool = new KI_TEST::DUMMY_TOOL();
+    mgr.RegisterTool( dummyTool );
+
+    PCB_SHAPE* kept = new PCB_SHAPE( &board, SHAPE_T::SEGMENT );
+    board.Add( kept );
+
+    PCB_SHAPE* rolledBack = new PCB_SHAPE( &board, SHAPE_T::SEGMENT );
+    rolledBack->SetStart( VECTOR2I( 0, 100000 ) );
+    rolledBack->SetEnd( VECTOR2I( 100000, 100000 ) );
+    board.Add( rolledBack );
+
+    BOARD_COMMIT commit( dummyTool );
+
+    commit.Modify( kept );
+    int checkpoint = commit.Checkpoint();
+
+    commit.Modify( rolledBack );
+    rolledBack->SetEnd( VECTOR2I( 200000, 100000 ) );
+    commit.RevertToCheckpoint( checkpoint );
+
+    BOOST_REQUIRE( rolledBack->GetEnd() == VECTOR2I( 100000, 100000 ) );
+    BOOST_CHECK_EQUAL( commit.GetStatus( kept ), CHT_MODIFY );
+
+    commit.Modify( rolledBack );
+    BOOST_CHECK_EQUAL( commit.GetStatus( rolledBack ), CHT_MODIFY );
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 

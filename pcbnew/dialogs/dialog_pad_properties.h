@@ -51,8 +51,20 @@ class PAD;
 class DIALOG_PAD_PROPERTIES : public DIALOG_PAD_PROPERTIES_BASE
 {
 public:
-    DIALOG_PAD_PROPERTIES( PCB_BASE_FRAME* aParent, PAD* aPad );
-    ~DIALOG_PAD_PROPERTIES();
+    /**
+     * @param aParent The parent frame for the dialog
+     * @param aPad The pad whose properties are to be edited
+     */
+    DIALOG_PAD_PROPERTIES( PCB_BASE_FRAME* aParent, PAD& aPad );
+    ~DIALOG_PAD_PROPERTIES() override;
+
+    /// Updates the different parameters for the component being edited.
+    /// Automatically fired from the OK button click.
+
+    bool TransferDataFromWindow() override;
+    bool TransferDataToWindow() override;
+
+    bool Show( bool aShow ) override;
 
 private:
     void prepareCanvas();       // Initialize the canvases (legacy or gal) to display the pad
@@ -71,13 +83,12 @@ private:
      * instead; this is intended for the case when the pad type has just changed and the previous
      * layer set no longer applies.
      */
-    void updatePadLayersList( std::optional<LSET> layer_mask, bool remove_unconnected,
-                              bool keep_top_bottom );
+    void updatePadLayersList( std::optional<LSET> layer_mask, bool remove_unconnected, bool keep_top_bottom );
 
     /// Copy values from dialog field to aPad's members
     bool transferDataToPad( PAD* aPad );
 
-    bool Show( bool aShow ) override;
+    void syncBackdrillControls( bool aFromUserEvent );
 
     // event handlers:
     void OnInitDialog( wxInitDialogEvent& event ) override;
@@ -118,12 +129,6 @@ private:
     /// Update the graphical pad shown in the panel.
     void OnValuesChanged( wxCommandEvent& event ) override;
 
-    /// Updates the different parameters for the component being edited.
-    /// Automatically fired from the OK button click.
-
-    bool TransferDataFromWindow() override;
-    bool TransferDataToWindow() override;
-
     /// Return the pad property currently selected
     PAD_PROP getSelectedProperty();
 
@@ -152,7 +157,6 @@ private:
     PCB_BASE_FRAME* m_parent;
     PAD*            m_currentPad;       // pad currently being edited
     PAD*            m_previewPad;       // a working copy used to show changes
-    PAD*            m_masterPad;        // pad used to create new pads in board or FP editor
     BOARD*          m_board;            // the main board: this is the board handled by the PCB
                                         //    editor or the dummy board used by the FP editor
     bool            m_initialized;
@@ -160,6 +164,8 @@ private:
     bool            m_isFpEditor;       // true if the caller is the footprint editor
     PCB_LAYER_ID    m_editLayer;        // Which copper layer of the padstack is being edited
     std::map<int, PCB_LAYER_ID> m_editLayerCtrlMap;
+    /// Enabled copper layers offered for NON_COMPONENT pads
+    std::vector<PCB_LAYER_ID>   m_nonComponentLayers;
 
     std::vector<std::shared_ptr<PCB_SHAPE>> m_primitives;     // the custom shape primitives in
                                                               // local coords, orient 0

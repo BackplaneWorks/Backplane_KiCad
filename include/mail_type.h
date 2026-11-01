@@ -58,6 +58,14 @@ enum MAIL_T
     MAIL_SCH_NAVIGATE_TO_SHEET, // Navigate to sheet by filename if in hierarchy
     MAIL_SCH_SHEET_CHANGED,     // Schematic editor current sheet changed
     MAIL_CALC_SHOW,             // Show the PCB calculator window
+    MAIL_SCH_RELOAD,            // Reload the schematic from disk (for example after a git pull)
+    MAIL_PCB_RELOAD,            // Reload the board from disk (for example after a git pull)
+    MAIL_SCH_PROJECT_SETTINGS_CHANGED, // Project settings changed on disk without a document reload
+    MAIL_PCB_PROJECT_SETTINGS_CHANGED, // Project settings changed on disk without a document reload
+    MAIL_PCB_GET_FOOTPRINT_IDS, // Fetch each footprint reference and LIB_ID from the PCB layout
+    MAIL_PCB_RECONCILE_NETS,    // Name the PCB nets after the schematic nets they match
+    MAIL_SCH_LINK_FOOTPRINTS,   // Fill empty symbol footprint fields from footprint references and LIB_IDs
+    MAIL_SCH_GET_REF_SUFFIXES,  // Fetch the composed reference suffix of each sheet path in page order
 };
 
 /**
@@ -67,5 +75,11 @@ enum MAIL_T
  * original annotation message back.
  */
 #define MAIL_SCH_GET_NETLIST_CANCELLED "\x01__netlist_cancelled__"
+
+/**
+ * First line of a #MAIL_SCH_GET_REF_SUFFIXES reply, so a schematic with no sheets still answers.
+ * Each following line holds a sheet path string, a tab and its composed reference suffix.
+ */
+#define MAIL_SCH_REF_SUFFIXES_TAG "ref_suffixes"
 
 #endif  // MAIL_TYPE_H_

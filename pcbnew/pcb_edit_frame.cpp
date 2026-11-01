@@ -152,6 +152,7 @@
 #include <widgets/wx_infobar.h>
 #include <widgets/panel_selection_filter.h>
 #include <widgets/pcb_properties_panel.h>
+#include <widgets/git_commit_pane.h>
 #include <widgets/pcb_net_inspector_panel.h>
 #include <widgets/wx_aui_utils.h>
 #include <kiplatform/app.h>
@@ -320,6 +321,7 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     m_netInspectorPanel = new PCB_NET_INSPECTOR_PANEL( this, this );
     m_designBlocksPane = new PCB_DESIGN_BLOCK_PANE( this, nullptr, m_designBlockHistoryList );
     m_constraintsPanel = new PANEL_CONSTRAINTS( this );
+    m_gitCommitPane = new GIT_COMMIT_PANE( this );
 
     m_auimgr.SetManagedWindow( this );
 
@@ -430,7 +432,25 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
                       .CloseButton( true )
                       .Hide() );
 
+    m_auimgr.AddPane( m_gitCommitPane,
+                      EDA_PANE()
+                              .Name( GitCommitPaneName() )
+                              .Right()
+                              .Layer( 5 )
+                              .Caption( _( "Version Control" ) )
+                              .PaneBorder( false )
+                              .MinSize( wxSize( m_gitCommitPane->GetMinDockWidth(), FromDIP( 120 ) ) )
+                              .BestSize( wxSize( std::max( m_gitCommitPane->GetMinDockWidth(), FromDIP( 300 ) ),
+                                                 FromDIP( 300 ) ) )
+                              .FloatingSize( FromDIP( wxSize( 300, 400 ) ) )
+                              .DestroyOnClose( false )
+                              .CloseButton( true )
+                              .Hide() );
+
     RestoreAuiLayout();
+
+    // A saved layout brings its own minimum, so the one the panel needs is set again.
+    m_auimgr.GetPane( GitCommitPaneName() ).min_size.x = m_gitCommitPane->GetMinDockWidth();
 
     m_auimgr.GetPane( "LayersManager" ).Show( m_ShowLayerManagerTools );
     m_auimgr.GetPane( "SelectionFilter" ).Show( m_ShowLayerManagerTools );
@@ -438,6 +458,7 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     m_auimgr.GetPane( NetInspectorPanelName() ).Show( m_ShowNetInspector );
     m_auimgr.GetPane( SearchPaneName() ).Show( m_ShowSearch );
     m_auimgr.GetPane( DesignBlocksPaneName() ).Show( GetPcbNewSettings()->m_AuiPanels.design_blocks_show );
+    m_auimgr.GetPane( GitCommitPaneName() ).Show( GetPcbNewSettings()->m_AuiPanels.show_git_commit_pane );
 
     wxAuiPaneInfo& selectionFilterPane = m_auimgr.GetPane( wxS( "SelectionFilter" ) );
 
@@ -628,6 +649,9 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     m_acceptedExts.emplace( FILEEXT::LegacyPcbFileExtension, &PCB_ACTIONS::ddAppendBoard );
     m_acceptedExts.emplace( wxS( "dxf" ), &PCB_ACTIONS::ddImportGraphics );
     m_acceptedExts.emplace( FILEEXT::SVGFileExtension, &PCB_ACTIONS::ddImportGraphics );
+    m_acceptedExts.emplace( FILEEXT::PngFileExtension, &PCB_ACTIONS::ddPlaceReferenceImage );
+    m_acceptedExts.emplace( FILEEXT::JpegFileExtension, &PCB_ACTIONS::ddPlaceReferenceImage );
+    m_acceptedExts.emplace( wxS( "jpeg" ), &PCB_ACTIONS::ddPlaceReferenceImage );
     DragAcceptFiles( true );
 
     Bind( EDA_EVT_CLOSE_DIALOG_BOOK_REPORTER, &PCB_EDIT_FRAME::onCloseModelessBookReporterDialogs, this );
@@ -873,6 +897,7 @@ void PCB_EDIT_FRAME::SetBoard( BOARD* aBoard, bool aBuildConnectivity, PROGRESS_
 
     PCB_BASE_EDIT_FRAME::SetBoard( aBoard, aReporter );
 
+    aBoard->AddListener( this );
     aBoard->SetProject( &Prj() );
 
     if( aBuildConnectivity )
@@ -1055,7 +1080,15 @@ void PCB_EDIT_FRAME::SetPageSettings( const PAGE_INFO& aPageSettings )
                             }
 
                             if( aDep->IsBOARD_ITEM() )
-                                view->Update( aDep, KIGFX::REPAINT );
+                            {
+                                if( PCB_TEXT* text = dynamic_cast<PCB_TEXT*>( aDep ) )
+                                {
+                                    text->ClearRenderCache();
+                                    text->ClearBoundingBoxCache();
+                                }
+
+                                view->Update( aDep, KIGFX::GEOMETRY | KIGFX::REPAINT );
+                            }
                         } );
             }
         }
@@ -1213,6 +1246,8 @@ void PCB_EDIT_FRAME::setupUIConditions()
                         ENABLE( SELECTION_CONDITIONS::NotEmpty ).HotkeyEnable( hasElements ) );
     mgr->SetConditions( PCB_ACTIONS::mirrorV,
                         ENABLE( SELECTION_CONDITIONS::NotEmpty ).HotkeyEnable( hasElements ) );
+    mgr->SetConditions( PCB_ACTIONS::mirrorInteractive,
+                        ENABLE( SELECTION_CONDITIONS::NotEmpty ).HotkeyEnable( hasElements ) );
 
     static const std::vector<KICAD_T> groupTypes = { PCB_GROUP_T, PCB_GENERATOR_T };
 
@@ -1303,6 +1338,12 @@ void PCB_EDIT_FRAME::setupUIConditions()
                 return m_auimgr.GetPane( DesignBlocksPaneName() ).IsShown();
             };
 
+    auto gitCommitPaneCond =
+            [this] ( const SELECTION& )
+            {
+                return IsGitCommitPaneShown();
+            };
+
     auto highContrastCond =
             [this] ( const SELECTION& )
             {
@@ -1360,6 +1401,7 @@ void PCB_EDIT_FRAME::setupUIConditions()
     mgr->SetConditions( PCB_ACTIONS::showSearch,           CHECK( searchPaneCond ) );
     mgr->SetConditions( PCB_ACTIONS::showConstraintsPanel, CHECK( constraintsPaneCond ) );
     mgr->SetConditions( PCB_ACTIONS::showDesignBlockPanel, CHECK( designBlockCond ) );
+    mgr->SetConditions( ACTIONS::showGitCommitPane,        CHECK( gitCommitPaneCond ) );
 
     mgr->SetConditions( PCB_ACTIONS::saveBoardAsDesignBlock,     ENABLE( hasElements ) );
     mgr->SetConditions( PCB_ACTIONS::saveSelectionAsDesignBlock, ENABLE( SELECTION_CONDITIONS::NotEmpty ) );
@@ -2039,6 +2081,8 @@ void PCB_EDIT_FRAME::SaveSettings( APP_SETTINGS_BASE* aCfg )
         cfg->m_AuiPanels.search_panel_width = m_searchPane->GetSize().x;
         cfg->m_AuiPanels.search_panel_dock_direction = searchPaneInfo.dock_direction;
 
+        cfg->m_AuiPanels.show_git_commit_pane = m_auimgr.GetPane( GitCommitPaneName() ).IsShown();
+
         if( m_netInspectorPanel )
         {
             wxAuiPaneInfo& netInspectorhPaneInfo = m_auimgr.GetPane( NetInspectorPanelName() );
@@ -2397,8 +2441,8 @@ void PCB_EDIT_FRAME::OnModify()
     if( m_isClosing )
         return;
 
-    // A chart reports the board, so an edit that moved a hole has already made it wrong.
-    // Costs one integer comparison per chart when nothing drill related changed.
+    // A generated table reports the board, so any edit may already have made it wrong
+    // A drill chart compares a counter but a stackup table regenerates its text, ~100 us at 32 layers
     RefreshGeneratedTables( *GetBoard() );
 
     GetCanvas()->RefreshStructure();
@@ -2406,6 +2450,29 @@ void PCB_EDIT_FRAME::OnModify()
 
     if( !GetTitle().StartsWith( wxT( "*" ) ) )
         UpdateTitle();
+}
+
+
+void PCB_EDIT_FRAME::OnBoardItemsChanged( BOARD& aBoard, std::vector<BOARD_ITEM*>& aItems )
+{
+    bool rebuilt = false;
+
+    for( BOARD_ITEM* item : aItems )
+    {
+        if( !IsGeneratedTableType( item->Type() ) )
+            continue;
+
+        rebuilt = true;
+
+        if( GetCanvas() )
+            GetCanvas()->GetView()->Update( item );
+    }
+
+    // The rebuild may have freed selected cells, which can no longer be asked what they were
+    PCB_SELECTION_TOOL* selTool = m_toolManager ? m_toolManager->GetTool<PCB_SELECTION_TOOL>() : nullptr;
+
+    if( rebuilt && selTool && !selTool->GetSelection().Empty() )
+        selTool->RebuildSelection();
 }
 
 
@@ -3187,8 +3254,15 @@ void PCB_EDIT_FRAME::OnEditItemRequest( BOARD_ITEM* aItem )
         break;
     }
 
+    case PCB_STACKUP_TABLE_T:
+    {
+        DIALOG_GENERATED_TABLE_PROPERTIES dlg( this, static_cast<PCB_GENERATED_TABLE*>( aItem ), {} );
+        dlg.ShowModal();
+        break;
+    }
+
     case PCB_PAD_T:
-        ShowPadPropertiesDialog( static_cast<PAD*>( aItem ) );
+        ShowPadPropertiesDialog( static_cast<PAD&>( *aItem ) );
         break;
 
     case PCB_FOOTPRINT_T:

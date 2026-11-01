@@ -69,6 +69,7 @@
 #include "cli/command_pcb_export_gerbers.h"
 #include "cli/command_pcb_export_hpgl.h"
 #include "cli/command_pcb_export_gencad.h"
+#include "cli/command_pcb_export_specctra.h"
 #include "cli/command_pcb_export_ipc2581.h"
 #include "cli/command_pcb_export_idf.h"
 #include "cli/command_pcb_export_ipcd356.h"
@@ -195,6 +196,7 @@ static CLI::PCB_EXPORT_STACKUP_COMMAND   exportPcbStackupCmd{};
 static CLI::PCB_EXPORT_GERBERS_COMMAND   exportPcbGerbersCmd{};
 static CLI::PCB_EXPORT_HPGL_COMMAND      exportPcbHpglCmd{};
 static CLI::PCB_EXPORT_GENCAD_COMMAND    exportPcbGencadCmd{};
+static CLI::PCB_EXPORT_SPECCTRA_COMMAND  exportPcbSpecctraCmd{};
 static CLI::PCB_EXPORT_IPC2581_COMMAND   exportPcbIpc2581Cmd{};
 static CLI::PCB_EXPORT_IDF_COMMAND       exportPcbIdfCmd{};
 static CLI::PCB_EXPORT_IPCD356_COMMAND   exportPcbIpcD356Cmd{};
@@ -308,6 +310,7 @@ static std::vector<COMMAND_ENTRY> commandStack = {
                     &exportPcbPngCmd,
                     &exportPcbPosCmd,
                     &exportPcbPsCmd,
+                    &exportPcbSpecctraCmd,
                     &exportPcbStatsCmd,
                     &exportPcbStackupCmd,
                     &exportPcbStepCmd,
@@ -811,21 +814,27 @@ struct APP_KICAD_CLI : public wxAppConsole
 #endif
 
         program.OnPgmExit();
+        program.ExitIfTeardownUnsafe();
+
         return ret;
     }
 
     int OnRun() override
     {
+        int ret = -1;
+
         try
         {
-            return program.OnPgmRun();
+            ret = program.OnPgmRun();
         }
         catch( ... )
         {
             Pgm().HandleException( std::current_exception() );
         }
 
-        return -1;
+        program.SetRunResult( ret );
+
+        return ret;
     }
 
     int FilterEvent( wxEvent& aEvent ) override { return Event_Skip; }

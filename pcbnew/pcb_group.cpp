@@ -145,17 +145,17 @@ std::unordered_set<BOARD_ITEM*> PCB_GROUP::GetBoardItems() const
  * @return if not in the footprint editor and aItem is in a footprint, returns the
  * footprint's parent group. Otherwise, returns the aItem's parent group.
  */
-EDA_GROUP* getClosestGroup( BOARD_ITEM* aItem, bool isFootprintEditor )
+static EDA_GROUP* getClosestGroup( const BOARD_ITEM& aItem, bool isFootprintEditor )
 {
-    if( !isFootprintEditor && aItem->GetParent() && aItem->GetParent()->Type() == PCB_FOOTPRINT_T )
-        return aItem->GetParent()->GetParentGroup();
+    if( !isFootprintEditor && aItem.GetParent() && aItem.GetParent()->Type() == PCB_FOOTPRINT_T )
+        return aItem.GetParent()->GetParentGroup();
     else
-        return aItem->GetParentGroup();
+        return aItem.GetParentGroup();
 }
 
 
 /// Returns the top level group inside the aScope group, or nullptr
-EDA_GROUP* getNestedGroup( BOARD_ITEM* aItem, EDA_GROUP* aScope, bool isFootprintEditor )
+static EDA_GROUP* getNestedGroup( const BOARD_ITEM& aItem, const EDA_GROUP* aScope, bool isFootprintEditor )
 {
     EDA_GROUP* group = getClosestGroup( aItem, isFootprintEditor );
 
@@ -169,13 +169,13 @@ EDA_GROUP* getNestedGroup( BOARD_ITEM* aItem, EDA_GROUP* aScope, bool isFootprin
 }
 
 
-EDA_GROUP* PCB_GROUP::TopLevelGroup( BOARD_ITEM* aItem, EDA_GROUP* aScope, bool isFootprintEditor )
+EDA_GROUP* PCB_GROUP::TopLevelGroup( const BOARD_ITEM& aItem, const EDA_GROUP* aScope, bool isFootprintEditor )
 {
     return getNestedGroup( aItem, aScope, isFootprintEditor );
 }
 
 
-bool PCB_GROUP::WithinScope( BOARD_ITEM* aItem, PCB_GROUP* aScope, bool isFootprintEditor )
+bool PCB_GROUP::WithinScope( const BOARD_ITEM& aItem, const PCB_GROUP* aScope, bool isFootprintEditor )
 {
     EDA_GROUP* group = getClosestGroup( aItem, isFootprintEditor );
 
@@ -467,25 +467,41 @@ void PCB_GROUP::Flip( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
 }
 
 
+static bool groupHasFootprint( const PCB_GROUP* aGroup )
+{
+    bool found = false;
+
+    aGroup->RunOnChildren(
+            [&]( BOARD_ITEM* aChild )
+            {
+                if( aChild->Type() == PCB_FOOTPRINT_T )
+                    found = true;
+            },
+            RECURSE_MODE::RECURSE );
+
+    return found;
+}
+
+
 void PCB_GROUP::Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
 {
     // Footprints have no mirror, only flip. If the group holds one, leave the whole group alone
     // rather than mirror the rest and tear it apart.
-    bool hasFootprint = false;
-
-    RunOnChildren(
-            [&]( BOARD_ITEM* aChild )
-            {
-                if( aChild->Type() == PCB_FOOTPRINT_T )
-                    hasFootprint = true;
-            },
-            RECURSE_MODE::RECURSE );
-
-    if( hasFootprint )
+    if( groupHasFootprint( this ) )
         return;
 
     for( EDA_ITEM* item : m_items )
         static_cast<BOARD_ITEM*>( item )->Mirror( aCentre, aFlipDirection );
+}
+
+
+void PCB_GROUP::Mirror( const SEG& aAxis )
+{
+    if( groupHasFootprint( this ) )
+        return;
+
+    for( EDA_ITEM* item : m_items )
+        static_cast<BOARD_ITEM*>( item )->Mirror( aAxis );
 }
 
 

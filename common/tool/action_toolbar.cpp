@@ -868,7 +868,7 @@ void ACTION_TOOLBAR::onRightUp( wxMouseEvent& aEvent )
     // Hit-test the tool ourselves so the whole button works.
     wxAuiToolBarItem* item = FindToolByPosition( aEvent.GetX(), aEvent.GetY() );
 
-    if( !item )
+    if( !item || ( item->GetState() & wxAUI_BUTTON_STATE_DISABLED ) != 0 )
     {
         aEvent.Skip();
         return;
@@ -923,8 +923,8 @@ void ACTION_TOOLBAR::onMouseClick( wxMouseEvent& aEvent )
 
     if( item )
     {
-        // Ensure there is no active palette
-        if( m_palette )
+        // The release that ends the long press must not close the palette it opened
+        if( aEvent.LeftDown() && m_palette )
         {
             m_palette->Hide();
             m_palette->Destroy();
@@ -998,23 +998,25 @@ void ACTION_TOOLBAR::onPaletteEvent( wxCommandEvent& aEvent )
                                       return aAction->GetUIId() == aEvent.GetId();
                                   } );
 
-    if( actionIt != group->GetActions().end() )
+    const TOOL_ACTION* action = ( actionIt != group->GetActions().end() ) ? *actionIt : nullptr;
+
+    // Hide and destroy the palette first so it vanishes immediately, releases
+    // transient window mouse capture, and returns window focus to the canvas
+    // before the tool starts running.
+    palette->Hide();
+    palette->Destroy();
+
+    if( action )
     {
-        const TOOL_ACTION* action = *actionIt;
+        // Update the main toolbar item with the selected action
+        doSelectAction( group, *action );
 
         // Dispatch a tool event
         evt = action->MakeEvent();
         evt->SetHasPosition( false );
         m_toolManager->ProcessEvent( *evt );
         m_toolManager->GetToolHolder()->RefreshCanvas();
-
-        // Update the main toolbar item with the selected action
-        doSelectAction( group, *action );
     }
-
-    // Hide the palette
-    palette->Hide();
-    palette->Destroy();
 }
 
 

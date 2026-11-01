@@ -44,12 +44,13 @@ public:
     CommitResult Amend( GIT_COMMIT_HANDLER* aHandler, const std::vector<wxString>& aFiles, const wxString& aMessage,
                         const wxString& aAuthorName, const wxString& aAuthorEmail ) override;
 
+    UndoCommitResult UndoLastCommit( GIT_COMMIT_HANDLER* aHandler, const wxString& aExpectedBranch,
+                                     const git_oid& aExpectedHead, wxString& aMessage ) override;
+
     PushResult Push( GIT_PUSH_HANDLER* aHandler, bool aForce = false ) override;
 
-    bool HasChangedFiles( GIT_STATUS_HANDLER* aHandler ) override;
-
-    std::map<wxString, FileStatus> GetFileStatus( GIT_STATUS_HANDLER* aHandler,
-                                                  const wxString& aPathspec ) override;
+    std::map<wxString, FileStatus> GetFileStatus( GIT_STATUS_HANDLER* aHandler, const wxString& aPathspec,
+                                                  bool aChangedOnly ) override;
 
     wxString GetCurrentBranchName( GIT_STATUS_HANDLER* aHandler ) override;
 
@@ -60,7 +61,6 @@ public:
 
     wxString GetWorkingDirectory( GIT_STATUS_HANDLER* aHandler ) override;
 
-    wxString GetWorkingDirectory( GIT_CONFIG_HANDLER* aHandler ) override;
     bool GetConfigString( GIT_CONFIG_HANDLER* aHandler, const wxString& aKey,
                           wxString& aValue ) override;
 
@@ -69,27 +69,48 @@ public:
     bool SetupRemote( GIT_INIT_HANDLER* aHandler, const RemoteConfig& aConfig ) override;
 
     BranchResult SwitchToBranch( GIT_BRANCH_HANDLER* aHandler, const wxString& aBranchName ) override;
-    bool BranchExists( GIT_BRANCH_HANDLER* aHandler, const wxString& aBranchName ) override;
 
     bool PerformFetch( GIT_PULL_HANDLER* aHandler, bool aSkipLock ) override;
     PullResult PerformPull( GIT_PULL_HANDLER* aHandler ) override;
-    bool       ResetToUpstream( GIT_PULL_HANDLER* aHandler ) override;
-    PullResult RebaseOntoUpstream( GIT_PULL_HANDLER* aHandler ) override;
 
-    void PerformRevert( GIT_REVERT_HANDLER* aHandler ) override;
-
-    git_repository* GetRepositoryForFile( const char* aFilename ) override;
-    int CreateBranch( git_repository* aRepo, const wxString& aBranchName ) override;
+    git_repository* GetRepositoryForFile( const char* aFilename, wxString* aError, wxString* aTrustCommand ) override;
+    int             CreateBranch( git_repository* aRepo, const wxString& aBranchName, const wxString& aFrom ) override;
     bool RemoveVCS( git_repository*& aRepo, const wxString& aProjectPath,
                     bool aRemoveGitDir, wxString* aErrors ) override;
 
-    bool AddToIndex( GIT_ADD_TO_INDEX_HANDLER* aHandler, const wxString& aFilePath ) override;
+    bool DeleteBranch( git_repository* aRepo, const wxString& aBranchName ) override;
 
-    bool PerformAddToIndex( GIT_ADD_TO_INDEX_HANDLER* aHandler ) override;
+    bool StashSave( git_repository* aRepo, const wxString& aMessage ) override;
+    bool StashApply( git_repository* aRepo, size_t aIndex ) override;
+    bool StashPop( git_repository* aRepo, size_t aIndex ) override;
+    bool StashDrop( git_repository* aRepo, size_t aIndex ) override;
 
-    bool RemoveFromIndex( GIT_REMOVE_FROM_INDEX_HANDLER* aHandler, const wxString& aFilePath ) override;
+    bool CreateTag( git_repository* aRepo, const wxString& aName, const wxString& aMessage ) override;
+    bool DeleteTag( git_repository* aRepo, const wxString& aName ) override;
+    bool CheckoutTag( git_repository* aRepo, const wxString& aName ) override;
 
-    void PerformRemoveFromIndex( GIT_REMOVE_FROM_INDEX_HANDLER* aHandler ) override;
+    bool AddRemote( git_repository* aRepo, const wxString& aName, const wxString& aUrl ) override;
+    bool SetRemoteUrl( git_repository* aRepo, const wxString& aName, const wxString& aUrl ) override;
+    bool RemoveRemote( git_repository* aRepo, const wxString& aName ) override;
+
+    bool SetUserConfig( git_repository* aRepo, const wxString& aName, const wxString& aEmail ) override;
+
+    RestoreResult RestoreVersion( KIGIT_COMMON& aCommon, const wxString& aCommitHash,
+                                  KIGIT_ERROR_MESSAGE& aError ) override;
+
+    bool DiscardChanges( git_repository* aRepo, const std::vector<wxString>& aPaths, wxString& aError ) override;
+
+    bool IsPathInHead( git_repository* aRepo, const wxString& aPath ) override;
+
+    bool AbandonOperation( git_repository* aRepo, wxString& aError ) override;
+
+    bool GetMergeConflicts( git_repository* aRepo, const wxString& aStageDir, wxString& aHeadOid, wxString& aTheirsOid,
+                            std::vector<KIGIT_CONFLICT_SIDES>& aConflicts, wxString& aError ) override;
+
+    MergeCommitResult CreateMergedCommit( git_repository* aRepo, const wxString& aExpectedHeadOid,
+                                          const wxString&                                   aTheirsOid,
+                                          const std::vector<std::pair<wxString, wxString>>& aResolvedFiles,
+                                          KIGIT_ERROR_MESSAGE&                              aError ) override;
 
 private:
     PullResult handleFastForward( GIT_PULL_HANDLER* aHandler );

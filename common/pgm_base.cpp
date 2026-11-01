@@ -47,6 +47,7 @@
 #include <bitmaps.h>
 #include <build_version.h>
 #include <common.h>
+#include <database/access_fast_exit.h>
 #include <confirm.h>
 #include <core/arraydim.h>
 #include <id.h>
@@ -182,6 +183,18 @@ PGM_BASE::~PGM_BASE()
 
 void PGM_BASE::Destroy()
 {
+    // The preload reads the design block libraries, so it has to stop before they go
+    if( m_libraryPreloadReturn.valid() )
+    {
+        if( m_libraryPreloadInProgress.load() )
+            m_libraryPreloadAbort.store( true );
+
+        m_libraryPreloadReturn.wait();
+    }
+
+    // Clean up library IO plugins before static destruction
+    m_library_manager.reset();
+
     KICAD_CURL::Cleanup();
 
     APP_MONITOR::SENTRY::Instance()->Cleanup();
@@ -201,6 +214,12 @@ void PGM_BASE::Destroy()
     // causing a crash. By destroying the thread pool here, we ensure it's cleaned up
     // while the C++ runtime is still in a valid state.
     m_singleton.Shutdown();
+}
+
+
+void PGM_BASE::ExitIfTeardownUnsafe()
+{
+    ExitFastIfAccessWorkerAbandoned( m_runResult );
 }
 
 
@@ -328,8 +347,7 @@ wxString PGM_BASE::DesktopAppIdForProgram( const wxString& aPgmName )
     if( aPgmName == wxT( "kicad" ) )
         return wxT( KICAD_DESKTOP_APP_NAME );
 
-    if( aPgmName == wxT( "eeschema" ) || aPgmName == wxT( "pcbnew" )
-        || aPgmName == wxT( "gerbview" ) || aPgmName == wxT( "bitmap2component" )
+    if( aPgmName == wxT( "eeschema" ) || aPgmName == wxT( "pcbnew" ) || aPgmName == wxT( "gerbview" )
         || aPgmName == wxT( "pcb_calculator" ) )
     {
         // pcb_calculator installs as pcbcalculator to satisfy freedesktop naming rules.
@@ -896,10 +914,6 @@ void PGM_BASE::WritePdfBrowserInfos()
 
 void PGM_BASE::PreloadDesignBlockLibraries( KIWAY* aKiway )
 {
-    // TODO(JE) much of this code can be shared across the 3 preloads
-    constexpr static int interval = 150;
-    constexpr static int timeLimit = 120000;
-
     if( m_libraryPreloadInProgress.load() )
         return;
 
@@ -909,56 +923,23 @@ void PGM_BASE::PreloadDesignBlockLibraries( KIWAY* aKiway )
     auto preload =
         [this, aKiway]() -> void
         {
+            // A task that starts after its cancel must not reach the project that is going away
+            if( m_libraryPreloadAbort.load() )
+            {
+                m_libraryPreloadAbort.store( false );
+                Pgm().GetBackgroundJobMonitor().Remove( m_libraryPreloadBackgroundJob );
+                m_libraryPreloadBackgroundJob.reset();
+                m_libraryPreloadInProgress.store( false );
+                return;
+            }
+
             std::shared_ptr<BACKGROUND_JOB_REPORTER> reporter =
                     m_libraryPreloadBackgroundJob->m_reporter;
 
             DESIGN_BLOCK_LIBRARY_ADAPTER* adapter = aKiway->Prj().DesignBlockLibs();
 
-            int elapsed = 0;
-            bool aborted = false;
-
             reporter->Report( _( "Loading Design Block Libraries" ) );
-            adapter->AsyncLoad();
-
-            while( true )
-            {
-                if( m_libraryPreloadAbort.load() )
-                {
-                    m_libraryPreloadAbort.store( false );
-                    aborted = true;
-                    break;
-                }
-
-                std::this_thread::sleep_for( std::chrono::milliseconds( interval ) );
-
-                if( std::optional<float> loadStatus = adapter->AsyncLoadProgress() )
-                {
-                    float progress = *loadStatus;
-                    reporter->SetCurrentProgress( progress );
-
-                    if( progress >= 1 )
-                        break;
-                }
-                else
-                {
-                    reporter->SetCurrentProgress( 1 );
-                    break;
-                }
-
-                elapsed += interval;
-
-                if( elapsed > timeLimit )
-                    break;
-            }
-
-            // AbortAsyncLoad() sets the adapter's worker abort flag and then blocks,
-            // so workers exit at their next checkpoint. BlockUntilLoaded() alone just
-            // waits for each future to complete naturally, which can hang indefinitely
-            // if a worker is stuck on a stalled network or filesystem operation.
-            if( aborted )
-                adapter->AbortAsyncLoad();
-            else
-                adapter->BlockUntilLoaded();
+            adapter->RunPreload( *reporter, m_libraryPreloadAbort );
 
             Pgm().GetBackgroundJobMonitor().Remove( m_libraryPreloadBackgroundJob );
             m_libraryPreloadBackgroundJob.reset();
@@ -969,9 +950,26 @@ void PGM_BASE::PreloadDesignBlockLibraries( KIWAY* aKiway )
             aKiway->ExpressMail( FRAME_PCB_EDITOR, MAIL_RELOAD_LIB, payload, nullptr, true );
         };
 
-    thread_pool& tp = GetKiCadThreadPool();
+    // The preload waits on loads it queues on the pool, so it must not hold a pool thread itself
     m_libraryPreloadInProgress.store( true );
-    m_libraryPreloadReturn = tp.submit_task( preload );
+    m_libraryPreloadReturn = std::async( std::launch::async, preload );
+}
+
+
+void PGM_BASE::CancelDesignBlockPreload()
+{
+    if( m_libraryPreloadReturn.valid() )
+        m_libraryPreloadAbort.store( true );
+}
+
+
+void PGM_BASE::WaitForDesignBlockPreload()
+{
+    if( m_libraryPreloadReturn.valid() )
+        m_libraryPreloadReturn.wait();
+
+    // The preload has ended, so a flag it never read can only stop the next one
+    m_libraryPreloadAbort.store( false );
 }
 
 

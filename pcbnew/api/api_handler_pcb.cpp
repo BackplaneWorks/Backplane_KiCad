@@ -54,6 +54,7 @@
 #include <pcb_track.h>
 #include <pcbnew_id.h>
 #include <pcb_marker.h>
+#include <pcb_3d_body.h>
 #include <pcb_point.h>
 #include <kiway.h>
 #include <drc/drc_item.h>
@@ -61,6 +62,7 @@
 #include <jobs/job_export_pcb_dxf.h>
 #include <jobs/job_export_pcb_drill.h>
 #include <jobs/job_export_pcb_gencad.h>
+#include <jobs/job_export_pcb_specctra_dsn.h>
 #include <jobs/job_export_pcb_gerber.h>
 #include <jobs/job_export_pcb_gerbers.h>
 #include <jobs/job_export_pcb_idf.h>
@@ -82,6 +84,7 @@
 #include <netlist_reader/board_netlist_updater.h>
 #include <netlist_reader/pcb_netlist.h>
 #include <project.h>
+#include <project/project_file.h>
 #include <tool/actions.h>
 #include <string_utils.h>
 #include <tool/tool_manager.h>
@@ -93,6 +96,9 @@
 #include <zone_filler.h>
 
 #include <api/common/types/base_types.pb.h>
+
+#include <specctra_import_export/specctra.h>
+#include <reporter.h>
 #include <api/board/board_rules.pb.h>
 #include <connectivity/connectivity_data.h>
 #include <google/protobuf/util/json_util.h>
@@ -193,6 +199,15 @@ API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDI
     registerHandler<kiapi::backplane::ExportAssemblyStep, kiapi::backplane::AssemblyResponse>(
             &API_HANDLER_PCB::handleExportAssemblyStep );
     registerHandler<ImportNetlist, ImportNetlistResponse>( &API_HANDLER_PCB::handleImportNetlist );
+    registerHandler<ImportSpecctraSession, ImportSpecctraSessionResponse>(
+            &API_HANDLER_PCB::handleImportSpecctraSession );
+    registerHandler<kiapi::board::tasks::StartRefillZonesTask, kiapi::common::tasks::StartTaskResponse>(
+            &API_HANDLER_PCB::handleStartRefillZonesTask );
+    registerHandler<kiapi::board::tasks::StartDrcTask,
+                    kiapi::common::tasks::StartTaskResponse>(
+            &API_HANDLER_PCB::handleStartDrcTask );
+    registerHandler<kiapi::board::tasks::GetDrcTaskResult, kiapi::board::tasks::DrcTaskResult>(
+            &API_HANDLER_PCB::handleGetDrcTaskResult, true );
 
     registerHandler<GetBoardEditorAppearanceSettings, BoardEditorAppearanceSettings>(
             &API_HANDLER_PCB::handleGetBoardEditorAppearanceSettings );
@@ -233,6 +248,8 @@ API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDI
             &API_HANDLER_PCB::handleRunBoardJobExportDrill );
     registerHandler<RunBoardJobExportPosition, types::RunJobResponse>(
             &API_HANDLER_PCB::handleRunBoardJobExportPosition );
+    registerHandler<RunBoardJobExportSpecctraDsn, types::RunJobResponse>(
+            &API_HANDLER_PCB::handleRunBoardJobExportSpecctraDsn );
     registerHandler<RunBoardJobExportGencad, types::RunJobResponse>(
             &API_HANDLER_PCB::handleRunBoardJobExportGencad );
     registerHandler<RunBoardJobExportIpc2581, types::RunJobResponse>(
@@ -505,6 +522,9 @@ static const std::vector<KICAD_T> s_allowedBoardTypes = {
     PCB_TEXT_T,
     PCB_TEXTBOX_T,
     PCB_TABLE_T,
+    PCB_DRILL_CHART_T,
+    PCB_STACKUP_TABLE_T,
+    PCB_DRILL_MAP_T,
     PCB_TRACE_T,
     PCB_ARC_T,
     PCB_VIA_T,
@@ -515,7 +535,8 @@ static const std::vector<KICAD_T> s_allowedBoardTypes = {
     PCB_BARCODE_T,
     PCB_CONSTRAINT_T,
     PCB_GRID_ITEM_T,
-    PCB_POINT_T
+    PCB_POINT_T,
+    PCB_3D_BODY_T
 };
 
 
@@ -536,8 +557,7 @@ HANDLER_RESULT<GetItemsResponse> API_HANDLER_PCB::handleGetItems( const HANDLER_
 
     BOARD* board = this->board();
     std::vector<BOARD_ITEM*> items;
-    std::set<KICAD_T> typesRequested, typesInserted;
-    bool handledAnything = false;
+    std::set<KICAD_T> typesRequested, typesHandled;
 
     std::vector<KICAD_T> requestedTypes = parseRequestedItemTypes( aCtx.Request.types() );
 
@@ -548,7 +568,7 @@ HANDLER_RESULT<GetItemsResponse> API_HANDLER_PCB::handleGetItems( const HANDLER_
     {
         typesRequested.emplace( type );
 
-        if( typesInserted.count( type ) )
+        if( typesHandled.count( type ) )
             continue;
 
         switch( type )
@@ -556,147 +576,77 @@ HANDLER_RESULT<GetItemsResponse> API_HANDLER_PCB::handleGetItems( const HANDLER_
         case PCB_TRACE_T:
         case PCB_ARC_T:
         case PCB_VIA_T:
-            handledAnything = true;
-            std::copy( board->Tracks().begin(), board->Tracks().end(),
-                       std::back_inserter( items ) );
-            typesInserted.insert( { PCB_TRACE_T, PCB_ARC_T, PCB_VIA_T } );
+            std::ranges::copy( board->Tracks(), std::back_inserter( items ) );
+            typesHandled.insert( { PCB_TRACE_T, PCB_ARC_T, PCB_VIA_T } );
             break;
 
         case PCB_PAD_T:
-        {
-            handledAnything = true;
-
             for( FOOTPRINT* fp : board->Footprints() )
-            {
-                std::copy( fp->Pads().begin(), fp->Pads().end(),
-                           std::back_inserter( items ) );
-            }
+                std::ranges::copy( fp->Pads(), std::back_inserter( items ) );
 
-            typesInserted.insert( PCB_PAD_T );
+            typesHandled.insert( PCB_PAD_T );
             break;
-        }
 
         case PCB_FOOTPRINT_T:
-        {
-            handledAnything = true;
-
-            std::copy( board->Footprints().begin(), board->Footprints().end(),
-                       std::back_inserter( items ) );
-
-            typesInserted.insert( PCB_FOOTPRINT_T );
+            std::ranges::copy( board->Footprints(), std::back_inserter( items ) );
+            typesHandled.insert( PCB_FOOTPRINT_T );
             break;
-        }
 
         case PCB_SHAPE_T:
         case PCB_TABLE_T:
+        case PCB_DRILL_CHART_T:
+        case PCB_STACKUP_TABLE_T:
+        case PCB_DRILL_MAP_T:
         case PCB_TEXT_T:
         case PCB_TEXTBOX_T:
         case PCB_BARCODE_T:
         case PCB_REFERENCE_IMAGE_T:
         case PCB_GRID_ITEM_T:
-        {
-            handledAnything = true;
-            bool inserted = false;
-
-            for( BOARD_ITEM* item : board->Drawings() )
-            {
-                if( item->Type() == type )
-                {
-                    items.emplace_back( item );
-                    inserted = true;
-                }
-            }
-
-            if( inserted )
-                typesInserted.insert( type );
-
-            break;
-        }
-
         case PCB_DIMENSION_T:
-        {
-            handledAnything = true;
-            bool inserted = false;
-
             for( BOARD_ITEM* item : board->Drawings() )
             {
-                switch (item->Type()) {
-                    case PCB_DIM_ALIGNED_T:
-                    case PCB_DIM_CENTER_T:
-                    case PCB_DIM_RADIAL_T:
-                    case PCB_DIM_ORTHOGONAL_T:
-                    case PCB_DIM_LEADER_T:
-                        items.emplace_back( item );
-                        inserted = true;
-                        break;
-                    default:
-                        break;
-                }
+                if( item->Type() == type || BaseType( item->Type() ) == type )
+                    items.emplace_back( item );
             }
-            // we have to add the dimension subtypes to the requested to get them out
-            typesRequested.insert( {PCB_DIM_ALIGNED_T, PCB_DIM_CENTER_T, PCB_DIM_RADIAL_T, PCB_DIM_ORTHOGONAL_T, PCB_DIM_LEADER_T } );
 
-            if( inserted )
-                typesInserted.insert( {PCB_DIM_ALIGNED_T, PCB_DIM_CENTER_T, PCB_DIM_RADIAL_T, PCB_DIM_ORTHOGONAL_T, PCB_DIM_LEADER_T } );
-
+            typesHandled.insert( type );
             break;
-        }
 
         case PCB_ZONE_T:
-        {
-            handledAnything = true;
-
-            std::copy( board->Zones().begin(), board->Zones().end(),
-                       std::back_inserter( items ) );
-
-            typesInserted.insert( PCB_ZONE_T );
+            std::ranges::copy( board->Zones(), std::back_inserter( items ) );
+            typesHandled.insert( PCB_ZONE_T );
             break;
-        }
 
         case PCB_GROUP_T:
-        {
-            handledAnything = true;
-
-            std::copy( board->Groups().begin(), board->Groups().end(),
-                       std::back_inserter( items ) );
-
-            typesInserted.insert( PCB_GROUP_T );
+            std::ranges::copy( board->Groups(), std::back_inserter( items ) );
+            typesHandled.insert( PCB_GROUP_T );
             break;
-        }
 
         case PCB_POINT_T:
-        {
-            handledAnything = true;
-            std::copy( board->Points().begin(), board->Points().end(), std::back_inserter( items ) );
-            typesInserted.insert( PCB_POINT_T );
+            std::ranges::copy( board->Points(), std::back_inserter( items ) );
+            typesHandled.insert( PCB_POINT_T );
             break;
-        }
+
+        case PCB_3D_BODY_T:
+            // Not supported on a board context yet
+            break;
 
         case PCB_GENERATOR_T:
-        {
-            handledAnything = true;
             std::ranges::copy( board->Generators(), std::back_inserter( items ) );
-            typesInserted.insert( PCB_GENERATOR_T );
+            typesHandled.insert( PCB_GENERATOR_T );
             break;
-        }
 
         case PCB_CONSTRAINT_T:
-        {
-            handledAnything = true;
-
-            std::copy( board->Constraints().begin(), board->Constraints().end(),
-                       std::back_inserter( items ) );
-
-            typesInserted.insert( PCB_CONSTRAINT_T );
+            std::ranges::copy( board->Constraints(), std::back_inserter( items ) );
+            typesHandled.insert( PCB_CONSTRAINT_T );
             break;
-        }
 
         default:
             break;
         }
     }
 
-    if( !handledAnything )
+    if( typesHandled.empty() )
     {
         ApiResponseStatus e;
         e.set_status( ApiStatusCode::AS_BAD_REQUEST );
@@ -706,7 +656,7 @@ HANDLER_RESULT<GetItemsResponse> API_HANDLER_PCB::handleGetItems( const HANDLER_
 
     for( const BOARD_ITEM* item : items )
     {
-        if( !typesRequested.count( item->Type() ) )
+        if( !typesRequested.count( item->Type() ) && !typesRequested.count( BaseType( item->Type() ) ) )
             continue;
 
         google::protobuf::Any itemBuf;
@@ -1133,37 +1083,31 @@ HANDLER_RESULT<BoardDesignRulesResponse> API_HANDLER_PCB::handleSetBoardDesignRu
         newSettings.m_FillVias = viaProtection.fill();
     }
 
-    if( rules.severities_size() > 0 )
-    {
-        newSettings.m_DRCSeverities.clear();
+    newSettings.m_DRCSeverities.clear();
 
-        for( const kiapi::board::DrcSeveritySetting& severitySetting : rules.severities() )
+    for( const kiapi::board::DrcSeveritySetting& severitySetting : rules.severities() )
+    {
+        PCB_DRC_CODE ruleType =
+                FromProtoEnum<PCB_DRC_CODE, kiapi::board::DrcErrorType>( severitySetting.rule_type() );
+
+        const std::unordered_set<SEVERITY> permitted( { RPT_SEVERITY_ERROR, RPT_SEVERITY_WARNING, RPT_SEVERITY_IGNORE } );
+        SEVERITY setting = FromProtoEnum<SEVERITY, kiapi::common::types::RuleSeverity>( severitySetting.severity() );
+
+        if( !permitted.contains( setting ) )
         {
-            PCB_DRC_CODE ruleType =
-                    FromProtoEnum<PCB_DRC_CODE, kiapi::board::DrcErrorType>( severitySetting.rule_type() );
-
-            const std::unordered_set<SEVERITY> permitted( { RPT_SEVERITY_ERROR, RPT_SEVERITY_WARNING, RPT_SEVERITY_IGNORE } );
-            SEVERITY setting = FromProtoEnum<SEVERITY, kiapi::common::types::RuleSeverity>( severitySetting.severity() );
-
-            if( !permitted.contains( setting ) )
-            {
-                ApiResponseStatus e;
-                e.set_status( ApiStatusCode::AS_BAD_REQUEST );
-                e.set_error_message( fmt::format( "DRC severity must be error, warning, or ignore" ) );
-                return tl::unexpected( e );
-            }
-
-            newSettings.m_DRCSeverities[ruleType] = setting;
+            ApiResponseStatus e;
+            e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+            e.set_error_message( fmt::format( "DRC severity must be error, warning, or ignore" ) );
+            return tl::unexpected( e );
         }
+
+        newSettings.m_DRCSeverities[ruleType] = setting;
     }
 
-    if( rules.exclusions_size() > 0 )
-    {
-        newSettings.m_DrcExclusions.clear();
+    newSettings.m_DrcExclusions.clear();
 
-        for( const kiapi::board::DrcExclusion& exclusion : rules.exclusions() )
-            newSettings.m_DrcExclusions.insert( DRC_EXCLUSION::FromProto( exclusion ) );
-    }
+    for( const kiapi::board::DrcExclusion& exclusion : rules.exclusions() )
+        newSettings.m_DrcExclusions.insert( DRC_EXCLUSION::FromProto( exclusion ) );
 
     std::vector<BOARD_DESIGN_SETTINGS::VALIDATION_ERROR> errors = newSettings.ValidateDesignRules();
 
@@ -1556,7 +1500,10 @@ void API_HANDLER_PCB::setDrawingSheetFileName( const wxString& aFileName )
     BASE_SCREEN::m_DrawingSheetFileName = aFileName;
 
     if( frame() )
+    {
+        frame()->Prj().GetProjectFile().m_BoardDrawingSheetFile = aFileName;
         frame()->LoadDrawingSheet();
+    }
 }
 
 
@@ -1869,6 +1816,44 @@ HANDLER_RESULT<NetClassForNetsResponse> API_HANDLER_PCB::handleGetNetClassForNet
 }
 
 
+HANDLER_RESULT<std::vector<ZONE*>> API_HANDLER_PCB::resolveZonesToFill(
+        const google::protobuf::RepeatedPtrField<kiapi::common::types::KIID>& aZoneIds ) const
+{
+    std::vector<ZONE*> toFill;
+
+    for( const types::KIID& id : aZoneIds )
+    {
+        std::optional<BOARD_ITEM*> item = getItemById( KIID( id.value() ) );
+
+        if( !item || ( *item )->Type() != PCB_ZONE_T )
+        {
+            ApiResponseStatus e;
+            e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+            e.set_error_message( fmt::format( "zone with ID {} not found on the board", id.value() ) );
+            return tl::unexpected( e );
+        }
+
+        ZONE* zone = static_cast<ZONE*>( *item );
+
+        // The filler silently skips rule areas, which would turn this into a false success
+        if( zone->GetIsRuleArea() )
+        {
+            ApiResponseStatus e;
+            e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+            e.set_error_message( fmt::format( "zone with ID {} is a rule area and cannot be filled",
+                                              id.value() ) );
+            return tl::unexpected( e );
+        }
+
+        // A repeated id would enqueue concurrent fill tasks for the same zone
+        if( !alg::contains( toFill, zone ) )
+            toFill.push_back( zone );
+    }
+
+    return toFill;
+}
+
+
 HANDLER_RESULT<Empty> API_HANDLER_PCB::handleRefillZones( const HANDLER_CONTEXT<RefillZones>& aCtx )
 {
     if( HANDLER_RESULT<bool> documentValidation = validateDocument( aCtx.Request.board() ); !documentValidation )
@@ -1902,41 +1887,15 @@ HANDLER_RESULT<Empty> API_HANDLER_PCB::handleRefillZones( const HANDLER_CONTEXT<
     }
     else
     {
-        std::vector<ZONE*> toFill;
+        HANDLER_RESULT<std::vector<ZONE*>> toFill = resolveZonesToFill( aCtx.Request.zones() );
 
-        for( const types::KIID& id : aCtx.Request.zones() )
-        {
-            std::optional<BOARD_ITEM*> item = getItemById( KIID( id.value() ) );
-
-            if( !item || ( *item )->Type() != PCB_ZONE_T )
-            {
-                ApiResponseStatus e;
-                e.set_status( ApiStatusCode::AS_BAD_REQUEST );
-                e.set_error_message( fmt::format( "zone with ID {} not found on the board", id.value() ) );
-                return tl::unexpected( e );
-            }
-
-            ZONE* zone = static_cast<ZONE*>( *item );
-
-            // The filler silently skips rule areas, which would turn this into a false success
-            if( zone->GetIsRuleArea() )
-            {
-                ApiResponseStatus e;
-                e.set_status( ApiStatusCode::AS_BAD_REQUEST );
-                e.set_error_message( fmt::format( "zone with ID {} is a rule area and cannot be filled",
-                                                  id.value() ) );
-                return tl::unexpected( e );
-            }
-
-            // A repeated id would enqueue concurrent fill tasks for the same zone
-            if( !alg::contains( toFill, zone ) )
-                toFill.push_back( zone );
-        }
+        if( !toFill )
+            return tl::unexpected( toFill.error() );
 
         std::unique_ptr<COMMIT> commit = createCommit();
         ZONE_FILLER             filler( board(), commit.get() );
 
-        if( !filler.Fill( toFill ) )
+        if( !filler.Fill( *toFill ) )
         {
             commit->Revert();
 
@@ -2019,6 +1978,55 @@ HANDLER_RESULT<ImportNetlistResponse> API_HANDLER_PCB::handleImportNetlist( cons
     response.set_error_count( updater->GetErrorCount() );
     response.set_warning_count( updater->GetWarningCount() );
     response.set_new_footprint_count( updater->GetNewFootprintCount() );
+    return response;
+}
+
+
+HANDLER_RESULT<ImportSpecctraSessionResponse>
+API_HANDLER_PCB::handleImportSpecctraSession( const HANDLER_CONTEXT<ImportSpecctraSession>& aCtx )
+{
+    if( HANDLER_RESULT<bool> documentValidation = validateDocument( aCtx.Request.board() ); !documentValidation )
+        return tl::unexpected( documentValidation.error() );
+
+    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+        return tl::unexpected( *busy );
+
+    wxFileName sesPath( project().AbsolutePath( wxString::FromUTF8( aCtx.Request.session_path() ) ) );
+
+    if( !sesPath.IsOk() || !sesPath.FileExists() )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+        e.set_error_message(
+                fmt::format( "session file '{}' could not be opened", sesPath.GetFullPath().ToStdString() ) );
+        return tl::unexpected( e );
+    }
+
+    int                skippedCount = 0;
+    BOARD_COMMIT*      commit = static_cast<BOARD_COMMIT*>( getCurrentCommit( aCtx.ClientName ) );
+    WX_STRING_REPORTER reporter;
+
+    try
+    {
+        DSN::ImportSpecctraSession( board(), sesPath.GetFullPath(), *commit, &reporter, &skippedCount );
+    }
+    catch( const IO_ERROR& ioe )
+    {
+        commit->Revert();
+
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+        e.set_error_message( fmt::format( "failed to import session '{}': {}", sesPath.GetFullPath().ToStdString(),
+                                          ioe.What().ToStdString() ) );
+        return tl::unexpected( e );
+    }
+
+    if( !m_activeClients.count( aCtx.ClientName ) )
+        pushCurrentCommit( aCtx.ClientName, _( "Imported Specctra session via API" ) );
+
+    ImportSpecctraSessionResponse response;
+    response.set_report( reporter.GetMessages().ToUTF8() );
+    response.set_skipped_count( skippedCount );
     return response;
 }
 
@@ -2821,6 +2829,23 @@ HANDLER_RESULT<types::RunJobResponse> API_HANDLER_PCB::handleRunBoardJobExportGe
     job.m_storeOriginCoords = aCtx.Request.store_origin_coords();
     job.m_useDrillOrigin = aCtx.Request.use_drill_origin();
     job.m_useUniquePins = aCtx.Request.use_unique_pins();
+
+    return ExecuteBoardJob( pcbContext(), job );
+}
+
+
+HANDLER_RESULT<types::RunJobResponse> API_HANDLER_PCB::handleRunBoardJobExportSpecctraDsn(
+        const HANDLER_CONTEXT<RunBoardJobExportSpecctraDsn>& aCtx )
+{
+    if( HANDLER_RESULT<bool> validation = validateDocument( aCtx.Request.job_settings().document() ); !validation )
+        return tl::unexpected( validation.error() );
+
+    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+        return tl::unexpected( *busy );
+
+    JOB_EXPORT_PCB_SPECCTRA_DSN job;
+    job.m_filename = pcbContext()->GetCurrentFileName();
+    job.SetConfiguredOutputPath( wxString::FromUTF8( aCtx.Request.job_settings().output_path() ) );
 
     return ExecuteBoardJob( pcbContext(), job );
 }

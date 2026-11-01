@@ -300,10 +300,10 @@ void PCB_BASE_EDIT_FRAME::onDarkModeToggle( wxSysColourChangedEvent& aEvent )
     if( m_appearancePanel )
         m_appearancePanel->OnDarkModeToggle();
 
-    EDA_3D_VIEWER_FRAME* viewer = Get3DViewerFrame();
+    if( EDA_3D_VIEWER_FRAME* our3DViewer = GetOur3DViewerFrame() )
+        our3DViewer->OnDarkModeToggle();
 
-    if( viewer )
-        viewer->OnDarkModeToggle();
+    aEvent.Skip();
 }
 
 

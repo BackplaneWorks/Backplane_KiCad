@@ -135,7 +135,7 @@ void enumerateVia( PCB_VIA* aVia, const BOARD& aBoard, const DRILL_QUERY& aQuery
 
                 const BOARD_STACKUP& stackup = aBoard.GetDesignSettings().GetStackupDescriptor();
 
-                return std::optional<int>( stackup.GetLayerDistance( aStart, aEnd ) );
+                return std::optional<int>( stackup.GetDrillDepth( aStart, aEnd ) );
             };
 
     if( span.m_IsBackdrill )
@@ -287,8 +287,9 @@ void enumeratePad( PAD* aPad, const DRILL_QUERY& aQuery, std::vector<DRILL_OPERA
 
 bool IsDrillSlot( const PAD& aPad )
 {
-    return aPad.HasHole() && aPad.GetDrillShape() != PAD_DRILL_SHAPE::CIRCLE
-           && aPad.GetDrillSizeX() != aPad.GetDrillSizeY();
+    return aPad.HasHole()
+            && aPad.GetDrillShape() != PAD_DRILL_SHAPE::CIRCLE
+            && aPad.GetDrillSize().x != aPad.GetDrillSize().y;
 }
 
 
@@ -296,7 +297,8 @@ std::vector<DRILL_OPERATION> EnumerateDrillOperations( const BOARD& aBoard, cons
 {
     std::vector<DRILL_OPERATION> operations;
 
-    wxASSERT( IsCopperLayerLowerThan( aQuery.m_Span.BottomLayer(), aQuery.m_Span.TopLayer() ) );
+    wxASSERT( IsCopperLayerLowerThan( aQuery.m_Span.BottomLayer(), aQuery.m_Span.TopLayer() )
+                || aQuery.m_Span.BottomLayer() == aQuery.m_Span.TopLayer() );
 
     if( !aQuery.m_NonPlatedOnly )
     {
@@ -327,13 +329,12 @@ std::vector<DRILL_SPAN> EnumerateDrillSpans( const BOARD& aBoard, bool aPadBackd
 {
     std::set<DRILL_SPAN> unique;
 
-    auto addBackdrill = [&]( const PADSTACK::DRILL_PROPS& aDrill )
-    {
-        if( isBackdrillSet( aDrill ) )
-        {
-            unique.emplace( aDrill.start, aDrill.end, true, false );
-        }
-    };
+    auto addBackdrill =
+            [&]( const PADSTACK::DRILL_PROPS& aDrill )
+            {
+                if( isBackdrillSet( aDrill ) )
+                    unique.emplace( aDrill.start, aDrill.end, true, false );
+            };
 
     for( PCB_TRACK* track : aBoard.Tracks() )
     {

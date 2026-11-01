@@ -154,14 +154,15 @@ bool PGM_KICAD::OnPgmInit()
     {
         wxString name;
         FRAME_T  type;
+        // clang-format off
     } frameTypes[] = { { wxT( "pcb" ), FRAME_PCB_EDITOR },
                        { wxT( "fpedit" ), FRAME_FOOTPRINT_EDITOR },
                        { wxT( "sch" ), FRAME_SCH },
                        { wxT( "calc" ), FRAME_CALC },
-                       { wxT( "bm2cmp" ), FRAME_BM2CMP },
                        { wxT( "ds" ), FRAME_PL_EDITOR },
                        { wxT( "gerb" ), FRAME_GERBER },
                        { wxT( "" ), FRAME_T_COUNT } };
+    // clang-format on
 
     wxString frameName;
 
@@ -440,6 +441,9 @@ bool PGM_KICAD::OnPgmInit()
 
     if( mergetoolFrame )
     {
+        // Closing the host frame must not replace the merge result with an exit code of zero.
+        App().SetExitOnFrameDelete( false );
+
         // Stay hidden; the merge dialog is its own modal. The frame just needs
         // to be the wxApp top window so the modal has a parent and the wxApp
         // loop has something to drive. Defer the run via CallAfter so the
@@ -615,22 +619,28 @@ struct APP_KICAD : public wxApp
         wxLog::EnableLogging( false );
 
         program.OnPgmExit();
+        program.ExitIfTeardownUnsafe();
+
         return ret;
     }
 
 
     int OnRun() override
     {
+        int ret = -1;
+
         try
         {
-            return wxApp::OnRun();
+            ret = wxApp::OnRun();
         }
         catch(...)
         {
             Pgm().HandleException( std::current_exception() );
         }
 
-        return -1;
+        program.SetRunResult( ret );
+
+        return ret;
     }
 
 

@@ -38,7 +38,6 @@
 #include <lset.h>
 #include <lib_id.h>
 #include <lib_tree_item.h>
-#include <list>
 
 #include <zones.h>
 #include <convert_shape_list_to_polygon.h>
@@ -61,6 +60,7 @@ class SHAPE;
 class REPORTER;
 class COMPONENT_CLASS_CACHE_PROXY;
 class PCB_FOOTPRINT_FIELD_PROPERTY;
+class PCB_3D_BODY;
 class PCB_POINT;
 
 namespace KIGFX {
@@ -101,56 +101,6 @@ enum class FOOTPRINT_TYPE
     SMD
 };
 
-
-enum class EXTRUSION_MATERIAL
-{
-    PLASTIC = 0,
-    MATTE,
-    METAL,
-    COPPER
-};
-
-class EXTRUDED_3D_BODY
-{
-public:
-    EXTRUDED_3D_BODY() = default;
-
-    int                m_height = 0;
-    int                m_standoff = 0;
-    PCB_LAYER_ID       m_layer = UNDEFINED_LAYER;
-    KIGFX::COLOR4D     m_color = KIGFX::COLOR4D::UNSPECIFIED;
-    EXTRUSION_MATERIAL m_material = EXTRUSION_MATERIAL::PLASTIC;
-    bool               m_show = true;
-
-    VECTOR3D m_scale{ 1.0, 1.0, 1.0 };
-    VECTOR3D m_rotation{ 0.0, 0.0, 0.0 };
-    VECTOR3D m_offset{ 0.0, 0.0, 0.0 };
-
-    static KIGFX::COLOR4D GetDefaultColor( EXTRUSION_MATERIAL aMaterial )
-    {
-        switch( aMaterial )
-        {
-        default:
-        case EXTRUSION_MATERIAL::PLASTIC: return KIGFX::COLOR4D( 0.2, 0.2, 0.2, 1.0 );
-        case EXTRUSION_MATERIAL::MATTE: return KIGFX::COLOR4D( 0.4, 0.4, 0.4, 1.0 );
-        case EXTRUSION_MATERIAL::METAL: return KIGFX::COLOR4D( 0.7, 0.7, 0.7, 1.0 );
-        case EXTRUSION_MATERIAL::COPPER: return KIGFX::COLOR4D( 0.72, 0.45, 0.2, 1.0 );
-        }
-    }
-
-    bool operator==( const EXTRUDED_3D_BODY& aOther ) const
-    {
-        return m_height == aOther.m_height && m_standoff == aOther.m_standoff && m_layer == aOther.m_layer
-               && m_color == aOther.m_color && m_material == aOther.m_material && m_scale == aOther.m_scale
-               && m_rotation == aOther.m_rotation && m_offset == aOther.m_offset && m_show == aOther.m_show;
-    }
-
-    static uint32_t PackColorKey( const KIGFX::COLOR4D& aColor )
-    {
-        return ( (uint8_t) ( aColor.r * 255 ) << 24 ) | ( (uint8_t) ( aColor.g * 255 ) << 16 )
-               | ( (uint8_t) ( aColor.b * 255 ) << 8 ) | (uint8_t) ( aColor.a * 255 );
-    }
-};
 
 enum class FOOTPRINT_STACKUP
 {
@@ -425,13 +375,6 @@ public:
     std::vector<FP_3DMODEL>& Models()             { return m_3D_Drawings; }
     const std::vector<FP_3DMODEL>& Models() const { return m_3D_Drawings; }
 
-    bool                    HasExtrudedBody() const { return m_extrudedBody != nullptr; }
-    const EXTRUDED_3D_BODY* GetExtrudedBody() const { return m_extrudedBody.get(); }
-    EXTRUDED_3D_BODY*       GetExtrudedBody() { return m_extrudedBody.get(); }
-    EXTRUDED_3D_BODY&       EnsureExtrudedBody();
-    void                    SetExtrudedBody( std::unique_ptr<EXTRUDED_3D_BODY> aBody );
-    void                    ClearExtrudedBody() { m_extrudedBody.reset(); }
-
     void     SetPosition( const VECTOR2I& aPos ) override;
     VECTOR2I GetPosition() const override { return m_transform.GetTranslate(); }
 
@@ -472,13 +415,28 @@ public:
     }
 
     const LIB_ID& GetFPID() const { return m_fpid; }
-    void          SetFPID( const LIB_ID& aFPID )
-    {
-        m_fpid = aFPID;
-    }
-
+    void          SetFPID( const LIB_ID& aFPID ) { m_fpid = aFPID; }
     wxString GetFPIDAsString() const { return m_fpid.Format(); }
     void SetFPIDAsString( const wxString& aFPID ) { m_fpid.Parse( aFPID ); }
+
+    std::deque<PCB_3D_BODY*>& Bodies()             { return m_bodies; }
+    const std::deque<PCB_3D_BODY*>& Bodies() const { return m_bodies; }
+
+    /// Convenience accessors for now while we restrict to only one body per footprint
+    bool               HasBody() const { return !m_bodies.empty(); }
+    const PCB_3D_BODY* GetBody() const { return m_bodies.empty() ? nullptr : m_bodies.front(); }
+    PCB_3D_BODY*       GetBody() { return m_bodies.empty() ? nullptr : m_bodies.front(); }
+    PCB_3D_BODY&       EnsureBody();
+    void               ClearBody();
+
+    /**
+     * The overall height of the footprint, or 0 if not specified.  This is independent of any
+     * individual 3D body / 3D model on a footprint.  It is used for IDF export when there isn't an
+     * explicit extruded body configured, and can also be used for custom rules and perhaps more
+     * things in the future.
+     */
+    int  GetHeight() const { return m_height; }
+    void SetHeight( int aHeight ) { m_height = aHeight; }
 
     // LIB_TREE_ITEM interface
     LIB_ID GetLIB_ID() const override { return m_fpid; }
@@ -713,58 +671,6 @@ public:
             m_fpStatus &= ~FP_to_PLACE;
     }
 
-    /**
-     * Test if footprint attributes for type (SMD/Through hole/Other) match the expected
-     * type based on the pads in the footprint.
-     * Footprints with plated through-hole pads should usually be marked through hole even if they
-     * also have SMD because they might not be auto-placed.  Exceptions to this might be shielded
-     * connectors.  Otherwise, footprints with SMD pads should be marked SMD.
-     * Footprints with no connecting pads should be marked "Unspecified"
-     *
-     * @param aErrorHandler callback to handle the error messages generated
-     */
-    void CheckFootprintAttributes( const std::function<void( const wxString& )>& aErrorHandler );
-
-    /**
-     * Run non-board-specific DRC checks on footprint's pads.  These are the checks supported by
-     * both the PCB DRC and the Footprint Editor Footprint Checker.
-     *
-     * @param aUnitsProvider
-     * @param aErrorHandler callback to handle the error messages generated
-     */
-    void CheckPads( UNITS_PROVIDER* aUnitsProvider,
-                    const std::function<void( const PAD*, int, const wxString& )>& aErrorHandler );
-
-    /**
-     * Check for overlapping, different-numbered, non-net-tie pads.
-     *
-     * @param aErrorHandler callback to handle the error messages generated
-     */
-    void CheckShortingPads( const std::function<void( const PAD*, const PAD*, int aErrorCode,
-                                                      const VECTOR2I& )>& aErrorHandler );
-
-    /**
-     * Check for un-allowed shorting of pads in net-tie footprints.  If two pads are shorted,
-     * they must both appear in one of the allowed-shorting lists.
-     *
-     * @param aErrorHandler callback to handle the error messages generated
-     */
-    void CheckNetTies( const std::function<void( const BOARD_ITEM* aItem,
-                                                 const BOARD_ITEM* bItem,
-                                                 const BOARD_ITEM* cItem,
-                                                 const VECTOR2I& )>& aErrorHandler );
-
-    /**
-     * Sanity check net-tie pad groups.  Pads cannot be listed more than once, and pad numbers
-     * must correspond to a pad.
-     *
-     * @param aErrorHandler callback to handle the error messages generated
-     */
-    void CheckNetTiePadGroups( const std::function<void( const wxString& )>& aErrorHandler );
-
-    void CheckClippedSilk( const std::function<void( BOARD_ITEM* aItemA,
-                                                     BOARD_ITEM* aItemB,
-                                                     const VECTOR2I& aPt )>& aErrorHandler );
     /**
      * Cache the pads that are allowed to connect to each other in the footprint.
      */
@@ -1105,6 +1011,12 @@ public:
     const CASE_INSENSITIVE_MAP<FOOTPRINT_VARIANT>& GetVariants() const { return m_variants; }
 
     /**
+     * Replace all variants with the given set.
+     * @param aVariants Map of variant name to variant data.
+     */
+    void SetVariants( const CASE_INSENSITIVE_MAP<FOOTPRINT_VARIANT>& aVariants ) { m_variants = aVariants; }
+
+    /**
      * Get the DNP status for a specific variant.
      *
      * If the variant doesn't exist, returns the default DNP status.
@@ -1309,8 +1221,7 @@ public:
     /**
      * Return true if a board footprint differs from the library version.
      */
-    bool FootprintNeedsUpdate( const FOOTPRINT* aLibFP, int aCompareFlags = 0,
-                               REPORTER* aReporter = nullptr );
+    bool FootprintNeedsUpdate( const FOOTPRINT* aLibFP, int aCompareFlags = 0, REPORTER* aReporter = nullptr );
 
     /**
      * Take ownership of caller's heap allocated aInitialComments block.
@@ -1470,20 +1381,20 @@ protected:
     void addMandatoryFields();
 
 private:
-    std::deque<PCB_FIELD*>  m_fields;    // Fields, mapped by name, owned by pointer
-    std::deque<BOARD_ITEM*> m_drawings;  // Drawings in the footprint, owned by pointer
-    std::deque<PAD*>        m_pads;      // Pads, owned by pointer
-    std::vector<ZONE*>      m_zones;     // Rule area zones, owned by pointer
-    std::deque<PCB_GROUP*>  m_groups;    // Groups, owned by pointer
-    std::deque<PCB_CONSTRAINT*> m_constraints;  // Geometric constraints, owned by pointer
-    std::deque<PCB_POINT*>  m_points;    // Points, owned by pointer
+    std::deque<PCB_FIELD*>      m_fields;            // Fields, mapped by name, owned by pointer
+    std::deque<BOARD_ITEM*>     m_drawings;          // Drawings in the footprint, owned by pointer
+    std::deque<PAD*>            m_pads;              // Pads, owned by pointer
+    std::vector<ZONE*>          m_zones;             // Rule area zones, owned by pointer
+    std::deque<PCB_GROUP*>      m_groups;            // Groups, owned by pointer
+    std::deque<PCB_CONSTRAINT*> m_constraints;       // Geometric constraints, owned by pointer
+    std::deque<PCB_POINT*>      m_points;            // Points, owned by pointer
 
-    TRANSFORM_TRS   m_transform;
-    bool            m_flipped = false;
-    LIB_ID          m_fpid;
-    int             m_attributes;        // Flag bits (see FOOTPRINT_ATTR_T)
-    int             m_fpStatus = 0;      // For autoplace: flags (PLACED, TO_PLACE)
-    int             m_fileFormatVersionAtLoad;
+    TRANSFORM_TRS               m_transform;
+    bool                        m_flipped = false;
+    LIB_ID                      m_fpid;
+    int                         m_attributes;        // Flag bits (see FOOTPRINT_ATTR_T)
+    int                         m_fpStatus = 0;      // For autoplace: flags (PLACED, TO_PLACE)
+    int                         m_fileFormatVersionAtLoad;
 
     /// Variant data for this footprint, keyed by variant name
     CASE_INSENSITIVE_MAP<FOOTPRINT_VARIANT> m_variants;
@@ -1501,65 +1412,66 @@ private:
     mutable std::mutex                                     m_geometry_cache_mutex;
     mutable std::unique_ptr<FOOTPRINT_GEOMETRY_CACHE_DATA> m_geometry_cache;
 
-    mutable std::map<wxString, std::unique_ptr<PCB_FOOTPRINT_FIELD_PROPERTY>> m_dynamicPropertyCache;
+    /// Per-object cache of dynamic property descriptors for custom fields, keyed by descriptor name
+    /// and populated lazily.  Entries linger after a key is removed but are simply not enumerated.
+    mutable std::map<wxString, std::unique_ptr<PCB_FOOTPRINT_FIELD_PROPERTY>> m_fieldPropsStorageCache;
 
     // A list of pad groups, each of which is allowed to short nets within their group.
     // A pad group is a comma-separated list of pad numbers.
-    std::vector<wxString>  m_netTiePadGroups;
+    std::vector<wxString>    m_netTiePadGroups;
 
     // A list of 1:N footprint item to allowed net numbers
     std::map<const BOARD_ITEM*, std::set<int>> m_netTieCache;
 
     /// A list of jumper pad groups, each of which is a set of pad numbers that should be jumpered
     /// together (treated as internally connected for the purposes of connectivity)
-    JUMPER_GROUP_SET m_jumperPadGroups;
+    JUMPER_GROUP_SET         m_jumperPadGroups;
 
     /// Flag that this footprint should automatically treat sets of two or more pads with the same
     /// number as jumpered pin groups
-    bool                  m_duplicatePadNumbersAreJumpers;
+    bool                     m_duplicatePadNumbersAreJumpers;
 
-    bool                  m_allowMissingCourtyard;
-    bool                  m_allowSolderMaskBridges;
+    bool                     m_allowMissingCourtyard;
+    bool                     m_allowSolderMaskBridges;
 
     // Optional overrides
-    ZONE_CONNECTION       m_zoneConnection;
-    std::optional<int>    m_clearance;
-    std::optional<int>    m_solderMaskMargin;       // Solder mask margin
-    std::optional<int>    m_solderPasteMargin;      // Solder paste margin absolute value
-    std::optional<double> m_solderPasteMarginRatio; // Solder mask margin ratio of pad size
-                                                    // The final margin is the sum of these 2 values
+    ZONE_CONNECTION          m_zoneConnection;
+    std::optional<int>       m_clearance;
+    std::optional<int>       m_solderMaskMargin;       // Solder mask margin
+    std::optional<int>       m_solderPasteMargin;      // Solder paste margin absolute value
+    std::optional<double>    m_solderPasteMarginRatio; // Solder mask margin ratio of pad size
+                                                       // The final margin is the sum of these 2 values
 
-    LSET              m_stackupLayers; // Layers in the stackup
-    FOOTPRINT_STACKUP m_stackupMode;   // Stackup mode for this footprint
-    LSET              m_privateLayers; // Layers visible only in the footprint editor
+    LSET                     m_stackupLayers;          // Layers in the stackup
+    FOOTPRINT_STACKUP        m_stackupMode;            // Stackup mode for this footprint
+    LSET                     m_privateLayers;          // Layers visible only in the footprint editor
 
-    wxString        m_libDescription;    // File name and path for documentation file.
-    wxString        m_keywords;          // Search keywords to find footprint in library.
-    KIID_PATH       m_path;              // Path to associated symbol ([sheetUUID, .., symbolUUID]).
-    wxString        m_sheetname;         // Name of the sheet containing the symbol for this footprint
-    wxString        m_sheetfile;         // File of the sheet containing the symbol for this footprint
-    wxString        m_filters;           // Footprint filters from symbol
-    timestamp_t     m_lastEditTime;
-    int             m_arflag;            // Use to trace ratsnest and auto routing.
-    KIID            m_link;              // Temporary logical link used during editing
+    wxString                 m_libDescription;         // File name and path for documentation file.
+    wxString                 m_keywords;               // Search keywords to find footprint in library.
+    KIID_PATH                m_path;                   // Path to associated symbol ([sheetUUID, .., symbolUUID]).
+    wxString                 m_sheetname;              // Name of the sheet containing the symbol for this footprint
+    wxString                 m_sheetfile;              // File of the sheet containing the symbol for this footprint
+    wxString                 m_filters;                // Footprint filters from symbol
+    timestamp_t              m_lastEditTime;
+    int                      m_arflag;                 // Use to trace ratsnest and auto routing.
+    KIID                     m_link;                   // Temporary logical link used during editing
+    std::deque<PCB_3D_BODY*> m_bodies;                 // 3D bodies (extruded or model), owned by pointer
+    std::vector<FP_3DMODEL>  m_3D_Drawings;            // 3D models.
+    int                      m_height = 0;
 
-    std::vector<FP_3DMODEL> m_3D_Drawings;       // 3D models.
-
-    std::unique_ptr<EXTRUDED_3D_BODY> m_extrudedBody; // nullptr = disabled
-
-    wxArrayString*          m_initial_comments;  // s-expression comments in the footprint,
-                                                 //   lazily allocated only if needed for speed
+    wxArrayString*           m_initial_comments;       // s-expression comments in the footprint,
+                                                       //   lazily allocated only if needed for speed
 
     mutable std::unique_ptr<FOOTPRINT_COURTYARD_CACHE_DATA> m_courtyard_cache;
     mutable std::mutex                                      m_courtyard_cache_mutex;
 
-    std::unordered_set<wxString> m_transientComponentClassNames;
+    std::unordered_set<wxString>                 m_transientComponentClassNames;
     std::unique_ptr<COMPONENT_CLASS_CACHE_PROXY> m_componentClassCacheProxy;
 
     // Optional unit mapping information for multi-unit symbols
-    std::vector<FP_UNIT_INFO> m_unitInfo;
+    std::vector<FP_UNIT_INFO>                    m_unitInfo;
 
-    std::vector<SEARCH_TERM> m_searchTerms;
+    std::vector<SEARCH_TERM>                     m_searchTerms;
 };
 
 #endif     // FOOTPRINT_H

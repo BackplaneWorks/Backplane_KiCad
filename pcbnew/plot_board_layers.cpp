@@ -567,7 +567,7 @@ void PlotStandardLayer( BOARD* aBoard, PLOTTER* aPlotter, const LSET& aLayerMask
                         if( sameXYClearance )
                         {
                             int originalRadius = pad->GetRoundRectCornerRadius( aLayer );
-                            int newRadius      = std::max( 0, originalRadius + mask_clearance );
+                            int newRadius      = std::max( 0, originalRadius + mask_clearance + width_adj / 2 );
                             pad->SetSize( aLayer, padPlotsSize );
                             pad->SetRoundRectCornerRadius( aLayer, newRadius );
                         }
@@ -976,9 +976,9 @@ void PlotLayerOutlines( BOARD* aBoard, PLOTTER* aPlotter, const LSET& aLayerMask
                 {
                     if( pad->HasHole() )
                     {
-                        if( pad->GetDrillSizeX() == pad->GetDrillSizeY() )
+                        if( pad->GetDrillSize().x == pad->GetDrillSize().y )
                         {
-                            int drill = pad->GetDrillSizeX();
+                            int drill = pad->GetDrillSize().x;
 
                             if( aPlotOpt.GetDrillMarksType() == DRILL_MARKS::SMALL_DRILL_SHAPE )
                                 drill = std::min( smallDrill, drill );
@@ -1389,7 +1389,6 @@ static void FillNegativeKnockout( PLOTTER *aPlotter, const BOX2I &aBbbox )
 static void plotBackgroundColor( BOARD* aBoard, const PCB_PLOT_PARAMS* aPlotOpts, PLOTTER* aPlotter )
 {
     const PAGE_INFO& pageInfo = aPlotter->PageSettings();
-    const VECTOR2I   plotOffset = aPlotter->GetPlotOffsetUserUnits();
     const VECTOR2I   pageSizeIU( pageInfo.GetWidthIU( pcbIUScale.IU_PER_MILS ),
                                  pageInfo.GetHeightIU( pcbIUScale.IU_PER_MILS ) );
 
@@ -1398,10 +1397,16 @@ static void plotBackgroundColor( BOARD* aBoard, const PCB_PLOT_PARAMS* aPlotOpts
     {
         aPlotter->SetColor( aPlotOpts->GetBackgroundColor() );
 
-        // Undo the viewport scale so the background fills the physical page.
-        VECTOR2I end = plotOffset + pageSizeIU / aPlotter->GetPlotScale();
+        const VECTOR2I plotOffset = aPlotter->GetPlotOffsetUserUnits();
+        const double   plotScale = aPlotter->GetPlotScale();
+        const bool     plotMirror = aPlotter->GetPlotMirrored();
+        const double   iusPerDecimil = aPlotter->GetIUsPerDecimil();
 
-        aPlotter->Rect( plotOffset, end, FILL_T::FILLED_SHAPE, 1.0 );
+        // Draw in unscaled page coordinates so small plot scales do not require coordinates
+        // outside the range of VECTOR2I.
+        aPlotter->SetViewport( VECTOR2I( 0, 0 ), iusPerDecimil, 1.0, plotMirror );
+        aPlotter->Rect( VECTOR2I( 0, 0 ), pageSizeIU, FILL_T::FILLED_SHAPE, 1.0 );
+        aPlotter->SetViewport( plotOffset, iusPerDecimil, plotScale, plotMirror );
     }
 }
 

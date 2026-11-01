@@ -24,6 +24,7 @@
 #include <future>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <shared_mutex>
 
 #include <kicommon.h>
@@ -34,6 +35,7 @@
 
 class LIBRARY_MANAGER;
 class LIBRARY_MANAGER_ADAPTER;
+class PROGRESS_REPORTER;
 class PROJECT;
 
 
@@ -57,6 +59,7 @@ struct KICOMMON_API LIB_STATUS
 /// Storage for an actual loaded library (including library content owned by the plugin)
 struct KICOMMON_API LIB_DATA
 {
+    /// Never destroyed while holding the map's mutex; a plugin's worker thread may be blocked on it
     std::unique_ptr<IO_BASE> plugin;
     const LIBRARY_TABLE_ROW* row = nullptr;
     LIB_STATUS               status;
@@ -173,9 +176,24 @@ public:
 
     void BlockUntilLoaded();
 
+    /**
+     * Starts AsyncLoad() and waits for it on the calling thread, reporting progress to @a aReporter.
+     * Setting @a aAbort asks the plugins to cancel, but the call still waits for the workers, so one blocked in
+     * I/O that cannot be cancelled delays the return.
+     *
+     * @return false when @a aAbort cut the load short, in which case the flag has been cleared
+     */
+    bool RunPreload( PROGRESS_REPORTER& aReporter, std::atomic_bool& aAbort );
+
     /// Aborts any async load in progress; blocks until fully done aborting.
     /// This is the public interface to allow LIBRARY_MANAGER to abort loads before project changes.
-    void AbortAsyncLoad();
+    /// Only a caller that discards the libraries, or leaves them to RestartAsyncLoad(), passes true to end the
+    /// in-flight loads early.
+    void AbortAsyncLoad( bool aCancelPlugins = false );
+
+    /// Queues again the libraries a cancelling abort left INVALID, when one has cut a load short since the last
+    /// AsyncLoad() that started. Unlike AsyncLoad() it waits for a load lock held elsewhere, so it is never dropped.
+    void RestartAsyncLoad();
 
     bool IsLibraryLoaded( const wxString& aNickname );
 
@@ -202,9 +220,21 @@ public:
     /// Creates the library (i.e. saves to disk) for the given row if it exists
     bool CreateLibrary( const wxString& aNickname );
 
-    virtual bool SupportsConfigurationDialog( const wxString& aNickname ) const { return false; }
+    /**
+     * Configuration works from the row itself, so libraries that failed to load or are not yet
+     * committed to a table can still be configured.
+     */
+    virtual bool SupportsConfigurationDialog( const LIBRARY_TABLE_ROW& aRow ) const { return false; }
 
-    virtual int ShowConfigurationDialog( const wxString& aNickname, wxWindow* aParent ) const { return wxID_CANCEL; }
+    /**
+     * Shows the plugin's configuration dialog for a library table row.  On OK, the committed library
+     * with the same nickname, type and URI in aScope is reloaded.
+     */
+    virtual int ShowConfigurationDialog( const LIBRARY_TABLE_ROW& aRow, LIBRARY_TABLE_SCOPE aScope,
+                                         wxWindow* aParent )
+    {
+        return wxID_CANCEL;
+    }
 
     virtual std::optional<LIBRARY_ERROR> LibraryError( const wxString& aNickname ) const;
 
@@ -240,11 +270,14 @@ protected:
     /// globalLibs() cache. The cached LIB_DATA::row pointers reference this manager's tables, so
     /// they must be dropped before the manager is destroyed or a later manager's fetchIfLoaded()
     /// would dereference freed rows. Derived destructors must call this while globalLibs() is
-    /// still resolvable.
+    /// still resolvable. Derived destructors must also call resetProjectCache() so plugin worker
+    /// threads are joined while the derived adapter is still alive.
     void evictOwnedGlobalEntries();
 
-    /// Aborts any async load in progress; blocks until fully done aborting
-    void abortLoad();
+    /// Aborts any async load in progress; blocks until fully done aborting.
+    /// A cancelled library is left INVALID and recorded for RestartAsyncLoad(), so a caller that cancels and keeps
+    /// its tables calls that once they are in place.
+    void abortLoad( bool aCancelPlugins = false );
 
     /// Aborts pending loads and resets every project-scope cache entry in place
     /// (plugin and row cleared, status returned to INVALID) while preserving the
@@ -253,7 +286,8 @@ protected:
     /// falling through to globalLibs(), which is what preserves project-over-
     /// global shadowing across a project table reload. Shared between
     /// ProjectChanged() and ProjectTablesChanged() so both hooks stay in sync.
-    void resetProjectCache();
+    /// Derived destructors pass true, since nothing is left to load the cancelled libraries for.
+    void resetProjectCache( bool aCancelPlugins = false );
 
     /// Creates a concrete plugin for the given row
     virtual LIBRARY_RESULT<IO_BASE*> createPlugin( const LIBRARY_TABLE_ROW* row ) = 0;
@@ -269,6 +303,20 @@ protected:
     /// other plugins' LoadSymbol paths while already holding their own mutex.
     static std::recursive_mutex& pluginMutex( const wxString& aNickname );
 
+    using LOADING_KEY = std::pair<wxString, LIBRARY_TABLE_SCOPE>;
+
+    /// The libraries an async worker is enumerating right now
+    std::vector<LOADING_KEY> loadingSnapshot();
+
+    /// Asks the plugins in aSnapshot to end their load early, so abortLoad() does not wait out their waits
+    void cancelLoadingPlugins( const std::vector<LOADING_KEY>& aSnapshot );
+
+    /// Tells the plugins cancelLoadingPlugins() reached that the loads they were asked to end have ended
+    void resumeLoadingPlugins( const std::vector<LOADING_KEY>& aCancelled );
+
+    /// Runs aAction on the plugin of a library when it is still in the map
+    void withPlugin( const LOADING_KEY& aKey, const std::function<void( IO_BASE& )>& aAction );
+
     LIBRARY_MANAGER& m_manager;
 
     // The actual library content is held in an associated IO plugin
@@ -276,12 +324,50 @@ protected:
 
     mutable std::shared_mutex m_librariesMutex;
 
-    std::atomic_bool               m_abort;
+    /// Libraries an async worker is enumerating, so a cancel reaches exactly those plugins
+    std::mutex            m_loadingMutex;
+    std::set<LOADING_KEY> m_loading;
+
+    std::atomic_bool m_abort;
+
+    /// Set with m_abort by an abort that cancels, so only such an abort turns a failed load into INVALID
+    std::atomic_bool m_cancelling{ false };
+
+    /// Counts cancelling aborts, so a load can tell one that began after it started from one that already ended
+    std::atomic<unsigned> m_abortGeneration{ 0 };
+
     std::vector<std::future<void>> m_futures;
+
+    /// Set when a cancelling abort cut a worker short, and cleared only by an AsyncLoad() that starts. It outlives
+    /// later aborts, so whichever caller restarts the loads finds what an earlier one cancelled. Guarded by
+    /// m_loadMutex.
+    bool m_rearmPending = false;
 
     std::atomic<size_t> m_loadCount{ 0 };
     std::atomic<size_t> m_loadTotal{ 0 };
     std::mutex          m_loadMutex;
+
+private:
+    /// A library queued by AsyncLoad(), with its URI resolved on the calling thread
+    struct LOAD_WORK
+    {
+        wxString            nickname;
+        LIBRARY_TABLE_SCOPE scope;
+        wxString            uri;
+    };
+
+    /// The body of AsyncLoad(), run with m_loadMutex already held by the caller
+    void asyncLoadLocked();
+
+    /// Loads one queued library on a worker thread.
+    /// @return false when a cancel cut the load short, so the row is not counted
+    bool loadQueuedRow( const LOAD_WORK& aWork );
+
+    /// The cache entry of a queued library, created and owned by this adapter when it is missing, so a global
+    /// failure entry is still evicted with the adapter. The caller holds the lock of the library's scope.
+    LIB_DATA& queuedRowEntry( const LOAD_WORK& aWork );
+
+    std::shared_mutex& scopeMutex( LIBRARY_TABLE_SCOPE aScope );
 };
 
 
@@ -348,7 +434,12 @@ public:
     /// Abort any async library loading operations in progress. This should be called before
     /// modifying the project list to prevent race conditions with background threads that
     /// access Prj().
-    void AbortAsyncLoads();
+    /// Only a caller that discards the libraries, or calls RestartAsyncLoads() once every table and cache has been
+    /// replaced, passes true to end the in-flight loads early.
+    void AbortAsyncLoads( bool aCancelPlugins = false );
+
+    /// Queues again the libraries that any cancelling abort left INVALID, for every registered adapter
+    void RestartAsyncLoads();
 
     void RegisterAdapter( LIBRARY_TABLE_TYPE aType,
                           std::unique_ptr<LIBRARY_MANAGER_ADAPTER>&& aAdapter );

@@ -20,6 +20,7 @@
 
 #include <fast_float/fast_float.h>
 #include <cstdarg>
+#include <memory>
 #include <cstdio>
 #include <cstdlib>         // bsearch()
 #include <cctype>
@@ -242,6 +243,22 @@ int DSNLEXER::findToken( const std::string& tok ) const
 
         if( it != keywordsLookup->end() )
             return it->second;
+
+        // The Specctra DSN grammar is case-insensitive and the keyword table is lowercase
+        if( specctraMode )
+        {
+            std::string lower;
+
+            lower.reserve( tok.size() );
+
+            for( char cc : tok )
+                lower += std::tolower( cc );
+
+            it = keywordsLookup->find( lower.c_str() );
+
+            if( it != keywordsLookup->end() )
+                return it->second;
+        }
     }
 
     return DSN_SYMBOL;      // not a keyword, some arbitrary symbol.
@@ -475,16 +492,7 @@ inline bool DSNLEXER::isSep( char cc )
 }
 
 
-/**
- * Return true if the next sequence of text is a number:
- * either an integer, fixed point, or float with exponent.  Stops scanning
- * at the first non-number character, even if it is not whitespace.
- *
- * @param cp is the start of the current token.
- * @param limit is the end of the current token.
- * @return true if input token is a number, else false.
- */
-static bool isNumber( const char* cp, const char* limit )
+bool DSNLEXER::isNumber( const char* cp, const char* limit )
 {
     // regex for a float: "^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?" i.e. any number,
     // code traversal manually here:
@@ -834,13 +842,13 @@ exit:   // single point of exit, no returns elsewhere please.
 
 wxArrayString* DSNLEXER::ReadCommentLines()
 {
-    wxArrayString*  ret = nullptr;
-    bool            cmt_setting = SetCommentsAreTokens( true );
-    int             tok = NextTok();
+    std::unique_ptr<wxArrayString> ret;
+    bool                           cmt_setting = SetCommentsAreTokens( true );
+    int                            tok = NextTok();
 
     if( tok == DSN_COMMENT )
     {
-        ret = new wxArrayString();
+        ret = std::make_unique<wxArrayString>();
 
         do
         {
@@ -851,7 +859,7 @@ wxArrayString* DSNLEXER::ReadCommentLines()
 
     SetCommentsAreTokens( cmt_setting );
 
-    return ret;
+    return ret.release();
 }
 
 // Skip the white space and also accept both normal numbers and scientfic notation

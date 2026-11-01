@@ -690,6 +690,11 @@ bool SCH_SELECTION_TOOL::Init()
                 return aSel.GetSize() >= 1 && aSel.OnlyContains( { SCH_SYMBOL_T } );
             };
 
+    SELECTION_CONDITION imageSelection = []( const SELECTION& aSel )
+    {
+        return aSel.GetSize() == 1 && aSel.OnlyContains( { SCH_BITMAP_T } );
+    };
+
     std::shared_ptr<NET_CHAIN_MENU> netChainMenu = std::make_shared<NET_CHAIN_MENU>();
     netChainMenu->SetTool( this );
     m_menu->RegisterSubMenu( netChainMenu );
@@ -699,6 +704,7 @@ bool SCH_SELECTION_TOOL::Init()
     menu.AddItem( ACTIONS::groupLeave,                  inGroupCondition,    1 );
     menu.AddItem( SCH_ACTIONS::placeLinkedDesignBlock,  groupEnterCondition, 1 );
     menu.AddItem( SCH_ACTIONS::saveToLinkedDesignBlock, groupEnterCondition, 1 );
+    menu.AddItem( SCH_ACTIONS::convertImageToOutlines,  imageSelection,      1 );
     menu.AddItem( SCH_ACTIONS::clearHighlight,          haveHighlight && SCH_CONDITIONS::Idle, 1 );
     menu.AddSeparator(                                  haveHighlight && SCH_CONDITIONS::Idle, 1 );
 
@@ -1483,7 +1489,7 @@ int SCH_SELECTION_TOOL::Main( const TOOL_EVENT& aEvent )
         {
             // Passing reactivation would nest another selection loop and retain its view items.
             evt->SetPassEvent( false );
-            m_frame->GetCanvas()->SetCurrentCursor( KICURSOR::ARROW );
+            m_frame->GetCanvas()->SetCurrentCursor( m_nonModifiedCursor );
         }
         else if( evt->Action() == TA_UNDO_REDO_PRE )
         {
@@ -1580,6 +1586,11 @@ int SCH_SELECTION_TOOL::Main( const TOOL_EVENT& aEvent )
             )
             {
                 m_nonModifiedCursor = KICURSOR::MOVING;
+            }
+            else if( m_selectionMode == SELECTION_MODE::INSIDE_LASSO
+                     || m_selectionMode == SELECTION_MODE::TOUCHING_LASSO )
+            {
+                m_nonModifiedCursor = KICURSOR::SELECT_LASSO;
             }
             else
             {
@@ -2612,6 +2623,7 @@ void SCH_SELECTION_TOOL::updateReferencePoint()
 int SCH_SELECTION_TOOL::SetSelectPoly( const TOOL_EVENT& aEvent )
 {
     m_selectionMode = SELECTION_MODE::INSIDE_LASSO;
+    m_nonModifiedCursor = KICURSOR::SELECT_LASSO;
     m_frame->GetCanvas()->SetCurrentCursor( KICURSOR::SELECT_LASSO );
     m_toolMgr->PostAction( ACTIONS::selectionTool );
     return 0;
@@ -2621,6 +2633,7 @@ int SCH_SELECTION_TOOL::SetSelectPoly( const TOOL_EVENT& aEvent )
 int SCH_SELECTION_TOOL::SetSelectRect( const TOOL_EVENT& aEvent )
 {
     m_selectionMode = SELECTION_MODE::INSIDE_RECTANGLE;
+    m_nonModifiedCursor = KICURSOR::ARROW;
     m_frame->GetCanvas()->SetCurrentCursor( KICURSOR::ARROW );
     m_toolMgr->PostAction( ACTIONS::selectionTool );
     return 0;
@@ -3043,8 +3056,8 @@ void SCH_SELECTION_TOOL::SelectMultiple( KIGFX::PREVIEW::SELECTION_AREA& aArea, 
             item->SetFlags( SHOW_ELEC_TYPE );
 
         // If the pin lives inside a group that is already being selected, don't also select the pin.
-        if( EDA_GROUP* group = SCH_GROUP::TopLevelGroup( static_cast<SCH_ITEM*>( item ), m_enteredGroup,
-                                                         m_isSymbolEditor ) )
+        if( EDA_GROUP* group =
+                    SCH_GROUP::TopLevelGroup( *static_cast<SCH_ITEM*>( item ), m_enteredGroup, m_isSymbolEditor ) )
         {
             if( collector.HasItem( group->AsEdaItem() ) )
             {
@@ -3113,7 +3126,7 @@ void SCH_SELECTION_TOOL::FilterCollectorForHierarchy( SCH_COLLECTOR& aCollector,
             start = sym;
 
         // If a group is entered, disallow selections of objects outside the group.
-        if( m_enteredGroup && !SCH_GROUP::WithinScope( item, m_enteredGroup, m_isSymbolEditor ) )
+        if( m_enteredGroup && !SCH_GROUP::WithinScope( *item, m_enteredGroup, m_isSymbolEditor ) )
         {
             aCollector.Remove( item );
             continue;
@@ -3121,8 +3134,8 @@ void SCH_SELECTION_TOOL::FilterCollectorForHierarchy( SCH_COLLECTOR& aCollector,
 
         // If any element is a member of a group, replace those elements with the top containing
         // group.
-        if( EDA_GROUP* top = promoteToGroups ? SCH_GROUP::TopLevelGroup( start, m_enteredGroup, m_isSymbolEditor )
-                                             : nullptr )
+        if( EDA_GROUP* top =
+                    promoteToGroups ? SCH_GROUP::TopLevelGroup( *start, m_enteredGroup, m_isSymbolEditor ) : nullptr )
         {
             if( top->AsEdaItem() != item )
             {
@@ -4196,7 +4209,7 @@ void SCH_SELECTION_TOOL::select( EDA_ITEM* aItem )
     // Don't group when we select new items, the schematic editor selects all new items for moving.
     // The PCB editor doesn't need this logic because it doesn't select new items for moving.
     if( m_enteredGroup && !aItem->IsNew()
-        && !SCH_GROUP::WithinScope( static_cast<SCH_ITEM*>( aItem ), m_enteredGroup, m_isSymbolEditor ) )
+        && !SCH_GROUP::WithinScope( *static_cast<SCH_ITEM*>( aItem ), m_enteredGroup, m_isSymbolEditor ) )
     {
         ExitGroup();
     }

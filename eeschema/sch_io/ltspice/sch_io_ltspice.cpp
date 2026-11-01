@@ -24,6 +24,7 @@
 #include <sch_io/ltspice/sch_io_ltspice_parser.h>
 
 #include <project_sch.h>
+#include <richio.h>
 #include <schematic.h>
 #include <sch_sheet.h>
 #include <sch_screen.h>
@@ -39,8 +40,24 @@ int SCH_IO_LTSPICE::GetModifyHash() const
 }
 
 
-SCH_SHEET* SCH_IO_LTSPICE::LoadSchematicFile( const wxString& aFileName, SCHEMATIC* aSchematic,
-                                              SCH_SHEET*             aAppendToMe,
+bool SCH_IO_LTSPICE::CanReadSchematicFile( const wxString& aFileName ) const
+{
+    if( !SCH_IO::CanReadSchematicFile( aFileName ) )
+        return false;
+
+    // PADS uses .asc too, and LTspice files can be UTF-16 so the header needs decoding
+    try
+    {
+        return SafeReadFile( aFileName, wxS( "r" ) ).Left( 7 ).Upper() == wxS( "VERSION" );
+    }
+    catch( const IO_ERROR& )
+    {
+        return false;
+    }
+}
+
+
+SCH_SHEET* SCH_IO_LTSPICE::LoadSchematicFile( const wxString& aFileName, SCHEMATIC* aSchematic, SCH_SHEET* aAppendToMe,
                                               const std::map<std::string, UTF8>* aProperties )
 {
     wxASSERT( !aFileName || aSchematic );
@@ -143,11 +160,6 @@ SCH_SHEET* SCH_IO_LTSPICE::LoadSchematicFile( const wxString& aFileName, SCHEMAT
     {
         m_reporter->Report( e.What(), RPT_SEVERITY_ERROR );
     }
-
-    aSchematic->CurrentSheet().UpdateAllScreenReferences();
-
-    // fixing all junctions at the end
-    aSchematic->FixupJunctionsAfterImport();
 
     return rootSheet;
 }

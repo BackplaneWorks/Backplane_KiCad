@@ -75,6 +75,7 @@ public:
      */
     int SketchRoute( const TOOL_EVENT& aEvent );
     int OptimizeSelected( const TOOL_EVENT& aEvent );
+    int SpreadTracks( const TOOL_EVENT& aEvent );
 
     int InlineBreakTrack( const TOOL_EVENT& aEvent );
     bool CanInlineDrag( int aDragMode );
@@ -137,6 +138,8 @@ private:
     int onLayerCommand( const TOOL_EVENT& aEvent );
     int onViaCommand( const TOOL_EVENT& aEvent );
     int onViaStackCommand( const TOOL_EVENT& aEvent );
+    int onSpreadTracksSetDistance( const TOOL_EVENT& aEvent );
+    int onSpreadTracksIncDecDistance( const TOOL_EVENT& aEvent, bool aInc );
 
     /// Build and commit a staggered via stack queued during routing (after the PNS world is gone).
     void commitPendingViaStack();

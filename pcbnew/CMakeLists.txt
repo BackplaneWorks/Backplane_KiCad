@@ -445,7 +445,6 @@ set( PCBNEW_CLASS_SRCS
     board_statistics.cpp
     board_statistics_report.cpp
     board_tables/board_characteristics_table.cpp
-    board_tables/board_stackup_table.cpp
     build_BOM_from_board.cpp
     cleanup_item.cpp
     convert_shape_list_to_polygon.cpp
@@ -472,6 +471,9 @@ set( PCBNEW_CLASS_SRCS
     graphics_cleaner.cpp
     grid_layer_box_helpers.cpp
     grid_layer_box_helpers.h
+    import_design_rules.cpp
+    import_local_footprint_libs.cpp
+    import_net_reconciler.cpp
     initpcb.cpp
     layer_pairs.cpp
     load_select_footprint.cpp
@@ -491,6 +493,7 @@ set( PCBNEW_CLASS_SRCS
     pcbplot.cpp
     plot_board_layers.cpp
     plot_brditems_plotter.cpp
+    ref_suffix_split.cpp
     specctra_import_export/specctra.cpp
     specctra_import_export/specctra_export.cpp
     specctra_import_export/specctra_import.cpp
@@ -512,6 +515,7 @@ set( PCBNEW_CLASS_SRCS
     api/api_handler_pcb.cpp
     api/api_pcb_assembly.cpp
     api/api_pcb_sketch_route.cpp
+    api/api_handler_pcb_tasks.cpp
     api/footprint_context.cpp
     api/headless_pcb_context.cpp
     api/headless_footprint_context.cpp
@@ -520,6 +524,11 @@ set( PCBNEW_CLASS_SRCS
     tools/array_tool.cpp
     tools/board_structure_tool.cpp
     tools/board_structure_edit.cpp
+    tools/block_drag_capability.cpp
+    tools/block_drag_dependents.cpp
+    tools/block_drag_displacement.cpp
+    tools/block_drag_pick.cpp
+    tools/block_drag_validation.cpp
     tools/board_editor_control.cpp
     tools/board_inspection_tool.cpp
     tools/board_reannotate_tool.cpp
@@ -546,6 +555,7 @@ set( PCBNEW_CLASS_SRCS
     tools/pcb_control.cpp
     tools/pcb_design_block_control.cpp
     tools/pcb_group_tool.cpp
+    tools/pcb_handle_key.cpp
     tools/pcb_picker_tool.cpp
     tools/pcb_selection.cpp
     tools/pcb_selection_conditions.cpp
@@ -583,6 +593,8 @@ set( PCBNEW_CLASS_SRCS
     widgets/net_inspector_panel.cpp
     widgets/pcb_net_inspector_panel.cpp
     widgets/vertex_editor_pane.cpp
+    widgets/via_cross_section_geometry.cpp
+    widgets/via_cross_section_preview.cpp
 
     component_classes/component_class.cpp
     component_classes/component_class_cache_proxy.cpp
@@ -730,8 +742,9 @@ add_subdirectory( pcb_io/sprint_layout )
 add_subdirectory( pcb_io/diptrace )
 add_subdirectory( pcb_io/easypc )
 add_subdirectory( pcb_io/autotrax )
+add_subdirectory( pcb_io/target3001 )
 
-set( PCBNEW_IO_LIBRARIES pcad2kicadpcb allegro2pcbnew altium2pcbnew cadstar2pcbnew easyeda easyedapro fabmaster ipc2581 odbpp pads2pcbnew sprint_layout2pcbnew diptrace2pcbnew easypc2pcbnew autotrax2pcbnew CACHE INTERNAL "")
+set( PCBNEW_IO_LIBRARIES pcad2kicadpcb allegro2pcbnew altium2pcbnew cadstar2pcbnew easyeda easyedapro fabmaster ipc2581 odbpp pads2pcbnew sprint_layout2pcbnew diptrace2pcbnew easypc2pcbnew autotrax2pcbnew target30012pcbnew CACHE INTERNAL "")
 
 #a very small program launcher for pcbnew_kiface
 add_executable( pcbnew WIN32 MACOSX_BUNDLE

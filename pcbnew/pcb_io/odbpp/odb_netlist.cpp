@@ -18,49 +18,41 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "odb_netlist.h"
 
-#include <confirm.h>
-#include <gestfich.h>
-#include <kiface_base.h>
-#include <pcb_edit_frame.h>
-#include <trigo.h>
-#include <build_version.h>
-#include <macros.h>
-#include <wildcards_and_files_ext.h>
+#include <string_view>
+
 #include <board.h>
 #include <footprint.h>
 #include <pad.h>
 #include <pcb_track.h>
+
 #include <exporters/fab_model/fab_pin.h>
 #include <exporters/fab_model/fab_test_points.h>
-#include <vector>
-#include <cctype>
-#include <odb_netlist.h>
-#include <wx/filedlg.h>
-#include <wx/log.h>
-#include "odb_defines.h"
-#include "odb_util.h"
-#include "pcb_io_odbpp.h"
+
+#include <odb_defines.h>
+#include <odb_util.h>
+#include <pcb_io_odbpp.h>
 
 
 // Compute the side code for a via.
-std::string ODB_NET_LIST::ComputeViaAccessSide( BOARD* aBoard, int top_layer, int bottom_layer )
+static ODB_NET_RECORD::SIDE ComputeViaAccessSide( int top_layer, int bottom_layer )
 {
     // Easy case for through vias: top_layer is component, bottom_layer is
     // solder, side code is Both
     if( ( top_layer == F_Cu ) && ( bottom_layer == B_Cu ) )
-        return "B";
+        return ODB_NET_RECORD::SIDE::BOTH;
 
     // Blind via, reachable from front, Top
     if( top_layer == F_Cu )
-        return "T";
+        return ODB_NET_RECORD::SIDE::TOP;
 
     // Blind via, reachable from bottom, Down
     if( bottom_layer == B_Cu )
-        return "D";
+        return ODB_NET_RECORD::SIDE::DOWN;
 
     // It's a buried via, accessible from some inner layer, Inner
-    return "I";
+    return ODB_NET_RECORD::SIDE::INNER;
 }
 
 
@@ -86,9 +78,9 @@ void ODB_NET_LIST::InitNetPoints( std::map<size_t, std::vector<ODB_NET_RECORD>>&
         {
             PCB_LAYER_ID top, bottom;
             via->LayerPair( &top, &bottom );
-            record.side = ComputeViaAccessSide( m_board, top, bottom );
+            record.side = ComputeViaAccessSide( top, bottom );
 
-            if( record.side == "I" )
+            if( record.side == ODB_NET_RECORD::SIDE::INNER )
                 continue;
 
             record.refdes = "VIA";
@@ -103,20 +95,32 @@ void ODB_NET_LIST::InitNetPoints( std::map<size_t, std::vector<ODB_NET_RECORD>>&
         {
             const PAD* pad = point.m_pad;
 
+            // TODO (JB): ODB++ represents inner net points with side "I" and a
+            // ld=<layer UID> reference (optional for T/D). But we don't have a layer map yet.
+            // Currently, we skip inner net points.
             if( !point.m_front && !point.m_back )
                 continue;
 
-            record.side = point.m_front && point.m_back ? "B" : point.m_front ? "T" : "D";
+            if( point.m_front && point.m_back )
+                record.side = ODB_NET_RECORD::SIDE::BOTH;
+            else if( point.m_front )
+                record.side = ODB_NET_RECORD::SIDE::TOP;
+            else
+                record.side = ODB_NET_RECORD::SIDE::DOWN;
+
             record.refdes = pad->GetParentFootprint()->GetReference();
             record.hole = pad->HasHole();
             record.drill_radius = record.hole ? point.m_drill / 2 : 0;
-            record.smd = pad->GetAttribute() == PAD_ATTRIB::SMD || pad->GetAttribute() == PAD_ATTRIB::CONN;
+            record.smd = pad->GetAttribute() == PAD_ATTRIB::SMD
+                || pad->GetAttribute() == PAD_ATTRIB::CONN
+                || pad->GetAttribute() == PAD_ATTRIB::NON_COMPONENT;
             record.mechanical = pad->GetAttribute() == PAD_ATTRIB::NPTH;
             record.testpoint = GetFabPadRole( *pad ) == FAB_PAD_ROLE::TESTPOINT;
 
             // The land size is written only for undrilled pads, which are single-sided, so
             // the access side gives the copper to report
-            PCB_LAYER_ID sideLayer = pad->Padstack().EffectiveLayerFor( record.side == "D" ? B_Cu : F_Cu );
+            PCB_LAYER_ID sideLayer =
+                    pad->Padstack().EffectiveLayerFor( record.side == ODB_NET_RECORD::SIDE::DOWN ? B_Cu : F_Cu );
             record.x_size = pad->GetSize( sideLayer ).x;
 
             // A circle's stored second size can differ from its diameter
@@ -128,6 +132,21 @@ void ODB_NET_LIST::InitNetPoints( std::map<size_t, std::vector<ODB_NET_RECORD>>&
 
         aRecords[point.m_netCode].push_back( record );
     }
+}
+
+
+static std::string_view SideToString( ODB_NET_RECORD::SIDE aSide )
+{
+    switch( aSide )
+    {
+        case ODB_NET_RECORD::SIDE::TOP:     return "T";
+        case ODB_NET_RECORD::SIDE::DOWN:    return "D";
+        case ODB_NET_RECORD::SIDE::BOTH:    return "B";
+        case ODB_NET_RECORD::SIDE::INNER:   return "I";
+        // No default
+    }
+
+    return {};
 }
 
 
@@ -158,7 +177,7 @@ void ODB_NET_LIST::WriteNetPointRecords( std::map<size_t, std::vector<ODB_NET_RE
 
             aStream << " " << ODB::Data2String( aFormat, net_point.x_location - aFormat.m_originOffset.x ) << " "
                     << ODB::Data2String( aFormat, net_point.y_location + aFormat.m_originOffset.y ) << " "
-                    << net_point.side << " ";
+                    << SideToString( net_point.side ) << " ";
 
             if( !net_point.hole )
                 aStream << ODB::Data2String( aFormat, net_point.x_size ) << " "

@@ -26,6 +26,7 @@
 
 #include <widgets/indicator_icon.h>
 #include <widgets/grid_text_helpers.h>
+#include <widgets/grid_combobox.h>
 #include <widgets/wx_grid.h>
 #include <widgets/ui_common.h>
 #include <algorithm>
@@ -1205,7 +1206,23 @@ void WX_GRID::RecomputeGridWidths()
             if( GetColSize( colIndex ) != 0 )
             {
                 AutoSizeColumn( colIndex );
-                const int colSize = GetColSize( colIndex );
+                int colSize = GetColSize( colIndex );
+
+                // Give a bit more width to columns that have editors with graphic widgets
+                if( GetNumberRows() > 0 )
+                {
+                    if( wxGridCellEditor* editor = GetCellEditor( 0, colIndex ) )
+                    {
+                        if( dynamic_cast<wxGridCellChoiceEditor*>( editor )
+                            || dynamic_cast<GRID_CELL_TEXT_BUTTON*>( editor )
+                            || dynamic_cast<GRID_CELL_COMBOBOX*>( editor ) )
+                        {
+                            colSize += 40;
+                        }
+
+                        editor->DecRef();
+                    }
+                }
 
                 int minWidthScaled = FromDIP( minWidth );
                 SetColSize( colIndex, std::max( minWidthScaled, colSize ) );

@@ -33,6 +33,7 @@
 #include <settings/settings_manager.h>
 #include <tool/tool_manager.h>
 #include <kiplatform/ui.h>
+#include <widgets/text_ctrl_eval.h>
 #include <widgets/unit_binder.h>
 
 #include <wx/display.h>
@@ -452,6 +453,11 @@ void DIALOG_SHIM::SetPosition( const wxPoint& aNewPosition )
 
 void DIALOG_SHIM::focusParentCanvas( bool aDeferUntilFrameActive )
 {
+    // A dialog can be hidden while its parent frame is part way through its own destructor,
+    // where the frame's overrides are gone and GetToolCanvas() is pure again.
+    if( m_parentFrame && m_parentFrame->IsBeingDeleted() )
+        return;
+
     wxWindow* toolCanvas = m_parentFrame ? m_parentFrame->GetToolCanvas() : nullptr;
     wxWindow* target = toolCanvas ? toolCanvas : m_parent;
 
@@ -523,7 +529,7 @@ bool DIALOG_SHIM::Show( bool show )
             // Convert saved DIP size to logical pixels for the current monitor
             wxSize restoredSize = FromDIP( savedDialogRect.GetSize() );
 
-            if( m_useCalculatedSize )
+            if( m_useCalculatedSize || ( GetWindowStyleFlag() & wxRESIZE_BORDER ) == 0 )
             {
                 SetSize( savedDialogRect.GetPosition().x, savedDialogRect.GetPosition().y,
                          wxDialog::GetSize().x, wxDialog::GetSize().y, 0 );
@@ -554,11 +560,14 @@ bool DIALOG_SHIM::Show( bool show )
             }
 #endif
 
+            ReloadSashPositions();
         }
         else if( m_initialSize != wxDefaultSize )
         {
             SetSize( m_initialSize );
             Centre();
+
+            ReloadSashPositions();
         }
 
         // Re-center if the title bar would land on no display. Testing a point inside the title
@@ -736,9 +745,32 @@ void DIALOG_SHIM::SaveControlState()
 
                 if( !key.empty() )
                 {
-                    if( m_unitBinders.contains( win ) && !m_unitBinders[ win ]->UnitsInvariant() )
+                    UNIT_BINDER* binder = m_unitBinders.contains( win ) ? m_unitBinders[ win ] : nullptr;
+                    wxString     formula = binder ? binder->GetFormula() : wxString();
+
+                    if( binder && !binder->UnitsInvariant() )
                     {
-                        dlgMap[ key ] = m_unitBinders[ win ]->GetValue();
+                        // The value survives a change of units while the expression does not, so
+                        // the value is always stored and the expression rides along with it.
+                        if( formula.IsEmpty() )
+                        {
+                            dlgMap[ key ] = binder->GetValue();
+                        }
+                        else
+                        {
+                            nlohmann::json state;
+                            state[ "value" ] = binder->GetValue();
+                            state[ "formula" ] = formula;
+                            dlgMap[ key ] = state;
+                        }
+                    }
+                    else if( !formula.IsEmpty() )
+                    {
+                        dlgMap[ key ] = formula;
+                    }
+                    else if( TEXT_CTRL_EVAL* evalCtrl = binder ? nullptr : dynamic_cast<TEXT_CTRL_EVAL*>( win ) )
+                    {
+                        dlgMap[ key ] = evalCtrl->GetFormula();
                     }
                     else if( wxComboBox* combo = dynamic_cast<wxComboBox*>( win ) )
                     {
@@ -854,14 +886,40 @@ void DIALOG_SHIM::LoadControlState()
 
                         if( m_unitBinders.contains( win ) )
                         {
+                            UNIT_BINDER* binder = m_unitBinders[ win ];
+
                             if( j.is_number_integer() )
                             {
-                                m_unitBinders[ win ]->ChangeValue( j.get<int>() );
+                                binder->ChangeValue( j.get<int>() );
+                            }
+                            else if( j.is_object() && j.contains( "value" ) && j[ "value" ].is_number_integer() )
+                            {
+                                wxString formula;
+
+                                if( j.contains( "formula" ) && j[ "formula" ].is_string() )
+                                    formula = wxString::FromUTF8( j[ "formula" ].get<std::string>().c_str() );
+
+                                binder->RestoreValue( j[ "value" ].get<int>(), formula );
                             }
                             else if( j.is_string() )
                             {
-                                if( wxTextEntry* textEntry = dynamic_cast<wxTextEntry*>( win ) )
-                                    textEntry->ChangeValue( wxString::FromUTF8( j.get<std::string>().c_str() ) );
+                                wxString text = wxString::FromUTF8( j.get<std::string>().c_str() );
+
+                                if( !binder->RestoreFormula( text ) )
+                                {
+                                    if( wxTextEntry* textEntry = dynamic_cast<wxTextEntry*>( win ) )
+                                        textEntry->ChangeValue( text );
+                                }
+                            }
+                        }
+                        else if( TEXT_CTRL_EVAL* evalCtrl = dynamic_cast<TEXT_CTRL_EVAL*>( win ) )
+                        {
+                            if( j.is_string() )
+                            {
+                                wxString text = wxString::FromUTF8( j.get<std::string>().c_str() );
+
+                                if( !evalCtrl->RestoreFormula( text ) )
+                                    evalCtrl->ChangeValue( text );
                             }
                         }
                         else if( wxComboBox* combo = dynamic_cast<wxComboBox*>( win ) )
@@ -984,11 +1042,88 @@ void DIALOG_SHIM::LoadControlState()
 }
 
 
+void DIALOG_SHIM::ReloadSashPositions()
+{
+    COMMON_SETTINGS* settings = Pgm().GetCommonSettings();
+
+    if( !settings )
+        return;
+
+    std::string dialogKey = m_hash_key.empty() ? getDialogKeyFromTitle( GetTitle() ) : m_hash_key;
+    auto        dlgIt = settings->CsInternals().m_dialogControlValues.find( dialogKey );
+
+    if( dlgIt == settings->CsInternals().m_dialogControlValues.end() )
+        return;
+
+    const std::map<std::string, nlohmann::json>& dlgMap = dlgIt->second;
+
+    std::function<void( wxWindow* )> loadFn =
+            [&]( wxWindow* win )
+            {
+                if( PROPERTY_HOLDER* props = PROPERTY_HOLDER::SafeCast( win->GetClientData() ) )
+                {
+                    if( !props->GetPropertyOr( "persist", false ) )
+                        return;
+                }
+
+                std::string key = generateKey( win );
+
+                if( !key.empty() )
+                {
+                    auto it = dlgMap.find( key );
+
+                    if( it != dlgMap.end() )
+                    {
+                        const nlohmann::json& j = it->second;
+
+                        if( wxSplitterWindow* splitter = dynamic_cast<wxSplitterWindow*>( win ) )
+                        {
+                            if( j.is_number_integer() )
+                                splitter->SetSashPosition( j.get<int>() );
+                        }
+                    }
+                }
+
+                for( wxWindow* child : win->GetChildren() )
+                    loadFn( child );
+            };
+
+    if( PROPERTY_HOLDER* props = PROPERTY_HOLDER::SafeCast( GetClientData() ) )
+    {
+        if( !props->GetPropertyOr( "persist", false ) )
+            return;
+    }
+
+    for( wxWindow* child : GetChildren() )
+        loadFn( child );
+}
+
+
 void DIALOG_SHIM::OptOut( wxWindow* aWindow )
 {
     PROPERTY_HOLDER* props = new PROPERTY_HOLDER();
     props->SetProperty( "persist", false );
     aWindow->SetClientData( props );
+
+    if( aWindow == this )
+    {
+        COMMON_SETTINGS* settings = Pgm().GetCommonSettings();
+
+        if( settings )
+        {
+            std::string dialogKey = m_hash_key.empty() ? getDialogKeyFromTitle( GetTitle() ) : m_hash_key;
+            auto        dlgIt = settings->CsInternals().m_dialogControlValues.find( dialogKey );
+
+            if( dlgIt != settings->CsInternals().m_dialogControlValues.end() )
+            {
+                std::erase_if( dlgIt->second,
+                               []( const auto& aEntry )
+                               {
+                                   return aEntry.first != "__geometry";
+                               } );
+            }
+        }
+    }
 }
 
 

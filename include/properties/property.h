@@ -220,6 +220,18 @@ public:
 
     const wxString& Name() const { return m_name; }
 
+    const wxString& HelpString() const { return m_helpString; }
+
+    /**
+     * Set untranslated help text, marked with _HKI for translation extraction.
+     * An empty string makes the property grid use the property name as its help text.
+     */
+    PROPERTY_BASE& SetHelpString( const wxString& aHelpString )
+    {
+        m_helpString = aHelpString;
+        return *this;
+    }
+
     /**
      * Return a limited set of possible values (e.g. enum). Check with HasChoices() if a particular
      * PROPERTY provides such set.
@@ -293,6 +305,23 @@ public:
     PROPERTY_BASE& SetWriteableFunc( std::function<bool(INSPECTABLE*)> aFunc )
     {
         m_writeableFunc = std::move( aFunc );
+        return *this;
+    }
+
+    /**
+     * Return true if aObject holds several values for this property, so it has no single value to show.
+     */
+    bool IsIndeterminate( INSPECTABLE* aObject ) const
+    {
+        return m_indeterminateFunc && m_indeterminateFunc( aObject );
+    }
+
+    /**
+     * Set a callback function to determine whether an object's value for this property is mixed.
+     */
+    PROPERTY_BASE& SetIndeterminateFunc( std::function<bool(INSPECTABLE*)> aFunc )
+    {
+        m_indeterminateFunc = std::move( aFunc );
         return *this;
     }
 
@@ -458,6 +487,9 @@ private:
      */
     const wxString m_name;
 
+    /// Optional help text, translated when the property grid control is created.
+    wxString m_helpString;
+
     /// The display style controls how properties are edited in the properties manager GUI
     PROPERTY_DISPLAY m_display;
 
@@ -480,6 +512,8 @@ private:
     std::function<bool(INSPECTABLE*)> m_writeableFunc;   ///< Eval to determine if prop is read-only
 
     std::function<wxPGChoices(INSPECTABLE*)> m_choicesFunc;
+
+    std::function<bool(INSPECTABLE*)> m_indeterminateFunc;   ///< Eval to determine if the value is mixed
 
     PROPERTY_VALIDATOR_FN m_validator;
 

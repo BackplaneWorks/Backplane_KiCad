@@ -17,12 +17,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <dialog_footprint_checker.h>
+#include "dialog_footprint_checker.h"
+
 #include <widgets/appearance_controls.h>
 #include <tool/tool_manager.h>
 #include <tools/pcb_actions.h>
 #include <footprint.h>
+#include <footprint_utils.h>
 #include <pad.h>
+#include <pad_utils.h>
 #include <pcb_marker.h>
 #include <drc/drc_item.h>
 #include <footprint_edit_frame.h>
@@ -91,7 +94,7 @@ void DIALOG_FOOTPRINT_CHECKER::runChecks()
     if( !footprint )
         return;
 
-    auto errorHandler =
+    const auto errorHandler =
             [&]( const BOARD_ITEM* aItemA, const BOARD_ITEM* aItemB, const BOARD_ITEM* aItemC,
                  int aErrorCode, const wxString& aMsg, const VECTOR2I& aPt )
             {
@@ -125,19 +128,25 @@ void DIALOG_FOOTPRINT_CHECKER::runChecks()
         errorHandler( footprint, nullptr, nullptr, DRCE_MISSING_COURTYARD, wxEmptyString, { 0, 0 } );
     }
 
-    footprint->CheckFootprintAttributes(
+    FOOTPRINT_UTILS::CheckFootprintAttributes( *footprint,
             [&]( const wxString& aMsg )
             {
                 errorHandler( footprint, nullptr, nullptr, DRCE_FOOTPRINT_TYPE_MISMATCH, aMsg, { 0, 0 } );
             } );
 
-    footprint->CheckPads( m_frame,
-            [&]( const PAD* aPad, int aErrorCode, const wxString& aMsg )
+    FOOTPRINT_UTILS::CheckPads( *footprint, *m_frame,
+            [&]( const PAD& aPad, const PAD_UTILS::PAD_CHECK_RESULT& aResult )
             {
-                errorHandler( aPad, nullptr, nullptr, aErrorCode, aMsg, aPad->GetPosition() );
+                const int drcError = ConvertPadCheckToDrcCode( aResult.code );
+
+                wxString detail;
+                if( !aResult.message.IsEmpty() )
+                    detail = wxString::Format( wxT( "(%s)" ), aResult.message );
+
+                errorHandler( &aPad, nullptr, nullptr, drcError, detail, aPad.GetPosition() );
             } );
 
-    footprint->CheckShortingPads(
+    FOOTPRINT_UTILS::CheckShortingPads( *footprint,
             [&]( const PAD* aPadA, const PAD* aPadB, int aErrorCode, const VECTOR2I& aPosition )
             {
                 errorHandler( aPadA, aPadB, nullptr, aErrorCode, wxEmptyString, aPosition );
@@ -145,13 +154,13 @@ void DIALOG_FOOTPRINT_CHECKER::runChecks()
 
     if( footprint->IsNetTie() )
     {
-        footprint->CheckNetTiePadGroups(
+        FOOTPRINT_UTILS::CheckNetTiePadGroups( *footprint,
                 [&]( const wxString& aMsg )
                 {
                     errorHandler( footprint, nullptr, nullptr, DRCE_FOOTPRINT, aMsg, { 0, 0 } );
                 } );
 
-        footprint->CheckNetTies(
+        FOOTPRINT_UTILS::CheckNetTies( *footprint,
                 [&]( const BOARD_ITEM* aItemA, const BOARD_ITEM* aItemB, const BOARD_ITEM* aItemC,
                      const VECTOR2I& aPt )
                 {
@@ -159,7 +168,7 @@ void DIALOG_FOOTPRINT_CHECKER::runChecks()
                 } );
     }
 
-    footprint->CheckClippedSilk(
+    FOOTPRINT_UTILS::CheckClippedSilk( *footprint,
             [&]( BOARD_ITEM* aItemA, BOARD_ITEM* aItemB, const VECTOR2I& aPt )
             {
                 errorHandler( aItemA, aItemB, nullptr, DRCE_SILK_MASK_CLEARANCE, wxEmptyString, aPt );
@@ -425,4 +434,3 @@ void DIALOG_FOOTPRINT_CHECKER::updateDisplayedCounts()
     m_exclusionsBadge->SetMaximumNumber( numExcluded );
     m_exclusionsBadge->UpdateNumber( numExcluded, RPT_SEVERITY_EXCLUSION );
 }
-

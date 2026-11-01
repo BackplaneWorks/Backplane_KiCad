@@ -438,7 +438,8 @@ FOOTPRINT* BOARD_NETLIST_UPDATER::replaceFootprint( NETLIST& aNetlist, FOOTPRINT
              // Expand the footprint pad layers
              newFootprint->FixUpPadsForBoard( m_board );
 
-             m_board->ExchangeFootprint( aFootprint, newFootprint, m_commit, true );
+             m_board->ExchangeFootprint( aFootprint, newFootprint, m_commit,
+                                         m_frame->GetPcbNewSettings()->m_FlipDirection, true );
 
              msg.Printf( _( "Changed %s footprint from '%s' to '%s'."),
                          aFootprint->GetReference(),
@@ -1576,38 +1577,21 @@ void BOARD_NETLIST_UPDATER::applyComponentVariants( COMPONENT* aComponent,
             // Check if this footprint is the active one for this variant
             bool isAssociatedFootprint = fpidsEquivalent( footprint->GetFPID(), info.variantFPID );
 
+            // If this footprint is not active, and it's not one of multiple footprints that share
+            // a RefDes (one per variant), then it doesn't need variant info for it.
+            if( !isAssociatedFootprint && aFootprints.size() <= 1 )
+                continue;
+
+            excessVariants.erase( info.name );
+            bool targetDnp = variant.m_hasDnp ? variant.m_dnp : baseFootprintDnp;
+            bool currentDnp = currentVariant ? currentVariant->GetDNP() : effectiveFootprintDnp;
+
             // When multiple footprints share a RefDes (one per variant), a footprint that is not
             // the active choice for this variant must be DNP for it so the 3D viewer and other
             // consumers hide it.  The base footprint carries no global DNP flag, so it needs an
             // explicit per-variant override; non-base footprints are already globally DNP above.
             if( !isAssociatedFootprint )
-            {
-                if( aFootprints.size() > 1 )
-                {
-                    excessVariants.erase( info.name );
-                    bool currentDnp = currentVariant ? currentVariant->GetDNP() : effectiveFootprintDnp;
-
-                    if( !currentDnp )
-                    {
-                        printAttributeMessage( true, _( "Do not place" ), info.name );
-
-                        if( !m_isDryRun )
-                        {
-                            if( FOOTPRINT_VARIANT* fpVariant = footprint->AddVariant( info.name ) )
-                                fpVariant->SetDNP( true );
-                        }
-
-                        m_reporter->Report( msg, RPT_SEVERITY_ACTION );
-                        changed = true;
-                    }
-                }
-
-                continue;
-            }
-
-            excessVariants.erase( info.name );
-            bool targetDnp = variant.m_hasDnp ? variant.m_dnp : baseFootprintDnp;
-            bool currentDnp = currentVariant ? currentVariant->GetDNP() : effectiveFootprintDnp;
+                targetDnp = true;
 
             if( currentDnp != targetDnp )
             {
@@ -2315,7 +2299,20 @@ bool BOARD_NETLIST_UPDATER::UpdateNetlist( NETLIST& aNetlist )
             }
 
             if( match )
-                matchingFootprints.push_back( footprint );
+            {
+                if( footprint->IsBoardOnly() )
+                {
+                    msg.Printf( _( "Found a footprint matching %s, but the footprint's 'Not in schematic' "
+                                   "flag indicates there should be no matching symbol." ),
+                                component->GetReference() );
+                    m_reporter->Report( msg, RPT_SEVERITY_WARNING );
+                    ++m_warningCount;
+                }
+                else
+                {
+                    matchingFootprints.push_back( footprint );
+                }
+            }
 
             if( footprint == lastPreexistingFootprint )
             {
@@ -2596,6 +2593,8 @@ bool BOARD_NETLIST_UPDATER::UpdateNetlist( NETLIST& aNetlist )
 
     if( !m_isDryRun )
     {
+        m_board->ClearNetChainColors();
+
         // Finalise the component class manager
         m_board->GetComponentClassManager().FinishNetlistUpdate();
         m_board->SynchronizeComponentClasses( sheetPaths );
@@ -2607,8 +2606,7 @@ bool BOARD_NETLIST_UPDATER::UpdateNetlist( NETLIST& aNetlist )
         {
             if( !net->IsCurrent() )
             {
-                msg.Printf( _( "Removed unused net %s." ),
-                            EscapeHTML( net->GetNetname() ) );
+                msg.Printf( _( "Removed unused net %s." ), EscapeHTML( net->GetNetname() ) );
                 m_reporter->Report( msg, RPT_SEVERITY_ACTION );
             }
         }
@@ -2731,29 +2729,29 @@ bool BOARD_NETLIST_UPDATER::UpdateNetlist( NETLIST& aNetlist )
         // pointers pick up cleared/changed chain entries even when no chain carries a netclass.
         m_board->SynchronizeNetsAndNetClasses( true );
 
-        for( const auto& sig : aNetlist.GetNetChainTerminalPins() )
+        for( const auto& [chain, terminalPins] : aNetlist.GetNetChainTerminalPins() )
         {
             PAD* pads[2] = { nullptr, nullptr };
 
-            for( size_t i = 0; i < sig.second.size() && i < 2; ++i )
+            for( size_t i = 0; i < terminalPins.size() && i < 2; ++i )
             {
-                const wxString& ref = sig.second[i].first;
-                const wxString& pin = sig.second[i].second;
-                FOOTPRINT* fp = m_board->FindFootprintByReference( ref );
+                const wxString& ref = terminalPins[i].first;
+                const wxString& pin = terminalPins[i].second;
+                FOOTPRINT*      fp = m_board->FindFootprintByReference( ref );
 
                 if( !fp )
                     continue;
 
-                PAD* candidate = nullptr;
-                PAD* best = nullptr;
-                int bestDist = std::numeric_limits<int>::max();
+                PAD*  candidate = nullptr;
+                PAD*  best = nullptr;
+                int   bestDist = std::numeric_limits<int>::max();
                 BOX2I bbox = fp->GetBoundingBox();
 
                 while( ( candidate = fp->FindPadByNumber( pin, candidate ) ) )
                 {
                     VECTOR2I pos = candidate->GetPosition();
                     int dist = std::min( { pos.x - bbox.GetLeft(), bbox.GetRight() - pos.x,
-                                            pos.y - bbox.GetTop(), bbox.GetBottom() - pos.y } );
+                                           pos.y - bbox.GetTop(), bbox.GetBottom() - pos.y } );
 
                     if( !best || dist < bestDist || ( dist == bestDist && candidate->m_Uuid < best->m_Uuid ) )
                     {
@@ -2772,16 +2770,13 @@ bool BOARD_NETLIST_UPDATER::UpdateNetlist( NETLIST& aNetlist )
 
                 NETINFO_ITEM* termNet = pads[i]->GetNet();
 
-                if( !termNet || termNet->GetNetChain() != sig.first )
+                if( !termNet || termNet->GetNetChain() != chain )
                     continue;
 
                 for( NETINFO_ITEM* net : m_board->GetNetInfo() )
                 {
-                    if( net != termNet && net->GetNetChain() == sig.first
-                        && net->GetTerminalPad( i ) )
-                    {
+                    if( net != termNet && net->GetNetChain() == chain && net->GetTerminalPad( i ) )
                         net->ClearTerminalPad( i );
-                    }
                 }
 
                 termNet->SetTerminal( i, pads[i] );

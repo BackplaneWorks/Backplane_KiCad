@@ -57,19 +57,7 @@ GitUserConfig GIT_CONFIG_HANDLER::GetUserConfig()
 }
 
 
-wxString GIT_CONFIG_HANDLER::GetWorkingDirectory()
-{
-    return GetGitBackend()->GetWorkingDirectory( this );
-}
-
-
 bool GIT_CONFIG_HANDLER::GetConfigString( const wxString& aKey, wxString& aValue )
 {
     return GetGitBackend()->GetConfigString( this, aKey, aValue );
-}
-
-
-void GIT_CONFIG_HANDLER::UpdateProgress( int aCurrent, int aTotal, const wxString& aMessage )
-{
-    ReportProgress( aCurrent, aTotal, aMessage );
 }

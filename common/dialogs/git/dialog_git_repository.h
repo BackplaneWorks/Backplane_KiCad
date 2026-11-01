@@ -23,6 +23,7 @@
 #include "dialog_git_repository_base.h"
 
 #include <git/kicad_git_common.h>
+#include <git/kigit_ssh_keys.h>
 #include <git2.h>
 
 class DIALOG_GIT_REPOSITORY : public DIALOG_GIT_REPOSITORY_BASE
@@ -43,41 +44,25 @@ public:
         return static_cast<KIGIT_COMMON::GIT_CONN_TYPE>( m_ConnType->GetSelection() );
     }
 
-    void     SetRepoName( const wxString& aName ) { m_txtName->SetValue( aName ); }
     wxString GetRepoName() const { return m_txtName->GetValue(); }
 
     void     SetRepoURL( const wxString& aURL ) { m_txtURL->SetValue( aURL ); }
     wxString GetRepoURL() const { return m_txtURL->GetValue(); }
 
-    /**
-     * @brief Get the Bare Repo U R L object
-     *
-     * @return wxString without the protocol
-     */
-    wxString GetBareRepoURL() const
-    {
-        wxString url = m_txtURL->GetValue();
-
-        if( url.StartsWith( "https://" ) )
-            url = url.Mid( 8 );
-        else if( url.StartsWith( "http://" ) )
-            url = url.Mid( 7 );
-        else if( url.StartsWith( "ssh://" ) )
-            url = url.Mid( 6 );
-
-        return url;
-    }
-
-    const wxString& GetFullURL() const { return m_fullURL; }
-
     void     SetUsername( const wxString& aUsername ) { m_txtUsername->SetValue( aUsername ); }
-    wxString GetUsername() const { return m_txtUsername->GetValue(); }
+
+    wxString GetUsername() const
+    {
+        KIGIT_COMMON::REMOTE_URL parsed = KIGIT_COMMON::ParseRemoteURL( GetRepoURL() );
+        return parsed.username.IsEmpty() ? m_txtUsername->GetValue() : parsed.username;
+    }
 
     void     SetPassword( const wxString& aPassword ) { m_txtPassword->SetValue( aPassword ); }
     wxString GetPassword() const { return m_txtPassword->GetValue(); }
 
-    void     SetRepoSSHPath( const wxString& aPath ) { m_fpSSHKey->SetFileName( aPath ); m_prevFile = aPath; }
-    wxString GetRepoSSHPath() const { return m_fpSSHKey->GetFileName().GetFullPath(); }
+    void SetRepoSSHPath( const wxString& aPath ) { m_fpSSHKey->SetFileName( aPath ); }
+    /// The private key, also when its .pub was picked.
+    wxString GetRepoSSHPath() const { return KIGIT::PrivateKeyPath( m_fpSSHKey->GetFileName().GetFullPath() ); }
 
     void     SetEncrypted( bool aEncrypted = true );
 
@@ -104,20 +89,17 @@ private:
     void OnFileUpdated( wxFileDirPickerEvent& event ) override;
     void onCbCustom( wxCommandEvent& event ) override;
 
-    void setDefaultSSHKey();
+    void setDefaultSSHKey( const wxString& aHost );
+
+    /// Show why the chosen SSH key cannot be used. False when there is no such problem.
+    bool reportUnusableKey();
 
     void updateAuthControls();
     void updateURLData();
     bool extractClipboardData();
 
-    std::tuple<bool,wxString,wxString,wxString> isValidHTTPS( const wxString& url );
-    std::tuple<bool,wxString, wxString> isValidSSH( const wxString& url );
-
     git_repository* m_repository;
-    wxString        m_fullURL;
     wxString        m_incomeURL;
-
-    wxString        m_prevFile;
 
     bool            m_tempRepo;
     wxString        m_tempPath;

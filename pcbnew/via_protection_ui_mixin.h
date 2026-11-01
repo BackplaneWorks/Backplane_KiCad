@@ -115,20 +115,20 @@ protected:
         { IPC4761_PRESET::IA,            _( "Type I-a (tented top)" ) },
         { IPC4761_PRESET::IB,            _( "Type I-b (tented both sides)" ) },
         { IPC4761_PRESET::IA_INVERTED,   _( "Type I-a (tented bottom)" ) },
-        { IPC4761_PRESET::IIA,           _( "Type II-a (covered and tented top)" ) },
-        { IPC4761_PRESET::IIB,           _( "Type II-b (covered and tented both sides)" ) },
-        { IPC4761_PRESET::IIA_INVERTED,  _( "Type II-a (covered and tented bottom)" ) },
+        { IPC4761_PRESET::IIA,           _( "Type II-a (covered & tented top)" ) },
+        { IPC4761_PRESET::IIB,           _( "Type II-b (covered & tented both sides)" ) },
+        { IPC4761_PRESET::IIA_INVERTED,  _( "Type II-a (covered & tented bottom)" ) },
         { IPC4761_PRESET::IIIA,          _( "Type III-a (plugged top)" ) },
         { IPC4761_PRESET::IIIB,          _( "Type III-b (plugged both sides)" ) },
         { IPC4761_PRESET::IIIA_INVERTED, _( "Type III-a (plugged bottom)" ) },
-        { IPC4761_PRESET::IVA,           _( "Type IV-a (plugged and tented top)" ) },
-        { IPC4761_PRESET::IVB,           _( "Type IV-b (plugged and tented both sides)" ) },
-        { IPC4761_PRESET::IVA_INVERTED,  _( "Type IV-a (plugged and tented bottom)" ) },
+        { IPC4761_PRESET::IVA,           _( "Type IV-a (plugged & tented top)" ) },
+        { IPC4761_PRESET::IVB,           _( "Type IV-b (plugged & tented both sides)" ) },
+        { IPC4761_PRESET::IVA_INVERTED,  _( "Type IV-a (plugged & tented bottom)" ) },
         { IPC4761_PRESET::V,             _( "Type V (filled)" ) },
-        { IPC4761_PRESET::VIA,           _( "Type VI-a (filled and tented top)" ) },
-        { IPC4761_PRESET::VIB,           _( "Type VI-b (filled and tented both sides)" ) },
-        { IPC4761_PRESET::VIA_INVERTED,  _( "Type VI-a (filled and tented bottom)" ) },
-        { IPC4761_PRESET::VII,           _( "Type VII (filled and capped)" ) },
+        { IPC4761_PRESET::VIA,           _( "Type VI-a (filled & tented top)" ) },
+        { IPC4761_PRESET::VIB,           _( "Type VI-b (filled & tented both sides)" ) },
+        { IPC4761_PRESET::VIA_INVERTED,  _( "Type VI-a (filled & tented bottom)" ) },
+        { IPC4761_PRESET::VII,           _( "Type VII (filled & capped)" ) },
         { IPC4761_PRESET::CUSTOM,        _( "Custom" ) },
         { IPC4761_PRESET::END,           _( "End" ) }
     };
@@ -242,27 +242,29 @@ protected:
         }
     };
 
-    void setViaConfiguration( PCB_VIA* aVia, const IPC4761_PRESET& aPreset )
+    void setViaConfiguration( PADSTACK& aStack, const IPC4761_PRESET& aPreset )
     {
         if( aPreset < IPC4761_PRESET::CUSTOM ) // Do not change custom feaure list.
         {
             const IPC4761_CONFIGURATION config = m_IPC4761Presets.at( aPreset );
 
-            setSurfaceProtection( aVia->Padstack().FrontOuterLayers().has_solder_mask,
-                                  aVia->Padstack().BackOuterLayers().has_solder_mask,
+            setSurfaceProtection( aStack.FrontOuterLayers().has_solder_mask, aStack.BackOuterLayers().has_solder_mask,
                                   config.tent );
 
-            setSurfaceProtection( aVia->Padstack().FrontOuterLayers().has_plugging,
-                                  aVia->Padstack().BackOuterLayers().has_plugging,
+            setSurfaceProtection( aStack.FrontOuterLayers().has_plugging, aStack.BackOuterLayers().has_plugging,
                                   config.plug );
 
-            setSurfaceProtection( aVia->Padstack().FrontOuterLayers().has_covering,
-                                  aVia->Padstack().BackOuterLayers().has_covering,
+            setSurfaceProtection( aStack.FrontOuterLayers().has_covering, aStack.BackOuterLayers().has_covering,
                                   config.cover );
 
-            setDrillProtection( aVia->Padstack().Drill().is_filled, config.fill );
+            setDrillProtection( aStack.Drill().is_filled, config.fill );
 
-            setDrillProtection( aVia->Padstack().Drill().is_capped, config.cap );
+            setDrillProtection( aStack.Drill().is_capped, config.cap );
         }
+    }
+
+    void setViaConfiguration( PCB_VIA* aVia, const IPC4761_PRESET& aPreset )
+    {
+        setViaConfiguration( aVia->Padstack(), aPreset );
     }
 };

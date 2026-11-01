@@ -149,6 +149,8 @@ public:
     void Flip( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
     void Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
 
+    void Mirror( const SEG& aAxis ) override;
+
     const STRING_ANY_MAP GetProperties() const override;
     void                 SetProperties( const STRING_ANY_MAP& aProps ) override;
 
@@ -156,6 +158,12 @@ public:
     bool Deserialize( const google::protobuf::Any& aContainer ) override;
 
     void ShowPropertiesDialog( PCB_BASE_EDIT_FRAME* aEditFrame ) override;
+
+    /**
+     * Indicates that the via stack can be selected as a connected entity:
+     * when the selection crosses one, it is included as part of the connected selection.
+     */
+    bool IsSelectableAsConnected() const override { return true; }
 
     void             ApplyPreset( const VIA_STACK_PRESET& aPreset );
     VIA_STACK_PRESET ToPreset() const;

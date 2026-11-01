@@ -1104,7 +1104,7 @@ BOOST_AUTO_TEST_CASE( PlacedStackCommitState )
         // Parented to the stack and promotable to it, which is how selection works.
         BOOST_CHECK_EQUAL( via->GetParentGroup(), static_cast<EDA_GROUP*>( stack ) );
 
-        EDA_GROUP* top = PCB_GROUP::TopLevelGroup( via, nullptr, false );
+        EDA_GROUP* top = PCB_GROUP::TopLevelGroup( *via, nullptr, false );
         BOOST_CHECK_EQUAL( top, static_cast<EDA_GROUP*>( stack ) );
 
         // No leftover edit flags that would make items invisible to hit testing.
@@ -1414,7 +1414,7 @@ BOOST_AUTO_TEST_CASE( PlacedStackClickCollection )
     {
         if( collector[i]->Type() == PCB_VIA_T )
         {
-            BOOST_CHECK_EQUAL( PCB_GROUP::TopLevelGroup( collector[i], nullptr, false ),
+            BOOST_CHECK_EQUAL( PCB_GROUP::TopLevelGroup( *collector[i], nullptr, false ),
                                static_cast<EDA_GROUP*>( stack ) );
         }
     }
@@ -1915,10 +1915,7 @@ BOOST_AUTO_TEST_CASE( MovingAStackReusesItsMembers )
 // alongside a deliberate file format change.
 BOOST_AUTO_TEST_CASE( GoldenFileStillLoads )
 {
-    std::string path = KI_TEST::GetPcbnewTestDataDir() + "via_stacks.kicad_pcb";
-
-    std::unique_ptr<BOARD> board = ::KI_TEST::ReadBoardFromFileOrStream( path );
-    BOOST_REQUIRE( board );
+    std::unique_ptr<BOARD> board = KI_TEST::RequireBoardFromPcbnewQAData( "via_stacks.kicad_pcb" );
 
     BOOST_REQUIRE_EQUAL( board->Generators().size(), 2u );
 
@@ -2684,9 +2681,7 @@ private:
 // A drag regenerates inside one commit, so members added by an earlier motion event must be freed
 BOOST_AUTO_TEST_CASE( RegenerateFreesMembersAddedEarlierInTheCommit )
 {
-    std::unique_ptr<BOARD> board =
-            ::KI_TEST::ReadBoardFromFileOrStream( KI_TEST::GetPcbnewTestDataDir() + "via_stacks.kicad_pcb" );
-    BOOST_REQUIRE( board );
+    std::unique_ptr<BOARD> board = KI_TEST::RequireBoardFromPcbnewQAData( "via_stacks.kicad_pcb" );
 
     TOOL_MANAGER mgr;
     mgr.SetEnvironment( board.get(), nullptr, nullptr, nullptr, nullptr );

@@ -19,25 +19,67 @@
 
 #include "dialog_git_credentials.h"
 
-DIALOG_GIT_CREDENTIALS::DIALOG_GIT_CREDENTIALS( wxWindow* aParent, const wxString& aUrl,
+#include <diff_merge/diff_scene.h>
+#include <git/kigit_failure.h>
+#include <git/kigit_ssh_keys.h>
+#include <kiplatform/ui.h>
+
+#include <wx/dcclient.h>
+
+DIALOG_GIT_CREDENTIALS::DIALOG_GIT_CREDENTIALS( wxWindow* aParent, const wxString& aUrl, const wxString& aExplanation,
                                                 KIGIT_COMMON::GIT_CONN_TYPE aConnType, const wxString& aDefaultUsername,
                                                 const wxString& aDefaultSSHKey ) :
-        DIALOG_GIT_CREDENTIALS_BASE( aParent )
+        DIALOG_GIT_CREDENTIALS_BASE( aParent ),
+        m_connType( aConnType )
 {
-    m_urlLabel->SetLabel( aUrl );
-    m_userCtrl->SetValue( aDefaultUsername );
+    OptOut( this );
+
+    if( aUrl.IsEmpty() )
+    {
+        m_promptLabel->SetLabelText( _( "Authentication is required to access the remote repository." ) );
+    }
+    else
+    {
+        // Long remote paths would otherwise widen the dialog past the screen
+        wxClientDC dc( m_promptLabel );
+        dc.SetFont( m_promptLabel->GetFont() );
+        const wxString safeUrl = KIGIT::StripEmbeddedUserinfo( aUrl );
+        wxString url = wxControl::Ellipsize( safeUrl, dc, wxELLIPSIZE_MIDDLE, FromDIP( 400 ), wxELLIPSIZE_FLAGS_NONE );
+
+        m_promptLabel->SetLabelText( wxString::Format( _( "Authentication is required to access %s." ), url ) );
+        m_promptLabel->Wrap( FromDIP( 500 ) );
+        m_promptLabel->SetToolTip( safeUrl );
+    }
+
+    if( !aExplanation.IsEmpty() )
+    {
+        KICAD_DIFF::DIFF_COLOR_THEME theme = KICAD_DIFF::DIFF_COLOR_THEME::ForText( KIPLATFORM::UI::IsDarkTheme() );
+
+        m_explanationLabel->SetLabelText( aExplanation );
+        m_explanationLabel->SetForegroundColour( theme.removed.ToColour() );
+        m_explanationLabel->Wrap( FromDIP( 500 ) );
+        m_explanationLabel->Show();
+    }
+
+    if( m_connType == KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_SSH )
+        m_urlUsername = KIGIT_COMMON::ParseRemoteURL( aUrl ).username;
+
+    m_userCtrl->SetValue( m_urlUsername.IsEmpty() ? aDefaultUsername : m_urlUsername );
+
+    // Otherwise the picker opens wherever the last file dialog was, far from any key
+    m_keyPicker->SetInitialDirectory( KIGIT::SSHKeyFolder() );
 
     if( !aDefaultSSHKey.IsEmpty() )
         m_keyPicker->SetFileName( wxFileName( aDefaultSSHKey ) );
 
-    if( aConnType == KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_SSH )
-        m_authChoice->SetSelection( 1 );
-    else
-        m_authChoice->SetSelection( 0 );
+    // Keyed on the address, not the session, so a type chosen here earlier cannot lock the choice
+    KIGIT_COMMON::GIT_CONN_TYPE urlConnType = KIGIT_COMMON::ParseRemoteURL( aUrl ).connType;
+    m_authChoice->Enable( urlConnType == KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_LOCAL );
 
-    // Auth type is determined by the remote URL scheme; don't let the user
-    // pick a transport that doesn't match.
-    m_authChoice->Enable( false );
+    if( m_connType == KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_LOCAL )
+        m_connType = KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_HTTPS;
+
+    m_authChoice->SetSelection( m_connType == KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_SSH ? 1 : 0 );
 
     updateFieldsForConnType();
 
@@ -51,6 +93,11 @@ DIALOG_GIT_CREDENTIALS::DIALOG_GIT_CREDENTIALS( wxWindow* aParent, const wxStrin
 
 void DIALOG_GIT_CREDENTIALS::OnConnTypeChanged( wxCommandEvent& aEvent )
 {
+    if( m_authChoice->GetSelection() == 1 )
+        m_connType = KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_SSH;
+    else
+        m_connType = KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_HTTPS;
+
     updateFieldsForConnType();
     aEvent.Skip();
 }
@@ -58,17 +105,24 @@ void DIALOG_GIT_CREDENTIALS::OnConnTypeChanged( wxCommandEvent& aEvent )
 
 void DIALOG_GIT_CREDENTIALS::updateFieldsForConnType()
 {
-    bool ssh = ( m_authChoice->GetSelection() == 1 );
+    bool ssh = ( m_connType == KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_SSH );
 
     m_keyLabel->Enable( ssh );
     m_keyPicker->Enable( ssh );
 
-    if( ssh )
-        m_passLabel->SetLabel( _( "Key passphrase:" ) );
-    else
-        m_passLabel->SetLabel( _( "Password / token:" ) );
+    // The server refuses any user other than the one the SSH address names
+    m_userCtrl->Enable( !ssh || m_urlUsername.IsEmpty() );
 
-    // SSH still needs a username (typically "git") but it can stay editable.
+    if( ssh )
+    {
+        m_passLabel->SetLabel( _( "Key passphrase:" ) );
+        m_passCtrl->SetHint( _( "Leave empty if the key has no passphrase." ) );
+    }
+    else
+    {
+        m_passLabel->SetLabel( _( "Password / token:" ) );
+        m_passCtrl->SetHint( wxEmptyString );
+    }
 }
 
 
@@ -86,16 +140,13 @@ wxString DIALOG_GIT_CREDENTIALS::GetPassword() const
 
 wxString DIALOG_GIT_CREDENTIALS::GetSSHKey() const
 {
-    return m_keyPicker->GetFileName().GetFullPath();
+    return KIGIT::PrivateKeyPath( m_keyPicker->GetFileName().GetFullPath() );
 }
 
 
 KIGIT_COMMON::GIT_CONN_TYPE DIALOG_GIT_CREDENTIALS::GetConnType() const
 {
-    if( m_authChoice->GetSelection() == 1 )
-        return KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_SSH;
-
-    return KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_HTTPS;
+    return m_connType;
 }
 
 

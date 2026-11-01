@@ -211,14 +211,17 @@ bool ITEM::collideSimple( const ITEM* aHead, const NODE* aNode, int aLayer,
     {
         clearance = -1;
     }
-    else if( aCtx && aCtx->options.m_overrideClearance >= 0 )
-    {
-        clearance = aCtx->options.m_overrideClearance;
-    }
     else
     {
-        clearance = aNode->GetClearance( this, aHead, aCtx ? aCtx->options.m_useClearanceEpsilon
-                                                           : false );
+        const COLLISION_SEARCH_OPTIONS defaultOptions;
+        if ( aCtx )
+        {
+            clearance = aNode->GetClearance( this, aHead, aCtx->options.m_useClearanceEpsilon, aCtx->options );
+        }
+        else
+        {
+            clearance = aNode->GetClearance( this, aHead, false, defaultOptions );
+        }
     }
 
     if( clearance >= 0 )

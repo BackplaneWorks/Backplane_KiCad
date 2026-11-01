@@ -107,22 +107,6 @@ DIALOG_ZONE_MANAGER::DIALOG_ZONE_MANAGER( PCB_BASE_FRAME* aParent ) :
     m_modelZonesOverview->SetLayerFilter( UNDEFINED_LAYER );
     m_layerFilter->SetSelection( 0 );
 
-    m_modelZonesOverview->ApplyFilter( m_filterCtrl->GetValue(), m_viewZonesOverview->GetSelection() );
-
-    if( m_modelZonesOverview->GetCount() )
-        SelectZoneTableItem( m_modelZonesOverview->GetItem( 0 ) );
-    else
-        m_panelZoneProperties->SetZone( nullptr );
-
-    // Control values set before the dialog is shown may not render, so re-apply them once
-    // it is on screen (issue 24797).
-    CallAfter(
-            [this]()
-            {
-                if( m_panelZoneProperties->GetZone() )
-                    m_panelZoneProperties->TransferZoneSettingsToWindow();
-            } );
-
     Layout();
     m_MainBoxSizer->Fit( this );
     finishDialogSettings();
@@ -143,14 +127,13 @@ DIALOG_ZONE_MANAGER::DIALOG_ZONE_MANAGER( PCB_BASE_FRAME* aParent ) :
     Bind( wxEVT_CHECKBOX, &DIALOG_ZONE_MANAGER::OnCheckBoxClicked, this );
     Bind( wxEVT_IDLE, &DIALOG_ZONE_MANAGER::OnIdle, this );
     Bind( wxEVT_CHAR_HOOK, &DIALOG_ZONE_MANAGER::OnDialogCharHook, this );
-    Bind(
-            wxEVT_BOOKCTRL_PAGE_CHANGED,
-            [this]( wxNotebookEvent& aEvent )
-            {
-                Layout();
-                SelectZoneOnCanvas( m_panelZoneProperties->GetZone(), m_zonePreviewNotebook->GetCurrentLayer() );
-            },
-            m_zonePreviewNotebook->GetId() );
+    Bind( wxEVT_BOOKCTRL_PAGE_CHANGED,
+          [this]( wxNotebookEvent& aEvent )
+          {
+              Layout();
+              SelectZoneOnCanvas( m_panelZoneProperties->GetZone(), m_zonePreviewNotebook->GetCurrentLayer() );
+          },
+          m_zonePreviewNotebook->GetId() );
 
     m_canvasSelectReady = true;
 }
@@ -161,6 +144,22 @@ DIALOG_ZONE_MANAGER::~DIALOG_ZONE_MANAGER() = default;
 
 bool DIALOG_ZONE_MANAGER::TransferDataToWindow()
 {
+    m_modelZonesOverview->ApplyFilter( m_filterCtrl->GetValue(), m_viewZonesOverview->GetSelection() );
+
+    if( m_modelZonesOverview->GetCount() )
+        SelectZoneTableItem( m_modelZonesOverview->GetItem( 0 ) );
+    else
+        m_panelZoneProperties->SetZone( nullptr );
+
+    // Control values set before the dialog is shown may not render, so re-apply them once
+    // it is on screen (issue 24797).
+    CallAfter(
+            [this]()
+            {
+                if( m_panelZoneProperties->GetZone() )
+                    m_panelZoneProperties->TransferZoneSettingsToWindow();
+            } );
+
     return true;
 }
 
@@ -503,10 +502,28 @@ void DIALOG_ZONE_MANAGER::OnDeleteClick( wxCommandEvent& aEvent )
 
     m_pcbFrame->GetCanvas()->Refresh();
 
-    wxString currentFilter = m_filterCtrl->GetValue();
+    wxString     currentFilter = m_filterCtrl->GetValue();
+    PCB_LAYER_ID layerFilter = UNDEFINED_LAYER;
+    bool         nameFilter = m_checkName->IsChecked();
+    bool         netFilter = m_checkNet->IsChecked();
+
+    if( m_layerFilter->GetSelection() > 0 )   // 0 is "All Layers" (ie: no filter)
+    {
+        void* data = m_layerFilter->GetClientData( m_layerFilter->GetSelection() );
+        layerFilter = static_cast<PCB_LAYER_ID>( reinterpret_cast<intptr_t>( data ) );
+    }
 
     m_modelZonesOverview = new MODEL_ZONES_OVERVIEW( this, m_pcbFrame, m_zoneSettingsBag );
     m_viewZonesOverview->AssociateModel( m_modelZonesOverview.get() );
+
+    if( layerFilter != UNDEFINED_LAYER )
+        m_modelZonesOverview->SetLayerFilter( layerFilter );
+
+    if( nameFilter )
+        m_modelZonesOverview->EnableFilterByName( true );
+
+    if( netFilter )
+        m_modelZonesOverview->EnableFilterByNet( true );
 
     if( !currentFilter.IsEmpty() )
         m_modelZonesOverview->ApplyFilter( currentFilter, wxDataViewItem() );
@@ -680,9 +697,9 @@ void DIALOG_ZONE_MANAGER::OnCheckBoxClicked( wxCommandEvent& aEvent )
     const wxObject* sender = aEvent.GetEventObject();
 
     if( aEvent.GetEventObject() == m_checkName )
-        m_modelZonesOverview->EnableFitterByName( aEvent.IsChecked() );
+        m_modelZonesOverview->EnableFilterByName( aEvent.IsChecked() );
     else if( aEvent.GetEventObject() == m_checkNet )
-        m_modelZonesOverview->EnableFitterByNet( aEvent.IsChecked() );
+        m_modelZonesOverview->EnableFilterByNet( aEvent.IsChecked() );
 
     if( ( sender == m_checkName || sender == m_checkNet ) && !m_filterCtrl->IsEmpty() )
         m_modelZonesOverview->ApplyFilter( m_filterCtrl->GetValue(), m_viewZonesOverview->GetSelection() );

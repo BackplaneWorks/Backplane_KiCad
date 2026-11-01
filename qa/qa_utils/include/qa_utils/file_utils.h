@@ -38,7 +38,8 @@ class SCOPED_TEMP_DIR
 {
 public:
     /**
-     * Create a temporary directory with a unique name based on the given prefix.
+     * Create a temporary directory with a unique name based on the given prefix and
+     * optional suffix.
      *
      * The directory is removed on destruction unless the environment variable
      * KICAD_QA_KEEP_TEMP, when interpreted as a comma-separated list of
@@ -46,8 +47,9 @@ public:
      * temporary directories created by this class.
      *
      * @param aPrefix Prefix for the temporary directory name
+     * @param aSuffix Suffix for the temporary directory name (optional)
      */
-    SCOPED_TEMP_DIR( const wxString& aPrefix );
+    SCOPED_TEMP_DIR( const wxString& aPrefix, const wxString& aSuffix = wxEmptyString );
 
     ~SCOPED_TEMP_DIR();
 
@@ -80,6 +82,8 @@ public:
     /**
      * Create and return the path to a direct child directory.
      *
+     * @param aName Name of the child directory, must be a single path component
+     * @throws std::invalid_argument if aName is not a single path component
      * @throws std::runtime_error if the directory cannot be created
      */
     std::filesystem::path CreateChildDir( const wxString& aName ) const;
@@ -87,6 +91,8 @@ public:
     /**
      * Create and return the path to a direct child directory as a wxString.
      *
+     * @param aName Name of the child directory, must be a single path component
+     * @throws std::invalid_argument if aName is not a single path component
      * @throws std::runtime_error if the directory cannot be created
      */
     wxString CreateChildDirStr( const wxString& aName ) const;
@@ -94,6 +100,8 @@ public:
     /**
      * Create and return the path to a direct child file.
      *
+     * @param aName Name of the child file, must be a single path component
+     * @throws std::invalid_argument if aName is not a single path component
      * @throws std::runtime_error if the file cannot be created
      */
     std::filesystem::path CreateChildFile( const wxString& aName ) const;
@@ -101,6 +109,8 @@ public:
     /**
      * Create and return the path to a direct child file as a wxString.
      *
+     * @param aName Name of the child file, must be a single path component
+     * @throws std::invalid_argument if aName is not a single path component
      * @throws std::runtime_error if the file cannot be created
      */
     wxString CreateChildFileStr( const wxString& aName ) const;

@@ -36,12 +36,12 @@ class WX_INFOBAR;
 
 ///////////////////////////////////////////////////////////////////////////
 
-#define ID_SORT_BY_X_POSITION 1000
-#define ID_SORT_BY_Y_POSITION 1001
-#define wxID_FIRST_FREE 1002
-#define wxID_SHEET_X_100 1003
-#define wxID_SHEET_X_1000 1004
-#define ID_CLEAR_ANNOTATION_CMP 1005
+#define ID_SORT_BY_X_POSITION 6000
+#define ID_SORT_BY_Y_POSITION 6001
+#define wxID_FIRST_FREE 6002
+#define wxID_SHEET_X_100 6003
+#define wxID_SHEET_X_1000 6004
+#define ID_CLEAR_ANNOTATION_CMP 6005
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class DIALOG_ANNOTATE_BASE
@@ -67,6 +67,8 @@ class DIALOG_ANNOTATE_BASE : public DIALOG_SHIM
 		wxTextCtrl* m_textNumberAfter;
 		wxRadioButton* m_rbSheetX100;
 		wxRadioButton* m_rbSheetX1000;
+		wxRadioButton* m_rbSeparateInstances;
+		wxRadioButton* m_rbSuffixInstances;
 		WX_HTML_REPORT_PANEL* m_MessageWindow;
 		wxButton* m_btnClear;
 		wxStdDialogButtonSizer* m_sdbSizer1;

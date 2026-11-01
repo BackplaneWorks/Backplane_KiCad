@@ -18,17 +18,63 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
-#include "wx/html/m_templ.h"
-#include "wx/html/styleparams.h"
 #include "core/kicad_algo.h"
 #include <algorithm>
 #include <drc/drc_item.h>
 #include <drc/drc_rule.h>
 #include <board.h>
 #include <pad.h>
+#include <pad_utils.h>
 #include <pcb_marker.h>
 #include <i18n_utility.h>
+
+
+int ConvertPadCheckToDrcCode( PAD_UTILS::PAD_CHECK_CODE aCode )
+{
+    switch( aCode )
+    {
+    case PAD_UTILS::PAD_CHECK_CODE::PAD_SIZE_NOT_POSITIVE:
+    case PAD_UTILS::PAD_CHECK_CODE::PTH_HOLE_TOO_SMALL:
+    case PAD_UTILS::PAD_CHECK_CODE::UNEXPECTED_HOLE:
+    case PAD_UTILS::PAD_CHECK_CODE::ROUNDRECT_RADIUS_NEGATIVE:
+    case PAD_UTILS::PAD_CHECK_CODE::CHAMFER_NEGATIVE:
+    case PAD_UTILS::PAD_CHECK_CODE::CHAMFER_TOO_LARGE:
+    case PAD_UTILS::PAD_CHECK_CODE::TRAPEZOID_DELTA_TOO_LARGE:
+    case PAD_UTILS::PAD_CHECK_CODE::CUSTOM_SHAPE_NOT_SINGLE_POLYGON:
+    case PAD_UTILS::PAD_CHECK_CODE::NON_COMPONENT_NO_COPPER:
+    case PAD_UTILS::PAD_CHECK_CODE::NON_COMPONENT_TECH_ON_INNER:
+        return DRCE_PADSTACK_INVALID;
+
+    case PAD_UTILS::PAD_CHECK_CODE::TH_NO_HOLE:
+        return DRCE_PAD_TH_WITH_NO_HOLE;
+
+    case PAD_UTILS::PAD_CHECK_CODE::PTH_NO_OUTER_COPPER:
+    case PAD_UTILS::PAD_CHECK_CODE::PTH_HOLE_LEAVES_NO_COPPER:
+    case PAD_UTILS::PAD_CHECK_CODE::PTH_HOLE_NOT_INSIDE_COPPER:
+    case PAD_UTILS::PAD_CHECK_CODE::HOLE_NOT_INSIDE_PAD:
+    case PAD_UTILS::PAD_CHECK_CODE::NEGATIVE_LOCAL_CLEARANCE:
+    case PAD_UTILS::PAD_CHECK_CODE::NEGATIVE_MASK_CLEARANCE_TOO_LARGE:
+    case PAD_UTILS::PAD_CHECK_CODE::NEGATIVE_PASTE_MARGIN_TOO_LARGE:
+    case PAD_UTILS::PAD_CHECK_CODE::ROUNDRECT_RADIUS_TOO_LARGE:
+    case PAD_UTILS::PAD_CHECK_CODE::MASK_WRONG_SIDE:
+    case PAD_UTILS::PAD_CHECK_CODE::PASTE_WRONG_SIDE:
+    case PAD_UTILS::PAD_CHECK_CODE::PAD_NO_OUTER_COPPER:
+    case PAD_UTILS::PAD_CHECK_CODE::CONN_HAS_PASTE:
+    case PAD_UTILS::PAD_CHECK_CODE::FIDUCIAL_NOT_PLATED:
+    case PAD_UTILS::PAD_CHECK_CODE::TESTPOINT_NOT_PLATED:
+    case PAD_UTILS::PAD_CHECK_CODE::HEATSINK_NOT_PLATED:
+    case PAD_UTILS::PAD_CHECK_CODE::CASTELLATED_NOT_PTH:
+    case PAD_UTILS::PAD_CHECK_CODE::BGA_NOT_SMD:
+    case PAD_UTILS::PAD_CHECK_CODE::MECHANICAL_NOT_PTH:
+    case PAD_UTILS::PAD_CHECK_CODE::PRESSFIT_NOT_PTH:
+    case PAD_UTILS::PAD_CHECK_CODE::MULTIPLE_COPPER_LAYERS:
+    case PAD_UTILS::PAD_CHECK_CODE::NON_COMPONENT_INNER_NEEDS_CUSTOM_STACKUP:
+        return DRCE_PADSTACK;
+    }
+
+    wxFAIL_MSG( wxT( "Unknown pad check code" ) );
+    return DRCE_PADSTACK;
+}
 
 
 // These, being statically-defined, require specialized I18N handling.
@@ -76,6 +122,10 @@ DRC_ITEM DRC_ITEM::tracksCrossing( DRCE_TRACKS_CROSSING,
 DRC_ITEM DRC_ITEM::edgeClearance( DRCE_EDGE_CLEARANCE,
         _HKI( "Board edge clearance violation" ),
         wxT( "copper_edge_clearance" ) );
+
+DRC_ITEM DRC_ITEM::copperOutsideBoard( DRCE_COPPER_OUTSIDE_BOARD,
+        _HKI( "Copper outside board outline" ),
+        wxT( "copper_outside_board" ) );
 
 DRC_ITEM DRC_ITEM::isolatedCopper( DRCE_ISOLATED_COPPER,
         _HKI( "Isolated copper fill" ),
@@ -358,6 +408,7 @@ std::vector<std::reference_wrapper<RC_ITEM>> DRC_ITEM::allItemTypes( {
 
         DRC_ITEM::heading_DFM,
         DRC_ITEM::edgeClearance,
+        DRC_ITEM::copperOutsideBoard,
         DRC_ITEM::holeClearance,
         DRC_ITEM::holeNearHole,
         DRC_ITEM::holesCoLocated,
@@ -453,6 +504,7 @@ std::shared_ptr<DRC_ITEM> DRC_ITEM::Create( int aErrorCode )
     case DRCE_CREEPAGE:                      return std::make_shared<DRC_ITEM>( creepage );
     case DRCE_TRACKS_CROSSING:               return std::make_shared<DRC_ITEM>( tracksCrossing );
     case DRCE_EDGE_CLEARANCE:                return std::make_shared<DRC_ITEM>( edgeClearance );
+    case DRCE_COPPER_OUTSIDE_BOARD:          return std::make_shared<DRC_ITEM>( copperOutsideBoard );
     case DRCE_ISOLATED_COPPER:               return std::make_shared<DRC_ITEM>( isolatedCopper );
     case DRCE_STARVED_THERMAL:               return std::make_shared<DRC_ITEM>( starvedThermal );
     case DRCE_DANGLING_VIA:                  return std::make_shared<DRC_ITEM>( viaDangling );
@@ -719,3 +771,8 @@ void DRC_ITEMS_PROVIDER::DeleteItem( int aIndex, bool aDeep )
         m_board->Delete( marker );
 }
 
+
+EDA_ITEM* BOARD_RC_ITEM_RESOLVER::doResolveItemById( const KIID& aKiid ) const
+{
+    return m_board.ResolveItem( aKiid, true );
+}

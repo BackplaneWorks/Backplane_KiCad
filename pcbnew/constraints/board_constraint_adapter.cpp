@@ -37,6 +37,7 @@
 #include <footprint.h>
 #include <geometry/seg.h>
 #include <math/util.h>
+#include <pad.h>
 #include <pcb_dimension.h>
 #include <pcb_shape.h>
 
@@ -58,19 +59,6 @@ static constexpr double STAY_PUT_WEIGHT = 1e-4;
 static constexpr double CURSOR_WEIGHT = 1e-2;
 
 
-// Every constraint owned by the board or by any of its footprints.  In the footprint editor the
-// "board" is a footprint holder, so footprint-scoped constraints must be gathered too.
-static std::vector<PCB_CONSTRAINT*> collectAllConstraints( BOARD* aBoard )
-{
-    std::vector<PCB_CONSTRAINT*> all( aBoard->Constraints().begin(), aBoard->Constraints().end() );
-
-    for( FOOTPRINT* footprint : aBoard->Footprints() )
-        all.insert( all.end(), footprint->Constraints().begin(), footprint->Constraints().end() );
-
-    return all;
-}
-
-
 bool BoardHasConstraints( BOARD* aBoard )
 {
     if( !aBoard )
@@ -79,9 +67,38 @@ bool BoardHasConstraints( BOARD* aBoard )
     if( !aBoard->Constraints().empty() )
         return true;
 
-    return std::ranges::any_of( aBoard->Footprints(),
-                                []( const FOOTPRINT* aFootprint )
-                                { return !aFootprint->Constraints().empty(); } );
+    return aBoard->IsFootprintHolder()
+           && std::ranges::any_of( aBoard->Footprints(),
+                                   []( const FOOTPRINT* aFootprint )
+                                   { return !aFootprint->Constraints().empty(); } );
+}
+
+
+std::vector<VECTOR2I> ConstraintPinnedPositions( BOARD* aBoard, const std::set<KIID>& aItems )
+{
+    std::vector<VECTOR2I> positions;
+
+    if( !aBoard )
+        return positions;
+
+    for( const PCB_CONSTRAINT* constraint : CollectResolvedConstraints( aBoard ) )
+    {
+        if( constraint->GetConstraintType() != PCB_CONSTRAINT_TYPE::FIXED_POSITION )
+            continue;
+
+        for( const CONSTRAINT_MEMBER& member : constraint->GetMembers() )
+        {
+            if( !aItems.contains( member.m_item ) )
+                continue;
+
+            std::optional<VECTOR2I> pos = ConstraintAnchorPosition( aBoard, member );
+
+            if( pos && std::ranges::find( positions, *pos ) == positions.end() )
+                positions.push_back( *pos );
+        }
+    }
+
+    return positions;
 }
 
 
@@ -99,15 +116,53 @@ bool ConstraintItemIsLocked( const BOARD_ITEM* aItem )
 }
 
 
+// The footprint @p aItem moves with as one body, or nullptr inside the footprint editor where a
+// footprint's children are the geometry being edited
+static FOOTPRINT* boardFootprintOf( const BOARD_ITEM* aItem )
+{
+    FOOTPRINT* footprint = aItem ? aItem->GetParentFootprint() : nullptr;
+
+    if( !footprint )
+        return nullptr;
+
+    const BOARD* board = footprint->GetBoard();
+
+    return board && !board->IsFootprintHolder() ? footprint : nullptr;
+}
+
+
+// A board-wide pass checks members against the board's ids first since a missing id costs a full
+// board scan in BOARD::ResolveItem()
+static BOARD_ITEM* resolveMember( BOARD* aBoard, const std::unordered_set<KIID>* aOnBoard, const KIID& aId )
+{
+    if( aOnBoard && !aOnBoard->contains( aId ) )
+        return nullptr;
+
+    return aBoard->ResolveItem( aId, true );
+}
+
+
+// Constraint adjacency by member KIID plus, for each footprint on a board, links between its
+// constrained children so the whole footprint lands in one cluster
+struct CONSTRAINT_GRAPH
+{
+    std::unordered_map<KIID, std::vector<PCB_CONSTRAINT*>> byMember;
+    std::unordered_map<KIID, std::vector<KIID>>            rigidSiblings;
+
+    bool contains( const KIID& aId ) const { return byMember.contains( aId ); }
+};
+
+
 // Adjacency from a member KIID to the constraints touching it.  When @p aErrored is given, any
 // constraint that cannot be satisfied -- it has no members, or a member that does not resolve to a
 // constrainable item (a shape or dimension) -- is recorded there (error state), since such a
 // constraint never reaches the solver's per-cluster mapping where the remaining error cases are caught.
-static std::unordered_map<KIID, std::vector<PCB_CONSTRAINT*>>
+static CONSTRAINT_GRAPH
 buildShapeConstraintMap( BOARD* aBoard, const std::vector<PCB_CONSTRAINT*>& aConstraints,
-                         std::vector<KIID>* aErrored = nullptr )
+                         std::vector<KIID>* aErrored = nullptr, const std::unordered_set<KIID>* aOnBoard = nullptr )
 {
-    std::unordered_map<KIID, std::vector<PCB_CONSTRAINT*>> map;
+    CONSTRAINT_GRAPH                                        graph;
+    std::unordered_map<KIID, std::vector<PCB_CONSTRAINT*>>& map = graph.byMember;
 
     for( PCB_CONSTRAINT* constraint : aConstraints )
     {
@@ -119,7 +174,7 @@ buildShapeConstraintMap( BOARD* aBoard, const std::vector<PCB_CONSTRAINT*>& aCon
 
             // Members must resolve to a constrainable item (shape or dimension); a deleted or
             // wrong-typed item is an error.
-            if( aErrored && !ResolveConstrainableItem( aBoard, member.m_item ) )
+            if( aErrored && !IsConstrainableItem( resolveMember( aBoard, aOnBoard, member.m_item ) ) )
                 errored = true;
         }
 
@@ -127,14 +182,46 @@ buildShapeConstraintMap( BOARD* aBoard, const std::vector<PCB_CONSTRAINT*>& aCon
             aErrored->push_back( constraint->m_Uuid );
     }
 
-    return map;
+    if( aBoard->IsFootprintHolder() )
+        return graph;
+
+    // Walk footprint children rather than resolve members since a dangling member costs a full
+    // board scan in BOARD::ResolveItem()
+    for( FOOTPRINT* footprint : aBoard->Footprints() )
+    {
+        std::vector<KIID> constrained;
+
+        auto visit = [&]( const BOARD_ITEM* aChild )
+        {
+            if( map.contains( aChild->m_Uuid ) )
+                constrained.push_back( aChild->m_Uuid );
+        };
+
+        for( const BOARD_ITEM* child : footprint->GraphicalItems() )
+            visit( child );
+
+        for( const PAD* pad : footprint->Pads() )
+            visit( pad );
+
+        if( constrained.size() < 2 )
+            continue;
+
+        // A star keeps the children connected without a quadratic all-pairs link set
+        for( size_t i = 1; i < constrained.size(); ++i )
+        {
+            graph.rigidSiblings[constrained.front()].push_back( constrained[i] );
+            graph.rigidSiblings[constrained[i]].push_back( constrained.front() );
+        }
+    }
+
+    return graph;
 }
 
 
 // Walk the connected component (shapes + constraints) that contains @p aSeed.  Shapes reached are
 // added to @p aVisited when provided, so a caller iterating seeds can skip an already-walked one.
 static void collectConstraintCluster(
-        const std::unordered_map<KIID, std::vector<PCB_CONSTRAINT*>>& aMap, const KIID& aSeed,
+        const CONSTRAINT_GRAPH& aGraph, const KIID& aSeed,
         std::unordered_set<KIID>& aClusterShapes, std::vector<PCB_CONSTRAINT*>& aClusterConstraints,
         std::set<KIID>* aVisited = nullptr )
 {
@@ -150,9 +237,18 @@ static void collectConstraintCluster(
         if( aVisited )
             aVisited->insert( shapeId );
 
-        auto it = aMap.find( shapeId );
+        if( auto siblings = aGraph.rigidSiblings.find( shapeId ); siblings != aGraph.rigidSiblings.end() )
+        {
+            for( const KIID& sibling : siblings->second )
+            {
+                if( aClusterShapes.insert( sibling ).second )
+                    frontier.push_back( sibling );
+            }
+        }
 
-        if( it == aMap.end() )
+        auto it = aGraph.byMember.find( shapeId );
+
+        if( it == aGraph.byMember.end() )
             continue;
 
         for( PCB_CONSTRAINT* constraint : it->second )
@@ -174,13 +270,14 @@ static void collectConstraintCluster(
 // Resolve a set of KIIDs to the live items of type T among them, dropping other kinds and deleted
 // items.
 template <typename T>
-static std::vector<T*> resolveClusterItems( BOARD* aBoard, const std::unordered_set<KIID>& aIds )
+static std::vector<T*> resolveClusterItems( BOARD* aBoard, const std::unordered_set<KIID>& aIds,
+                                            const std::unordered_set<KIID>* aOnBoard )
 {
     std::vector<T*> items;
 
     for( const KIID& id : aIds )
     {
-        if( T* item = dynamic_cast<T*>( aBoard->ResolveItem( id, true ) ) )
+        if( T* item = dynamic_cast<T*>( resolveMember( aBoard, aOnBoard, id ) ) )
             items.push_back( item );
     }
 
@@ -188,16 +285,25 @@ static std::vector<T*> resolveClusterItems( BOARD* aBoard, const std::unordered_
 }
 
 
-static std::vector<PCB_SHAPE*> resolveClusterShapes( BOARD* aBoard, const std::unordered_set<KIID>& aIds )
+static std::vector<PCB_SHAPE*> resolveClusterShapes( BOARD* aBoard, const std::unordered_set<KIID>& aIds,
+                                                     const std::unordered_set<KIID>* aOnBoard = nullptr )
 {
-    return resolveClusterItems<PCB_SHAPE>( aBoard, aIds );
+    return resolveClusterItems<PCB_SHAPE>( aBoard, aIds, aOnBoard );
 }
 
 
 static std::vector<PCB_DIMENSION_BASE*> resolveClusterDimensions( BOARD* aBoard,
-                                                                  const std::unordered_set<KIID>& aIds )
+                                                                  const std::unordered_set<KIID>& aIds,
+                                                                  const std::unordered_set<KIID>* aOnBoard = nullptr )
 {
-    return resolveClusterItems<PCB_DIMENSION_BASE>( aBoard, aIds );
+    return resolveClusterItems<PCB_DIMENSION_BASE>( aBoard, aIds, aOnBoard );
+}
+
+
+static std::vector<PAD*> resolveClusterPads( BOARD* aBoard, const std::unordered_set<KIID>& aIds,
+                                             const std::unordered_set<KIID>* aOnBoard = nullptr )
+{
+    return resolveClusterItems<PAD>( aBoard, aIds, aOnBoard );
 }
 
 
@@ -535,11 +641,15 @@ BOARD_CONSTRAINT_ADAPTER::orthogonalDimensionForMembers( const std::vector<CONST
 bool BOARD_CONSTRAINT_ADAPTER::Build( const std::vector<PCB_SHAPE*>&          aShapes,
                                       const std::vector<PCB_CONSTRAINT*>&     aConstraints,
                                       const std::set<KIID>*                   aFixedShapes,
-                                      const std::vector<PCB_DIMENSION_BASE*>& aDimensions )
+                                      const std::vector<PCB_DIMENSION_BASE*>& aDimensions,
+                                      const std::vector<PAD*>&                aPads )
 {
     m_system.Clear();
     m_shapeVars.clear();
+    m_rigidFootprints.clear();
+    m_rigidMembers.clear();
     m_tagToConstraint.clear();
+    m_droppedTags.clear();
     m_nonDrivingTags.clear();
     m_tagMembers.clear();
     m_referenceConstraints.clear();
@@ -552,12 +662,14 @@ bool BOARD_CONSTRAINT_ADAPTER::Build( const std::vector<PCB_SHAPE*>&          aS
     m_temporaryParams.clear();
     m_nextTemporaryParam = 0;
 
-    if( aShapes.empty() && aDimensions.empty() )
+    if( aShapes.empty() && aDimensions.empty() && aPads.empty() )
         return false;
 
     // Centre on the first item's start point so normalized coordinates stay small for a board far
     // from the origin.
-    VECTOR2I origin = !aShapes.empty() ? aShapes.front()->GetStart() : aDimensions.front()->GetStart();
+    VECTOR2I origin = !aShapes.empty()       ? aShapes.front()->GetStart()
+                      : !aDimensions.empty() ? aDimensions.front()->GetStart()
+                                             : aPads.front()->GetPosition();
     m_scale = IU_PER_NORM_UNIT;
     m_invScale = 1.0 / m_scale;
     m_system.SetCoordinateFrame( origin, m_scale );
@@ -760,9 +872,23 @@ bool BOARD_CONSTRAINT_ADAPTER::Build( const std::vector<PCB_SHAPE*>&          aS
         m_shapeVars[dimension->m_Uuid] = vars;
     }
 
+    for( PAD* pad : aPads )
+    {
+        SHAPE_VARS vars;
+        vars.kind = SHAPE_KIND::PAD_CENTER;
+        vars.pad = pad;
+        vars.startX = pushParam( normalizeX( pad->GetPosition().x ) );
+        pushParam( normalizeY( pad->GetPosition().y ) );
+        m_shapeVars[pad->m_Uuid] = vars;
+    }
+
     // Params the solver may not change.  Grounded points, driving constants (lengths, radii) and
     // locked-shape params go here; everything else stays an unknown.
     std::set<int> fixedParams;
+
+    // Of those, the ones a FIXED_POSITION constraint nails down, kept apart because a block
+    // edit is allowed to place a locked shape but never a point the user pinned
+    std::set<int> groundedPositions;
 
     for( const auto& [first, last] : lockedRanges )
     {
@@ -772,6 +898,16 @@ bool BOARD_CONSTRAINT_ADAPTER::Build( const std::vector<PCB_SHAPE*>&          aS
 
     for( int i : ellipseOffsetParams )
         fixedParams.insert( i );
+
+    std::set<FOOTPRINT*> rigidFootprints;
+
+    for( const auto& [kiid, vars] : m_shapeVars )
+    {
+        if( FOOTPRINT* footprint = boardFootprintOf( itemOf( vars ) ) )
+            rigidFootprints.insert( footprint );
+    }
+
+    coupleRigidFootprints( rigidFootprints, aFixedShapes, fixedParams );
 
     auto pointAt = [&]( int aXIndex ) -> GCS::Point
     {
@@ -949,6 +1085,8 @@ bool BOARD_CONSTRAINT_ADAPTER::Build( const std::vector<PCB_SHAPE*>&          aS
             {
                 fixedParams.insert( a.x );
                 fixedParams.insert( a.y );
+                groundedPositions.insert( a.x );
+                groundedPositions.insert( a.y );
                 mapped = true;   // enforced by omission from the unknowns, not a solver constraint
             }
 
@@ -1277,7 +1415,9 @@ bool BOARD_CONSTRAINT_ADAPTER::Build( const std::vector<PCB_SHAPE*>&          aS
             continue;
         }
 
-        m_tagToConstraint[tag] = constraint->m_Uuid;
+        // A fixed position is enforced by grounding, not by a solver constraint
+        if( constraint->GetConstraintType() != PCB_CONSTRAINT_TYPE::FIXED_POSITION )
+            m_tagToConstraint[tag] = constraint->m_Uuid;
 
         if( !constraint->IsDriving() )
             m_nonDrivingTags.insert( tag );
@@ -1346,7 +1486,15 @@ bool BOARD_CONSTRAINT_ADAPTER::Build( const std::vector<PCB_SHAPE*>&          aS
 
     for( const auto& [kiid, vars] : m_shapeVars )
     {
-        if( vars.kind != SHAPE_KIND::POINT_PAIR )
+        if( vars.kind == SHAPE_KIND::PAD_CENTER && !m_rigidMembers.contains( kiid ) )
+        {
+            fixedParams.insert( vars.startX );
+            fixedParams.insert( vars.startX + 1 );
+            continue;
+        }
+
+        // A rigid footprint's dimension travels with the footprint instead of staying grounded
+        if( vars.kind != SHAPE_KIND::POINT_PAIR || m_rigidMembers.contains( kiid ) )
             continue;
 
         bool locked = ConstraintItemIsLocked( vars.dimension );
@@ -1371,6 +1519,7 @@ bool BOARD_CONSTRAINT_ADAPTER::Build( const std::vector<PCB_SHAPE*>&          aS
     }
 
     m_fixedParams = fixedParams;
+    m_groundedPositionParams = groundedPositions;
     m_gcs->declareUnknowns( unknowns );
     m_gcs->initSolution();
     m_gcs->maxIter = MAX_SOLVE_ITERATIONS;
@@ -1382,6 +1531,78 @@ bool BOARD_CONSTRAINT_ADAPTER::Build( const std::vector<PCB_SHAPE*>&          aS
 
     m_built = true;
     return true;
+}
+
+
+BOARD_ITEM* BOARD_CONSTRAINT_ADAPTER::itemOf( const SHAPE_VARS& aVars )
+{
+    if( aVars.shape )
+        return aVars.shape;
+
+    if( aVars.dimension )
+        return aVars.dimension;
+
+    return aVars.pad;
+}
+
+
+void BOARD_CONSTRAINT_ADAPTER::coupleRigidFootprints( const std::set<FOOTPRINT*>& aFootprints,
+                                                      const std::set<KIID>* aFixedShapes, std::set<int>& aFixed )
+{
+    for( FOOTPRINT* footprint : aFootprints )
+    {
+        std::set<KIID> children;
+        bool           frozen = false;
+
+        for( const auto& [kiid, vars] : m_shapeVars )
+        {
+            BOARD_ITEM* item = itemOf( vars );
+
+            if( boardFootprintOf( item ) != footprint )
+                continue;
+
+            children.insert( kiid );
+            frozen |= ConstraintItemIsLocked( item ) || ( aFixedShapes && aFixedShapes->contains( kiid ) );
+        }
+
+        m_rigidMembers.insert( children.begin(), children.end() );
+
+        RIGID_STATE state = collectRigidState( children );
+
+        // Translation alone can never resize a child
+        for( const RIGID_RADIUS_HOLD& hold : state.radii )
+            aFixed.insert( hold.radius );
+
+        if( frozen )
+        {
+            for( int pointX : state.points )
+            {
+                aFixed.insert( pointX );
+                aFixed.insert( pointX + 1 );
+            }
+
+            continue;
+        }
+
+        RIGID_FOOTPRINT body;
+        body.footprint = footprint;
+        body.buildPosition = footprint->GetPosition();
+        body.translationX = pushParam( 0.0 );
+        pushParam( 0.0 );
+
+        for( int pointX : state.points )
+        {
+            for( int axis : { 0, 1 } )
+            {
+                int origin = pushParam( m_params[pointX + axis] );
+                aFixed.insert( origin );
+                m_gcs->addConstraintDifference( &m_params[origin], &m_params[pointX + axis],
+                                                &m_params[body.translationX + axis] );
+            }
+        }
+
+        m_rigidFootprints.push_back( body );
+    }
 }
 
 
@@ -1786,6 +2007,10 @@ BOARD_CONSTRAINT_ADAPTER::collectRigidState( const std::set<KIID>& aEditedShapes
                 addPoint( vars.startX + 2 * i );
 
             break;
+
+        case SHAPE_KIND::PAD_CENTER:
+            addPoint( vars.startX );
+            break;
         }
     }
 
@@ -1868,6 +2093,17 @@ bool BOARD_CONSTRAINT_ADAPTER::SolveRigidTranslation( const std::set<KIID>& aEdi
     if( state.points.empty() )
         return false;
 
+    const bool movesGroundedPoint =
+            std::ranges::any_of( state.points,
+                                 [&]( int aPointX )
+                                 {
+                                     return m_fixedParams.contains( aPointX ) || m_fixedParams.contains( aPointX + 1 );
+                                 } );
+
+    // A pinned or locked coordinate cannot travel
+    if( movesGroundedPoint && aTranslation != VECTOR2I() )
+        return false;
+
     const double            dx = aTranslation.x * m_invScale;
     const double            dy = aTranslation.y * m_invScale;
     std::map<int, VECTOR2I> exactTargets;
@@ -1880,17 +2116,8 @@ bool BOARD_CONSTRAINT_ADAPTER::SolveRigidTranslation( const std::set<KIID>& aEdi
                                                 KiROUND( denormalizeY( m_params[pointX + 1] ) ) ) );
     }
 
-    // A grounded coordinate cannot travel, so a translation that moves one still needs the solve
-    const bool movesGroundedPoint =
-            std::ranges::any_of( state.points,
-                                 [&]( int aPointX )
-                                 {
-                                     return m_fixedParams.contains( aPointX ) || m_fixedParams.contains( aPointX + 1 );
-                                 } );
-
-    // Translating the whole cluster leaves every relation as it found it, so solving would only
-    // re-judge the starting state and reject a move that cannot change it
-    if( !movesGroundedPoint && TravelsWhole( aEditedShapes ) )
+    // Moving every shape a constraint touches cannot change what it measures
+    if( TravelsWhole( aEditedShapes ) )
         return true;
 
     beginTemporaryParameters();
@@ -1915,6 +2142,112 @@ bool BOARD_CONSTRAINT_ADAPTER::SolveRigidTranslation( const std::set<KIID>& aEdi
 
     m_gcs->clearByTag( GCS::DefaultTemporaryConstraint );
     return solved && QuantizedRelationsSatisfied();
+}
+
+
+CONSTRAINT_BLOCK_RESULT
+BOARD_CONSTRAINT_ADAPTER::SolveBlockEdit( const std::vector<std::pair<CONSTRAINT_MEMBER, VECTOR2I>>& aPinnedAnchors,
+                                          const std::set<KIID>& aTranslatedShapes, const VECTOR2I& aTranslation )
+{
+    if( !m_built )
+        return CONSTRAINT_BLOCK_RESULT::NOT_MODELED;
+
+    // The held coordinates and their IU targets, keyed by parameter index so a coordinate
+    // two anchors name is held once. The axes are kept apart because a rectangle corner
+    // shares one stored corner's x with the other's y.
+    std::map<int, int> targetsX;
+    std::map<int, int> targetsY;
+
+    const RIGID_STATE carried = collectRigidState( aTranslatedShapes );
+
+    // A shape travelling whole cannot carry a point the user pinned, the same refusal
+    // SolveRigidTranslation makes. A locked shape is different and stays placeable, since
+    // the caller has already put it where the user asked
+    const bool carriesGroundedPoint = std::ranges::any_of(
+            carried.points,
+            [&]( int aPointX )
+            {
+                return m_groundedPositionParams.contains( aPointX ) || m_groundedPositionParams.contains( aPointX + 1 );
+            } );
+
+    if( carriesGroundedPoint && aTranslation != VECTOR2I() )
+        return CONSTRAINT_BLOCK_RESULT::REFUSED;
+
+    for( int pointX : carried.points )
+    {
+        targetsX[pointX] = KiROUND( denormalizeX( m_params[pointX] ) ) + aTranslation.x;
+        targetsY[pointX + 1] = KiROUND( denormalizeY( m_params[pointX + 1] ) ) + aTranslation.y;
+    }
+
+    // Whether the user picked a point this cluster nails down. The solve still has to run in
+    // that case, with nothing commanded, so the point is put back where the constraint says
+    bool groundedAnchorPicked = false;
+
+    for( const auto& [member, target] : aPinnedAnchors )
+    {
+        // An anchor this cluster does not cover, say a corner of a polygon the solver cannot
+        // model, is skipped so the rest of the block still solves
+        if( ANCHOR_PARAMS anchor = anchorParams( member ); anchor.IsValid() )
+        {
+            // A FIXED_POSITION constraint grounds this point. The caller has already written
+            // the cursor into the item, so commanding it here would hold the violation and
+            // then report it solved, because the check below reads back what was just written
+            // A rectangle corner shares each axis with a different neighbour, so check them apart
+            if( m_groundedPositionParams.contains( anchor.x ) )
+                groundedAnchorPicked = true;
+            else
+                targetsX[anchor.x] = target.x;
+
+            if( m_groundedPositionParams.contains( anchor.y ) )
+                groundedAnchorPicked = true;
+            else
+                targetsY[anchor.y] = target.y;
+        }
+    }
+
+    if( targetsX.empty() && targetsY.empty() && !groundedAnchorPicked )
+        return CONSTRAINT_BLOCK_RESULT::NOT_MODELED;
+
+    beginTemporaryParameters();
+
+    std::set<int> commanded;
+
+    for( const auto& [param, target] : targetsX )
+    {
+        m_params[param] = normalizeX( target );
+        commanded.insert( param );
+    }
+
+    for( const auto& [param, target] : targetsY )
+    {
+        m_params[param] = normalizeY( target );
+        commanded.insert( param );
+    }
+
+    // The anchors keep the default weight, far above the stay-put tier, and the whole
+    // temporary subsystem is minimized inside the null space of the real constraints. A
+    // constraint therefore always wins, and a contradiction turns up as an unreachable
+    // target in the check below
+    for( int param : commanded )
+        softPinCoordinate( param, GCS::DefaultTemporaryConstraint );
+
+    pinUncommandedCoordinates( commanded, GCS::DefaultTemporaryConstraint );
+
+    m_gcs->initSolution();
+    int ret = m_gcs->solve();
+    m_gcs->applySolution();
+
+    bool solved = solveSucceeded( ret );
+
+    for( const auto& [param, target] : targetsX )
+        solved = solved && KiROUND( denormalizeX( m_params[param] ) ) == target;
+
+    for( const auto& [param, target] : targetsY )
+        solved = solved && KiROUND( denormalizeY( m_params[param] ) ) == target;
+
+    m_gcs->clearByTag( GCS::DefaultTemporaryConstraint );
+
+    return solved ? CONSTRAINT_BLOCK_RESULT::SOLVED : CONSTRAINT_BLOCK_RESULT::REFUSED;
 }
 
 
@@ -2040,19 +2373,47 @@ bool BOARD_CONSTRAINT_ADAPTER::hardRelationsSatisfied() const
     if( std::isfinite( structuralErr ) && std::abs( structuralErr ) > residualTol )
         return false;
 
+    return staleRelationTags().empty();
+}
+
+
+std::vector<int> BOARD_CONSTRAINT_ADAPTER::staleRelationTags() const
+{
+    const double     residualTol = 1e-3;
+    std::vector<int> stale;
+
     for( const auto& [tag, kiid] : m_tagToConstraint )
     {
         // A reference non-driving constraint only measures so its residual is never a failure
-        if( m_nonDrivingTags.contains( tag ) )
+        if( m_nonDrivingTags.contains( tag ) || m_droppedTags.contains( tag ) )
             continue;
 
         double err = m_gcs->calculateConstraintErrorByTag( tag );
 
         if( !std::isfinite( err ) || std::abs( err ) > residualTol )
-            return false;
+            stale.push_back( tag );
     }
 
-    return true;
+    return stale;
+}
+
+
+int BOARD_CONSTRAINT_ADAPTER::DropStaleRelations()
+{
+    const std::vector<int> stale = staleRelationTags();
+
+    for( int tag : stale )
+    {
+        m_gcs->clearByTag( tag );
+
+        // The mapping stays so Diagnose() can still attribute the relation to its constraint
+        m_droppedTags.insert( tag );
+    }
+
+    if( !stale.empty() )
+        m_gcs->initSolution();
+
+    return (int) stale.size();
 }
 
 
@@ -2133,6 +2494,64 @@ void BOARD_CONSTRAINT_ADAPTER::softPinPoint( int aPointX, int aTag, std::optiona
 {
     if( aPointX >= 0 )
         softPinPoint( ANCHOR_PARAMS{ aPointX, aPointX + 1 }, aTag, aWeight );
+}
+
+
+void BOARD_CONSTRAINT_ADAPTER::softPinCoordinate( int aParam, int aTag, std::optional<double> aWeight )
+{
+    // A zero weight would neutralize the pin instead of tiering it
+    wxASSERT( !aWeight || *aWeight > 0 );
+
+    if( aParam < 0 )
+        return;
+
+    int pin = temporaryParam( m_params[aParam] );
+    int id = m_gcs->addConstraintEqual( &m_params[aParam], &m_params[pin], aTag );
+
+    if( aWeight )
+        m_gcs->rescaleConstraint( id, *aWeight );
+}
+
+
+void BOARD_CONSTRAINT_ADAPTER::pinUncommandedCoordinates( const std::set<int>& aCommanded, int aTag )
+{
+    for( const auto& [kiid, vars] : m_shapeVars )
+    {
+        // Build already froze a locked shape or dimension, so a pin here adds nothing
+        if( ConstraintItemIsLocked( vars.shape ) || ConstraintItemIsLocked( vars.dimension ) )
+            continue;
+
+        const RIGID_STATE state = collectRigidState( { kiid } );
+        bool              commandedShape = false;
+
+        for( int pointX : state.points )
+            commandedShape = commandedShape || aCommanded.contains( pointX ) || aCommanded.contains( pointX + 1 );
+
+        // Holding one coordinate at a time keeps a rectangle corner the user placed apart
+        // from the free corner it shares stored parameters with
+        for( int pointX : state.points )
+        {
+            if( !aCommanded.contains( pointX ) )
+                softPinCoordinate( pointX, aTag, STAY_PUT_WEIGHT );
+
+            if( !aCommanded.contains( pointX + 1 ) )
+                softPinCoordinate( pointX + 1, aTag, STAY_PUT_WEIGHT );
+        }
+
+        // A shape the user placed keeps its size exactly, while an untouched one only prefers to
+        for( const RIGID_RADIUS_HOLD& hold : state.radii )
+        {
+            int         target = temporaryParam( m_params[hold.radius] );
+            GCS::Circle circle;
+            circle.center = GCS::Point{ &m_params[hold.centerX], &m_params[hold.centerX + 1] };
+            circle.rad = &m_params[hold.radius];
+
+            int id = m_gcs->addConstraintCircleRadius( circle, &m_params[target], aTag );
+
+            if( !commandedShape )
+                m_gcs->rescaleConstraint( id, STAY_PUT_WEIGHT );
+        }
+    }
 }
 
 
@@ -2259,6 +2678,10 @@ void BOARD_CONSTRAINT_ADAPTER::pinUneditedShapes( const std::set<KIID>& aEdited,
                 softPinPoint( vars.startX + 2 * i, aTag, STAY_PUT_WEIGHT );
 
             break;
+
+        case SHAPE_KIND::PAD_CENTER:
+            softPinPoint( vars.startX, aTag, STAY_PUT_WEIGHT );
+            break;
         }
     }
 }
@@ -2375,8 +2798,29 @@ std::vector<PCB_SHAPE*> BOARD_CONSTRAINT_ADAPTER::Apply( const std::function<voi
         return VECTOR2I( KiROUND( denormalizeX( m_params[aX] ) ), KiROUND( denormalizeY( m_params[aX + 1] ) ) );
     };
 
+    for( const RIGID_FOOTPRINT& body : m_rigidFootprints )
+    {
+        // A drag session re-applies every frame from its baseline so target the solved position
+        // rather than stacking each frame's translation
+        VECTOR2I translation( KiROUND( m_params[body.translationX] * m_scale ),
+                              KiROUND( m_params[body.translationX + 1] * m_scale ) );
+        VECTOR2I delta = body.buildPosition + translation - body.footprint->GetPosition();
+
+        if( delta == VECTOR2I() )
+            continue;
+
+        if( aBeforeWrite )
+            aBeforeWrite( body.footprint );
+
+        body.footprint->Move( delta );
+    }
+
     for( const auto& [kiid, vars] : m_shapeVars )
     {
+        // Rigid children already moved with their footprint and a pad never moves on its own
+        if( m_rigidMembers.contains( kiid ) || vars.kind == SHAPE_KIND::PAD_CENTER )
+            continue;
+
         if( vars.kind == SHAPE_KIND::POINT_PAIR )
         {
             VECTOR2I start = pointAt( vars.startX );
@@ -2792,13 +3236,14 @@ bool BOARD_CONSTRAINT_SESSION::buildCluster( BOARD* aBoard,
 
     std::vector<PCB_SHAPE*>          shapes = resolveClusterShapes( aBoard, aClusterShapes );
     std::vector<PCB_DIMENSION_BASE*> dimensions = resolveClusterDimensions( aBoard, aClusterShapes );
+    std::vector<PAD*>                pads = resolveClusterPads( aBoard, aClusterShapes );
 
-    if( ( shapes.empty() && dimensions.empty() ) || aConstraints.empty() )
+    if( ( shapes.empty() && dimensions.empty() && pads.empty() ) || aConstraints.empty() )
         return false;
 
     auto adapter = std::make_unique<BOARD_CONSTRAINT_ADAPTER>();
 
-    if( !adapter->Build( shapes, aConstraints, nullptr, dimensions ) )
+    if( !adapter->Build( shapes, aConstraints, nullptr, dimensions, pads ) )
         return false;
 
     m_adapter = std::move( adapter );
@@ -2841,7 +3286,7 @@ bool BOARD_CONSTRAINT_MOVE_SESSION::Build( BOARD* aBoard,
     if( !aBoard || aEditedShapes.empty() )
         return false;
 
-    auto shapeToConstraints = buildShapeConstraintMap( aBoard, collectAllConstraints( aBoard ) );
+    auto shapeToConstraints = buildShapeConstraintMap( aBoard, CollectResolvedConstraints( aBoard ) );
     std::set<KIID>               visited;
     std::unordered_set<KIID>     sessionShapes;
     std::vector<PCB_CONSTRAINT*> sessionConstraints;
@@ -2978,6 +3423,80 @@ bool BOARD_CONSTRAINT_MOVE_SESSION::Solve(
 }
 
 
+bool BOARD_CONSTRAINT_BLOCK_SESSION::Build( BOARD* aBoard, const std::vector<BOARD_ITEM*>& aBlockItems )
+{
+    reset();
+
+    if( !aBoard || aBlockItems.empty() )
+        return false;
+
+    auto shapeToConstraints = buildShapeConstraintMap( aBoard, CollectResolvedConstraints( aBoard ) );
+    std::set<KIID>           visited;
+    std::unordered_set<KIID> sessionShapes;
+    std::vector<PCB_CONSTRAINT*> sessionConstraints;
+
+    // Every cluster the block touches goes into one adapter. Two block shapes can constrain
+    // each other, and a cluster solved on its own would pull the other's anchors back
+    for( BOARD_ITEM* seed : aBlockItems )
+    {
+        if( !seed || visited.contains( seed->m_Uuid ) || !shapeToConstraints.contains( seed->m_Uuid ) )
+            continue;
+
+        std::unordered_set<KIID>     clusterShapes;
+        std::vector<PCB_CONSTRAINT*> clusterConstraints;
+        collectConstraintCluster( shapeToConstraints, seed->m_Uuid, clusterShapes, clusterConstraints, &visited );
+
+        sessionShapes.insert( clusterShapes.begin(), clusterShapes.end() );
+        sessionConstraints.insert( sessionConstraints.end(), clusterConstraints.begin(), clusterConstraints.end() );
+    }
+
+    if( sessionShapes.empty() )
+        return false;
+
+    if( !buildCluster( aBoard, sessionShapes, sessionConstraints ) )
+        return false;
+
+    // One constraint that the geometry already fails marks the whole cluster conflicted, and a
+    // conflicted cluster is solved not at all, so the constraints that do hold are dropped with
+    // it. Take the stale ones out instead and keep enforcing the rest
+    if( m_baseConflict && m_adapter->DropStaleRelations() > 0 )
+        m_baseConflict = !m_adapter->CurrentRelationsSatisfied();
+
+    return true;
+}
+
+
+CONSTRAINT_BLOCK_RESULT
+BOARD_CONSTRAINT_BLOCK_SESSION::Solve( const std::vector<std::pair<CONSTRAINT_MEMBER, VECTOR2I>>& aPinnedAnchors,
+                                       const std::set<KIID>& aTranslatedShapes, const VECTOR2I& aTranslation,
+                                       std::vector<PCB_SHAPE*>*                  aModified,
+                                       const std::function<void( BOARD_ITEM* )>& aBeforeModify )
+{
+    // Leave a cluster that was already broken before the drag alone, so the drag does not
+    // quietly repair geometry the user did not touch
+    if( !usable() || !rewind() )
+        return CONSTRAINT_BLOCK_RESULT::NOT_MODELED;
+
+    CONSTRAINT_BLOCK_RESULT result = m_adapter->SolveBlockEdit( aPinnedAnchors, aTranslatedShapes, aTranslation );
+
+    if( result != CONSTRAINT_BLOCK_RESULT::SOLVED )
+    {
+        rewind();
+        return result;
+    }
+
+    // The starting geometry stays as it was when the session was built, so every frame
+    // solves the same system and only the final offset decides the result
+    std::vector<PCB_SHAPE*> changed = m_adapter->Apply( aBeforeModify );
+    m_adapter->ApplyReferenceValues( aBeforeModify );
+
+    if( aModified )
+        aModified->insert( aModified->end(), changed.begin(), changed.end() );
+
+    return result;
+}
+
+
 bool BOARD_CONSTRAINT_DRAG_SESSION::Build( BOARD* aBoard, const CONSTRAINT_MEMBER& aDragged )
 {
     m_board = aBoard;
@@ -2988,7 +3507,7 @@ bool BOARD_CONSTRAINT_DRAG_SESSION::Build( BOARD* aBoard, const CONSTRAINT_MEMBE
     if( !m_board )
         return false;
 
-    auto shapeToConstraints = buildShapeConstraintMap( m_board, collectAllConstraints( m_board ) );
+    auto shapeToConstraints = buildShapeConstraintMap( m_board, CollectResolvedConstraints( m_board ) );
     std::unordered_set<KIID>     clusterShapes;
     std::vector<PCB_CONSTRAINT*> clusterConstraints;
     collectConstraintCluster( shapeToConstraints, m_dragged.m_item, clusterShapes, clusterConstraints );
@@ -3233,7 +3752,7 @@ CONSTRAINT_DIAGNOSIS SolveCluster( BOARD* aBoard, const CONSTRAINT_MEMBER& aDrag
 
     // The cluster is the connected component of the shape<->constraint graph containing the
     // dragged shape, since a constraint links the shapes of all its members.
-    auto shapeToConstraints = buildShapeConstraintMap( aBoard, collectAllConstraints( aBoard ) );
+    auto shapeToConstraints = buildShapeConstraintMap( aBoard, CollectResolvedConstraints( aBoard ) );
 
     std::unordered_set<KIID>     clusterShapes;
     std::vector<PCB_CONSTRAINT*> clusterConstraints;
@@ -3241,13 +3760,14 @@ CONSTRAINT_DIAGNOSIS SolveCluster( BOARD* aBoard, const CONSTRAINT_MEMBER& aDrag
 
     std::vector<PCB_SHAPE*>          shapes = resolveClusterShapes( aBoard, clusterShapes );
     std::vector<PCB_DIMENSION_BASE*> dimensions = resolveClusterDimensions( aBoard, clusterShapes );
+    std::vector<PAD*>                pads = resolveClusterPads( aBoard, clusterShapes );
 
-    if( ( shapes.empty() && dimensions.empty() ) || clusterConstraints.empty() )
+    if( ( shapes.empty() && dimensions.empty() && pads.empty() ) || clusterConstraints.empty() )
         return diag;
 
     BOARD_CONSTRAINT_ADAPTER adapter;
 
-    if( !adapter.Build( shapes, clusterConstraints, &aFixedShapes, dimensions ) )
+    if( !adapter.Build( shapes, clusterConstraints, &aFixedShapes, dimensions, pads ) )
         return diag;
 
     bool solved = adapter.Solve( aDragged, aCursor, aStabilize, aEdited, aCoDragged, aHoldDraggedRigid );
@@ -3314,7 +3834,7 @@ std::set<KIID> ConstraintReferenceShapes( BOARD* aBoard, const PCB_CONSTRAINT* a
                && aOther->GetMembers().front() == members.front();
     };
 
-    if( std::ranges::any_of( collectAllConstraints( aBoard ), pinsThePoint ) )
+    if( std::ranges::any_of( CollectResolvedConstraints( aBoard ), pinsThePoint ) )
         return {};
 
     return { members.back().m_item };
@@ -3369,7 +3889,7 @@ void ReSolveShapeClusters( BOARD* aBoard, const std::vector<PCB_SHAPE*>& aShapes
     if( !aBoard )
         return;
 
-    auto shapeToConstraints = buildShapeConstraintMap( aBoard, collectAllConstraints( aBoard ) );
+    auto shapeToConstraints = buildShapeConstraintMap( aBoard, CollectResolvedConstraints( aBoard ) );
 
     // Solve each affected cluster once, no matter how many of its shapes were edited.
     std::set<KIID> visited;
@@ -3412,7 +3932,7 @@ bool ReSolveShapeClustersHoldingEdited( BOARD* aBoard, const std::vector<PCB_SHA
     if( !aBoard )
         return false;
 
-    auto           shapeToConstraints = buildShapeConstraintMap( aBoard, collectAllConstraints( aBoard ) );
+    auto           shapeToConstraints = buildShapeConstraintMap( aBoard, CollectResolvedConstraints( aBoard ) );
     std::set<KIID> visited;
     std::vector<std::unique_ptr<BOARD_CONSTRAINT_ADAPTER>> solvedClusters;
 
@@ -3427,6 +3947,7 @@ bool ReSolveShapeClustersHoldingEdited( BOARD* aBoard, const std::vector<PCB_SHA
 
         std::vector<PCB_SHAPE*>          shapes = resolveClusterShapes( aBoard, clusterShapes );
         std::vector<PCB_DIMENSION_BASE*> dimensions = resolveClusterDimensions( aBoard, clusterShapes );
+        std::vector<PAD*>                pads = resolveClusterPads( aBoard, clusterShapes );
 
         if( shapes.empty() || clusterConstraints.empty() )
             continue;
@@ -3443,7 +3964,7 @@ bool ReSolveShapeClustersHoldingEdited( BOARD* aBoard, const std::vector<PCB_SHA
 
         auto adapter = std::make_unique<BOARD_CONSTRAINT_ADAPTER>();
 
-        if( !adapter->Build( shapes, clusterConstraints, &fixed, dimensions )
+        if( !adapter->Build( shapes, clusterConstraints, &fixed, dimensions, pads )
             || !adapter->Solve( true ) || !adapter->CurrentRelationsSatisfied() )
         {
             return false;
@@ -3474,7 +3995,7 @@ void ReSolveAfterShapeResize( BOARD* aBoard, PCB_SHAPE* aShape, std::vector<PCB_
     if( !aBoard || !aShape )
         return;
 
-    auto shapeToConstraints = buildShapeConstraintMap( aBoard, collectAllConstraints( aBoard ) );
+    auto shapeToConstraints = buildShapeConstraintMap( aBoard, CollectResolvedConstraints( aBoard ) );
 
     if( !shapeToConstraints.contains( aShape->m_Uuid ) )
         return;
@@ -3485,13 +4006,14 @@ void ReSolveAfterShapeResize( BOARD* aBoard, PCB_SHAPE* aShape, std::vector<PCB_
 
     std::vector<PCB_SHAPE*>          shapes = resolveClusterShapes( aBoard, clusterShapes );
     std::vector<PCB_DIMENSION_BASE*> dimensions = resolveClusterDimensions( aBoard, clusterShapes );
+    std::vector<PAD*>                pads = resolveClusterPads( aBoard, clusterShapes );
 
     if( shapes.empty() || clusterConstraints.empty() )
         return;
 
     BOARD_CONSTRAINT_ADAPTER adapter;
 
-    if( !adapter.Build( shapes, clusterConstraints, nullptr, dimensions )
+    if( !adapter.Build( shapes, clusterConstraints, nullptr, dimensions, pads )
         || !adapter.SolveAfterResize( aShape->m_Uuid ) )
     {
         return;
@@ -3515,17 +4037,19 @@ void ReSolveAfterShapeResize( BOARD* aBoard, PCB_SHAPE* aShape, std::vector<PCB_
 // constraints contributes nothing so its result stays empty
 static CLUSTER_DIAGNOSIS diagnoseSingleCluster( BOARD*                              aBoard,
                                                 const std::unordered_set<KIID>&     aClusterShapes,
-                                                const std::vector<PCB_CONSTRAINT*>& aClusterConstraints )
+                                                const std::vector<PCB_CONSTRAINT*>& aClusterConstraints,
+                                                const std::unordered_set<KIID>&     aOnBoard )
 {
     CLUSTER_DIAGNOSIS result;
 
-    std::vector<PCB_SHAPE*>          shapes = resolveClusterShapes( aBoard, aClusterShapes );
-    std::vector<PCB_DIMENSION_BASE*> dimensions = resolveClusterDimensions( aBoard, aClusterShapes );
+    std::vector<PCB_SHAPE*>          shapes = resolveClusterShapes( aBoard, aClusterShapes, &aOnBoard );
+    std::vector<PCB_DIMENSION_BASE*> dimensions = resolveClusterDimensions( aBoard, aClusterShapes, &aOnBoard );
+    std::vector<PAD*>                pads = resolveClusterPads( aBoard, aClusterShapes, &aOnBoard );
 
     BOARD_CONSTRAINT_ADAPTER adapter;
 
-    if( ( shapes.empty() && dimensions.empty() ) || aClusterConstraints.empty()
-        || !adapter.Build( shapes, aClusterConstraints, nullptr, dimensions ) )
+    if( ( shapes.empty() && dimensions.empty() && pads.empty() ) || aClusterConstraints.empty()
+        || !adapter.Build( shapes, aClusterConstraints, nullptr, dimensions, pads ) )
     {
         return result;
     }
@@ -3555,6 +4079,9 @@ static CLUSTER_DIAGNOSIS diagnoseSingleCluster( BOARD*                          
     for( PCB_DIMENSION_BASE* dimension : dimensions )
         result.dimensionIds.push_back( dimension->m_Uuid );
 
+    for( PAD* pad : pads )
+        result.padIds.push_back( pad->m_Uuid );
+
     if( diag.freeDof > 0 )
         result.freeDof = diag.freeDof;
 
@@ -3573,6 +4100,9 @@ static void assembleClusterInto( BOARD_CONSTRAINT_DIAGNOSTICS& aResult, const CL
         aResult.shapeStates[id] = aCluster.state;
 
     for( const KIID& id : aCluster.dimensionIds )
+        aResult.shapeStates[id] = aCluster.state;
+
+    for( const KIID& id : aCluster.padIds )
         aResult.shapeStates[id] = aCluster.state;
 
     aResult.totalFreeDof += aCluster.freeDof;
@@ -3603,14 +4133,19 @@ BOARD_CONSTRAINT_DIAGNOSTICS DiagnoseBoardConstraints( BOARD* aBoard )
     if( !aBoard )
         return result;
 
-    std::vector<PCB_CONSTRAINT*> boardConstraints = collectAllConstraints( aBoard );
+    std::vector<PCB_CONSTRAINT*> boardConstraints = CollectResolvedConstraints( aBoard );
 
-    std::unordered_map<KIID, std::vector<PCB_CONSTRAINT*>> shapeToConstraints =
-            buildShapeConstraintMap( aBoard, boardConstraints, &result.errored );
+    if( boardConstraints.empty() )
+        return result;
+
+    std::unordered_set<KIID> onBoard = CollectMemberCandidateIds( aBoard );
+
+    CONSTRAINT_GRAPH shapeToConstraints =
+            buildShapeConstraintMap( aBoard, boardConstraints, &result.errored, &onBoard );
 
     std::set<KIID> visitedShapes;
 
-    for( const auto& [seedShape, seedConstraints] : shapeToConstraints )
+    for( const auto& [seedShape, seedConstraints] : shapeToConstraints.byMember )
     {
         if( visitedShapes.contains( seedShape ) )
             continue;
@@ -3621,7 +4156,7 @@ BOARD_CONSTRAINT_DIAGNOSTICS DiagnoseBoardConstraints( BOARD* aBoard )
                                   &visitedShapes );
 
         assembleClusterInto( result,
-                             diagnoseSingleCluster( aBoard, clusterShapes, clusterConstraints ) );
+                             diagnoseSingleCluster( aBoard, clusterShapes, clusterConstraints, onBoard ) );
     }
 
     dedupErrored( result );
@@ -3792,7 +4327,8 @@ static void hashConstraint( std::size_t& aSeed, const PCB_CONSTRAINT* aConstrain
 // A hash over every input diagnoseSingleCluster would solve on so any geometry value or membership
 // change invalidates the cached result err toward hashing more since a missed field leaves it stale
 static std::size_t hashCluster( BOARD* aBoard, const std::unordered_set<KIID>& aClusterShapes,
-                                const std::vector<PCB_CONSTRAINT*>& aClusterConstraints )
+                                const std::vector<PCB_CONSTRAINT*>& aClusterConstraints,
+                                const std::unordered_set<KIID>& aOnBoard )
 {
     std::size_t seed = 0;
 
@@ -3801,12 +4337,17 @@ static std::size_t hashCluster( BOARD* aBoard, const std::unordered_set<KIID>& a
 
     for( const KIID& id : ids )
     {
-        BOARD_ITEM* item = aBoard->ResolveItem( id, true );
+        BOARD_ITEM* item = resolveMember( aBoard, &aOnBoard, id );
 
         if( PCB_SHAPE* shape = dynamic_cast<PCB_SHAPE*>( item ) )
             hashShape( seed, shape );
         else if( PCB_DIMENSION_BASE* dimension = dynamic_cast<PCB_DIMENSION_BASE*>( item ) )
             hashDimension( seed, dimension );
+        else if( PAD* pad = dynamic_cast<PAD*>( item ) )
+        {
+            hashInt( seed, ConstraintItemIsLocked( pad ) ? 1 : 0 );
+            hashPoint( seed, pad->GetPosition() );
+        }
     }
 
     std::vector<PCB_CONSTRAINT*> constraints = aClusterConstraints;
@@ -3837,17 +4378,25 @@ BOARD_CONSTRAINT_DIAGNOSTICS BOARD_CONSTRAINT_DIAGNOSER::Diagnose( BOARD* aBoard
         return result;
     }
 
-    std::vector<PCB_CONSTRAINT*> boardConstraints = collectAllConstraints( aBoard );
+    std::vector<PCB_CONSTRAINT*> boardConstraints = CollectResolvedConstraints( aBoard );
+
+    if( boardConstraints.empty() )
+    {
+        m_cache.clear();
+        return result;
+    }
+
+    std::unordered_set<KIID> onBoard = CollectMemberCandidateIds( aBoard );
 
     // The map-scan errored dangling members is recomputed in full every call so it can never go
     // stale however aggressively the per-cluster diagnoses are cached
-    std::unordered_map<KIID, std::vector<PCB_CONSTRAINT*>> shapeToConstraints =
-            buildShapeConstraintMap( aBoard, boardConstraints, &result.errored );
+    CONSTRAINT_GRAPH shapeToConstraints =
+            buildShapeConstraintMap( aBoard, boardConstraints, &result.errored, &onBoard );
 
     std::set<KIID>              visitedShapes;
     std::set<std::vector<KIID>> seenKeys;
 
-    for( const auto& [seedShape, seedConstraints] : shapeToConstraints )
+    for( const auto& [seedShape, seedConstraints] : shapeToConstraints.byMember )
     {
         if( visitedShapes.contains( seedShape ) )
             continue;
@@ -3866,13 +4415,13 @@ BOARD_CONSTRAINT_DIAGNOSTICS BOARD_CONSTRAINT_DIAGNOSER::Diagnose( BOARD* aBoard
 
         std::sort( key.begin(), key.end() );
 
-        std::size_t hash = hashCluster( aBoard, clusterShapes, clusterConstraints );
+        std::size_t hash = hashCluster( aBoard, clusterShapes, clusterConstraints, onBoard );
         auto        it = m_cache.find( key );
 
         if( it == m_cache.end() || it->second.hash != hash )
         {
             CLUSTER_DIAGNOSIS cluster =
-                    diagnoseSingleCluster( aBoard, clusterShapes, clusterConstraints );
+                    diagnoseSingleCluster( aBoard, clusterShapes, clusterConstraints, onBoard );
             m_solveCount++;
             it = m_cache.insert_or_assign( key, CACHE_ENTRY{ hash, std::move( cluster ) } ).first;
         }

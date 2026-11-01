@@ -49,7 +49,9 @@ public:
     void Reset( RESET_REASON aReason ) override;
 
     void CheckAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aReporter = nullptr );
-    void FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aReporter = nullptr, bool aHeadless = false );
+
+    /// @return true if the fill completed, false if it was cancelled or failed
+    bool FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aReporter = nullptr, bool aHeadless = false );
 
     /**
      * Run the shared post-fill refresh once a fill commit has been pushed with connectivity
@@ -78,17 +80,17 @@ public:
 
     static bool IsZoneFillAction( const TOOL_EVENT* aEvent );
 
+    /**
+     * Kicks all the generators as they may need to update after a zone fill update
+     */
+    std::vector<PCB_GENERATOR*> RegenerateDirtyGenerators( BOARD_COMMIT& aCommit );
+
 private:
     /// Refocus on an idle event (used after the Progress Reporter messes up the focus).
     void singleShotRefocus( wxIdleEvent& );
 
     void rebuildConnectivity( bool aHeadless = false );
     void refresh();
-
-    /**
-     * Kicks all the generators as they may need to update after a zone fill update
-     */
-    std::vector<PCB_GENERATOR*> regenerateDirtyGenerators( BOARD_COMMIT& aCommit );
 
     /**
      * Triggers refill of zones near the given generators

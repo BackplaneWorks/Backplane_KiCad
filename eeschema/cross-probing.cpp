@@ -28,7 +28,9 @@
 #include <kiway.h>
 #include <kiway_mail.h>
 #include <import_net_map.h>
+#include <import_local_symbol_libs.h>
 #include <import_proj_properties.h>
+#include <link_imported_footprints.h>
 #include <reporter.h>
 #include <connectivity/conn_navigation.h>
 #include <connectivity/conn_netchain_manager.h>
@@ -55,6 +57,7 @@
 #include <widgets/kistatusbar.h>
 #include <wx/filefn.h>
 #include <wx/log.h>
+#include <wx/msgdlg.h>
 #include <trace_helpers.h>
 
 SCH_ITEM* SCH_EDITOR_CONTROL::FindSymbolAndItem( const wxString* aPath, const wxString* aReference,
@@ -338,7 +341,7 @@ void SCH_EDIT_FRAME::SendSelectItemsToPcb( const std::vector<EDA_ITEM*>& aItems,
         {
             SCH_SYMBOL* symbol = static_cast<SCH_SYMBOL*>( item );
             kiapi::common::commands::SelectionSpec* spec = sync.add_items();
-            spec->mutable_footprint()->set_reference( symbol->GetField( FIELD_T::REFERENCE )->GetText().ToUTF8() );
+            spec->mutable_footprint()->set_reference( symbol->GetCurrentSheetRef().ToUTF8() );
             break;
         }
 
@@ -458,95 +461,17 @@ void SCH_EDIT_FRAME::KiwayMailIn( KIWAY_MAIL_EVENT& mail )
         std::stringstream ss( payload );
         std::string       file;
 
-        LIBRARY_MANAGER&              manager = Pgm().GetLibraryManager();
-        SYMBOL_LIBRARY_ADAPTER*       adapter = PROJECT_SCH::SymbolLibAdapter( &Prj() );
-        std::optional<LIBRARY_TABLE*> optTable = manager.Table( LIBRARY_TABLE_TYPE::SYMBOL,
-                                                                LIBRARY_TABLE_SCOPE::PROJECT );
-
-        wxCHECK_RET( optTable.has_value(), "Could not load symbol lib table." );
-        LIBRARY_TABLE* table = optTable.value();
-
-        wxString projectPath = Prj().GetProjectPath();
-
         // First line of payload is the source project directory.
         std::string srcProjDir;
         std::getline( ss, srcProjDir, '\n' );
 
-        std::vector<wxString> toLoad;
+        std::vector<wxString> libraries;
 
         while( std::getline( ss, file, '\n' ) )
-        {
-            if( file.empty() )
-                continue;
+            libraries.push_back( wxString::FromUTF8( file ) );
 
-            wxFileName             fn( file );
-            IO_RELEASER<SCH_IO>    pi;
-            SCH_IO_MGR::SCH_FILE_T type = SCH_IO_MGR::GuessPluginTypeFromLibPath( fn.GetFullPath() );
-
-            if( type == SCH_IO_MGR::SCH_FILE_UNKNOWN )
-            {
-                wxLogTrace( "KIWAY", "Unknown file type: %s", fn.GetFullPath() );
-                continue;
-            }
-
-            pi.reset( SCH_IO_MGR::FindPlugin( type ) );
-
-            wxString libTableUri;
-            bool     isProjectLocal = fn.GetFullPath().StartsWith( wxString( srcProjDir ) );
-
-            if( isProjectLocal )
-            {
-                // Project-local library: copy into the KiCad project directory and use a
-                // project-relative path so the sym-lib-table stays portable.
-                if( !fn.FileExists() )
-                    continue;
-
-                wxFileName projectFn( projectPath, fn.GetFullName() );
-
-                if( fn.GetFullPath() != projectFn.GetFullPath() && !projectFn.FileExists() )
-                    wxCopyFile( fn.GetFullPath(), projectFn.GetFullPath() );
-
-                libTableUri = wxS( "${KIPRJMOD}/" ) + fn.GetFullName();
-            }
-            else
-            {
-                // External library referenced by absolute path. Preserve the original path.
-                libTableUri = fn.GetFullPath();
-            }
-
-            if( !table->HasRow( fn.GetName() ) )
-            {
-                LIBRARY_TABLE_ROW& row = table->InsertRow();
-                row.SetNickname( fn.GetName() );
-                row.SetURI( libTableUri );
-                row.SetType( SCH_IO_MGR::ShowType( type ) );
-                toLoad.emplace_back( fn.GetName() );
-            }
-        }
-
-        if( !toLoad.empty() )
-        {
-            bool success = true;
-
-            table->Save().map_error(
-                        [&]( const LIBRARY_ERROR& aError )
-                        {
-                            wxLogError( wxT( "Error saving project library table:\n\n" ) + aError.message );
-                            success = false;
-                        } );
-
-            if( success )
-            {
-                manager.AbortAsyncLoads();
-                manager.LoadProjectTables( { LIBRARY_TABLE_TYPE::SYMBOL } );
-
-                std::ranges::for_each( toLoad,
-                                       [adapter]( const wxString& aNick )
-                                       {
-                                           adapter->LoadOne( aNick );
-                                       } );
-            }
-        }
+        RegisterLocalSymbolLibraries( Prj(), wxString::FromUTF8( srcProjDir ), libraries,
+                                      WXLOG_REPORTER::GetInstance() );
 
         Kiway().ExpressMail( FRAME_CVPCB, MAIL_RELOAD_LIB, payload );
         Kiway().ExpressMail( FRAME_SCH_SYMBOL_EDITOR, MAIL_RELOAD_LIB, payload );
@@ -595,6 +520,12 @@ void SCH_EDIT_FRAME::KiwayMailIn( KIWAY_MAIL_EVENT& mail )
         break;
     }
 
+    case MAIL_SCH_GET_REF_SUFFIXES:
+    {
+        payload = Schematic().FormatRefSuffixes();
+        break;
+    }
+
     case MAIL_SCH_GET_ITEM:
     {
         KIID           uuid( payload );
@@ -630,6 +561,18 @@ void SCH_EDIT_FRAME::KiwayMailIn( KIWAY_MAIL_EVENT& mail )
 
         GetCanvas()->GetView()->UpdateAllItems( KIGFX::ALL );
         GetCanvas()->Refresh();
+        break;
+    }
+
+    case MAIL_SCH_LINK_FOOTPRINTS:
+    {
+        std::optional<std::map<wxString, wxString>> footprints =
+                IMPORT_PROJ_PROPS::SplitTaggedMap( IMPORT_PROJ_PROPS::FOOTPRINT_ID_MAP_TAG,
+                                                   wxString::FromUTF8( payload ) );
+
+        if( footprints && LinkImportedFootprints( Schematic(), *footprints, WXLOG_REPORTER::GetInstance() ) > 0 )
+            OnModify();
+
         break;
     }
 
@@ -675,8 +618,10 @@ void SCH_EDIT_FRAME::KiwayMailIn( KIWAY_MAIL_EVENT& mail )
 
         payload.clear();
 
-        if( importFormat >= 0 && importFile( fnameStr, importFormat, props.empty() ? nullptr : &props )
-            && importFormat == SCH_IO_MGR::SCH_ORCAD )
+        if( importFormat < 0 || !importFile( fnameStr, importFormat, props.empty() ? nullptr : &props ) )
+            break;
+
+        if( importFormat == SCH_IO_MGR::SCH_ORCAD )
         {
             const IMPORT_NET_MAP*        map = Schematic().GetImportNetMap();
             std::map<wxString, wxString> names;
@@ -685,6 +630,10 @@ void SCH_EDIT_FRAME::KiwayMailIn( KIWAY_MAIL_EVENT& mail )
                 names = GetBoardNetNameMap( *map, LOAD_INFO_REPORTER::GetInstance() );
 
             payload = TO_UTF8( IMPORT_PROJ_PROPS::JoinNetNameMap( names ) );
+        }
+        else
+        {
+            payload = "success";
         }
 
         break;
@@ -696,8 +645,74 @@ void SCH_EDIT_FRAME::KiwayMailIn( KIWAY_MAIL_EVENT& mail )
 
         break;
 
+    case MAIL_SCH_RELOAD:
+    {
+        // A git operation rewrote files on disk. Reload the schematic so the editor matches.
+        if( Schematic().GetFileName().IsEmpty() )
+            break;
+
+        SCH_SCREENS screens( Schematic().Root() );
+
+        // A payload lists the changed files. When none is a sheet of this schematic, the change
+        // belongs to another project and reloading would only cost this one its undo history.
+        if( !payload.empty() )
+        {
+            wxArrayString changed = wxSplit( wxString::FromUTF8( payload.c_str() ), '\n' );
+            bool          mine = false;
+
+            for( SCH_SCREEN* screen = screens.GetFirst(); screen && !mine; screen = screens.GetNext() )
+            {
+                wxString screenFile = wxFileName( screen->GetFileName() ).GetFullPath();
+
+                for( const wxString& changedFile : changed )
+                {
+                    if( !changedFile.IsEmpty() && screenFile == wxFileName( changedFile ).GetFullPath() )
+                    {
+                        mine = true;
+                        break;
+                    }
+                }
+            }
+
+            if( !mine )
+                break;
+        }
+
+        // Neither choice is safe without asking: reloading discards the unsaved edits, keeping
+        // them means the next save overwrites what arrived.
+        if( IsContentModified() )
+        {
+            wxMessageDialog dlg( this,
+                                 _( "The schematic changed on disk while you were editing it.\n\n"
+                                    "Reloading loses your unsaved edits. Keeping them means your "
+                                    "next save overwrites the changes that just arrived. To get those "
+                                    "back later, use Discard Changes on the file in the Version Control "
+                                    "panel, which drops your edits to it." ),
+                                 _( "Schematic Changed on Disk" ),
+                                 wxYES_NO | wxNO_DEFAULT | wxICON_WARNING | wxCENTER );
+            dlg.SetYesNoLabels( _( "&Reload" ), _( "&Keep My Edits" ) );
+
+            if( dlg.ShowModal() != wxID_YES )
+                break;
+        }
+
+        ReloadFromDisk();
+        break;
+    }
+
     case MAIL_SCH_UPDATE:
         m_toolManager->RunAction( ACTIONS::updateSchematicFromPcb );
+        break;
+
+    case MAIL_SCH_PROJECT_SETTINGS_CHANGED:
+        // Net colors and widths resolve through per-net caches, and text variables at draw time,
+        // so both need a flush and a repaint.
+        Prj().GetProjectFile().NetSettings()->ClearAllCaches();
+        Prj().IncrementNetclassesTicker();
+        Prj().IncrementTextVarsTicker();
+
+        GetCanvas()->GetView()->UpdateAllItems( KIGFX::ALL );
+        GetCanvas()->Refresh();
         break;
 
     case MAIL_RELOAD_LIB:

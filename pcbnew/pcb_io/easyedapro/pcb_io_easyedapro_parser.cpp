@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 
 
@@ -43,6 +44,7 @@
 #include <footprint.h>
 #include <board.h>
 #include <board_design_settings.h>
+#include <board_design_settings_defaults.h>
 #include <netclass.h>
 #include <project/net_settings.h>
 
@@ -294,6 +296,80 @@ void PCB_IO_EASYEDAPRO_PARSER::FillFootprintModelInfo( FOOTPRINT* footprint, con
 }
 
 
+namespace
+{
+/// Nanometers in a source unit
+constexpr double NM_PER_UNIT = 25400.0;
+
+
+// Chords within a micrometer of an arc whose circle leaves the integer range, or one chord when the curve itself
+// does, as the points after aStart; none when the arc can be stored
+std::vector<VECTOR2D> chordsForUnstorableArc( const VECTOR2D& aStart, const VECTOR2D& aEnd, double aAngle )
+{
+    VECTOR2D delta = aEnd - aStart;
+    VECTOR2D mid = ( aStart + delta / 2 );
+
+    double   ha = aAngle / 2;
+    double   hd = delta.EuclideanNorm() / 2;
+    double   cdist = ha == 0 ? 0 : hd / tan( DEG2RAD( ha ) );
+    VECTOR2D center = mid + delta.Perpendicular().Resize( cdist );
+
+    const double radiusNm = std::hypot( cdist, hd ) * NM_PER_UNIT;
+    const double limit = std::numeric_limits<int>::max();
+
+    if( ha != 0 && std::abs( center.x ) * NM_PER_UNIT + radiusNm <= limit
+        && std::abs( center.y ) * NM_PER_UNIT + radiusNm <= limit )
+    {
+        return {};
+    }
+
+    double radius = ha == 0 ? 0 : std::hypot( cdist, hd );
+
+    // The center sits left of the chord for a positive angle, so the sweep turns counterclockwise
+    double   sweep = DEG2RAD( aAngle );
+    VECTOR2D v = aStart - center;
+    double   startAngle = std::atan2( v.y, v.x );
+    auto     rotated = [&]( double aRotation )
+    {
+        return center + VECTOR2D( v.x * std::cos( aRotation ) - v.y * std::sin( aRotation ),
+                                  v.x * std::sin( aRotation ) + v.y * std::cos( aRotation ) );
+    };
+
+    bool curveFits = radius > 0
+                     && std::max( { std::abs( aStart.x ), std::abs( aStart.y ), std::abs( aEnd.x ),
+                                    std::abs( aEnd.y ) } ) * NM_PER_UNIT <= limit;
+
+    for( int quadrant = 0; quadrant < 4 && curveFits; quadrant++ )
+    {
+        double   cardinal = quadrant * M_PI / 2;
+        double   turn = sweep > 0 ? cardinal - startAngle : startAngle - cardinal;
+        double   reach = std::fmod( turn, 2 * M_PI );
+        VECTOR2D extreme = center + VECTOR2D( std::cos( cardinal ), std::sin( cardinal ) ) * radius;
+
+        if( reach < 0 )
+            reach += 2 * M_PI;
+
+        if( reach <= std::abs( sweep )
+            && std::max( std::abs( extreme.x ), std::abs( extreme.y ) ) * NM_PER_UNIT > limit )
+        {
+            curveFits = false;
+        }
+    }
+
+    // Half a micrometer of sagitta leaves the other half for the rounding of the points
+    double maxStep = curveFits ? 2 * std::acos( 1 - ( 500.0 / NM_PER_UNIT ) / radius ) : 0;
+    int    count = maxStep > 0 ? std::max( 1, (int) std::ceil( std::abs( sweep ) / maxStep ) ) : 1;
+
+    std::vector<VECTOR2D> points;
+
+    for( int step = 1; step <= count; step++ )
+        points.push_back( step == count ? aEnd : rotated( sweep * step / count ) );
+
+    return points;
+}
+} // namespace
+
+
 std::vector<std::unique_ptr<PCB_SHAPE>> PCB_IO_EASYEDAPRO_PARSER::ParsePoly( BOARD_ITEM_CONTAINER* aContainer,
                                                                              nlohmann::json polyData, bool aClosed,
                                                                              bool aInFill ) const
@@ -394,6 +470,31 @@ std::vector<std::unique_ptr<PCB_SHAPE>> PCB_IO_EASYEDAPRO_PARSER::ParsePoly( BOA
                 end.x = ( polyData.at( ++i ) );
                 end.y = ( polyData.at( ++i ) );
 
+                VECTOR2D delta = end - prevPt;
+                VECTOR2D mid = ( prevPt + delta / 2 );
+
+                double   ha = angle / 2;
+                double   hd = delta.EuclideanNorm() / 2;
+                double   cdist = ha == 0 ? 0 : hd / tan( DEG2RAD( ha ) );
+                VECTOR2D center = mid + delta.Perpendicular().Resize( cdist );
+
+                if( std::vector<VECTOR2D> chords = chordsForUnstorableArc( prevPt, end, angle ); !chords.empty() )
+                {
+                    for( const VECTOR2D& to : chords )
+                    {
+                        std::unique_ptr<PCB_SHAPE> line = std::make_unique<PCB_SHAPE>( aContainer, SHAPE_T::SEGMENT );
+
+                        line->SetStart( ScalePos( prevPt ) );
+                        line->SetEnd( ScalePos( to ) );
+                        line->SetFilled( aClosed );
+                        results.emplace_back( std::move( line ) );
+
+                        prevPt = to;
+                    }
+
+                    continue;
+                }
+
                 std::unique_ptr<PCB_SHAPE> shape = std::make_unique<PCB_SHAPE>( aContainer, SHAPE_T::ARC );
 
                 if( angle < 0 )
@@ -407,13 +508,6 @@ std::vector<std::unique_ptr<PCB_SHAPE>> PCB_IO_EASYEDAPRO_PARSER::ParsePoly( BOA
                     shape->SetEnd( ScalePos( prevPt ) );
                 }
 
-                VECTOR2D delta = end - prevPt;
-                VECTOR2D mid = ( prevPt + delta / 2 );
-
-                double   ha = angle / 2;
-                double   hd = delta.EuclideanNorm() / 2;
-                double   cdist = hd / tan( DEG2RAD( ha ) );
-                VECTOR2D center = mid + delta.Perpendicular().Resize( cdist );
                 shape->SetCenter( ScalePos( center ) );
 
                 shape->SetFilled( aClosed );
@@ -536,10 +630,21 @@ PCB_IO_EASYEDAPRO_PARSER::ParseContour( nlohmann::json polyData, bool aInFill, i
                 end.x = ( polyData.at( ++i ) );
                 end.y = ( polyData.at( ++i ) );
 
-                SHAPE_ARC sarc;
-                sarc.ConstructFromStartEndAngle( ScalePos( prevPt ), ScalePos( end ), -EDA_ANGLE( angle, DEGREES_T ) );
+                if( std::vector<VECTOR2D> chords = chordsForUnstorableArc( prevPt, end, angle ); !chords.empty() )
+                {
+                    result.Append( ScalePos( prevPt ) );
 
-                result.Append( sarc, aMaxError );
+                    for( const VECTOR2D& to : chords )
+                        result.Append( ScalePos( to ) );
+                }
+                else
+                {
+                    SHAPE_ARC sarc;
+                    sarc.ConstructFromStartEndAngle( ScalePos( prevPt ), ScalePos( end ),
+                                                     -EDA_ANGLE( angle, DEGREES_T ) );
+
+                    result.Append( sarc, aMaxError );
+                }
 
                 prevPt = end;
             }
@@ -609,6 +714,27 @@ NETINFO_ITEM* PCB_IO_EASYEDAPRO_PARSER::getNet( BOARD* aBoard, const wxString& a
     }
 
     return net;
+}
+
+
+void PCB_IO_EASYEDAPRO_PARSER::SizeHoleOnlyPad( PAD& aPad, bool aPlated )
+{
+    VECTOR2I size = aPad.GetSize( PADSTACK::ALL_LAYERS );
+
+    if( size.x > 0 && size.y > 0 )
+        return;
+
+    VECTOR2I drill = aPad.GetDrillSize();
+
+    aPad.SetSize( PADSTACK::ALL_LAYERS, drill );
+    aPad.SetShape( PADSTACK::ALL_LAYERS,
+                   aPad.GetDrillShape() == PAD_DRILL_SHAPE::OBLONG ? PAD_SHAPE::OVAL : PAD_SHAPE::CIRCLE );
+
+    if( !aPlated )
+    {
+        aPad.SetAttribute( PAD_ATTRIB::NPTH );
+        aPad.SetLayerSet( PAD::UnplatedHoleMask() );
+    }
 }
 
 
@@ -746,18 +872,26 @@ std::unique_ptr<PAD> PCB_IO_EASYEDAPRO_PARSER::createPAD( FOOTPRINT* aFootprint,
 
         nlohmann::json polyData = padShape.at( 1 );
 
-        std::vector<std::unique_ptr<PCB_SHAPE>> results = ParsePoly( aFootprint, polyData, true, false );
+        SHAPE_LINE_CHAIN contour = ParseContour( polyData, false );
+        wxASSERT( contour.PointCount() > 2 );
 
-        for( auto& shape : results )
+        std::unique_ptr<PCB_SHAPE> shape = std::make_unique<PCB_SHAPE>( aFootprint, SHAPE_T::POLY );
+
+        if( contour.PointCount() > 2 )
         {
+            contour.SetClosed( true );
+            shape->SetFilled( true );
+            shape->SetPolyShape( contour );
             shape->SetLayer( klayer );
             shape->SetWidth( 0 );
-
             shape->Move( -pad->GetPosition() );
 
             pad->AddPrimitive( PADSTACK::ALL_LAYERS, shape.release() );
         }
     }
+
+    if( hasHole )
+        SizeHoleOnlyPad( *pad, !( line.size() > 15 && line.at( 15 ).is_number() && line.at( 15 ).get<int>() == 0 ) );
 
     pad->SetThermalSpokeAngle( ANGLE_90 );
 
@@ -1114,7 +1248,7 @@ void PCB_IO_EASYEDAPRO_PARSER::ParseBoard( BOARD* aBoard, const nlohmann::json& 
         {
             wxString netname = line.at( 1 );
 
-            aBoard->Add( new NETINFO_ITEM( aBoard, netname, aBoard->GetNetCount() + 1 ), ADD_MODE::APPEND );
+            aBoard->FindOrAddNet( netname, aBoard->GetNetCount() + 1, ADD_MODE::APPEND );
         }
         else if( type == wxS( "RULE" ) )
         {
@@ -1333,6 +1467,7 @@ void PCB_IO_EASYEDAPRO_PARSER::ParseBoard( BOARD* aBoard, const nlohmann::json& 
                     zoneFillPoly.AddOutline( contour );
 
                 zoneFillPoly.RebuildHolesFromContours();
+                zoneFillPoly.ClearArcs();
                 zoneFillPoly.Fracture();
 
                 std::unique_ptr<ZONE> zone = std::make_unique<ZONE>( aBoard );
@@ -1434,7 +1569,9 @@ void PCB_IO_EASYEDAPRO_PARSER::ParseBoard( BOARD* aBoard, const nlohmann::json& 
             zone->SetNet( getNet( aBoard, netname ) );
             zone->SetLayer( klayer );
             zone->Outline()->Append( contour );
-            zone->SetFilledPolysList( klayer, contour );
+            SHAPE_POLY_SET teardropFill( contour );
+            teardropFill.ClearArcs();
+            zone->SetFilledPolysList( klayer, teardropFill );
             zone->SetNeedRefill( false );
             zone->SetIsFilled( true );
 

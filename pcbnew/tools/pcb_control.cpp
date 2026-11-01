@@ -20,6 +20,10 @@
  */
 
 #include "pcb_control.h"
+
+#include <wx/hyperlink.h>
+#include <wx/filename.h>
+
 #include "convert_basic_shapes_to_polygon.h"
 
 #include <advanced_config.h>
@@ -27,6 +31,7 @@
 #include <kiplatform/ui.h>
 #include <kiway.h>
 #include <tools/edit_tool.h>
+#include <tools/pad_tool.h>
 #include <tools/board_inspection_tool.h>
 #include <router/router_tool.h>
 #include <pgm_base.h>
@@ -59,6 +64,7 @@
 #include <pcb_textbox.h>
 #include <board_tables/generated_table_refresh.h>
 #include <pcb_drill_chart.h>
+#include <pcb_stackup_table.h>
 #include <dialogs/dialog_drill_groups.h>
 #include <pcb_drill_map.h>
 #include <pcb_table.h>
@@ -71,7 +77,6 @@
 #include <filename_resolver.h>
 #include <3d_cache/3d_cache.h>
 #include <embedded_files.h>
-#include <wx/filename.h>
 #include <zone.h>
 #include <confirm.h>
 #include <kidialog.h>
@@ -79,6 +84,8 @@
 #include <core/kicad_algo.h>
 #include <dialogs/hotkey_cycle_popup.h>
 #include <dialogs/dialog_map_layers.h>
+#include <drc/drc_engine.h>
+#include <drc/drc_rule.h>
 #include <pcb_io/common/plugin_common_layer_mapping.h>
 #include <kicad_clipboard.h>
 #include <origin_viewitem.h>
@@ -96,7 +103,6 @@
 #include <widgets/wx_progress_reporters.h>
 #include <widgets/wx_infobar.h>
 #include <pcb_io/pcb_io.h>
-#include <wx/hyperlink.h>
 
 
 using namespace std::placeholders;
@@ -105,8 +111,6 @@ using namespace std::placeholders;
 // files.cpp
 extern bool AskLoadBoardFileName( PCB_EDIT_FRAME* aParent, wxString* aFileName, int aCtl = 0 );
 
-// board_tables/board_stackup_table.cpp
-extern PCB_TABLE* Build_Board_Stackup_Table( BOARD* aBoard, EDA_UNITS aDisplayUnits );
 // board_tables/board_characteristics_table.cpp
 extern PCB_TABLE* Build_Board_Characteristics_Table( BOARD* aBoard, EDA_UNITS aDisplayUnits );
 
@@ -822,6 +826,10 @@ int PCB_CONTROL::InteractiveDelete( const TOOL_EVENT& aEvent )
         return 0;
 
     PCB_PICKER_TOOL* picker = m_toolMgr->GetTool<PCB_PICKER_TOOL>();
+    EDIT_TOOL*       editTool = m_toolMgr->GetTool<EDIT_TOOL>();
+
+    if( !picker || !editTool )
+        return 0;
 
     m_pickerItem = nullptr;
     m_toolMgr->RunAction( ACTIONS::selectionClear );
@@ -834,7 +842,7 @@ int PCB_CONTROL::InteractiveDelete( const TOOL_EVENT& aEvent )
     picker->ClearHandlers();
 
     picker->SetClickHandler(
-            [this]( const VECTOR2D& aPosition ) -> bool
+            [this, editTool]( const VECTOR2D& aPosition ) -> bool
             {
                 if( m_pickerItem )
                 {
@@ -853,7 +861,6 @@ int PCB_CONTROL::InteractiveDelete( const TOOL_EVENT& aEvent )
                     PCB_SELECTION items;
                     items.Add( m_pickerItem );
 
-                    EDIT_TOOL* editTool = m_toolMgr->GetTool<EDIT_TOOL>();
                     editTool->DeleteItems( items, false );
 
                     m_pickerItem = nullptr;
@@ -1057,6 +1064,25 @@ void PCB_CONTROL::pruneItemLayers( std::vector<BOARD_ITEM*>& aItems )
 }
 
 
+/**
+ * Handle items that have been pasted. For example, notify the pad tool
+ * about pasted pads.
+ */
+static void recordPastedItems( TOOL_MANAGER* aToolMgr, const std::vector<BOARD_ITEM*>& aItems )
+{
+    PAD_TOOL* padTool = aToolMgr->GetTool<PAD_TOOL>();
+
+    if( !padTool )
+        return;
+
+    for( BOARD_ITEM* item : aItems )
+    {
+        if( PAD* pad = dynamic_cast<PAD*>( item ) )
+            padTool->RecordMasterPad( *pad );
+    }
+}
+
+
 int PCB_CONTROL::Paste( const TOOL_EVENT& aEvent )
 {
     // The viewer frames cannot paste
@@ -1257,7 +1283,6 @@ int PCB_CONTROL::Paste( const TOOL_EVENT& aEvent )
                 case PCB_TEXT_T:
                 case PCB_TEXTBOX_T:
                 case PCB_TABLE_T:
-            case PCB_DRILL_CHART_T:
                 case PCB_SHAPE_T:
                 case PCB_BARCODE_T:
                 case PCB_DIM_ALIGNED_T:
@@ -1318,6 +1343,9 @@ int PCB_CONTROL::Paste( const TOOL_EVENT& aEvent )
 
             cancelled = !placeBoardItems( &commit, pastedItems, true, true, mode == PASTE_MODE::UNIQUE_ANNOTATIONS,
                                           false );
+
+            if( !cancelled )
+                recordPastedItems( m_toolMgr, pastedItems );
         }
         else    // isBoardEditor
         {
@@ -1364,6 +1392,10 @@ int PCB_CONTROL::Paste( const TOOL_EVENT& aEvent )
         pruneItemLayers( pastedItems );
 
         cancelled = !placeBoardItems( &commit, pastedItems, true, true, mode == PASTE_MODE::UNIQUE_ANNOTATIONS, false );
+
+        if( !cancelled )
+            recordPastedItems( m_toolMgr, pastedItems );
+
         break;
     }
 
@@ -1700,8 +1732,7 @@ int PCB_CONTROL::ApplyDesignBlockLayout( const TOOL_EVENT& aEvent )
                                           .m_copyPlacement = true,
                                           .m_copyOtherItems = true,
                                           .m_groupItems = false,
-                                          .m_includeLockedItems = true,
-                                          .m_anchorFp = nullptr };
+                                          .m_includeLockedItems = true };
 
         // Give the appended block's auto-generated nets a private namespace so they cannot fuse by
         // name with a different part's net on the board, which would corrupt the topology match
@@ -2834,6 +2865,11 @@ int PCB_CONTROL::UpdateMessagePanel( const TOOL_EVENT& aEvent )
                             return;
                         }
 
+                        // An image has no physical area to contribute and no polygon
+                        // representation, so leave it out without invalidating the total.
+                        if( aItem->Type() == PCB_REFERENCE_IMAGE_T )
+                            return;
+
                         if( PCB_GROUP* group = dynamic_cast<PCB_GROUP*>( aItem ) )
                         {
                             group->RunOnChildren( accumulateArea, RECURSE_MODE::RECURSE );
@@ -2969,22 +3005,14 @@ int PCB_CONTROL::PlaceCharacteristics( const TOOL_EVENT& aEvent )
 
 int PCB_CONTROL::PlaceStackup( const TOOL_EVENT& aEvent )
 {
-    BOARD_COMMIT commit( this );
-    EDA_UNITS    displayUnit = m_frame->GetUserUnits();
+    auto table = std::make_unique<PCB_STACKUP_TABLE>( m_frame->GetBoard() );
 
-    PCB_TABLE* table = Build_Board_Stackup_Table( m_frame->GetBoard(), displayUnit );
-    table->SetLayer( m_frame->GetActiveLayer() );
+    // Seeded from the user's units once. After that the table keeps its own
+    table->SetUnits( ToGeneratedTableUnits( m_frame->GetUserUnits() ) );
 
-    std::vector<BOARD_ITEM*> items;
-    items.push_back( table );
-
-    // Revert rather than delete, since an entered group may already hold the table
-    if( placeBoardItems( &commit, items, true, true, false, false ) )
-        commit.Push( _( "Place Board Stackup Table" ) );
-    else
-        commit.Revert();
-
-    return 0;
+    return placeGeneratedTable( std::move( table ),
+                                _( "No documentation layer is enabled to hold a stackup table." ),
+                                _( "Place Board Stackup Table" ) );
 }
 
 
@@ -3033,6 +3061,11 @@ PCB_LAYER_ID PCB_CONTROL::pickDocumentationLayer( const std::function<bool( PCB_
 int PCB_CONTROL::placeGeneratedTable( std::unique_ptr<PCB_GENERATED_TABLE> aTable, const wxString& aNoLayerMessage,
                                       const wxString& aUndoMessage )
 {
+    // Generated tables report a board, and FOOTPRINT::Add would refuse one anyway. A user
+    // hotkey can still reach this action from the footprint editor
+    if( m_isFootprintEditor )
+        return 0;
+
     BOARD* board = m_frame->GetBoard();
 
     // Copper, silk, mask, paste, adhesive, Edge.Cuts, Margin and courtyard are manufacturing

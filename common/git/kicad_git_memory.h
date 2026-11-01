@@ -91,6 +91,22 @@ using GitDiffPtr = std::unique_ptr<git_diff,
                                       })>;
 
 /**
+* @brief A unique pointer for git_patch objects with automatic cleanup.
+*/
+using GitPatchPtr = std::unique_ptr<git_patch,
+                                       decltype([](git_patch* aPatch) {
+                                           git_patch_free(aPatch);
+                                       })>;
+
+/**
+* @brief A unique pointer for git_reference_iterator objects with automatic cleanup.
+*/
+using GitReferenceIteratorPtr = std::unique_ptr<git_reference_iterator,
+                                                   decltype([](git_reference_iterator* aIter) {
+                                                       git_reference_iterator_free(aIter);
+                                                   })>;
+
+/**
 * @brief A unique pointer for git_signature objects with automatic cleanup.
 */
 using GitSignaturePtr = std::unique_ptr<git_signature,
@@ -249,6 +265,14 @@ using GitIndexConflictIteratorPtr = std::unique_ptr<git_index_conflict_iterator,
                                                        decltype([](git_index_conflict_iterator* aIterator) {
                                                            git_index_conflict_iterator_free(aIterator);
                                                        })>;
+
+/**
+* @brief A unique pointer for git_tree_entry objects with automatic cleanup.
+*/
+using GitTreeEntryPtr = std::unique_ptr<git_tree_entry,
+                                           decltype([](git_tree_entry* aEntry) {
+                                               git_tree_entry_free(aEntry);
+                                           })>;
 
 /**
 * @brief A unique pointer for git_status_list objects with automatic cleanup.

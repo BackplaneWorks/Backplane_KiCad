@@ -22,12 +22,13 @@
 
 #include <vector>
 
+#include <wx/event.h>
+
 #include <gal/color4d.h>
 #include <layer_ids.h>
 #include <3d_canvas/board_adapter.h>
 #include <dialogs/appearance_controls_3D_base.h>
 #include <tool/tool_action.h>
-#include <wx/intl.h>
 
 
 class BITMAP_TOGGLE;
@@ -142,9 +143,16 @@ public:
 protected:
     void OnSetFocus( wxFocusEvent& aEvent ) override;
     void OnSize( wxSizeEvent& aEvent ) override;
+
+    void OnLayerContextMenu( wxContextMenuEvent& aEvent );
+    void OnLayerScaleChange( wxSpinDoubleEvent& aEvent ) override;
+    void OnResetLayerSpacing( wxCommandEvent& aEvent ) override;
+    void OnRedrawTriggerTimer( wxTimerEvent& aEvent );
     void OnLanguageChanged( wxCommandEvent& aEvent );
 
 private:
+    void applyLayerSpacing();
+
     void rebuildControls();
 
     void rebuildLayers();
@@ -194,4 +202,6 @@ private:
     wxCheckBox*                    m_cbUseBoardEditorCopperColors;
     wxCheckBox*                    m_cbConstructionView;
     wxCheckBox*                    m_cbFoldedView;
+    /// A timer used to rate-limit redraws when UI controls change.
+    wxTimer m_redrawTriggerTimer;
 };

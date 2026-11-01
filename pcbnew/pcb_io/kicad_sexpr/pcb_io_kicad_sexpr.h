@@ -219,7 +219,13 @@ class PCB_IO_KICAD_SEXPR;   // forward decl
 //#define SEXPR_BOARD_FILE_VERSION    20260828  // Exclude-from-simulation footprint attribute
 //#define SEXPR_BOARD_FILE_VERSION    20260830  // Microvia stack generator (via_stack)
 //#define SEXPR_BOARD_FILE_VERSION    20260831  // Custom user properties
-#define SEXPR_BOARD_FILE_VERSION      20260901  // Drill charts and maps
+//#define SEXPR_BOARD_FILE_VERSION    20260901  // Drill charts and maps
+//#define SEXPR_BOARD_FILE_VERSION    20260930  // UUID for extruded 3D body
+//#define SEXPR_BOARD_FILE_VERSION    20261017  // Footprint overall height
+//#define SEXPR_BOARD_FILE_VERSION    20261018  // Linked placement rule areas
+//#define SEXPR_BOARD_FILE_VERSION    20261025  // Reference image rotation and opacity
+//#define SEXPR_BOARD_FILE_VERSION    20261030  // Live stackup tables
+#define SEXPR_BOARD_FILE_VERSION      20261031  // Non-component pads
 
 #define BOARD_FILE_HOST_VERSION       20200825  ///< Earlier files than this include the host tag
 #define LEGACY_ARC_FORMATTING         20210925  ///< These were the last to use old arc formatting
@@ -230,6 +236,18 @@ class PCB_IO_KICAD_SEXPR;   // forward decl
                                                 ///<   in library frame. Earlier files stored them
                                                 ///<   in board frame, so zone outlines need to be
                                                 ///<   un-baked on load.
+
+// The footprint library now has a header and is a separate format from the board file FOOTPRINT
+// object parser and formatter.  If you make any footprint library file format changes that do not
+// affect the board file format, please do not bump the board file format.
+#define SEXPR_FOOTPRINT_LIB_FILE_VERSION  20261031
+
+// A footprint body uses the board format, so a library file stamped older than the board format would
+// run migrations on current data
+static_assert( SEXPR_FOOTPRINT_LIB_FILE_VERSION >= SEXPR_BOARD_FILE_VERSION,
+               "Bump SEXPR_FOOTPRINT_LIB_FILE_VERSION with SEXPR_BOARD_FILE_VERSION" );
+
+
 // clang-format on
 
 // common combinations of the above:
@@ -435,6 +453,13 @@ public:
      */
     void Format( const BOARD_ITEM* aItem ) const;
 
+    /**
+     * Output \a aFootprint as a complete footprint library file.
+     *
+     * @param aFootprint has its embedded fonts updated to match its settings, so pass a copy of a live footprint.
+     */
+    void FormatFootprintLibFile( FOOTPRINT* aFootprint ) const;
+
     std::string GetStringOutput( bool doClear )
     {
         std::string ret = m_sf.GetString();
@@ -500,7 +525,12 @@ private:
 
     void format( const PCB_GRID_ITEM* aGridItem ) const;
 
-    void format( const FOOTPRINT* aFootprint ) const;
+    /**
+     * @param aInLibFile leaves the initial comments and version to the enclosing library file.
+     */
+    void format( const FOOTPRINT* aFootprint, bool aInLibFile = false ) const;
+
+    void formatInitialComments( const FOOTPRINT* aFootprint ) const;
 
     void format( const PAD* aPad ) const;
 

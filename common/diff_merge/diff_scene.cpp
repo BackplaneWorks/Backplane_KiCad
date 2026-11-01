@@ -37,6 +37,20 @@
 namespace KICAD_DIFF
 {
 
+DIFF_COLOR_THEME DIFF_COLOR_THEME::ForText( bool aDarkTheme )
+{
+    DIFF_COLOR_THEME theme;
+
+    if( aDarkTheme )
+    {
+        for( KIGFX::COLOR4D* color : { &theme.added, &theme.removed, &theme.modified, &theme.conflict } )
+            *color = color->Brightened( 0.4 );
+    }
+
+    return theme;
+}
+
+
 KIGFX::COLOR4D ThemeColorFor( const DIFF_COLOR_THEME& aTheme, CATEGORY aCategory )
 {
     switch( aCategory )
@@ -410,7 +424,7 @@ bool IsRoutingNetChange( const ITEM_CHANGE& aChange )
 
 wxString ChangeDisplayLabel( const ITEM_CHANGE& aChange )
 {
-    wxString label = aChange.typeName;
+    wxString label = aChange.DisplayType();
 
     if( aChange.refdes.has_value() )
         label += wxS( " [" ) + *aChange.refdes + wxS( "]" );
@@ -439,6 +453,24 @@ DIFF_SCENE BuildScene( const DOCUMENT_DIFF& aDiff, const DIFF_COLOR_THEME& aThem
                 scene.conflictShapes.size() );
 
     return scene;
+}
+
+
+SIDE_BY_SIDE_SCENES SplitSceneBySide( const DIFF_SCENE& aScene )
+{
+    SIDE_BY_SIDE_SCENES sides;
+
+    sides.reference = aScene;
+    sides.reference.addedShapes.clear();
+    sides.reference.removedShapes.clear();
+    sides.reference.modifiedShapes.clear();
+    sides.reference.conflictShapes.clear();
+    sides.reference.comparisonGeometry = {};
+
+    sides.comparison = aScene;
+    sides.comparison.referenceGeometry = {};
+
+    return sides;
 }
 
 

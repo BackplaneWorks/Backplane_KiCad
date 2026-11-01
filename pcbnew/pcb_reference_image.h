@@ -76,6 +76,7 @@ public:
     void Flip( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
     void Rotate( const VECTOR2I& aCenter, const EDA_ANGLE& aAngle ) override;
     void Mirror( const VECTOR2I& aMirrorRef, FLIP_DIRECTION aFlipDirection ) override;
+    void Mirror( const SEG& aAxis ) override;
 
     wxString GetItemDescription( UNITS_PROVIDER* aUnitsProvider, bool aFull ) const override
     {
@@ -120,14 +121,18 @@ private:
     friend struct PCB_REFERENCE_IMAGE_DESC;
 
     // Property manager interfaces
-    int  GetWidth() const;
-    void SetWidth( int aWidth );
-    int  GetHeight() const;
-    void SetHeight( int aHeight );
-    int  GetTransformOriginOffsetX() const;
-    void SetTransformOriginOffsetX( int aX );
-    int  GetTransformOriginOffsetY() const;
-    void SetTransformOriginOffsetY( int aY );
+    int       GetWidth() const;
+    void      SetWidth( int aWidth );
+    int       GetHeight() const;
+    void      SetHeight( int aHeight );
+    int       GetTransformOriginOffsetX() const;
+    void      SetTransformOriginOffsetX( int aX );
+    int       GetTransformOriginOffsetY() const;
+    void      SetTransformOriginOffsetY( int aY );
+    EDA_ANGLE GetOrientation() const;
+    void      SetOrientation( const EDA_ANGLE& aAngle );
+    double    GetOpacity() const;
+    void      SetOpacity( double aOpacity );
 
     double GetImageScale() const;
     void   SetImageScale( double aScale );

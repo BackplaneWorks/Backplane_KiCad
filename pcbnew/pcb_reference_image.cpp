@@ -195,6 +195,10 @@ void PCB_REFERENCE_IMAGE::Serialize( google::protobuf::Any& aContainer ) const
     m_referenceImage.PackToBytes( *refImage.mutable_image_data() );
 
     kiapi::common::PackCustomProperties( refImage.mutable_custom_properties(), *this );
+
+    refImage.mutable_orientation()->set_value_degrees( m_referenceImage.GetOrientation().AsDegrees() );
+    refImage.set_opacity( m_referenceImage.GetOpacity() );
+
     aContainer.PackFrom( refImage );
 }
 
@@ -224,6 +228,10 @@ bool PCB_REFERENCE_IMAGE::Deserialize( const google::protobuf::Any& aContainer )
 
     SetLocked( refImage.locked() == kiapi::common::types::LockedState::LS_LOCKED );
     kiapi::common::UnpackCustomProperties( refImage.custom_properties(), *this );
+
+    m_referenceImage.SetOrientation( EDA_ANGLE( refImage.orientation().value_degrees(), DEGREES_T ) );
+    m_referenceImage.SetOpacity( refImage.opacity() );
+
     return true;
 }
 
@@ -245,6 +253,13 @@ void PCB_REFERENCE_IMAGE::Mirror( const VECTOR2I& aMirrorRef, FLIP_DIRECTION aFl
 {
     // Mirror the content about the axis through aMirrorRef without changing layers.
     m_referenceImage.Flip( aMirrorRef, aFlipDirection );
+}
+
+
+void PCB_REFERENCE_IMAGE::Mirror( const SEG& aAxis )
+{
+    // Mirror the content about aAxis without changing layers.
+    m_referenceImage.Mirror( aAxis );
 }
 
 
@@ -413,6 +428,30 @@ void PCB_REFERENCE_IMAGE::SetHeight( int aHeight )
 }
 
 
+EDA_ANGLE PCB_REFERENCE_IMAGE::GetOrientation() const
+{
+    return m_referenceImage.GetOrientation();
+}
+
+
+void PCB_REFERENCE_IMAGE::SetOrientation( const EDA_ANGLE& aAngle )
+{
+    m_referenceImage.SetOrientation( aAngle );
+}
+
+
+double PCB_REFERENCE_IMAGE::GetOpacity() const
+{
+    return m_referenceImage.GetOpacity();
+}
+
+
+void PCB_REFERENCE_IMAGE::SetOpacity( double aOpacity )
+{
+    m_referenceImage.SetOpacity( aOpacity );
+}
+
+
 static struct PCB_REFERENCE_IMAGE_DESC
 {
     PCB_REFERENCE_IMAGE_DESC()
@@ -427,6 +466,7 @@ static struct PCB_REFERENCE_IMAGE_DESC
 
         const wxString groupImage = _HKI( "Image Properties" );
 
+        // clang-format off
         propMgr.AddProperty( new PROPERTY<PCB_REFERENCE_IMAGE, double>( _HKI( "Scale" ),
                     &PCB_REFERENCE_IMAGE::SetImageScale, &PCB_REFERENCE_IMAGE::GetImageScale ),
                     groupImage );
@@ -441,6 +481,15 @@ static struct PCB_REFERENCE_IMAGE_DESC
                     PROPERTY_DISPLAY::PT_COORD, ORIGIN_TRANSFORMS::ABS_Y_COORD ),
                     groupImage );
 
+        propMgr.AddProperty( new PROPERTY<PCB_REFERENCE_IMAGE, EDA_ANGLE>( _HKI( "Orientation" ),
+                    &PCB_REFERENCE_IMAGE::SetOrientation, &PCB_REFERENCE_IMAGE::GetOrientation,
+                    PROPERTY_DISPLAY::PT_DECIDEGREE ),
+                    groupImage );
+
+        propMgr.AddProperty( new PROPERTY<PCB_REFERENCE_IMAGE, double>( _HKI( "Opacity" ),
+                    &PCB_REFERENCE_IMAGE::SetOpacity, &PCB_REFERENCE_IMAGE::GetOpacity ),
+                    groupImage );
+
         propMgr.AddProperty( new PROPERTY<PCB_REFERENCE_IMAGE, int>( _HKI( "Width" ),
                     &PCB_REFERENCE_IMAGE::SetWidth, &PCB_REFERENCE_IMAGE::GetWidth, PROPERTY_DISPLAY::PT_COORD ),
                     groupImage );
@@ -448,6 +497,7 @@ static struct PCB_REFERENCE_IMAGE_DESC
         propMgr.AddProperty( new PROPERTY<PCB_REFERENCE_IMAGE, int>( _HKI( "Height" ),
                     &PCB_REFERENCE_IMAGE::SetHeight, &PCB_REFERENCE_IMAGE::GetHeight, PROPERTY_DISPLAY::PT_COORD ),
                     groupImage );
+        // clang-format on
 
         // For future use
         const wxString greyscale = _HKI( "Greyscale" );

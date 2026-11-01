@@ -347,6 +347,9 @@ enum GAL_LAYER_ID: int
     /** Router preview collision marker, drawn above all board items */
     LAYER_ROUTER_PREVIEW_COLLISION,
 
+    /// Opacity slider for items outside the entered group
+    LAYER_OUTSIDE_GROUP_OPACITY,
+
     /// Virtual layers for stacking zones and tracks on a given copper layer.
     LAYER_ZONE_START,
     LAYER_ZONE_END = LAYER_ZONE_START + PCB_LAYER_ID_COUNT,
@@ -650,6 +653,38 @@ enum LAYER_3D_ID : int
         LAYER_3D_BOUNDING_BOXES,
         LAYER_3D_OFF_BOARD_SILK,
         LAYER_3D_PLATED_BARRELS,
+
+        // Inner copper layers are appended here to keep existing enum values stable.
+        LAYER_3D_COPPER_INNER_1,
+        LAYER_3D_COPPER_INNER_2,
+        LAYER_3D_COPPER_INNER_3,
+        LAYER_3D_COPPER_INNER_4,
+        LAYER_3D_COPPER_INNER_5,
+        LAYER_3D_COPPER_INNER_6,
+        LAYER_3D_COPPER_INNER_7,
+        LAYER_3D_COPPER_INNER_8,
+        LAYER_3D_COPPER_INNER_9,
+        LAYER_3D_COPPER_INNER_10,
+        LAYER_3D_COPPER_INNER_11,
+        LAYER_3D_COPPER_INNER_12,
+        LAYER_3D_COPPER_INNER_13,
+        LAYER_3D_COPPER_INNER_14,
+        LAYER_3D_COPPER_INNER_15,
+        LAYER_3D_COPPER_INNER_16,
+        LAYER_3D_COPPER_INNER_17,
+        LAYER_3D_COPPER_INNER_18,
+        LAYER_3D_COPPER_INNER_19,
+        LAYER_3D_COPPER_INNER_20,
+        LAYER_3D_COPPER_INNER_21,
+        LAYER_3D_COPPER_INNER_22,
+        LAYER_3D_COPPER_INNER_23,
+        LAYER_3D_COPPER_INNER_24,
+        LAYER_3D_COPPER_INNER_25,
+        LAYER_3D_COPPER_INNER_26,
+        LAYER_3D_COPPER_INNER_27,
+        LAYER_3D_COPPER_INNER_28,
+        LAYER_3D_COPPER_INNER_29,
+        LAYER_3D_COPPER_INNER_30,
 
         LAYER_3D_END
 };

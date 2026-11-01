@@ -17,9 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <jobs/job_registry.h>
 #include <jobs/job_gerber_diff.h>
-#include <i18n_utility.h>
 
 
 NLOHMANN_JSON_SERIALIZE_ENUM( JOB_GERBER_DIFF::OUTPUT_FORMAT, { { JOB_GERBER_DIFF::OUTPUT_FORMAT::PNG, "png" },
@@ -33,24 +31,9 @@ JOB_GERBER_DIFF::JOB_GERBER_DIFF() :
     m_params.emplace_back( new JOB_PARAM<OUTPUT_FORMAT>( "output_format", &m_outputFormat, m_outputFormat ) );
     m_params.emplace_back( new JOB_PARAM<int>( "dpi", &m_dpi, m_dpi ) );
     m_params.emplace_back( new JOB_PARAM<bool>( "antialias", &m_antialias, m_antialias ) );
-    m_params.emplace_back(
-            new JOB_PARAM<bool>( "transparent_background", &m_transparentBackground, m_transparentBackground ) );
+    m_params.emplace_back( new JOB_PARAM<bool>( "transparent_background", &m_transparentBackground,
+                                                m_transparentBackground ) );
     m_params.emplace_back( new JOB_PARAM<bool>( "exit_code_only", &m_exitCodeOnly, m_exitCodeOnly ) );
     m_params.emplace_back( new JOB_PARAM<int>( "tolerance", &m_tolerance, m_tolerance ) );
     m_params.emplace_back( new JOB_PARAM<bool>( "no_align", &m_noAlign, m_noAlign ) );
 }
-
-
-wxString JOB_GERBER_DIFF::GetDefaultDescription() const
-{
-    return _( "Gerber Diff" );
-}
-
-
-wxString JOB_GERBER_DIFF::GetSettingsDialogTitle() const
-{
-    return _( "Gerber Diff Job Settings" );
-}
-
-
-REGISTER_JOB( gerber_diff, _HKI( "Gerber: Diff" ), KIWAY::FACE_GERBVIEW, JOB_GERBER_DIFF );

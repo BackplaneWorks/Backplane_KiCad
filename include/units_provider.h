@@ -231,21 +231,27 @@ public:
         case EDA_UNITS::CM:
         case EDA_UNITS::MILS:
             return EDA_DATA_TYPE::DISTANCE;
+
         case EDA_UNITS::DEGREES:
+            return EDA_DATA_TYPE::ANGLE;
+
         case EDA_UNITS::PERCENT:
         case EDA_UNITS::UNSCALED:
             return EDA_DATA_TYPE::UNITLESS;
+
         case EDA_UNITS::FS:
         case EDA_UNITS::PS:
             return EDA_DATA_TYPE::TIME;
+
         case EDA_UNITS::PS_PER_INCH:
         case EDA_UNITS::PS_PER_CM:
         case EDA_UNITS::PS_PER_MM:
             return EDA_DATA_TYPE::LENGTH_DELAY;
         }
 
-        wxCHECK_MSG( false, EDA_DATA_TYPE::UNITLESS,
-                     wxString::Format( wxT( "Unhandled unit data type %d" ), static_cast<int>( aUnits ) ) );
+        wxCHECK_MSG( false, EDA_DATA_TYPE::UNITLESS, wxString::Format( wxT( "Unhandled unit data type %d" ),
+                                                                       static_cast<int>( aUnits ) ) );
+
         return EDA_DATA_TYPE::UNITLESS; // Note that this is unreachable but g++-12 doesn't know that.
     }
 

@@ -26,17 +26,22 @@
 #include <sch_io/sch_io_mgr.h>
 #include <wildcards_and_files_ext.h>
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
+#include <functional>
 #include <mutex>
 #include <optional>
+#include <random>
 #include <shared_mutex>
 #include <thread>
 #include <unordered_set>
 
 
+class LIB_ID;
 class LIBRARY_MANAGER_ADAPTER;
 class DATABASE_LIB_SETTINGS;
 struct DATABASE_LIB_TABLE;
+struct DATABASE_SOURCE;
 
 
 /**
@@ -95,16 +100,76 @@ public:
 
     bool SupportsConfigurationDialog() const override { return true; }
 
-    DIALOG_SHIM* CreateConfigurationDialog( wxWindow* aParent ) override;
+    DIALOG_SHIM* CreateConfigurationDialog( wxWindow* aParent, const wxString& aLibraryPath ) override;
+
+    /// Ends the waits of a load in progress and of any that starts before ResumeLoad(), so closing a project does not
+    /// wait out a locked database
+    void CancelLoad() override;
+
+    void ResumeLoad() noexcept override;
 
     DATABASE_LIB_SETTINGS* Settings() const { return m_settings.get(); }
 
-    bool TestConnection( wxString* aErrorMsg = nullptr );
+    /// @return the symbol name a row is listed under, or empty if the row has no key
+    static wxString SymbolNameForRow( const DATABASE_LIB_TABLE& aTable, bool aGloballyUniqueKeys,
+                                      const DATABASE_CONNECTION::ROW& aRow, std::string* aRawKey = nullptr );
+
+    /// A connection built from settings, or the reason none could be built
+    struct CONNECTION_RESULT
+    {
+        /// Null when no backend exists for the source type
+        std::unique_ptr<DATABASE_CONNECTION> connection;
+
+        /// Why connection is null
+        DB_FAILURE failure = DB_FAILURE::UNKNOWN;
+
+        /// The message naming the problem when connection is null
+        std::string error;
+    };
+
+    /**
+     * Opens a connection described by aSettings, expanding ${CWD} in a connection string to the
+     * directory holding the settings file.  The connection may be disconnected; check IsConnected().
+     *
+     * @param aConnectNow false defers connecting to the caller's Connect(), e.g. on a worker thread
+     * @param aBaseDir replaces the settings file's directory for ${CWD}; used while the file has no path yet
+     */
+    static CONNECTION_RESULT CreateConnection( const DATABASE_LIB_SETTINGS& aSettings, bool aConnectNow = true,
+                                               const wxString& aBaseDir = wxEmptyString );
+
+    /// A problem found while previewing, tagged with the setting that caused it
+    struct PREVIEW_ISSUE
+    {
+        enum class FIELD
+        {
+            KEY,          ///< The row as a whole, such as colliding keys or a row that could not be loaded
+            REPEATED_KEY, ///< A key that more than one row has
+            SYMBOLS,      ///< The symbols column
+            PIN_MAP       ///< The pin map column
+        };
+
+        FIELD    field;
+        wxString message;
+    };
+
+    using PREVIEW_ISSUES = std::vector<PREVIEW_ISSUE>;
+
+    /**
+     * Builds symbols from already-fetched rows exactly as the library would name and load them,
+     * without opening a connection.  References into database libraries are not resolved, so a
+     * preview never issues queries beyond the rows it was given.
+     *
+     * @param aLibs resolves the symbols column; may be null for metadata-only symbols
+     * @param aIssues receives per-row problems such as malformed pin maps; may be null
+     */
+    static std::vector<std::unique_ptr<LIB_SYMBOL>>
+    BuildPreviewSymbols( SYMBOL_LIBRARY_ADAPTER* aLibs, const DATABASE_LIB_TABLE& aTable, bool aGloballyUniqueKeys,
+                         const std::vector<DATABASE_CONNECTION::ROW>& aRows, PREVIEW_ISSUES* aIssues );
 
 private:
     typedef std::vector<std::pair<const DATABASE_LIB_TABLE*, std::vector<DATABASE_CONNECTION::ROW>>> TABLE_RESULT_LIST;
 
-    void cacheLib();
+    void cacheLib( const std::shared_ptr<DATABASE_CONNECTION>& aConn );
 
     size_t computeSignature( const TABLE_RESULT_LIST& aTableResults ) const;
 
@@ -114,9 +179,34 @@ private:
 
     void ensureSettings( const wxString& aSettingsPath );
 
-    void ensureConnection();
+    /// Loads the settings file on a thread that can be abandoned, so a share that went away cannot hold the caller
+    /// past the wait or past a cancel; throws when the file could not be reached
+    void loadSettingsBounded( int aTimeoutSeconds );
 
-    void connect();
+    /// Why the last connect() attempt failed, for the caller to report from its own copy
+    struct CONNECT_STATUS
+    {
+        DB_FAILURE failure = DB_FAILURE::UNKNOWN;
+        wxString   error;
+    };
+
+    /// Copies the connection under the cache lock so the caller keeps it alive across a reconnect
+    std::shared_ptr<DATABASE_CONNECTION> currentConnection();
+
+    /// Returns a live connection or throws
+    std::shared_ptr<DATABASE_CONNECTION> ensureConnection();
+
+    /// Connects, and waits out a file another instance is opening at the same moment when the library never opened
+    CONNECT_STATUS connect();
+
+    /// One attempt at connect(), with m_connectMutex held
+    CONNECT_STATUS connectOnce();
+
+    /// @return true once the plugin is closing, so no wait should outlast the call that notices
+    bool connectionStopped() const;
+
+    /// Wraps a backend in a connection, or reports why there is none
+    static CONNECTION_RESULT connectionFor( DB_BACKEND_RESULT&& aBackend, bool aConnectNow );
 
     std::unique_ptr<LIB_SYMBOL> loadSymbolFromRow( const wxString& aSymbolName,
                                                    const DATABASE_LIB_TABLE& aTable,
@@ -124,12 +214,24 @@ private:
 
     static std::optional<bool> boolFromAny( const std::any& aVal );
 
+    /// Resolves one entry of a row's symbols column through the library adapter
+    LIB_SYMBOL* resolveSourceSymbol( const LIB_ID& aId );
+
+    /// Reports to the preview's issue list when there is one, otherwise to the reporter
+    void reportIssue( PREVIEW_ISSUE::FIELD aField, const wxString& aMessage, SEVERITY aSeverity ) const;
+
+    /// Set on the throwaway instance behind BuildPreviewSymbols()
+    bool m_previewMode = false;
+
+    /// Collects the problems found while building a preview; null outside BuildPreviewSymbols()
+    PREVIEW_ISSUES* m_previewIssues = nullptr;
+
     SYMBOL_LIBRARY_ADAPTER* m_adapter;
 
     std::unique_ptr<DATABASE_LIB_SETTINGS> m_settings;
 
     /// Generally will be null if no valid connection is established
-    std::unique_ptr<DATABASE_CONNECTION> m_conn;
+    std::shared_ptr<DATABASE_CONNECTION> m_conn;
 
     std::set<wxString> m_customFields;
 
@@ -163,14 +265,28 @@ private:
     void stopBackgroundRefresh();
     void backgroundRefreshWorker();
 
-    std::thread             m_refreshThread;
-    std::atomic<bool>       m_refreshRunning{ false };
+    /// Busy retries past this attempt stop doubling the window
+    static constexpr int MAX_BUSY_ATTEMPT = 5;
+
+    /**
+     * @return the wait before retrying a refresh that found the database locked, drawn from the upper half of a
+     *         window that starts at 3 s and doubles with each attempt up to max_age
+     */
+    static std::chrono::milliseconds busyRetryWait( long long aMaxAgeSeconds, int aAttempt, std::minstd_rand& aRng );
+
+    /// The race this covers lasts milliseconds, so a file in use for longer has a real holder and is reported
+    static constexpr std::chrono::seconds FIRST_CONNECT_BUDGET{ 3 };
+
+    std::thread       m_refreshThread;
+    std::atomic<bool> m_refreshRunning{ false };
+    std::atomic<bool> m_stopping{ false };
+    std::atomic<bool> m_loadCancelled{ false }; ///< Set by CancelLoad(), cleared by ResumeLoad()
+
     std::condition_variable m_refreshCV;
     std::mutex              m_refreshMutex;
     std::shared_mutex       m_cacheMutex;
+    std::mutex              m_connectMutex;
     std::mutex              m_symbolLoadMutex;
-
-    wxString m_lastError;
 };
 
 #endif //SCH_IO_DATABASE_H_

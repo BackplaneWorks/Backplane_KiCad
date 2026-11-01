@@ -19,6 +19,9 @@
 
 #include <wx/init.h>
 #include <wx/app.h>
+
+#include <qa_utils/wx_utils/wx_assert.h>
+
 #include <kiplatform/app.h>
 #include <mock_pgm_base.h>
 #include <settings/settings_manager.h>

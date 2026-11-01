@@ -156,6 +156,12 @@ public:
     void LoadControlState();
 
     /**
+     * While we did this in LoadControlState(), we need to re-apply if after setting
+     * the dialog size.  Well, sometimes we need to re-apply it.
+     */
+    void ReloadSashPositions();
+
+    /**
      * Save control values and geometry to the current project's local settings.
      */
     void SaveControlState();
@@ -290,6 +296,15 @@ protected:
      */
     void unregisterUnitBinders( wxWindow* aWindow );
 
+    /**
+     * Tell the undo mechanism to snapshot the current value of a control and record it
+     * as an undo step when the value changes.
+     *
+     * If you call this from an event handler that generates multiple change events,
+     * they will be coalesced into a single undo step.
+     */
+    void recordControlChange( wxWindow* aCtrl );
+
 private:
     /**
      * Properly handle the wxCloseEvent when in the quasimodal mode when not calling
@@ -331,15 +346,6 @@ private:
     std::string generateKey( const wxWindow* aWin ) const;
 
     void registerUndoRedoHandlers( wxWindowList& aChildren );
-
-    /**
-     * Tell the undo mechanism to snapshot the current value of a control and record it
-     * as an undo step when the value changes.
-     *
-     * If you call this from an event handler that generates multiple change events,
-     * they will be coalesced into a single undo step.
-     */
-    void recordControlChange( wxWindow* aCtrl );
 
     /**
      * Apply outstanding control changes to the undo stack, and clear the pending list.

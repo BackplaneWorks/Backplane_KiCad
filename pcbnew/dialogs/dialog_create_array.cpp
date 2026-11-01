@@ -418,7 +418,21 @@ static bool validateAxisOptions( const wxTextCtrl& offsetEntry, const wxChoice& 
  */
 static bool arrayHasStackedPositions( const ARRAY_OPTIONS& aOptions, const VECTOR2I& aPos )
 {
-    std::set<std::pair<VECTOR2I, EDA_ANGLE>> placements;
+    struct sort_placements
+    {
+        bool operator()( const std::pair<VECTOR2I, EDA_ANGLE>& lhs, const std::pair<VECTOR2I, EDA_ANGLE>& rhs ) const
+        {
+            if( lhs.first.x != rhs.first.x )
+                return lhs.first.x < rhs.first.x;
+
+            if( lhs.first.y != rhs.first.y )
+                return lhs.first.y < rhs.first.y;
+
+            return lhs.second < rhs.second;
+        }
+    };
+
+    std::set<std::pair<VECTOR2I, EDA_ANGLE>, sort_placements> placements;
 
     for( int ii = 0; ii < aOptions.GetArraySize(); ++ii )
     {
@@ -504,15 +518,13 @@ bool DIALOG_CREATE_ARRAY::TransferDataFromWindow()
     }
     else if( page == m_circularPanel )
     {
-        auto   newCirc = std::make_unique<ARRAY_CIRCULAR_OPTIONS>();
-        bool   ok = true;
-        double angle = EDA_UNIT_UTILS::UI::DoubleValueFromString( m_entryCircAngle->GetValue() );
-        double offset = EDA_UNIT_UTILS::UI::DoubleValueFromString( m_entryCircOffset->GetValue() );
+        auto newCirc = std::make_unique<ARRAY_CIRCULAR_OPTIONS>();
+        bool ok = true;
 
         newCirc->m_centre.x = m_hCentre.GetIntValue();
         newCirc->m_centre.y = m_vCentre.GetIntValue();
-        newCirc->m_angle = EDA_ANGLE( angle, DEGREES_T );
-        newCirc->m_angleOffset = EDA_ANGLE( offset, DEGREES_T );
+        newCirc->m_angle = m_circAngle.GetAngleValue();
+        newCirc->m_angleOffset = m_circOffset.GetAngleValue();
         newCirc->m_clockwise = m_rbCircDirection->GetSelection() == 0;
 
         ok = validateLongEntry(*m_entryCircCount, newCirc->m_nPts, _("point count"), errors);

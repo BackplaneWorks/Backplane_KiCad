@@ -62,7 +62,7 @@ void ZONE_FILLER_TOOL::Reset( RESET_REASON aReason )
 }
 
 
-std::vector<PCB_GENERATOR*> ZONE_FILLER_TOOL::regenerateDirtyGenerators( BOARD_COMMIT& aCommit )
+std::vector<PCB_GENERATOR*> ZONE_FILLER_TOOL::RegenerateDirtyGenerators( BOARD_COMMIT& aCommit )
 {
     std::vector<PCB_GENERATOR*> regenerated;
 
@@ -177,10 +177,10 @@ void ZONE_FILLER_TOOL::singleShotRefocus( wxIdleEvent& )
 }
 
 
-void ZONE_FILLER_TOOL::FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aReporter, bool aHeadless )
+bool ZONE_FILLER_TOOL::FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aReporter, bool aHeadless )
 {
     if( m_fillInProgress )
-        return;
+        return false;
 
     m_fillInProgress = true;
 
@@ -227,6 +227,8 @@ void ZONE_FILLER_TOOL::FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aRepo
         m_filler->SetProgressReporter( reporter.get() );
     }
 
+    bool filled = false;
+
     if( m_filler->Fill( toFill ) )
     {
         if( m_filler->GetProgressReporter() )
@@ -234,7 +236,7 @@ void ZONE_FILLER_TOOL::FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aRepo
 
         // First pass on allowing generators like via-stitch to update
         board()->OnZonesFilled( toFill );
-        std::vector<PCB_GENERATOR*> regenerated = regenerateDirtyGenerators( commit );
+        std::vector<PCB_GENERATOR*> regenerated = RegenerateDirtyGenerators( commit );
 
         commit.Push( _( "Fill Zone(s)" ), SKIP_CONNECTIVITY | ZONE_FILL_OP );
 
@@ -243,6 +245,8 @@ void ZONE_FILLER_TOOL::FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aRepo
 
         // Refill again as generators like via stitches can cause punch outs
         refillAroundGenerators( regenerated );
+
+        filled = true;
     }
     else
     {
@@ -261,6 +265,8 @@ void ZONE_FILLER_TOOL::FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aRepo
         // wxWidgets has keyboard focus issues after the progress reporter.  Re-setting the focus
         // here doesn't work, so we delay it to an idle event.
         canvas()->Bind( wxEVT_IDLE, &ZONE_FILLER_TOOL::singleShotRefocus, this );
+
+    return filled;
 }
 
 
@@ -334,7 +340,7 @@ int ZONE_FILLER_TOOL::ZoneFillDirty( const TOOL_EVENT& aEvent )
     if( filled )
     {
         board()->OnZonesFilled( toFill );
-        regenerated = regenerateDirtyGenerators( commit );
+        regenerated = RegenerateDirtyGenerators( commit );
 
         commit.Push( _( "Auto-fill Zone(s)" ), APPEND_UNDO | SKIP_CONNECTIVITY | ZONE_FILL_OP );
     }

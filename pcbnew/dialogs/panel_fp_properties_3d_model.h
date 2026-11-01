@@ -57,6 +57,7 @@ public:
     bool Validate() override;
     bool CommitPendingChanges();
 
+    void UpdateEmbeddedFiles();
     void ReloadModelsFromFootprint();
 
     std::vector<FP_3DMODEL>& GetModelList() { return m_shapes3D_list; }
@@ -96,6 +97,7 @@ private:
     virtual void onDialogActivateEvent( wxActivateEvent& aEvent );
     virtual void onShowEvent( wxShowEvent& aEvent );
     void onSize( wxSizeEvent& aEvent );
+    void onSashPositionChanging( wxSplitterEvent& aEvent );
 
     /**
      * Split the page so the model list shows its rows, never fewer than three and never
@@ -115,7 +117,7 @@ private:
     FOOTPRINT*                m_footprint;
 
     std::vector<FP_3DMODEL>   m_shapes3D_list;
-    bool                      m_sashPositioned = false;
+    bool                      m_userSetSashPosition = false;
     PANEL_PREVIEW_3D_MODEL*   m_previewPane;
     PANEL_EMBEDDED_FILES*     m_filesPanel;
 

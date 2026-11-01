@@ -125,6 +125,12 @@ PCB_IO_EASYEDAPRO::EnumerateProjectBoards( const wxString& aFileName ) const
 }
 
 
+std::vector<IMPORT_PROJECT_DESC> PCB_IO_EASYEDAPRO::EnumerateProjectEntries( const wxString& aFileName ) const
+{
+    return EASYEDAPRO::ProjectToSelectorDialog( EASYEDAPRO::ReadProjectOrDeviceFile( aFileName ) );
+}
+
+
 void PCB_IO_EASYEDAPRO::loadBoard( const wxString& aFileName, BOARD& aBoard, bool aIsNewLoad,
                                    const std::map<std::string, UTF8>* aProperties, PROJECT* aProject )
 {
@@ -161,13 +167,14 @@ void PCB_IO_EASYEDAPRO::loadBoard( const wxString& aFileName, BOARD& aBoard, boo
         }
         else
         {
-            std::map<wxString, wxString> prjPcbNames = project.at( "pcbs" );
 
-            if( prjPcbNames.size() == 1 )
+            std::map<wxString, nlohmann::json> prjPcbData = project.at( "pcbs" );
+
+            if( prjPcbData.size() == 1 )
             {
-                pcbToLoad = prjPcbNames.begin()->first;
+                pcbToLoad = prjPcbData.begin()->first;
             }
-            else
+            else if( m_choose_project_handler )
             {
                 std::vector<IMPORT_PROJECT_DESC> chosen = m_choose_project_handler(
                         EASYEDAPRO::ProjectToSelectorDialog( project, true, false ) );
@@ -177,6 +184,11 @@ void PCB_IO_EASYEDAPRO::loadBoard( const wxString& aFileName, BOARD& aBoard, boo
                     THROW_IO_CANCELLED();
 
                 pcbToLoad = chosen[0].PCBId;
+            }
+            else if( !prjPcbData.empty() )
+            {
+                // No chooser registered (headless), so take the first
+                pcbToLoad = prjPcbData.begin()->first;
             }
         }
 

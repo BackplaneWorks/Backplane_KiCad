@@ -24,6 +24,7 @@
 #include <properties/pg_editors.h>
 #include <properties/pg_properties.h>
 #include <widgets/color_swatch.h>
+#include <widgets/ui_common.h>
 #include <widgets/unit_binder.h>
 #include <bitmaps.h>
 #include <frame_type.h>
@@ -118,6 +119,7 @@ wxPGWindowList PG_UNIT_EDITOR::CreateControls( wxPropertyGrid* aPropGrid, wxPGPr
     else if( dynamic_cast<PGPROPERTY_ANGLE*>( aProperty ) != nullptr )
     {
         m_unitBinder->SetCoordType( ORIGIN_TRANSFORMS::NOT_A_COORD );
+        m_unitBinder->SetDataType( EDA_DATA_TYPE::ANGLE );
         m_unitBinder->SetUnits( EDA_UNITS::DEGREES );
     }
     else if( dynamic_cast<PGPROPERTY_TIME*>( aProperty ) != nullptr )
@@ -134,6 +136,15 @@ wxPGWindowList PG_UNIT_EDITOR::CreateControls( wxPropertyGrid* aPropGrid, wxPGPr
 void PG_UNIT_EDITOR::UpdateControl( wxPGProperty* aProperty, wxWindow* aCtrl ) const
 {
     wxVariant var = aProperty->GetValue();
+
+    // Shown as a mix, not blank. Set on the control since the binder would append units
+    if( aProperty->IsValueUnspecified() )
+    {
+        if( wxTextEntry* textEntry = dynamic_cast<wxTextEntry*>( aCtrl ) )
+            textEntry->ChangeValue( INDETERMINATE_STATE );
+
+        return;
+    }
 
     if( PGPROPERTY_ANGLE* angleProp = dynamic_cast<PGPROPERTY_ANGLE*>( aProperty ) )
     {
@@ -216,6 +227,10 @@ bool PG_UNIT_EDITOR::GetValueFromControl( wxVariant& aVariant, wxPGProperty* aPr
         aVariant.MakeNull();
         return true;
     }
+
+    // A mixed value left as it was is not an edit
+    if( textVal == INDETERMINATE_STATE )
+        return false;
 
     bool changed;
 

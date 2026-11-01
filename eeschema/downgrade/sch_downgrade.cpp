@@ -81,11 +81,13 @@ static constexpr int SCH_VER_LINE_ENDINGS = 20260818;
 static constexpr int SYMLIB_VER_LINE_ENDINGS = 20260710;
 static constexpr int SCH_VER_ALTERNATE_SYMBOLS = 20260722;
 static constexpr int SCH_VER_CUSTOM_PROPERTIES = 20260830;
+static constexpr int SCH_VER_IMAGE_ROTATION = 20261025;
+static constexpr int SCH_VER_IMAGE_OPACITY = 20261025;
 
 // The formats this feature was built for. If a version moves past its constant, a new feature
 // landed and the rules or denylist may be stale. Review the keywords, then update these.
-static constexpr int SCH_DOWNGRADE_COVERED = 20260830;
-static constexpr int SYMLIB_DOWNGRADE_COVERED = 20260830;
+static constexpr int SCH_DOWNGRADE_COVERED = 20261025;
+static constexpr int SYMLIB_DOWNGRADE_COVERED = 20261015;
 
 
 static bool isEllipse( const SCH_ITEM* aItem )
@@ -1058,6 +1060,19 @@ static void visitScreenItems( const SCH_SCREEN* aScreen, const std::function<voi
 }
 
 
+static int countScreenItems( const SCH_SCREEN* aScreen, const std::function<bool( EDA_ITEM* )>& aPredicate )
+{
+    int count = 0;
+    visitScreenItems( aScreen,
+                      [&]( EDA_ITEM* item )
+                      {
+                          if( aPredicate( item ) )
+                              ++count;
+                      } );
+    return count;
+}
+
+
 static bool isPostTargetTextVar( const wxString& aToken )
 {
     const wxString token = aToken.AfterLast( ':' );
@@ -1577,25 +1592,35 @@ static int countIncompatibleBusLabels( const SCH_SCREEN* aScreen, bool aPreTen )
     visitScreenItems( aScreen,
                       [&]( EDA_ITEM* item )
                       {
-                          if( item->Type() != SCH_LABEL_T && item->Type() != SCH_GLOBAL_LABEL_T
-                              && item->Type() != SCH_HIER_LABEL_T && item->Type() != SCH_SHEET_PIN_T )
+                          if( item->Type() != SCH_LABEL_T
+                              && item->Type() != SCH_GLOBAL_LABEL_T
+                              && item->Type() != SCH_HIER_LABEL_T
+                              && item->Type() != SCH_SHEET_PIN_T )
+                          {
                               return;
+                          }
+
                           const EDA_TEXT*       text = dynamic_cast<const EDA_TEXT*>( item );
                           const SCH_LABEL_BASE* label = dynamic_cast<const SCH_LABEL_BASE*>( item );
+
                           if( !text || !label )
                               return;
+
                           bool incompatible = hasIncompatibleBusVector( text->GetText(), aPreTen );
+
                           if( schematic && schematic->IsValid() )
                           {
                               for( const SCH_SHEET_PATH& path : schematic->BuildUnorderedSheetList() )
                               {
                                   if( path.LastScreen() != aScreen )
                                       continue;
+
                                   wxString resolved = label->GetShownText( &path, FOR_NETNAME );
                                   incompatible |= hasIncompatibleBusVector( resolved, aPreTen )
                                                   || hasPaddedBusVector( resolved );
                               }
                           }
+
                           count += incompatible;
                       } );
     return count;
@@ -1971,6 +1996,47 @@ static void dropLineEndings( SCH_SCREEN* aScreen )
 }
 
 
+static int countRotatedBitmaps( const SCH_SCREEN* aScreen )
+{
+    const auto isRotatedBitmap = []( const EDA_ITEM* aItem )
+    {
+        if( aItem->Type() != SCH_BITMAP_T )
+            return false;
+
+        const SCH_BITMAP& bitmap = static_cast<const SCH_BITMAP&>( *aItem );
+        return !bitmap.GetReferenceImage().GetOrientation().IsZero();
+    };
+
+    return countScreenItems( aScreen, isRotatedBitmap );
+}
+
+
+static int countBitmapsWithOpacity( const SCH_SCREEN* aScreen )
+{
+    const auto hasOpacity = []( const EDA_ITEM* aItem )
+    {
+        if( aItem->Type() != SCH_BITMAP_T )
+            return false;
+
+        const SCH_BITMAP& bitmap = static_cast<const SCH_BITMAP&>( *aItem );
+        return bitmap.GetReferenceImage().GetOpacity() != 1.0;
+    };
+
+    return countScreenItems( aScreen, hasOpacity );
+}
+
+
+static void dropBitmapOpacity( SCH_SCREEN* aScreen )
+{
+    visitScreenItems( aScreen,
+                      []( EDA_ITEM* aItem )
+                      {
+                          if( aItem->Type() == SCH_BITMAP_T )
+                              static_cast<SCH_BITMAP*>( aItem )->GetReferenceImage().SetOpacity( 1.0 );
+                      } );
+}
+
+
 // Same pattern as board_downgrade.cpp. One list drives both the report and the transform.
 struct SCREEN_RULE
 {
@@ -1990,10 +2056,11 @@ struct SCREEN_RULE
 
 static std::vector<SCREEN_RULE> screenRules()
 {
+    // clang-format off
     return {
         { SCH_VER_CUSTOM_PROPERTIES, DOWNGRADE_BUCKET::DROP, _( "Custom user properties" ),
-          _( "Custom user-property metadata is removed." ), countCustomProperties, dropCustomProperties,
-          countSymbolCustomProperties, dropSymbolCustomProperties },
+          _( "Custom user-property metadata is removed." ),
+          countCustomProperties, dropCustomProperties, countSymbolCustomProperties, dropSymbolCustomProperties },
         { SCH_VER_ALTERNATE_SYMBOLS, DOWNGRADE_BUCKET::DROP, _( "Alternate variant symbols" ),
           _( "Alternate-symbol choices in retained variant definitions are removed. The base symbol is unchanged." ),
           countAlternateSymbols, dropAlternateSymbols },
@@ -2010,11 +2077,9 @@ static std::vector<SCREEN_RULE> screenRules()
           {},
           _( "Symbols selecting a custom body style are omitted, including their pins. Connectivity may change." ) },
         { SCH_VER_BODY_STYLES, DOWNGRADE_BUCKET::BLOCK, _( "Unresolved custom body styles" ),
-          _( "The selected drawing cannot be preserved without its library symbol." ), countUnresolvedCustomBodyStyles,
-          nullptr },
-        { SCH_VER_LOCKING,
-          DOWNGRADE_BUCKET::LOWER,
-          _( "Locked items" ),
+          _( "The selected drawing cannot be preserved without its library symbol." ),
+          countUnresolvedCustomBodyStyles, nullptr },
+        { SCH_VER_LOCKING, DOWNGRADE_BUCKET::LOWER, _( "Locked items" ),
           _( "The lock is not kept." ),
           countLockedItems,
           unlockItems,
@@ -2024,21 +2089,23 @@ static std::vector<SCREEN_RULE> screenRules()
           {},
           _( "Lock metadata is removed; the supported items are kept." ) },
         { SCH_VER_LINE_ENDINGS, DOWNGRADE_BUCKET::LOWER, _( "Line endings" ),
-          _( "Solid line bodies and endings are approximated by filled polygons." ), countLineEndings, lowerLineEndings,
-          countSymbolLineEndings, lowerSymbolLineEndings, dropLineEndings, dropSymbolLineEndings,
+          _( "Solid line bodies and endings are approximated by filled polygons." ),
+          countLineEndings, lowerLineEndings, countSymbolLineEndings, lowerSymbolLineEndings, dropLineEndings,
+          dropSymbolLineEndings,
           _( "Line-ending embellishments are removed. The original supported body is kept." ) },
-        { SCH_VER_ELLIPSE, DOWNGRADE_BUCKET::LOWER, _( "Ellipse graphics" ), _( "Approximated by a polygon." ),
+        { SCH_VER_ELLIPSE, DOWNGRADE_BUCKET::LOWER, _( "Ellipse graphics" ),
+          _( "Approximated by a polygon." ),
           countEllipses, lowerEllipses, countSymbolEllipses, lowerSymbolEllipses, omitEllipses, omitSymbolEllipses,
           _( "Ellipse graphics are omitted instead of approximated." ) },
-        { SCH_VER_SHAPE_HATCH, DOWNGRADE_BUCKET::LOWER, _( "Hatched shape fills" ), _( "Converted to a solid fill." ),
+        { SCH_VER_SHAPE_HATCH, DOWNGRADE_BUCKET::LOWER, _( "Hatched shape fills" ),
+          _( "Converted to a solid fill." ),
           countHatchedFills, lowerHatchedFills, countSymbolHatchedFills, lowerSymbolHatchedFills, omitHatchedFills,
-          omitSymbolHatchedFills, _( "The hatch fill is omitted; the supported outline is kept." ) },
+          omitSymbolHatchedFills,
+          _( "The hatch fill is omitted; the supported outline is kept." ) },
         { SCH_VER_PIN_MAPS, DOWNGRADE_BUCKET::DROP, _( "Pin-to-pad maps" ),
-          _( "No equivalent in the target. The map is removed." ), countPinMaps, dropPinMaps, countSymbolPinMaps,
-          dropSymbolPinMaps },
-        { SCH_VER_GROUPS,
-          DOWNGRADE_BUCKET::LOWER,
-          _( "Groups" ),
+          _( "No equivalent in the target. The map is removed." ),
+          countPinMaps, dropPinMaps, countSymbolPinMaps, dropSymbolPinMaps },
+        { SCH_VER_GROUPS, DOWNGRADE_BUCKET::LOWER, _( "Groups" ),
           _( "Grouping is removed; the items are kept." ),
           countGroups,
           ungroupAll,
@@ -2048,29 +2115,39 @@ static std::vector<SCREEN_RULE> screenRules()
           {},
           _( "Group metadata is removed; the supported items are kept." ) },
         { SCH_VER_JUMPER_PINS, DOWNGRADE_BUCKET::DROP, _( "Jumper pin groups" ),
-          _( "Jumper pin groupings are removed." ), countJumperPinGroups, dropJumperPinGroups, countSymbolJumperPins,
-          dropSymbolJumperPins },
+          _( "Jumper pin groupings are removed." ),
+          countJumperPinGroups, dropJumperPinGroups, countSymbolJumperPins, dropSymbolJumperPins },
         { SCH_VER_BODY_STYLES, DOWNGRADE_BUCKET::DROP, _( "Named body styles" ),
           _( "Custom names are removed. The target can select only the base and De Morgan styles." ),
           countNamedBodyStyles, dropNamedBodyStyles, countSymbolNamedBodyStyles, dropSymbolBodyStyleNames },
         { SCH_VER_POSITION_EXCLUSIONS, DOWNGRADE_BUCKET::DROP, _( "Position file exclusions" ),
-          _( "The target cannot exclude schematic symbols from position files." ), countPositionExclusions,
-          dropPositionExclusions, countSymbolPositionExclusions, dropSymbolPositionExclusions },
-        { SCH_VER_ROUNDED_RECT, DOWNGRADE_BUCKET::LOWER, _( "Rounded rectangles" ), _( "Approximated by a polygon." ),
+          _( "The target cannot exclude schematic symbols from position files." ),
+          countPositionExclusions, dropPositionExclusions, countSymbolPositionExclusions, dropSymbolPositionExclusions },
+        { SCH_VER_ROUNDED_RECT, DOWNGRADE_BUCKET::LOWER, _( "Rounded rectangles" ),
+          _( "Approximated by a polygon." ),
           countRoundedRects, lowerRoundedRects, countSymbolRoundedRects, lowerSymbolRoundedRects, omitRoundedRects,
-          omitSymbolRoundedRects, _( "Rounded rectangles are omitted instead of approximated." ) },
+          omitSymbolRoundedRects,
+          _( "Rounded rectangles are omitted instead of approximated." ) },
         { SCH_VER_LOCAL_POWER, DOWNGRADE_BUCKET::BLOCK, _( "Local power symbols" ),
-          _( "The target would treat it as global power and merge nets across sheets." ), countLocalPowerSymbols,
-          nullptr, countSymbolLocalPower },
+          _( "The target would treat it as global power and merge nets across sheets." ),
+          countLocalPowerSymbols, nullptr, countSymbolLocalPower },
         { SCH_VER_RULE_AREA_FLAGS, DOWNGRADE_BUCKET::DROP, _( "Rule area flags" ),
-          _( "DNP and exclusion flags on rule areas are removed." ), countRuleAreaFlags, dropRuleAreaFlags },
+          _( "DNP and exclusion flags on rule areas are removed." ),
+          countRuleAreaFlags, dropRuleAreaFlags },
         { SCH_VER_STACKED_PIN_ESCAPES, DOWNGRADE_BUCKET::BLOCK, _( "Escaped stacked pin numbers" ),
-          _( "The target misreads the escaping and would rename the pins." ), countEscapedStackedPins, nullptr,
-          countSymbolEscapedStackedPins },
+          _( "The target misreads the escaping and would rename the pins." ),
+          countEscapedStackedPins, nullptr, countSymbolEscapedStackedPins },
         { SCH_VER_STACKED_PINS, DOWNGRADE_BUCKET::BLOCK, _( "Stacked pin numbers" ),
-          _( "The target reads the brackets as one literal pin number and the netlist changes." ), countStackedPins,
-          nullptr, countSymbolStackedPins },
+          _( "The target reads the brackets as one literal pin number and the netlist changes." ),
+          countStackedPins, nullptr, countSymbolStackedPins },
+        { SCH_VER_IMAGE_ROTATION, DOWNGRADE_BUCKET::BLOCK, _( "Rotated reference images" ),
+          _( "The target cannot store an image rotation." ),
+          countRotatedBitmaps, nullptr },
+        { SCH_VER_IMAGE_OPACITY, DOWNGRADE_BUCKET::DROP, _( "Reference image opacity" ),
+          _( "The target cannot store an image opacity. Opacity will be ignored." ),
+          countBitmapsWithOpacity, dropBitmapOpacity },
     };
+    // clang-format on
 }
 
 
@@ -2319,6 +2396,7 @@ static constexpr DATED_TOKEN SCH_TOKENS[] = {
     { "entry", SCH_VER_PIN_MAPS },
     { "map", SCH_VER_PIN_MAPS },
     { "edit", SCH_VER_PIN_MAPS },
+    { "opacity", SCH_VER_IMAGE_OPACITY },
 };
 
 // Bareword values the target cannot parse. The node scan cannot see these.
@@ -2602,9 +2680,10 @@ bool FlattenSchematicVariant( SCHEMATIC& aSchematic, const wxString& aVariantNam
         {
             for( SCH_FIELD& field : sheet->GetFields() )
             {
-                bool mandatory = field.GetId() == FIELD_T::SHEET_NAME || field.GetId() == FIELD_T::SHEET_FILENAME;
+                bool invariant = field.GetId() == FIELD_T::SHEET_NAME || field.GetId() == FIELD_T::SHEET_FILENAME
+                                 || field.GetId() == FIELD_T::SHEET_REF_SUFFIX;
 
-                if( !mandatory && field.GetName() == name )
+                if( !invariant && field.GetName() == name )
                     field.SetText( value );
             }
         }

@@ -19,19 +19,29 @@
 
 
 #include "pad_tool.h"
-#include "pcb_painter.h"
+
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <unordered_map>
+
+#include <kiid.h>
+#include <pcb_painter.h>
 #include <kiplatform/ui.h>
 #include <macros.h>
 #include <class_draw_panel_gal.h>
 #include <view/view_controls.h>
 #include <tool/tool_manager.h>
 #include <board_design_settings.h>
+#include <board_design_settings_defaults.h>
 #include <board_item.h>
 #include <collectors.h>
 #include <footprint.h>
 #include <pcb_shape.h>
 #include <pad.h>
+#include <pad_utils.h>
 #include <pcbnew_settings.h>
+#include <string_utils.h>
 #include <board_commit.h>
 #include <dialogs/dialog_push_pad_properties.h>
 #include <dialogs/dialog_fp_edit_pad_table.h>
@@ -47,11 +57,352 @@
 using KIGFX::PCB_RENDER_SETTINGS;
 
 
+class PAD_MASTER_PROVIDER
+{
+public:
+    enum class TYPE
+    {
+        AUTO,
+        THT,
+        SMD,
+        NPTH,
+        CONNECTOR,
+        NON_COMPONENT,
+        PASTE,
+        MASK,
+    };
+
+    PAD_MASTER_PROVIDER() = default;
+
+    /**
+     * Get the master pad for the given type, footprint, and selected pad.
+     *
+     * If 'auto' is specified for the type, see #resolveAutoType for the type
+     * resolution logic.
+     *
+     * For a given resolved type, the master pad is found by, in order:
+     *
+     * - The selected pad, if the mode is 'auto'
+     * - The most recently created pad of the requested type in the current footprint
+     *   (including edits in the meantime)
+     * - The highest numbered pad of the requested type in the current footprint.
+     * - A constructed default pad for the requested type if none of the above are found.
+     */
+    PAD GetMasterPad( TYPE aType, const FOOTPRINT* aFootprint, const PAD* aSelectedPad ) const
+    {
+        std::vector<const PAD*> fpPads;
+
+        if( aFootprint )
+        {
+            fpPads.assign( aFootprint->Pads().begin(), aFootprint->Pads().end() );
+
+            const auto reverseNumberSorter =
+                    []( const PAD* a, const PAD* b )
+                    {
+                        return StrNumCmp( a->GetNumber(), b->GetNumber() ) > 0;
+                    };
+
+            // Sort the pads in reverse number order (we want to avoid choosing pin 1, usually)
+            std::sort( fpPads.begin(), fpPads.end(), reverseNumberSorter );
+        }
+
+        // Resolve the most recent pad type if the requested type is AUTO.
+        // Note that the selection-copy logic is only used for AUTO. If the user uses,
+        // say, THT explicitly, then we don't try to copy the selection.
+        if( aType == TYPE::AUTO )
+        {
+            aType = resolveAutoType( fpPads, aSelectedPad );
+
+            // If the type came from the selected pad, that pad is the template as well.
+            if( aSelectedPad && TypeFromPad( *aSelectedPad ) == aType )
+                return *aSelectedPad;
+        }
+
+        // See if the most recently created pad of the requested type can still be found
+        if( auto lastRealPadIt = m_lastRealPadsForType.find( aType ); lastRealPadIt != m_lastRealPadsForType.end() )
+        {
+            for( const PAD* pad : fpPads )
+            {
+                if( pad->m_Uuid == lastRealPadIt->second )
+                {
+                    // Check it still has this type
+                    std::optional<TYPE> padType = TypeFromPad( *pad );
+                    if( !padType || *padType != aType )
+                        break;
+
+                    return *pad;
+                }
+            }
+        }
+
+        // If that doesn't work, look in the current footprint for ideas
+        if( aFootprint )
+        {
+            for( const PAD* pad : fpPads )
+            {
+                std::optional<TYPE> padType = TypeFromPad( *pad );
+
+                // If this pad is the one we're looking for
+                if( padType && *padType == aType )
+                {
+                    return *pad;
+                }
+            }
+        }
+
+        // If we still don't have a master pad, fall back to a constructed default
+        return *MakeDefaultPad( aType );
+    }
+
+    /**
+     * Create a default pad for the given master pad type when there is no more obvious source.
+     */
+    std::unique_ptr<PAD> MakeDefaultPad( PAD_MASTER_PROVIDER::TYPE aMasterType ) const
+    {
+        std::unique_ptr<PAD> pad = std::make_unique<PAD>( nullptr );
+
+        pad->SetPadstackMode( PADSTACK::MODE::NORMAL );
+        pad->SetThermalSpokeAngle( ANGLE_90 );
+
+        switch( aMasterType )
+        {
+        case PAD_MASTER_PROVIDER::TYPE::THT:
+        {
+            pad->SetAttribute( PAD_ATTRIB::PTH );
+            pad->SetLayerSet( PAD::PTHMask() );
+            pad->SetShape( PADSTACK::ALL_LAYERS, PAD_SHAPE::OVAL );
+
+            pad->SetSize( PADSTACK::ALL_LAYERS, VECTOR2D{
+                                                        pcbIUScale.mmToIU( DEFAULT_PAD_THT_WIDTH_MM ),
+                                                        pcbIUScale.mmToIU( DEFAULT_PAD_THT_HEIGHT_MM ),
+                                                } );
+
+            pad->SetDrillShape( PAD_DRILL_SHAPE::CIRCLE );
+            pad->SetDrillSize( VECTOR2D{
+                    pcbIUScale.mmToIU( DEFAULT_PAD_DRILL_DIAMETER_MM ),
+                    pcbIUScale.mmToIU( DEFAULT_PAD_DRILL_DIAMETER_MM ),
+            } );
+            break;
+        }
+        case PAD_MASTER_PROVIDER::TYPE::SMD:
+        {
+            pad->SetAttribute( PAD_ATTRIB::SMD );
+            pad->SetLayerSet( PAD::SMDMask() );
+
+            pad->SetShape( PADSTACK::ALL_LAYERS, PAD_SHAPE::ROUNDRECT );
+
+            pad->SetSize( PADSTACK::ALL_LAYERS, VECTOR2D{
+                                                        pcbIUScale.mmToIU( DEFAULT_PAD_SMD_WIDTH_MM ),
+                                                        pcbIUScale.mmToIU( DEFAULT_PAD_SMD_HEIGHT_MM ),
+                                                } );
+            // No drill for SMD pads
+            break;
+        }
+        case PAD_MASTER_PROVIDER::TYPE::NPTH:
+        {
+            pad->SetAttribute( PAD_ATTRIB::NPTH );
+            pad->SetLayerSet( PAD::UnplatedHoleMask() );
+            pad->SetShape( PADSTACK::ALL_LAYERS, PAD_SHAPE::CIRCLE );
+
+            const VECTOR2D size = VECTOR2D{
+                pcbIUScale.mmToIU( DEFAULT_PAD_NPTH_DIAMETER_MM ),
+                pcbIUScale.mmToIU( DEFAULT_PAD_NPTH_DIAMETER_MM ),
+            };
+            pad->SetSize( PADSTACK::ALL_LAYERS, size );
+            pad->SetDrillShape( PAD_DRILL_SHAPE::CIRCLE );
+            pad->SetDrillSize( size );
+
+            break;
+        }
+        case PAD_MASTER_PROVIDER::TYPE::PASTE:
+        case PAD_MASTER_PROVIDER::TYPE::MASK:
+        {
+            pad->SetAttribute( PAD_ATTRIB::SMD );
+
+            if( aMasterType == PAD_MASTER_PROVIDER::TYPE::PASTE )
+                pad->SetLayerSet( PAD::ApertureMask() );
+            else
+                pad->SetLayerSet( LSET{ F_Mask } );
+
+            pad->SetShape( PADSTACK::ALL_LAYERS, PAD_SHAPE::ROUNDRECT );
+            pad->SetSize( PADSTACK::ALL_LAYERS, VECTOR2D{
+                                                        pcbIUScale.mmToIU( DEFAULT_PAD_APERTURE_WIDTH_MM ),
+                                                        pcbIUScale.mmToIU( DEFAULT_PAD_APERTURE_HEIGHT_MM ),
+                                                } );
+            break;
+        }
+        case PAD_MASTER_PROVIDER::TYPE::CONNECTOR:
+        {
+            pad->SetAttribute( PAD_ATTRIB::CONN );
+            pad->SetLayerSet( PAD::ConnSMDMask() );
+
+            pad->SetShape( PADSTACK::ALL_LAYERS, PAD_SHAPE::RECTANGLE );
+            pad->SetSize( PADSTACK::ALL_LAYERS, VECTOR2D{
+                                                        pcbIUScale.mmToIU( DEFAULT_PAD_THT_WIDTH_MM ),
+                                                        pcbIUScale.mmToIU( DEFAULT_PAD_THT_HEIGHT_MM ),
+                                                } );
+            break;
+        }
+        case PAD_MASTER_PROVIDER::TYPE::NON_COMPONENT:
+        {
+            pad->SetAttribute( PAD_ATTRIB::NON_COMPONENT );
+            pad->SetLayerSet( { F_Cu } );
+            pad->SetShape( PADSTACK::ALL_LAYERS, PAD_SHAPE::ROUNDRECT );
+
+            const VECTOR2D size = VECTOR2D{
+                pcbIUScale.mmToIU( DEFAULT_PAD_SMD_WIDTH_MM ),
+                pcbIUScale.mmToIU( DEFAULT_PAD_SMD_HEIGHT_MM ),
+            };
+            pad->SetSize( PADSTACK::ALL_LAYERS, size );
+            break;
+        }
+        // No Default: handle every case explicitly
+        case PAD_MASTER_PROVIDER::TYPE::AUTO:
+        {
+            wxFAIL_MSG( "AUTO pad type should not be used for default pad creation" );
+            break;
+        }
+        }
+
+        // Set an IPC-standard rouding radius when useful
+        if( pad->GetShape( PADSTACK::ALL_LAYERS ) == PAD_SHAPE::ROUNDRECT )
+        {
+            const double newRadius = PAD_UTILS::GetDefaultIpcRoundingRatio( *pad, PADSTACK::ALL_LAYERS );
+            pad->SetRoundRectRadiusRatio( PADSTACK::ALL_LAYERS, newRadius );
+        }
+
+        return pad;
+    }
+
+    /**
+     * Record the given pad as the most recently placed pad of its type.
+     *
+     * This can then be used when auto-detecting the pad type for new pads.
+     */
+    void RecordNewMasterPad( const PAD& aPlacedPad )
+    {
+        std::optional<TYPE> padType = TypeFromPad( aPlacedPad );
+
+        // Don't update the MRU records if the pad type could not be determined.
+        if( !padType )
+            return;
+
+        m_lastType = *padType;
+        m_lastRealPadsForType[*padType] = aPlacedPad.m_Uuid;
+    }
+
+    static TYPE TypeFromAction( const TOOL_EVENT& aEvent )
+    {
+        if( aEvent.IsAction( &PCB_ACTIONS::placeThtPad ) )
+            return TYPE::THT;
+        if( aEvent.IsAction( &PCB_ACTIONS::placeSmdPad ) )
+            return TYPE::SMD;
+        if( aEvent.IsAction( &PCB_ACTIONS::placeNpthPad ) )
+            return TYPE::NPTH;
+        if( aEvent.IsAction( &PCB_ACTIONS::placePasteAperturePad ) )
+            return TYPE::PASTE;
+
+        return TYPE::AUTO;
+    }
+
+    /**
+     * Determine the master pad type from the given pad.
+     *
+     * Returns std::nullopt if the pad does not obviously match any master pad type.
+     */
+    static std::optional<TYPE> TypeFromPad( const PAD& aPad )
+    {
+        if( aPad.GetAttribute() == PAD_ATTRIB::PTH )
+            return TYPE::THT;
+        if( aPad.GetAttribute() == PAD_ATTRIB::SMD )
+        {
+            if( aPad.IsAperturePad() )
+            {
+                if( ( aPad.GetLayerSet() & LSET{ F_Paste, B_Paste } ).any() )
+                    return TYPE::PASTE;
+
+                if( ( aPad.GetLayerSet() & LSET{ F_Mask, B_Mask } ).any() )
+                    return TYPE::MASK;
+
+                // Weird case: an aperture pad with no paste or mask layers
+                return std::nullopt;
+            }
+
+            return TYPE::SMD;
+        }
+        if( aPad.GetAttribute() == PAD_ATTRIB::CONN )
+            return TYPE::CONNECTOR;
+        if( aPad.GetAttribute() == PAD_ATTRIB::NON_COMPONENT )
+            return TYPE::NON_COMPONENT;
+        if( aPad.GetAttribute() == PAD_ATTRIB::NPTH )
+            return TYPE::NPTH;
+
+        return std::nullopt;
+    }
+
+private:
+    /**
+     * Resolve the type a TYPE::AUTO request actually wants.
+     *
+     * The order is:
+     *
+     * - the selected pad, if any
+     * - the last pad type placed
+     * - the first classified pad in the footprint pad list @a aFpPads
+     * - a THT default
+     */
+    TYPE resolveAutoType( const std::vector<const PAD*>& aFpPads, const PAD* aSelectedPad ) const
+    {
+        if( aSelectedPad )
+        {
+            std::optional<TYPE> selectedType = TypeFromPad( *aSelectedPad );
+            if( selectedType )
+                return *selectedType;
+        }
+
+        if( m_lastType != TYPE::AUTO )
+            return m_lastType;
+
+        for( const PAD* pad : aFpPads )
+        {
+            if( std::optional<TYPE> padType = TypeFromPad( *pad ) )
+                return *padType;
+        }
+
+        return TYPE::THT;
+    }
+
+    // Persistent store of the last real pad's ID for each type.
+    // Note that the pad with this UUID may not exist in the current footprint,
+    // or may no longer have the recorded type.
+    std::unordered_map<TYPE, KIID> m_lastRealPadsForType;
+
+    /// Persistent store of the last pad type
+    TYPE m_lastType = PAD_MASTER_PROVIDER::TYPE::AUTO;
+};
+
+
 PAD_TOOL::PAD_TOOL() :
         PCB_TOOL_BASE( "pcbnew.PadTool" ),
         m_previousHighContrastMode( HIGH_CONTRAST_MODE::NORMAL ),
-        m_editPad( niluuid )
-{}
+        m_editPad( niluuid ),
+        m_masterPadProvider( std::make_unique<PAD_MASTER_PROVIDER>() ),
+        m_bufferPad( std::make_unique<PAD>( nullptr ) )
+{
+    // Seed the paste buffer with a sensible default at startup.
+    m_bufferPad->ImportSettingsFrom( *m_masterPadProvider->MakeDefaultPad( PAD_MASTER_PROVIDER::TYPE::THT ) );
+}
+
+
+PAD_TOOL::~PAD_TOOL()
+{
+}
+
+
+void PAD_TOOL::RecordMasterPad( const PAD& aPad )
+{
+    m_masterPadProvider->RecordNewMasterPad( aPad );
+}
 
 
 void PAD_TOOL::Reset( RESET_REASON aReason )
@@ -142,7 +493,6 @@ int PAD_TOOL::pastePadProperties( const TOOL_EVENT& aEvent )
 {
     PCB_SELECTION_TOOL*  selTool = m_toolMgr->GetTool<PCB_SELECTION_TOOL>();
     const PCB_SELECTION& selection = selTool->GetSelection();
-    const PAD*           masterPad = frame()->GetDesignSettings().m_Pad_Master.get();
 
     BOARD_COMMIT commit( frame() );
 
@@ -152,7 +502,7 @@ int PAD_TOOL::pastePadProperties( const TOOL_EVENT& aEvent )
         if( item->Type() == PCB_PAD_T )
         {
             commit.Modify( item );
-            static_cast<PAD&>( *item ).ImportSettingsFrom( *masterPad );
+            static_cast<PAD&>( *item ).ImportSettingsFrom( *m_bufferPad );
         }
     }
 
@@ -178,7 +528,12 @@ int PAD_TOOL::copyPadSettings( const TOOL_EVENT& aEvent )
         if( item->Type() == PCB_PAD_T )
         {
             const PAD& selPad = static_cast<const PAD&>( *item );
-            frame()->GetDesignSettings().m_Pad_Master->ImportSettingsFrom( selPad );
+
+            // Store the settings in the buffer pad for paste
+            m_bufferPad->ImportSettingsFrom( selPad );
+
+            // And push into the master pad provider for future use
+            m_masterPadProvider->RecordNewMasterPad( selPad );
         }
     }
 
@@ -186,9 +541,27 @@ int PAD_TOOL::copyPadSettings( const TOOL_EVENT& aEvent )
 }
 
 
-static void doPushPadProperties( BOARD& board, const PAD& aSrcPad, BOARD_COMMIT& commit,
-                                 bool aSameFootprints, bool aPadShapeFilter, bool aPadOrientFilter,
-                                 bool aPadLayerFilter, bool aPadTypeFilter )
+/**
+ * Check if the sizes of two pads match on all relevant layers.
+ * Returns true if all sizes match, false otherwise.
+ */
+static bool padSizesMatch( const PAD& aPad1, const PAD& aPad2 )
+{
+    LSET relevantLayers = aPad1.Padstack().RelevantShapeLayers( aPad2.Padstack() );
+
+    for( PCB_LAYER_ID aLayer : relevantLayers )
+    {
+        if( aPad1.GetSize( aLayer ) != aPad2.GetSize( aLayer ) )
+            return false;
+    }
+
+    return true;
+}
+
+
+static void doPushPadProperties( BOARD& board, const PAD& aSrcPad, BOARD_COMMIT& commit, bool aSameFootprints,
+                                 bool aPadShapeFilter, bool aPadSizeFilter, bool aPadOrientFilter, bool aPadLayerFilter,
+                                 bool aPadTypeFilter )
 {
     const FOOTPRINT* refFootprint = aSrcPad.GetParentFootprint();
 
@@ -228,6 +601,9 @@ static void doPushPadProperties( BOARD& board, const PAD& aSrcPad, BOARD_COMMIT&
             }
 
             EDA_ANGLE padAngle = pad->GetOrientation() - footprint->GetOrientation();
+
+            if( aPadSizeFilter && ( !padSizesMatch( *pad, aSrcPad ) ) )
+                continue;
 
             if( aPadOrientFilter && ( padAngle != srcPadAngle ) )
                 continue;
@@ -278,7 +654,8 @@ int PAD_TOOL::pushPadSettings( const TOOL_EVENT& aEvent )
             BOARD_COMMIT commit( frame() );
 
             doPushPadProperties( *getModel<BOARD>(), *srcPad, commit, edit_Same_Modules, dlg.GetPadShapeFilter(),
-                                 dlg.GetPadOrientFilter(), dlg.GetPadLayerFilter(), dlg.GetPadTypeFilter() );
+                                 dlg.GetPadSizeFilter(), dlg.GetPadOrientFilter(), dlg.GetPadLayerFilter(),
+                                 dlg.GetPadTypeFilter() );
 
             commit.Push( _( "Push Pad Settings" ) );
 
@@ -588,22 +965,30 @@ int PAD_TOOL::PlacePad( const TOOL_EVENT& aEvent )
 
     struct PAD_PLACER : public INTERACTIVE_PLACER_BASE
     {
-        PAD_PLACER( PAD_TOOL* aPadTool, PCB_BASE_EDIT_FRAME* aFrame ) :
+        PAD_PLACER( PAD_TOOL* aPadTool, PCB_BASE_EDIT_FRAME* aFrame, PAD_MASTER_PROVIDER& aMasterPadProvider,
+                    PAD_MASTER_PROVIDER::TYPE aMasterType, std::unique_ptr<PAD> aSelectedPadCopy ) :
                 m_padTool( aPadTool ),
-                m_frame( aFrame ),
-                m_gridHelper( aPadTool->GetManager(), aFrame->GetMagneticItemsSettings() )
+                m_gridHelper( aPadTool->GetManager(), aFrame->GetMagneticItemsSettings() ),
+                m_masterPadProvider( aMasterPadProvider ),
+                m_masterPadType( aMasterType ),
+                m_selectedPadCopy( std::move( aSelectedPadCopy ) )
         {
-            neednewPadNumber = true;    // Use a new pad number when creatin a pad by default
+            m_frame = aFrame;
+            m_board = aFrame->GetBoard();
+
+            neednewPadNumber = true; // Use a new pad number when creating a pad by default
         }
 
-        virtual ~PAD_PLACER() = default;
+        ~PAD_PLACER() = default;
 
         std::unique_ptr<BOARD_ITEM> CreateItem() override
         {
-            PAD* pad = new PAD( m_board->GetFirstFootprint() );
-            PAD* master = m_frame->GetDesignSettings().m_Pad_Master.get();
+            std::unique_ptr<PAD> pad = std::make_unique<PAD>( m_board->GetFirstFootprint() );
 
-            pad->ImportSettingsFrom( *master );
+            const PAD master = m_masterPadProvider.GetMasterPad( m_masterPadType, m_board->GetFirstFootprint(),
+                                                                 m_selectedPadCopy.get() );
+
+            pad->ImportSettingsFrom( master );
 
             if( pad->CanHaveNumber() )
             {
@@ -622,7 +1007,7 @@ int PAD_TOOL::PlacePad( const TOOL_EVENT& aEvent )
                 neednewPadNumber = false;
             }
 
-            return std::unique_ptr<BOARD_ITEM>( pad );
+            return pad;
         }
 
         bool PlaceItem( BOARD_ITEM *aItem, BOARD_COMMIT& aCommit ) override
@@ -634,7 +1019,7 @@ int PAD_TOOL::PlacePad( const TOOL_EVENT& aEvent )
 
             if( pad )
             {
-                m_frame->GetDesignSettings().m_Pad_Master->ImportSettingsFrom( *pad );
+                m_masterPadProvider.RecordNewMasterPad( *pad );
                 aCommit.Add( aItem );
                 return true;
             }
@@ -674,12 +1059,32 @@ int PAD_TOOL::PlacePad( const TOOL_EVENT& aEvent )
             aItem->SetPosition( cursorPos );
         }
 
-        PAD_TOOL*            m_padTool;
-        PCB_BASE_EDIT_FRAME* m_frame;
-        PCB_GRID_HELPER      m_gridHelper;
+        PAD_TOOL*                 m_padTool;
+        PCB_GRID_HELPER           m_gridHelper;
+        PAD_MASTER_PROVIDER&      m_masterPadProvider;
+        PAD_MASTER_PROVIDER::TYPE m_masterPadType;
+        std::unique_ptr<PAD>      m_selectedPadCopy;
     };
 
-    PAD_PLACER placer( this, frame() );
+    const PAD_MASTER_PROVIDER::TYPE masterPadType = PAD_MASTER_PROVIDER::TypeFromAction( aEvent );
+
+    // The interactive placement helper clears the selection, so do this beforehand.
+    std::unique_ptr<PAD> selectedPad;
+
+    if( PCB_SELECTION_TOOL* selTool = m_toolMgr->GetTool<PCB_SELECTION_TOOL>() )
+    {
+        for( const EDA_ITEM* item : selTool->GetSelection() )
+        {
+            // Choose a pad from the selection if available
+            if( item->Type() == PCB_PAD_T )
+            {
+                selectedPad = std::make_unique<PAD>( *static_cast<const PAD*>( item ) );
+                break;
+            }
+        }
+    }
+
+    PAD_PLACER placer( this, frame(), *m_masterPadProvider, masterPadType, std::move( selectedPad ) );
 
     doInteractiveItemPlacement( aEvent, &placer, _( "Place pad" ),
                                 IPO_REPEAT | IPO_SINGLE_CLICK | IPO_ROTATE | IPO_FLIP );
@@ -926,6 +1331,11 @@ void PAD_TOOL::setTransitions()
     Go( &PAD_TOOL::pushPadSettings,         PCB_ACTIONS::pushPadSettings.MakeEvent() );
 
     Go( &PAD_TOOL::PlacePad,                PCB_ACTIONS::placePad.MakeEvent() );
+    Go( &PAD_TOOL::PlacePad,                PCB_ACTIONS::placeThtPad.MakeEvent() );
+    Go( &PAD_TOOL::PlacePad,                PCB_ACTIONS::placeSmdPad.MakeEvent() );
+    Go( &PAD_TOOL::PlacePad,                PCB_ACTIONS::placeNpthPad.MakeEvent() );
+    Go( &PAD_TOOL::PlacePad,                PCB_ACTIONS::placePasteAperturePad.MakeEvent() );
+
     Go( &PAD_TOOL::EnumeratePads,           PCB_ACTIONS::enumeratePads.MakeEvent() );
     Go( &PAD_TOOL::PadTable,                PCB_ACTIONS::padTable.MakeEvent() );
 

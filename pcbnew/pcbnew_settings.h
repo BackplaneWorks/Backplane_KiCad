@@ -141,6 +141,7 @@ public:
         int   search_panel_dock_direction;
         bool  show_layer_manager;
         bool  show_properties;
+        bool  show_git_commit_pane;
         bool  show_search;
         bool  show_net_inspector;
         bool  design_blocks_show;
@@ -264,6 +265,9 @@ public:
     bool      m_AllowFreePads;  // True: unlocked pads can be moved freely with respect to the footprint.
                                 // False (default): all pads are treated as locked for the purposes of
                                 // movement and any attempt to move them will move the footprint instead.
+
+    bool m_AreaAnchorPointSelection; // True: every reshapeable item in a multi-selection
+    // shows its own anchor point handles
 
     bool      m_ImportKeepKiCadLayerNames;
 

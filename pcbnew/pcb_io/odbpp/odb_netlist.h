@@ -18,14 +18,31 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _ODB_NETLIST_H_
-#define _ODB_NETLIST_H_
+#pragma once
 
-#include <wx/string.h>
+#include <map>
+#include <ostream>
+#include <string>
+#include <vector>
+
 
 // Structure for holding the ODB net point record.
 struct ODB_NET_RECORD
 {
+    /**
+    * Possible values for the "side" of an ODB net point.
+    *
+    * This is not the same as the subnet side (T/B)
+    * or matrix layer TOP/BOTTOM/INNER.
+    */
+    enum class SIDE
+    {
+        TOP,    ///< T
+        DOWN,   ///< D (i.e. bottom)
+        BOTH,   ///< B
+        INNER,  ///< I
+    };
+
     bool        smd;
     bool        hole;
     bool        is_via;
@@ -33,7 +50,7 @@ struct ODB_NET_RECORD
     std::string refdes;
     int         drill_radius;
     bool        mechanical;
-    std::string side; // B: Both, T: Top, D: Down
+    SIDE        side;
 
     // All these in PCB units, will be output in decimils
     int x_location;
@@ -67,7 +84,6 @@ public:
 private:
     BOARD*        m_board;
     PCB_IO_ODBPP* m_plugin;
-    std::string ComputeViaAccessSide( BOARD* aBoard, int top_layer, int bottom_layer );
 
     void InitNetPoints( std::map<size_t, std::vector<ODB_NET_RECORD>>& aRecords );
     /// Writes a list of records to the given output stream
@@ -75,5 +91,3 @@ private:
                                std::ostream&                                  aStream,
                                const ODB_FORMAT&                              aFormat );
 };
-
-#endif // _ODB_NETLIST_H_

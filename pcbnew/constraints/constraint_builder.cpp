@@ -23,6 +23,7 @@
 #include <cmath>
 #include <ranges>
 #include <set>
+#include <unordered_set>
 
 #include <base_units.h>
 #include <board.h>
@@ -32,8 +33,11 @@
 #include <geometry/seg.h>
 #include <geometry/shape_line_chain.h>
 #include <geometry/shape_poly_set.h>
+#include <pad.h>
 #include <pcb_dimension.h>
 #include <pcb_shape.h>
+#include <pcb_table.h>
+#include <pcb_tablecell.h>
 
 
 namespace
@@ -450,7 +454,7 @@ std::optional<CONSTRAINT_MEMBER> NearestAnchorAmong( const std::vector<PCB_SHAPE
 }
 
 
-std::vector<PCB_SHAPE*> CollectConstraintShapes( BOARD* aBoard, PCB_LAYER_ID aLayer )
+std::vector<PCB_SHAPE*> CollectConstraintShapes( const BOARD* aBoard, PCB_LAYER_ID aLayer )
 {
     std::vector<PCB_SHAPE*> shapes;
 
@@ -479,7 +483,7 @@ std::vector<PCB_SHAPE*> CollectConstraintShapes( BOARD* aBoard, PCB_LAYER_ID aLa
 }
 
 
-std::vector<BOARD_ITEM*> CollectConstrainableItems( BOARD* aBoard, PCB_LAYER_ID aLayer )
+std::vector<BOARD_ITEM*> CollectConstrainableItems( const BOARD* aBoard, PCB_LAYER_ID aLayer )
 {
     std::vector<BOARD_ITEM*> items;
 
@@ -502,16 +506,30 @@ std::vector<BOARD_ITEM*> CollectConstrainableItems( BOARD* aBoard, PCB_LAYER_ID 
     collect( aBoard->Drawings() );
 
     for( FOOTPRINT* footprint : aBoard->Footprints() )
+    {
         collect( footprint->GraphicalItems() );
+
+        // A pad spans several layers so its principal layer alone would hide an NPTH mounting hole
+        for( PAD* pad : footprint->Pads() )
+        {
+            bool visible = std::ranges::any_of( pad->GetLayerSet().Seq(),
+                                                [&]( PCB_LAYER_ID aPadLayer )
+                                                {
+                                                    return aBoard->IsLayerVisible( aPadLayer );
+                                                } );
+
+            if( visible && layerMatches( pad, aLayer ) )
+                items.push_back( pad );
+        }
+    }
 
     return items;
 }
 
 
-std::optional<CONSTRAINT_MEMBER> NearestConstraintAnchor( BOARD* aBoard, const VECTOR2I& aPos,
-                                                          double aMaxDist,
+std::optional<CONSTRAINT_MEMBER> NearestConstraintAnchor( const BOARD* aBoard, const VECTOR2I& aPos, double aMaxDist,
                                                           const std::vector<CONSTRAINT_MEMBER>& aExclude,
-                                                          PCB_LAYER_ID aLayer )
+                                                          PCB_LAYER_ID                          aLayer )
 {
     double                           best = aMaxDist;
     std::optional<CONSTRAINT_MEMBER> result;
@@ -540,7 +558,7 @@ std::optional<CONSTRAINT_MEMBER> NearestConstraintAnchor( BOARD* aBoard, const V
 }
 
 
-std::vector<ENDPOINT_BINDING> SelectEndpointBindings( BOARD* aBoard, const KIID& aItem, const VECTOR2I& aStart,
+std::vector<ENDPOINT_BINDING> SelectEndpointBindings( const BOARD* aBoard, const KIID& aItem, const VECTOR2I& aStart,
                                                       const std::optional<VECTOR2I>& aEnd, double aMaxDist,
                                                       PCB_LAYER_ID aLayer )
 {
@@ -665,20 +683,26 @@ std::vector<ENDPOINT_BINDING> SelectEndpointBindings( BOARD* aBoard, const KIID&
 }
 
 
-BOARD_ITEM* ResolveConstrainableItem( BOARD* aBoard, const KIID& aId )
+BOARD_ITEM* ResolveConstrainableItem( const BOARD* aBoard, const KIID& aId )
 {
     if( !aBoard )
         return nullptr;
 
     BOARD_ITEM* item = aBoard->ResolveItem( aId, true );
 
-    return item && ( item->Type() == PCB_SHAPE_T || dynamic_cast<PCB_DIMENSION_BASE*>( item ) )
-                   ? item
-                   : nullptr;
+    return IsConstrainableItem( item ) ? item : nullptr;
 }
 
 
-std::optional<KIID> NearestOutlineShape( BOARD* aBoard, const VECTOR2I& aPos, double aMaxDist, bool aAllowCircle,
+bool IsConstrainableItem( const BOARD_ITEM* aItem )
+{
+    return aItem
+           && ( aItem->Type() == PCB_SHAPE_T || aItem->Type() == PCB_PAD_T
+                || dynamic_cast<const PCB_DIMENSION_BASE*>( aItem ) );
+}
+
+
+std::optional<KIID> NearestOutlineShape( const BOARD* aBoard, const VECTOR2I& aPos, double aMaxDist, bool aAllowCircle,
                                          PCB_LAYER_ID aLayer )
 {
     double              best = aMaxDist;
@@ -763,11 +787,14 @@ std::vector<CONSTRAINT_ANCHOR_POINT> ConstraintItemAnchors( const BOARD_ITEM* aI
         return anchors;
     }
 
+    if( aItem->Type() == PCB_PAD_T )
+        return { { CONSTRAINT_ANCHOR::CENTER, static_cast<const PAD*>( aItem )->GetPosition() } };
+
     return {};
 }
 
 
-std::optional<VECTOR2I> ConstraintAnchorPosition( BOARD* aBoard, const CONSTRAINT_MEMBER& aMember )
+std::optional<VECTOR2I> ConstraintAnchorPosition( const BOARD* aBoard, const CONSTRAINT_MEMBER& aMember )
 {
     for( const CONSTRAINT_ANCHOR_POINT& a : ConstraintItemAnchors( ResolveConstrainableItem( aBoard, aMember.m_item ) ) )
     {
@@ -792,8 +819,8 @@ double InitialConstraintValue( PCB_CONSTRAINT_TYPE aType, double aMeasured,
 }
 
 
-std::optional<KIID> NearestConstrainedShape( BOARD* aBoard, const std::vector<KIID>& aCandidates, const VECTOR2I& aPos,
-                                             int aMaxDist )
+std::optional<KIID> NearestConstrainedShape( const BOARD* aBoard, const std::vector<KIID>& aCandidates,
+                                             const VECTOR2I& aPos, int aMaxDist )
 {
     if( !aBoard )
         return std::nullopt;
@@ -810,9 +837,87 @@ std::optional<KIID> NearestConstrainedShape( BOARD* aBoard, const std::vector<KI
 }
 
 
-std::optional<KIID> SelectRadialDimensionTarget( BOARD* aBoard, const KIID& aDimension,
-                                                 const VECTOR2I& aCenter, const VECTOR2I& aRim,
-                                                 double aMaxDist )
+std::unordered_set<KIID> CollectMemberCandidateIds( const BOARD* aBoard )
+{
+    std::unordered_set<KIID> ids;
+
+    if( !aBoard )
+        return ids;
+
+    auto collect =
+            [&]( const auto& aContainer )
+            {
+                for( BOARD_ITEM* item : aContainer )
+                {
+                    if( dynamic_cast<PCB_SHAPE*>( item ) || dynamic_cast<PCB_DIMENSION_BASE*>( item ) )
+                        ids.insert( item->m_Uuid );
+
+                    if( PCB_TABLE* table = dynamic_cast<PCB_TABLE*>( item ) )
+                    {
+                        for( PCB_TABLECELL* cell : table->GetCells() )
+                            ids.insert( cell->m_Uuid );
+                    }
+                }
+            };
+
+    collect( aBoard->Drawings() );
+
+    for( FOOTPRINT* footprint : aBoard->Footprints() )
+    {
+        collect( footprint->GraphicalItems() );
+
+        for( PAD* pad : footprint->Pads() )
+            ids.insert( pad->m_Uuid );
+    }
+
+    return ids;
+}
+
+
+std::vector<KIID> ConstrainedShapeIds( const BOARD* aBoard )
+{
+    std::vector<KIID> ids;
+
+    if( !aBoard )
+        return ids;
+
+    std::unordered_set<KIID> onBoard = CollectMemberCandidateIds( aBoard );
+    std::unordered_set<KIID> seen;
+
+    for( PCB_CONSTRAINT* constraint : CollectResolvedConstraints( aBoard ) )
+    {
+        for( const CONSTRAINT_MEMBER& member : constraint->GetMembers() )
+        {
+            if( onBoard.contains( member.m_item ) && seen.insert( member.m_item ).second )
+                ids.push_back( member.m_item );
+        }
+    }
+
+    return ids;
+}
+
+
+std::vector<PCB_CONSTRAINT*> CollectResolvedConstraints( const BOARD* aBoard )
+{
+    std::vector<PCB_CONSTRAINT*> constraints;
+
+    if( !aBoard )
+        return constraints;
+
+    constraints.assign( aBoard->Constraints().begin(), aBoard->Constraints().end() );
+
+    if( !aBoard->IsFootprintHolder() )
+        return constraints;
+
+    for( FOOTPRINT* footprint : aBoard->Footprints() )
+        constraints.insert( constraints.end(), footprint->Constraints().begin(), footprint->Constraints().end() );
+
+    return constraints;
+}
+
+
+std::optional<KIID> SelectRadialDimensionTarget( const BOARD* aBoard, const KIID& aDimension, const VECTOR2I& aCenter,
+                                                 const VECTOR2I& aRim, double aMaxDist )
 {
     if( !aBoard )
         return std::nullopt;
@@ -866,7 +971,7 @@ std::optional<KIID> SelectRadialDimensionTarget( BOARD* aBoard, const KIID& aDim
 }
 
 
-bool DimensionEndpointsBound( BOARD* aBoard, const PCB_DIMENSION_BASE* aDimension )
+bool DimensionEndpointsBound( const BOARD* aBoard, const PCB_DIMENSION_BASE* aDimension )
 {
     if( !aBoard || !aDimension )
         return false;
@@ -874,16 +979,11 @@ bool DimensionEndpointsBound( BOARD* aBoard, const PCB_DIMENSION_BASE* aDimensio
     const CONSTRAINT_MEMBER startMember( aDimension->m_Uuid, CONSTRAINT_ANCHOR::START );
     const CONSTRAINT_MEMBER endMember( aDimension->m_Uuid, CONSTRAINT_ANCHOR::END );
 
+    const std::vector<PCB_CONSTRAINT*> resolved = CollectResolvedConstraints( aBoard );
+
     auto anyConstraint = [&]( const auto& aMatch )
     {
-        if( std::ranges::any_of( aBoard->Constraints(), aMatch ) )
-            return true;
-
-        // Bindings are parented to the owning dimension footprint not necessarily the first so
-        // every footprint must be scanned to match the write path
-        return std::ranges::any_of( aBoard->Footprints(),
-                                    [&]( const FOOTPRINT* aFootprint )
-                                    { return std::ranges::any_of( aFootprint->Constraints(), aMatch ); } );
+        return std::ranges::any_of( resolved, aMatch );
     };
 
     // Radial dimension binds centre coincident plus rim on outline of one circle or arc
@@ -981,7 +1081,7 @@ bool DimensionHasValueMode( const PCB_DIMENSION_BASE* aDimension )
 }
 
 
-PCB_CONSTRAINT* FindDimensionLengthConstraint( BOARD* aBoard, const PCB_DIMENSION_BASE* aDimension )
+PCB_CONSTRAINT* FindDimensionLengthConstraint( const BOARD* aBoard, const PCB_DIMENSION_BASE* aDimension )
 {
     if( !aBoard || !aDimension )
         return nullptr;
@@ -1001,28 +1101,14 @@ PCB_CONSTRAINT* FindDimensionLengthConstraint( BOARD* aBoard, const PCB_DIMENSIO
                     || ( members[0] == endMember && members[1] == startMember ) );
     };
 
-    auto scan = [&]( const CONSTRAINTS& aList ) -> PCB_CONSTRAINT*
-    {
-        auto it = std::ranges::find_if( aList, matches );
-        return it != aList.end() ? *it : nullptr;
-    };
+    const std::vector<PCB_CONSTRAINT*> resolved = CollectResolvedConstraints( aBoard );
+    auto                               it = std::ranges::find_if( resolved, matches );
 
-    if( PCB_CONSTRAINT* c = scan( aBoard->Constraints() ) )
-        return c;
-
-    // Driving length is parented to the owning dimension footprint not necessarily the first so
-    // scan every footprint to match the write
-    for( FOOTPRINT* footprint : aBoard->Footprints() )
-    {
-        if( PCB_CONSTRAINT* c = scan( footprint->Constraints() ) )
-            return c;
-    }
-
-    return nullptr;
+    return it != resolved.end() ? *it : nullptr;
 }
 
 
-bool DimensionCanDrive( BOARD* aBoard, const PCB_DIMENSION_BASE* aDimension )
+bool DimensionCanDrive( const BOARD* aBoard, const PCB_DIMENSION_BASE* aDimension )
 {
     if( !DimensionHasValueMode( aDimension ) )
         return false;
@@ -1036,7 +1122,7 @@ bool DimensionCanDrive( BOARD* aBoard, const PCB_DIMENSION_BASE* aDimension )
 }
 
 
-DIM_VALUE_MODE DimensionValueMode( BOARD* aBoard, const PCB_DIMENSION_BASE* aDimension )
+DIM_VALUE_MODE DimensionValueMode( const BOARD* aBoard, const PCB_DIMENSION_BASE* aDimension )
 {
     PCB_CONSTRAINT* lengthConstraint = FindDimensionLengthConstraint( aBoard, aDimension );
 
@@ -1081,7 +1167,9 @@ PCB_CONSTRAINT* SetDimensionValueMode( BOARD* aBoard, PCB_DIMENSION_BASE* aDimen
             return existing;
         }
 
-        BOARD_ITEM* parent = aDimension->GetParentFootprint()
+        // A footprint owns its constraints only in the footprint editor since the board never
+        // resolves them
+        BOARD_ITEM* parent = aBoard->IsFootprintHolder() && aDimension->GetParentFootprint()
                                      ? static_cast<BOARD_ITEM*>( aDimension->GetParentFootprint() )
                                      : static_cast<BOARD_ITEM*>( aBoard );
 
@@ -1169,24 +1257,12 @@ void RemapPolygonVertexMembers( BOARD* aBoard, const KIID& aPoly, int aChangedIn
 }
 
 
-bool ConstraintIsDuplicateOnBoard( BOARD* aBoard, const PCB_CONSTRAINT* aConstraint )
+bool ConstraintIsDuplicateOnBoard( const BOARD* aBoard, const PCB_CONSTRAINT* aConstraint )
 {
-    auto scan = [&]( const CONSTRAINTS& aList )
-    {
-        return std::ranges::any_of( aList,
-                                    [&]( const PCB_CONSTRAINT* aExisting )
-                                    {
-                                        return ConstraintsAreDuplicate( *aExisting, *aConstraint );
-                                    } );
-    };
-
-    if( scan( aBoard->Constraints() ) )
-        return true;
-
-    return std::ranges::any_of( aBoard->Footprints(),
-                                [&]( FOOTPRINT* aFootprint )
+    return std::ranges::any_of( CollectResolvedConstraints( aBoard ),
+                                [&]( const PCB_CONSTRAINT* aExisting )
                                 {
-                                    return scan( aFootprint->Constraints() );
+                                    return ConstraintsAreDuplicate( *aExisting, *aConstraint );
                                 } );
 }
 
@@ -1266,7 +1342,7 @@ std::unique_ptr<PCB_CONSTRAINT> makeTangent( const PCB_SHAPE* aShape, const PCB_
 
 // Append unless an equal constraint exists on the board or already in this batch
 // One draw can touch the same target twice so the batch check matters
-void addUnlessDuplicate( BOARD* aBoard, std::vector<AUTO_CONSTRAINT>& aResult,
+void addUnlessDuplicate( const BOARD* aBoard, std::vector<AUTO_CONSTRAINT>& aResult,
                          std::unique_ptr<PCB_CONSTRAINT> aConstraint, bool aNeedsSolve )
 {
     if( ConstraintIsDuplicateOnBoard( aBoard, aConstraint.get() ) )
@@ -1287,7 +1363,7 @@ void addUnlessDuplicate( BOARD* aBoard, std::vector<AUTO_CONSTRAINT>& aResult,
 
 // A circle or closed ellipse has no endpoints so only its centre binds
 // Another curve centre reads as concentric an anchor coincides and an outline holds the centre
-std::vector<AUTO_CONSTRAINT> selectCenterBindings( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent )
+std::vector<AUTO_CONSTRAINT> selectCenterBindings( const BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent )
 {
     std::vector<AUTO_CONSTRAINT> result;
 
@@ -1333,7 +1409,7 @@ std::vector<AUTO_CONSTRAINT> selectCenterBindings( BOARD* aBoard, const PCB_SHAP
 
 
 // Endpoints landing on existing anchors bind coincident
-void selectEndpointCoincidents( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent,
+void selectEndpointCoincidents( const BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent,
                                 std::vector<AUTO_CONSTRAINT>& aResult, std::set<CONSTRAINT_ANCHOR>& aBound,
                                 std::vector<std::pair<VECTOR2I, KIID>>& aTouches )
 {
@@ -1360,7 +1436,7 @@ void selectEndpointCoincidents( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_IT
 
 // An endpoint with no anchor to coincide with but sitting on an outline binds point on line
 // Landing on a segment midpoint means the midpoint snap was used so bind midpoint instead
-void selectOutlineFallbacks( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent,
+void selectOutlineFallbacks( const BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent,
                              std::vector<AUTO_CONSTRAINT>& aResult, const std::set<CONSTRAINT_ANCHOR>& aBound,
                              std::vector<std::pair<VECTOR2I, KIID>>& aTouches )
 {
@@ -1401,7 +1477,7 @@ void selectOutlineFallbacks( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM*
 
 // A segment drawn through or near an existing shape anchor pins that point on the new segment
 // Near misses within the corridor bind too and the post push solve pulls the line onto them
-void selectCorridorPins( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent,
+void selectCorridorPins( const BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent,
                          std::vector<AUTO_CONSTRAINT>& aResult )
 {
     if( aShape->GetShape() != SHAPE_T::SEGMENT || aShape->GetStart() == aShape->GetEnd() )
@@ -1453,8 +1529,8 @@ void selectCorridorPins( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aPa
 
 
 // Tangents where the drawn shape touched another shape near tangency
-void selectTangents( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent, std::vector<AUTO_CONSTRAINT>& aResult,
-                     const std::vector<std::pair<VECTOR2I, KIID>>& aTouches )
+void selectTangents( const BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent,
+                     std::vector<AUTO_CONSTRAINT>& aResult, const std::vector<std::pair<VECTOR2I, KIID>>& aTouches )
 {
     for( const auto& [pos, id] : aTouches )
     {
@@ -1470,7 +1546,7 @@ void selectTangents( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent
 
 
 // A segment drawn in a constrained line mode keeps its axis
-void selectAxisConstraint( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent,
+void selectAxisConstraint( const BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent,
                            std::vector<AUTO_CONSTRAINT>& aResult )
 {
     if( aShape->GetShape() != SHAPE_T::SEGMENT || aShape->GetStart() == aShape->GetEnd() )
@@ -1491,8 +1567,8 @@ void selectAxisConstraint( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* a
 } // namespace
 
 
-std::vector<AUTO_CONSTRAINT> SelectShapeAutoConstraints( BOARD* aBoard, const PCB_SHAPE* aShape, BOARD_ITEM* aParent,
-                                                         bool aAxisConstraint )
+std::vector<AUTO_CONSTRAINT> SelectShapeAutoConstraints( const BOARD* aBoard, const PCB_SHAPE* aShape,
+                                                         BOARD_ITEM* aParent, bool aAxisConstraint )
 {
     std::vector<AUTO_CONSTRAINT> result;
 

@@ -23,6 +23,7 @@ set( KIAPI_PROTO_SRCS
     backplane/capabilities.proto
     backplane/lifecycle.proto
     backplane/assembly.proto
+    common/tasks.proto
 
     common/types/base_types.proto
     common/types/embedded_files.proto
@@ -45,6 +46,7 @@ set( KIAPI_PROTO_SRCS
     board/board_jobs.proto
     board/board_types.proto
     board/board_rules.proto
+    board/board_tasks.proto
 
     backplane/structure.proto
     backplane/sketch_route.proto
@@ -53,6 +55,7 @@ set( KIAPI_PROTO_SRCS
     schematic/schematic_commands.proto
     schematic/schematic_jobs.proto
     schematic/schematic_rules.proto
+    schematic/schematic_tasks.proto
     )
 
 # Generated C++ code must be in the build dir; it is dependent on the version of protoc installed

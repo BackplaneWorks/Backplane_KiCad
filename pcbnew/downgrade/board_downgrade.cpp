@@ -42,6 +42,7 @@
 #include <pad.h>
 #include <pcb_barcode.h>
 #include <pcb_shape.h>
+#include <pcb_stackup_table.h>
 #include <pcb_table.h>
 #include <pcb_tablecell.h>
 #include <pcb_textbox.h>
@@ -66,6 +67,7 @@
 #include <io/kicad/legacy_tuning_pattern.h>
 #include <geometry/shape_ellipse.h>
 #include <geometry/shape_poly_set.h>
+#include <board_tables/generated_table_refresh.h>
 #include <pcb_io/kicad_sexpr/pcb_io_kicad_sexpr.h>
 #include <pcb_io/kicad_sexpr/writers/pcb_writer_v9.h>
 #include <pcb_io/kicad_sexpr/writers/pcb_writer_v10.h>
@@ -109,6 +111,13 @@ static constexpr int VER_SIM_EXCLUSION = 20260828;
 static constexpr int VER_VIA_STACK = 20260830;
 static constexpr int VER_CUSTOM_PROPERTIES = 20260831;
 static constexpr int VER_DRILL_DRAWINGS = 20260901;
+static constexpr int VER_FOOTPRINT_HEIGHT = 20261017;
+static constexpr int VER_LINKED_PLACEMENT = 20261018;
+static constexpr int VER_IMAGE_ROTATION = 20261025;
+static constexpr int VER_IMAGE_OPACITY = 20261025;
+static constexpr int VER_FP_LIB_HEADER = 20261028;
+static constexpr int VER_STACKUP_TABLE = 20261030;
+static constexpr int VER_NON_COMPONENT_PAD = 20261031;
 
 // The board format these rules were written against. When SEXPR_BOARD_FILE_VERSION moves past
 // it, ClassifyBoardForDowngrade asserts in debug builds until the new format is covered.
@@ -120,7 +129,11 @@ static constexpr int VER_DRILL_DRAWINGS = 20260901;
 // 3. Otherwise add a VER_ constant above, a BOARD_RULE row that counts and strips the feature,
 //    and a dated row in BOARD_TOKENS or BOARD_VALUES for each new node head or bareword value.
 // 4. Set this constant to the new version.
-static constexpr int BOARD_DOWNGRADE_COVERED = 20260901;
+static constexpr int BOARD_DOWNGRADE_COVERED = 20261031;
+
+// The footprint library format these rules were reviewed against. It moves independently of the
+// board format, so it needs its own gate.
+static constexpr int FOOTPRINT_LIB_DOWNGRADE_COVERED = 20261031;
 
 
 static bool isEllipse( const BOARD_ITEM* aItem )
@@ -317,7 +330,13 @@ static void dropPcbPointsFp( FOOTPRINT* aFootprint )
 
 static void dropExtrudedBodiesFp( FOOTPRINT* aFootprint )
 {
-    aFootprint->ClearExtrudedBody();
+    aFootprint->ClearBody();
+}
+
+
+static void dropFootprintHeightsFp( FOOTPRINT* aFootprint )
+{
+    aFootprint->SetHeight( 0 );
 }
 
 
@@ -472,7 +491,7 @@ static int countExtrudedBodies( const BOARD* aBoard )
 
     for( FOOTPRINT* fp : aBoard->Footprints() )
     {
-        if( fp->HasExtrudedBody() )
+        if( fp->HasBody() )
             count++;
     }
 
@@ -484,6 +503,27 @@ static void dropExtrudedBodies( BOARD* aBoard )
 {
     for( FOOTPRINT* fp : aBoard->Footprints() )
         dropExtrudedBodiesFp( fp );
+}
+
+
+static int countFootprintHeights( const BOARD* aBoard )
+{
+    int count = 0;
+
+    for( FOOTPRINT* fp : aBoard->Footprints() )
+    {
+        if( fp->GetHeight() != 0 )
+            count++;
+    }
+
+    return count;
+}
+
+
+static void dropFootprintHeights( BOARD* aBoard )
+{
+    for( FOOTPRINT* fp : aBoard->Footprints() )
+        dropFootprintHeightsFp( fp );
 }
 
 
@@ -1410,6 +1450,23 @@ static int countCustomFpStackups( const BOARD* aBoard )
 }
 
 
+static int countNonComponentPads( const BOARD* aBoard )
+{
+    int count = 0;
+
+    for( const FOOTPRINT* fp : aBoard->Footprints() )
+    {
+        for( const PAD* pad : fp->Pads() )
+        {
+            if( pad->GetAttribute() == PAD_ATTRIB::NON_COMPONENT )
+                count++;
+        }
+    }
+
+    return count;
+}
+
+
 // Omission is distinct from lowering: do not leave replacement polygons, plain knockout
 // text, or electrically different vias behind when the user declines approximations.
 static void omitGraphicsFp( FOOTPRINT* aFootprint, const std::function<bool( const BOARD_ITEM* )>& aMatches )
@@ -1630,6 +1687,152 @@ static void dropGrids( BOARD* aBoard )
 }
 
 
+static bool isStackupTable( const BOARD_ITEM* aItem )
+{
+    return aItem->Type() == PCB_STACKUP_TABLE_T;
+}
+
+
+static int countStackupTables( const BOARD* aBoard )
+{
+    return countDrawings( aBoard, isStackupTable );
+}
+
+
+static void omitStackupTables( BOARD* aBoard )
+{
+    omitGraphics( aBoard, isStackupTable );
+}
+
+
+/**
+ * Cells are cloned, not moved, because a table deletes its own cells. The copy keeps the UUID,
+ * so repeated exports of one board stay identical.
+ */
+static PCB_TABLE* stackupTableToTable( const PCB_STACKUP_TABLE* aTable, BOARD_ITEM* aParent )
+{
+    PCB_TABLE* table = new PCB_TABLE( aParent, aTable->GetBorderWidth() );
+
+    table->SetLayer( aTable->GetLayer() );
+    table->SetLocked( aTable->IsLocked() );
+    table->SetBorderStroke( aTable->GetBorderStroke() );
+    table->SetSeparatorsStroke( aTable->GetSeparatorsStroke() );
+    table->SetStrokeExternal( aTable->StrokeExternal() );
+    table->SetStrokeHeaderSeparator( aTable->StrokeHeaderSeparator() );
+    table->SetStrokeColumns( aTable->StrokeColumns() );
+    table->SetStrokeRows( aTable->StrokeRows() );
+
+    const int cols = aTable->GetColCount();
+    const int rows = aTable->GetRowCount();
+
+    table->SetColCount( cols );
+
+    for( int col = 0; col < cols; ++col )
+        table->SetColWidth( col, aTable->GetColWidth( col ) );
+
+    for( int row = 0; row < rows; ++row )
+        table->SetRowHeight( row, aTable->GetRowHeight( row ) );
+
+    for( PCB_TABLECELL* cell : aTable->GetCells() )
+        table->AddCell( static_cast<PCB_TABLECELL*>( cell->Clone() ) );
+
+    return table;
+}
+
+
+static void lowerStackupTables( BOARD* aBoard )
+{
+    // Nothing on the downgrade path refreshes generated tables, and a saved table can be stale.
+    RefreshGeneratedTables( *aBoard );
+
+    std::vector<PCB_STACKUP_TABLE*> tables;
+
+    for( BOARD_ITEM* item : aBoard->Drawings() )
+    {
+        if( isStackupTable( item ) )
+            tables.push_back( static_cast<PCB_STACKUP_TABLE*>( item ) );
+    }
+
+    for( PCB_STACKUP_TABLE* live : tables )
+    {
+        EDA_GROUP* group = live->GetParentGroup();
+        PCB_TABLE* flat = stackupTableToTable( live, aBoard );
+
+        aBoard->Add( flat );
+
+        if( group )
+            group->AddItem( flat );
+
+        detachFromGroup( live );
+        aBoard->Remove( live );
+        delete live;
+    }
+}
+
+
+static int countReferenceImageRotations( const BOARD* aBoard )
+{
+    const auto isRotatedReferenceImage = []( const BOARD_ITEM* aItem )
+    {
+        if( aItem->Type() != PCB_REFERENCE_IMAGE_T )
+            return false;
+
+        const PCB_REFERENCE_IMAGE& refImage = static_cast<const PCB_REFERENCE_IMAGE&>( *aItem );
+        return !refImage.GetReferenceImage().GetOrientation().IsZero();
+    };
+
+    size_t count = std::count_if( aBoard->Drawings().begin(), aBoard->Drawings().end(), isRotatedReferenceImage );
+
+    for( FOOTPRINT* fp : aBoard->Footprints() )
+    {
+        count += std::count_if( fp->GraphicalItems().begin(), fp->GraphicalItems().end(), isRotatedReferenceImage );
+    }
+
+    return static_cast<int>( count );
+}
+
+
+static int countReferenceImageOpacities( const BOARD* aBoard )
+{
+    const auto isReferenceImageWithOpacity = []( const BOARD_ITEM* aItem )
+    {
+        if( aItem->Type() != PCB_REFERENCE_IMAGE_T )
+            return false;
+
+        const PCB_REFERENCE_IMAGE& refImage = static_cast<const PCB_REFERENCE_IMAGE&>( *aItem );
+        return refImage.GetReferenceImage().GetOpacity() < 1.0;
+    };
+
+    size_t count = std::count_if( aBoard->Drawings().begin(), aBoard->Drawings().end(), isReferenceImageWithOpacity );
+
+    for( FOOTPRINT* fp : aBoard->Footprints() )
+    {
+        count += std::count_if( fp->GraphicalItems().begin(), fp->GraphicalItems().end(), isReferenceImageWithOpacity );
+    }
+
+    return static_cast<int>( count );
+}
+
+
+static void dropReferenceImageOpacities( BOARD* aBoard )
+{
+    const auto clearOpacity = []( BOARD_ITEM* aItem )
+    {
+        if( aItem->Type() == PCB_REFERENCE_IMAGE_T )
+            static_cast<PCB_REFERENCE_IMAGE*>( aItem )->GetReferenceImage().SetOpacity( 1.0 );
+    };
+
+    for( BOARD_ITEM* item : aBoard->Drawings() )
+        clearOpacity( item );
+
+    for( FOOTPRINT* fp : aBoard->Footprints() )
+    {
+        for( BOARD_ITEM* item : fp->GraphicalItems() )
+            clearOpacity( item );
+    }
+}
+
+
 static int countDrillDrawings( const BOARD* aBoard )
 {
     return countDrawings( aBoard, isDrillDrawing );
@@ -1779,7 +1982,8 @@ static bool isUnreviewedDrawing( const BOARD_ITEM* aItem )
     case PCB_BARCODE_T:
     case PCB_GRID_ITEM_T:
     case PCB_DRILL_CHART_T:
-    case PCB_DRILL_MAP_T: return false;
+    case PCB_DRILL_MAP_T:
+    case PCB_STACKUP_TABLE_T: return false;
 
     default: return true;
     }
@@ -1856,6 +2060,30 @@ static void dropCustomProperties( BOARD* aBoard )
                          if( aItem )
                              aItem->ClearCustomProperties();
                      } );
+}
+
+
+static int countLinkedPlacementAreas( const BOARD* aBoard )
+{
+    int count = 0;
+
+    for( const ZONE* zone : aBoard->Zones() )
+    {
+        if( zone->GetLinkSet() != niluuid )
+            ++count;
+    }
+
+    return count;
+}
+
+
+static void dropLinkedPlacementAreas( BOARD* aBoard )
+{
+    for( ZONE* zone : aBoard->Zones() )
+    {
+        zone->SetLinkSet( niluuid );
+        zone->SetRepeatOptions( REPEAT_LAYOUT_OPTIONS() );
+    }
 }
 
 
@@ -2464,6 +2692,7 @@ struct BOARD_RULE
 
 static std::vector<BOARD_RULE> boardRules()
 {
+    // clang-format off
     return {
         { VER_CONSTRAINTS, DOWNGRADE_BUCKET::BLOCK, _( "Unreviewed generated objects" ),
           _( "Unknown generator kinds or detached generated children cannot be safely exported." ),
@@ -2541,6 +2770,16 @@ static std::vector<BOARD_RULE> boardRules()
         { VER_DRILL_DRAWINGS, DOWNGRADE_BUCKET::DROP, _( "Drill symbol configuration" ),
           _( "Drill symbol assignments and display settings are removed. Holes are unchanged." ),
           countDrillSymbolConfiguration, dropDrillSymbolConfiguration },
+        { VER_LINKED_PLACEMENT, DOWNGRADE_BUCKET::DROP, _( "Linked placement rule areas" ),
+          _( "Links between placement rule areas and their saved repeat layout options are removed. "
+             "The copied layouts are kept." ),
+          countLinkedPlacementAreas, dropLinkedPlacementAreas },
+        { VER_IMAGE_ROTATION, DOWNGRADE_BUCKET::BLOCK, _( "Rotated reference images" ),
+          _( "The target cannot store an image rotation." ),
+          countReferenceImageRotations, nullptr },
+        { VER_IMAGE_OPACITY, DOWNGRADE_BUCKET::DROP, _( "Reference image opacity" ),
+          _( "The target cannot store an image opacity. Opacity will be ignored." ),
+          countReferenceImageOpacities, dropReferenceImageOpacities },
         { VER_NET_CHAINS, DOWNGRADE_BUCKET::DROP, _( "Net chains" ),
           _( "No equivalent in the target. Connectivity will change." ),
           countNetChains, dropNetChains },
@@ -2551,6 +2790,9 @@ static std::vector<BOARD_RULE> boardRules()
         { VER_EXTRUDED_BODY, DOWNGRADE_BUCKET::DROP, _( "Extruded 3D bodies" ),
           _( "No equivalent in the target. The 3D body is left out." ),
           countExtrudedBodies, dropExtrudedBodies, dropExtrudedBodiesFp },
+        { VER_FOOTPRINT_HEIGHT, DOWNGRADE_BUCKET::DROP, _( "Footprint overall height" ),
+          _( "No equivalent in the target. The footprint height is left out." ),
+          countFootprintHeights, dropFootprintHeights, dropFootprintHeightsFp },
         { VER_THIEVING, DOWNGRADE_BUCKET::BLOCK, _( "Copper-thieving zones" ),
           _( "A refill in the target would turn the pattern into solid copper." ),
           countThievingZones, nullptr },
@@ -2655,6 +2897,11 @@ static std::vector<BOARD_RULE> boardRules()
         { VER_GROUP_LIB_ID, DOWNGRADE_BUCKET::DROP, _( "Group design block links" ),
           _( "The link from a group to its design block is removed." ),
           countGroupDesignBlocks, dropGroupDesignBlocks, dropGroupDesignBlocksFp },
+        { VER_STACKUP_TABLE, DOWNGRADE_BUCKET::LOWER, _( "Live stackup tables" ),
+          _( "Converted to a static table with the same contents. Column configuration and the "
+             "link to the board stackup are lost." ),
+          countStackupTables, lowerStackupTables, nullptr, omitStackupTables, nullptr,
+          _( "Stackup tables are omitted instead of converted to static tables." ) },
         { VER_TEXTBOX_KNOCKOUT, DOWNGRADE_BUCKET::LOWER, _( "Knockout text boxes" ),
           _( "Drawn as plain text boxes." ),
           countKnockoutTextBoxes, dropKnockoutTextBoxes, dropKnockoutTextBoxesFp, omitKnockoutTextBoxes,
@@ -2681,7 +2928,17 @@ static std::vector<BOARD_RULE> boardRules()
         { FIRST_FP_AFFINE_TRANSFORM, DOWNGRADE_BUCKET::BLOCK, _( "Scaled footprints" ),
           _( "The target cannot represent a scaled footprint." ),
           countScaledFootprints, nullptr },
+        {
+                VER_NON_COMPONENT_PAD,
+                // Theoretically, can degrade to SMD/CONN but it affects Gerbers attributes
+                DOWNGRADE_BUCKET::BLOCK,
+                _( "Non-component pads" ),
+                _( "The target cannot represent non-component pads." ),
+                countNonComponentPads,
+                nullptr,
+        },
     };
+    // clang-format on
 }
 
 
@@ -2885,6 +3142,13 @@ static constexpr DATED_TOKEN BOARD_TOKENS[] = {
     { "drill_chart", VER_DRILL_DRAWINGS },
     { "drill_map", VER_DRILL_DRAWINGS },
     { "drill_symbol_profile", VER_DRILL_DRAWINGS },
+    { "stackup_table", VER_STACKUP_TABLE },
+    { "kicad_footprint_lib", VER_FP_LIB_HEADER },
+    { "link", VER_LINKED_PLACEMENT },
+    { "connected_routing", VER_LINKED_PLACEMENT },
+    { "other_items", VER_LINKED_PLACEMENT },
+    { "group_items", VER_LINKED_PLACEMENT },
+    { "locked_items", VER_LINKED_PLACEMENT },
     { "templates", VER_VIA_STITCH },
     { "hatch_position", VER_ZONE_DEFAULTS },
     { "covering", VER_VIA_PROTECTION },
@@ -2939,6 +3203,7 @@ static constexpr DATED_TOKEN BOARD_VALUES[] = {
     { "via_stitch", VER_VIA_STITCH },
     { "via_stack", VER_VIA_STACK },
     { "pad_prop_pressfit", VER_PRESSFIT },
+    { "copper_only", VER_NON_COMPONENT_PAD },
     { "buried", VER_VIA_SPLIT },
 };
 
@@ -2946,6 +3211,12 @@ static constexpr DATED_TOKEN BOARD_VALUES[] = {
 int BoardDowngradeCoveredVersion()
 {
     return BOARD_DOWNGRADE_COVERED;
+}
+
+
+int FootprintLibDowngradeCoveredVersion()
+{
+    return FOOTPRINT_LIB_DOWNGRADE_COVERED;
 }
 
 

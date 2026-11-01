@@ -53,6 +53,26 @@
 #include "pin_numbers.h"
 
 
+/// Reports whether a symbol sets its own value for some inheritable property.
+using HAS_OWN_VALUE = bool ( * )( const LIB_SYMBOL& );
+
+
+/**
+ * Return the nearest ancestor of \a aSymbol that sets its own value, as reported by
+ * \a aHasOwn, or nullptr when the whole chain leaves it unset.
+ */
+static std::shared_ptr<LIB_SYMBOL> ancestorDefining( const LIB_SYMBOL* aSymbol, HAS_OWN_VALUE aHasOwn )
+{
+    std::shared_ptr<LIB_SYMBOL> source = aSymbol->GetParent().lock();
+    std::set<LIB_SYMBOL*>       visited;
+
+    while( source && !aHasOwn( *source ) && visited.insert( source.get() ).second )
+        source = source->GetParent().lock();
+
+    return source && aHasOwn( *source ) ? source : nullptr;
+}
+
+
 int DIALOG_LIB_SYMBOL_PROPERTIES::m_lastOpenedPage = 0;
 DIALOG_LIB_SYMBOL_PROPERTIES::LAST_LAYOUT DIALOG_LIB_SYMBOL_PROPERTIES::m_lastLayout =
         DIALOG_LIB_SYMBOL_PROPERTIES::LAST_LAYOUT::NONE;
@@ -329,13 +349,14 @@ bool DIALOG_LIB_SYMBOL_PROPERTIES::TransferDataToWindow()
     m_KeywordCtrl->ChangeValue( m_libEntry->GetRawKeyWords() );
 
     // Keywords are not a field, so the inherited value is shown as a hint
-    std::shared_ptr<LIB_SYMBOL> source = m_libEntry->GetParent().lock();
-    std::set<LIB_SYMBOL*>       visited;
+    auto hasOwnKeyWords = []( const LIB_SYMBOL& aSymbol )
+    {
+        return !aSymbol.GetRawKeyWords().IsEmpty();
+    };
 
-    while( source && source->GetRawKeyWords().IsEmpty() && visited.insert( source.get() ).second )
-        source = source->GetParent().lock();
+    std::shared_ptr<LIB_SYMBOL> source = ancestorDefining( m_libEntry, hasOwnKeyWords );
 
-    if( source && !source->GetRawKeyWords().IsEmpty() )
+    if( source )
     {
         m_keywordsSource = UnescapeString( source->GetName() );
         m_KeywordCtrl->SetHint( source->GetRawKeyWords() );
@@ -403,7 +424,25 @@ bool DIALOG_LIB_SYMBOL_PROPERTIES::TransferDataToWindow()
     m_PinsNameInsideButt->SetValue( m_libEntry->GetPinNameOffset() != 0 );
     m_pinNameOffset.ChangeValue( m_libEntry->GetPinNameOffset() );
 
-    m_fpFiltersPanel->SetFilters( m_libEntry->GetFPFilters() );
+    wxArrayString fpFilters = m_libEntry->GetFPFilters();
+    wxString      fpFiltersSource;
+
+    if( m_libEntry->GetRawFPFilters().IsEmpty() )
+    {
+        m_inheritedFpFilters = fpFilters;
+
+        auto hasOwnFilters = []( const LIB_SYMBOL& aSymbol )
+        {
+            return !aSymbol.GetRawFPFilters().IsEmpty();
+        };
+
+        std::shared_ptr<LIB_SYMBOL> fpSource = ancestorDefining( m_libEntry, hasOwnFilters );
+
+        if( fpSource )
+            fpFiltersSource = UnescapeString( fpSource->GetName() );
+    }
+
+    m_fpFiltersPanel->SetFilters( fpFilters, fpFiltersSource );
 
     m_cbDuplicatePinsAreJumpers->SetValue( m_libEntry->GetDuplicatePinNumbersAreJumpers() );
 
@@ -578,6 +617,11 @@ bool DIALOG_LIB_SYMBOL_PROPERTIES::Validate()
 
         if( subRef.IsEmpty() )
             subRef = LIB_SYMBOL::LetterSubReference( row + 1, 'A' );
+
+        // For empty names we only check letter reference for collsions, which means the user _could_
+        // end up with a collision if they name a unit with a digit, and then use the symbol in a
+        // schematic which uses .digit, -digit or _digit notation for units.  We'll leave that to ERC
+        // to catch.
 
         if( !seenSubRefs.insert( subRef.Upper() ).second )
         {
@@ -797,9 +841,6 @@ bool DIALOG_LIB_SYMBOL_PROPERTIES::TransferDataFromWindow()
             m_libEntry->SetLocalPower();
         else
             m_libEntry->SetGlobalPower();
-
-        // Power symbols must have value matching name for now
-        m_libEntry->GetValueField().SetText( newName );
     }
     else
     {
@@ -826,7 +867,9 @@ bool DIALOG_LIB_SYMBOL_PROPERTIES::TransferDataFromWindow()
         m_libEntry->SetPinNameOffset( 0 );   // pin text outside the body (name is on the pin)
     }
 
-    m_libEntry->SetFPFilters( m_fpFiltersPanel->GetFilters() );
+    wxArrayString fpFilters = m_fpFiltersPanel->GetFilters();
+
+    m_libEntry->SetFPFilters( fpFilters == m_inheritedFpFilters ? wxArrayString() : fpFilters );
 
     m_libEntry->SetDuplicatePinNumbersAreJumpers( m_cbDuplicatePinsAreJumpers->GetValue() );
 
@@ -964,9 +1007,6 @@ void DIALOG_LIB_SYMBOL_PROPERTIES::OnGridCellChanged( wxGridEvent& event )
 
 void DIALOG_LIB_SYMBOL_PROPERTIES::OnSymbolNameText( wxCommandEvent& event )
 {
-    if( m_OptionPower->IsChecked() )
-        m_grid->SetCellValue( m_fields->GetFieldRow( FIELD_T::VALUE ), FDC_VALUE, m_SymbolNameCtrl->GetValue() );
-
     OnModify();
 }
 
@@ -1230,19 +1270,6 @@ void DIALOG_LIB_SYMBOL_PROPERTIES::OnUpdateUI( wxUpdateUIEvent& event )
 {
     m_OptionPartsInterchangeable->Enable( !m_libEntry->IsDerived() && m_unitSpinCtrl->GetValue() > 1 );
     m_pinNameOffset.Enable( m_PinsNameInsideButt->GetValue() );
-
-    if( m_grid->IsCellEditControlShown() )
-    {
-        int row = m_grid->GetGridCursorRow();
-        int col = m_grid->GetGridCursorCol();
-
-        if( row == m_fields->GetFieldRow( FIELD_T::VALUE ) && col == FDC_VALUE && m_OptionPower->IsChecked() )
-        {
-            wxGridCellEditor* editor = m_grid->GetCellEditor( row, col );
-            m_SymbolNameCtrl->ChangeValue( editor->GetValue() );
-            editor->DecRef();
-        }
-    }
 
     // Handle shown columns changes
     std::bitset<64> shownColumns = m_grid->GetShownColumns();

@@ -49,6 +49,7 @@
 #include <pad.h>
 #include <fix_board_shape.h>
 #include <board_design_settings.h>
+#include <board_design_settings_defaults.h>
 #include <netclass.h>
 #include <project/net_settings.h>
 
@@ -324,6 +325,9 @@ std::unique_ptr<PAD> PCB_IO_EASYEDAPRO_V3_PARSER::createV3PAD( FOOTPRINT* aFootp
         pad->SetSize( PADSTACK::ALL_LAYERS, PCB_IO_EASYEDAPRO_PARSER::ScaleSize( VECTOR2D( 1.0, 1.0 ) ) );
         pad->SetShape( PADSTACK::ALL_LAYERS, PAD_SHAPE::RECTANGLE );
     }
+
+    if( hasHole )
+        PCB_IO_EASYEDAPRO_PARSER::SizeHoleOnlyPad( *pad, aRow.inner.value( "plated", true ) );
 
     pad->SetThermalSpokeAngle( ANGLE_90 );
 
@@ -910,7 +914,7 @@ void PCB_IO_EASYEDAPRO_V3_PARSER::ParseBoard( BOARD* aBoard, const nlohmann::jso
     BOARD_DESIGN_SETTINGS&                      bds = aBoard->GetDesignSettings();
 
     m_safeSpacing = nlohmann::json();
-    
+
     for( const V3_ROW& row : aDoc.rows )
     {
         if( row.type != wxS( "RULE" ) || V3GetString( row.inner, "ruleState" ) != wxS( "DEFAULT" ) )
@@ -998,7 +1002,7 @@ void PCB_IO_EASYEDAPRO_V3_PARSER::ParseBoard( BOARD* aBoard, const nlohmann::jso
 
             if( !netname.IsEmpty() )
             {
-                aBoard->Add( new NETINFO_ITEM( aBoard, netname, aBoard->GetNetCount() + 1 ), ADD_MODE::APPEND );
+                aBoard->FindOrAddNet( netname, aBoard->GetNetCount() + 1, ADD_MODE::APPEND );
             }
         }
         else if( row.type == wxS( "RULE" ) )
@@ -1208,6 +1212,7 @@ void PCB_IO_EASYEDAPRO_V3_PARSER::ParseBoard( BOARD* aBoard, const nlohmann::jso
                 zoneFillPoly.AddOutline( contour );
 
             zoneFillPoly.RebuildHolesFromContours();
+            zoneFillPoly.ClearArcs();
             zoneFillPoly.Fracture();
 
             std::unique_ptr<ZONE> zone = std::make_unique<ZONE>( aBoard );
@@ -1272,7 +1277,9 @@ void PCB_IO_EASYEDAPRO_V3_PARSER::ParseBoard( BOARD* aBoard, const nlohmann::jso
             zone->SetNet( aBoard->FindNet( netname ) );
             zone->SetLayer( klayer );
             zone->Outline()->Append( contour );
-            zone->SetFilledPolysList( klayer, contour );
+            SHAPE_POLY_SET teardropFill( contour );
+            teardropFill.ClearArcs();
+            zone->SetFilledPolysList( klayer, teardropFill );
             zone->SetNeedRefill( false );
             zone->SetIsFilled( true );
             zone->SetAssignedPriority( 600 );

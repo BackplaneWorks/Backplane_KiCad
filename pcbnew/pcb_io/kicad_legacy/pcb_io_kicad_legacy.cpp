@@ -1072,16 +1072,12 @@ void PCB_IO_KICAD_LEGACY::loadSETUP()
         }
         else if( TESTLINE( "PadSize" ) )
         {
-            BIU x = biuParse( line + SZ( "PadSize" ), &data );
-            BIU y = biuParse( data );
-
-            bds.m_Pad_Master->SetPadstackMode( PADSTACK::MODE::NORMAL );
-            bds.m_Pad_Master->SetSize( PADSTACK::ALL_LAYERS, VECTOR2I( x, y ) );
+            biuParse( line + SZ( "PadSize" ), &data ); // x
+            biuParse( data );                          // y
         }
         else if( TESTLINE( "PadDrill" ) )
         {
-            BIU tmp = biuParse( line + SZ( "PadDrill" ) );
-            bds.m_Pad_Master->SetDrillSize( VECTOR2I( tmp, tmp ) );
+            biuParse( line + SZ( "PadDrill" ) ); // drill size
         }
         else if( TESTLINE( "Pad2MaskClearance" ) )
         {
@@ -1561,7 +1557,7 @@ void PCB_IO_KICAD_LEGACY::loadPAD( FOOTPRINT* aFootprint )
         }
         else if( TESTLINE( "$EndPAD" ) )
         {
-            if( pad->GetSizeX() > 0 && pad->GetSizeY() > 0 )
+            if( pad->GetSize( PADSTACK::ALL_LAYERS ).x > 0 && pad->GetSize( PADSTACK::ALL_LAYERS ).y > 0 )
             {
                 aFootprint->Add( pad.release() );
             }
@@ -2030,20 +2026,17 @@ void PCB_IO_KICAD_LEGACY::loadNETINFO_ITEM()
             // if it is not the net 0, or if the net 0 does not exists.
             if( net && ( net->GetNetCode() > 0 || m_board->FindNet( 0 ) == nullptr ) )
             {
-                m_board->Add( net );
+                NETINFO_ITEM* boardNet = m_board->FindOrAddNet( net->GetNetname(), net->GetNetCode() );
 
                 // Be sure we have room to store the net in m_netCodes
                 if( (int)m_netCodes.size() <= netCode )
                     m_netCodes.resize( netCode+1 );
 
-                m_netCodes[netCode] = net->GetNetCode();
-                net = nullptr;
+                m_netCodes[netCode] = boardNet->GetNetCode();
             }
-            else
-            {
-                delete net;
-                net = nullptr;     // Avoid double deletion.
-            }
+
+            delete net;
+            net = nullptr;     // Avoid double deletion.
 
             return;     // preferred exit
         }

@@ -19,9 +19,13 @@
 
 #pragma once
 
+#include <memory>
+
 #include <tools/pcb_tool_base.h>
 
 class ACTION_MENU;
+class PAD;
+class PAD_MASTER_PROVIDER;
 class PCB_SHAPE;
 
 
@@ -29,6 +33,7 @@ class PAD_TOOL : public PCB_TOOL_BASE
 {
 public:
     PAD_TOOL();
+    ~PAD_TOOL();
 
     /// React to model/view changes
     void Reset( RESET_REASON aReason ) override;
@@ -62,6 +67,11 @@ public:
     void SetLastPadNumber( const wxString& aPadNumber ) { m_lastPadNumber = aPadNumber; }
 
     /**
+     * Record @a aPad as the template for the next pad of its type placed.
+     */
+    void RecordMasterPad( const PAD& aPad );
+
+    /**
      * Recombine an exploded pad (or one produced with overlapping polygons in an older version).
      * @param aPad the pad to run the recombination algorithm on
      * @param aIsDryRun if true the list will be generated but no changes will be made
@@ -74,10 +84,10 @@ protected:
     void setTransitions() override;
 
 private:
-    /// Apply pad settings from board design settings to a pad.
+    /// Apply pad settings from the buffer pad to a pad.
     int pastePadProperties( const TOOL_EVENT& aEvent );
 
-    /// Copy pad settings from a pad to the board design settings.
+    /// Copy pad settings from a pad to the tool's buffer pad.
     int copyPadSettings( const TOOL_EVENT& aEvent );
 
     /// Push pad settings from a pad to other pads on board or footprint.
@@ -92,4 +102,10 @@ private:
 
     HIGH_CONTRAST_MODE m_previousHighContrastMode;
     KIID               m_editPad;
+
+    /// When pads are created this provides the master pad settings.
+    std::unique_ptr<PAD_MASTER_PROVIDER> m_masterPadProvider;
+
+    /// The "buffer" pad that holds the settings applied by "Paste Pad Properties".
+    std::unique_ptr<PAD> m_bufferPad;
 };

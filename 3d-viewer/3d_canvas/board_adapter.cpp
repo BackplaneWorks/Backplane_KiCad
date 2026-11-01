@@ -31,10 +31,13 @@
 #include <board.h>
 #include <dialogs/dialog_color_picker.h>
 #include <footprint.h>
+#include <footprint_library_adapter.h>
 #include <layer_range.h>
+#include <project_pcb.h>
 #include <3d_math.h>
-#include "3d_fastmath.h"
 #include <geometry/geometry_utils.h>
+#include <layer_ids.h>
+#include <layer_range.h>
 #include <lset.h>
 #include <pgm_base.h>
 #include <settings/color_settings.h>
@@ -342,6 +345,47 @@ bool BOARD_ADAPTER::IsFootprintShown( const FOOTPRINT* aFootprint ) const
 }
 
 
+wxString BOARD_ADAPTER::GetFootprintLibraryPath( const FOOTPRINT* aFootprint ) const
+{
+    if( !aFootprint )
+        return wxEmptyString;
+
+    const wxString libraryName = aFootprint->GetFPID().GetLibNickname();
+
+    if( libraryName.empty() )
+        return wxEmptyString;
+
+    PROJECT* project = m_board ? m_board->GetProject() : nullptr;
+
+    // Footprint-editor boards have no project, so fall back to the 3D cache.
+    if( !project && m_3dModelManager )
+        project = m_3dModelManager->GetProject();
+
+    if( !project )
+        return wxEmptyString;
+
+    try
+    {
+        FOOTPRINT_LIBRARY_ADAPTER* adapter = PROJECT_PCB::FootprintLibAdapter( project );
+
+        if( !adapter )
+            return wxEmptyString;
+
+        // GetRow() can throw an exception
+        std::optional<LIBRARY_TABLE_ROW*> fpRow = adapter->GetRow( libraryName );
+
+        if( fpRow )
+            return LIBRARY_MANAGER::GetFullURI( *fpRow, true );
+    }
+    catch( ... )
+    {
+        // Do nothing if the libraryName is not found in lib table
+    }
+
+    return wxEmptyString;
+}
+
+
 int BOARD_ADAPTER::GetHolePlatingThickness() const noexcept
 {
     return m_board ? m_board->GetDesignSettings().GetHolePlatingThickness()
@@ -481,6 +525,14 @@ void BOARD_ADAPTER::InitSettings( std::shared_ptr<REPORTER> aStatusReporter,
 
             m_boardBodyThickness3DU = body_thickness * m_biuTo3Dunits;
         }
+    }
+
+    {
+        const float zScale = m_Cfg->m_Render.board_layer_thickness_scale;
+
+        // Scale the substrate thickness (only) according to the user-defined Z scale.
+        // Other layers don't get scaled.
+        m_boardBodyThickness3DU *= zScale;
     }
 
     // Init  Z position of each layer
@@ -819,6 +871,10 @@ void BOARD_ADAPTER::SetVisibleLayers( const std::bitset<LAYER_3D_END>& aLayers )
     m_Cfg->m_Render.show_plated_barrels            = aLayers.test( LAYER_3D_PLATED_BARRELS );
     m_Cfg->m_Render.show_copper_top                = aLayers.test( LAYER_3D_COPPER_TOP );
     m_Cfg->m_Render.show_copper_bottom             = aLayers.test( LAYER_3D_COPPER_BOTTOM );
+
+    for( int layer = LAYER_3D_COPPER_INNER_1; layer <= LAYER_3D_COPPER_INNER_30; ++layer )
+        m_Cfg->m_Render.show_copper_inner[layer - LAYER_3D_COPPER_INNER_1] = aLayers.test( layer );
+
     m_Cfg->m_Render.show_silkscreen_top            = aLayers.test( LAYER_3D_SILKSCREEN_TOP );
     m_Cfg->m_Render.show_silkscreen_bottom         = aLayers.test( LAYER_3D_SILKSCREEN_BOTTOM );
     m_Cfg->m_Render.show_soldermask_top            = aLayers.test( LAYER_3D_SOLDERMASK_TOP );
@@ -876,7 +932,7 @@ std::bitset<LAYER_3D_END> BOARD_ADAPTER::GetVisibleLayers() const
         // The preview has one board-body button and no layer controls, so it cannot follow
         // the per-layer flags the 3D viewer's appearance panel writes: a mask switched off
         // there would leave the preview showing bare substrate with no way back.
-        if( m_Cfg->m_Render.preview_show_board_body )
+        if( m_Cfg->m_Preview.show_board_body )
         {
             ret.set( LAYER_3D_BOARD,             true );
             ret.set( LAYER_3D_SOLDERMASK_TOP,    true );
@@ -886,8 +942,10 @@ std::bitset<LAYER_3D_END> BOARD_ADAPTER::GetVisibleLayers() const
         }
 
         ret.set( LAYER_3D_PLATED_BARRELS,    true );
-        ret.set( LAYER_3D_COPPER_TOP,        true );
-        ret.set( LAYER_3D_COPPER_BOTTOM,     true );
+
+        for( PCB_LAYER_ID layer : LAYER_RANGE( F_Cu, B_Cu, m_copperLayersCount ) )
+            ret.set( MapPCBLayerTo3DLayer( layer ), true );
+
         ret.set( LAYER_3D_SILKSCREEN_TOP,    true );
         ret.set( LAYER_3D_SILKSCREEN_BOTTOM, true );
         ret.set( LAYER_3D_USER_COMMENTS,     true );
@@ -923,6 +981,10 @@ std::bitset<LAYER_3D_END> BOARD_ADAPTER::GetVisibleLayers() const
     ret.set( LAYER_3D_PLATED_BARRELS,    m_Cfg->m_Render.show_plated_barrels );
     ret.set( LAYER_3D_COPPER_TOP,        m_Cfg->m_Render.show_copper_top );
     ret.set( LAYER_3D_COPPER_BOTTOM,     m_Cfg->m_Render.show_copper_bottom );
+
+    for( int layer = LAYER_3D_COPPER_INNER_1; layer <= LAYER_3D_COPPER_INNER_30; ++layer )
+        ret.set( layer, m_Cfg->m_Render.show_copper_inner[layer - LAYER_3D_COPPER_INNER_1] );
+
     ret.set( LAYER_3D_SILKSCREEN_TOP,    m_Cfg->m_Render.show_silkscreen_top );
     ret.set( LAYER_3D_SILKSCREEN_BOTTOM, m_Cfg->m_Render.show_silkscreen_bottom );
     ret.set( LAYER_3D_SOLDERMASK_TOP,    m_Cfg->m_Render.show_soldermask_top );
@@ -961,8 +1023,10 @@ std::bitset<LAYER_3D_END> BOARD_ADAPTER::GetVisibleLayers() const
             return ret;
 
         ret.set( LAYER_3D_BOARD,             true );
-        ret.set( LAYER_3D_COPPER_TOP,        m_board->IsLayerVisible( F_Cu ) );
-        ret.set( LAYER_3D_COPPER_BOTTOM,     m_board->IsLayerVisible( B_Cu ) );
+
+        for( PCB_LAYER_ID layer : LAYER_RANGE( F_Cu, B_Cu, m_copperLayersCount ) )
+            ret.set( MapPCBLayerTo3DLayer( layer ), m_board->IsLayerVisible( layer ) );
+
         ret.set( LAYER_3D_SILKSCREEN_TOP,    m_board->IsLayerVisible( F_SilkS ) );
         ret.set( LAYER_3D_SILKSCREEN_BOTTOM, m_board->IsLayerVisible( B_SilkS ) );
         ret.set( LAYER_3D_SOLDERMASK_TOP,    m_board->IsLayerVisible( F_Mask ) );
@@ -993,8 +1057,10 @@ std::bitset<LAYER_3D_END> BOARD_ADAPTER::GetVisibleLayers() const
             layers.set( commonLayer );
 
         ret.set( LAYER_3D_BOARD,             true );
-        ret.set( LAYER_3D_COPPER_TOP,        layers.test( F_Cu ) );
-        ret.set( LAYER_3D_COPPER_BOTTOM,     layers.test( B_Cu ) );
+
+        for( PCB_LAYER_ID layer : LAYER_RANGE( F_Cu, B_Cu, m_copperLayersCount ) )
+            ret.set( MapPCBLayerTo3DLayer( layer ), layers.test( layer ) );
+
         ret.set( LAYER_3D_SILKSCREEN_TOP,    layers.test( F_SilkS ) );
         ret.set( LAYER_3D_SILKSCREEN_BOTTOM, layers.test( B_SilkS ) );
         ret.set( LAYER_3D_SOLDERMASK_TOP,    layers.test( F_Mask ) );
@@ -1045,6 +1111,10 @@ std::bitset<LAYER_3D_END> BOARD_ADAPTER::GetDefaultVisibleLayers() const
     ret.set( LAYER_3D_PLATED_BARRELS,    true );
     ret.set( LAYER_3D_COPPER_TOP,        true );
     ret.set( LAYER_3D_COPPER_BOTTOM,     true );
+
+    for( int layer = LAYER_3D_COPPER_INNER_1; layer <= LAYER_3D_COPPER_INNER_30; ++layer )
+        ret.set( layer, true );
+
     ret.set( LAYER_3D_SILKSCREEN_TOP,    true );
     ret.set( LAYER_3D_SILKSCREEN_BOTTOM, true );
     ret.set( LAYER_3D_SOLDERMASK_TOP,    true );

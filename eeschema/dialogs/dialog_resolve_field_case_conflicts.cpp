@@ -24,21 +24,24 @@
 #include <sch_commit.h>
 #include <wx/grid.h>
 
+#include "grid_tricks.h"
 
-DIALOG_RESOLVE_FIELD_CASE_CONFLICTS::DIALOG_RESOLVE_FIELD_CASE_CONFLICTS(
-        wxWindow* aParent, SCH_EDIT_FRAME* aFrame,
-        std::vector<FIELD_CASE_CONFLICT> aConflicts ) :
+
+DIALOG_RESOLVE_FIELD_CASE_CONFLICTS::DIALOG_RESOLVE_FIELD_CASE_CONFLICTS( wxWindow* aParent, SCH_EDIT_FRAME* aFrame,
+                                                                          std::vector<FIELD_CASE_CONFLICT> conflicts ) :
         DIALOG_RESOLVE_FIELD_CASE_CONFLICTS_BASE( aParent ),
         m_frame( aFrame ),
-        m_conflicts( std::move( aConflicts ) ),
-        m_rowAction( m_conflicts.size(), ACTION_KEEP_FIRST )
+        m_conflicts( std::move( conflicts ) ),
+        m_rowAction( m_conflicts.size(), 0 )
 {
-    m_conflictsGrid->SetSelectionMode( wxGrid::wxGridSelectRows );
+    m_grid->SetSelectionMode( wxGrid::wxGridSelectRows );
 
-    m_headerLabel->SetLabel( wxString::Format(
-            _( "%zu symbols have user fields whose names differ only in case. "
-               "Choose how to resolve each before opening the table." ),
-            m_conflicts.size() ) );
+    m_headerLabel->SetLabel( wxString::Format( _( "%zu symbols have user fields whose names differ only in case. "
+                                                  "Choose how to resolve each before opening the table." ),
+                                               m_conflicts.size() ) );
+
+    m_grid->PushEventHandler( new GRID_TRICKS( m_grid ) );
+    m_grid->SetupColumnAutosizer( 3 );
 
     populateGrid();
 
@@ -49,49 +52,58 @@ DIALOG_RESOLVE_FIELD_CASE_CONFLICTS::DIALOG_RESOLVE_FIELD_CASE_CONFLICTS(
 }
 
 
+DIALOG_RESOLVE_FIELD_CASE_CONFLICTS::~DIALOG_RESOLVE_FIELD_CASE_CONFLICTS()
+{
+    // destroy GRID_TRICKS before m_conflictsGrid.
+    m_grid->PopEventHandler( true );
+}
+
+
 void DIALOG_RESOLVE_FIELD_CASE_CONFLICTS::populateGrid()
 {
-    wxGrid* g = m_conflictsGrid;
-    g->BeginBatch();
+    m_grid->BeginBatch();
+    m_grid->ClearRows();
+    m_grid->AppendRows( static_cast<int>( m_conflicts.size() ) );
 
-    if( g->GetNumberRows() > 0 )
-        g->DeleteRows( 0, g->GetNumberRows() );
+    auto formatValue =
+            []( const wxString& aValue )
+            {
+                return aValue.IsEmpty() ? wxString( _( "(empty)" ) ) : aValue;
+            };
 
-    g->AppendRows( static_cast<int>( m_conflicts.size() ) );
-
-    for( size_t i = 0; i < m_conflicts.size(); ++i )
+    for( int i = 0; i < (int) m_conflicts.size(); ++i )
     {
         const FIELD_CASE_CONFLICT& c = m_conflicts[i];
 
-        g->SetCellValue( i, 0, c.reference );
-        g->SetCellValue( i, 1, c.sheetPath.PathHumanReadable( false ) );
+        m_grid->SetCellValue( i, 0, c.reference );
+        m_grid->SetCellValue( i, 1, c.sheetPath.PathHumanReadable( false ) );
 
-        wxString fieldsLabel = wxString::Format( "%s\n%s",
-                                                 c.variants[0].first,
-                                                 c.variants[1].first );
+        wxString fieldsLabel = c.variants[0].first;
+        wxString valuesLabel = formatValue( c.variants[0].second );
 
-        wxString valuesLabel = wxString::Format( "%s\n%s",
-                                                 c.variants[0].second.IsEmpty()
-                                                         ? wxString( _( "(empty)" ) )
-                                                         : c.variants[0].second,
-                                                 c.variants[1].second.IsEmpty()
-                                                         ? wxString( _( "(empty)" ) )
-                                                         : c.variants[1].second );
+        for( size_t ii = 1; ii < c.variants.size(); ++ii )
+        {
+            fieldsLabel += '\n' + c.variants[ii].first;
+            valuesLabel += '\n' + formatValue( c.variants[ii].second );
+        }
 
-        g->SetCellValue( i, 2, fieldsLabel );
-        g->SetCellValue( i, 3, valuesLabel );
+        m_grid->SetCellValue( i, 2, fieldsLabel );
+        m_grid->SetCellValue( i, 3, valuesLabel );
 
         wxArrayString choices;
         choices.Add( wxString::Format( _( "Keep '%s'" ), c.variants[0].first ) );
-        choices.Add( wxString::Format( _( "Keep '%s'" ), c.variants[1].first ) );
+
+        for( size_t ii = 1; ii < c.variants.size(); ++ii )
+            choices.Add( wxString::Format( _( "Keep '%s'" ), c.variants[ii].first ) );
+
         choices.Add( _( "Join values" ) );
 
-        g->SetCellEditor( i, 4, new wxGridCellChoiceEditor( choices, false ) );
-        g->SetCellValue( i, 4, choices[0] );
+        m_grid->SetCellEditor( i, 4, new wxGridCellChoiceEditor( choices, false ) );
+        m_grid->SetCellValue( i, 4, choices[0] );
     }
 
-    g->AutoSizeRows();
-    g->EndBatch();
+    m_grid->AutoSizeRows();
+    m_grid->EndBatch();
 }
 
 
@@ -107,11 +119,8 @@ DIALOG_RESOLVE_FIELD_CASE_CONFLICTS::findSiblingRows( int aRow ) const
 
     for( size_t i = 0; i < m_conflicts.size(); ++i )
     {
-        if( static_cast<int>( i ) != aRow
-            && m_conflicts[i].caseFoldedKey.IsSameAs( key, false ) )
-        {
+        if( static_cast<int>( i ) != aRow && m_conflicts[i].caseFoldedKey.IsSameAs( key, false ) )
             siblings.push_back( static_cast<int>( i ) );
-        }
     }
 
     return siblings;
@@ -129,22 +138,23 @@ void DIALOG_RESOLVE_FIELD_CASE_CONFLICTS::onActionCellChanged( wxGridEvent& even
         return;
     }
 
-    wxString choice = m_conflictsGrid->GetCellValue( row, 4 );
-    ACTION   action = ACTION_KEEP_FIRST;
+    m_rowAction[row] = -1;  // join values
 
-    if( choice.Contains( m_conflicts[row].variants[1].first ) )
-        action = ACTION_KEEP_SECOND;
-    else if( choice == _( "Join values" ) )
-        action = ACTION_JOIN;
-
-    m_rowAction[row] = action;
+    for( int ii = 0; ii < (int) m_conflicts[row].variants.size(); ++ii )
+    {
+        if( m_grid->GetCellValue( row, 4 ).Contains( m_conflicts[row].variants[ii].first ) )
+        {
+            m_rowAction[row] = ii;
+            break;
+        }
+    }
 
     if( m_bulkApplyCheckbox->IsChecked() )
     {
         for( int sibling : findSiblingRows( row ) )
         {
-            m_rowAction[sibling] = action;
-            m_conflictsGrid->SetCellValue( sibling, 4, choice );
+            m_rowAction[sibling] = m_rowAction[row];
+            m_grid->SetCellValue( sibling, 4, m_grid->GetCellValue( row, 4 ) );
         }
     }
 
@@ -164,53 +174,53 @@ void DIALOG_RESOLVE_FIELD_CASE_CONFLICTS::applyResolutions()
     SCH_COMMIT commit( m_frame );
     wxString   sep = m_separatorCtrl->GetValue();
 
-    for( size_t i = 0; i < m_conflicts.size(); ++i )
+    for( size_t row = 0; row < m_conflicts.size(); ++row )
     {
-        FIELD_CASE_CONFLICT& c   = m_conflicts[i];
+        FIELD_CASE_CONFLICT& c   = m_conflicts[row];
         SCH_SYMBOL*          sym = c.symbol;
+        int                  action = m_rowAction[row];
 
         commit.Modify( sym, c.sheetPath.LastScreen() );
 
-        SCH_FIELD* a = sym->GetField( c.variants[0].first );
-        SCH_FIELD* b = sym->GetField( c.variants[1].first );
+        wxString value;
 
-        if( !a || !b || a == b )
-            continue;
-
-        const wxString& aValue = c.variants[0].second;
-        const wxString& bValue = c.variants[1].second;
-
-        switch( m_rowAction[i] )
+        if( action < 0 )    // join
         {
-        case ACTION_KEEP_FIRST:
-        {
-            wxString winning = aValue.IsEmpty() ? bValue : aValue;
-            a->SetText( winning );
-            sym->RemoveField( c.variants[1].first );
-            break;
+            for( const auto& [fieldName, fieldValue] : c.variants )
+            {
+                if( !value.IsEmpty() && !fieldValue.IsEmpty() )
+                    value += sep;
+
+                value += fieldValue;
+            }
+
+            action = 0;     // apply result to first field
         }
-        case ACTION_KEEP_SECOND:
+        else
         {
-            wxString winning = bValue.IsEmpty() ? aValue : bValue;
-            b->SetText( winning );
-            sym->RemoveField( c.variants[0].first );
-            break;
-        }
-        case ACTION_JOIN:
-        {
-            wxString joined;
+            if( action < (int) c.variants.size() )
+                value = c.variants[action].second;
 
-            if( !aValue.IsEmpty() && !bValue.IsEmpty() )
-                joined = aValue + sep + bValue;
+            for( const auto& [fieldName, fieldValue] : c.variants )
+            {
+                if( value.IsEmpty() )
+                    value = fieldValue;
+            }
+        }
+
+        for( int jj = 0; jj < (int) c.variants.size(); ++jj )
+        {
+            if( jj == action )
+            {
+                if( SCH_FIELD* field = sym->GetField( c.variants[jj].first ) )
+                    field->SetText( value );
+            }
             else
-                joined = aValue.IsEmpty() ? bValue : aValue;
-
-            a->SetText( joined );
-            sym->RemoveField( c.variants[1].first );
-            break;
-        }
+            {
+                sym->RemoveField( c.variants[jj].first );
+            }
         }
     }
 
-    commit.Push( _( "Resolve duplicate field names" ) );
+    commit.Push( _( "Resolve Duplicate Field Names" ) );
 }

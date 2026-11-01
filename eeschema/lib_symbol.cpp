@@ -432,6 +432,15 @@ void LIB_SYMBOL::Serialize( kiapi::schematic::types::SchematicSymbol& aOutput, b
     def.set_show_pin_names( GetShowPinNames() );
     PackDistance( *def.mutable_pin_name_offset(), GetPinNameOffset(), schIUScale );
 
+    // Derived symbols are serialized flattened (the inherited drawings are resolved into
+    // items above), but the inheritance relationship itself is still worth reporting.
+    if( !m_parentName.IsEmpty() )
+    {
+        LIB_ID parentId = m_libId;
+        parentId.SetLibItemName( m_parentName );
+        PackLibId( def.mutable_extends(), parentId );
+    }
+
     for( const auto& [unit, displayName] : GetUnitDisplayNames() )
     {
         SchematicUnitDisplayName* protoName = def.add_unit_display_names();
@@ -580,6 +589,9 @@ bool LIB_SYMBOL::Deserialize( const kiapi::schematic::types::SchematicSymbol& aI
     SetShowPinNumbers( def.show_pin_numbers() );
     SetShowPinNames( def.show_pin_names() );
     SetPinNameOffset( UnpackDistance( def.pin_name_offset(), schIUScale ) );
+
+    if( def.has_extends() )
+        SetParentName( wxString::FromUTF8( def.extends().entry_name() ) );
 
     if( def.has_pin_maps() )
     {
@@ -883,10 +895,20 @@ void LIB_SYMBOL::SetParent( LIB_SYMBOL* aParent )
 
 wxString LIB_SYMBOL::GetFootprint() const
 {
-    if( !GetField( FIELD_T::FOOTPRINT ) )
+    const SCH_FIELD* field = GetField( FIELD_T::FOOTPRINT );
+
+    if( !field )
         return wxEmptyString;
 
-    return GetFootprintField().GetShownText( INTERNAL );
+    // Placing a derived symbol inherits the parent's footprint the same way the description,
+    // keywords and filters do, so reporting none here disagrees with what lands on the schematic
+    if( field->GetText().IsEmpty() && IsDerived() )
+    {
+        if( std::shared_ptr<LIB_SYMBOL> parent = m_parent.lock() )
+            return parent->GetFootprint();
+    }
+
+    return field->GetShownText( INTERNAL );
 }
 
 

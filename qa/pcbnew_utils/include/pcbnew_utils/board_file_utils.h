@@ -17,14 +17,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
-#ifndef QA_PCBNEW_UTILS_BOARD_FILE_UTILS__H
-#define QA_PCBNEW_UTILS_BOARD_FILE_UTILS__H
+#pragma once
 
 #include <filesystem>
 #include <iostream>
 #include <memory>
 #include <string>
+
+#include <wx/string.h>
 
 class BOARD;
 class BOARD_ITEM;
@@ -103,9 +103,31 @@ template <typename ITEM> std::unique_ptr<ITEM> ReadItemFromStream( std::istream&
 std::unique_ptr<BOARD> ReadBoardFromFileOrStream( const std::string& aFilename,
                                                   std::istream& aFallback = std::cin );
 
+std::unique_ptr<BOARD> ReadBoardFromFile( const std::filesystem::path& aFilename );
+
+/**
+ * Require a board from the path relative to the pcbnew QA data directory.
+ *
+ * @param aFilename the path relative to the pcbnew QA data directory
+ * @returns a new #BOARD, or a test failure if it cannot be obtained.
+ */
+std::unique_ptr<BOARD> RequireBoardFromPcbnewQAData( const std::filesystem::path& aFilename );
+
 std::unique_ptr<FOOTPRINT> ReadFootprintFromFileOrStream( const std::string& aFilename,
                                                           std::istream& aFallback = std::cin );
+/**
+ * Read a footprint object  \a aFootprintName from \a aFileName.
+ *
+ * @note This no longer directly parses a FOOTPRINT object from a file.  This was always conceptually a
+ *       bad idea because it assumed a footprint library file would only ever be a FOOTPRINT object which
+ *       was wrong.  This now calls #PCB_IO_KICAD_SEXPR::LoadFootprint which loads a footprint library.
+ *       This means that the footprint name must be the file name of the originally saved file.
+ *
+ * @param aFilename is the full path and file name with extension of the file to load.
+ * @param aFootprintName is the name of the footprint to load.
+ * @return a pointer to the loaded #FOOTPRINT object or a nullptr if the footprint was not loaded.
+ */
+std::unique_ptr<FOOTPRINT> ReadFootprintFromFile( const std::filesystem::path& aFilename,
+                                                  const wxString& aFootprintName );
 
 } // namespace KI_TEST
-
-#endif // QA_PCBNEW_UTILS_BOARD_FILE_UTILS__H

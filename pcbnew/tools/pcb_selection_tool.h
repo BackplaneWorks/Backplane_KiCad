@@ -270,6 +270,12 @@ public:
      */
     PCB_GROUP* GetEnteredGroup() { return m_enteredGroup; }
 
+    /**
+     * Tell the painter whether items outside the entered group should be dimmed, and recolour
+     * the board if that changed.
+     */
+    void SetGroupEditModeActive( bool aActive );
+
     PCB_LAYER_ID GetActiveLayer() { return m_frame->GetActiveLayer(); }
 
     enum STOP_CONDITION
@@ -311,10 +317,17 @@ public:
      * footprint move rigidly with it, so only descendants outside a parent footprint count
      * (group members, see issue 6841).
      */
-    static bool HasLockedDescendant( const BOARD_ITEM* aItem );
+    static bool HasLockedDescendant( const BOARD_ITEM& aItem );
 
-    /// True if aItem may be selected while aEnteredGroup is entered (24967).
-    static bool isWithinEnteredGroup( BOARD_ITEM* aItem, PCB_GROUP* aEnteredGroup, bool aIsFootprintEditor );
+    /**
+     * True if an item may be selected by connection expansion.
+     *
+     * While @a aEnteredGroup is entered, @a aItem qualifies only if it is within that group's scope.
+     * Otherwise, it qualifies if it belongs to no group, or if its parent group is a generator
+     * that opts in through PCB_GENERATOR::IsSelectableAsConnected().
+     */
+    static bool itemIsSelectableAsConnected( const BOARD_ITEM& aItem, const PCB_GROUP* aEnteredGroup,
+                                             bool aIsFootprintEditor );
 
     /**
      * True if the Render tab's Footprints Front/Back switches leave aItem drawn, mirroring the
@@ -365,6 +378,13 @@ public:
     void FilterCollectorForFootprints( GENERAL_COLLECTOR& aCollector,
                                        const VECTOR2I& aWhere ) const;
 
+    /**
+     * @return true if the given point is contained in any of selected items' bounding boxes.
+     */
+    bool SelectionContains( const VECTOR2I& aPoint ) const;
+
+    SELECTION_MODE GetSelectionMode() const { return m_selectionMode; }
+
 protected:
     KIGFX::PCB_VIEW* view() const
     {
@@ -402,9 +422,12 @@ protected:
 
 private:
     /**
-     * Select the drill chart row under a point, when the chart itself is what is selected.
+     * Select the generated table row under a point, when the table itself is what is selected.
      */
-    bool selectChartRow( const VECTOR2I& aPosition );
+    bool selectGeneratedTableRow( const VECTOR2I& aPosition );
+
+    /// True when a selection mode switch must keep the point editor's block handles alive.
+    bool keepsBlockHandles() const;
 
     /**
      * Select an item pointed by the parameter \a aWhere.
@@ -615,11 +638,6 @@ private:
      * @param aGroup [optional] A group to remove the item from.
      */
     void unhighlight( EDA_ITEM* aItem, int aHighlightMode, SELECTION* aGroup = nullptr ) override;
-
-    /**
-     * @return true if the given point is contained in any of selected items' bounding boxes.
-     */
-    bool selectionContains( const VECTOR2I& aPoint ) const;
 
     /**
      * @return the distance from \a aWhere to \a aItem, up to and including \a aMaxDistance.

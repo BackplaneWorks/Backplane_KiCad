@@ -20,24 +20,26 @@
 
 #pragma once
 
-
 #include <map>
 
 #include <core/mirror.h>
 #include <eda_item.h>
 #include <geometry/approximation.h>
+#include <geometry/seg.h>
 #include <layer_ids.h>
 #include <properties/property.h>
 #include <lseq.h>
 #include <lset.h>
 #include <stroke_params.h>
 #include <geometry/eda_angle.h>
-#include "macros.h"
-#include "drc/drc_rule.h"
+#include <macros.h>
+#include <drc/drc_constraint_types.h>
+
 
 class BOARD;
 class BOARD_DESIGN_SETTINGS;
 class BOARD_ITEM_CONTAINER;
+class BOARD_ITEM_INDEX;
 class BOARD_COMMIT;
 class SHAPE_POLY_SET;
 class SHAPE_SEGMENT;
@@ -74,6 +76,18 @@ enum ZONE_LAYER_OVERRIDE
     ZLO_FORCE_FLASHED,
     ZLO_FORCE_NO_ZONE_CONNECTION
 };
+
+/**
+ * @return the axis an axis-aligned mirror about aCentre in aFlipDirection uses, as the infinite
+ *         line through the two points of the returned segment.
+ */
+inline SEG MIRROR_AXIS( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
+{
+    if( aFlipDirection == FLIP_DIRECTION::LEFT_RIGHT )
+        return SEG( aCentre, aCentre + VECTOR2I( 0, 1 ) );
+
+    return SEG( aCentre, aCentre + VECTOR2I( 1, 0 ) );
+}
 
 /**
  * A base class for any item which can be embedded within the #BOARD container class, and
@@ -425,7 +439,7 @@ public:
     bool IsLocked() const override;
     void SetLocked( bool aLocked ) override { m_isLocked = aLocked; }
 
-    bool IsIndexedInBoard() const { return m_boardCacheOwner != nullptr; }
+    bool IsIndexedInBoard() const { return m_owningIndex != nullptr; }
 
     int GetMaxError() const;
 
@@ -490,6 +504,14 @@ public:
      * @param aFlipDirection mirror across X axis instead of Y (the default).
      */
     virtual void Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection );
+
+    /**
+     * Mirror this object about an arbitrary axis, without changing its layer or side.
+     *
+     * @param aAxis defines the axis. The item is reflected over the (infinite) line
+     *              through the two axis points.
+     */
+    virtual void Mirror( const SEG& aAxis );
 
     /**
      * Perform any normalization required after a user rotate and/or flip.
@@ -600,10 +622,13 @@ protected:
     bool            m_isKnockout;
     bool            m_isLocked;
 
-    // Board that indexed this item, or nullptr. Set only by BOARD. Clones start detached.
-    mutable BOARD*  m_boardCacheOwner = nullptr;
+    /**
+     * Board index that indexes this item, or nullptr. Set only by the board's BOARD_ITEM_INDEX.
+     * Clones start detached.
+     */
+    mutable BOARD_ITEM_INDEX* m_owningIndex = nullptr;
 
-    friend class BOARD;
+    friend class BOARD_ITEM_INDEX;
 };
 
 DECLARE_ENUM_TO_WXANY( PCB_LAYER_ID );

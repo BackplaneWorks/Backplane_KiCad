@@ -570,7 +570,7 @@ TOOL_ACTION PCB_ACTIONS::placeStackup( TOOL_ACTION_ARGS()
         .Scope( AS_GLOBAL )
         .LegacyHotkeyName( "Add Stackup Table" )
         .FriendlyName( _( "Add Stackup Table" ) )
-        .Tooltip( _( "Add a board stackup table on a graphic layer" ) )
+        .Tooltip( _( "Add a board stackup table that follows the stackup" ) )
         .ToolbarState( TOOLBAR_STATE::TOGGLE )
         .Flags( AF_ACTIVATE ) );
 
@@ -614,6 +614,13 @@ TOOL_ACTION PCB_ACTIONS::placeReferenceImage( TOOL_ACTION_ARGS()
         .Icon( BITMAPS::image )
         .Flags( AF_ACTIVATE )
         .Parameter<PCB_REFERENCE_IMAGE*>( nullptr ) );
+
+TOOL_ACTION PCB_ACTIONS::convertImageToOutlines( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.InteractiveDrawing.convertImageToOutlines" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Convert to Outlines..." ) )
+        .Tooltip( _( "Trace the image into board graphics" ) )
+        .Icon( BITMAPS::image ) );
 
 TOOL_ACTION PCB_ACTIONS::placeText( TOOL_ACTION_ARGS()
         .Name( "pcbnew.InteractiveDrawing.text" )
@@ -1134,6 +1141,12 @@ TOOL_ACTION PCB_ACTIONS::mirrorV( TOOL_ACTION_ARGS()
         .Tooltip( _( "Mirrors selected item(s) across the X axis" ) )
         .Icon( BITMAPS::mirror_v ) );
 
+TOOL_ACTION PCB_ACTIONS::mirrorInteractive( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.InteractiveEdit.mirrorInteractive" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Mirror Interactive" ) )
+        .Tooltip( _( "Mirrors selected item(s) interactively" ) ) );
+
 TOOL_ACTION PCB_ACTIONS::swap( TOOL_ACTION_ARGS()
         .Name( "pcbnew.InteractiveEdit.swap" )
         .Scope( AS_GLOBAL )
@@ -1651,9 +1664,45 @@ TOOL_ACTION PCB_ACTIONS::placePad( TOOL_ACTION_ARGS()
         .Name( "pcbnew.PadTool.placePad" )
         .Scope( AS_GLOBAL )
         .FriendlyName( _( "Add Pad" ) )
-        .Tooltip( _( "Add a pad" ) )
+        .Tooltip( _( "Add a pad of the most recently-placed type, or a copy of the selected pad" ) )
         .ToolbarState( TOOLBAR_STATE::TOGGLE )
         .Icon( BITMAPS::pad )
+        .Flags( AF_ACTIVATE ) );
+
+TOOL_ACTION PCB_ACTIONS::placeThtPad( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.PadTool.placeThtPad" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Add a THT Pad" ) )
+        .Tooltip( _( "Add a through-hole pad" ) )
+        .ToolbarState( TOOLBAR_STATE::TOGGLE )
+        .Icon( BITMAPS::pad_tht )
+        .Flags( AF_ACTIVATE ) );
+
+TOOL_ACTION PCB_ACTIONS::placeSmdPad( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.PadTool.placeSmdPad" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Add an SMD Pad" ) )
+        .Tooltip( _( "Add a surface-mount pad" ) )
+        .ToolbarState( TOOLBAR_STATE::TOGGLE )
+        .Icon( BITMAPS::pad_smd )
+        .Flags( AF_ACTIVATE ) );
+
+TOOL_ACTION PCB_ACTIONS::placeNpthPad( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.PadTool.placeNpthPad" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Add an NPTH Pad" ) )
+        .Tooltip( _( "Add a non-plated through-hole pad" ) )
+        .ToolbarState( TOOLBAR_STATE::TOGGLE )
+        .Icon( BITMAPS::pad_npth )
+        .Flags( AF_ACTIVATE ) );
+
+TOOL_ACTION PCB_ACTIONS::placePasteAperturePad( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.PadTool.placePasteAperturePad" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Add a Paste Aperture Pad" ) )
+        .Tooltip( _( "Add a paste aperture pad" ) )
+        .ToolbarState( TOOLBAR_STATE::TOGGLE )
+        .Icon( BITMAPS::pad_paste_aperture )
         .Flags( AF_ACTIVATE ) );
 
 TOOL_ACTION PCB_ACTIONS::explodePad( TOOL_ACTION_ARGS()
@@ -1671,14 +1720,6 @@ TOOL_ACTION PCB_ACTIONS::recombinePad( TOOL_ACTION_ARGS()
         .FriendlyName( _( "Finish Pad Edit" ) )
         .Tooltip( _( "Regroups all touching graphic shapes into the edited pad" ) )
         .Icon( BITMAPS::custom_pad_to_primitives ) );
-
-TOOL_ACTION PCB_ACTIONS::defaultPadProperties( TOOL_ACTION_ARGS()
-        .Name( "pcbnew.PadTool.defaultPadProperties" )
-        .Scope( AS_GLOBAL )
-        .FriendlyName( _( "Default Pad Properties..." ) )
-        .Tooltip( _( "Edit the pad properties used when creating new pads" ) )
-        .Icon( BITMAPS::options_pad ) );
-
 
 // BOARD_EDITOR_CONTROL
 //
@@ -2738,7 +2779,7 @@ TOOL_ACTION PCB_ACTIONS::showFootprintAssociations( TOOL_ACTION_ARGS()
         .Scope( AS_GLOBAL )
         .FriendlyName( _( "Show Footprint Associations" ) )
         .Tooltip( _( "Show footprint library and schematic symbol associations" ) )
-        .Icon( BITMAPS::edit_cmp_symb_links ) );
+        .Icon( BITMAPS::link ) );
 
 //Geographic re-annotation tool
 TOOL_ACTION PCB_ACTIONS::boardReannotate( TOOL_ACTION_ARGS()
@@ -3085,6 +3126,34 @@ TOOL_ACTION PCB_ACTIONS::repeatLayout( TOOL_ACTION_ARGS()
         .Icon( BITMAPS::copy )
         );
 
+TOOL_ACTION PCB_ACTIONS::updateLinkedLayouts( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Multichannel.updateLinkedLayouts" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Update Linked Layouts" ) )
+        .Tooltip( _( "Copies the selected Rule Area onto the Rule Areas linked to it" ) )
+        .Icon( BITMAPS::refresh ) );
+
+TOOL_ACTION PCB_ACTIONS::expandToMatchingTopology( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Multichannel.expandToMatchingTopology" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Expand Selection by One Step" ) )
+        .Tooltip( _( "Adds the neighbouring parts, as long as the selection still repeats elsewhere on the board" ) )
+        .Icon( BITMAPS::select_same_sheet ) );
+
+TOOL_ACTION PCB_ACTIONS::expandToLargestTopology( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Multichannel.expandToLargestTopology" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Expand Selection to Largest Matching Topology" ) )
+        .Tooltip( _( "Adds parts until the selection no longer repeats elsewhere on the board" ) )
+        .Icon( BITMAPS::select_same_sheet ) );
+
+TOOL_ACTION PCB_ACTIONS::unlinkLayout( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Multichannel.unlinkLayout" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Unlink Layout" ) )
+        .Tooltip( _( "Removes the selected Rule Areas from the set of linked layouts" ) )
+        .Icon( BITMAPS::group_ungroup ) );
+
 // ROUTER_TOOL
 //
 TOOL_ACTION PCB_ACTIONS::routeSingleTrack( TOOL_ACTION_ARGS()
@@ -3201,6 +3270,17 @@ TOOL_ACTION PCB_ACTIONS::tuneSkew( TOOL_ACTION_ARGS()
         .ToolbarState( TOOLBAR_STATE::TOGGLE )
         .Flags( AF_ACTIVATE )
         .Parameter( PNS::PNS_MODE_TUNE_DIFF_PAIR_SKEW ) );
+
+
+TOOL_ACTION PCB_ACTIONS::routerSpreadTracks( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.InteractiveRouter.SpreadTracks" )
+        .Scope( AS_GLOBAL )
+        // Don't be tempted to remove "Modern Toolset only".  It's in the legacy property name.
+        .FriendlyName( _( "Spread Tracks" ) )
+        .ToolbarState( TOOLBAR_STATE::TOGGLE )
+        .Flags( AF_ACTIVATE )
+        .Icon( BITMAPS::spread_tracks )
+        .Parameter( PNS::PNS_MODE_SPREAD_TRACKS ) );
 
 TOOL_ACTION PCB_ACTIONS::routerInlineDrag( TOOL_ACTION_ARGS()
         .Name( "pcbnew.InteractiveRouter.InlineDrag" )
@@ -3410,6 +3490,10 @@ TOOL_ACTION PCB_ACTIONS::ddImportFootprint( TOOL_ACTION_ARGS()
 
 TOOL_ACTION PCB_ACTIONS::ddImportGraphics( TOOL_ACTION_ARGS()
         .Name( "pcbnew.InteractiveDrawing.ddImportGraphics" )
+        .Scope( AS_GLOBAL ) );
+
+TOOL_ACTION PCB_ACTIONS::ddPlaceReferenceImage( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.InteractiveDrawing.ddPlaceReferenceImage" )
         .Scope( AS_GLOBAL ) );
 
 // actions for footprint wizard frame

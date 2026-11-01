@@ -17,6 +17,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <boost/test/tools/context.hpp>
+#include <memory>
+
+#include <boost/test/unit_test.hpp>
+
 #include <pcbnew_utils/board_file_utils.h>
 
 // For PCB parsing
@@ -114,6 +119,28 @@ std::unique_ptr<BOARD> ReadBoardFromFileOrStream( const std::string& aFilename,
 }
 
 
+std::unique_ptr<BOARD> ReadBoardFromFile( const std::filesystem::path& aFilename )
+{
+    return ReadBoardFromFileOrStream( aFilename.string() );
+}
+
+
+std::unique_ptr<BOARD> RequireBoardFromPcbnewQAData( const std::filesystem::path& aFilename )
+{
+    std::unique_ptr<BOARD> board;
+
+    // Make it really clear in the test context which board is being loaded
+    BOOST_TEST_CONTEXT( "Loading board " << aFilename )
+    {
+        board = ReadBoardFromFile( KI_TEST::GetPcbnewTestDataDir() + aFilename.string() );
+
+        BOOST_REQUIRE( board );
+    }
+
+    return board;
+}
+
+
 std::unique_ptr<FOOTPRINT> ReadFootprintFromFileOrStream( const std::string& aFilename,
                                                           std::istream& aFallback )
 {
@@ -138,6 +165,22 @@ std::unique_ptr<FOOTPRINT> ReadFootprintFromFileOrStream( const std::string& aFi
     }
 
     return ReadItemFromStream<FOOTPRINT>( *in_stream );
+}
+
+
+std::unique_ptr<FOOTPRINT> ReadFootprintFromFile( const std::filesystem::path& aFilename,
+                                                  const wxString& aFootprintName )
+{
+    PCB_IO_KICAD_SEXPR io;
+    wxString           libPath;
+    wxFileName         fn( aFilename.string() );
+
+    if( fn.GetExt().Lower() == FILEEXT::KiCadFootprintFileExtension )
+        libPath = fn.GetPath();
+    else
+        libPath = aFilename.string();
+
+    return io.FootprintLoad( libPath, aFootprintName, true );
 }
 
 

@@ -88,6 +88,8 @@ static struct PGM_SINGLE_TOP : public PGM_BASE
         GetKiCadThreadPool().purge();
         GetKiCadThreadPool().wait();
 
+        // Library preloads aren't in the threadpool, but KIWAY::OnKifaceEnd() will cancel them
+
         Kiway.OnKiwayEnd();
 
         m_api_server.reset();
@@ -234,6 +236,8 @@ struct APP_SINGLE_TOP : public wxApp
         // pointer out from under them. See https://gitlab.com/kicad/code/kicad/-/issues/23373
         int ret = wxApp::OnExit();
         program.OnPgmExit();
+        program.ExitIfTeardownUnsafe();
+
         return ret;
     }
 
@@ -249,6 +253,8 @@ struct APP_SINGLE_TOP : public wxApp
         {
             Pgm().HandleException( std::current_exception() );
         }
+
+        program.SetRunResult( ret );
 
         return ret;
     }
@@ -369,9 +375,9 @@ bool PGM_SINGLE_TOP::OnPgmInit()
 
 #if !defined(BUILD_KIWAY_DLL)
 
-    // Only bitmap2component and pcb_calculator use this code currently, as they
-    // are not split to use single_top as a link image separate from a *.kiface.
-    // i.e. they are single part link images so don't need to load a *.kiface.
+    // Only pcb_calculator uses this code currently, as it is not split to use
+    // single_top as a link image separate from a *.kiface.
+    // i.e. it is a single part link image so doesn't need to load a *.kiface.
 
     // Get the getter, it is statically linked into this binary image.
     KIFACE_GETTER_FUNC* ki_getter = &KIFACE_GETTER;

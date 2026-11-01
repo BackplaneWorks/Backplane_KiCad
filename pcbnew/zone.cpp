@@ -48,6 +48,8 @@
 #include <api/api_pcb_utils.h>
 #include <api/board/board_types.pb.h>
 
+#include "board_commit.h"
+
 
 ZONE::ZONE( BOARD_ITEM_CONTAINER* aParent ) :
         BOARD_CONNECTED_ITEM( aParent, PCB_ZONE_T ),
@@ -57,6 +59,7 @@ ZONE::ZONE( BOARD_ITEM_CONTAINER* aParent ) :
         m_isRuleArea( false ),
         m_placementAreaEnabled( false ),
         m_placementAreaSourceType( PLACEMENT_SOURCE_T::SHEETNAME ),
+        m_linkSet( niluuid ),
         m_teardropType( TEARDROP_TYPE::TD_NONE ),
         m_PadConnection( ZONE_CONNECTION::NONE ),
         m_ZoneClearance( 0 ),
@@ -142,6 +145,8 @@ void ZONE::InitDataFromSrcInCopyCtor( const ZONE& aZone, PCB_LAYER_ID aLayer )
     m_placementAreaEnabled    = aZone.m_placementAreaEnabled;
     m_placementAreaSourceType = aZone.m_placementAreaSourceType;
     m_placementAreaSource     = aZone.m_placementAreaSource;
+    m_linkSet                 = aZone.m_linkSet;
+    m_repeatOptions           = aZone.m_repeatOptions;
 
     m_fillMode = aZone.m_fillMode; // solid vs. hatched
 
@@ -237,7 +242,37 @@ BOARD_ITEM* ZONE::Duplicate( bool addToParentGroup, BOARD_COMMIT* aCommit ) cons
 
         // Give the copy its own name so it does not collide with the original (issue 23131)
         if( !newZone->GetZoneName().IsEmpty() )
-            newZone->SetZoneName( board->GetUniqueZoneName( newZone->GetZoneName(), newZone ) );
+        {
+            auto inUse =
+                    [&]( const wxString& aName )
+                    {
+                        for( const ZONE* zone : board->Zones() )
+                        {
+                            if( zone != newZone && zone->GetZoneName() == aName )
+                                return true;
+                        }
+
+                        // Check the commit as well.  The array tool adds many zones at once, which
+                        // only end up in the board's Zones() list after the commit has been pushed.
+                        if( aCommit )
+                        {
+                            for( const auto& [item, change_type] : aCommit->StagedItems() )
+                            {
+                                if( item->Type() == PCB_ZONE_T && ( change_type & CHT_ADD ) > 0 )
+                                {
+                                    ZONE* zone = static_cast<ZONE*>( item );
+
+                                    if( zone != newZone && zone->GetZoneName() == aName )
+                                        return true;
+                                }
+                            }
+                        }
+
+                        return false;
+                    };
+
+            newZone->SetZoneName( BOARD::MakeUniqueZoneName( newZone->GetZoneName(), inUse ) );
+        }
     }
 
     return dupe;
@@ -1154,6 +1189,9 @@ void ZONE::GetMsgPanelInfo( EDA_DRAW_FRAME* aFrame, std::vector<MSG_PANEL_ITEM>&
 
         if( GetPlacementAreaEnabled() )
             aList.emplace_back( _( "Placement source" ), UnescapeString( GetPlacementAreaSource() ) );
+
+        if( m_linkSet != niluuid )
+            aList.emplace_back( _( "Layout link" ), _( "Linked" ) );
     }
     else if( IsOnCopperLayer() )
     {
@@ -1394,18 +1432,39 @@ void ZONE::Flip( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
 
 void ZONE::Mirror( const VECTOR2I& aMirrorRef, FLIP_DIRECTION aFlipDirection )
 {
-    VECTOR2I outlineRef = aMirrorRef;
+    Mirror( MIRROR_AXIS( aMirrorRef, aFlipDirection ) );
+}
+
+
+void ZONE::Mirror( const SEG& aAxis )
+{
+    const EDA_ANGLE axisAngle = -EDA_ANGLE( aAxis.B - aAxis.A );
+
+    SetHatchOrientation( GetHatchOrientation().Reflect( axisAngle ).Normalized() );
+    SetThievingOrientation( GetThievingOrientation().Reflect( axisAngle ).Normalized() );
 
     if( const FOOTPRINT* fp = GetParentFootprint() )
-        outlineRef = fp->GetTransform().InverseApply( aMirrorRef );
+    {
+        // Footprints are only ever flipped, never mirrored, so this is reached only from Flip(),
+        // which always passes a cardinal axis.
+        // (Handy, because otherwise we have to handle the footprint transform!)
+        const FLIP_DIRECTION flipDirection =
+                ( aAxis.A.x == aAxis.B.x ) ? FLIP_DIRECTION::LEFT_RIGHT : FLIP_DIRECTION::TOP_BOTTOM;
 
-    m_Poly->Mirror( outlineRef, aFlipDirection );
+        const VECTOR2I flipAxisStart = fp->GetTransform().InverseApply( aAxis.A );
+        m_Poly->Mirror( flipAxisStart, flipDirection );
+    }
+    else
+    {
+        m_Poly->Mirror( aAxis );
+    }
+
     invalidateBoundingBoxCache();
 
     HatchBorder();
 
     for( std::pair<const PCB_LAYER_ID, std::shared_ptr<SHAPE_POLY_SET>>& pair : m_FilledPolysList )
-        pair.second->Mirror( aMirrorRef, aFlipDirection );
+        pair.second->Mirror( aAxis );
 }
 
 

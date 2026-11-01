@@ -300,3 +300,46 @@ def test_pcb_export_drill( kitest: KiTestFixture,
 
     compare_filepath = kitest.get_data_file_path( "cli/basic_test/{}".format( golden_name ) )
     assert utils.textdiff_files( compare_filepath, output_drill_path, skip_line_count )
+
+
+def test_pcb_export_pos_exclude_bom(kitest: KiTestFixture, tmp_path: Path):
+    source = kitest.get_data_file_path("pcbnew/issue5830.kicad_pcb")
+    board = tmp_path / source.name
+
+    # Flag D2 as excluded from BOM, the stock board has no such footprint
+    text = source.read_text(encoding="utf-8")
+    d2 = text.index('(property "Reference" "D2"')
+    attr = text.index("(attr smd)", d2)
+    board.write_text(text[:attr] + "(attr smd exclude_from_bom)" + text[attr + len("(attr smd)"):], encoding="utf-8")
+
+    def export(*options: str) -> str:
+        out = tmp_path / "pos.pos"
+        out.unlink(missing_ok=True)
+        stdout, stderr, exitcode = utils.run_and_capture(
+            [utils.kicad_cli(), "pcb", "export", "pos", *options, "-o", str(out), str(board)])
+        assert exitcode == 0, stdout + stderr
+        return out.read_text(encoding="utf-8")
+
+    plain = export()
+    assert re.search(r"^D1 ", plain, re.M) and re.search(r"^D2 ", plain, re.M)
+
+    excluded = export("--exclude-bom")
+    assert re.search(r"^D1 ", excluded, re.M) and not re.search(r"^D2 ", excluded, re.M)
+
+
+def test_pcb_export_dxf_exclude_value(kitest: KiTestFixture, tmp_path: Path):
+    board = kitest.get_data_file_path("pcbnew/issue5830.kicad_pcb")
+
+    def export(name: str, *options: str) -> int:
+        out = tmp_path / name
+        stdout, stderr, exitcode = utils.run_and_capture(
+            [utils.kicad_cli(), "pcb", "export", "dxf", "--layers", "F.Fab", *options, "-o", str(out), str(board)])
+        assert exitcode == 0, stdout + stderr
+        return (out / "issue5830-F_Fab.dxf").stat().st_size
+
+    # Value and reference text are plotted on F.Fab, so each exclusion shrinks the file
+    both = export("both")
+    no_value = export("no_value", "--exclude-value")
+    neither = export("neither", "--exclude-value", "--exclude-refdes")
+
+    assert both > no_value > neither

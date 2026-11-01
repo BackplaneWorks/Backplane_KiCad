@@ -22,10 +22,12 @@
 #define ALTIUM_PCB_H
 
 #include <core/utf8.h>
+#include <geometry/shape_line_chain.h>
 #include <embedded_files.h>
 #include <functional>
 #include <layer_ids.h>
 #include <map>
+#include <set>
 #include <memory>
 #include <vector>
 #include <pcb_io/common/plugin_common_layer_mapping.h>
@@ -168,6 +170,9 @@ public:
     std::unique_ptr<FOOTPRINT> ParseFootprint( ALTIUM_PCB_COMPOUND_FILE& altiumLibFile,
                                                const wxString&           aFootprintName );
 
+    /// Special strings in the parsed text that KiCad has no variable for.
+    const std::set<wxString>& GetSpecialStrings() const { return m_specialStrings; }
+
 private:
     void checkpoint();
 
@@ -242,12 +247,23 @@ private:
     void HelperSetFootprintStackups();
 
     /**
-     * Hold netted copper a component draws until its pads exist.
+     * Hold copper a footprint draws until its pads exist.
      *
-     * @param aFallback places the copper on the board when no pad of its net touches it.
+     * @param aFallback places the copper where it would otherwise go when no pad of its net touches it.
      */
     void HelperDeferComponentCopper( FOOTPRINT* aFootprint, PCB_LAYER_ID aLayer, uint16_t aNet,
                                      std::unique_ptr<PCB_SHAPE> aShape, std::function<void()> aFallback );
+
+    /**
+     * Join each deferred copper shape on \a aCopper to the same-net numbered pad it touches.
+     *
+     * @param aExtensionPads copper-only pads made by earlier passes, which grow in place.
+     * @return true when any shape was joined.
+     */
+    bool HelperFoldPendingCopper( const LSET& aCopper, int aMaxError, std::set<PAD*>& aExtensionPads );
+
+    /// Run the fallback of every deferred copper shape no pad took.
+    void HelperPlaceUnfoldedCopper();
 
     /// Join deferred component copper and vias to the same-net pads they touch.
     void HelperFoldComponentCopperIntoPads();
@@ -285,6 +301,10 @@ private:
     void ConvertShapeBasedRegions6ToBoardItem( const AREGION6& aElem, const int aPrimitiveIndex );
     void ConvertShapeBasedRegions6ToFootprintItem( FOOTPRINT* aFootprint, const AREGION6& aElem,
                                                    const int aPrimitiveIndex );
+
+    /// Plain copper region of a footprint; inner layers wait to join the pad they touch.
+    void ConvertShapeBasedRegions6ToFootprintCopper( FOOTPRINT* aFootprint, const AREGION6& aElem,
+                                                     const int aPrimitiveIndex, uint16_t aNet );
     void ConvertShapeBasedRegions6ToBoardItemOnLayer( const AREGION6& aElem, PCB_LAYER_ID aLayer,
                                                       const int aPrimitiveIndex );
     void ConvertShapeBasedRegions6ToFootprintItemOnLayer( FOOTPRINT*      aFootprint,
@@ -310,6 +330,8 @@ private:
     void HelperFillMechanicalLayerAssignments( const std::vector<ABOARD6_LAYER_STACKUP>& aStackup );
 
     void HelperCreateBoardOutline( const std::vector<ALTIUM_VERTICE>& aVertices );
+    void HelperCreateBoardOutline( const SHAPE_LINE_CHAIN& aOutline );
+    void HelperFinishBoardOutline();
 
     void HelperSetZoneLayers( ZONE& aZone, const ALTIUM_LAYER aAltiumLayer );
     void HelperSetZoneKeepoutRestrictions( ZONE& aZone, const uint8_t aKeepoutRestrictions );
@@ -371,6 +393,12 @@ private:
     std::vector<FOOTPRINT*>              m_components;
     std::vector<ZONE*>                   m_polygons;
     std::vector<PCB_DIM_RADIAL*>         m_radialDimensions;
+
+    // The outline waits for every board cutout, since a cutout can run over the board edge
+    SHAPE_LINE_CHAIN              m_boardOutline;
+    std::vector<SHAPE_LINE_CHAIN> m_boardCutouts;
+    int                           m_outlineJogCount = 0;
+    int                           m_outlineJogLargest = 0;
     std::map<uint32_t, wxString>         m_unicodeStrings;
     std::vector<int>                     m_altiumToKicadNetcodes;
     std::map<wxString, wxString>         m_schematicNetNames; // upper cased name to schematic casing
@@ -405,6 +433,7 @@ private:
 
     PROGRESS_REPORTER* m_progressReporter;   ///< optional; may be nullptr
     REPORTER*          m_reporter;           ///< optional; may be nullptr
+    std::set<wxString> m_specialStrings;     ///< special strings in text that KiCad has no variable for
     unsigned           m_doneCount;
     unsigned           m_lastProgressCount;
     unsigned           m_totalCount;         ///< for progress reporting

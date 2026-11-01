@@ -27,7 +27,6 @@
 #include <pad.h>
 #include <project.h>
 #include <board_tables/generated_table_refresh.h>
-#include <pcb_drill_chart.h>
 #include <reporter.h>
 #include <pcbplot.h>
 #include <wx/filename.h>
@@ -88,11 +87,6 @@ bool PCB_PLOTTER::Plot( const wxString& aOutputPath, const LSEQ& aLayersToPlot,
         return false;
     }
 
-    // The one path GUI plotting, PNG, PS and every CLI plot job share. Common layers are
-    // included or a chart plotted as one slips past the policy
-    LSET plotted( { aLayersToPlot } );
-    plotted |= LSET( { aCommonLayers } );
-
     RefreshGeneratedTables( *m_board );
 
     PAGE_INFO existingPageInfo = m_board->GetPageSettings();
@@ -124,8 +118,7 @@ bool PCB_PLOTTER::Plot( const wxString& aOutputPath, const LSEQ& aLayersToPlot,
     LSEQ layersToPlot;
     LSEQ commonLayers;
 
-    const bool isPdfMultiPage =
-            ( m_plotOpts.GetFormat() == PLOT_FORMAT::PDF && m_plotOpts.m_PDFSingle );
+    const bool isPdfMultiPage = ( m_plotOpts.GetFormat() == PLOT_FORMAT::PDF && m_plotOpts.m_PDFSingle );
 
     if( aOutputPathIsSingle && !m_plotOpts.GetDXFMultiLayeredExportOption() && !isPdfMultiPage )
     {
@@ -140,7 +133,7 @@ bool PCB_PLOTTER::Plot( const wxString& aOutputPath, const LSEQ& aLayersToPlot,
         commonLayers = aCommonLayers;
     }
 
-    int finalPageCount = 0;
+    int                                            finalPageCount = 0;
     std::vector<std::pair<PCB_LAYER_ID, wxString>> layersToExport;
 
     // Skip the disabled copper layers and build the layer ID -> layer name mapping for plotter
@@ -290,14 +283,14 @@ bool PCB_PLOTTER::Plot( const wxString& aOutputPath, const LSEQ& aLayersToPlot,
             }
 
             // last page
-            if( (plot_format != PLOT_FORMAT::PDF && plot_format != PLOT_FORMAT::DXF)
-                    || (!m_plotOpts.m_PDFSingle && !m_plotOpts.GetDXFMultiLayeredExportOption())
-                    || i == aLayersToPlot.size() - 1
-                    || pageNum == finalPageCount )
+            if( ( plot_format != PLOT_FORMAT::PDF && plot_format != PLOT_FORMAT::DXF )
+                || ( !m_plotOpts.m_PDFSingle && !m_plotOpts.GetDXFMultiLayeredExportOption() )
+                || i == aLayersToPlot.size() - 1
+                || pageNum == finalPageCount )
             {
                 try
                 {
-                    plotter->EndPlot();
+                    success &= plotter->EndPlot();
                 }
                 catch( ... )
                 {
@@ -364,6 +357,17 @@ bool PCB_PLOTTER::Plot( const wxString& aOutputPath, const LSEQ& aLayersToPlot,
 bool PCB_PLOTTER::copperLayerShouldBeSkipped( PCB_LAYER_ID aLayerToPlot )
 {
     return ( LSET::AllCuMask() & ~m_board->GetEnabledLayers() )[aLayerToPlot];
+}
+
+
+LSET PCB_PLOTTER::DialogLayerSelection( const LSET& aChecked, const LSET& aEnabledLayers, bool aForJob )
+{
+    LSET shown = aChecked & aEnabledLayers;
+
+    if( aForJob )
+        return shown;
+
+    return shown | ( LSET::AllCuMask() & ~aEnabledLayers );
 }
 
 

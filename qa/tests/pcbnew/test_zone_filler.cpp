@@ -240,11 +240,10 @@ BOOST_DATA_TEST_CASE_F( ZONE_FILL_TEST_FIXTURE, RegressionZoneFillTests,
     {
         UNITS_PROVIDER unitsProvider( pcbIUScale, EDA_UNITS::INCH );
 
-        std::map<KIID, EDA_ITEM*> itemMap;
-        m_board->FillItemMap( itemMap );
+        BOARD_RC_ITEM_RESOLVER resolver( *m_board );
 
         for( const DRC_ITEM& item : violations )
-            BOOST_TEST_MESSAGE( item.ShowReport( &unitsProvider, RPT_SEVERITY_ERROR, itemMap ) );
+            BOOST_TEST_MESSAGE( item.ShowReport( &unitsProvider, RPT_SEVERITY_ERROR, resolver ) );
 
         BOOST_ERROR( wxString::Format( "Zone fill regression: %s failed", relPath ) );
     }
@@ -281,11 +280,10 @@ BOOST_FIXTURE_TEST_CASE( ZoneFillClearsLineEndings, ZONE_FILL_TEST_FIXTURE )
     }
 
     UNITS_PROVIDER            unitsProvider( pcbIUScale, EDA_UNITS::INCH );
-    std::map<KIID, EDA_ITEM*> itemMap;
-    m_board->FillItemMap( itemMap );
+    BOARD_RC_ITEM_RESOLVER    resolver( *m_board );
 
     for( const DRC_ITEM& item : violations )
-        BOOST_TEST_MESSAGE( item.ShowReport( &unitsProvider, RPT_SEVERITY_ERROR, itemMap ) );
+        BOOST_TEST_MESSAGE( item.ShowReport( &unitsProvider, RPT_SEVERITY_ERROR, resolver ) );
 
     BOOST_ERROR( wxString::Format( "Zone fill line-ending regression failed with %d clearance/shorting violations",
                                    (int) violations.size() ) );
@@ -327,8 +325,7 @@ BOOST_FIXTURE_TEST_CASE( RegressionZoneClearanceWithIterativeRefill, ZONE_FILL_T
 
                 std::vector<DRC_ITEM> violations;
 
-                std::map<KIID, EDA_ITEM*> itemMap;
-                m_board->FillItemMap( itemMap );
+                BOARD_RC_ITEM_RESOLVER resolver( *m_board );
                 UNITS_PROVIDER unitsProvider( pcbIUScale, EDA_UNITS::MM );
 
                 bds.m_DRCEngine->SetViolationHandler(
@@ -345,7 +342,7 @@ BOOST_FIXTURE_TEST_CASE( RegressionZoneClearanceWithIterativeRefill, ZONE_FILL_T
                                     violations.push_back( *aItem );
 
                                     BOOST_TEST_MESSAGE( aItem->ShowReport( &unitsProvider, RPT_SEVERITY_ERROR,
-                                                                           itemMap ) );
+                                                                           resolver ) );
                                 }
                             }
                         } );
@@ -404,11 +401,10 @@ BOOST_DATA_TEST_CASE_F( ZONE_FILL_TEST_FIXTURE, RegressionSliverZoneFillTests,
     {
         UNITS_PROVIDER unitsProvider( pcbIUScale, EDA_UNITS::INCH );
 
-        std::map<KIID, EDA_ITEM*> itemMap;
-        m_board->FillItemMap( itemMap );
+        BOARD_RC_ITEM_RESOLVER resolver( *m_board );
 
         for( const DRC_ITEM& item : violations )
-            BOOST_TEST_MESSAGE( item.ShowReport( &unitsProvider, RPT_SEVERITY_ERROR, itemMap ) );
+            BOOST_TEST_MESSAGE( item.ShowReport( &unitsProvider, RPT_SEVERITY_ERROR, resolver ) );
 
         BOOST_ERROR( wxString::Format( "Zone fill copper sliver regression: %s failed", relPath ) );
     }
@@ -1059,14 +1055,13 @@ BOOST_FIXTURE_TEST_CASE( RegressionThermalReliefAnnularRing45, ZONE_FILL_TEST_FI
 
                 if( !pad->FlashLayer( layer ) )
                 {
-                    BOOST_TEST_MESSAGE(
-                            wxString::Format( "Pad %s (drill %.2f mm, spoke angle %.0f deg) on net %s is inside the "
-                                              "zone but not flashing on %s",
-                                              pad->GetNumber(),
-                                              pcbIUScale.IUTomm( pad->GetDrillSizeX() ),
-                                              pad->GetThermalSpokeAngle().AsDegrees(),
-                                              pad->GetNetname(),
-                                              m_board->GetLayerName( layer ) ) );
+                    BOOST_TEST_MESSAGE( wxString::Format( "Pad %s (drill %.2f mm, spoke angle %.0f deg) on net %s "
+                                                          "is inside the zone but not flashing on %s",
+                                                          pad->GetNumber(),
+                                                          pcbIUScale.IUTomm( pad->GetDrillSize().x ),
+                                                          pad->GetThermalSpokeAngle().AsDegrees(),
+                                                          pad->GetNetname(),
+                                                          m_board->GetLayerName( layer ) ) );
                     padsWithMissingFlashing++;
                 }
             }
@@ -4038,7 +4033,14 @@ BOOST_FIXTURE_TEST_CASE( RegressionSameNetZoneFillScheduler, ZONE_FILL_TEST_FIXT
 
     const PCB_LAYER_ID layer = F_Cu;
 
-    for( int pass = 0; pass < 64; ++pass )
+    // The race is only reported reliably under a sanitizer, so other builds just smoke test the fill
+#if defined( KICAD_SANITIZE_THREADS ) || defined( KICAD_SANITIZE_ADDRESS )
+    const int passes = 64;
+#else
+    const int passes = 8;
+#endif
+
+    for( int pass = 0; pass < passes; ++pass )
     {
         BOOST_REQUIRE_NO_THROW( KI_TEST::FillZones( m_board.get() ) );
 
@@ -4252,11 +4254,10 @@ BOOST_FIXTURE_TEST_CASE( RegressionZoneFillNarrowBridge, ZONE_FILL_TEST_FIXTURE 
     {
         UNITS_PROVIDER unitsProvider( pcbIUScale, EDA_UNITS::MM );
 
-        std::map<KIID, EDA_ITEM*> itemMap;
-        m_board->FillItemMap( itemMap );
+        BOARD_RC_ITEM_RESOLVER resolver( *m_board );
 
         for( const DRC_ITEM& item : violations )
-            BOOST_TEST_MESSAGE( item.ShowReport( &unitsProvider, RPT_SEVERITY_ERROR, itemMap ) );
+            BOOST_TEST_MESSAGE( item.ShowReport( &unitsProvider, RPT_SEVERITY_ERROR, resolver ) );
     }
 
     BOOST_CHECK_MESSAGE( violations.empty(),

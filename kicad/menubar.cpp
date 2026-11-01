@@ -166,6 +166,11 @@ void KICAD_MANAGER_FRAME::doReCreateMenuBar()
                      ID_IMPORT_EASYPC_PROJECT,
                      BITMAPS::import_project );
 
+    importMenu->Add( _( "TARGET 3001! Project..." ),
+                     _( "Import TARGET 3001! project schematic and PCB (*.T3001)" ),
+                     ID_IMPORT_TARGET3001_PROJECT,
+                     BITMAPS::import_project );
+
     importMenu->Add( _( "OrCAD Project..." ),
                      _( "Import OrCAD schematic (*.dsn) and optional Allegro board (*.brd)" ),
                      ID_IMPORT_ORCAD_PROJECT,
@@ -209,6 +214,7 @@ void KICAD_MANAGER_FRAME::doReCreateMenuBar()
     ACTION_MENU* panelsMenu = new ACTION_MENU( false, controlTool );
     panelsMenu->SetTitle( _( "Panels" ) );
     panelsMenu->Add( KICAD_MANAGER_ACTIONS::showLocalHistory, ACTION_MENU::CHECK );
+    panelsMenu->Add( ACTIONS::showGitCommitPane, ACTION_MENU::CHECK );
     viewMenu->Add( panelsMenu );
 
     viewMenu->AppendSeparator();
@@ -234,7 +240,6 @@ void KICAD_MANAGER_FRAME::doReCreateMenuBar()
 
     toolsMenu->AppendSeparator();
     toolsMenu->Add( KICAD_MANAGER_ACTIONS::viewGerbers );
-    toolsMenu->Add( KICAD_MANAGER_ACTIONS::convertImage );
     toolsMenu->Add( KICAD_MANAGER_ACTIONS::showCalculator );
     toolsMenu->Add( KICAD_MANAGER_ACTIONS::editDrawingSheet );
 

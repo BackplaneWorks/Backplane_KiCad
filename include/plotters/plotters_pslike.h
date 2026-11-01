@@ -201,10 +201,9 @@ public:
                            int aWidth, void* aData = nullptr ) override;
 
     /**
-     * PostScript-likes at the moment are the only plot engines supporting bitmaps.
+     * Plot a bitmap, applying an overall opacity on top of the image's own alpha.
      */
-    virtual void PlotImage( const wxImage& aImage, const VECTOR2I& aPos,
-                            double aScaleFactor ) override;
+    virtual void PlotImage( const wxImage& aImage, const VECTOR2I& aPos, double aScaleFactor, double aAlpha ) override;
 
     virtual void PenTo( const VECTOR2I& pos, char plume ) override;
     virtual void Text( const VECTOR2I&        aPos,
@@ -256,6 +255,7 @@ public:
             m_pageTreeHandle( 0 ),
             m_fontResDictHandle( 0 ),
             m_imgResDictHandle( 0 ),
+            m_extGStateResDictHandle( 0 ),
             m_jsNamesHandle( 0 ),
             m_pageStreamHandle( -1 ),
             m_streamLengthHandle( 0 ),
@@ -264,6 +264,7 @@ public:
             m_3dModelHandle( -1 ),
             m_3dExportMode( false ),
             m_usedBase14Fonts( false ),
+            m_currentAlpha( 1.0 ),
             m_strokeFontManager( nullptr ),
             m_outlineFontManager( nullptr )
     {
@@ -438,10 +439,10 @@ public:
 
     void Set3DExport( bool aYes ) { m_3dExportMode = aYes; }
 
-    /**
+    /*
      * PDF images are handles as inline, not XObject streams...
      */
-    void PlotImage( const wxImage& aImage, const VECTOR2I& aPos, double aScaleFactor ) override;
+    void PlotImage( const wxImage& aImage, const VECTOR2I& aPos, double aScaleFactor, double aAlpha ) override;
 
     /**
      * Generates the camera to world matrix for use with a 3D View.
@@ -517,6 +518,9 @@ protected:
      * PDF supports colors fully. It actually has distinct fill and pen colors,
      * but we set both at the same time.
      *
+     * Alpha is emitted as an ExtGState that contains that alpha value.
+     * A new ExtGState object is allocated if the alpha value has not been used before.
+     *
      * XXX Keeping them divided could result in a minor optimization in
      * Eeschema filled shapes, but would propagate to all the other plot
      * engines. Also arcs are filled as pies but only the arc is stroked so
@@ -531,6 +535,14 @@ protected:
      * only, no output is done.
      */
     int allocPdfObject();
+
+    /**
+     * Return the ExtGState resource handle for the given alpha, allocating a new object the
+     * first time that alpha is used.
+     *
+     * @param aAlpha The alpha value [0.0 - 1.0]
+     */
+    int getExtGStateHandleForAlpha( double aAlpha );
 
     /**
      * Open a new PDF object and returns the handle if the parameter is -1.
@@ -584,9 +596,70 @@ protected:
     std::string encodeByteString( const std::string& aBytes );
 
 protected:
+    /**
+     * The PDF cross-reference table.
+     *
+     * This is a table of file offsets for each PDF object "handle" (int)
+     */
+    class XREF_TABLE
+    {
+    public:
+        void Reset()
+        {
+            m_offsets.assign( 1, 0 );
+        }
+
+        /**
+         * Allocate a new PDF object handle. Object 0 is reserved by the PDF
+         * format and is never handed out.
+         *
+         * You must fill in the file offset for this handle using SetOffset()
+         * before the object is useable.
+         *
+         * @return The newly allocated handle.
+         */
+        int Allocate()
+        {
+            m_offsets.push_back( 0 );
+            return static_cast<int>( m_offsets.size() ) - 1;
+        }
+
+        /**
+         * Is the given PDF object handle in the table?
+         */
+        bool IsValid( int aHandle ) const
+        {
+            return aHandle > 0 && aHandle < static_cast<int>( m_offsets.size() );
+        }
+
+        /**
+         * Set the file offset for a given PDF object handle.
+         *
+         * @param aHandle The PDF object handle.
+         * @param aOffset The file offset where the object starts.
+         */
+        void SetOffset( int aHandle, long aOffset )
+        {
+            wxASSERT_MSG( IsValid( aHandle ), "PDF object handle is not valid" );
+            wxASSERT_MSG( aOffset >= 0, "PDF object offset must be non-negative" );
+
+            if( IsValid( aHandle ) )
+                m_offsets[aHandle] = aOffset;
+        }
+
+        const std::vector<long>& Entries() const
+        {
+            return m_offsets;
+        }
+
+    private:
+        std::vector<long> m_offsets = { 0 };
+    };
+
     int               m_pageTreeHandle;           ///< Handle to the root of the page tree object.
     int               m_fontResDictHandle;        ///< Font resource dictionary.
     int               m_imgResDictHandle;         ///< Image resource dictionary.
+    int               m_extGStateResDictHandle;   ///< Graphics state resource dictionary.
     int               m_jsNamesHandle;            ///< Handle for Names dictionary with JS.
     std::vector<int>  m_pageHandles;              ///< Handles to the page objects.
     int               m_pageStreamHandle;         ///< Handle of the page content object.
@@ -599,7 +672,7 @@ protected:
     FILE*             m_workFile;                 ///< Temporary file to construct the stream before zipping.
 
     /// The PDF xref offset table.
-    std::vector<long>                                           m_xrefTable;
+    XREF_TABLE m_xrefTable;
 
     /// List of user-space page numbers for resolving internal hyperlinks.
     std::vector<wxString>                                       m_pageNumbers;
@@ -624,6 +697,12 @@ protected:
 
     /// Set when the non-embeddable font fallback references the base-14 /KicadFont* resources.
     bool                          m_usedBase14Fonts;
+
+    /// Alpha currently set in the page graphics state (PDF starts each page with 1.0).
+    double m_currentAlpha = 1.0;
+
+    /// Graphics state objects keyed by alpha
+    std::map<double, int> m_alphaToExtGStateHandles;
 
     std::unique_ptr<PDF_STROKE_FONT_MANAGER>  m_strokeFontManager;
     std::unique_ptr<PDF_OUTLINE_FONT_MANAGER> m_outlineFontManager;
@@ -680,8 +759,7 @@ public:
     /**
      * PostScript-likes at the moment are the only plot engines supporting bitmaps.
      */
-    virtual void PlotImage( const wxImage& aImage, const VECTOR2I& aPos,
-                            double aScaleFactor ) override;
+    virtual void PlotImage( const wxImage& aImage, const VECTOR2I& aPos, double aScaleFactor, double aAlpha ) override;
 
     virtual void PenTo( const VECTOR2I& pos, char plume ) override;
 

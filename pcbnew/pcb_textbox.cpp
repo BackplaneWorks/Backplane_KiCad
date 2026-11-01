@@ -24,6 +24,7 @@
 #include <bitmaps.h>
 #include <board.h>
 #include <board_design_settings.h>
+#include <core/mirror.h>
 #include <footprint.h>
 #include <pcb_textbox.h>
 #include <pcb_painter.h>
@@ -661,13 +662,37 @@ void PCB_TEXTBOX::Rotate( const VECTOR2I& aRotCentre, const EDA_ANGLE& aAngle )
 
 void PCB_TEXTBOX::Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
 {
-    // the position and angle are mirrored, but not the text (or its justification)
-    PCB_SHAPE::Mirror( aCentre, aFlipDirection );
+    Mirror( MIRROR_AXIS( aCentre, aFlipDirection ) );
+}
 
-    if( aFlipDirection == FLIP_DIRECTION::LEFT_RIGHT )
-        m_libTextAngle = ANGLE_180 - m_libTextAngle;
+
+void PCB_TEXTBOX::Mirror( const SEG& aAxis )
+{
+    // the position and justification are mirrored, but not the text itself
+
+    if( GetShape() == SHAPE_T::RECTANGLE )
+    {
+        const VECTOR2I centre( ( m_start.x + m_end.x ) / 2, ( m_start.y + m_end.y ) / 2 );
+        const VECTOR2I delta = aAxis.ReflectPoint( centre ) - centre;
+
+        PCB_SHAPE::SetStart( m_start + delta );
+        PCB_SHAPE::SetEnd( m_end + delta );
+
+        syncLibCoords();
+    }
     else
-        m_libTextAngle = -m_libTextAngle;
+    {
+        // A polygon is the drawn box already, so its vertices are what gets mirrored.
+        PCB_SHAPE::Mirror( aAxis );
+    }
+
+    const EDA_ANGLE axisAngle = -EDA_ANGLE( aAxis.B - aAxis.A );
+    const EDA_ANGLE newAngle = GetTextAngle().Reflect( axisAngle );
+
+    if( const FOOTPRINT* fp = GetParentFootprint() )
+        SetLibTextAngle( newAngle - fp->GetOrientation() );
+    else
+        SetLibTextAngle( newAngle );
 
     EDA_TEXT::SetTextAngle( GetTextAngle() );
 }
@@ -677,10 +702,9 @@ void PCB_TEXTBOX::Flip( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
 {
     PCB_SHAPE::Flip( aCentre, aFlipDirection );
 
-    if( aFlipDirection == FLIP_DIRECTION::LEFT_RIGHT )
-        m_libTextAngle = -m_libTextAngle;
-    else
-        m_libTextAngle = ANGLE_180 - m_libTextAngle;
+    // A flip changes the side it is read from, so add a half turn on top of the reflection.
+    const EDA_ANGLE axis = MIRROR_AXIS( aFlipDirection );
+    m_libTextAngle = m_libTextAngle.Reflect( axis ) + ANGLE_180;
 
     EDA_TEXT::SetTextAngle( GetTextAngle() );
 

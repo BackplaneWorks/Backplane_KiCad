@@ -18,110 +18,41 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+
 #include <boost/algorithm/string.hpp>
-#include <boost/locale.hpp>
-#include <fmt/format.h>
-#include <nanodbc/nanodbc.h>
-
-// Some outdated definitions are used in sql.h
-// We need to define them for "recent" dev tools
-#define INT64 int64_t
-#define UINT64 uint64_t
-
-#ifdef __MINGW32__
-#define BYTE uint8_t
-#define WORD uint16_t
-#define DWORD uint32_t
-#define HWND uint32_t   /* dummy define */
-#endif
-
-#ifdef WIN32
-#include <windows.h> // for sql.h
-#endif
-
-#include <sql.h> // SQL_IDENTIFIER_QUOTE_CHAR
-
 #include <wx/log.h>
 
 #include <database/database_connection.h>
-#include <database/database_cache.h>
+#include <database/database_value.h>
 #include <core/profile.h>
 
 
-const char* const traceDatabase = "KICAD_DATABASE";
-
-/**
- * When Unicode support is enabled in nanodbc, string formats are used matching the appropriate
- * character set of the platform.  KiCad uses UTF-8 encoded strings internally, but different
- * platforms use different encodings for SQL strings.  Unicode mode must be enabled for compilation
- * on Windows, since Visual Studio forces the use of Unicode SQL headers if any part of the project
- * has Unicode enabled.
- */
-
-/**
- * Converts a string from KiCad-native to nanodbc-native
- * @param aString is a UTF-8 encoded string
- * @return a string in nanodbc's platform-specific representation
- */
-nanodbc::string fromUTF8( const std::string& aString )
+DATABASE_CONNECTION::DATABASE_CONNECTION( std::unique_ptr<DATABASE_BACKEND> aBackend, bool aConnectNow ) :
+        m_backend( std::move( aBackend ) ),
+        m_cache( std::make_unique<DB_CACHE_TYPE>( 10, 1 ) )
 {
-    return boost::locale::conv::utf_to_utf<nanodbc::string::value_type>( aString );
-}
-
-
-/**
- * Converts a string from nanodbc-native to KiCad-native
- * @param aString is a string encoded in nanodbc's platform-specific way
- * @return a string with UTF-8 encoding
- */
-std::string toUTF8( const nanodbc::string& aString )
-{
-    return boost::locale::conv::utf_to_utf<char>( aString );
-}
-
-
-DATABASE_CONNECTION::DATABASE_CONNECTION( const std::string& aDataSourceName,
-                                          const std::string& aUsername,
-                                          const std::string& aPassword, int aTimeoutSeconds,
-                                          bool aConnectNow ) :
-        m_quoteChar( '"' )
-{
-    m_dsn     = aDataSourceName;
-    m_user    = aUsername;
-    m_pass    = aPassword;
-    m_timeout = aTimeoutSeconds;
-
-    init();
+    wxASSERT_MSG( m_backend, "DATABASE_CONNECTION needs a backend" );
 
     if( aConnectNow )
         Connect();
 }
 
 
-DATABASE_CONNECTION::DATABASE_CONNECTION( const std::string& aConnectionString,
-                                          int aTimeoutSeconds, bool aConnectNow ) :
-        m_quoteChar( '"' )
+DATABASE_CONNECTION::LOAD_CYCLE::LOAD_CYCLE( DATABASE_CONNECTION& aConnection, DB_STOP_CHECK aStopped ) :
+        m_connection( aConnection )
 {
-    m_connectionString = aConnectionString;
-    m_timeout          = aTimeoutSeconds;
+    std::lock_guard lock( m_connection.m_queryMutex );
 
-    init();
-
-    if( aConnectNow )
-        Connect();
+    m_connection.m_backend->BeginLoadCycle( aStopped );
 }
 
 
-DATABASE_CONNECTION::~DATABASE_CONNECTION()
+DATABASE_CONNECTION::LOAD_CYCLE::~LOAD_CYCLE()
 {
-    Disconnect();
-    m_conn.reset();
-}
+    std::lock_guard lock( m_connection.m_queryMutex );
 
-
-void DATABASE_CONNECTION::init()
-{
-    m_cache = std::make_unique<DB_CACHE_TYPE>( 10, 1 );
+    m_connection.m_backend->EndLoadCycle();
 }
 
 
@@ -143,78 +74,43 @@ void DATABASE_CONNECTION::SetCacheParams( int aMaxSize, int aMaxAge )
 
 bool DATABASE_CONNECTION::Connect()
 {
-    nanodbc::string dsn  = fromUTF8( m_dsn );
-    nanodbc::string user = fromUTF8( m_user );
-    nanodbc::string pass = fromUTF8( m_pass );
-    nanodbc::string cs   = fromUTF8( m_connectionString );
+    std::lock_guard lock( m_queryMutex );
 
-    try
-    {
-        if( cs.empty() )
-        {
-            wxLogTrace( traceDatabase, wxT( "Creating connection to DSN %s" ), m_dsn );
-            m_conn = std::make_unique<nanodbc::connection>( dsn, user, pass, m_timeout );
-        }
-        else
-        {
-            wxLogTrace( traceDatabase, wxT( "Creating connection with connection string" ) );
-            m_conn = std::make_unique<nanodbc::connection>( cs, m_timeout );
-        }
-    }
-    catch( std::exception& e )
-    {
-        m_lastError = e.what();
+    if( !m_backend->Connect() )
         return false;
-    }
 
     m_tables.clear();
+    m_tableFailures.clear();
 
-    if( IsConnected() )
-        getQuoteChar();
-
-    return IsConnected();
+    return true;
 }
 
 
 bool DATABASE_CONNECTION::Disconnect()
 {
-    if( !m_conn )
-    {
-        wxLogTrace( traceDatabase, wxT( "Note: Disconnect() called without valid connection" ) );
-        return false;
-    }
+    std::lock_guard lock( m_queryMutex );
 
-    try
-    {
-        m_conn->disconnect();
-    }
-    catch( std::exception& exc )
-    {
-        wxLogTrace( traceDatabase, wxT( "Disconnect() error \"%s\" occured." ), exc.what() );
-        return false;
-    }
+    m_backend->Disconnect();
 
-    return !m_conn->connected();
+    return !m_backend->IsConnected();
 }
 
 
 bool DATABASE_CONNECTION::IsConnected() const
 {
-    if( !m_conn )
-        return false;
-
-    return m_conn->connected();
+    return m_backend->IsConnected();
 }
 
 
-bool DATABASE_CONNECTION::CacheTableInfo( const std::string& aTable,
-                                          const std::set<std::string>& aRequiredColumns,
+bool DATABASE_CONNECTION::CacheTableInfo( const std::string& aTable, const std::set<std::string>& aRequiredColumns,
                                           const std::set<std::string>& aOptionalColumns )
 {
     std::lock_guard lock( m_queryMutex );
 
-    if( !m_conn )
+    if( !m_backend->IsConnected() )
         return false;
+
+    std::optional<DB_TABLE_INFO> info = m_backend->DescribeTable( aTable );
 
     // Catalog names are lowercase; normalize here so differently-cased columns still match
     std::set<std::string> requiredLower;
@@ -226,522 +122,335 @@ bool DATABASE_CONNECTION::CacheTableInfo( const std::string& aTable,
     for( const std::string& col : aOptionalColumns )
         optionalLower.insert( boost::to_lower_copy( col ) );
 
-    try
+    if( !info )
     {
-        nanodbc::catalog catalog( *m_conn );
-        nanodbc::catalog::tables tables = catalog.find_tables( fromUTF8( aTable ) );
+        wxLogTrace( traceDatabase, wxT( "CacheTableInfo: table '%s' not found in catalog" ), aTable );
 
-        if( !tables.next() )
+        // The next table's catalog read can clear the backend's error, so keep this table's own
+        TABLE_FAILURE& failed = m_tableFailures[aTable];
+        failed.failure = m_backend->GetLastFailure();
+        failed.error = m_backend->GetLastError();
+        failed.columns.insert( requiredLower.begin(), requiredLower.end() );
+        failed.columns.insert( optionalLower.begin(), optionalLower.end() );
+        return false;
+    }
+
+    // Another library entry on this table may still lack the columns its failed lookup asked for, and a describe
+    // that lists no columns does not show they are readable
+    if( auto failed = m_tableFailures.find( aTable ); failed != m_tableFailures.end() )
+    {
+        const bool covered = std::all_of( failed->second.columns.begin(), failed->second.columns.end(),
+                                          [&]( const std::string& aColumn )
+                                          {
+                                              return requiredLower.count( aColumn ) || optionalLower.count( aColumn );
+                                          } );
+
+        if( covered && !info->columnsUnavailable )
+            m_tableFailures.erase( failed );
+    }
+
+    TABLE_STATE& table = m_tables[info->name];
+    table.info = *info;
+
+    // The table is still usable with SELECT * when the catalog cannot list its columns
+    if( info->columnsUnavailable )
+    {
+        wxLogTrace( traceDatabase, wxT( "CacheTableInfo: columns of table '%s' unavailable" ), info->name );
+        return false;
+    }
+
+    std::set<std::string> columnsReported;
+
+    for( const DB_COLUMN& column : info->columns )
+    {
+        const std::string lower = boost::to_lower_copy( column.name );
+
+        if( !requiredLower.count( lower ) && !optionalLower.count( lower ) )
+            continue;
+
+        columnsReported.insert( lower );
+
+        if( !column.supported )
         {
-            wxLogTrace( traceDatabase, wxT( "CacheTableInfo: table '%s' not found in catalog" ),
-                        aTable );
-            return false;
+            wxLogTrace( traceDatabase, wxT( "CacheTableInfo: column '%s' of table '%s' cannot be read; dropped" ),
+                        column.name, info->name );
+            continue;
         }
 
-        std::string key = toUTF8( tables.table_name() );
-        m_tables[key] = toUTF8( tables.table_type() );
+        table.columns.insert( column.name );
+    }
 
-        try
+    // SQLite's ODBC driver doesn't report generated columns via SQLColumns, so required
+    // columns are trusted and added even when absent from the catalog
+    for( const std::string& requestedCol : aRequiredColumns )
+    {
+        const std::string requestedLower = boost::to_lower_copy( requestedCol );
+
+        if( !columnsReported.count( requestedLower ) && !requestedCol.empty() )
         {
-            nanodbc::catalog::columns columns =
-                    catalog.find_columns( NANODBC_TEXT( "" ), tables.table_name() );
+            wxLogTrace( traceDatabase,
+                        wxT( "CacheTableInfo: column '%s' not found in catalog for table '%s', adding anyway" ),
+                        requestedCol, info->name );
 
-            std::set<std::string> columnsInCatalog;
-
-            while( columns.next() )
-            {
-                std::string columnKey = toUTF8( columns.column_name() );
-                std::string columnKeyLower = boost::to_lower_copy( columnKey );
-
-                if( requiredLower.count( columnKeyLower )
-                    || optionalLower.count( columnKeyLower ) )
-                {
-                    m_columnCache[key][columnKey] = columns.data_type();
-                    columnsInCatalog.insert( columnKeyLower );
-                }
-            }
-
-            // SQLite's ODBC driver doesn't report generated columns via SQLColumns, so required
-            // columns are trusted and added even when absent from the catalog
-            for( const std::string& requestedCol : aRequiredColumns )
-            {
-                std::string requestedColLower = boost::to_lower_copy( requestedCol );
-
-                if( !columnsInCatalog.count( requestedColLower ) && !requestedCol.empty() )
-                {
-                    wxLogTrace( traceDatabase,
-                                wxT( "CacheTableInfo: column '%s' not found in catalog for table "
-                                     "'%s', adding anyway" ),
-                                requestedCol, key );
-
-                    m_columnCache[key][requestedCol] = SQL_VARCHAR;
-                }
-            }
-
-            // Unlike required columns, a missing optional column is dropped, not added, but is
-            // still worth a warning since it usually means a misconfigured .kicad_dbl mapping
-            for( const std::string& requestedCol : aOptionalColumns )
-            {
-                std::string requestedColLower = boost::to_lower_copy( requestedCol );
-
-                if( !columnsInCatalog.count( requestedColLower ) && !requestedCol.empty() )
-                {
-                    wxLogWarning( wxT( "Database table '%s' has no column '%s'; ignoring the "
-                                       "misconfigured properties mapping." ),
-                                  key, requestedCol );
-                }
-            }
-        }
-        catch( nanodbc::database_error& e )
-        {
-            m_lastError = e.what();
-            wxLogTrace( traceDatabase, wxT( "Exception while syncing columns for table '%s': %s" ),
-                        key, m_lastError );
-            return false;
+            table.columns.insert( requestedCol );
         }
     }
-    catch( std::exception& e )
+
+    // Unlike required columns, a missing optional column is dropped, not added, but is
+    // still worth a warning since it usually means a misconfigured .kicad_dbl mapping
+    for( const std::string& requestedCol : aOptionalColumns )
     {
-        m_lastError = e.what();
-        wxLogTrace( traceDatabase, wxT( "Exception while caching table info: %s" ), m_lastError );
-        return false;
+        if( !columnsReported.count( boost::to_lower_copy( requestedCol ) ) && !requestedCol.empty() )
+        {
+            wxLogWarning( wxT( "Database table '%s' has no column '%s'; ignoring the "
+                               "misconfigured properties mapping." ),
+                          info->name, requestedCol );
+        }
     }
 
     return true;
 }
 
 
-bool DATABASE_CONNECTION::getQuoteChar()
+std::vector<std::string> DATABASE_CONNECTION::columnNames( const TABLE_STATE& aTable )
 {
-    if( !m_conn )
+    std::vector<std::string> names;
+
+    for( const std::string& spelling : aTable.columns )
+        names.push_back( spelling );
+
+    if( names.empty() )
+        wxLogTrace( traceDatabase, wxT( "columnNames: table %s has no columns mapped!" ), aTable.info.name );
+
+    return names;
+}
+
+
+std::optional<size_t> DATABASE_CONNECTION::findLabel( const std::vector<std::string>& aLabels,
+                                                      const std::string& aKey )
+{
+    for( size_t i = 0; i < aLabels.size(); ++i )
+    {
+        if( aLabels[i] == aKey )
+            return i;
+    }
+
+    for( size_t i = 0; i < aLabels.size(); ++i )
+    {
+        if( boost::iequals( aLabels[i], aKey ) )
+            return i;
+    }
+
+    return std::nullopt;
+}
+
+
+DATABASE_CONNECTION::ROW DATABASE_CONNECTION::makeRow( const std::vector<std::string>& aLabels,
+                                                       std::vector<DB_VALUE>&&         aValues )
+{
+    ROW row;
+
+    for( size_t i = 0; i < aLabels.size() && i < aValues.size(); ++i )
+    {
+        if( std::string* text = std::get_if<std::string>( &aValues[i] ) )
+            row[aLabels[i]] = std::move( *text );
+        else
+            row[aLabels[i]] = DatabaseValueToString( aValues[i] );
+    }
+
+    return row;
+}
+
+
+bool DATABASE_CONNECTION::readAndCache( const std::string& aTable, const std::string& aKey,
+                                        DB_CACHE_TYPE::CACHE_VALUE& aEntry )
+{
+    const TABLE_STATE& table = m_tables.at( aTable );
+
+    PROF_TIMER                 timer;
+    DB_CACHE_TYPE::CACHE_VALUE built;
+    std::vector<std::string>   labels;
+    std::optional<size_t>      keyIndex;
+    bool                       keyResolved = false;
+
+    // Labels are known before the first row arrives
+    auto sink =
+            [&]( std::vector<DB_VALUE>&& aValues )
+            {
+                if( !keyResolved )
+                {
+                    keyResolved = true;
+                    keyIndex = findLabel( labels, aKey );
+
+                    if( !keyIndex )
+                    {
+                        wxLogTrace( traceDatabase, wxT( "readAndCache: warning: key %s not found in result set" ),
+                                    aKey );
+                    }
+                }
+
+                if( !keyIndex || *keyIndex >= aValues.size() )
+                    return;
+
+                std::string key = DatabaseValueToString( aValues[*keyIndex] );
+                built[std::move( key )] = makeRow( labels, std::move( aValues ) );
+            };
+
+    // A pass the backend could not verify must leave nothing behind, not even rows whose keys a later pass lacks
+    auto restart =
+            [&]()
+            {
+                built.clear();
+                keyResolved = false;
+                keyIndex.reset();
+            };
+
+    if( !m_backend->ReadAllRows( table.info, columnNames( table ), labels, sink, restart ) )
         return false;
 
-    try
-    {
-        nanodbc::string qc = m_conn->get_info<nanodbc::string>( SQL_IDENTIFIER_QUOTE_CHAR );
+    timer.Stop();
 
-        if( qc.empty() )
-            return false;
+    wxLogTrace( traceDatabase, wxT( "readAndCache from %s completed in %0.1f ms" ), aTable, timer.msecs() );
 
-        m_quoteChar = *toUTF8( qc ).begin();
-
-        wxLogTrace( traceDatabase, wxT( "Quote char retrieved: %c" ), m_quoteChar );
-    }
-    catch( std::exception& e )
-    {
-        m_lastError = e.what();
-        wxLogTrace( traceDatabase, wxT( "Exception while querying quote char: %s" ), m_lastError );
-        return false;
-    }
+    // The cache is best effort; with no room for the table the rows are still returned
+    m_cache->Put( aTable, built );
+    aEntry = std::move( built );
 
     return true;
 }
 
 
-std::string DATABASE_CONNECTION::columnsFor( const std::string& aTable )
-{
-    if( !m_columnCache.count( aTable ) )
-    {
-        wxLogTrace( traceDatabase, wxT( "columnsFor: requested table %s missing from cache!" ),
-                    aTable );
-        return "*";
-    }
-
-    if( m_columnCache[aTable].empty() )
-    {
-        wxLogTrace( traceDatabase, wxT( "columnsFor: requested table %s has no columns mapped!" ),
-                    aTable );
-        return "*";
-    }
-
-    std::string ret;
-
-    for( const auto& [ columnName, columnType ] : m_columnCache[aTable] )
-        ret += fmt::format( "{}{}{}, ", m_quoteChar, columnName, m_quoteChar );
-
-    // strip tailing ', '
-    ret.resize( ret.length() - 2 );
-
-    return ret;
-}
-
-//next step, make SelectOne take from the SelectAll cache if the SelectOne cache is missing.
-//To do this, need to build a map of PK->ROW for the cache result.
-bool DATABASE_CONNECTION::SelectOne( const std::string& aTable,
-                                     const std::pair<std::string, std::string>& aWhere,
+bool DATABASE_CONNECTION::SelectOne( const std::string& aTable, const std::pair<std::string, std::string>& aWhere,
                                      DATABASE_CONNECTION::ROW& aResult )
 {
     std::lock_guard lock( m_queryMutex );
 
-    if( !m_conn )
+    if( !m_backend->IsConnected() )
     {
         wxLogTrace( traceDatabase, wxT( "Called SelectOne without valid connection!" ) );
         return false;
     }
 
-    auto tableMapIter = m_tables.find( aTable );
+    auto tableIter = m_tables.find( aTable );
 
-    if( tableMapIter == m_tables.end() )
+    if( tableIter == m_tables.end() )
     {
-        wxLogTrace( traceDatabase, wxT( "SelectOne: requested table %s not found in cache" ),
-                    aTable );
+        wxLogTrace( traceDatabase, wxT( "SelectOne: requested table %s not found in cache" ), aTable );
         return false;
     }
 
-    const std::string& tableName = tableMapIter->first;
+    const std::string& tableName = tableIter->first;
+    const TABLE_STATE& table = tableIter->second;
     DB_CACHE_TYPE::CACHE_VALUE cacheEntry;
 
-    if( m_cache->Get( tableName, cacheEntry ) )
+    bool cached = m_cache->Get( tableName, cacheEntry );
+
+    if( !cached )
+        wxLogTrace( traceDatabase, wxT( "SelectOne: table `%s` not in row cache; will SelectAll" ), tableName );
+
+    if( cached || readAndCache( tableName, aWhere.first, cacheEntry ) )
     {
-        if( cacheEntry.count( aWhere.second ) )
+        if( auto hit = cacheEntry.find( aWhere.second ); hit != cacheEntry.end() )
         {
-            wxLogTrace( traceDatabase, wxT( "SelectOne: `%s` with parameter `%s` - cache hit" ),
-                        tableName, aWhere.second );
-            aResult = cacheEntry.at( aWhere.second );
+            wxLogTrace( traceDatabase, wxT( "SelectOne: `%s` with parameter `%s` - cache hit" ), tableName,
+                        aWhere.second );
+            aResult = hit->second;
             return true;
         }
     }
-    else
+
+    auto keyColumn = table.columns.find( aWhere.first );
+
+    if( keyColumn == table.columns.end() )
     {
-        wxLogTrace( traceDatabase, wxT( "SelectOne: table `%s` not in row cache; will SelectAll" ),
-                    tableName, aWhere.second );
-
-        selectAllAndCache( tableName, aWhere.first );
-
-        if( m_cache->Get( tableName, cacheEntry ) )
-        {
-            if( cacheEntry.count( aWhere.second ) )
-            {
-                wxLogTrace( traceDatabase, wxT( "SelectOne: `%s` with parameter `%s` - cache hit" ),
-                            tableName, aWhere.second );
-                aResult = cacheEntry.at( aWhere.second );
-                return true;
-            }
-        }
+        keyColumn = std::find_if( table.columns.begin(), table.columns.end(),
+                                  [&]( const std::string& aColumn )
+                                  {
+                                      return boost::iequals( aColumn, aWhere.first );
+                                  } );
     }
 
-    if( !m_columnCache.count( tableName ) )
+    if( keyColumn == table.columns.end() )
     {
-        wxLogTrace( traceDatabase, wxT( "SelectOne: requested table %s missing from column cache" ),
+        wxLogTrace( traceDatabase, wxT( "SelectOne: requested column %s not found in cache for %s" ), aWhere.first,
                     tableName );
         return false;
     }
 
-    auto columnCacheIter = m_columnCache.at( tableName ).find( aWhere.first );
+    std::vector<std::string> labels;
+    std::vector<DB_VALUE>    values;
 
-    if( columnCacheIter == m_columnCache.at( tableName ).end() )
+    std::optional<bool> found = m_backend->ReadRow( table.info, columnNames( table ), *keyColumn,
+                                                    aWhere.second, labels, values );
+
+    if( found )
     {
-        wxLogTrace( traceDatabase, wxT( "SelectOne: requested column %s not found in cache for %s" ),
-                    aWhere.first, tableName );
-        return false;
-    }
-
-    const std::string& columnName = columnCacheIter->first;
-
-    std::string cacheKey = fmt::format( "{}{}{}", tableName, columnName, aWhere.second );
-
-    std::string queryStr = fmt::format( "SELECT {} FROM {}{}{} WHERE {}{}{} = ?",
-                                        columnsFor( tableName ),
-                                        m_quoteChar, tableName, m_quoteChar,
-                                        m_quoteChar, columnName, m_quoteChar );
-    nanodbc::string query = fromUTF8( queryStr );
-
-    PROF_TIMER timer;
-    nanodbc::statement statement;
-
-    try
-    {
-        statement.prepare( *m_conn, query );
-    }
-    catch( std::exception& e )
-    {
-        m_lastError = e.what();
-        wxLogTrace( traceDatabase, wxT( "Exception while preparing statement for SelectOne: %s" ),
-                    m_lastError );
-
-        // Exception may be due to a connection error; nanodbc won't auto-reconnect
-        Disconnect();
-
-        return false;
-    }
-
-    // Pre-describe parameter as VARCHAR to avoid SQLDescribeParam call. Some ODBC drivers
-    // (Microsoft Access, Excel, CSV) don't implement SQLDescribeParam.
-    try
-    {
-        statement.describe_parameters( { 0 }, { SQL_VARCHAR }, { 255 }, { 0 } );
-        statement.bind( 0, aWhere.second.c_str() );
-    }
-    catch( std::exception& e )
-    {
-        m_lastError = e.what();
-        wxLogTrace( traceDatabase, wxT( "Exception while binding parameter for SelectOne: %s" ),
-                    m_lastError );
-
-        Disconnect();
-
-        return false;
-    }
-
-    wxLogTrace( traceDatabase, wxT( "SelectOne: `%s` with parameter `%s`" ), toUTF8( query ),
-                aWhere.second );
-
-    nanodbc::result results;
-
-    try
-    {
-        results = nanodbc::execute( statement );
-    }
-    catch( std::exception& e )
-    {
-        m_lastError = e.what();
-        wxLogTrace( traceDatabase, wxT( "Exception while executing statement for SelectOne: %s" ),
-                    m_lastError );
-
-        // Exception may be due to a connection error; nanodbc won't auto-reconnect
-        Disconnect();
-
-        return false;
-    }
-
-    timer.Stop();
-
-
-    if( !results.first() )
-    {
-        wxLogTrace( traceDatabase, wxT( "SelectOne: no results returned from query" ) );
-        return false;
-    }
-
-    wxLogTrace( traceDatabase, wxT( "SelectOne: %ld results returned from query in %0.1f ms" ),
-                results.rows(), timer.msecs() );
-
-    aResult.clear();
-
-    try
-    {
-        for( short i = 0; i < results.columns(); ++i )
-        {
-            std::string column = toUTF8( results.column_name( i ) );
-
-            switch( results.column_datatype( i ) )
-            {
-            case SQL_DOUBLE:
-            case SQL_FLOAT:
-            case SQL_REAL:
-            case SQL_DECIMAL:
-            case SQL_NUMERIC:
-            {
-                try
-                {
-                    aResult[column] = fmt::format( "{:G}", results.get<double>( i ) );
-                }
-                catch( nanodbc::null_access_error& )
-                {
-                    // Column was empty (null)
-                    aResult[column] = std::string();
-                }
-
-                break;
-            }
-
-            default:
-                aResult[column] = toUTF8( results.get<nanodbc::string>( i, NANODBC_TEXT( "" ) ) );
-            }
-        }
-    }
-    catch( std::exception& e )
-    {
-        m_lastError = e.what();
-        wxLogTrace( traceDatabase, wxT( "Exception while parsing results from SelectOne: %s" ),
-                    m_lastError );
-        return false;
-    }
-
-    return true;
-}
-
-
-bool DATABASE_CONNECTION::selectAllAndCache( const std::string& aTable, const std::string& aKey )
-{
-    try
-    {
-        nanodbc::statement statement( *m_conn );
-
-        nanodbc::string query = fromUTF8( fmt::format( "SELECT {} FROM {}{}{}",
-                                                       columnsFor( aTable ),
-                                                       m_quoteChar, aTable, m_quoteChar ) );
-
-        PROF_TIMER timer;
-
-        try
-        {
-            statement.prepare( query );
-        }
-        catch( std::exception& e )
-        {
-            m_lastError = e.what();
-            wxLogTrace( traceDatabase,
-                        wxT( "Exception while preparing query for selectAllAndCache: %s" ),
-                        m_lastError );
-
-            // Exception may be due to a connection error; nanodbc won't auto-reconnect
-            Disconnect();
-
+        if( !*found )
             return false;
-        }
 
-        nanodbc::result results;
-
-        try
-        {
-            results = nanodbc::execute( statement );
-        }
-        catch( std::exception& e )
-        {
-            m_lastError = e.what();
-            wxLogTrace( traceDatabase,
-                        wxT( "Exception while executing query for selectAllAndCache: %s" ),
-                        m_lastError );
-
-            // Exception may be due to a connection error; nanodbc won't auto-reconnect
-            Disconnect();
-
-            return false;
-        }
-
-        timer.Stop();
-
-        DB_CACHE_TYPE::CACHE_VALUE cacheEntry;
-
-        auto handleException =
-                [&]( std::runtime_error& aException, const std::string& aExtraContext = "" )
-                {
-                    m_lastError = aException.what();
-                    std::string extra = aExtraContext.empty() ? "" : ": " + aExtraContext;
-                    wxLogTrace( traceDatabase,
-                                wxT( "Exception while parsing result %d from selectAllAndCache: %s%s" ),
-                                cacheEntry.size(), m_lastError, extra );
-                };
-
-        while( results.next() )
-        {
-            short columnCount = 0;
-            ROW result;
-
-            try
-            {
-                columnCount = results.columns();
-            }
-            catch( nanodbc::database_error& e )
-            {
-                handleException( e );
-                return false;
-            }
-
-            for( short j = 0; j < columnCount; ++j )
-            {
-                std::string column;
-                std::string columnExtraDbgInfo;
-                int datatype = SQL_UNKNOWN_TYPE;
-
-                try
-                {
-                    column = toUTF8( results.column_name( j ) );
-                    datatype = results.column_datatype( j );
-                    columnExtraDbgInfo = fmt::format( "column index {}, name '{}', type {}",
-                                                      j,
-                                                      column,
-                                                      datatype );
-                }
-                catch( nanodbc::index_range_error& e )
-                {
-                    handleException( e, columnExtraDbgInfo );
-                    return false;
-                }
-
-                switch( datatype )
-                {
-                case SQL_DOUBLE:
-                case SQL_FLOAT:
-                case SQL_REAL:
-                case SQL_DECIMAL:
-                case SQL_NUMERIC:
-                    try
-                    {
-                        result[column] = fmt::format( "{:G}", results.get<double>( j ) );
-                    }
-                    catch( nanodbc::null_access_error& )
-                    {
-                        // Column was empty (null)
-                        result[column] = std::string();
-                    }
-                    catch( std::runtime_error& e )
-                    {
-                        handleException( e, columnExtraDbgInfo );
-                        return false;
-                    }
-
-                    break;
-
-                default:
-                    try
-                    {
-                        result[column] = toUTF8( results.get<nanodbc::string>( j, NANODBC_TEXT( "" ) ) );
-                    }
-                    catch( std::runtime_error& e )
-                    {
-                        handleException( e, columnExtraDbgInfo );
-                        return false;
-                    }
-                }
-            }
-
-            if( !result.count( aKey ) )
-            {
-                wxLogTrace( traceDatabase,
-                            wxT( "selectAllAndCache: warning: key %s not found in result set" ), aKey );
-                continue;
-            }
-
-            std::string keyStr = std::any_cast<std::string>( result.at( aKey ) );
-            cacheEntry[keyStr] = result;
-        }
-
-        wxLogTrace( traceDatabase, wxT( "selectAllAndCache from %s completed in %0.1f ms" ), aTable,
-                    timer.msecs() );
-
-        m_cache->Put( aTable, cacheEntry );
+        aResult = makeRow( labels, std::move( values ) );
         return true;
     }
-    catch( std::exception& e )
-    {
-        m_lastError = e.what();
-        wxLogTrace( traceDatabase, wxT( "Exception in selectAllAndCache: %s" ), m_lastError );
 
-        // Exception may be due to a connection error; nanodbc won't auto-reconnect
-        Disconnect();
-
-        return false;
-    }
+    // No indexed lookup, and the cache or a fresh read has no such key; the refresh bounds how stale the cache gets
+    return false;
 }
 
 
-bool DATABASE_CONNECTION::SelectAll( const std::string& aTable, const std::string& aKey, std::vector<ROW>& aResults )
+std::optional<DATABASE_CONNECTION::TABLE_FAILURE>
+DATABASE_CONNECTION::GetTableFailure( const std::string& aTable ) const
 {
     std::lock_guard lock( m_queryMutex );
 
-    if( !m_conn )
+    if( auto failed = m_tableFailures.find( aTable ); failed != m_tableFailures.end() )
+        return failed->second;
+
+    return std::nullopt;
+}
+
+
+bool DATABASE_CONNECTION::SelectAll( const std::string& aTable, const std::string& aKey, std::vector<ROW>& aResults,
+                                     QUERY_STATUS* aStatus )
+{
+    std::lock_guard lock( m_queryMutex );
+
+    // Copied under the query lock, so another thread's query cannot replace the failure first
+    auto fail =
+            [&]()
+            {
+                if( aStatus )
+                {
+                    *aStatus = QUERY_STATUS{ m_backend->IsConnected(), m_backend->GetLastFailure(),
+                                             m_backend->GetLastError() };
+                }
+
+                return false;
+            };
+
+    if( !m_backend->IsConnected() )
     {
         wxLogTrace( traceDatabase, wxT( "Called SelectAll without valid connection!" ) );
+        return fail();
+    }
+
+    // A table another library entry described is in m_tables too, so its failure must win
+    if( auto failed = m_tableFailures.find( aTable ); failed != m_tableFailures.end() )
+    {
+        wxLogTrace( traceDatabase, wxT( "SelectAll: table %s could not be described" ), aTable );
+
+        if( aStatus )
+            *aStatus = QUERY_STATUS{ m_backend->IsConnected(), failed->second.failure, failed->second.error };
+
         return false;
     }
 
-    auto tableMapIter = m_tables.find( aTable );
-
-    if( tableMapIter == m_tables.end() )
+    if( !m_tables.count( aTable ) )
     {
         wxLogTrace( traceDatabase, wxT( "SelectAll: requested table %s not found in cache" ), aTable );
+
+        if( aStatus )
+            *aStatus = QUERY_STATUS{ m_backend->IsConnected(), DB_FAILURE::UNKNOWN, std::string() };
+
         return false;
     }
 
@@ -749,30 +458,79 @@ bool DATABASE_CONNECTION::SelectAll( const std::string& aTable, const std::strin
 
     if( !m_cache->Get( aTable, cacheEntry ) )
     {
-        if( !selectAllAndCache( aTable, aKey ) )
+        if( !readAndCache( aTable, aKey, cacheEntry ) )
         {
             wxLogTrace( traceDatabase, wxT( "SelectAll: `%s` cache fill failed" ), aTable );
-            return false;
+            return fail();
         }
-
-        // Now it should be filled
-        m_cache->Get( aTable, cacheEntry );
     }
     else
     {
         wxLogTrace( traceDatabase, wxT( "SelectAll: `%s` - returning cached results" ), aTable );
     }
 
-    if( !m_cache->Get( aTable, cacheEntry ) )
+    aResults.reserve( cacheEntry.size() );
+
+    for( auto& [key, row] : cacheEntry )
+        aResults.emplace_back( std::move( row ) );
+
+    return true;
+}
+
+
+bool DATABASE_CONNECTION::SelectSample( const std::string& aTable, size_t aMaxRows,
+                                        std::vector<std::string>& aColumns, std::vector<ROW>& aRows )
+{
+    std::lock_guard lock( m_queryMutex );
+
+    aColumns.clear();
+    aRows.clear();
+
+    if( !m_backend->IsConnected() )
+        return false;
+
+    // A table nobody described yet is read by the name it was given
+    auto          tableIter = m_tables.find( aTable );
+    DB_TABLE_INFO info = tableIter != m_tables.end() ? tableIter->second.info : DB_TABLE_INFO{ aTable, {} };
+
+    auto sink =
+            [&]( std::vector<DB_VALUE>&& aValues )
+            {
+                aRows.emplace_back( makeRow( aColumns, std::move( aValues ) ) );
+            };
+
+    if( !m_backend->ReadTable( info, {}, aMaxRows, aColumns, sink ) )
     {
-        wxLogTrace( traceDatabase, wxT( "SelectAll: `%s` failed to get results from cache!" ), aTable );
+        aColumns.clear();
+        aRows.clear();
         return false;
     }
 
-    aResults.reserve( cacheEntry.size() );
-
-    for( auto &[ key, row ] : cacheEntry )
-        aResults.emplace_back( row );
-
     return true;
+}
+
+
+bool DATABASE_CONNECTION::GetTables( std::vector<std::string>& aTables )
+{
+    std::lock_guard lock( m_queryMutex );
+
+    aTables.clear();
+
+    if( !m_backend->IsConnected() )
+        return false;
+
+    return m_backend->ListTables( aTables );
+}
+
+
+bool DATABASE_CONNECTION::GetColumns( const std::string& aTable, std::vector<std::string>& aColumns )
+{
+    std::lock_guard lock( m_queryMutex );
+
+    aColumns.clear();
+
+    if( !m_backend->IsConnected() )
+        return false;
+
+    return m_backend->ListColumns( aTable, aColumns );
 }

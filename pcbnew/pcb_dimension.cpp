@@ -33,6 +33,7 @@
 #include <pcb_text.h>
 #include <view/view.h>
 #include <board_design_settings.h>
+#include <board_design_settings_defaults.h>
 #include <geometry/shape_compound.h>
 #include <geometry/shape_circle.h>
 #include <geometry/shape_segment.h>
@@ -509,7 +510,7 @@ wxString PCB_DIMENSION_BASE::GetValueText() const
 
     text.Printf( format, EDA_UNIT_UTILS::UI::ToUserUnit( pcbIUScale, m_units, val ) );
 
-    if( m_suppressZeroes )
+    if( m_suppressZeroes && precision > 0 )
     {
         while( text.EndsWith( '0' ) )
         {
@@ -529,10 +530,7 @@ wxString PCB_DIMENSION_BASE::GetValueText() const
 
 DIM_VALUE_MODE PCB_DIMENSION_BASE::GetValueMode() const
 {
-    // Read only here but shared lookup helpers require a mutable board pointer
-    BOARD* board = const_cast<BOARD*>( GetBoard() );
-
-    return DimensionValueMode( board, this );
+    return DimensionValueMode( GetBoard(), this );
 }
 
 
@@ -549,8 +547,7 @@ wxString PCB_DIMENSION_BASE::GetValueFieldText() const
     {
     case DIM_VALUE_MODE::DRIVING:
     {
-        PCB_CONSTRAINT* lengthConstraint =
-                FindDimensionLengthConstraint( const_cast<BOARD*>( GetBoard() ), this );
+        PCB_CONSTRAINT* lengthConstraint = FindDimensionLengthConstraint( GetBoard(), this );
 
         if( lengthConstraint && lengthConstraint->GetValue() )
         {

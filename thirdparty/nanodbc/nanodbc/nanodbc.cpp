@@ -540,8 +540,8 @@ recent_error(SQLHANDLE handle, SQLSMALLINT handle_type, long& native, std::strin
     if (size(sql_state) > 0)
     {
         state.clear();
-        state.reserve(size(sql_state) - 1);
-        for (std::size_t idx = 0; idx != size(sql_state) - 1; ++idx)
+        state.reserve(size(sql_state));
+        for (std::size_t idx = 0; idx != size(sql_state); ++idx)
         {
             state.push_back(static_cast<char>(sql_state[idx]));
         }
@@ -882,6 +882,32 @@ inline void deallocate_handle(SQLHANDLE& handle, short handle_type)
     handle = nullptr;
 }
 
+// Drivers without login timeout support report HYC00 or HY092; connect without it
+inline bool login_timeout_unsupported(SQLHANDLE dbc)
+{
+    NANODBC_SQLCHAR sql_state[6] = {0};
+    SQLINTEGER native_error = 0;
+    SQLSMALLINT total_bytes = 0;
+    RETCODE rc;
+    NANODBC_CALL_RC(
+        NANODBC_FUNC(SQLGetDiagRec),
+        rc,
+        SQL_HANDLE_DBC,
+        dbc,
+        (SQLSMALLINT)1,
+        sql_state,
+        &native_error,
+        0,
+        0,
+        &total_bytes);
+    if (!success(rc))
+        return false;
+
+    std::string state;
+    convert(nanodbc::string(sql_state, sql_state + 5), state);
+    return state == "HYC00" || state == "HY092";
+}
+
 inline void allocate_env_handle(SQLHENV& env)
 {
     if (env)
@@ -1102,7 +1128,7 @@ public:
                 SQL_LOGIN_TIMEOUT,
                 (SQLPOINTER)(std::intptr_t)timeout,
                 0);
-            if (!success(rc))
+            if (!success(rc) && !login_timeout_unsupported(dbc_))
                 NANODBC_THROW_DATABASE_ERROR(dbc_, SQL_HANDLE_DBC);
         }
 
@@ -1151,7 +1177,7 @@ public:
                 SQL_LOGIN_TIMEOUT,
                 (SQLPOINTER)(std::intptr_t)timeout,
                 0);
-            if (!success(rc))
+            if (!success(rc) && !login_timeout_unsupported(dbc_))
                 NANODBC_THROW_DATABASE_ERROR(dbc_, SQL_HANDLE_DBC);
         }
 
@@ -4869,8 +4895,8 @@ string catalog::columns::type_name() const
 
 long catalog::columns::column_size() const
 {
-    // COLUMN_SIZE
-    return result_.get<long>(6);
+    // COLUMN_SIZE might be NULL
+    return result_.get<long>( 6, 0 );
 }
 
 long catalog::columns::buffer_length() const

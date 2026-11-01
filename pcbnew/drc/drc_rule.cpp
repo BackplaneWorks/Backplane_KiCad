@@ -24,6 +24,7 @@
 #include <api/board/board.pb.h>
 #include <api/board/board_rules.pb.h>
 #include <base_units.h>
+#include <string_utils.h>
 #include <drc/drc_rule.h>
 #include <drc/drc_rule_condition.h>
 
@@ -204,6 +205,11 @@ wxString DRC_RULE::FormatRuleFromProto( const kiapi::board::CustomRule& aRule, w
                 case kiapi::board::CRCT_VIA_DANGLING:            return wxS( "via_dangling" );
                 case kiapi::board::CRCT_BRIDGED_MASK:            return wxS( "bridged_mask" );
                 case kiapi::board::CRCT_SOLDER_MASK_SLIVER:      return wxS( "solder_mask_sliver" );
+                case kiapi::board::CRCT_NET_CHAIN_LENGTH:        return wxS( "net_chain_length" );
+                case kiapi::board::CRCT_NET_CHAIN_STUB_LENGTH:   return wxS( "stub_length" );
+                case kiapi::board::CRCT_NET_CHAIN_RETURN_PATH:   return wxS( "return_path" );
+                case kiapi::board::CRCT_MICROVIA_STACK_DEPTH:    return wxS( "microvia_stack_depth" );
+                case kiapi::board::CRCT_HOLE_ASPECT_RATIO:       return wxS( "hole_aspect_ratio" );
 
                 case kiapi::board::CRCT_UNKNOWN:
                 default:
@@ -218,12 +224,16 @@ wxString DRC_RULE::FormatRuleFromProto( const kiapi::board::CustomRule& aRule, w
                 if( aConstraint.type() == kiapi::board::CRCT_TRACK_ANGLE )
                     return wxString::Format( "%ddeg", aValue );
 
+                if( aConstraint.type() == kiapi::board::CRCT_HOLE_ASPECT_RATIO )
+                    return wxString::FromUTF8( FormatDouble2Str( aValue / 1000.0 ) );
+
                 switch( aConstraint.type() )
                 {
                 case kiapi::board::CRCT_VIA_COUNT:
                 case kiapi::board::CRCT_MIN_RESOLVED_SPOKES:
                 case kiapi::board::CRCT_VIA_DANGLING:
                 case kiapi::board::CRCT_BRIDGED_MASK:
+                case kiapi::board::CRCT_MICROVIA_STACK_DEPTH:
                     return wxString::Format( "%d", aValue );
 
                 default:
@@ -231,7 +241,10 @@ wxString DRC_RULE::FormatRuleFromProto( const kiapi::board::CustomRule& aRule, w
                 }
 
                 if( hasConstraintOption( aConstraint, kiapi::board::CRCO_TIME_DOMAIN ) )
-                    return wxString::Format( "%dps", aValue );
+                {
+                    double picoseconds = aValue / pcbIUScale.IU_PER_PS;
+                    return wxString::FromUTF8( FormatDouble2Str( picoseconds ) ) + "ps";
+                }
 
                 wxString formatted = wxString::FromUTF8( EDA_UNIT_UTILS::FormatInternalUnits( pcbIUScale, aValue ) );
                 return formatted + "mm";
@@ -318,7 +331,13 @@ wxString DRC_RULE::FormatRuleFromProto( const kiapi::board::CustomRule& aRule, w
                     + wxS( "\")" );
         }
 
-        if( constraint.value_case() == kiapi::board::CustomRuleConstraint::ValueCase::kDisallow )
+        // Special case for CRCT_MIN_RESOLVED_SPOKES, which is a kNumeric value, but doesn't use
+        // min/opt/max for serialization in order to avoid the implication that we support opt.
+        if( constraint.type() == kiapi::board::CRCT_MIN_RESOLVED_SPOKES )
+        {
+            text += wxString::Format( "%d", constraint.numeric().min() );
+        }
+        else if( constraint.value_case() == kiapi::board::CustomRuleConstraint::ValueCase::kDisallow )
         {
             for( int disallowTypeValue : constraint.disallow().types() )
             {
@@ -370,6 +389,24 @@ wxString DRC_RULE::FormatRuleFromProto( const kiapi::board::CustomRule& aRule, w
             text += wxS( " \"" )
                     + escapeQuotedRuleText( wxString::FromUTF8( constraint.assertion_expression() ) )
                     + wxS( "\"" );
+        }
+        else if( constraint.value_case() == kiapi::board::CustomRuleConstraint::ValueCase::kReturnPath )
+        {
+            const kiapi::board::CustomRuleReturnPathSettings& returnPath = constraint.return_path();
+
+            if( !returnPath.reference_layer().empty() )
+            {
+                text += wxS( " (layer \"" )
+                        + escapeQuotedRuleText( wxString::FromUTF8( returnPath.reference_layer() ) )
+                        + wxS( "\")" );
+            }
+
+            if( !returnPath.reference_net().empty() )
+            {
+                text += wxS( " (net \"" )
+                        + escapeQuotedRuleText( wxString::FromUTF8( returnPath.reference_net() ) )
+                        + wxS( "\")" );
+            }
         }
         else if( constraint.value_case() == kiapi::board::CustomRuleConstraint::ValueCase::kNumeric )
         {
@@ -448,6 +485,12 @@ void DRC_CONSTRAINT::ToProto( kiapi::board::CustomRuleConstraint& aProto ) const
     {
         if( m_Test )
             aProto.set_assertion_expression( m_Test->GetExpression().ToUTF8() );
+    }
+    else if( m_Type == NET_CHAIN_RETURN_PATH_CONSTRAINT )
+    {
+        kiapi::board::CustomRuleReturnPathSettings* returnPath = aProto.mutable_return_path();
+        returnPath->set_reference_layer( m_ReferenceLayer.ToUTF8() );
+        returnPath->set_reference_net( m_ReferenceNet.ToUTF8() );
     }
     else
     {

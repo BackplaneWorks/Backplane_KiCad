@@ -384,25 +384,26 @@ void CADSTAR_SCH_ARCHIVE_LOADER::Load( SCHEMATIC* aSchematic, SCH_SHEET* aRootSh
 
     if( Schematic.VariantHierarchy.Variants.size() > 0 )
     {
-        m_reporter->Report( wxString::Format( _( "The CADSTAR design contains variants which has "
-                                                 "no KiCad equivalent. Only the master variant "
-                                                 "('%s') was loaded." ),
+        // TODO: implement variant importing
+        m_reporter->Report( wxString::Format( _( "The CADSTAR design contains variants are not currently "
+                                                 "supported.  Only the master variant ('%s') was loaded." ),
                                               Schematic.VariantHierarchy.Variants.at( "V0" ).Name ),
                             RPT_SEVERITY_WARNING );
     }
 
     if( Schematic.Groups.size() > 0 )
     {
-        m_reporter->Report( _( "The CADSTAR design contains grouped items which has no KiCad "
-                               "equivalent. Any grouped items have been ungrouped." ),
+        // TODO: implement group importing
+        m_reporter->Report( _( "The CADSTAR design contains grouped items which are not currently supported.  "
+                               "Any grouped items have been ungrouped." ),
                             RPT_SEVERITY_WARNING );
     }
 
     if( Schematic.ReuseBlocks.size() > 0 )
     {
-        m_reporter->Report( _( "The CADSTAR design contains re-use blocks which has no KiCad "
-                               "equivalent. The re-use block information has been discarded during "
-                               "the import." ),
+        // TODO: implement design block importing
+        m_reporter->Report( _( "The CADSTAR design contains re-use blocks which are not curretly supported.  "
+                               "The re-use block information has been discarded during the import." ),
                             RPT_SEVERITY_WARNING );
     }
 
@@ -451,14 +452,20 @@ void CADSTAR_SCH_ARCHIVE_LOADER::Load( SCHEMATIC* aSchematic, SCH_SHEET* aRootSh
         }
 
         // Find the screen grid of the original CADSTAR design
-        int grid = Assignments.Grids.ScreenGrid.Param1;
+        int grid = UNDEFINED_VALUE;
 
-        if( Assignments.Grids.ScreenGrid.Type == GRID_TYPE::FRACTIONALGRID )
-            grid = grid / Assignments.Grids.ScreenGrid.Param2;
-        else if( Assignments.Grids.ScreenGrid.Param2 > grid )
-            grid = Assignments.Grids.ScreenGrid.Param2;
+        if( Assignments.Grids.ScreenGrid.Param1 != UNDEFINED_VALUE )
+            grid = Assignments.Grids.ScreenGrid.Param1;
 
-        grid = getKiCadLength( grid );
+        if( Assignments.Grids.ScreenGrid.Param2 != UNDEFINED_VALUE )
+        {
+            if( Assignments.Grids.ScreenGrid.Type == GRID_TYPE::FRACTIONALGRID )
+                grid = grid / Assignments.Grids.ScreenGrid.Param2;
+            else if( Assignments.Grids.ScreenGrid.Param2 > grid )
+                grid = Assignments.Grids.ScreenGrid.Param2;
+        }
+
+        grid = getKiCadLength( grid, 50.0 );
 
         auto roundToNearestGrid =
                 [&]( int aNumber ) -> int
@@ -2749,7 +2756,7 @@ int CADSTAR_SCH_ARCHIVE_LOADER::getLineThickness( const LINECODE_ID& aCadstarLin
     wxCHECK( Assignments.Codedefs.LineCodes.find( aCadstarLineCodeID ) != Assignments.Codedefs.LineCodes.end(),
              schIUScale.MilsToIU( DEFAULT_WIRE_WIDTH_MILS ) );
 
-    return getKiCadLength( Assignments.Codedefs.LineCodes.at( aCadstarLineCodeID ).Width );
+    return getKiCadLength( Assignments.Codedefs.LineCodes.at( aCadstarLineCodeID ).Width, 6.0 );
 }
 
 
@@ -2784,7 +2791,7 @@ int CADSTAR_SCH_ARCHIVE_LOADER::getTextHeightFromTextCode( const TEXTCODE_ID& aC
 {
     TEXTCODE txtCode = getTextCode( aCadstarTextCodeID );
 
-    return KiROUND( (double) getKiCadLength( txtCode.Height ) * TXT_HEIGHT_RATIO );
+    return KiROUND( (double) getKiCadLength( txtCode.Height, 50.0 ) * TXT_HEIGHT_RATIO );
 }
 
 
@@ -2957,20 +2964,20 @@ void CADSTAR_SCH_ARCHIVE_LOADER::applyTextCodeIfExists( EDA_TEXT*          aKiCa
         return;
 
     TEXTCODE textCode = getTextCode( aCadstarTextCodeID );
-    int      textHeight = KiROUND( (double) getKiCadLength( textCode.Height ) * TXT_HEIGHT_RATIO );
-    int      textWidth = getKiCadLength( textCode.Width );
+    int      textHeight = KiROUND( (double) getKiCadLength( textCode.Height, 50.0 ) * TXT_HEIGHT_RATIO );
+    int      textWidth = getKiCadLength( textCode.Width, 50.0 );
 
     // The width is zero for all non-cadstar fonts. Using a width equal to 2/3 the height seems
     // to work well for most fonts.
     if( textWidth == 0 )
-        textWidth = getKiCadLength( 2LL * textCode.Height / 3LL );
+        textWidth = getKiCadLength( 2LL * textCode.Height / 3LL, 50.0 );
 
     aKiCadTextItem->SetTextWidth( textWidth );
     aKiCadTextItem->SetTextHeight( textHeight );
 
 #if 0
     // EEschema currently supports only normal vs bold for text thickness.
-    aKiCadTextItem->SetTextThickness( getKiCadLength( textCode.LineWidth ) );
+    aKiCadTextItem->SetTextThickness( getKiCadLength( textCode.LineWidth, 6.0 ) );
 #endif
 
     // Must come after SetTextSize()
@@ -3385,8 +3392,8 @@ VECTOR2I CADSTAR_SCH_ARCHIVE_LOADER::getKiCadPoint( const VECTOR2I& aCadstarPoin
 {
     VECTOR2I retval;
 
-    retval.x = getKiCadLength( aCadstarPoint.x - m_designCenter.x );
-    retval.y = -getKiCadLength( aCadstarPoint.y - m_designCenter.y );
+    retval.x = getKiCadOffset( aCadstarPoint.x - m_designCenter.x );
+    retval.y = -getKiCadOffset( aCadstarPoint.y - m_designCenter.y );
 
     return retval;
 }
@@ -3397,8 +3404,8 @@ VECTOR2I CADSTAR_SCH_ARCHIVE_LOADER::getKiCadLibraryPoint( const VECTOR2I& aCads
 {
     VECTOR2I retval;
 
-    retval.x = getKiCadLength( aCadstarPoint.x - aCadstarCentre.x );
-    retval.y = -getKiCadLength( aCadstarPoint.y - aCadstarCentre.y );
+    retval.x = getKiCadOffset( aCadstarPoint.x - aCadstarCentre.x );
+    retval.y = -getKiCadOffset( aCadstarPoint.y - aCadstarCentre.y );
 
     return retval;
 }

@@ -1961,11 +1961,11 @@ BOOST_AUTO_TEST_CASE( RuleSaverPreservesBareSymbolNameUnquoted )
 
 BOOST_AUTO_TEST_CASE( RuleSaverQuotesNameStartingWithDigit )
 {
-    // Names starting with a digit must be quoted so S-expression parsers treat them
+    // Names that pass DSNLEXER's isNumber() test must be quoted so S-expression parsers treat them
     // as a symbol rather than a numeric literal.
     DRC_RE_LOADED_PANEL_ENTRY entry;
     entry.panelType = MINIMUM_CLEARANCE;
-    entry.ruleName = wxS( "3.3V_Power" );
+    entry.ruleName = wxS( "3.3" );
     entry.wasEdited = true;
 
     auto numericData = std::make_shared<DRC_RE_NUMERIC_INPUT_CONSTRAINT_DATA>();
@@ -1978,12 +1978,12 @@ BOOST_AUTO_TEST_CASE( RuleSaverQuotesNameStartingWithDigit )
     std::vector<DRC_RE_LOADED_PANEL_ENTRY> entries = { entry };
     wxString result = saver.GenerateRulesText( entries, nullptr );
 
-    BOOST_CHECK( result.Contains( wxS( "\"3.3V_Power\"" ) ) );
+    BOOST_CHECK( result.Contains( wxS( "\"3.3\"" ) ) );
 
     DRC_RULE_LOADER loader;
     std::vector<DRC_RE_LOADED_PANEL_ENTRY> reloaded = loader.LoadFromString( result );
     BOOST_REQUIRE_EQUAL( reloaded.size(), 1 );
-    BOOST_CHECK_EQUAL( reloaded[0].ruleName, "3.3V_Power" );
+    BOOST_CHECK_EQUAL( reloaded[0].ruleName, "3.3" );
 }
 
 
@@ -2231,6 +2231,16 @@ BOOST_AUTO_TEST_CASE( IntegrationSplitRulePreservesOrder )
     BOOST_CHECK( lastBIndex < firstCIndex );
 }
 
+
+// A selector rebuilds only its own test, so anything more must stay a custom query
+BOOST_AUTO_TEST_CASE( SelectorConditionKeepsWholeTest )
+{
+    using KIND = DRC_RULE_EDITOR_UTILS::SELECTOR_KIND;
+
+    BOOST_CHECK( !DRC_RULE_EDITOR_UTILS::ParseSelectorCondition( wxS( "hasNetclass('N') == 0" ) ) );
+    BOOST_CHECK( DRC_RULE_EDITOR_UTILS::ParseSelectorCondition( wxS( "enclosedByArea('R')" ) )->kind
+                 == KIND::ENCLOSED_BY_AREA );
+}
 
 // ============================================================================
 // Condition Group Panel Tests

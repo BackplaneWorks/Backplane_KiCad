@@ -70,6 +70,7 @@ PCBNEW_SETTINGS::PCBNEW_SETTINGS() :
         m_ShowCourtyardCollisions( true ),
         m_AutoRefillZones( false ),
         m_AllowFreePads( false ),
+        m_AreaAnchorPointSelection( false ),
         m_ImportKeepKiCadLayerNames( false ),
         m_PnsSettings( nullptr ),
         m_FootprintViewerLibListWidth( 200 ),
@@ -118,22 +119,25 @@ PCBNEW_SETTINGS::PCBNEW_SETTINGS() :
     m_params.emplace_back( new PARAM<bool>( "aui.show_properties",
             &m_AuiPanels.show_properties, true ) );
 
+    m_params.emplace_back( new PARAM<bool>( "aui.show_git_commit_pane", &m_AuiPanels.show_git_commit_pane, false ) );
+
     m_params.emplace_back( new PARAM<bool>( "aui.show_search",
             &m_AuiPanels.show_search, false ) );
 
     m_params.emplace_back( new PARAM<bool>( "aui.show_net_inspector",
             &m_AuiPanels.show_net_inspector, false ) );
 
-    m_params.emplace_back( new PARAM<bool>( "aui.design_blocks_show", &m_AuiPanels.design_blocks_show, false ) );
+    m_params.emplace_back( new PARAM<bool>( "aui.design_blocks_show",
+            &m_AuiPanels.design_blocks_show, false ) );
 
     m_params.emplace_back( new PARAM<int>( "aui.design_blocks_panel_docked_width",
-                                           &m_AuiPanels.design_blocks_panel_docked_width, -1 ) );
+            &m_AuiPanels.design_blocks_panel_docked_width, -1 ) );
 
-    m_params.emplace_back(
-            new PARAM<int>( "aui.design_blocks_panel_float_width", &m_AuiPanels.design_blocks_panel_float_width, -1 ) );
+    m_params.emplace_back( new PARAM<int>( "aui.design_blocks_panel_float_width",
+            &m_AuiPanels.design_blocks_panel_float_width, -1 ) );
 
     m_params.emplace_back( new PARAM<int>( "aui.design_blocks_panel_float_height",
-                                           &m_AuiPanels.design_blocks_panel_float_height, -1 ) );
+            &m_AuiPanels.design_blocks_panel_float_height, -1 ) );
 
     m_params.emplace_back( new PARAM<int>( "footprint_chooser.width",
             &m_FootprintChooser.width, -1 ) );
@@ -208,6 +212,9 @@ PCBNEW_SETTINGS::PCBNEW_SETTINGS() :
     m_params.emplace_back( new PARAM<bool>( "editing.allow_free_pads",
             &m_AllowFreePads, false ) );
 
+    m_params.emplace_back(
+            new PARAM<bool>( "editing.area_anchor_point_selection", &m_AreaAnchorPointSelection, false ) );
+
     m_params.emplace_back( new PARAM<bool>( "import.keep_kicad_layer_names",
             &m_ImportKeepKiCadLayerNames, false ) );
 
@@ -263,7 +270,8 @@ PCBNEW_SETTINGS::PCBNEW_SETTINGS() :
     m_params.emplace_back( new PARAM<bool>( "pcb_display.ratsnest_global",
             &m_Display.m_ShowGlobalRatsnest, true ) );
 
-    m_params.emplace_back( new PARAM<bool>( "pcb_display.show_constraints", &m_Display.m_ShowConstraints, false ) );
+    m_params.emplace_back( new PARAM<bool>( "pcb_display.show_constraints",
+            &m_Display.m_ShowConstraints, false ) );
 
     m_params.emplace_back( new PARAM<bool>( "pcb_display.ratsnest_footprint",
             &m_Display.m_ShowModuleRatsnest, true ) );
@@ -352,20 +360,20 @@ PCBNEW_SETTINGS::PCBNEW_SETTINGS() :
     m_params.emplace_back( new PARAM<bool>( "DRC.scroll_on_crossprobe",
             &m_DRCDialog.scroll_on_crossprobe, true ) );
 
-    m_params.emplace_back( new PARAM<COLOR4D>( "diff_phase_skew.zero_color", &m_DiffPhaseSkewSettings.m_ZeroSkewColor,
-                                               COLOR4D( 1.0, 1.0, 1.0, 1.0 ) ) );
+    m_params.emplace_back( new PARAM<COLOR4D>( "diff_phase_skew.zero_color",
+            &m_DiffPhaseSkewSettings.m_ZeroSkewColor, COLOR4D( 1.0, 1.0, 1.0, 1.0 ) ) );
 
     m_params.emplace_back( new PARAM<COLOR4D>( "diff_phase_skew.positive_color",
-                                               &m_DiffPhaseSkewSettings.m_PositiveSkewColor,
-                                               COLOR4D( 0.0, 0.0, 1.0, 1.0 ) ) );
+            &m_DiffPhaseSkewSettings.m_PositiveSkewColor, COLOR4D( 0.0, 0.0, 1.0, 1.0 ) ) );
 
     m_params.emplace_back( new PARAM<COLOR4D>( "diff_phase_skew.negative_color",
-                                               &m_DiffPhaseSkewSettings.m_NegativeSkewColor,
-                                               COLOR4D( 1.0, 0.0, 0.0, 1.0 ) ) );
+            &m_DiffPhaseSkewSettings.m_NegativeSkewColor, COLOR4D( 1.0, 0.0, 0.0, 1.0 ) ) );
 
     m_params.emplace_back( new PARAM<COLOR4D>( "diff_phase_skew.unknown_color",
-                                               &m_DiffPhaseSkewSettings.m_UnknownSkewColor,
-                                               COLOR4D( 0.5, 0.5, 0.5, 1.0 ) ) );
+            &m_DiffPhaseSkewSettings.m_UnknownSkewColor, COLOR4D( 0.5, 0.5, 0.5, 1.0 ) ) );
+
+    m_params.emplace_back( new PARAM<bool>( "diff_phase_skew.use_log_scale",
+            &m_DiffPhaseSkewSettings.m_UseLogScale, false ) );
 
     registerMigration( 0, 1,
             [&]()

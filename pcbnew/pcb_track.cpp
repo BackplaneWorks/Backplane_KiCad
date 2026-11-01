@@ -92,6 +92,27 @@ PCB_ARC::PCB_ARC( BOARD_ITEM* aParent, const SHAPE_ARC* aArc ) :
 }
 
 
+std::unique_ptr<PCB_TRACK> PCB_ARC::CreateFromThreePoints( BOARD_ITEM* aParent, const VECTOR2I& aStart,
+                                                           const VECTOR2I& aMid, const VECTOR2I& aEnd )
+{
+    if( IsStraightArc( aStart, aMid, aEnd ) )
+    {
+        std::unique_ptr<PCB_TRACK> track = std::make_unique<PCB_TRACK>( aParent );
+
+        track->SetStart( aStart );
+        track->SetEnd( aEnd );
+        return track;
+    }
+
+    std::unique_ptr<PCB_ARC> arc = std::make_unique<PCB_ARC>( aParent );
+
+    arc->SetStart( aStart );
+    arc->SetMid( aMid );
+    arc->SetEnd( aEnd );
+    return arc;
+}
+
+
 EDA_ITEM* PCB_ARC::Clone() const
 {
     return new PCB_ARC( *this );
@@ -530,9 +551,17 @@ bool PCB_ARC::Deserialize( const google::protobuf::Any &aContainer )
         return false;
 
     SetUuidDirect( KIID( arc.id().value() ) );
-    SetStart( VECTOR2I( arc.start().x_nm(), arc.start().y_nm() ) );
-    SetMid( VECTOR2I( arc.mid().x_nm(), arc.mid().y_nm() ) );
-    SetEnd( VECTOR2I( arc.end().x_nm(), arc.end().y_nm() ) );
+    const VECTOR2I start( arc.start().x_nm(), arc.start().y_nm() );
+    const VECTOR2I mid( arc.mid().x_nm(), arc.mid().y_nm() );
+    const VECTOR2I end( arc.end().x_nm(), arc.end().y_nm() );
+
+    // The item type is fixed here, so reject points that have no arc center
+    if( IsStraightArc( start, mid, end ) )
+        return false;
+
+    SetStart( start );
+    SetMid( mid );
+    SetEnd( end );
     SetWidth( arc.width().value_nm() );
     SetLayer( FromProtoEnum<PCB_LAYER_ID, kiapi::board::types::BoardLayer>( arc.layer() ) );
     UnpackNet( arc.net() );
@@ -1078,143 +1107,37 @@ void PCB_VIA::SetTertiaryDrillShape( PAD_DRILL_SHAPE aShape )
 
 bool PCB_VIA::IsBackdrilledOrPostMachined( PCB_LAYER_ID aLayer ) const
 {
-    if( !IsCopperLayer( aLayer ) )
-        return false;
+    return GetBackdrillOrPostMachiningKnockout( aLayer ) > 0;
+}
 
+
+bool PCB_VIA::HasCopperRemoved( PCB_LAYER_ID aLayer ) const
+{
+    int knockout = GetBackdrillOrPostMachiningKnockout( aLayer );
+
+    return knockout > 0 && knockout >= GetWidth( aLayer );
+}
+
+
+int PCB_VIA::GetBackdrillOrPostMachiningKnockout( PCB_LAYER_ID aLayer ) const
+{
     const BOARD* board = GetBoard();
 
-    if( !board )
-        return false;
+    if( !IsCopperLayer( aLayer ) || !board )
+        return 0;
 
-    // Check secondary drill (backdrill from top)
-    const PADSTACK::DRILL_PROPS& secondaryDrill = m_padStack.SecondaryDrill();
-
-    if( secondaryDrill.size.x > 0
-            && secondaryDrill.start != UNDEFINED_LAYER
-            && secondaryDrill.end != UNDEFINED_LAYER )
-    {
-        // Contains honours copper Z-order; the range iterator instead walks PCB_LAYER_ID enum
-        // order, which for a bottom-anchored span spans the wrong (top inner) layers.
-        if( LAYER_RANGE::Contains( secondaryDrill.start, secondaryDrill.end, aLayer ) )
-            return true;
-    }
-
-    // Check tertiary drill (backdrill from bottom)
-    const PADSTACK::DRILL_PROPS& tertiaryDrill = m_padStack.TertiaryDrill();
-
-    if( tertiaryDrill.size.x > 0
-            && tertiaryDrill.start != UNDEFINED_LAYER
-            && tertiaryDrill.end != UNDEFINED_LAYER )
-    {
-        if( LAYER_RANGE::Contains( tertiaryDrill.start, tertiaryDrill.end, aLayer ) )
-            return true;
-    }
-
-    // Check if the layer is affected by post-machining
-    if( GetPostMachiningKnockout( aLayer ) > 0 )
-        return true;
-
-    return false;
+    return m_padStack.MachiningKnockout( *board, aLayer );
 }
 
 
 int PCB_VIA::GetPostMachiningKnockout( PCB_LAYER_ID aLayer ) const
 {
-    if( !IsCopperLayer( aLayer ) )
-        return 0;
-
     const BOARD* board = GetBoard();
 
-    if( !board )
+    if( !IsCopperLayer( aLayer ) || !board )
         return 0;
 
-    const BOARD_STACKUP& stackup = board->GetDesignSettings().GetStackupDescriptor();
-
-    // Check front post-machining (counterbore/countersink from top)
-    const PADSTACK::POST_MACHINING_PROPS& frontPM = m_padStack.FrontPostMachining();
-
-    if( frontPM.mode.has_value()
-            && *frontPM.mode != PAD_DRILL_POST_MACHINING_MODE::NOT_POST_MACHINED
-            && *frontPM.mode != PAD_DRILL_POST_MACHINING_MODE::UNKNOWN
-            && frontPM.size > 0 )
-    {
-        int pmDepth = frontPM.depth;
-
-        // For countersink without explicit depth, calculate from diameter and angle
-        if( pmDepth <= 0
-                && *frontPM.mode == PAD_DRILL_POST_MACHINING_MODE::COUNTERSINK
-                && frontPM.angle > 0 )
-        {
-            double halfAngleRad = ( frontPM.angle / 10.0 ) * M_PI / 180.0 / 2.0;
-            pmDepth = static_cast<int>( ( frontPM.size / 2.0 ) / tan( halfAngleRad ) );
-        }
-
-        if( pmDepth > 0 )
-        {
-            // Calculate distance from F_Cu to aLayer
-            int layerDist = stackup.GetLayerDistance( F_Cu, aLayer );
-
-            if( layerDist < pmDepth )
-            {
-                // For countersink, diameter decreases with depth
-                if( *frontPM.mode == PAD_DRILL_POST_MACHINING_MODE::COUNTERSINK && frontPM.angle > 0 )
-                {
-                    double halfAngleRad = ( frontPM.angle / 10.0 ) * M_PI / 180.0 / 2.0;
-                    int diameterAtLayer = frontPM.size - static_cast<int>( 2.0 * layerDist * tan( halfAngleRad ) );
-                    return std::max( 0, diameterAtLayer );
-                }
-                else
-                {
-                    // Counterbore - constant diameter
-                    return frontPM.size;
-                }
-            }
-        }
-    }
-
-    // Check back post-machining (counterbore/countersink from bottom)
-    const PADSTACK::POST_MACHINING_PROPS& backPM = m_padStack.BackPostMachining();
-
-    if( backPM.mode.has_value()
-            && *backPM.mode != PAD_DRILL_POST_MACHINING_MODE::NOT_POST_MACHINED
-            && *backPM.mode != PAD_DRILL_POST_MACHINING_MODE::UNKNOWN
-            && backPM.size > 0 )
-    {
-        int pmDepth = backPM.depth;
-
-        // For countersink without explicit depth, calculate from diameter and angle
-        if( pmDepth <= 0
-                && *backPM.mode == PAD_DRILL_POST_MACHINING_MODE::COUNTERSINK
-                && backPM.angle > 0 )
-        {
-            double halfAngleRad = ( backPM.angle / 10.0 ) * M_PI / 180.0 / 2.0;
-            pmDepth = static_cast<int>( ( backPM.size / 2.0 ) / tan( halfAngleRad ) );
-        }
-
-        if( pmDepth > 0 )
-        {
-            // Calculate distance from B_Cu to aLayer
-            int layerDist = stackup.GetLayerDistance( B_Cu, aLayer );
-
-            if( layerDist < pmDepth )
-            {
-                // For countersink, diameter decreases with depth
-                if( *backPM.mode == PAD_DRILL_POST_MACHINING_MODE::COUNTERSINK && backPM.angle > 0 )
-                {
-                    double halfAngleRad = ( backPM.angle / 10.0 ) * M_PI / 180.0 / 2.0;
-                    int diameterAtLayer = backPM.size - static_cast<int>( 2.0 * layerDist * tan( halfAngleRad ) );
-                    return std::max( 0, diameterAtLayer );
-                }
-                else
-                {
-                    // Counterbore - constant diameter
-                    return backPM.size;
-                }
-            }
-        }
-    }
-
-    return 0;
+    return m_padStack.PostMachiningKnockout( board->GetDesignSettings().GetStackupDescriptor(), aLayer );
 }
 
 
@@ -1381,16 +1304,28 @@ void PCB_ARC::Rotate( const VECTOR2I& aRotCentre, const EDA_ANGLE& aAngle )
 
 void PCB_TRACK::Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
 {
-    MIRROR( m_Start, aCentre, aFlipDirection );
-    MIRROR( m_End, aCentre, aFlipDirection );
+    Mirror( MIRROR_AXIS( aCentre, aFlipDirection ) );
+}
+
+
+void PCB_TRACK::Mirror( const SEG& aAxis )
+{
+    m_Start = aAxis.ReflectPoint( m_Start );
+    m_End = aAxis.ReflectPoint( m_End );
 }
 
 
 void PCB_ARC::Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
 {
-    MIRROR( m_Start, aCentre, aFlipDirection );
-    MIRROR( m_End, aCentre, aFlipDirection );
-    MIRROR( m_Mid, aCentre, aFlipDirection );
+    Mirror( MIRROR_AXIS( aCentre, aFlipDirection ) );
+}
+
+
+void PCB_ARC::Mirror( const SEG& aAxis )
+{
+    m_Start = aAxis.ReflectPoint( m_Start );
+    m_End = aAxis.ReflectPoint( m_End );
+    m_Mid = aAxis.ReflectPoint( m_Mid );
 }
 
 
@@ -2441,21 +2376,32 @@ double PCB_TRACK::ViewGetLOD( int aLayer, const KIGFX::VIEW* aView ) const
                 return LOD_HIDE;
         }
 
-        VECTOR2I start( GetStart() );
-        VECTOR2I end( GetEnd() );
-
-        // Calc the approximate size of the netname (assume square chars)
-        SEG::ecoord nameSize = GetDisplayNetname().size() * GetWidth();
-
-        if( VECTOR2I( end - start ).SquaredEuclideanNorm() < nameSize * nameSize )
-            return LOD_HIDE;
-
         BOX2I clipBox = BOX2ISafe( aView->GetViewport() );
 
-        ClipLine( &clipBox, start.x, start.y, end.x, end.y );
+        // Calc the approximate size of the netname (assume square chars)
+        int nameSize = (int) GetDisplayNetname().size() * GetWidth();
 
-        if( VECTOR2I( end - start ).SquaredEuclideanNorm() == 0 )
-            return LOD_HIDE;
+        if( Type() == PCB_ARC_T )
+        {
+            if( KiROUND( GetLength() ) < nameSize )
+                return LOD_HIDE;
+
+            if( !clipBox.Intersects( GetBoundingBox() ) )
+                return LOD_HIDE;
+        }
+        else if( Type() == PCB_TRACE_T )
+        {
+            VECTOR2I start( GetStart() );
+            VECTOR2I end( GetEnd() );
+
+            if( VECTOR2I( end - start ).SquaredEuclideanNorm() < SEG::Square( nameSize ) )
+                return LOD_HIDE;
+
+            ClipLine( &clipBox, start.x, start.y, end.x, end.y );
+
+            if( VECTOR2I( end - start ).SquaredEuclideanNorm() == 0 )
+                return LOD_HIDE;
+        }
 
         // Netnames will be shown only if zoom is appropriate
         return lodScaleForThreshold( aView, m_width, pcbIUScale.mmToIU( 4.0 ) );
@@ -3184,6 +3130,9 @@ std::shared_ptr<SHAPE> PCB_VIA::GetEffectiveShape( PCB_LAYER_ID aLayer, FLASHING
         {
             PCB_LAYER_ID cuLayer = m_padStack.EffectiveLayerFor( aLayer );
             diameter = GetWidth( cuLayer );
+
+            if( IsSolderMaskLayer( aLayer ) )
+                diameter += 2 * GetSolderMaskExpansion();
         }
     }
     else

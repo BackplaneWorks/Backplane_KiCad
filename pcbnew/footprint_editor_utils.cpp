@@ -64,6 +64,8 @@ void FOOTPRINT_EDIT_FRAME::LoadFootprintFromLibrary( LIB_ID aFPID )
         {
             m_tabsPanel->SelectTab( existing );
 
+            setFPWatcher( GetBoard()->GetFirstFootprint() );
+
             m_treePane->GetLibTree()->ExpandLibId( aFPID );
 
             m_centerItemOnIdle = aFPID;
@@ -278,7 +280,7 @@ void FOOTPRINT_EDIT_FRAME::OnEditItemRequest( BOARD_ITEM* aItem )
         break;
 
     case PCB_PAD_T:
-        ShowPadPropertiesDialog( static_cast<PAD*>( aItem ) );
+        ShowPadPropertiesDialog( static_cast<PAD&>( *aItem ) );
         break;
 
     case PCB_FOOTPRINT_T:
@@ -296,7 +298,6 @@ void FOOTPRINT_EDIT_FRAME::OnEditItemRequest( BOARD_ITEM* aItem )
         break;
 
     case PCB_TABLE_T:
-    case PCB_DRILL_CHART_T:
     {
         DIALOG_TABLE_PROPERTIES dlg( this, static_cast<PCB_TABLE*>( aItem ) );
 

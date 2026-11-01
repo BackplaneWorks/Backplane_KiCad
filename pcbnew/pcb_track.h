@@ -80,7 +80,9 @@ public:
 
     void Rotate( const VECTOR2I& aRotCentre, const EDA_ANGLE& aAngle ) override;
 
-    virtual void Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
+    void Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
+
+    void Mirror( const SEG& aAxis ) override;
 
     void Flip( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
 
@@ -163,8 +165,7 @@ public:
      * @param ignoreLineWidth is used for edge cut items where the line width is only for visualization.
      */
     void TransformShapeToPolygon( SHAPE_POLY_SET& aBuffer, PCB_LAYER_ID aLayer, int aClearance,
-                                  int aError, ERROR_LOC aErrorLoc,
-                                  bool ignoreLineWidth = false ) const override;
+                                  int aError, ERROR_LOC aErrorLoc, bool ignoreLineWidth = false ) const override;
 
     // @copydoc BOARD_ITEM::GetEffectiveShape
     std::shared_ptr<SHAPE> GetEffectiveShape( PCB_LAYER_ID aLayer = UNDEFINED_LAYER,
@@ -211,9 +212,9 @@ public:
 
     BITMAPS GetMenuImage() const override;
 
-    virtual EDA_ITEM* Clone() const override;
+    EDA_ITEM* Clone() const override;
 
-    virtual std::vector<int> ViewGetLayers() const override;
+    std::vector<int> ViewGetLayers() const override;
 
     double ViewGetLOD( int aLayer, const KIGFX::VIEW* aView ) const override;
 
@@ -227,9 +228,9 @@ public:
         return true;
     }
 
-    virtual double Similarity( const BOARD_ITEM& aOther ) const override;
+    double Similarity( const BOARD_ITEM& aOther ) const override;
 
-    virtual bool operator==( const BOARD_ITEM& aOther ) const override;
+    bool operator==( const BOARD_ITEM& aOther ) const override;
     virtual bool operator==( const PCB_TRACK& aOther ) const;
 
     struct cmp_tracks
@@ -241,14 +242,13 @@ public:
     bool Deserialize( const google::protobuf::Any &aContainer ) override;
 
 #if defined (DEBUG)
-    virtual void Show( int nestLevel, std::ostream& os ) const override { ShowDummy( os ); }
+    void Show( int nestLevel, std::ostream& os ) const override { ShowDummy( os ); }
 #endif
 
 protected:
-    virtual void swapData( BOARD_ITEM* aImage ) override;
+    void swapData( BOARD_ITEM* aImage ) override;
 
-    void GetMsgPanelInfoBase_Common( EDA_DRAW_FRAME* aFrame,
-                                     std::vector<MSG_PANEL_ITEM>& aList ) const;
+    void GetMsgPanelInfoBase_Common( EDA_DRAW_FRAME* aFrame, std::vector<MSG_PANEL_ITEM>& aList ) const;
 
 protected:
     VECTOR2I m_Start;        ///< Line start point
@@ -271,6 +271,13 @@ public:
 
     PCB_ARC( BOARD_ITEM* aParent, const SHAPE_ARC* aArc );
 
+    /**
+     * Create a PCB_ARC through the three points, or a PCB_TRACK segment when they are straight.
+     * Layer, width and net are left for the caller.
+     */
+    static std::unique_ptr<PCB_TRACK> CreateFromThreePoints( BOARD_ITEM* aParent, const VECTOR2I& aStart,
+                                                             const VECTOR2I& aMid, const VECTOR2I& aEnd );
+
     void CopyFrom( const BOARD_ITEM* aOther ) override;
 
     static inline bool ClassOf( const EDA_ITEM *aItem )
@@ -278,7 +285,7 @@ public:
         return aItem && PCB_ARC_T == aItem->Type();
     }
 
-    virtual void Move( const VECTOR2I& aMoveVector ) override
+    void Move( const VECTOR2I& aMoveVector ) override
     {
         m_Start += aMoveVector;
         m_Mid   += aMoveVector;
@@ -289,6 +296,8 @@ public:
 
     void Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
 
+    void Mirror( const SEG& aAxis ) override;
+
     void Flip( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
 
     void SetMid( const VECTOR2I& aMid ) { m_Mid = aMid; }
@@ -296,19 +305,18 @@ public:
 
     void SetPosition( const VECTOR2I& aPos ) override { m_Start = aPos; }
 
-    virtual VECTOR2I GetPosition() const override;
+    VECTOR2I GetPosition() const override;
     const VECTOR2I GetFocusPosition() const override  { return m_Mid; }
 
-    virtual VECTOR2I GetCenter() const override { return GetPosition(); }
+    VECTOR2I GetCenter() const override { return GetPosition(); }
 
     double GetRadius() const;
     EDA_ANGLE GetAngle() const;
     EDA_ANGLE GetArcAngleStart() const;
     EDA_ANGLE GetArcAngleEnd() const;  // Called by Python; ignore CLion's claim that it's unused
-    virtual bool HitTest( const VECTOR2I& aPosition, int aAccuracy = 0 ) const override;
+    bool HitTest( const VECTOR2I& aPosition, int aAccuracy = 0 ) const override;
 
-    virtual bool HitTest( const BOX2I& aRect, bool aContained = true,
-                          int aAccuracy = 0 ) const override;
+    bool HitTest( const BOX2I& aRect, bool aContained = true, int aAccuracy = 0 ) const override;
 
     bool IsCCW() const;
 
@@ -700,8 +708,7 @@ public:
      * @param aTopmost
      * @param aBottommost
      */
-    void GetOutermostConnectedLayers( PCB_LAYER_ID* aTopmost,
-                             PCB_LAYER_ID* aBottommost ) const;
+    void GetOutermostConnectedLayers( PCB_LAYER_ID* aTopmost, PCB_LAYER_ID* aBottommost ) const;
 
     /**
      * Set the drill value for vias.
@@ -785,6 +792,24 @@ public:
      */
     int GetPostMachiningKnockout( PCB_LAYER_ID aLayer ) const;
 
+    /**
+     * @see PADSTACK::MachiningKnockout
+     *
+     * A result of zero is equivalent to IsBackdrilledOrPostMachined() returning false.
+     */
+    int GetBackdrillOrPostMachiningKnockout( PCB_LAYER_ID aLayer ) const;
+
+    /**
+     * Check whether backdrilling or post-machining left no copper at all on a layer.
+     *
+     * A narrower operation only hollows the barrel and leaves an annular ring, which still
+     * conducts and whose outer edge is unmoved, so this is stricter than
+     * IsBackdrilledOrPostMachined().
+     *
+     * @param aLayer the copper layer to check
+     */
+    bool HasCopperRemoved( PCB_LAYER_ID aLayer ) const;
+
     void SetPrimaryDrillFilled( const std::optional<bool>& aFilled );
     void SetPrimaryDrillFilledFlag( bool aFilled );
     std::optional<bool> GetPrimaryDrillFilled() const { return m_padStack.Drill().is_filled; }
@@ -795,10 +820,7 @@ public:
     std::optional<bool> GetPrimaryDrillCapped() const { return m_padStack.Drill().is_capped; }
     bool GetPrimaryDrillCappedFlag() const { return m_padStack.Drill().is_capped.value_or( false ); }
 
-    void SetDrill( int aDrill )
-    {
-        SetPrimaryDrillSize( { aDrill, aDrill } );
-    }
+    void SetDrill( int aDrill ) { SetPrimaryDrillSize( { aDrill, aDrill } ); }
 
     /**
      * Return the local drill setting for this PCB_VIA.

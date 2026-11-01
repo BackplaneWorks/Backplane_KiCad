@@ -117,8 +117,11 @@ wxString JOB::ResolveOutputPath( const wxString& aPath, bool aPathIsDirectory, P
         {
             wxFileName fn( outPath );
 
-            if( fn.IsAbsolute() || outPath.IsEmpty() )
+            // Absolute directories are used as given, like absolute file paths
+            if( outPath.IsEmpty() )
                 fn.AssignDir( m_tempOutputDirectory );
+            else if( fn.IsAbsolute() )
+                fn.AssignDir( outPath );
             else
                 PrependDirectoryToPath( fn, m_tempOutputDirectory );
 
@@ -143,6 +146,28 @@ wxString JOB::ResolveOutputPath( const wxString& aPath, bool aPathIsDirectory, P
     }
 
     return outPath;
+}
+
+
+wxString JOB::AppendDefaultFileName( const wxString& aPath, const wxString& aDefaultName )
+{
+    if( aPath.IsEmpty() )
+        return aPath;
+
+    wxFileName fn( aPath );
+
+    if( !fn.GetFullName().IsEmpty() )
+    {
+        if( !wxFileName::DirExists( aPath ) )
+            return aPath;
+
+        // An existing folder without a trailing separator parses as a file name
+        fn.AssignDir( aPath );
+    }
+
+    fn.SetFullName( aDefaultName );
+
+    return fn.GetFullPath();
 }
 
 

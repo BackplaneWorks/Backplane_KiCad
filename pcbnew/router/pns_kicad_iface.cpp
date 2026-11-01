@@ -116,10 +116,13 @@ namespace std
     template <>
     struct hash<CLEARANCE_CACHE_KEY>
     {
-        std::size_t operator()( const CLEARANCE_CACHE_KEY& k ) const
+        std::size_t operator()( const CLEARANCE_CACHE_KEY& k ) const noexcept
         {
             size_t retval = 0xBADC0FFEE0DDF00D;
-            hash_combine( retval, hash<const void*>()( k.A ), hash<const void*>()( k.B ),
+
+            hash_combine( retval,
+                          hash<const void*>()( k.A ),
+                          hash<const void*>()( k.B ),
                           hash<int>()( k.Flag ) );
             return retval;
         }
@@ -132,56 +135,77 @@ namespace std
 // from the rules, so they share one cache entry.
 struct TEMP_CLEARANCE_CACHE_KEY
 {
-    struct SIDE
+    struct PARTICIPANT
     {
         const void* boardItem;
         const void* net;
+        VECTOR2I    start;
+        VECTOR2I    end;
         int         layerStart;
         int         layerEnd;
         int         kind;
         bool        freePad;
 
-        bool operator==( const SIDE& o ) const
+        bool operator==( const PARTICIPANT& o ) const
         {
-            return boardItem == o.boardItem && net == o.net && layerStart == o.layerStart && layerEnd == o.layerEnd
-                   && kind == o.kind && freePad == o.freePad;
+            return boardItem == o.boardItem
+                    && net == o.net
+                    && start == o.start && end == o.end
+                    && layerStart == o.layerStart && layerEnd == o.layerEnd
+                    && kind == o.kind
+                    && freePad == o.freePad;
         }
 
-        bool operator<( const SIDE& o ) const
+        bool operator<( const PARTICIPANT& o ) const
         {
             if( boardItem != o.boardItem )
                 return boardItem < o.boardItem;
+
             if( net != o.net )
                 return net < o.net;
+
+            if( start < o.start )
+                return start < o.start;
+
+            if( end < o.end )
+                return end < o.end;
+
             if( layerStart != o.layerStart )
                 return layerStart < o.layerStart;
+
             if( layerEnd != o.layerEnd )
                 return layerEnd < o.layerEnd;
+
             if( kind != o.kind )
                 return kind < o.kind;
+
             return freePad < o.freePad;
         }
     };
 
-    SIDE A;
-    SIDE B;
-    bool Flag;
+    PARTICIPANT A;
+    PARTICIPANT B;
+    bool        Flag;
 
-    static SIDE makeSide( const PNS::ITEM* aItem )
+    static PARTICIPANT makeParticipant( const PNS::ITEM* aItem )
     {
-        return SIDE{ (const void*) aItem->BoardItem(),
-                     (const void*) aItem->Net(),
-                     aItem->Layers().Start(),
-                     aItem->Layers().End(),
-                     (int) aItem->Kind(),
-                     aItem->IsFreePad() };
+        const SHAPE* shape = aItem->Shape( aItem->Layer() );
+
+        return PARTICIPANT{ (const void*) aItem->BoardItem(),
+                            (const void*) aItem->Net(),
+                            shape ? shape->GetStart() : VECTOR2I(),
+                            shape ? shape->GetEnd() : VECTOR2I(),
+                            aItem->Layers().Start(),
+                            aItem->Layers().End(),
+                            (int) aItem->Kind(),
+                            aItem->IsFreePad() };
     }
 
     TEMP_CLEARANCE_CACHE_KEY( const PNS::ITEM* aA, const PNS::ITEM* aB, bool aFlag ) :
             Flag( aFlag )
     {
-        SIDE sa = makeSide( aA );
-        SIDE sb = makeSide( aB );
+        PARTICIPANT sa = makeParticipant( aA );
+        PARTICIPANT sb = makeParticipant( aB );
 
         // Canonical order so the key is symmetric in (A, B)
         if( sb < sa )
@@ -201,24 +225,29 @@ struct TEMP_CLEARANCE_CACHE_KEY
 
 namespace std
 {
-template <>
-struct hash<TEMP_CLEARANCE_CACHE_KEY>
-{
-    std::size_t operator()( const TEMP_CLEARANCE_CACHE_KEY& k ) const
+    template <>
+    struct hash<TEMP_CLEARANCE_CACHE_KEY>
     {
-        size_t retval = 0xBADC0FFEE0DDF00D;
-
-        for( const TEMP_CLEARANCE_CACHE_KEY::SIDE* s : { &k.A, &k.B } )
+        std::size_t operator()( const TEMP_CLEARANCE_CACHE_KEY& k ) const noexcept
         {
-            hash_combine( retval, hash<const void*>()( s->boardItem ), hash<const void*>()( s->net ),
-                          hash<int>()( s->layerStart ), hash<int>()( s->layerEnd ), hash<int>()( s->kind ),
-                          hash<bool>()( s->freePad ) );
-        }
+            size_t retval = 0xBADC0FFEE0DDF00D;
 
-        hash_combine( retval, hash<bool>()( k.Flag ) );
-        return retval;
-    }
-};
+            for( const TEMP_CLEARANCE_CACHE_KEY::PARTICIPANT* s : { &k.A, &k.B } )
+            {
+                hash_combine( retval,
+                              hash<const void*>()( s->boardItem ),
+                              hash<const void*>()( s->net ),
+                              hash<int>()( s->start.x ), hash<int>()( s->start.y ),
+                              hash<int>()( s->end.x ), hash<int>()( s->end.y ),
+                              hash<int>()( s->layerStart ), hash<int>()( s->layerEnd ),
+                              hash<int>()( s->kind ),
+                              hash<bool>()( s->freePad ) );
+            }
+
+            hash_combine( retval, hash<bool>()( k.Flag ) );
+            return retval;
+        }
+    };
 } // namespace std
 
 
@@ -232,9 +261,9 @@ struct HULL_CACHE_KEY
     bool operator==( const HULL_CACHE_KEY& other ) const
     {
         return item == other.item
-            && clearance == other.clearance
-            && walkaroundThickness == other.walkaroundThickness
-            && layer == other.layer;
+                && clearance == other.clearance
+                && walkaroundThickness == other.walkaroundThickness
+                && layer == other.layer;
     }
 };
 
@@ -243,11 +272,15 @@ namespace std
     template <>
     struct hash<HULL_CACHE_KEY>
     {
-        std::size_t operator()( const HULL_CACHE_KEY& k ) const
+        std::size_t operator()( const HULL_CACHE_KEY& k ) const noexcept
         {
             size_t retval = 0xBADC0FFEE0DDF00D;
-            hash_combine( retval, hash<const void*>()( k.item ), hash<int>()( k.clearance ),
-                          hash<int>()( k.walkaroundThickness ), hash<int>()( k.layer ) );
+
+            hash_combine( retval,
+                          hash<const void*>()( k.item ),
+                          hash<int>()( k.clearance ),
+                          hash<int>()( k.walkaroundThickness ),
+                          hash<int>()( k.layer ) );
             return retval;
         }
     };
@@ -260,8 +293,7 @@ public:
     PNS_PCBNEW_RULE_RESOLVER( BOARD* aBoard, PNS::ROUTER_IFACE* aRouterIface );
     virtual ~PNS_PCBNEW_RULE_RESOLVER();
 
-    int Clearance( const PNS::ITEM* aA, const PNS::ITEM* aB,
-                   bool aUseClearanceEpsilon = true ) override;
+    int Clearance( const PNS::ITEM* aA, const PNS::ITEM* aB, bool aUseClearanceEpsilon = true ) override;
 
     bool HasUserDefinedPhysicalConstraint() override;
 
@@ -506,7 +538,7 @@ bool PNS_PCBNEW_RULE_RESOLVER::IsNonPlatedSlot( const PNS::ITEM* aItem )
             PAD* pad = static_cast<PAD*>( parent );
 
             return pad->GetAttribute() == PAD_ATTRIB::NPTH
-                        && pad->GetDrillSizeX() != pad->GetDrillSizeY();
+                        && pad->GetDrillSize().x != pad->GetDrillSize().y;
         }
 
         // Via holes are (currently) always round, and always plated
@@ -1261,7 +1293,7 @@ bool PNS_KICAD_IFACE_BASE::ImportSizes( PNS::SIZES_SETTINGS& aSizes, PNS::ITEM* 
     // First try to pick up diff pair width from starting track, if enabled
     if( bds.m_UseConnectedTrackWidth && aStartItem )
         found = inheritTrackWidthAndDpGap( aStartItem, aStartPosition, &diffPairWidth, &diffPairGap );
- 
+
     // Next, pick up gap from netclass, and width also if we didn't get a starting width above
     if( bds.UseNetClassDiffPair() && aStartItem )
     {
@@ -1677,6 +1709,7 @@ std::vector<std::unique_ptr<PNS::SOLID>> PNS_KICAD_IFACE_BASE::syncPad( PAD* aPa
 
     case PAD_ATTRIB::CONN:
     case PAD_ATTRIB::SMD:
+    case PAD_ATTRIB::NON_COMPONENT:
     {
         bool is_copper = false;
 
@@ -2370,6 +2403,7 @@ void PNS_KICAD_IFACE_BASE::SyncWorld( PNS::NODE *aWorld )
 
         case PCB_TABLE_T:
         case PCB_DRILL_CHART_T:
+        case PCB_STACKUP_TABLE_T:
             syncTextItem( aWorld, static_cast<PCB_TABLE*>( gitem ), gitem->GetLayer() );
             break;
 
@@ -2771,6 +2805,7 @@ void PNS_KICAD_IFACE::RemoveItem( PNS::ITEM* aItem )
         if( EDA_GROUP* group = parent->GetParentGroup() )
             m_itemGroups[parent] = group;
 
+        m_removedItems.insert( parent );
         m_commit->Remove( parent );
     }
 }
@@ -3004,18 +3039,23 @@ BOARD_CONNECTED_ITEM* PNS_KICAD_IFACE::createBoardItem( PNS::ITEM* aItem )
         if( aItem->IsLocked() )
             newBoardItem->SetLocked( true );
 
-        if( BOARD_ITEM* src = aItem->GetSourceItem() )
-        {
-            if( !m_itemGroups.contains( src ) )
-            {
-                if( EDA_GROUP* group = src->GetParentGroup() )
-                    m_itemGroups[src] = group;
-            }
+        BOARD_ITEM* src = aItem->GetSourceItem();
 
-            if( m_itemGroups.contains( src ) )
-                m_replacementMap[src].push_back( newBoardItem );
+        // A new route may borrow its start track as source for solder mask only, which does not
+        // make it a piece of that track
+        const bool isReplacement = src && ( aItem->Parent() || m_removedItems.contains( src ) );
+
+        if( isReplacement && !m_itemGroups.contains( src ) )
+        {
+            if( EDA_GROUP* group = src->GetParentGroup() )
+                m_itemGroups[src] = group;
         }
-        else
+
+        if( isReplacement && m_itemGroups.contains( src ) )
+        {
+            m_replacementMap[src].push_back( newBoardItem );
+        }
+        else if( !isReplacement )
         {
             // This is a new item, which goes in the entered group (if any)
             m_replacementMap[ENTERED_GROUP_MAGIC_NUMBER].push_back( newBoardItem );
@@ -3092,6 +3132,7 @@ void PNS_KICAD_IFACE::Commit()
     }
 
     m_itemGroups.clear();
+    m_removedItems.clear();
     m_replacementMap.clear();
 
     m_commit->Push( _( "Routing" ), m_commitFlags | SKIP_ENTERED_GROUP );

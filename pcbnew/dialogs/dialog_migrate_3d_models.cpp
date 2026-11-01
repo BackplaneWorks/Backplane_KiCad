@@ -28,6 +28,10 @@
 #include <wx/filedlg.h>
 #include <wx/filename.h>
 
+#include <widgets/std_bitmap_button.h>
+#include <widgets/wx_grid.h>
+#include <bitmaps/bitmaps_list.h>
+#include <bitmaps/bitmap_types.h>
 #include <board.h>
 #include <board_commit.h>
 #include <board_design_settings.h>
@@ -50,6 +54,9 @@
 #include <gestfich.h>
 
 
+#define UNSPECIFIED -2
+#define KEEP_EXISTING -1
+
 namespace
 {
 /**
@@ -59,9 +66,13 @@ namespace
 const std::vector<wxString>& stepExtensions()
 {
     static const std::vector<wxString> exts = {
-        wxS( "step" ), wxS( "stp" ), wxS( "stpz" ),
-        wxS( "step.gz" ), wxS( "stp.gz" ),
-        wxS( "iges" ), wxS( "igs" )
+        wxS( "step" ),
+        wxS( "stp" ),
+        wxS( "stpz" ),
+        wxS( "step.gz" ),
+        wxS( "stp.gz" ),
+        wxS( "iges" ),
+        wxS( "igs" )
     };
     return exts;
 }
@@ -79,16 +90,20 @@ wxString normalizeStem( const wxString& aName )
     // Strip known extensions (case-insensitive), including doubled-up .gz
     // forms that don't round-trip through wxFileName::GetName.
     static const wxString stripList[] = {
-        wxS( ".step.gz" ), wxS( ".stp.gz" ),
-        wxS( ".wrl" ),  wxS( ".wrz" ),
-        wxS( ".step" ), wxS( ".stp" ), wxS( ".stpz" ),
-        wxS( ".iges" ), wxS( ".igs" )
+        wxS( ".step.gz" ),
+        wxS( ".stp.gz" ),
+        wxS( ".wrl" ),
+        wxS( ".wrz" ),
+        wxS( ".step" ),
+        wxS( ".stp" ),
+        wxS( ".stpz" ),
+        wxS( ".iges" ),
+        wxS( ".igs" )
     };
 
     for( const wxString& ext : stripList )
     {
-        if( stem.length() > ext.length()
-                && stem.Right( ext.length() ).Lower() == ext )
+        if( stem.length() > ext.length() && stem.Right( ext.length() ).Lower() == ext )
         {
             stem = stem.Left( stem.length() - ext.length() );
             break;
@@ -171,18 +186,38 @@ DIALOG_MIGRATE_3D_MODELS::DIALOG_MIGRATE_3D_MODELS( PCB_EDIT_FRAME* aFrame ) :
         m_trackBallCamera( 2 * RANGE_SCALE_3D ),
         m_previewPane( nullptr )
 {
-    // Single column spanning the full list-control width; wxLC_REPORT needs
-    // at least one column to show anything, wxLC_NO_HEADER hides the header.
-    m_missingList->AppendColumn( wxEmptyString, wxLIST_FORMAT_LEFT, 800 );
-    m_candidatesList->AppendColumn( wxEmptyString, wxLIST_FORMAT_LEFT, 800 );
+    m_searchDirsGrid->ClearRows();
+    m_searchDirsGrid->EnableEditing( false );
+    m_searchDirsGrid->SetupColumnAutosizer( 0 );
 
-    // Keep the single column filling the visible width as the splitter sash
-    // moves.  Bare wxListCtrl in report mode clips overflowing text cleanly.
-    auto fitColumn = []( wxListCtrl* aList )
+    if( COMMON_SETTINGS* common = Pgm().GetCommonSettings() )
     {
-        const int width = std::max( aList->GetClientSize().GetWidth() - 2, 20 );
-        aList->SetColumnWidth( 0, width );
-    };
+        for( const wxString& dir : common->m_Extra3DSearchDirs )
+        {
+            m_searchDirsGrid->AppendRows( 1 );
+            m_searchDirsGrid->SetCellValue( m_searchDirsGrid->GetNumberRows() - 1, 0, dir );
+        }
+    }
+
+    m_addReplacement->SetBitmap( KiBitmapBundle( BITMAPS::small_plus ) );
+    m_addSearchDir->SetBitmap( KiBitmapBundle( BITMAPS::small_plus ) );
+    m_deleteSearchDir->SetBitmap( KiBitmapBundle( BITMAPS::small_trash ) );
+
+    m_headerLabel->SetFont( KIUI::GetControlFont( this ).Bold() );
+    m_subHeader->SetFont( KIUI::GetControlFont( this ).Italic() );
+    m_subHeader2->SetFont( KIUI::GetControlFont( this ).Italic() );
+    m_helpText->SetFont( KIUI::GetInfoFont( this ).Italic() );
+
+    m_missingList->AppendColumn( wxEmptyString );
+    m_candidatesList->AppendColumn( wxEmptyString );
+
+    // Keep the single column filling the visible width as the splitter sash moves.
+    auto fitColumn =
+            []( wxListCtrl* aList )
+            {
+                const int width = std::max( aList->GetClientSize().GetWidth() - 2, 20 );
+                aList->SetColumnWidth( 0, width );
+            };
 
     m_missingList->Bind( wxEVT_SIZE,
             [this, fitColumn]( wxSizeEvent& aEvt )
@@ -198,24 +233,54 @@ DIALOG_MIGRATE_3D_MODELS::DIALOG_MIGRATE_3D_MODELS( PCB_EDIT_FRAME* aFrame ) :
                 aEvt.Skip();
             } );
 
-    collectMissingModels();
-    buildCatalog();
-    rankAllCandidates();
-
-    // Build the throwaway board + footprint and the 3D canvas.  Must happen
-    // after collectMissingModels() so we can size the preview using whichever
-    // representative footprint is first shown.
+    // Build the throwaway board + footprint and the 3D canvas.
     initPreviewBoard();
 
-    // Auto-select the top real (non-"keep existing") candidate for every
-    // missing row so the user sees a sensible default without having to
-    // click through each one.  Rows for which no real candidate exists get
-    // bolded by populateMissingList() as a visual attention marker.
+    SetupStandardButtons( { { wxID_OK,     _( "Replace Models" ) },
+                            { wxID_CANCEL, _( "Cancel" )         } } );
+
+    finishDialogSettings();
+}
+
+
+DIALOG_MIGRATE_3D_MODELS::~DIALOG_MIGRATE_3D_MODELS()
+{
+    delete m_previewPane;
+    delete m_dummyBoard;   // owns m_dummyFootprint
+}
+
+
+bool DIALOG_MIGRATE_3D_MODELS::TransferDataToWindow()
+{
+    std::map<wxString, ENTRY> byName = collectMissingWrlModels( m_frame );
+
+    m_missing.reserve( byName.size() );
+    m_missingRepFp.reserve( byName.size() );
+    m_missingXform.reserve( byName.size() );
+
+    for( const auto& [fn, entry] : byName )
+    {
+        m_missing.push_back( fn );
+        m_missingRepFp.push_back( entry.m_fp );
+        m_missingXform.push_back( entry.m_xform );
+    }
+
+    buildCatalog();
+
+    m_selectedPerMissing.assign( m_missing.size(), UNSPECIFIED );
+    m_candidatesPerMissing.resize( m_missing.size() );
+    rankAllCandidates();
+
+    // Perform these actions *after* we have loaded saved state into the dialog
+
+    // Auto-select the top real (non-"keep existing") candidate for every missing row so the user gets
+    // a sensible default without having to click through each one.  Rows for which no real candidate
+    // exists get bolded by populateMissingList() as a visual attention marker.
     for( size_t i = 0; i < m_missing.size(); ++i )
     {
-        const std::vector<MATCH_CANDIDATE>& cands = m_candidatesPerMissing[i];
+        const std::vector<MATCH_CANDIDATE>& candidates = m_candidatesPerMissing[i];
 
-        if( !cands.empty() && !cands.front().m_absPath.IsEmpty() )
+        if( !candidates.empty() && !candidates.front().m_absPath.IsEmpty() )
             m_selectedPerMissing[i] = 0;
     }
 
@@ -228,178 +293,50 @@ DIALOG_MIGRATE_3D_MODELS::DIALOG_MIGRATE_3D_MODELS( PCB_EDIT_FRAME* aFrame ) :
         populateCandidatesList( 0 );
     }
 
-    finishDialogSettings();
-    applyInitialSizeCaps();
-
-    // Position the splitter sashes so the three columns start out at roughly
-    // one third of the dialog width each.  Must happen after the dialog has
-    // been laid out at its final initial size.
-    const int clientWidth = m_mainSplitter->GetClientSize().GetWidth();
-
-    if( clientWidth > 360 )
-    {
-        const int outerSash = clientWidth / 3;
-        m_mainSplitter->SetSashPosition( outerSash );
-
-        const int innerWidth = std::max( clientWidth - outerSash, 240 );
-        m_innerSplitter->SetSashPosition( innerWidth / 2 );
-    }
-}
-
-
-void DIALOG_MIGRATE_3D_MODELS::applyInitialSizeCaps()
-{
-    const wxSize screenSize = wxGetDisplaySize();
-    const int hardCap = ( screenSize.GetWidth() * 9 ) / 10;
-
-    // Soft cap (0.9 * parent width) only applies on the first time the
-    // dialog is opened against a given user settings file.  We detect that
-    // by comparing the current width to the hardcoded base-class default:
-    // if finishDialogSettings() restored a saved value the width won't
-    // match the default.
-    constexpr int kBaseDefaultWidth = 900;
-    int cap = hardCap;
-
-    if( m_frame && GetSize().GetWidth() == kBaseDefaultWidth )
-    {
-        const int parentCap = ( m_frame->GetSize().GetWidth() * 9 ) / 10;
-        cap = std::min( cap, parentCap );
-    }
-
-    if( GetSize().GetWidth() > cap )
-    {
-        wxSize sized = GetSize();
-        sized.SetWidth( std::max( cap, GetMinSize().GetWidth() ) );
-        SetSize( sized );
-        Centre( wxBOTH );
-    }
-}
-
-
-DIALOG_MIGRATE_3D_MODELS::~DIALOG_MIGRATE_3D_MODELS()
-{
-    delete m_previewPane;
-    delete m_dummyBoard;   // owns m_dummyFootprint
+    return true;
 }
 
 
 bool DIALOG_MIGRATE_3D_MODELS::BoardHasUnresolvedWrlReferences( PCB_EDIT_FRAME* aFrame )
 {
-    if( !aFrame )
-        return false;
-
-    BOARD*             board    = aFrame->GetBoard();
-    FILENAME_RESOLVER* resolver = PROJECT_PCB::Get3DFilenameResolver( &aFrame->Prj() );
-
-    if( !board || !resolver )
-        return false;
-
-    const wxString projectPath = aFrame->Prj().GetProjectPath();
-
-    for( FOOTPRINT* fp : board->Footprints() )
-    {
-        for( const FP_3DMODEL& model : fp->Models() )
-        {
-            const wxString& fn = model.m_Filename;
-
-            if( fn.IsEmpty() || !MODEL_SUBSTITUTION::IsWrlExtension( fn ) )
-                continue;
-
-            if( resolver->ResolvePath( fn, projectPath, {} ).IsEmpty() )
-                return true;
-        }
-    }
-
-    return false;
+    return collectMissingWrlModels( aFrame ).size() > 0;
 }
 
 
 int DIALOG_MIGRATE_3D_MODELS::CountUnresolvedWrlReferences( PCB_EDIT_FRAME* aFrame )
 {
-    if( !aFrame )
-        return 0;
-
-    BOARD*             board    = aFrame->GetBoard();
-    FILENAME_RESOLVER* resolver = PROJECT_PCB::Get3DFilenameResolver( &aFrame->Prj() );
-
-    if( !board || !resolver )
-        return 0;
-
-    const wxString               projectPath = aFrame->Prj().GetProjectPath();
-    std::unordered_set<wxString> unique;
-
-    for( FOOTPRINT* fp : board->Footprints() )
-    {
-        for( const FP_3DMODEL& model : fp->Models() )
-        {
-            const wxString& fn = model.m_Filename;
-
-            if( fn.IsEmpty() || !MODEL_SUBSTITUTION::IsWrlExtension( fn ) )
-                continue;
-
-            if( unique.count( fn ) )
-                continue;
-
-            if( resolver->ResolvePath( fn, projectPath, {} ).IsEmpty() )
-                unique.insert( fn );
-        }
-    }
-
-    return static_cast<int>( unique.size() );
+    return (int) collectMissingWrlModels( aFrame ).size();
 }
 
 
 int DIALOG_MIGRATE_3D_MODELS::AutoMigrateByFilename( PCB_EDIT_FRAME* aFrame )
 {
-    if( !aFrame )
+    std::map<wxString, ENTRY> missingModels = collectMissingWrlModels( aFrame );
+
+    if( missingModels.size() == 0 )
         return 0;
 
-    BOARD*             board    = aFrame->GetBoard();
-    FILENAME_RESOLVER* resolver = PROJECT_PCB::Get3DFilenameResolver( &aFrame->Prj() );
-
-    if( !board || !resolver )
-        return 0;
-
-    const wxString projectPath = aFrame->Prj().GetProjectPath();
-
+    BOARD*                           board    = aFrame->GetBoard();
+    FILENAME_RESOLVER*               resolver = PROJECT_PCB::Get3DFilenameResolver( &aFrame->Prj() );
+    const wxString                   projectPath = aFrame->Prj().GetProjectPath();
     MODEL_SUBSTITUTION::STEP_CATALOG catalog;
-    bool                             catalogBuilt = false;
+
+    catalog.Build( projectPath, resolver );
 
     std::map<wxString, wxString> replacements;
-    std::unordered_set<wxString> seen;
 
-    for( FOOTPRINT* fp : board->Footprints() )
+    for( const auto& [filename, _] : missingModels )
     {
-        for( const FP_3DMODEL& model : fp->Models() )
-        {
-            const wxString& fn = model.m_Filename;
+        const wxString match = catalog.FindMatchFor( filename );
 
-            if( fn.IsEmpty() || !MODEL_SUBSTITUTION::IsWrlExtension( fn ) )
-                continue;
+        if( match.IsEmpty() )
+            continue;
 
-            if( !seen.insert( fn ).second )
-                continue;
+        const wxString shortened = resolver->ShortenPath( match );
 
-            if( !resolver->ResolvePath( fn, projectPath, {} ).IsEmpty() )
-                continue;
-
-            if( !catalogBuilt )
-            {
-                catalog.Build( projectPath, resolver );
-                catalogBuilt = true;
-            }
-
-            const wxString match = catalog.FindMatchFor( fn );
-
-            if( match.IsEmpty() )
-                continue;
-
-            const wxString shortened = resolver->ShortenPath( match );
-
-            // ShortenPath returning empty would blank the footprint reference;
-            // fall back to the absolute path in that edge case.
-            replacements[fn] = shortened.IsEmpty() ? match : shortened;
-        }
+        // ShortenPath returning empty would blank the footprint reference;
+        // fall back to the absolute path in that edge case.
+        replacements[filename] = shortened.IsEmpty() ? match : shortened;
     }
 
     if( replacements.empty() )
@@ -430,32 +367,27 @@ int DIALOG_MIGRATE_3D_MODELS::AutoMigrateByFilename( PCB_EDIT_FRAME* aFrame )
         }
     }
 
-    if( rewritten > 0 )
-        commit.Push( _( "Auto-migrate 3D model references" ) );
+    if( !commit.Empty() )
+        commit.Push( _( "Auto-migrate 3D Model References" ) );
 
     return rewritten;
 }
 
 
-void DIALOG_MIGRATE_3D_MODELS::collectMissingModels()
+std::map<wxString, DIALOG_MIGRATE_3D_MODELS::ENTRY>
+DIALOG_MIGRATE_3D_MODELS::collectMissingWrlModels( PCB_EDIT_FRAME* aFrame )
 {
-    BOARD*             board    = m_frame->GetBoard();
-    FILENAME_RESOLVER* resolver = PROJECT_PCB::Get3DFilenameResolver( &m_frame->Prj() );
+    std::map<wxString, ENTRY> byName;
+
+    if( !aFrame )
+        return byName;
+
+    BOARD*             board       = aFrame->GetBoard();
+    FILENAME_RESOLVER* resolver    = PROJECT_PCB::Get3DFilenameResolver( &aFrame->Prj() );
+    const wxString     projectPath = aFrame->Prj().GetProjectPath();
 
     if( !board || !resolver )
-        return;
-
-    const wxString projectPath = m_frame->Prj().GetProjectPath();
-
-    // Accumulate into a map keyed by WRL filename so we can sort afterwards
-    // while still tracking the representative footprint and transform captured
-    // from the first FP_3DMODEL that referenced it.
-    struct ENTRY
-    {
-        const FOOTPRINT* m_fp = nullptr;
-        MISSING_XFORM    m_xform;
-    };
-    std::map<wxString, ENTRY> byName;
+        return byName;
 
     for( FOOTPRINT* fp : board->Footprints() )
     {
@@ -469,9 +401,11 @@ void DIALOG_MIGRATE_3D_MODELS::collectMissingModels()
             if( byName.count( fn ) )
                 continue;
 
-            // Mirror the resolver invocation used by the 3D viewer: empty
-            // return means "not found on disk via any search path".
-            if( !resolver->ResolvePath( fn, projectPath, {} ).IsEmpty() )
+            std::vector<const EMBEDDED_FILES*> embeddedFilesStack;
+            embeddedFilesStack.push_back( fp->GetEmbeddedFiles() );
+            embeddedFilesStack.push_back( board->GetEmbeddedFiles() );
+
+            if( !resolver->ResolvePath( fn, projectPath, embeddedFilesStack ).IsEmpty() )
                 continue;
 
             ENTRY& e = byName[fn];
@@ -483,19 +417,7 @@ void DIALOG_MIGRATE_3D_MODELS::collectMissingModels()
         }
     }
 
-    m_missing.reserve( byName.size() );
-    m_missingRepFp.reserve( byName.size() );
-    m_missingXform.reserve( byName.size() );
-
-    for( const auto& [fn, entry] : byName )
-    {
-        m_missing.push_back( fn );
-        m_missingRepFp.push_back( entry.m_fp );
-        m_missingXform.push_back( entry.m_xform );
-    }
-
-    m_selectedPerMissing.assign( m_missing.size(), -1 );
-    m_candidatesPerMissing.resize( m_missing.size() );
+    return byName;
 }
 
 
@@ -503,6 +425,9 @@ void DIALOG_MIGRATE_3D_MODELS::buildCatalog()
 {
     if( m_missing.empty() )
         return;
+
+    m_catalog.clear();
+    m_scannedDirs.clear();
 
     wxBusyCursor busy;
 
@@ -631,9 +556,7 @@ DIALOG_MIGRATE_3D_MODELS::rankCandidatesFor( const wxString& aWrlFilename ) cons
         {
             MATCH_CANDIDATE cand;
             cand.m_absPath = entry.m_absPath;
-            cand.m_display = wxFileName( entry.m_absPath ).GetFullName()
-                             + wxS( "   \u2014   " )
-                             + entry.m_parent;
+            cand.m_display = wxFileName( entry.m_absPath ).GetFullName() + wxS( "   \u2014   " ) + entry.m_parent;
             cand.m_score   = score;
             ranked.push_back( cand );
         }
@@ -704,20 +627,20 @@ void DIALOG_MIGRATE_3D_MODELS::populateCandidatesList( int aMissingIndex )
     if( aMissingIndex < 0 || aMissingIndex >= static_cast<int>( m_missing.size() ) )
         return;
 
-    const std::vector<MATCH_CANDIDATE>& cands = m_candidatesPerMissing[aMissingIndex];
+    const std::vector<MATCH_CANDIDATE>& candidates = m_candidatesPerMissing[aMissingIndex];
 
-    for( size_t i = 0; i < cands.size(); ++i )
-        m_candidatesList->InsertItem( static_cast<long>( i ), cands[i].m_display );
+    for( size_t i = 0; i < candidates.size(); ++i )
+        m_candidatesList->InsertItem( static_cast<long>( i ), candidates[i].m_display );
 
     const int sel = m_selectedPerMissing[aMissingIndex];
 
-    if( sel >= 0 && sel < static_cast<int>( cands.size() ) )
+    if( sel >= 0 && sel < static_cast<int>( candidates.size() ) )
     {
         m_candidatesList->SetItemState( sel, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED,
                                         wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED );
-        showPreview( aMissingIndex, cands[sel].m_absPath );
+        showPreview( aMissingIndex, candidates[sel].m_absPath );
     }
-    else if( !cands.empty() )
+    else if( !candidates.empty() )
     {
         // No committed choice yet (only the "keep existing" row is available).
         // Highlight the top row for visual continuity; the preview still shows
@@ -725,7 +648,7 @@ void DIALOG_MIGRATE_3D_MODELS::populateCandidatesList( int aMissingIndex )
         // even when no replacement has been chosen.
         m_candidatesList->SetItemState( 0, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED,
                                         wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED );
-        showPreview( aMissingIndex, cands.front().m_absPath );
+        showPreview( aMissingIndex, candidates.front().m_absPath );
     }
 }
 
@@ -750,13 +673,7 @@ void DIALOG_MIGRATE_3D_MODELS::initPreviewBoard()
     m_boardAdapter.m_IsPreviewer = true;
 
     if( EDA_3D_VIEWER_SETTINGS* cfg = GetAppSettings<EDA_3D_VIEWER_SETTINGS>( "3d_viewer" ) )
-    {
         m_boardAdapter.m_Cfg = cfg;
-
-        // Same rationale as PANEL_PREVIEW_3D_MODEL: placeholder models are
-        // noisy in a candidate picker.
-        cfg->m_Render.show_missing_models = false;
-    }
 
     m_previewPane = new EDA_3D_CANVAS( m_previewPanel, OGL_ATT_LIST::GetAttributesList( ANTIALIASING_MODE::AA_8X ),
                                        m_boardAdapter, m_trackBallCamera,
@@ -839,22 +756,21 @@ void DIALOG_MIGRATE_3D_MODELS::OnMissingSelected( wxListEvent& aEvent )
 
 void DIALOG_MIGRATE_3D_MODELS::OnCandidateSelected( wxListEvent& aEvent )
 {
-    const int missingIdx = static_cast<int>( getSelectedRow( m_missingList ) );
-    const int candIdx    = static_cast<int>( aEvent.GetIndex() );
+    const int missingIdx   = getSelectedRow( m_missingList );
+    const int candidateIdx = static_cast<int>( aEvent.GetIndex() );
 
     if( missingIdx < 0 || missingIdx >= static_cast<int>( m_missing.size() ) )
         return;
 
-    const std::vector<MATCH_CANDIDATE>& cands = m_candidatesPerMissing[missingIdx];
+    const std::vector<MATCH_CANDIDATE>& candidates = m_candidatesPerMissing[missingIdx];
 
-    if( candIdx < 0 || candIdx >= static_cast<int>( cands.size() ) )
+    if( candidateIdx < 0 || candidateIdx >= static_cast<int>( candidates.size() ) )
         return;
 
-    const MATCH_CANDIDATE& c = cands[candIdx];
+    const MATCH_CANDIDATE& c = candidates[candidateIdx];
 
-    // Record this row's choice.  The "keep existing" row has an empty path
-    // and we store -1 to mean "no replacement".
-    m_selectedPerMissing[missingIdx] = c.m_absPath.IsEmpty() ? -1 : candIdx;
+    // Record this row's choice.  The "keep existing" row has an empty path.
+    m_selectedPerMissing[missingIdx] = c.m_absPath.IsEmpty() ? KEEP_EXISTING : candidateIdx;
 
     // Bold the missing row again when the user explicitly chose "keep
     // existing", so the visual cue tracks the actual selection state.
@@ -876,12 +792,13 @@ void DIALOG_MIGRATE_3D_MODELS::OnAddSearchDirectoryClick( wxCommandEvent& )
     if( chosen.IsEmpty() )
         return;
 
-    // Persist the directory so future sessions include it automatically.
-    COMMON_SETTINGS* common = Pgm().GetCommonSettings();
+    m_searchDirsGrid->AppendRows( 1 );
+    m_searchDirsGrid->SetCellValue( m_searchDirsGrid->GetNumberRows() - 1, 0, chosen );
 
-    if( common )
+    // Persist the directory so future sessions include it automatically.
+    if( COMMON_SETTINGS* common = Pgm().GetCommonSettings() )
     {
-        auto& dirs = common->m_Extra3DSearchDirs;
+        std::vector<wxString>& dirs = common->m_Extra3DSearchDirs;
 
         if( std::find( dirs.begin(), dirs.end(), chosen ) == dirs.end() )
             dirs.push_back( chosen );
@@ -893,6 +810,12 @@ void DIALOG_MIGRATE_3D_MODELS::OnAddSearchDirectoryClick( wxCommandEvent& )
         scanDirectory( chosen );
     }
 
+    updateAfterCatalogChange();
+}
+
+
+void DIALOG_MIGRATE_3D_MODELS::updateAfterCatalogChange()
+{
     // Re-rank every row against the expanded catalog and refresh the view,
     // preserving the user's existing per-row selections by filename.
     std::vector<wxString> priorSelectionPaths( m_missing.size() );
@@ -909,16 +832,19 @@ void DIALOG_MIGRATE_3D_MODELS::OnAddSearchDirectoryClick( wxCommandEvent& )
 
     for( size_t i = 0; i < m_missing.size(); ++i )
     {
-        m_selectedPerMissing[i] = -1;
-        const std::vector<MATCH_CANDIDATE>& cands = m_candidatesPerMissing[i];
+        if( m_selectedPerMissing[i] == KEEP_EXISTING )
+            continue;
+
+        m_selectedPerMissing[i] = UNSPECIFIED;
+        const std::vector<MATCH_CANDIDATE>& candidates = m_candidatesPerMissing[i];
 
         // Preserve the user's prior explicit pick when the same file still
         // appears in the catalog.
         if( !priorSelectionPaths[i].IsEmpty() )
         {
-            for( size_t j = 0; j < cands.size(); ++j )
+            for( size_t j = 0; j < candidates.size(); ++j )
             {
-                if( cands[j].m_absPath == priorSelectionPaths[i] )
+                if( candidates[j].m_absPath == priorSelectionPaths[i] )
                 {
                     m_selectedPerMissing[i] = static_cast<int>( j );
                     break;
@@ -929,8 +855,8 @@ void DIALOG_MIGRATE_3D_MODELS::OnAddSearchDirectoryClick( wxCommandEvent& )
         // For rows with no prior pick (or whose pick disappeared), auto-select
         // the newly-best candidate so adding a directory immediately un-bolds
         // rows that just acquired a plausible match.
-        if( m_selectedPerMissing[i] < 0 && !cands.empty()
-                && !cands.front().m_absPath.IsEmpty() )
+        if( m_selectedPerMissing[i] == UNSPECIFIED && !candidates.empty()
+                                                   && !candidates.front().m_absPath.IsEmpty() )
         {
             m_selectedPerMissing[i] = 0;
         }
@@ -940,6 +866,34 @@ void DIALOG_MIGRATE_3D_MODELS::OnAddSearchDirectoryClick( wxCommandEvent& )
 
     const int activeRow = getSelectedRow( m_missingList );
     populateCandidatesList( activeRow );
+}
+
+
+void DIALOG_MIGRATE_3D_MODELS::OnRemoveSearchDirectoryClick(wxCommandEvent& event)
+{
+    std::vector<wxString> deleted;
+
+    m_searchDirsGrid->OnDeleteRows(
+            [&]( int row )
+            {
+                deleted.push_back( m_searchDirsGrid->GetCellValue( row, 0 ) );
+                m_searchDirsGrid->DeleteRows( row );
+            } );
+
+    // Persist the directory so future sessions include it automatically.
+    if( COMMON_SETTINGS* common = Pgm().GetCommonSettings() )
+    {
+        std::vector<wxString>& dirs = common->m_Extra3DSearchDirs;
+
+        std::erase_if( dirs,
+                       [&]( const wxString& dir )
+                       {
+                           return alg::contains( deleted, dir );
+                       } );
+    }
+
+    buildCatalog();
+    updateAfterCatalogChange();
 }
 
 
@@ -976,27 +930,30 @@ void DIALOG_MIGRATE_3D_MODELS::OnOpenExternalFileClick( wxCommandEvent& )
     // user can see it previewed and it will be applied when they hit Replace.
     MATCH_CANDIDATE injected;
     injected.m_absPath = chosenPath;
-    injected.m_display = wxFileName( chosenPath ).GetFullName() + wxS( "   \u2014   " )
-                         + _( "user-selected" );
+    injected.m_display = wxFileName( chosenPath ).GetFullName() + wxS( "   \u2014   " ) + _( "user-selected" );
     injected.m_score   = 2000;
 
-    std::vector<MATCH_CANDIDATE>& cands = m_candidatesPerMissing[missingIdx];
+    std::vector<MATCH_CANDIDATE>& candidates = m_candidatesPerMissing[missingIdx];
 
     // Avoid duplicating an already-present entry.
-    auto existing = std::find_if( cands.begin(), cands.end(),
-                                   [&]( const MATCH_CANDIDATE& c )
-                                   { return c.m_absPath == chosenPath; } );
+    auto existing = std::find_if( candidates.begin(), candidates.end(),
+                                  [&]( const MATCH_CANDIDATE& c )
+                                  {
+                                      return c.m_absPath == chosenPath;
+                                  } );
 
-    if( existing == cands.end() )
+    if( existing == candidates.end() )
     {
-        cands.insert( cands.begin(), injected );
+        // Put new candidate at the top and select it
+        candidates.insert( candidates.begin(), injected );
         m_selectedPerMissing[missingIdx] = 0;
     }
     else
     {
-        m_selectedPerMissing[missingIdx] = static_cast<int>( existing - cands.begin() );
+        m_selectedPerMissing[missingIdx] = static_cast<int>( existing - candidates.begin() );
     }
 
+    showPreview( missingIdx, chosenPath );
     updateMissingItemStyle( missingIdx );
     populateCandidatesList( missingIdx );
 }
@@ -1061,7 +1018,7 @@ void DIALOG_MIGRATE_3D_MODELS::OnReplaceClick( wxCommandEvent& )
         }
     }
 
-    commit.Push( _( "Migrate 3D model references" ) );
+    commit.Push( _( "Migrate 3D Model References" ) );
 
     EndModal( wxID_OK );
 }

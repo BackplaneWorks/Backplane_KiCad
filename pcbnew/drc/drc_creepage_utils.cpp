@@ -2496,35 +2496,22 @@ void CREEPAGE_GRAPH::Addshape( const SHAPE& aShape, std::shared_ptr<GRAPH_NODE>&
     {
         const SHAPE_ARC& arc = dynamic_cast<const SHAPE_ARC&>( aShape );
         EDA_ANGLE        alpha, beta;
-        VECTOR2I         start, end;
 
-        EDA_SHAPE edaArc( SHAPE_T::ARC, 0, FILL_T::NO_FILL );
-
-        if( arc.IsClockwise() )
-        {
-            edaArc.SetArcGeometry( arc.GetP0(), arc.GetArcMid(), arc.GetP1() );
-            start = arc.GetP0();
-            end = arc.GetP1();
-        }
-        else
-        {
-            edaArc.SetArcGeometry( arc.GetP1(), arc.GetArcMid(), arc.GetP0() );
-            start = arc.GetP1();
-            end = arc.GetP0();
-        }
+        EDA_SHAPE edaArc( arc );
 
         edaArc.CalcArcAngles( alpha, beta );
 
-        auto cuarc = std::make_unique<CU_SHAPE_ARC>( edaArc.getCenter(), edaArc.GetRadius(), alpha, beta,
+        auto cuArc = std::make_unique<CU_SHAPE_ARC>( edaArc.getCenter(), edaArc.GetRadius(), alpha, beta,
                                                      arc.GetP0(), arc.GetP1() );
-        cuarc->SetWidth( arc.GetWidth() );
-        newshape = std::move( cuarc );
+        cuArc->SetWidth( arc.GetWidth() );
+        newshape = std::move( cuArc );
         break;
     }
 
     case SH_COMPOUND:
     {
-        int nbShapes = static_cast<const SHAPE_COMPOUND*>( &aShape )->Shapes().size();
+        int nbShapes = (int) static_cast<const SHAPE_COMPOUND*>( &aShape )->Shapes().size();
+
         for( const SHAPE* subshape : ( static_cast<const SHAPE_COMPOUND*>( &aShape )->Shapes() ) )
         {
             if( subshape )
@@ -3144,6 +3131,9 @@ std::shared_ptr<GRAPH_NODE> CREEPAGE_GRAPH::AddNetElements( int aNetCode, PCB_LA
             if( pad->GetNetCode() != aNetCode || !pad->IsOnLayer( aLayer ) )
                 continue;
 
+            if( pad->HasCopperRemoved( aLayer ) )
+                continue;
+
             if( std::shared_ptr<SHAPE> padShape = pad->GetEffectiveShape( aLayer ) )
                 Addshape( *padShape, virtualNode, pad );
         }
@@ -3152,6 +3142,9 @@ std::shared_ptr<GRAPH_NODE> CREEPAGE_GRAPH::AddNetElements( int aNetCode, PCB_LA
     for( PCB_TRACK* track : m_board.Tracks() )
     {
         if( track->GetNetCode() != aNetCode || !track->IsOnLayer( aLayer ) )
+            continue;
+
+        if( track->Type() == PCB_VIA_T && static_cast<const PCB_VIA*>( track )->HasCopperRemoved( aLayer ) )
             continue;
 
         if( std::shared_ptr<SHAPE> shape = track->GetEffectiveShape() )

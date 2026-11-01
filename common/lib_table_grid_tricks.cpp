@@ -27,6 +27,13 @@
 #include <lib_id.h>
 
 
+static bool isGridReadOnly( WX_GRID* aGrid )
+{
+    LIB_TABLE_GRID_DATA_MODEL* model = static_cast<LIB_TABLE_GRID_DATA_MODEL*>( aGrid->GetTable() );
+    return model && model->Table().IsReadOnly();
+}
+
+
 LIB_TABLE_GRID_TRICKS::LIB_TABLE_GRID_TRICKS( WX_GRID* aGrid ) :
         GRID_TRICKS( aGrid )
 {
@@ -61,18 +68,22 @@ void LIB_TABLE_GRID_TRICKS::onGridCellLeftClick( wxGridEvent& aEvent )
                                 ? wxString::Format( _( "Error loading library table '%s'" ), row.Nickname() )
                                 : wxString::Format( _( "Error loading library '%s'" ), row.Nickname() );
 
-        if( !row.IsOk() )
+        // The settings dialog reports load errors itself and is where they get fixed
+        if( adapter->SupportsConfigurationDialog( row ) && !isGridReadOnly( m_grid ) )
+        {
+            if( adapter->ShowConfigurationDialog( row, model->Table().Scope(), wxGetTopLevelParent( m_grid ) )
+                != wxID_CANCEL )
+            {
+                model->OnModify();
+            }
+        }
+        else if( !row.IsOk() )
         {
             DisplayErrorMessage( m_grid, title, row.ErrorDescription() );
         }
         else if( std::optional<LIBRARY_ERROR> e = adapter->LibraryError( row.Nickname() ) )
         {
             DisplayErrorMessage( m_grid, title, e->message );
-        }
-        else if( adapter->SupportsConfigurationDialog( row.Nickname() ) )
-        {
-            if( adapter->ShowConfigurationDialog( row.Nickname(), wxGetTopLevelParent( m_grid ) ) != wxID_CANCEL )
-                model->OnModify();
         }
         else if( row.Type() == LIBRARY_TABLE_ROW::TABLE_TYPE_NAME )
         {
@@ -104,9 +115,7 @@ void LIB_TABLE_GRID_TRICKS::showPopupMenu( wxMenu& menu, wxGridEvent& aEvent )
     {
         if( LIBRARY_MANAGER_ADAPTER* adapter = model->Adapter() )
         {
-            wxString nickname = model->GetValue( m_sel_row_start, COL_NICKNAME );
-
-            if( m_sel_row_count == 1 && adapter->SupportsConfigurationDialog( nickname ) )
+            if( m_sel_row_count == 1 && adapter->SupportsConfigurationDialog( firstRow ) )
             {
                 showSettings = true;
                 menu.Append( LIB_TABLE_GRID_TRICKS_LIBRARY_SETTINGS, _( "Edit Settings..." ) );
@@ -131,12 +140,12 @@ void LIB_TABLE_GRID_TRICKS::showPopupMenu( wxMenu& menu, wxGridEvent& aEvent )
 
     for( int row = m_sel_row_start; row < m_sel_row_start + m_sel_row_count; ++row )
     {
-        if( model->GetValueAsBool( row, 0 ) )
+        if( model->GetValueAsBool( row, COL_ENABLED ) )
             showDeactivate = true;
         else
             showActivate = true;
 
-        if( model->GetValueAsBool( row, 1 ) )
+        if( model->GetValueAsBool( row, COL_VISIBLE ) )
             showUnsetVisible = true;
         else
             showSetVisible = true;
@@ -191,7 +200,7 @@ void LIB_TABLE_GRID_TRICKS::doPopupSelection( wxCommandEvent& event )
         bool selected_state = menu_id == LIB_TABLE_GRID_TRICKS_ACTIVATE_SELECTED;
 
         for( int row = m_sel_row_start; row < m_sel_row_start + m_sel_row_count; ++row )
-            model->SetValueAsBool( row, 0, selected_state );
+            model->SetValueAsBool( row, COL_ENABLED, selected_state );
 
         // Ensure the new state (on/off) of the widgets is immediately shown:
         m_grid->Refresh();
@@ -202,7 +211,7 @@ void LIB_TABLE_GRID_TRICKS::doPopupSelection( wxCommandEvent& event )
         bool selected_state = menu_id == LIB_TABLE_GRID_TRICKS_SET_VISIBLE;
 
         for( int row = m_sel_row_start; row < m_sel_row_start + m_sel_row_count; ++row )
-            model->SetValueAsBool( row, 1, selected_state );
+            model->SetValueAsBool( row, COL_VISIBLE, selected_state );
 
         // Ensure the new state (on/off) of the widgets is immediately shown:
         m_grid->Refresh();
@@ -212,8 +221,11 @@ void LIB_TABLE_GRID_TRICKS::doPopupSelection( wxCommandEvent& event )
         LIBRARY_MANAGER_ADAPTER* adapter = model->Adapter();
         LIBRARY_TABLE_ROW&       row = model->At( m_sel_row_start );
 
-        if( adapter->ShowConfigurationDialog( row.Nickname(), wxGetTopLevelParent( m_grid ) ) != wxID_CANCEL )
+        if( adapter->ShowConfigurationDialog( row, model->Table().Scope(), wxGetTopLevelParent( m_grid ) )
+            != wxID_CANCEL )
+        {
             model->OnModify();
+        }
     }
     else if( menu_id == LIB_TABLE_GRID_TRICKS_OPEN_TABLE )
     {
@@ -350,18 +362,17 @@ bool LIB_TABLE_GRID_TRICKS::handleDoubleClick( wxGridEvent& aEvent )
 {
     if( aEvent.GetCol() == COL_OPTIONS )
     {
+        if( isGridReadOnly( m_grid ) )
+        {
+            wxBell();
+            return true;
+        }
+
         optionsEditor( aEvent.GetRow() );
         return true;
     }
 
     return false;
-}
-
-
-static bool isGridReadOnly( WX_GRID* aGrid )
-{
-    LIB_TABLE_GRID_DATA_MODEL* model = static_cast<LIB_TABLE_GRID_DATA_MODEL*>( aGrid->GetTable() );
-    return model && model->Table().IsReadOnly();
 }
 
 

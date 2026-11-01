@@ -96,10 +96,7 @@ static std::vector<ODB_TOOL_RECORD> parseOdbTools( const fs::path& aToolsFile )
 static void checkNonPlatedDrillTools( const char* aUnits, double aOutputScale )
 {
     SETTINGS_MANAGER       settingsManager;
-    std::unique_ptr<BOARD> board = KI_TEST::ReadBoardFromFileOrStream(
-            KI_TEST::GetPcbnewTestDataDir() + "issue14130.kicad_pcb" );
-
-    BOOST_REQUIRE( board );
+    std::unique_ptr<BOARD> board = KI_TEST::RequireBoardFromPcbnewQAData( "issue14130.kicad_pcb" );
 
     std::set<double> expectedSizes;
     int              npthHoleCount = 0;
@@ -109,7 +106,7 @@ static void checkNonPlatedDrillTools( const char* aUnits, double aOutputScale )
         if( pad->GetAttribute() != PAD_ATTRIB::NPTH || !pad->HasHole() )
             continue;
 
-        expectedSizes.insert( pcbIUScale.IUTomm( std::min( pad->GetDrillSizeX(), pad->GetDrillSizeY() ) )
+        expectedSizes.insert( pcbIUScale.IUTomm( std::min( pad->GetDrillSize().x, pad->GetDrillSize().y ) )
                               * aOutputScale );
         npthHoleCount++;
     }

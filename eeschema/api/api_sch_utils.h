@@ -26,6 +26,7 @@
 #include <tl/expected.hpp>
 #include <core/typeinfo.h>
 #include <api/common/envelope.pb.h>
+#include <api/common/commands/editor_commands.pb.h>
 #include <api/schematic/schematic_types.pb.h>
 #include <pin_map.h>
 #include <kiid.h>
@@ -39,8 +40,11 @@ class SCHEMATIC;
 
 std::unique_ptr<EDA_ITEM> CreateItemForType( KICAD_T aType, EDA_ITEM* aContainer );
 
+/**
+ * @param aSchematic stands in for the symbol's own schematic while a created symbol is only staged.
+ */
 bool PackSymbol( kiapi::schematic::types::SchematicSymbolInstance* aOutput, const SCH_SYMBOL* aInput,
-                 const SCH_SHEET_PATH& aPath );
+                 const SCH_SHEET_PATH& aPath, const SCHEMATIC* aSchematic = nullptr );
 
 /**
  * Unpack the geometry, the library definition, fields, and the default-variant attributes that
@@ -49,13 +53,22 @@ bool PackSymbol( kiapi::schematic::types::SchematicSymbolInstance* aOutput, cons
 bool UnpackSymbol( SCH_SYMBOL* aOutput, const kiapi::schematic::types::SchematicSymbolInstance& aInput );
 
 /**
+ * Check what #ApplySymbolInstance would refuse, so a caller can reject a request before it
+ * changes anything.  The reference must not carry another instance's sheet suffix, and no
+ * variant may override the reference.
+ */
+bool ValidateSymbolInstance( kiapi::common::commands::ItemStatus* aStatus, const SCH_SYMBOL* aSymbol,
+                             const kiapi::schematic::types::SchematicSymbolInstance& aInput,
+                             const SCH_SHEET_PATH& aPath, const SCHEMATIC* aSchematic );
+
+/**
  * Apply placement-specific data to an @a aSymbol at @a aPath: reference, unit, and
  * the per-placement attribute and field differentials.
  *
  * Variant names are registered with @a aSchematic so that the UI offers them for selection.
  * @a aSymbol must already be in the schematic; the other placements of the symbol are untouched.
  */
-void ApplySymbolInstance( SCH_SYMBOL* aSymbol,
+bool ApplySymbolInstance( kiapi::common::commands::ItemStatus* aStatus, SCH_SYMBOL* aSymbol,
                           const kiapi::schematic::types::SchematicSymbolInstance& aInput,
                           const SCH_SHEET_PATH& aPath, SCHEMATIC* aSchematic );
 
@@ -74,6 +87,10 @@ bool PackSheet( kiapi::schematic::types::SheetSymbol* aOutput, const SCH_SHEET* 
 tl::expected<bool, kiapi::common::ApiResponseStatus> UnpackSheet( SCH_SHEET* aOutput,
                                                                   const kiapi::schematic::types::SheetSymbol& aInput );
 
+/// Validate sheet variant overrides before adding or modifying a live sheet.
+bool ValidateSheetInstance( kiapi::common::commands::ItemStatus* aStatus, const SCH_SHEET* aSheet,
+                            const kiapi::schematic::types::SheetSymbol& aInput );
+
 /**
  * Apply the placement data in a sheet message to @a aSheet: page number and the variants the
  * message carries.
@@ -81,7 +98,8 @@ tl::expected<bool, kiapi::common::ApiResponseStatus> UnpackSheet( SCH_SHEET* aOu
  * @a aParentPath is the path of the sheet that contains @a aSheet, which is how a sheet's
  * placement records are keyed.
  */
-void ApplySheetInstance( SCH_SHEET* aSheet, const kiapi::schematic::types::SheetSymbol& aInput,
+bool ApplySheetInstance( kiapi::common::commands::ItemStatus* aStatus, SCH_SHEET* aSheet,
+                         const kiapi::schematic::types::SheetSymbol& aInput,
                          const SCH_SHEET_PATH& aParentPath, SCHEMATIC* aSchematic );
 
 /// Specialization of PackSheetPath that includes the human-readable path

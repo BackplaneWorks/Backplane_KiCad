@@ -265,6 +265,10 @@ SCH_SHEET* SCH_IO_KICAD_SEXPR::LoadSchematicFile( const wxString& aFileName, SCH
         m_rootSheet = newSheet.get();
         loadHierarchy( SCH_SHEET_PATH(), newSheet.get() );
 
+        // A sheet load must keep another project's instances intact, so only its copies are stripped
+        if( !m_sheetLoad )
+            SCH_SHEET_LIST( newSheet.get() ).StripRefSuffixes();
+
         // If we got here, the schematic loaded successfully.
         sheet = newSheet.release();
         m_rootSheet = nullptr;         // Quiet Coverity warning.
@@ -574,6 +578,10 @@ void SCH_IO_KICAD_SEXPR::Format( SCH_SHEET* aSheet )
     screen->GetPageSettings().Format( m_out );
     screen->GetTitleBlock().Format( m_out );
 
+    // Variant alternates are not placed on the sheet, so include them here to keep the file self-contained
+    for( SCH_ITEM* item : screen->Items().OfType( SCH_SYMBOL_T ) )
+        screen->IncludeVariantSymbols( *static_cast<SCH_SYMBOL*>( item ) );
+
     // Save cache library.
     m_out->Print( "(lib_symbols" );
 
@@ -783,6 +791,16 @@ void SCH_IO_KICAD_SEXPR::Format( SCH_SELECTION* aSelection, SCH_SHEET_PATH* aSel
 
         if( it != screen->GetLibSymbols().end() )
             libSymbols[ libSymbolLookup ] = it->second;
+
+        screen->IncludeVariantSymbols( *symbol );
+
+        for( const LIB_ID& alternate : symbol->GetVariantSymbolOverrides() )
+        {
+            wxString key = alternate.Format().wx_str();
+
+            if( auto altIt = screen->GetLibSymbols().find( key ); altIt != screen->GetLibSymbols().end() )
+                libSymbols[key] = altIt->second;
+        }
     }
 
     if( !libSymbols.empty() )
@@ -1167,9 +1185,15 @@ void SCH_IO_KICAD_SEXPR::saveSymbol( SCH_SYMBOL* aSymbol, const SCHEMATIC& aSche
 
                 path = tmp.AsString();
 
+                wxString reference = instance.m_Reference;
+
+                // Older readers show the file's reference as is, so it carries the suffix
+                if( m_schematic && !aForClipboard && !reference.EndsWith( wxS( "?" ) ) )
+                    reference += m_schematic->GetRefSuffix( instance.m_Path );
+
                 m_out->Print( "(path %s (reference %s) (unit %d)",
                               m_out->Quotew( path ).c_str(),
-                              m_out->Quotew( instance.m_Reference ).c_str(),
+                              m_out->Quotew( reference ).c_str(),
                               instance.m_Unit );
 
                 if( !instance.m_Variants.empty() )
@@ -1285,6 +1309,9 @@ void SCH_IO_KICAD_SEXPR::saveBitmap( const SCH_BITMAP& aBitmap )
                   EDA_UNIT_UTILS::FormatInternalUnits( schIUScale,
                                                        refImage.GetPosition().y ).c_str() );
 
+    if( !refImage.GetOrientation().IsZero() )
+        m_out->Print( "(rotate %s)", EDA_UNIT_UTILS::FormatAngle( refImage.GetOrientation() ).c_str() );
+
     double scale = refImage.GetImageScale();
 
     // 20230121 or older file format versions assumed 300 image PPI at load/save.
@@ -1294,6 +1321,9 @@ void SCH_IO_KICAD_SEXPR::saveBitmap( const SCH_BITMAP& aBitmap )
 
     if( scale != 1.0 )
         m_out->Print( "%s", fmt::format("(scale {:g})", refImage.GetImageScale()).c_str() );
+
+    if( refImage.GetOpacity() < 1.0 )
+        m_out->Print( "%s", fmt::format( "(opacity {:g})", refImage.GetOpacity() ).c_str() );
 
     KICAD_FORMAT::FormatUuid( m_out, aBitmap.m_Uuid );
 
@@ -1351,7 +1381,13 @@ void SCH_IO_KICAD_SEXPR::saveSheet( SCH_SHEET* aSheet, const SCH_SHEET_LIST& aSh
     KICAD_FORMAT::FormatUuid( m_out, aSheet->m_Uuid );
 
     for( SCH_FIELD& field : aSheet->GetFields() )
+    {
+        // An empty suffix is the same as none, so designs without suffixes do not churn
+        if( field.GetId() == FIELD_T::SHEET_REF_SUFFIX && field.GetText().IsEmpty() )
+            continue;
+
         saveField( &field );
+    }
 
     for( const SCH_SHEET_PIN* pin : aSheet->GetPins() )
     {

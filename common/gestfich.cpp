@@ -27,6 +27,9 @@
 #include <wx/mimetype.h>
 #include <wx/dir.h>
 #include <wx/stdpaths.h>
+#include <wx/utils.h>
+
+#include <filesystem>
 
 #include <pgm_base.h>
 #include <kiplatform/io.h>
@@ -35,6 +38,7 @@
 #include <gestfich.h>
 #include <string_utils.h>
 #include <launch_ext.h>
+#include <paths.h>
 #include "wx/tokenzr.h"
 #include <richio.h>
 #include <sexpr/sexpr.h>
@@ -134,7 +138,6 @@ wxString FindKicadFile( const wxString& shortname )
         wxT( "Contents/Applications/pcbnew.app/Contents/MacOS/" ),
         wxT( "Contents/Applications/eeschema.app/Contents/MacOS/" ),
         wxT( "Contents/Applications/gerbview.app/Contents/MacOS/" ),
-        wxT( "Contents/Applications/bitmap2component.app/Contents/MacOS/" ),
         wxT( "Contents/Applications/pcb_calculator.app/Contents/MacOS/" ),
         wxT( "Contents/Applications/pl_editor.app/Contents/MacOS/" ),
 #else
@@ -275,29 +278,80 @@ int ExecuteFile( const wxString& aEditorName, const wxString& aFileName, wxProce
 }
 
 
-int ExecuteCommandThroughShell( const wxString& aCommand, wxProcess* aProcess )
+#ifdef __WXMSW__
+static const wxChar PATH_LIST_SEPARATOR = wxT( ';' );
+#else
+static const wxChar PATH_LIST_SEPARATOR = wxT( ':' );
+#endif
+
+
+// Windows spells it "Path", so reuse that spelling rather than hand the child two keys
+static wxString& envPathEntry( wxEnvVariableHashMap& aEnv )
 {
 #ifdef __WXMSW__
+    for( auto& [name, value] : aEnv )
+    {
+        if( name.CmpNoCase( wxS( "PATH" ) ) == 0 )
+            return value;
+    }
+#endif
+
+    return aEnv[wxS( "PATH" )];
+}
+
+
+#if !defined( __WXMSW__ ) && !defined( __WXMAC__ )
+// Symlinks are resolved so /bin and /usr/bin match on merged-usr systems
+static wxString normalizedDir( const wxString& aPath )
+{
+    std::error_code       ec;
+    std::filesystem::path resolved =
+            std::filesystem::weakly_canonical( std::filesystem::path( aPath.utf8_str().data() ), ec );
+
+    if( ec )
+        return aPath;
+
+    return wxString::FromUTF8( resolved.string().c_str() );
+}
+
+
+static bool pathListContains( const wxString& aPathList, const wxString& aDir )
+{
+    wxString          dir = normalizedDir( aDir );
+    wxStringTokenizer tokenizer( aPathList, PATH_LIST_SEPARATOR, wxTOKEN_STRTOK );
+
+    while( tokenizer.HasMoreTokens() )
+    {
+        if( normalizedDir( tokenizer.GetNextToken() ) == dir )
+            return true;
+    }
+
+    return false;
+}
+#endif
+
+
+int ExecuteCommandThroughShell( const wxString& aCommand, wxProcess* aProcess )
+{
     wxExecuteEnv env;
     wxGetEnvMap( &env.env );
 
-    // Preserve Windows PATH spelling while putting KiCad's Python first.
-    wxString binPath = wxFileName( wxStandardPaths::Get().GetExecutablePath() ).GetPath();
-    bool     foundPath = false;
+    // On Unix only add directories missing from PATH so a KiCad in /usr/bin cannot reorder the user's PATH
+    wxString&             pathList = envPathEntry( env.env );
+    std::vector<wxString> dirs = PATHS::GetToolDirectories( PATHS::GetExecutableDir() );
 
-    for( auto& entry : env.env )
+    for( auto it = dirs.rbegin(); it != dirs.rend(); ++it )
     {
-        if( entry.first.CmpNoCase( wxS( "PATH" ) ) == 0 )
-        {
-            entry.second = binPath + wxS( ';' ) + entry.second;
-            foundPath = true;
-            break;
-        }
+#if defined( __WXMSW__ ) || defined( __WXMAC__ )
+        // Bundled tools must win over anything earlier on PATH
+        pathList = pathList.IsEmpty() ? *it : *it + PATH_LIST_SEPARATOR + pathList;
+#else
+        if( !pathListContains( pathList, *it ) )
+            pathList = pathList.IsEmpty() ? *it : *it + PATH_LIST_SEPARATOR + pathList;
+#endif
     }
 
-    if( !foundPath )
-        env.env["PATH"] = binPath;
-
+#ifdef __WXMSW__
     // The array form of wxExecute is unusable with cmd.exe. wx joins the argv elements back into a
     // single command line, wrapping any element containing spaces in double quotes and escaping
     // embedded quotes with backslashes. cmd.exe does not understand backslash-escaped quotes and
@@ -318,7 +372,7 @@ int ExecuteCommandThroughShell( const wxString& aCommand, wxProcess* aProcess )
 
     const wchar_t* argv[] = { shell.data(), flag.data(), command.data(), nullptr };
 
-    return static_cast<int>( wxExecute( argv, wxEXEC_SYNC, aProcess ) );
+    return static_cast<int>( wxExecute( argv, wxEXEC_SYNC, aProcess, &env ) );
 #endif
 }
 
@@ -957,18 +1011,24 @@ bool SCOPED_TEMP_PATH::MakeFile( const wxString& aPrefix )
 }
 
 
-bool SCOPED_TEMP_PATH::MakeDirectory( const wxString& aPrefix )
+bool SCOPED_TEMP_PATH::MakeDirectory( const wxString& aPrefix, int aPermissions )
 {
-    if( !MakeFile( aPrefix ) || !wxRemoveFile( m_path ) )
+    SCOPED_TEMP_PATH tempFile;
+
+    if( !tempFile.MakeFile( aPrefix ) || !wxRemoveFile( tempFile.Path() ) )
         return false;
 
-    // A non-recursive Mkdir fails on a leaf that someone created after the remove
-    if( wxFileName::Mkdir( m_path, wxS_DIR_DEFAULT, 0 ) )
-        return true;
+    wxString path = tempFile.Path();
 
-    // That leaf is not ours to delete
-    m_path.clear();
-    return false;
+    // Stop owning the name before mkdir so a collision is never removed.
+    tempFile.m_path.clear();
+
+    // Non-recursive creation rejects an existing file, directory or symlink.
+    if( !wxFileName::Mkdir( path, aPermissions, 0 ) )
+        return false;
+
+    m_path = path;
+    return true;
 }
 
 

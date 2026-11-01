@@ -19,6 +19,7 @@
  */
 
 #include "eeschema_jobs_handler.h"
+#include <diff_merge/merge_dispatch.h>
 #include <algorithm>
 #include <common.h>
 #include <pgm_base.h>
@@ -409,16 +410,17 @@ int EESCHEMA_JOBS_HANDLER::JobExportPlot( JOB* aJob )
     case JOB_PAGE_SIZE::PAGE_SIZE_AUTO: pageSizeSelect = PageFormatReq::PAGE_SIZE_AUTO; break;
     }
 
-    if( !aPlotJob->GetOutputPathIsDirectory() && aPlotJob->GetConfiguredOutputPath().IsEmpty() )
-    {
-        wxFileName fn = sch->GetFileName();
-        fn.SetName( fn.GetName() );
-        fn.SetExt( GetDefaultPlotExtension( format ) );
+    wxFileName defaultFn = sch->GetFileName();
+    defaultFn.SetExt( GetDefaultPlotExtension( format ) );
 
-        aPlotJob->SetConfiguredOutputPath( fn.GetFullName() );
-    }
+    if( !aPlotJob->GetOutputPathIsDirectory() && aPlotJob->GetConfiguredOutputPath().IsEmpty() )
+        aPlotJob->SetConfiguredOutputPath( defaultFn.GetFullName() );
 
     wxString outPath = aPlotJob->GetFullOutputPath( &sch->Project() );
+
+    // A folder in file mode gets the default name inside it
+    if( !aPlotJob->GetOutputPathIsDirectory() )
+        outPath = JOB::AppendDefaultFileName( outPath, defaultFn.GetFullName() );
 
     if( !PATHS::EnsurePathExists( outPath, !aPlotJob->GetOutputPathIsDirectory() ) )
     {
@@ -582,16 +584,14 @@ int EESCHEMA_JOBS_HANDLER::JobExportNetlist( JOB* aJob )
         return CLI::EXIT_CODES::ERR_UNKNOWN;
     }
 
+    wxFileName defaultFn = sch->GetFileName();
+    defaultFn.SetExt( fileExt );
+
     if( aNetJob->GetConfiguredOutputPath().IsEmpty() )
-    {
-        wxFileName fn = sch->GetFileName();
-        fn.SetName( fn.GetName() );
-        fn.SetExt( fileExt );
+        aNetJob->SetConfiguredOutputPath( defaultFn.GetFullName() );
 
-        aNetJob->SetConfiguredOutputPath( fn.GetFullName() );
-    }
-
-    wxString outPath = aNetJob->GetFullOutputPath( &sch->Project() );
+    wxString outPath = JOB::AppendDefaultFileName( aNetJob->GetFullOutputPath( &sch->Project() ),
+                                                   defaultFn.GetFullName() );
 
     if( !PATHS::EnsurePathExists( outPath, true ) )
     {
@@ -717,13 +717,13 @@ int EESCHEMA_JOBS_HANDLER::JobExportBom( JOB* aJob )
     if( !aBomJob->m_bomPresetName.IsEmpty() )
     {
         // Find the preset
-        const BOM_PRESET* schPreset = nullptr;
+        std::optional<BOM_PRESET> schPreset;
 
         for( const BOM_PRESET& p : BOM_PRESET::BuiltInPresets() )
         {
             if( p.name == aBomJob->m_bomPresetName )
             {
-                schPreset = &p;
+                schPreset = p;
                 break;
             }
         }
@@ -732,7 +732,7 @@ int EESCHEMA_JOBS_HANDLER::JobExportBom( JOB* aJob )
         {
             if( p.name == aBomJob->m_bomPresetName )
             {
-                schPreset = &p;
+                schPreset = p;
                 break;
             }
         }
@@ -921,14 +921,11 @@ int EESCHEMA_JOBS_HANDLER::JobExportBom( JOB* aJob )
         fmt.includeByteOrderMark = aBomJob->m_includeByteOrderMark;
     }
 
-    if( aBomJob->GetConfiguredOutputPath().IsEmpty() )
-    {
-        wxFileName fn = sch->GetFileName();
-        fn.SetName( fn.GetName() );
-        fn.SetExt( FILEEXT::CsvFileExtension );
+    wxFileName defaultFn = sch->GetFileName();
+    defaultFn.SetExt( FILEEXT::CsvFileExtension );
 
-        aBomJob->SetConfiguredOutputPath( fn.GetFullName() );
-    }
+    if( aBomJob->GetConfiguredOutputPath().IsEmpty() )
+        aBomJob->SetConfiguredOutputPath( defaultFn.GetFullName() );
 
     wxString configuredPath = aBomJob->GetConfiguredOutputPath();
     bool     hasVariantPlaceholder = configuredPath.Contains( wxS( "${VARIANT}" ) );
@@ -967,6 +964,8 @@ int EESCHEMA_JOBS_HANDLER::JobExportBom( JOB* aJob )
         {
             outPath = aBomJob->GetFullOutputPath( &sch->Project() );
         }
+
+        outPath = JOB::AppendDefaultFileName( outPath, defaultFn.GetFullName() );
 
         if( !PATHS::EnsurePathExists( outPath, true ) )
         {
@@ -1039,16 +1038,15 @@ int EESCHEMA_JOBS_HANDLER::JobExportPythonBom( JOB* aJob )
 
     std::unique_ptr<NETLIST_EXPORTER_XML> xmlNetlist = std::make_unique<NETLIST_EXPORTER_XML>( sch, m_kiway );
 
+    wxFileName defaultFn = sch->GetFileName();
+    defaultFn.SetName( defaultFn.GetName() + "-bom" );
+    defaultFn.SetExt( FILEEXT::XmlFileExtension );
+
     if( aNetJob->GetConfiguredOutputPath().IsEmpty() )
-    {
-        wxFileName fn = sch->GetFileName();
-        fn.SetName( fn.GetName() + "-bom" );
-        fn.SetExt( FILEEXT::XmlFileExtension );
+        aNetJob->SetConfiguredOutputPath( defaultFn.GetFullName() );
 
-        aNetJob->SetConfiguredOutputPath( fn.GetFullName() );
-    }
-
-    wxString outPath = aNetJob->GetFullOutputPath( &sch->Project() );
+    wxString outPath = JOB::AppendDefaultFileName( aNetJob->GetFullOutputPath( &sch->Project() ),
+                                                   defaultFn.GetFullName() );
 
     if( !PATHS::EnsurePathExists( outPath, true ) )
     {
@@ -1361,22 +1359,21 @@ int EESCHEMA_JOBS_HANDLER::JobSchErc( JOB* aJob )
     aJob->SetTitleBlock( sch->RootScreen()->GetTitleBlock() );
     sch->Project().ApplyTextVars( aJob->GetVarOverrides() );
 
+    wxFileName defaultFn = sch->GetFileName();
+    defaultFn.SetName( defaultFn.GetName() + wxS( "-erc" ) );
+
+    if( ercJob->m_format == JOB_SCH_ERC::OUTPUT_FORMAT::JSON )
+        defaultFn.SetExt( FILEEXT::JsonFileExtension );
+    else
+        defaultFn.SetExt( FILEEXT::ReportFileExtension );
+
+    // Use a transient working path so an empty configured output filename isn't persisted
+    // back into the jobset file. Mirrors the PCB DRC handler.
     if( ercJob->GetConfiguredOutputPath().IsEmpty() )
-    {
-        wxFileName fn = sch->GetFileName();
-        fn.SetName( fn.GetName() + wxS( "-erc" ) );
+        ercJob->SetWorkingOutputPath( defaultFn.GetFullName() );
 
-        if( ercJob->m_format == JOB_SCH_ERC::OUTPUT_FORMAT::JSON )
-            fn.SetExt( FILEEXT::JsonFileExtension );
-        else
-            fn.SetExt( FILEEXT::ReportFileExtension );
-
-        // Use a transient working path so an empty configured output filename isn't persisted
-        // back into the jobset file. Mirrors the PCB DRC handler.
-        ercJob->SetWorkingOutputPath( fn.GetFullName() );
-    }
-
-    wxString outPath = ercJob->GetFullOutputPath( &sch->Project() );
+    wxString outPath = JOB::AppendDefaultFileName( ercJob->GetFullOutputPath( &sch->Project() ),
+                                                   defaultFn.GetFullName() );
 
     if( !PATHS::EnsurePathExists( outPath, true ) )
     {
@@ -2380,6 +2377,7 @@ int EESCHEMA_JOBS_HANDLER::JobImport( JOB* aJob )
     case JOB_SCH_IMPORT::FORMAT::PCAD:       fileType = SCH_IO_MGR::SCH_PCAD;            break;
     case JOB_SCH_IMPORT::FORMAT::ORCAD:      fileType = SCH_IO_MGR::SCH_ORCAD;           break;
     case JOB_SCH_IMPORT::FORMAT::EASYPC:     fileType = SCH_IO_MGR::SCH_EASYPC;          break;
+    case JOB_SCH_IMPORT::FORMAT::TARGET3001: fileType = SCH_IO_MGR::SCH_TARGET3001;      break;
     }
 
     if( fileType == SCH_IO_MGR::SCH_FILE_UNKNOWN )
@@ -2725,6 +2723,30 @@ static SCRATCH_DOC<SCHEMATIC> loadScratchSchematic( SETTINGS_MANAGER& aMgr, cons
 }
 
 
+// A bare PROJECT has no PROJECT_FILE and SCHEMATIC::SetProject dereferences GetProjectFile(),
+// so the missing side of a diff needs a real scratch project just like the loaded side.
+static SCRATCH_DOC<SCHEMATIC> emptyScratchSchematic( SETTINGS_MANAGER& aMgr, const wxString& aTag )
+{
+    // A fixed name in the shared temp directory could be loaded as the scratch project, and
+    // would collide between two KiCad instances diffing at once.
+    wxFileName synthetic( wxFileName::GetTempDir(),
+                          wxString::Format( wxS( "%s_%ld_%p" ), aTag, static_cast<long>( wxGetProcessId() ), &aMgr ) );
+
+    return LoadScratchDoc<SCHEMATIC>(
+            aMgr, synthetic.GetFullPath(),
+            []( PROJECT* aProject )
+            {
+                auto sch = std::make_unique<SCHEMATIC>( aProject );
+                sch->CreateDefaultScreens();
+                return sch;
+            },
+            []( SCHEMATIC* aSch )
+            {
+                aSch->SetProject( nullptr );
+            } );
+}
+
+
 int EESCHEMA_JOBS_HANDLER::JobSchDiff( JOB* aJob )
 {
     JOB_SCH_DIFF* diffJob = dynamic_cast<JOB_SCH_DIFF*>( aJob );
@@ -2888,8 +2910,122 @@ int EESCHEMA_JOBS_HANDLER::JobSymDiff( JOB* aJob )
 // ============================================================================
 #include <dialogs/dialog_kicad_diff.h>
 #include <diff_merge/sch_diff_canvas_context.h>
+#include <widgets/widget_diff_canvas.h>
 #include <diff_merge/sch_geometry_extractor.h>
 #include <jobs/scratch_doc.h>
+
+
+// Both schematics of a diff, kept while the caller draws them.
+struct SCH_DIFF_SIDES
+{
+    SCRATCH_DOC<SCHEMATIC>    a;
+    SCRATCH_DOC<SCHEMATIC>    b;
+    SCRATCH_DOC<SCHEMATIC>    emptyA;
+    SCRATCH_DOC<SCHEMATIC>    emptyB;
+    SCHEMATIC*                schA = nullptr;
+    SCHEMATIC*                schB = nullptr;
+    KICAD_DIFF::DOCUMENT_DIFF diff;
+};
+
+
+static int loadSchDiffSides( SETTINGS_MANAGER& aMgr, REPORTER& aReporter, const wxString& aFileA,
+                             const wxString& aFileB, SCH_DIFF_SIDES& aSides )
+{
+    aSides.a = loadScratchSchematic( aMgr, aFileA );
+    aSides.b = loadScratchSchematic( aMgr, aFileB );
+
+    if( !aSides.a.doc && !aFileA.IsEmpty() )
+    {
+        aReporter.Report( wxString::Format( _( "Failed to load %s\n" ), aFileA ), RPT_SEVERITY_ERROR );
+        return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
+    }
+
+    if( !aSides.b.doc && !aFileB.IsEmpty() )
+    {
+        aReporter.Report( wxString::Format( _( "Failed to load %s\n" ), aFileB ), RPT_SEVERITY_ERROR );
+        return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
+    }
+
+    // Synthesize empty SCHEMATICs for any missing side so SCH_DIFFER sees a valid empty
+    // document. Each empty side needs its own defaults-only project: a bare PROJECT has no
+    // PROJECT_FILE, and SCHEMATIC::SetProject dereferences GetProjectFile().
+    if( !aSides.a.doc )
+        aSides.emptyA = emptyScratchSchematic( aMgr, wxT( "kicad_diff_empty_a" ) );
+
+    if( !aSides.b.doc )
+        aSides.emptyB = emptyScratchSchematic( aMgr, wxT( "kicad_diff_empty_b" ) );
+
+    aSides.schA = aSides.a.doc ? aSides.a.doc.get() : aSides.emptyA.doc.get();
+    aSides.schB = aSides.b.doc ? aSides.b.doc.get() : aSides.emptyB.doc.get();
+
+    KICAD_DIFF::SCH_DIFFER differ( aSides.schA, aSides.schB, aFileB );
+    aSides.diff = differ.Diff();
+
+    return CLI::EXIT_CODES::SUCCESS;
+}
+
+
+// The two schematics a window outside the kiface shows, taken off their canvases before they go.
+class SCH_DIFF_CANVAS_CONTEXT : public KICAD_DIFF::DIFF_CANVAS_CONTEXT
+{
+public:
+    SCH_DIFF_CANVAS_CONTEXT( WIDGET_DIFF_CANVAS* aBefore, WIDGET_DIFF_CANVAS* aAfter ) :
+            m_before( aBefore ),
+            m_after( aAfter )
+    {
+    }
+
+    ~SCH_DIFF_CANVAS_CONTEXT() override
+    {
+        // The painter keeps a schematic pointer, so give the canvases one that points at nothing.
+        const KICAD_DIFF::DIFF_COLOR_THEME theme;
+
+        for( WIDGET_DIFF_CANVAS* canvas : { m_before, m_after } )
+        {
+            canvas->SetContextItems( {} );
+            canvas->SetContextPainter(
+                    KICAD_DIFF::MakeSchDiffContextPainter( canvas->GetGAL(), nullptr, theme.reference ) );
+        }
+    }
+
+    SCH_DIFF_SIDES m_sides;
+
+private:
+    WIDGET_DIFF_CANVAS* m_before;
+    WIDGET_DIFF_CANVAS* m_after;
+};
+
+
+KICAD_DIFF::DIFF_CANVAS_CONTEXT*
+EESCHEMA_JOBS_HANDLER::AttachDiffCanvases( KICAD_DIFF::DOC_KIND aKind, const wxString& aFileA, const wxString& aFileB,
+                                           WIDGET_DIFF_CANVAS* aBefore, WIDGET_DIFF_CANVAS* aAfter,
+                                           KICAD_DIFF::DOCUMENT_DIFF& aDiff, REPORTER* aReporter )
+{
+    SCOPED_SET_RESET<REPORTER*> reporterGuard( m_reporter, aReporter ? aReporter : m_reporter );
+
+    if( aKind != KICAD_DIFF::DOC_KIND::SCH )
+        return nullptr;
+
+    auto context = std::make_unique<SCH_DIFF_CANVAS_CONTEXT>( aBefore, aAfter );
+
+    if( loadSchDiffSides( Pgm().GetSettingsManager(), *m_reporter, aFileA, aFileB, context->m_sides )
+        != CLI::EXIT_CODES::SUCCESS )
+    {
+        return nullptr;
+    }
+
+    const KICAD_DIFF::DIFF_COLOR_THEME theme;
+    SCHEMATIC*                         schA = context->m_sides.schA;
+    SCHEMATIC*                         schB = context->m_sides.schB;
+
+    KICAD_DIFF::ConfigureSchDiffCanvasContext( *aBefore, schA, nullptr, theme.reference, {}, {}, {}, schA->RootScreen(),
+                                               nullptr );
+    KICAD_DIFF::ConfigureSchDiffCanvasContext( *aAfter, nullptr, schB, theme.reference, {}, {}, {}, nullptr,
+                                               schB->RootScreen() );
+
+    aDiff = context->m_sides.diff;
+    return context.release();
+}
 
 
 int EESCHEMA_JOBS_HANDLER::OpenDiffDialog( KICAD_DIFF::DOC_KIND aKind, const wxString& aFileA,
@@ -2912,47 +3048,17 @@ int EESCHEMA_JOBS_HANDLER::OpenDiffDialog( KICAD_DIFF::DOC_KIND aKind, const wxS
     {
     case KICAD_DIFF::DOC_KIND::SCH:
     {
-        SETTINGS_MANAGER& mgr = Pgm().GetSettingsManager();
+        SCH_DIFF_SIDES sides;
 
-        SCRATCH_DOC<SCHEMATIC> a = loadScratchSchematic( mgr, aFileA );
-        SCRATCH_DOC<SCHEMATIC> b = loadScratchSchematic( mgr, aFileB );
-
-        if( !a.doc && !aFileA.IsEmpty() )
+        if( int rc = loadSchDiffSides( Pgm().GetSettingsManager(), *m_reporter, aFileA, aFileB, sides );
+            rc != CLI::EXIT_CODES::SUCCESS )
         {
-            m_reporter->Report( wxString::Format( _( "Failed to load %s\n" ), aFileA ), RPT_SEVERITY_ERROR );
-            return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
+            return rc;
         }
 
-        if( !b.doc && !aFileB.IsEmpty() )
-        {
-            m_reporter->Report( wxString::Format( _( "Failed to load %s\n" ), aFileB ), RPT_SEVERITY_ERROR );
-            return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
-        }
-
-        // Synthesize empty SCHEMATICs against scratch PROJECTs for any
-        // missing side so SCH_DIFFER sees a valid empty document.
-        PROJECT                    scratchPrjA;
-        PROJECT                    scratchPrjB;
-        std::unique_ptr<SCHEMATIC> emptyA;
-        std::unique_ptr<SCHEMATIC> emptyB;
-
-        if( !a.doc )
-        {
-            emptyA = std::make_unique<SCHEMATIC>( &scratchPrjA );
-            emptyA->CreateDefaultScreens();
-        }
-
-        if( !b.doc )
-        {
-            emptyB = std::make_unique<SCHEMATIC>( &scratchPrjB );
-            emptyB->CreateDefaultScreens();
-        }
-
-        SCHEMATIC* schA = a.doc ? a.doc.get() : emptyA.get();
-        SCHEMATIC* schB = b.doc ? b.doc.get() : emptyB.get();
-
-        KICAD_DIFF::SCH_DIFFER differ( schA, schB, aFileB );
-        result = differ.Diff();
+        SCHEMATIC* schA = sides.schA;
+        SCHEMATIC* schB = sides.schB;
+        result = std::move( sides.diff );
 
         const KICAD_DIFF::DIFF_COLOR_THEME theme;
         refGeometry = KICAD_DIFF::ExtractSchematicGeometry( *schA, theme.reference );
@@ -2961,38 +3067,67 @@ int EESCHEMA_JOBS_HANDLER::OpenDiffDialog( KICAD_DIFF::DOC_KIND aKind, const wxS
         const wxString labelA = aLabelA.IsEmpty() ? aFileA : aLabelA;
         const wxString labelB = aLabelB.IsEmpty() ? aFileB : aLabelB;
 
-        DIALOG_KICAD_DIFF dlg(
-                parent, labelA, labelB, result, std::move( refGeometry ), std::move( compGeometry ),
-                [schA, schB, color = theme.reference]( WIDGET_DIFF_CANVAS& aCanvas, const KIID_PATH& aSheetPath )
-                {
-                    SCH_SCREEN* refScreen = schA ? schA->RootScreen() : nullptr;
-                    SCH_SCREEN* compScreen = schB ? schB->RootScreen() : nullptr;
+        // A deleted item exists only in the reference schematic, so the comparison-side context cannot
+        // draw it. Keyed by sheet path, or removing one instance of a shared sheet ghosts the others.
+        std::map<KIID_PATH, std::set<KIID>> removedBySheet;
 
-                    if( !aSheetPath.empty() )
-                    {
-                        if( schA )
-                        {
-                            if( auto sp = schA->Hierarchy().GetSheetPathByKIIDPath( aSheetPath, true ) )
-                                refScreen = sp->LastScreen();
-                        }
+        for( const KICAD_DIFF::ITEM_CHANGE& change : result.changes )
+        {
+            if( change.kind == KICAD_DIFF::CHANGE_KIND::REMOVED && !change.id.empty() )
+            {
+                KIID_PATH sheetPath = change.id;
+                sheetPath.pop_back();
+                removedBySheet[sheetPath].insert( change.id.back() );
+            }
+        }
 
-                        if( schB )
-                        {
-                            if( auto sp = schB->Hierarchy().GetSheetPathByKIIDPath( aSheetPath, true ) )
-                                compScreen = sp->LastScreen();
-                        }
-                    }
+        DIALOG_KICAD_DIFF dlg( parent, labelA, labelB, result, std::move( refGeometry ), std::move( compGeometry ),
+                               [schA, schB, removedBySheet, color = theme.reference]( WIDGET_DIFF_CANVAS& aCanvas,
+                                                                                      const KIID_PATH&    aSheetPath )
+                               {
+                                   SCH_SCREEN* compScreen = schB ? schB->RootScreen() : nullptr;
 
-                    KICAD_DIFF::ConfigureSchDiffCanvasContext( aCanvas, schA, schB, color, {}, {}, {}, refScreen,
-                                                               compScreen );
-                } );
+                                   if( !aSheetPath.empty() && schB )
+                                   {
+                                       if( auto sp = schB->Hierarchy().GetSheetPathByKIIDPath( aSheetPath, true ) )
+                                           compScreen = sp->LastScreen();
+                                   }
+
+                                   SCH_SCREEN* refScreen = schA ? schA->RootScreen() : nullptr;
+
+                                   if( !aSheetPath.empty() && schA )
+                                   {
+                                       if( auto sp = schA->Hierarchy().GetSheetPathByKIIDPath( aSheetPath, true ) )
+                                           refScreen = sp->LastScreen();
+                                   }
+
+                                   std::vector<KIGFX::VIEW_ITEM*> deletedItems;
+                                   auto                           removedHere = removedBySheet.find( aSheetPath );
+
+                                   // The initial display passes an empty path for the root
+                                   // sheet, which the change ids name by uuid.
+                                   if( removedHere == removedBySheet.end() && aSheetPath.empty() && schA )
+                                   {
+                                       KIID_PATH rootPath;
+                                       rootPath.push_back( schA->Root().m_Uuid );
+                                       removedHere = removedBySheet.find( rootPath );
+                                   }
+
+                                   if( refScreen && removedHere != removedBySheet.end() )
+                                   {
+                                       for( SCH_ITEM* item : refScreen->Items() )
+                                       {
+                                           if( removedHere->second.count( item->m_Uuid ) )
+                                               deletedItems.push_back( item );
+                                       }
+                                   }
+
+                                   // Drawing the reference too would overlay the old and new
+                                   // versions of a moved item, so only its deleted items are used.
+                                   KICAD_DIFF::ConfigureSchDiffCanvasContext( aCanvas, nullptr, schB, color, {},
+                                                                              deletedItems, {}, nullptr, compScreen );
+                               } );
         dlg.ShowModal();
-
-        if( emptyA )
-            emptyA->SetProject( nullptr );
-
-        if( emptyB )
-            emptyB->SetProject( nullptr );
 
         return CLI::EXIT_CODES::SUCCESS;
     }
@@ -3041,6 +3176,7 @@ int EESCHEMA_JOBS_HANDLER::OpenDiffDialog( KICAD_DIFF::DOC_KIND aKind, const wxS
 // ============================================================================
 // JobSchMerge: sch_merge implementation
 // ============================================================================
+#include <diff_merge/auto_resolution.h>
 #include <diff_merge/sch_merge_applier.h>
 #include <dialogs/dialog_kicad_merge_3way.h>
 #include <jobs/scratch_doc.h>
@@ -3095,6 +3231,18 @@ int EESCHEMA_JOBS_HANDLER::runSchMerge( const wxString& aAncestor, const wxStrin
         return CLI::EXIT_CODES::ERR_ARGS;
     }
 
+    auto loadedVersion = []( const SCHEMATIC* aSch )
+    {
+        return aSch->RootScreen() ? aSch->RootScreen()->GetFileFormatVersionAtLoad() : 0;
+    };
+
+    const wxString formatNotice =
+            KICAD_DIFF::OlderFormatNotice( loadedVersion( ancestor.doc.get() ), loadedVersion( ours.doc.get() ),
+                                           loadedVersion( theirs.doc.get() ), SEXPR_SCHEMATIC_FILE_VERSION );
+
+    if( !formatNotice.IsEmpty() )
+        m_reporter->Report( formatNotice + wxS( "\n" ), RPT_SEVERITY_WARNING );
+
     KICAD_DIFF::SCH_DIFFER ourDiff( ancestor.doc.get(), ours.doc.get() );
     KICAD_DIFF::SCH_DIFFER theirDiff( ancestor.doc.get(), theirs.doc.get() );
 
@@ -3104,9 +3252,7 @@ int EESCHEMA_JOBS_HANDLER::runSchMerge( const wxString& aAncestor, const wxStrin
     KICAD_DIFF::KICAD_MERGE_ENGINE engine;
     KICAD_DIFF::MERGE_PLAN         plan = engine.Plan( ourDocDiff, theirDocDiff );
 
-    // A cancelled dialog leaves plan unresolved and falls through to the
-    // marker flow below.
-    if( aInteractive && !plan.Resolved() )
+    if( aInteractive && !KICAD_DIFF::BuildConflictList( plan ).empty() )
     {
         if( !Pgm().IsGUI() )
         {
@@ -3118,6 +3264,7 @@ int EESCHEMA_JOBS_HANDLER::runSchMerge( const wxString& aAncestor, const wxStrin
 
         const KICAD_DIFF::DIFF_COLOR_THEME        theme;
         DIALOG_KICAD_MERGE_3WAY::CONFLICT_CONTEXT ctx;
+        ctx.formatNotice = formatNotice;
 
         if( ancestor.doc )
             ctx.ancestorGeometry = KICAD_DIFF::ExtractSchematicGeometry( *ancestor.doc, theme.reference );
@@ -3131,10 +3278,79 @@ int EESCHEMA_JOBS_HANDLER::runSchMerge( const wxString& aAncestor, const wxStrin
         KICAD_DIFF::CollectChangeBBoxes( ourDocDiff, ctx.oursBBoxes );
         KICAD_DIFF::CollectChangeBBoxes( theirDocDiff, ctx.theirsBBoxes );
 
+        ctx.describeItem = [&ours, &theirs, &ancestor]( const KIID_PATH& aId ) -> wxString
+        {
+            if( aId.empty() )
+                return wxEmptyString;
+
+            UNITS_PROVIDER units( schIUScale, EDA_UNITS::MM );
+
+            for( SCHEMATIC* doc : { ours.doc.get(), theirs.doc.get(), ancestor.doc.get() } )
+            {
+                if( !doc )
+                    continue;
+
+                if( SCH_ITEM* item = doc->ResolveItem( aId.back(), nullptr, true ) )
+                    return item->GetItemDescription( &units, false );
+            }
+
+            return wxEmptyString;
+        };
+
+        // A conflict's path is its sheet path followed by the item, so dropping the item
+        // names the sheet it lives on.
+        auto screenForConflict = []( SCHEMATIC* aDoc, const std::optional<KIID_PATH>& aId ) -> SCH_SCREEN*
+        {
+            if( !aId.has_value() || aId->size() < 2 )
+                return aDoc->RootScreen();
+
+            KIID_PATH sheetPath = *aId;
+            sheetPath.pop_back();
+
+            SCH_SHEET_LIST sheets = aDoc->BuildSheetListSortedByPageNumbers();
+
+            if( std::optional<SCH_SHEET_PATH> path = sheets.GetSheetPathByKIIDPath( sheetPath ) )
+            {
+                if( SCH_SCREEN* screen = path->LastScreen() )
+                    return screen;
+            }
+
+            return aDoc->RootScreen();
+        };
+
+        ctx.drawSide = [&ancestor, &ours, &theirs, theme, screenForConflict]( WIDGET_DIFF_CANVAS&             aCanvas,
+                                                                              DIALOG_KICAD_MERGE_3WAY::SIDE   aSide,
+                                                                              const std::optional<KIID_PATH>& aId )
+        {
+            SCHEMATIC*     doc = nullptr;
+            KIGFX::COLOR4D colour = theme.reference;
+
+            switch( aSide )
+            {
+            case DIALOG_KICAD_MERGE_3WAY::SIDE::OURS: doc = ours.doc.get(); break;
+
+            case DIALOG_KICAD_MERGE_3WAY::SIDE::THEIRS:
+                doc = theirs.doc.get();
+                colour = theme.comparison;
+                break;
+
+            case DIALOG_KICAD_MERGE_3WAY::SIDE::ANCESTOR: doc = ancestor.doc.get(); break;
+            }
+
+            if( doc )
+            {
+                KICAD_DIFF::ConfigureSchDiffCanvasContext( aCanvas, doc, nullptr, colour, {}, {}, {},
+                                                           screenForConflict( doc, aId ) );
+            }
+        };
+
         DIALOG_KICAD_MERGE_3WAY dlg( wxTheApp->GetTopWindow(), plan, std::move( ctx ) );
 
-        if( dlg.ShowModal() == wxID_APPLY )
-            plan = dlg.GetResolvedPlan();
+        // Cancelling leaves the conflicts unresolved and the files untouched.
+        if( dlg.ShowModal() != wxID_APPLY )
+            return CLI::EXIT_CODES::ERR_CANCELLED;
+
+        plan = dlg.GetResolvedPlan();
     }
 
     // Snapshot of the plan before the applier moves it; drives the

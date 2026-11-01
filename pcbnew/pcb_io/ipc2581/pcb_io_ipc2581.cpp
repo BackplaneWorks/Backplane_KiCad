@@ -2714,10 +2714,10 @@ void PCB_IO_IPC2581::addPadStack( wxXmlNode* aPadNode, const PAD* aPad )
         padStackHoleNode->AddAttribute( "name",
                                         wxString::Format( "%s%d_%d",
                                                           aPad->GetAttribute() == PAD_ATTRIB::PTH ? "PTH" : "NPTH",
-                                                          aPad->GetDrillSizeX(), aPad->GetDrillSizeY() ) );
+                                                          aPad->GetDrillSize().x, aPad->GetDrillSize().y ) );
 
         // A round drill with unequal axes is drilled at its smaller axis, like its layer hole
-        int diameter = std::min( aPad->GetDrillSizeX(), aPad->GetDrillSizeY() );
+        int diameter = std::min( aPad->GetDrillSize().x, aPad->GetDrillSize().y );
         addAttribute( padStackHoleNode,  "diameter", floatVal( m_scale * diameter ) );
         addAttribute( padStackHoleNode,  "platingStatus",
                       aPad->GetAttribute() == PAD_ATTRIB::PTH ? "PLATED" : "NONPLATED" );
@@ -2745,7 +2745,7 @@ void PCB_IO_IPC2581::addPadStack( wxXmlNode* aPadNode, const PAD* aPad )
         {
             PCB_SHAPE shape( nullptr, SHAPE_T::CIRCLE );
             shape.SetStart( offset );
-            shape.SetEnd( offset + VECTOR2I( std::min( aPad->GetDrillSizeX(), aPad->GetDrillSizeY() ) / 2, 0 ) );
+            shape.SetEnd( offset + VECTOR2I( std::min( aPad->GetDrillSize().x, aPad->GetDrillSize().y ) / 2, 0 ) );
             addShape( padStackPadDefNode, shape );
         }
         else
@@ -2949,10 +2949,10 @@ void PCB_IO_IPC2581::ensureBackdrillSpecs( const wxString& aPadstackName, const 
             addAttribute( p, "layerOrGroupRef", mustNotCutEntry->second );
         }
 
-        // MAX_STUB_LENGTH: the maximum residual copper allowed past the
-        // must-cut layer. KiCad has no explicit fabricator tolerance, so use
-        // half the dielectric thickness between must-cut and must-not-cut as
-        // a nominal midpoint. Falls back to zero if no inner signal exists.
+        // MAX_STUB_LENGTH: the maximum residual copper allowed above/below the signal layers (ie:
+        // between the last signal layer and the must-cut layer).  KiCad has no explicit fabricator
+        // tolerance, so use half the dielectric thickness between must-cut and must-not-cut as a
+        // nominal midpoint. Falls back to zero if no inner signal exists.
         int stubLength = 0;
 
         if( mustNotCut != UNDEFINED_LAYER )

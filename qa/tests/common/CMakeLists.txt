@@ -36,6 +36,7 @@ set( QA_COMMON_SRCS
     test_backup_settings.cpp
     test_base_set.cpp
     test_bitmap_base.cpp
+    test_bitmap_tracing.cpp
     test_clipboard.cpp
     test_collector.cpp
     test_color4d.cpp
@@ -43,9 +44,12 @@ set( QA_COMMON_SRCS
     test_compatibility_report.cpp
     test_coroutine.cpp
     test_filter_kruskal.cpp
+    test_database_lib_settings.cpp
+    test_database_value.cpp
     test_design_block_io.cpp
     test_design_block_library_adapter.cpp
     test_desktop_app_id.cpp
+    test_dialog_kicad_merge_3way.cpp
     test_dialog_shim.cpp
     test_eda_shape.cpp
     test_eda_text.cpp
@@ -66,6 +70,7 @@ set( QA_COMMON_SRCS
     test_hotkey_store.cpp
     test_increment.cpp
     test_inplace_function.cpp
+    test_io_error.cpp
     test_item_realignment.cpp
     test_json_schema_validator.cpp
     test_ki_any.cpp
@@ -96,6 +101,7 @@ set( QA_COMMON_SRCS
     test_svg_plotter.cpp
     test_property_holder.cpp
     test_reporting.cpp
+    test_rhi_compute.cpp
     test_rhi_deferred_release.cpp
     test_rc_tree_model.cpp
     test_refdes_utils.cpp
@@ -107,6 +113,9 @@ set( QA_COMMON_SRCS
     test_snapping_options.cpp
     test_string_any_map.cpp
     test_string_utils.cpp
+    test_base64.cpp
+    test_target3001_arc.cpp
+    test_target3001_fonts.cpp
     test_richio.cpp
     test_template_fieldnames.cpp
     test_text_attributes.cpp
@@ -114,6 +123,7 @@ set( QA_COMMON_SRCS
     test_tool_prime.cpp
     git/test_libgit_backend.cpp
     git/test_git_compare_handler.cpp
+    git/test_text_diff.cpp
     text_eval/test_text_eval_parser.cpp
     text_eval/test_text_eval_parser_core.cpp
     text_eval/test_text_eval_parser_datetime.cpp
@@ -130,6 +140,7 @@ set( QA_COMMON_SRCS
     test_wx_any_utils.cpp
     test_wx_filename.cpp
 
+    libeval/test_libeval_string_literal.cpp
     libeval/test_numeric_evaluator.cpp
 
     transline_calculations/test_coax.cpp
@@ -159,10 +170,12 @@ set( QA_COMMON_SRCS
     io/pads/test_pads_unit_converter.cpp
 
     test_kigit_common.cpp
+    test_scratch_doc.cpp
     test_kigit_orphan_registry.cpp
     test_throttle.cpp
     view/test_zoom_controller.cpp
     view/test_view_null_safety.cpp
+    widgets/test_file_checklist_ctrl.cpp
 
     test_netclass.cpp
     test_netname_validator.cpp
@@ -206,6 +219,9 @@ set( QA_COMMON_SRCS
     test_job_sch_erc.cpp
     test_jobs_runner.cpp
     test_jobs_output_archive.cpp
+    test_job_output_path.cpp
+    test_jobs_runner_record_output.cpp
+    ${CMAKE_SOURCE_DIR}/kicad/jobs_runner.cpp
 
     # Translation integrity tests
     test_translation_format_strings.cpp
@@ -240,6 +256,7 @@ target_link_libraries( qa_common
     common
     libcontext
     gal
+    rhi
     pads_common
     qa_utils
     Boost::headers
@@ -288,3 +305,11 @@ endif()
 kicad_add_boost_test( qa_common qa_common )
 
 setup_qa_env( qa_common )
+
+
+kicad_add_shaders( TARGET qa_common SHADERS
+    rhi_compute/checkerboard.comp
+    rhi_compute/workgroup.comp
+    rhi_compute/reduction.comp
+    rhi_compute/multipass.comp
+)

@@ -29,6 +29,9 @@
 
 #include <wx/regex.h>
 #include <algorithm>
+#include <map>
+#include <optional>
+#include <set>
 #include <vector>
 #include <unordered_set>
 
@@ -36,6 +39,7 @@
 #include <erc/erc_settings.h>
 #include <refdes_tracker.h>
 #include <sch_symbol.h>
+#include <schematic.h>
 #include <sch_edit_frame.h>
 
 
@@ -115,6 +119,10 @@ bool SCH_REFERENCE_LIST::sortByRefAndValue( const SCH_REFERENCE& item1,
 {
     int ii = item1.CompareRef( item2 );
 
+    // Keeps each channel's units adjacent for the duplicate check
+    if( ii == 0 )
+        ii = item1.GetRefSuffix().Cmp( item2.GetRefSuffix() );
+
     if( ii == 0 )
         ii = item1.CompareValue( item2 );
 
@@ -186,7 +194,7 @@ int SCH_REFERENCE_LIST::FindRef( const wxString& aRef ) const
 {
     for( size_t i = 0; i < m_flatList.size(); ++i )
     {
-        if( m_flatList[i].GetRef() == aRef )
+        if( m_flatList[i].GetComposedRef() == aRef )
             return i;
     }
 
@@ -214,29 +222,19 @@ void SCH_REFERENCE_LIST::GetRefsInUse( int aIndex, std::vector< int >& aIdList,
 }
 
 
-std::vector<int> SCH_REFERENCE_LIST::GetUnitsMatchingRef( const SCH_REFERENCE& aRef ) const
+std::vector<int> SCH_REFERENCE_LIST::GetPackageUnits( const SCH_REFERENCE& aRef ) const
 {
     std::vector<int> unitsList;
 
     // Always add this reference to the list
     unitsList.push_back( aRef.m_unit );
 
-    for( SCH_REFERENCE ref : m_flatList )
+    for( const SCH_REFERENCE& ref : m_flatList )
     {
         if( ref.CompareValue( aRef ) != 0 )
             continue;
 
         if( ref.CompareLibId( aRef ) != 0 )
-            continue;
-
-        // Split if needed before comparing ref and number
-        if( ref.IsSplitNeeded() )
-            ref.Split();
-
-        if( ref.CompareRef( aRef ) != 0 )
-            continue;
-
-        if( ref.m_numRef != aRef.m_numRef )
             continue;
 
         unitsList.push_back( ref.m_unit );
@@ -252,12 +250,294 @@ std::vector<int> SCH_REFERENCE_LIST::GetUnitsMatchingRef( const SCH_REFERENCE& a
 }
 
 
-int SCH_REFERENCE_LIST::FindFirstUnusedReference( const SCH_REFERENCE& aRef, int aMinValue,
-                                                  const std::vector<int>& aRequiredUnits ) const
+static bool sharesReusedBase( const SCH_REFERENCE& aRef )
+{
+    const SCHEMATIC* schematic = aRef.GetSymbol()->Schematic();
+    return !schematic || !schematic->CopiesSelectDifferentUnits( aRef.GetSymbol() );
+}
+
+
+// A copy that keeps its own base can sit in another package than its siblings, so it keys apart
+static std::pair<const SCH_SYMBOL*, KIID_PATH> packageMemberKey( const SCH_REFERENCE& aRef )
+{
+    return { aRef.GetSymbol(), sharesReusedBase( aRef ) ? KIID_PATH() : aRef.GetSheetPath().Path() };
+}
+
+
+void SCH_REFERENCE_LIST::UseReusedSheetRepresentatives( const SCH_SHEET_LIST& aSheets )
+{
+    std::map<const SCH_SCREEN*, const SCH_SHEET_PATH*> firstPath;
+
+    for( const SCH_SHEET_PATH& path : aSheets )
+        firstPath.emplace( path.LastScreen(), &path );
+
+    SCH_REFERENCE_LIST              representatives;
+    std::unordered_set<SCH_SYMBOL*> seen;
+
+    for( const SCH_REFERENCE& ref : m_flatList )
+    {
+        // Copies that select different units each annotate on their own path
+        if( !sharesReusedBase( ref ) )
+        {
+            representatives.AddItem( ref );
+            continue;
+        }
+
+        if( !seen.insert( ref.GetSymbol() ).second )
+            continue;
+
+        auto it = firstPath.find( ref.GetSheetPath().LastScreen() );
+
+        if( it == firstPath.end() || *it->second == ref.GetSheetPath() )
+            representatives.AddItem( ref );
+        else
+            it->second->AppendSymbol( representatives, ref.GetSymbol(), SYMBOL_FILTER_ALL, true );
+    }
+
+    m_flatList = std::move( representatives.m_flatList );
+}
+
+
+SCH_MULTI_UNIT_REFERENCE_MAP
+SCH_REFERENCE_LIST::LockedForRepresentatives( const SCH_MULTI_UNIT_REFERENCE_MAP& aLocked ) const
+{
+    std::map<std::pair<const SCH_SYMBOL*, KIID_PATH>, size_t> indexOf;
+    std::vector<size_t>                                       parent( m_flatList.size() );
+    std::set<size_t>                                          locked;
+
+    for( size_t i = 0; i < m_flatList.size(); i++ )
+    {
+        indexOf[packageMemberKey( m_flatList[i] )] = i;
+        parent[i] = i;
+    }
+
+    auto root =
+            [&]( size_t aIndex )
+            {
+                while( parent[aIndex] != aIndex )
+                    aIndex = parent[aIndex] = parent[parent[aIndex]];
+
+                return aIndex;
+            };
+
+    for( const auto& [key, group] : aLocked )
+    {
+        std::optional<size_t> first;
+
+        for( const SCH_REFERENCE& ref : group )
+        {
+            auto it = indexOf.find( packageMemberKey( ref ) );
+
+            if( it == indexOf.end() )
+                continue;
+
+            locked.insert( it->second );
+
+            if( first )
+                parent[root( it->second )] = root( *first );
+            else
+                first = it->second;
+        }
+    }
+
+    SCH_MULTI_UNIT_REFERENCE_MAP result;
+
+    // The root index keeps two packages apart even when a duplicate gave them one composed ref
+    for( size_t index : locked )
+    {
+        const size_t group = root( index );
+        result[wxString::Format( wxS( "%s:%zu" ), m_flatList[group].GetComposedRef(), group )].AddItem(
+                m_flatList[index] );
+    }
+
+    return result;
+}
+
+
+void SCH_REFERENCE_LIST::RenumberBasesUsedBy( const SCH_REFERENCE_LIST&           aOthers,
+                                              const SCH_MULTI_UNIT_REFERENCE_MAP& aLocked,
+                                              const SCH_SHEET_LIST&               aSheets )
+{
+    std::map<std::pair<const SCH_SYMBOL*, KIID_PATH>, wxString> packageOf;
+    std::map<wxString, std::set<int>>                           packageUnits;
+    std::set<wxString>                                          renumberedPackages;
+
+    for( const auto& [key, group] : aLocked )
+    {
+        for( const SCH_REFERENCE& ref : group )
+        {
+            packageOf[packageMemberKey( ref )] = key;
+            packageUnits[key].insert( ref.GetUnit() );
+
+            // Sharing would move all but one base onto destinations nobody checked
+            if( ref.GetRef() != group[0].GetRef() )
+                renumberedPackages.insert( key );
+        }
+    }
+
+    auto packageFor =
+            [&]( const SCH_REFERENCE& aRef ) -> const wxString*
+            {
+                auto it = packageOf.find( packageMemberKey( aRef ) );
+                return it == packageOf.end() ? nullptr : &it->second;
+            };
+
+    // Another part's unit can only join a package where the package leaves that unit free
+    auto joins =
+            [&]( const SCH_REFERENCE& aRef, const SCH_REFERENCE& aOther )
+            {
+                if( aOther.CompareLibId( aRef ) != 0 || aOther.CompareValue( aRef ) != 0 )
+                    return false;
+
+                if( const wxString* package = packageFor( aRef ) )
+                    return !packageUnits[*package].contains( aOther.GetUnit() );
+
+                return aOther.GetUnit() != aRef.GetUnit();
+            };
+
+    auto samePackage =
+            [&]( const SCH_REFERENCE& aRef, const SCH_REFERENCE& aOther )
+            {
+                const wxString* ref = packageFor( aRef );
+                const wxString* other = packageFor( aOther );
+
+                if( ref && other )
+                    return *ref == *other;
+
+                return aOther.GetUnit() != aRef.GetUnit() && aOther.CompareLibId( aRef ) == 0
+                       && aOther.CompareValue( aRef ) == 0;
+            };
+
+    std::multimap<wxString, const SCH_REFERENCE*>                   othersByBase;
+    std::multimap<wxString, const SCH_REFERENCE*>                   othersByComposed;
+    std::map<const SCH_SCREEN*, std::vector<const SCH_SHEET_PATH*>> pathsOf;
+
+    for( const SCH_REFERENCE& other : aOthers.m_flatList )
+    {
+        othersByBase.emplace( other.GetRef(), &other );
+        othersByComposed.emplace( other.GetComposedRef(), &other );
+    }
+
+    for( const SCH_SHEET_PATH& path : aSheets )
+        pathsOf[path.LastScreen()].push_back( &path );
+
+    // A shared base shows on every copy, while a copy keeping its own shows only there
+    // A multi-unit symbol shows its package's suffix, which can be another sheet's
+    auto suffixesFor =
+            [&]( const SCH_REFERENCE& aRef ) -> std::vector<wxString>
+            {
+                const SCH_SYMBOL*     symbol = aRef.GetSymbol();
+                const SCHEMATIC*      schematic = symbol->Schematic();
+                std::vector<wxString> result;
+
+                auto add =
+                        [&]( const SCH_SHEET_PATH& aPath )
+                        {
+                            if( !schematic )
+                                result.emplace_back();
+                            else
+                                result.push_back( schematic->GetPackageRefSuffix( symbol, aPath ) );
+                        };
+
+                if( !sharesReusedBase( aRef ) )
+                {
+                    add( aRef.GetSheetPath() );
+                    return result;
+                }
+
+                for( const SCH_SHEET_PATH* path : pathsOf[aRef.GetSheetPath().LastScreen()] )
+                    add( *path );
+
+                return result;
+            };
+
+    auto collides =
+            [&]( const SCH_REFERENCE& aRef, const std::vector<wxString>& aSuffixes )
+            {
+                auto blocks =
+                        [&]( const std::multimap<wxString, const SCH_REFERENCE*>& aIndex, const wxString& aKey )
+                        {
+                            auto [begin, end] = aIndex.equal_range( aKey );
+
+                            return std::any_of( begin, end,
+                                                [&]( const auto& aEntry )
+                                                {
+                                                    return !joins( aRef, *aEntry.second );
+                                                } );
+                        };
+
+                if( blocks( othersByBase, aRef.GetRef() ) )
+                    return true;
+
+                // The suffix need not separate cleanly from the base, so compare what each instance will show
+                for( const wxString& suffix : aSuffixes )
+                {
+                    if( blocks( othersByComposed, aRef.GetRef() + suffix ) )
+                        return true;
+                }
+
+                return false;
+            };
+
+    std::set<const SCH_REFERENCE*>                        renumbered;
+    std::map<wxString, std::vector<const SCH_REFERENCE*>> holders;
+    std::map<wxString, std::vector<const SCH_REFERENCE*>> composedHolders;
+
+    for( const SCH_REFERENCE& ref : m_flatList )
+    {
+        const std::vector<wxString> suffixes = suffixesFor( ref );
+
+        auto clashes =
+                [&]( const std::vector<const SCH_REFERENCE*>& aHolders )
+                {
+                    return !std::all_of( aHolders.begin(), aHolders.end(),
+                                         [&]( const SCH_REFERENCE* aHolder )
+                                         {
+                                             return samePackage( ref, *aHolder );
+                                         } );
+                };
+
+        bool conflict = collides( ref, suffixes ) || clashes( holders[ref.GetRef()] )
+                        || std::any_of( suffixes.begin(), suffixes.end(),
+                                        [&]( const wxString& aSuffix )
+                                        {
+                                            return clashes( composedHolders[ref.GetRef() + aSuffix] );
+                                        } );
+
+        if( !conflict )
+        {
+            holders[ref.GetRef()].push_back( &ref );
+
+            for( const wxString& suffix : suffixes )
+                composedHolders[ref.GetRef() + suffix].push_back( &ref );
+        }
+        else if( const wxString* package = packageFor( ref ) )
+            renumberedPackages.insert( *package );
+        else
+            renumbered.insert( &ref );
+    }
+
+    for( SCH_REFERENCE& ref : m_flatList )
+    {
+        const wxString* package = packageFor( ref );
+
+        if( renumbered.contains( &ref ) || ( package && renumberedPackages.contains( *package ) ) )
+            ref.m_isNew = true;
+    }
+}
+
+
+int SCH_REFERENCE_LIST::FindFirstUnusedReference(
+        const SCH_REFERENCE& aRef, int aMinValue, const std::vector<int>& aRequiredUnits,
+        const std::map<const SCH_REFERENCE*, std::vector<SCH_REFERENCE>>& aDestinations,
+        const SCH_REFERENCE_LIST*                                         aLocked ) const
 {
     // Create a map of references indexed by reference number, only including those with the same
     // reference prefix as aRef
     std::map<int, std::vector<SCH_REFERENCE>> refNumberMap;
+
+    // Without required units the tracker only asks whether a number is taken, so skip the copies
+    const bool needUnits = std::ranges::any_of( aRequiredUnits, []( int aUnit ) { return aUnit >= 0; } );
 
     for( const SCH_REFERENCE& ref : m_flatList )
     {
@@ -268,10 +548,66 @@ int SCH_REFERENCE_LIST::FindFirstUnusedReference( const SCH_REFERENCE& aRef, int
         if( ref.m_isNew )
             continue; // It will be reannotated
 
-        refNumberMap[ref.m_numRef].push_back( ref );
+        std::vector<SCH_REFERENCE>& numbered = refNumberMap[ref.m_numRef];
+
+        if( needUnits )
+            numbered.push_back( ref );
     }
 
-    return m_refDesTracker->GetNextRefDesForUnits( aRef, refNumberMap, aRequiredUnits, aMinValue );
+    std::function<bool( int )> acceptNumber;
+
+    if( !aDestinations.empty() )
+    {
+        std::multimap<wxString, SCH_REFERENCE> occupied;
+        std::vector<SCH_REFERENCE>             candidates;
+
+        for( const auto& [ref, destinations] : aDestinations )
+        {
+            if( ref == &aRef
+                || ( aLocked && ref->CompareRef( aRef ) == 0 && ref->CompareLibId( aRef ) == 0
+                     && ref->CompareValue( aRef ) == 0 && aLocked->Contains( *ref ) ) )
+            {
+                candidates.insert( candidates.end(), destinations.begin(), destinations.end() );
+            }
+
+            if( ref->m_isNew || ref->m_numRef < 0 )
+                continue;
+
+            for( SCH_REFERENCE destination : destinations )
+            {
+                destination.SetUnit( ref->GetUnit() );
+
+                // Symbols still hold the old references until allocation finishes
+                wxString composed = ref->GetRef() + ref->GetRefNumber() + destination.m_refSuffix;
+                occupied.emplace( composed, std::move( destination ) );
+            }
+        }
+
+        acceptNumber = [&aRef, occupied = std::move( occupied ), candidates = std::move( candidates )]( int aNumber )
+        {
+            wxString base = aRef.GetRef() + aRef.formatRefStr( aNumber );
+
+            for( const SCH_REFERENCE& candidate : candidates )
+            {
+                auto [begin, end] = occupied.equal_range( base + candidate.m_refSuffix );
+
+                for( auto it = begin; it != end; ++it )
+                {
+                    const SCH_REFERENCE& other = it->second;
+
+                    if( other.GetUnit() == candidate.GetUnit() || other.CompareLibId( candidate ) != 0
+                        || other.CompareValue( candidate ) != 0 )
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        };
+    }
+
+    return m_refDesTracker->GetNextRefDesForUnits( aRef, refNumberMap, aRequiredUnits, aMinValue, acceptNumber );
 }
 
 
@@ -358,12 +694,10 @@ void SCH_REFERENCE_LIST::ReannotateDuplicates( const SCH_REFERENCE_LIST& aAdditi
 }
 
 
-void SCH_REFERENCE_LIST::AnnotateByOptions( ANNOTATE_ORDER_T                    aSortOption,
-                                            ANNOTATE_ALGO_T                     aAlgoOption,
-                                            int                                 aStartNumber,
+void SCH_REFERENCE_LIST::AnnotateByOptions( ANNOTATE_ORDER_T aSortOption, ANNOTATE_ALGO_T aAlgoOption, int aStartNumber,
                                             const SCH_MULTI_UNIT_REFERENCE_MAP& aLockedUnitMap,
-                                            const SCH_REFERENCE_LIST&           aAdditionalRefs,
-                                            bool                                aStartAtCurrent )
+                                            const SCH_REFERENCE_LIST& aAdditionalRefs, bool aStartAtCurrent,
+                                            const SCH_SHEET_LIST* aSharedSheets )
 {
     switch( aSortOption )
     {
@@ -396,14 +730,14 @@ void SCH_REFERENCE_LIST::AnnotateByOptions( ANNOTATE_ORDER_T                    
         break;
     }
 
-    Annotate( useSheetNum, idStep, aStartNumber, aLockedUnitMap, aAdditionalRefs, aStartAtCurrent );
+    Annotate( useSheetNum, idStep, aStartNumber, aLockedUnitMap, aAdditionalRefs, aStartAtCurrent, aSharedSheets );
 }
 
 
 void SCH_REFERENCE_LIST::Annotate( bool aUseSheetNum, int aSheetIntervalId, int aStartNumber,
                                    const SCH_MULTI_UNIT_REFERENCE_MAP& aLockedUnitMap,
-                                   const SCH_REFERENCE_LIST& aAdditionalRefs,
-                                   bool aStartAtCurrent )
+                                   const SCH_REFERENCE_LIST& aAdditionalRefs, bool aStartAtCurrent,
+                                   const SCH_SHEET_LIST* aSharedSheets )
 {
     if( !m_refDesTracker )
     {
@@ -440,6 +774,30 @@ void SCH_REFERENCE_LIST::Annotate( bool aUseSheetNum, int aSheetIntervalId, int 
         // so we change the m_isNew flag to be false after splitting
         additionalRef.m_isNew = false;
         AddItem( additionalRef ); //add to this container
+    }
+
+    std::map<const SCH_REFERENCE*, std::vector<SCH_REFERENCE>> destinations;
+
+    if( aSharedSheets )
+    {
+        for( size_t i = 0; i < m_flatList.size(); ++i )
+        {
+            const SCH_REFERENCE&        ref = m_flatList[i];
+            std::vector<SCH_REFERENCE>& instances = destinations[&ref];
+
+            if( i < originalSize && sharesReusedBase( ref ) )
+            {
+                for( const SCH_SHEET_PATH& path : *aSharedSheets )
+                {
+                    if( path.LastScreen() == ref.GetSheetPath().LastScreen() )
+                        instances.emplace_back( ref.GetSymbol(), path );
+                }
+            }
+            else
+            {
+                instances.push_back( ref );
+            }
+        }
     }
 
     int LastReferenceNumber = 0;
@@ -514,7 +872,7 @@ void SCH_REFERENCE_LIST::Annotate( bool aUseSheetNum, int aSheetIntervalId, int 
         {
             if( ref_unit.m_isNew )
             {
-                LastReferenceNumber = FindFirstUnusedReference( ref_unit, minRefId, {} );
+                LastReferenceNumber = FindFirstUnusedReference( ref_unit, minRefId, {}, destinations );
                 ref_unit.m_numRef = LastReferenceNumber;
                 ref_unit.m_numRefStr = ref_unit.formatRefStr( LastReferenceNumber );
             }
@@ -529,11 +887,11 @@ void SCH_REFERENCE_LIST::Annotate( bool aUseSheetNum, int aSheetIntervalId, int 
         if( lockedList != nullptr )
         {
             unsigned n_refs = lockedList->GetCount();
-            std::vector<int> units = lockedList->GetUnitsMatchingRef( ref_unit );
+            std::vector<int> units = lockedList->GetPackageUnits( ref_unit );
 
             if( ref_unit.m_isNew )
             {
-                LastReferenceNumber = FindFirstUnusedReference( ref_unit, minRefId, units );
+                LastReferenceNumber = FindFirstUnusedReference( ref_unit, minRefId, units, destinations, lockedList );
                 ref_unit.m_numRef = LastReferenceNumber;
                 ref_unit.m_numRefStr = ref_unit.formatRefStr( LastReferenceNumber );
                 ref_unit.m_isNew = false;
@@ -565,6 +923,10 @@ void SCH_REFERENCE_LIST::Annotate( bool aUseSheetNum, int aSheetIntervalId, int 
                     if( !lockedRef.IsSameInstance( m_flatList[jj] ) )
                         continue;
 
+                    // A merged reused-sheet group can mix prefixes, and the number is only free for this one
+                    if( m_flatList[jj].CompareRef( ref_unit ) != 0 )
+                        continue;
+
                     wxString ref_candidate = buildFullReference( ref_unit, lockedRef.m_unit );
 
                     // propagate the new reference and unit selection to the "old" symbol,
@@ -590,7 +952,7 @@ void SCH_REFERENCE_LIST::Annotate( bool aUseSheetNum, int aSheetIntervalId, int 
             // know what group this might belong to, so just find the first unused reference for
             // this specific unit. The other units will be annotated in the following passes.
             std::vector<int> units = { ref_unit.GetUnit() };
-            LastReferenceNumber = FindFirstUnusedReference( ref_unit, minRefId, units );
+            LastReferenceNumber = FindFirstUnusedReference( ref_unit, minRefId, units, destinations );
             ref_unit.m_numRef = LastReferenceNumber;
             ref_unit.m_numRefStr = ref_unit.formatRefStr( LastReferenceNumber );
             ref_unit.m_isNew = false;
@@ -673,23 +1035,17 @@ int SCH_REFERENCE_LIST::CheckAnnotation( ANNOTATION_ERROR_HANDLER aHandler )
         }
     }
 
-    // count the duplicated elements (if all are annotated)
-    int imax = m_flatList.size() - 1;
+    auto sameBaseAndSuffix = []( const SCH_REFERENCE& aFirst, const SCH_REFERENCE& aSecond )
+    {
+        return aFirst.CompareRef( aSecond ) == 0 && aFirst.m_numRef == aSecond.m_numRef
+               && aFirst.GetRefSuffix() == aSecond.GetRefSuffix();
+    };
 
-    for( int ii = 0; ii < imax; ii++ )
+    auto checkPackage = [&]( SCH_REFERENCE& first, SCH_REFERENCE& second )
     {
         msg.Empty();
         tmp.Empty();
         tmp2.Empty();
-
-        SCH_REFERENCE& first = m_flatList[ii];
-        SCH_REFERENCE& second = m_flatList[ii + 1];
-
-        if(  ( first.CompareRef( second ) != 0 )
-          || ( first.m_numRef != second.m_numRef )  )
-        {
-            continue;
-        }
 
         // Same reference found. If same unit, error!
         if( first.m_unit == second.m_unit )
@@ -699,16 +1055,17 @@ int SCH_REFERENCE_LIST::CheckAnnotation( ANNOTATION_ERROR_HANDLER aHandler )
             else
                 tmp = wxT( "?" );
 
-            msg.Printf( _( "Duplicate items %s%s%s\n" ),
+            msg.Printf( _( "Duplicate items %s%s%s%s\n" ),
                         first.GetRef(),
                         tmp,
                         first.GetLibPart() && first.GetLibPart()->GetUnitCount() > 1
                                 ? first.GetSymbol()->SubReference( first.GetUnit() )
-                                : wxString( wxT( "" ) ) );
+                                : wxString( wxT( "" ) ),
+                        first.GetRefSuffix() );
 
-            aHandler( ERCE_DUPLICATE_REFERENCE, msg, &first, &m_flatList[ii+1] );
+            aHandler( ERCE_DUPLICATE_REFERENCE, msg, &first, &second );
             error++;
-            continue;
+            return;
         }
 
         /* Test error if units are different but number of parts per package
@@ -726,17 +1083,19 @@ int SCH_REFERENCE_LIST::CheckAnnotation( ANNOTATION_ERROR_HANDLER aHandler )
             else
                 tmp2 = wxT( "?" );
 
-            msg.Printf( _( "Differing unit counts for item %s%s%s and %s%s%s\n" ),
+            msg.Printf( _( "Differing unit counts for item %s%s%s%s and %s%s%s%s\n" ),
                         first.GetRef(),
                         tmp,
                         first.GetSymbol()->SubReference( first.GetUnit() ),
+                        first.GetRefSuffix(),
                         second.GetRef(),
                         tmp2,
-                        first.GetSymbol()->SubReference( second.GetUnit() )  );
+                        first.GetSymbol()->SubReference( second.GetUnit() ),
+                        second.GetRefSuffix() );
 
             aHandler( ERCE_DUPLICATE_REFERENCE, msg, &first, &second );
             error++;
-            continue;
+            return;
         }
 
         // Error if values are different between units, for the same reference
@@ -745,16 +1104,44 @@ int SCH_REFERENCE_LIST::CheckAnnotation( ANNOTATION_ERROR_HANDLER aHandler )
             msg.Printf( _( "Different values for %s%d%s (%s) and %s%d%s (%s)" ),
                         first.GetRef(),
                         first.m_numRef,
-                        first.GetSymbol()->SubReference( first.GetUnit() ),
+                        first.GetSymbol()->SubReference( first.GetUnit() ) + first.GetRefSuffix(),
                         first.m_value,
                         second.GetRef(),
                         second.m_numRef,
-                        first.GetSymbol()->SubReference( second.GetUnit() ),
+                        first.GetSymbol()->SubReference( second.GetUnit() ) + second.GetRefSuffix(),
                         second.m_value );
 
             aHandler( ERCE_DIFFERENT_UNIT_VALUE, msg, &first, &second );
             error++;
         }
+    };
+
+    // count the duplicated elements (if all are annotated)
+    for( size_t ii = 1; ii < m_flatList.size(); ++ii )
+    {
+        if( sameBaseAndSuffix( m_flatList[ii - 1], m_flatList[ii] ) )
+            checkPackage( m_flatList[ii - 1], m_flatList[ii] );
+    }
+
+    // Different base and suffix splits can identify the same complete package reference
+    std::map<wxString, std::map<int, SCH_REFERENCE*>> composed;
+
+    for( SCH_REFERENCE& ref : m_flatList )
+    {
+        if( ref.m_isNew )
+            continue;
+
+        auto& units = composed[ref.GetRef() + ref.m_numRefStr + ref.GetRefSuffix()];
+        auto  first = units.find( ref.m_unit );
+
+        if( first == units.end() )
+            first = units.begin();
+
+        // The loop above already checked units with the same base and suffix
+        if( first != units.end() && !sameBaseAndSuffix( *first->second, ref ) )
+            checkPackage( *first->second, ref );
+
+        units.emplace( ref.m_unit, &ref );
     }
 
     return error;
@@ -775,7 +1162,7 @@ SCH_REFERENCE::SCH_REFERENCE( SCH_SYMBOL* aSymbol, const SCH_SHEET_PATH& aSheetP
     if( !aSymbol->GetInstance( instance, aSheetPath.Path(), false ) )
     {
         instance.m_Path = aSheetPath.Path();
-        instance.m_Reference = aSymbol->GetRef( &aSheetPath, false );
+        instance.m_Reference = aSymbol->GetBaseRef( &aSheetPath );
 
         if( instance.m_Reference.IsEmpty() )
             instance.m_Reference = aSymbol->GetField( FIELD_T::REFERENCE )->GetText();
@@ -793,20 +1180,48 @@ SCH_REFERENCE::SCH_REFERENCE( SCH_SYMBOL* aSymbol, const SCH_SHEET_PATH& aSheetP
     m_symbolPos  = aSymbol->GetPosition();
     m_sheetNum   = 0;
 
-    if( aSymbol->GetRef( &aSheetPath ).IsEmpty() )
+    if( aSymbol->GetBaseRef( &aSheetPath ).IsEmpty() )
         aSymbol->SetRef( &aSheetPath, wxT( "DefRef?" ) );
 
-    wxString ref = aSymbol->GetRef( &aSheetPath );
+    wxString ref = aSymbol->GetBaseRef( &aSheetPath );
     SetRef( ref );
+
+    // A unit of a package spanning sheets composes with the package's suffix, which keeps its units together
+    if( const SCHEMATIC* schematic = aSymbol->Schematic() )
+        m_refSuffix = schematic->GetPackageRefSuffix( aSymbol, aSheetPath );
 
     m_numRef = -1;
 
-    wxString value = aSymbol->GetValue( &aSheetPath, RESOLVED );
+    // Unresolved so building a reference list never re-enters text resolution
+    wxString value = aSymbol->GetValue( &aSheetPath, RAW_VALUE );
 
     if( value.IsEmpty() )
         value = wxT( "~" );
 
     m_value = std::move( value );
+}
+
+
+wxString SCH_REFERENCE::GetFullRef() const
+{
+    wxString ref = GetRef();
+
+    if( IsSplit() )
+    {
+        if( !m_numRefStr.IsEmpty() )
+            ref += m_numRefStr;
+        else
+            ref << m_numRef;
+    }
+
+    if( GetSymbol()->GetUnitCount() > 1 )
+        ref += GetSymbol()->SubReference( GetUnit() );
+
+    // A unit shows its own sheet's suffix even when its package composes with another
+    if( const SCHEMATIC* schematic = m_rootSymbol->Schematic(); schematic && hasRef() )
+        schematic->AppendRefSuffix( ref, m_sheetPath );
+
+    return ref;
 }
 
 
@@ -885,14 +1300,12 @@ void SCH_REFERENCE::Split()
 
 bool SCH_REFERENCE::IsSplitNeeded() const
 {
-    std::string refText = GetRefStr();
-
-    if( refText.empty() )
+    if( m_ref.IsEmpty() )
         return false;
 
-    int ll = (int) refText.length() - 1;
+    const wxUniChar last = m_ref.Last();
 
-    return ( refText[ll] == '?' ) || isdigit( refText[ll] );
+    return last == '?' || ( last >= '0' && last <= '9' );
 }
 
 
@@ -1001,3 +1414,235 @@ void SCH_REFERENCE_LIST::Show( const char* aPrefix )
     }
 }
 #endif
+
+
+void AnnotateNewSymbol( SCH_SYMBOL* aSymbol, const std::vector<SCH_SHEET_PATH>& aPaths,
+                        SCH_REFERENCE_LIST& aExistingRefs, const SCHEMATIC_SETTINGS& aSettings,
+                        SCH_SHEET_LIST* aHierarchy )
+{
+    std::optional<wxString>         sharedBase;
+    std::vector<wxString>           pathSuffixes;
+    std::multimap<wxString, size_t> composedInUse;
+    bool                            share = aSettings.m_AnnotateReusedSheetSuffixes;
+
+    for( const SCH_SHEET_PATH& path : aPaths )
+    {
+        wxString suffix = path.ComposeRefSuffix();
+
+        // Paths that compose alike cannot share a base, which full annotation refuses outright
+        if( std::ranges::find( pathSuffixes, suffix ) != pathSuffixes.end() )
+            share = false;
+
+        pathSuffixes.push_back( std::move( suffix ) );
+    }
+
+    if( share )
+    {
+        for( size_t ii = 0; ii < aExistingRefs.GetCount(); ii++ )
+        {
+            if( aExistingRefs[ii].GetSymbol() != aSymbol )
+                composedInUse.emplace( aExistingRefs[ii].GetComposedRef(), ii );
+        }
+    }
+
+    // A free base can compose to a reference held elsewhere, as R1 on _M2 meets a root R1_M2
+    // A free unit of the same part is no collision, since the allocator shares those on purpose
+    auto composesTaken =
+            [&]( const wxString& aBase, int aUnit )
+            {
+                for( size_t ii = 0; ii < aPaths.size(); ii++ )
+                {
+                    // Values can resolve per path, so each destination compares its own
+                    SCH_REFERENCE newRef( aSymbol, aPaths[ii] );
+                    newRef.SetUnit( aUnit );
+
+                    auto [begin, end] = composedInUse.equal_range( aBase + pathSuffixes[ii] );
+
+                    for( auto it = begin; it != end; ++it )
+                    {
+                        const SCH_REFERENCE& other = aExistingRefs[it->second];
+
+                        if( other.GetUnit() == aUnit || other.CompareLibId( newRef ) != 0
+                                || other.CompareValue( newRef ) != 0 )
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            };
+
+    for( const SCH_SHEET_PATH& path : aPaths )
+    {
+        if( sharedBase )
+        {
+            aSymbol->SetRef( &path, *sharedBase );
+            aExistingRefs.AddItem( SCH_REFERENCE( aSymbol, path ) );
+            continue;
+        }
+
+        std::optional<SCH_REFERENCE_LIST> reserved;
+        SCH_REFERENCE_LIST                refs;
+        std::set<wxString>                tried;
+
+        for( ;; )
+        {
+            refs = SCH_REFERENCE_LIST();
+            refs.AddItem( SCH_REFERENCE( aSymbol, path ) );
+            refs.SetRefDesTracker( aSettings.m_refDesTracker );
+            refs.ReannotateByOptions( (ANNOTATE_ORDER_T) aSettings.m_AnnotateSortOrder,
+                                      (ANNOTATE_ALGO_T) aSettings.m_AnnotateMethod, aSettings.m_AnnotateStartNum,
+                                      reserved ? *reserved : aExistingRefs, false, aHierarchy );
+            refs.UpdateAnnotation();
+
+            // Power symbols keep a number per sheet, as annotation never shares them
+            if( !share || refs[0].AlwaysAnnotate() )
+                break;
+
+            sharedBase = aSymbol->GetBaseRef( &path );
+
+            // A base offered twice means the reservation did not hold, so stop rather than spin
+            if( !tried.insert( *sharedBase ).second || !composesTaken( *sharedBase, refs[0].GetUnit() ) )
+                break;
+
+            // Copy only when a retry must reserve the base it rejected
+            if( !reserved )
+                reserved = aExistingRefs;
+
+            reserved->AddItem( refs[0] );
+        }
+
+        for( size_t ii = 0; ii < refs.GetCount(); ii++ )
+            aExistingRefs.AddItem( refs[ii] );
+    }
+}
+
+
+std::optional<std::pair<SCH_SHEET_PATH, SCH_SHEET_PATH>> FindRefSuffixCollision( const SCH_REFERENCE_LIST& aRefs,
+                                                                                 const SCHEMATIC&          aSchematic )
+{
+    if( !aSchematic.Settings().m_AnnotateReusedSheetSuffixes )
+        return std::nullopt;
+
+    std::set<const SCH_SCREEN*> screensInScope;
+
+    for( const SCH_REFERENCE& ref : aRefs )
+        screensInScope.insert( ref.GetSheetPath().LastScreen() );
+
+    for( const std::pair<SCH_SHEET_PATH, SCH_SHEET_PATH>& collision : aSchematic.RefSuffixCollisions( true ) )
+    {
+        if( screensInScope.contains( collision.first.LastScreen() ) )
+            return collision;
+    }
+
+    return std::nullopt;
+}
+
+
+static void removeUnitConflicts( SCH_MULTI_UNIT_REFERENCE_MAP& aLocked )
+{
+    std::erase_if( aLocked,
+                   []( const auto& aEntry )
+                   {
+                       std::set<int> seenUnits;
+
+                       for( const SCH_REFERENCE& ref : aEntry.second )
+                       {
+                           if( !seenUnits.insert( ref.GetUnit() ).second )
+                               return true;
+                       }
+
+                       return false;
+                   } );
+}
+
+
+std::set<const SCH_SCREEN*> AnnotateReferences( SCH_REFERENCE_LIST& aRefs, SCH_MULTI_UNIT_REFERENCE_MAP aLocked,
+                                                const SCHEMATIC& aSchematic, ANNOTATE_SCOPE_T aScope,
+                                                ANNOTATE_ORDER_T aSortOption, ANNOTATE_ALGO_T aAlgoOption,
+                                                int aStartNumber, bool aResetAnnotation,
+                                                const std::function<void( SCH_REFERENCE& )>& aBeforeAnnotate )
+{
+    const SCH_SHEET_LIST sheets = aSchematic.Hierarchy();
+    const bool           suffixMode = aSchematic.Settings().m_AnnotateReusedSheetSuffixes;
+
+    // A group holding one unit twice gets fresh assignments when resetting
+    if( aResetAnnotation )
+        removeUnitConflicts( aLocked );
+
+    if( suffixMode )
+    {
+        aRefs.UseReusedSheetRepresentatives( sheets );
+
+        // Merging can join two symbols on one unit even when annotation is kept
+        aLocked = aRefs.LockedForRepresentatives( aLocked );
+        removeUnitConflicts( aLocked );
+    }
+
+    // Remove annotation only updates the "new" flag to indicate to the algorithm
+    // that these references must be reannotated, but keeps the original reference
+    // so that we can reannotate multi-unit symbols together.
+    if( aResetAnnotation )
+        aRefs.RemoveAnnotation();
+
+    // Build additional list of references to be used during reannotation
+    // to avoid duplicate designators (no additional references when annotating
+    // the full schematic)
+    SCH_REFERENCE_LIST additionalRefs;
+
+    if( aScope != ANNOTATE_ALL )
+    {
+        SCH_REFERENCE_LIST              allRefs;
+        std::unordered_set<SCH_SYMBOL*> annotatedSymbols;
+        sheets.GetSymbols( allRefs, SYMBOL_FILTER_NON_POWER );
+
+        // The other instances of a renumbered symbol take its new base, so their old one is free
+        if( suffixMode )
+        {
+            for( const SCH_REFERENCE& ref : aRefs )
+            {
+                if( !aSchematic.CopiesSelectDifferentUnits( ref.GetSymbol() ) )
+                    annotatedSymbols.insert( ref.GetSymbol() );
+            }
+        }
+
+        for( const SCH_REFERENCE& ref : allRefs )
+        {
+            if( !annotatedSymbols.contains( ref.GetSymbol() ) && !aRefs.Contains( ref ) )
+                additionalRefs.AddItem( ref );
+        }
+    }
+
+    if( suffixMode )
+        aRefs.RenumberBasesUsedBy( additionalRefs, aLocked, sheets );
+
+    aRefs.SetRefDesTracker( aSchematic.Settings().m_refDesTracker );
+
+    // Break full symbol reference into name (prefix) and number:
+    // example: IC1 become IC, and 1
+    aRefs.SplitReferences();
+    aRefs.AnnotateByOptions( aSortOption, aAlgoOption, aStartNumber, aLocked, additionalRefs, false,
+                             suffixMode ? &sheets : nullptr );
+
+    std::set<const SCH_SCREEN*> sharedScreens;
+
+    // Annotating changes references, so decide which copies share before any of them do
+    const std::set<KIID> splitCopies = suffixMode ? aSchematic.SplitUnitSymbols() : std::set<KIID>();
+
+    for( SCH_REFERENCE& ref : aRefs )
+    {
+        if( aBeforeAnnotate )
+            aBeforeAnnotate( ref );
+
+        ref.Annotate();
+
+        if( suffixMode && !splitCopies.contains( ref.GetSymbol()->m_Uuid )
+                && sheets.ShareReusedSheetRef( ref.GetSymbol(), ref.GetSheetPath() ) > 0 )
+        {
+            sharedScreens.insert( ref.GetSheetPath().LastScreen() );
+        }
+    }
+
+    return sharedScreens;
+}

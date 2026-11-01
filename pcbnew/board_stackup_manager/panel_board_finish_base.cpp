@@ -5,6 +5,8 @@
 // PLEASE DO *NOT* EDIT THIS FILE!
 ///////////////////////////////////////////////////////////////////////////
 
+#include "widgets/via_cross_section_preview.h"
+
 #include "panel_board_finish_base.h"
 
 ///////////////////////////////////////////////////////////////////////////
@@ -18,7 +20,7 @@ PANEL_SETUP_BOARD_FINISH_BASE::PANEL_SETUP_BOARD_FINISH_BASE( wxWindow* parent, 
 	bMargins = new wxBoxSizer( wxVERTICAL );
 
 	m_cbEgdesPlated = new wxCheckBox( this, wxID_ANY, _("Plated board edge"), wxDefaultPosition, wxDefaultSize, 0 );
-	bMargins->Add( m_cbEgdesPlated, 0, wxBOTTOM|wxLEFT, 5 );
+	bMargins->Add( m_cbEgdesPlated, 0, wxTOP|wxBOTTOM|wxLEFT, 5 );
 
 	wxFlexGridSizer* fgSizer2;
 	fgSizer2 = new wxFlexGridSizer( 0, 2, 5, 0 );
@@ -27,7 +29,7 @@ PANEL_SETUP_BOARD_FINISH_BASE::PANEL_SETUP_BOARD_FINISH_BASE( wxWindow* parent, 
 
 	m_staticTextFinish = new wxStaticText( this, wxID_ANY, _("Copper finish:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticTextFinish->Wrap( -1 );
-	fgSizer2->Add( m_staticTextFinish, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 5 );
+	fgSizer2->Add( m_staticTextFinish, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT, 5 );
 
 	wxArrayString m_choiceFinishChoices;
 	m_choiceFinish = new wxChoice( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, m_choiceFinishChoices, 0 );
@@ -36,7 +38,7 @@ PANEL_SETUP_BOARD_FINISH_BASE::PANEL_SETUP_BOARD_FINISH_BASE( wxWindow* parent, 
 
 	m_staticTextEdgeConn = new wxStaticText( this, wxID_ANY, _("Edge card connectors:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticTextEdgeConn->Wrap( -1 );
-	fgSizer2->Add( m_staticTextEdgeConn, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 5 );
+	fgSizer2->Add( m_staticTextEdgeConn, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT, 5 );
 
 	wxString m_choiceEdgeConnChoices[] = { _("None"), _("Yes"), _("Yes, bevelled") };
 	int m_choiceEdgeConnNChoices = sizeof( m_choiceEdgeConnChoices ) / sizeof( wxString );
@@ -47,7 +49,109 @@ PANEL_SETUP_BOARD_FINISH_BASE::PANEL_SETUP_BOARD_FINISH_BASE( wxWindow* parent, 
 	fgSizer2->Add( m_choiceEdgeConn, 0, wxEXPAND, 2 );
 
 
-	bMargins->Add( fgSizer2, 1, wxEXPAND|wxTOP, 10 );
+	bMargins->Add( fgSizer2, 0, wxEXPAND|wxALL, 10 );
+
+
+	bMargins->Add( 0, 5, 0, wxEXPAND, 5 );
+
+	m_viaProtectionHint = new wxStaticText( this, wxID_ANY, _("Settings for Vias with Protection Features Set to \"From rules\":"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_viaProtectionHint->Wrap( -1 );
+	bMargins->Add( m_viaProtectionHint, 0, wxTOP|wxRIGHT|wxLEFT, 8 );
+
+	m_staticline1 = new wxStaticLine( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
+	bMargins->Add( m_staticline1, 0, wxEXPAND|wxALL, 3 );
+
+	wxBoxSizer* bViaProtectionCtrls;
+	bViaProtectionCtrls = new wxBoxSizer( wxHORIZONTAL );
+
+	wxFlexGridSizer* fgViaProtection;
+	fgViaProtection = new wxFlexGridSizer( 0, 3, 5, 0 );
+	fgViaProtection->SetFlexibleDirection( wxBOTH );
+	fgViaProtection->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+
+	m_fillViasLabel = new wxStaticText( this, wxID_ANY, _("Fill vias:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_fillViasLabel->Wrap( -1 );
+	fgViaProtection->Add( m_fillViasLabel, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+	m_fillVias = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	m_fillVias->SetToolTip( _("Filled: the hole is completely filled.") );
+
+	fgViaProtection->Add( m_fillVias, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+
+	fgViaProtection->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	m_capViasLabel = new wxStaticText( this, wxID_ANY, _("Cap vias:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_capViasLabel->Wrap( -1 );
+	fgViaProtection->Add( m_capViasLabel, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+	m_capVias = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	m_capVias->SetToolTip( _("Capped: copper is plated over the filled hole, giving a flat solderable surface.") );
+
+	fgViaProtection->Add( m_capVias, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+
+	fgViaProtection->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	m_plugViasLabel = new wxStaticText( this, wxID_ANY, _("Plug vias:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_plugViasLabel->Wrap( -1 );
+	fgViaProtection->Add( m_plugViasLabel, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+	m_plugViasFront = new wxCheckBox( this, wxID_ANY, _("front"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_plugViasFront->SetToolTip( _("Plugged: the hole is partly filled from this side.") );
+
+	fgViaProtection->Add( m_plugViasFront, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+	m_plugViasBack = new wxCheckBox( this, wxID_ANY, _("back"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_plugViasBack->SetToolTip( _("Plugged: the hole is partly filled from this side.") );
+
+	fgViaProtection->Add( m_plugViasBack, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 5 );
+
+	m_tentViasLabel = new wxStaticText( this, wxID_ANY, _("Tent vias:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_tentViasLabel->Wrap( -1 );
+	fgViaProtection->Add( m_tentViasLabel, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+	m_tentViasFront = new wxCheckBox( this, wxID_ANY, _("front"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_tentViasFront->SetToolTip( _("Tented: vias are covered with solder mask.\nNot tented: vias are not covered with solder mask.") );
+
+	fgViaProtection->Add( m_tentViasFront, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+	m_tentViasBack = new wxCheckBox( this, wxID_ANY, _("back"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_tentViasBack->SetToolTip( _("Tented: vias are covered with solder mask.\nNot tented: vias are not covered with solder mask.") );
+
+	fgViaProtection->Add( m_tentViasBack, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+	m_coverViasLabel = new wxStaticText( this, wxID_ANY, _("Cover vias:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_coverViasLabel->Wrap( -1 );
+	fgViaProtection->Add( m_coverViasLabel, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+	m_coverViasFront = new wxCheckBox( this, wxID_ANY, _("front"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_coverViasFront->SetToolTip( _("Covered: a second coat is applied over the via on this side.") );
+
+	fgViaProtection->Add( m_coverViasFront, 0, wxALIGN_CENTER_VERTICAL|wxLEFT|wxRIGHT, 5 );
+
+	m_coverViasBack = new wxCheckBox( this, wxID_ANY, _("back"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_coverViasBack->SetToolTip( _("Covered: a second coat is applied over the via on this side.") );
+
+	fgViaProtection->Add( m_coverViasBack, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 5 );
+
+
+	bViaProtectionCtrls->Add( fgViaProtection, 0, wxALIGN_CENTER_VERTICAL, 5 );
+
+	wxBoxSizer* bSizerPreview;
+	bSizerPreview = new wxBoxSizer( wxVERTICAL );
+
+	m_viaPreview = new VIA_CROSS_SECTION_PREVIEW( this, wxID_ANY, wxDefaultPosition, wxSize( -1,-1 ), 0 );
+	m_viaPreview->SetMinSize( wxSize( 240,120 ) );
+	m_viaPreview->SetMaxSize( wxSize( 240,120 ) );
+
+	bSizerPreview->Add( m_viaPreview, 0, wxRIGHT|wxLEFT, 20 );
+
+
+	bViaProtectionCtrls->Add( bSizerPreview, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 20 );
+
+
+	bMargins->Add( bViaProtectionCtrls, 0, wxEXPAND|wxBOTTOM|wxRIGHT|wxLEFT, 5 );
 
 
 	bMainSizer->Add( bMargins, 1, wxEXPAND|wxTOP|wxRIGHT|wxLEFT, 5 );

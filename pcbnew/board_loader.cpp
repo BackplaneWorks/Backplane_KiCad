@@ -23,6 +23,7 @@
 #include <base_screen.h>
 #include <board.h>
 #include <board_design_settings.h>
+#include <board_tables/generated_table_refresh.h>
 #include <drawing_sheet/ds_data_model.h>
 #include <drc/drc_engine.h>
 #include <filename_resolver.h>
@@ -174,6 +175,10 @@ std::unique_ptr<BOARD> BOARD_LOADER::CreateEmptyBoard( PROJECT* aProject )
 {
     std::unique_ptr<BOARD> brd = std::make_unique<BOARD>();
     brd->SetProject( aProject );
+
+    BOARD_DESIGN_SETTINGS& bds = brd->GetDesignSettings();
+    bds.m_DRCEngine = std::make_shared<DRC_ENGINE>( brd.get(), &bds );
+
     return brd;
 }
 
@@ -183,6 +188,7 @@ bool BOARD_LOADER::SaveBoard( wxString& aFileName, BOARD& aBoard, PCB_IO_MGR::PC
     aBoard.BuildConnectivity();
     aBoard.SynchronizeNetsAndNetClasses( false );
     aBoard.SynchronizeProperties();
+    RefreshGeneratedTables( aBoard );
 
     try
     {

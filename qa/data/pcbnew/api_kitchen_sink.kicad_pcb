@@ -1,5 +1,5 @@
 (kicad_pcb
-	(version 20260901)
+	(version 20261017)
 	(generator "pcbnew")
 	(generator_version "10.99")
 	(general
@@ -123,6 +123,7 @@
 		)
 		(descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
 		(tags "resistor")
+		(height 0.9)
 		(property "Reference" "R1"
 			(at 0 -1.43 0)
 			(layer "F.SilkS")
@@ -305,6 +306,25 @@
 			(uuid "dae62be7-5b36-462f-8f68-44e6e11e6733")
 		)
 		(embedded_fonts no)
+		(model
+			(type extruded)
+			(uuid "25e34581-a229-4a75-8179-37c63e3f2ef1")
+			(hide no)
+			(overall_height 1.6)
+			(body_pcb_gap 0.2)
+			(layer "F.CrtYd")
+			(material metal)
+			(color unspecified)
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 		(model "${KICAD9_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0603_1608Metric.step"
 			(offset
 				(xyz 0 0 0)
@@ -945,7 +965,7 @@
 		(descr "Bornier d'alimentation 2 pins")
 		(tags "DEV")
 		(property "Reference" "P2"
-			(at 0 -5.08 -90)
+			(at 0 -5.08 270)
 			(layer "F.SilkS")
 			(uuid "ba42dcaf-4533-4d88-b1fa-fdb993574d72")
 			(effects
@@ -956,7 +976,7 @@
 			)
 		)
 		(property "Value" "CONN_2"
-			(at 0 5.08 -90)
+			(at 0 5.08 270)
 			(layer "F.SilkS")
 			(uuid "66aeb929-e503-4d95-8f48-82e9d57c9ad0")
 			(effects
@@ -967,7 +987,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 -90)
+			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -980,7 +1000,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 0 0 -90)
+			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
 			(hide yes)
@@ -1058,7 +1078,7 @@
 			(uuid "ef80f3bc-cc20-4a9a-975f-ea015f9e9335")
 		)
 		(pad "1" thru_hole rect
-			(at -2.54 0 -90)
+			(at -2.54 0 270)
 			(size 2.54 2.54)
 			(drill 1.524)
 			(layers "*.Cu" "*.Mask" "F.SilkS")
@@ -1067,7 +1087,7 @@
 			(uuid "afe67c4a-2148-455d-81b1-6bcc2a745c4d")
 		)
 		(pad "2" thru_hole circle
-			(at 2.54 0 -90)
+			(at 2.54 0 270)
 			(size 2.54 2.54)
 			(drill 1.524)
 			(layers "*.Cu" "*.Mask" "F.SilkS")
@@ -2446,6 +2466,16 @@
 		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
+		(units
+			(unit
+				(name "A")
+				(pins "1" "2" "3" "4" "5" "6")
+			)
+			(unit
+				(name "B")
+				(pins "7" "8" "9" "10" "11" "12")
+			)
+		)
 		(fp_line
 			(start -1.61 -1.61)
 			(end -0.885 -1.61)
@@ -2868,6 +2898,25 @@
 			(uuid "605d710e-3d4c-4a8d-8c1f-b730fa11b9db")
 		)
 		(embedded_fonts no)
+		(model
+			(type extruded)
+			(uuid "55ec7c98-9681-4518-8387-f023de8f14d4")
+			(hide no)
+			(overall_height 1.2)
+			(body_pcb_gap 0.05)
+			(layer auto)
+			(material plastic)
+			(color unspecified)
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 		(model "${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/QFN-12-1EP_3x3mm_P0.5mm_EP1.45x1.45mm.step"
 			(offset
 				(xyz 0 0 0)
@@ -3754,16 +3803,7 @@
 	(drill_chart
 		(uuid "5383ee38-a9d4-45be-94ed-27ce389fc0fc")
 		(layer "Dwgs.User")
-		(filter
-			(plated yes)
-			(npth no)
-			(vias yes)
-			(slots no)
-			(backdrill no)
-			(castellated yes)
-		)
 		(precision 2)
-		(totals no)
 		(column
 			(id symbol)
 			(width 16)
@@ -3773,16 +3813,25 @@
 			(name "Drill (mm)")
 			(width 16)
 		)
+		(row_keys
+			(key 1 "v1|d300000|s-|p1|L0-31|k0|m0:0:0:0/0:0:0:0")
+			(key 2 "v1|d1143000|s-|p1|L0-31|k0|m0:0:0:0/0:0:0:0")
+			(key 3 "v1|d1524000|s-|p1|L0-31|k0|m0:0:0:0/0:0:0:0")
+		)
+		(filter
+			(plated yes)
+			(npth no)
+			(vias yes)
+			(slots no)
+			(backdrill no)
+			(castellated yes)
+		)
+		(totals no)
 		(row_shapes
 			(column 0)
 			(shape 1 0)
 			(shape 2 1)
 			(shape 3 2)
-		)
-		(row_keys
-			(key 1 "v1|d300000|s-|p1|L0-31|k0|m0:0:0:0/0:0:0:0")
-			(key 2 "v1|d1143000|s-|p1|L0-31|k0|m0:0:0:0/0:0:0:0")
-			(key 3 "v1|d1524000|s-|p1|L0-31|k0|m0:0:0:0/0:0:0:0")
 		)
 		(column_count 2)
 		(border

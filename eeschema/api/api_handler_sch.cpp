@@ -256,6 +256,10 @@ API_HANDLER_SCH::API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext,
     registerHandler<SetPageSettings, types::PageSettings>( &API_HANDLER_SCH::handleSetPageSettings );
     registerHandler<GetSchematicNetlist, SchematicNetlistResponse>( &API_HANDLER_SCH::handleGetSchematicNetlist );
     registerHandler<CrossProbeAnnounce, CrossProbeAnnounceResponse>( &API_HANDLER_SCH::handleCrossProbeAnnounce );
+    registerHandler<kiapi::schematic::tasks::StartErcTask, kiapi::common::tasks::StartTaskResponse>(
+            &API_HANDLER_SCH::handleStartErcTask );
+    registerHandler<kiapi::schematic::tasks::GetErcTaskResult, kiapi::schematic::tasks::ErcTaskResult>(
+            &API_HANDLER_SCH::handleGetErcTaskResult, true );
     registerHandler<SyncSelection, SyncSelectionResponse>( &API_HANDLER_SCH::handleSyncSelection );
     registerHandler<HighlightNets, HighlightNetsResponse>( &API_HANDLER_SCH::handleHighlightNets );
     registerHandler<GetVariants, VariantsResponse>( &API_HANDLER_SCH::handleGetVariants );
@@ -1437,6 +1441,12 @@ HANDLER_RESULT<ItemRequestStatus> API_HANDLER_SCH::handleCreateUpdateItemsIntern
         {
             SCH_SHEET* sheet = static_cast<SCH_SHEET*>( item.get() );
 
+            if( !ValidateSheetInstance( &status, sheet, sheetProto ) )
+            {
+                aItemHandler( status, anyItem );
+                continue;
+            }
+
             if( aCreate && !sheet->GetScreen() )
             {
                 sheet->SetScreen( new SCH_SCREEN( schematic() ) );
@@ -1513,6 +1523,15 @@ HANDLER_RESULT<ItemRequestStatus> API_HANDLER_SCH::handleCreateUpdateItemsIntern
             }
         }
 
+        // A refused request must not leave the created item staged
+        if( aCreate && item->Type() == SCH_SYMBOL_T
+                && !ValidateSymbolInstance( &status, static_cast<SCH_SYMBOL*>( item.get() ), symbolProto, targetPath,
+                                            schematic() ) )
+        {
+            aItemHandler( status, anyItem );
+            continue;
+        }
+
         if( aCreate )
         {
             SCH_ITEM* createdItem = static_cast<SCH_ITEM*>( item.release() );
@@ -1523,9 +1542,13 @@ HANDLER_RESULT<ItemRequestStatus> API_HANDLER_SCH::handleCreateUpdateItemsIntern
                 SCH_SYMBOL* symbol = static_cast<SCH_SYMBOL*>( createdItem );
                 kiapi::schematic::types::SchematicSymbolInstance packed;
 
-                ApplySymbolInstance( symbol, symbolProto, targetPath, schematic() );
+                if( !ApplySymbolInstance( &status, symbol, symbolProto, targetPath, schematic() ) )
+                {
+                    aItemHandler( status, anyItem );
+                    continue;
+                }
 
-                if( PackSymbol( &packed, symbol, targetPath ) )
+                if( PackSymbol( &packed, symbol, targetPath, schematic() ) )
                     newItem.PackFrom( packed );
             }
             else if( createdItem->Type() == SCH_SHEET_T )
@@ -1536,7 +1559,11 @@ HANDLER_RESULT<ItemRequestStatus> API_HANDLER_SCH::handleCreateUpdateItemsIntern
                 if( sheetProto.page_number().empty() )
                     sheetProto.set_page_number( hierarchy.GetNextPageNumber().ToUTF8() );
 
-                ApplySheetInstance( sheet, sheetProto, targetPath, schematic() );
+                if( !ApplySheetInstance( &status, sheet, sheetProto, targetPath, schematic() ) )
+                {
+                    aItemHandler( status, anyItem );
+                    continue;
+                }
 
                 if( PackSheet( &packed, sheet, targetPath ) )
                     newItem.PackFrom( packed );
@@ -1558,6 +1585,15 @@ HANDLER_RESULT<ItemRequestStatus> API_HANDLER_SCH::handleCreateUpdateItemsIntern
             else if( existingItem->Type() == SCH_SHEET_T )
                 sheetPlacements = static_cast<SCH_SHEET*>( existingItem )->GetInstances();
 
+            // A refused request must not leave the swapped data behind
+            if( existingItem->Type() == SCH_SYMBOL_T
+                    && !ValidateSymbolInstance( &status, static_cast<SCH_SYMBOL*>( existingItem ), symbolProto,
+                                                existingPath, schematic() ) )
+            {
+                aItemHandler( status, anyItem );
+                continue;
+            }
+
             commit->Modify( existingItem, targetScreen );
             existingItem->SwapItemData( static_cast<SCH_ITEM*>( item.get() ) );
 
@@ -1575,7 +1611,11 @@ HANDLER_RESULT<ItemRequestStatus> API_HANDLER_SCH::handleCreateUpdateItemsIntern
                 for( const SCH_SYMBOL_INSTANCE& placement : symbolPlacements )
                     symbol->AddHierarchicalReference( placement );
 
-                ApplySymbolInstance( symbol, symbolProto, existingPath, schematic() );
+                if( !ApplySymbolInstance( &status, symbol, symbolProto, existingPath, schematic() ) )
+                {
+                    aItemHandler( status, anyItem );
+                    continue;
+                }
 
                 if( PackSymbol( &packed, symbol, existingPath ) )
                     newItem.PackFrom( packed );
@@ -1588,7 +1628,11 @@ HANDLER_RESULT<ItemRequestStatus> API_HANDLER_SCH::handleCreateUpdateItemsIntern
                 for( const SCH_SHEET_INSTANCE& placement : sheetPlacements )
                     sheet->AddInstance( placement );
 
-                ApplySheetInstance( sheet, sheetProto, existingPath, schematic() );
+                if( !ApplySheetInstance( &status, sheet, sheetProto, existingPath, schematic() ) )
+                {
+                    aItemHandler( status, anyItem );
+                    continue;
+                }
 
                 if( PackSheet( &packed, sheet, existingPath ) )
                     newItem.PackFrom( packed );
@@ -2357,7 +2401,7 @@ bool findSymbolsAndPins( const SCH_SHEET_LIST& aSchematicSheetList, const SCH_SH
 
         SCH_SYMBOL* symbol = schRef.GetSymbol();
         wxString    refNum = schRef.GetRefNumber();
-        wxString    fullRef = schRef.GetRef() + refNum;
+        wxString    fullRef = schRef.GetComposedRef();
 
         // Skip power symbols
         if( fullRef.StartsWith( wxS( "#" ) ) )
@@ -2458,7 +2502,7 @@ bool sheetContainsOnlyWantedItems(
             schRef.Split();
 
         wxString refNum = schRef.GetRefNumber();
-        wxString fullRef = schRef.GetRef() + refNum;
+        wxString fullRef = schRef.GetComposedRef();
 
         // Skip power symbols
         if( fullRef.StartsWith( wxS( "#" ) ) )
@@ -3318,7 +3362,19 @@ HANDLER_RESULT<PlaceFromLibraryResponse> API_HANDLER_SCH::handlePlaceSymbolFromL
 
     if( !aCtx.Request.reference().empty() )
     {
-        symbol->SetRef( &targetPath, wxString::FromUTF8( aCtx.Request.reference() ) );
+        wxString base;
+        wxString error = symbol->BaseRefFromUser( targetPath, wxString::FromUTF8( aCtx.Request.reference() ), base,
+                                                  schematic() );
+
+        if( !error.IsEmpty() )
+        {
+            ApiResponseStatus e;
+            e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+            e.set_error_message( error.ToStdString() );
+            return tl::unexpected( e );
+        }
+
+        symbol->SetRef( &targetPath, base );
     }
     else
     {
@@ -3335,13 +3391,17 @@ HANDLER_RESULT<PlaceFromLibraryResponse> API_HANDLER_SCH::handlePlaceSymbolFromL
         {
             existingRefs.SortByReferenceOnly();
 
-            SCH_REFERENCE_LIST refs;
-            refs.AddItem( newReference );
-            refs.SetRefDesTracker( schematic()->Settings().m_refDesTracker );
-            refs.ReannotateByOptions( static_cast<ANNOTATE_ORDER_T>( schematic()->Settings().m_AnnotateSortOrder ),
-                                      static_cast<ANNOTATE_ALGO_T>( schematic()->Settings().m_AnnotateMethod ),
-                                      schematic()->Settings().m_AnnotateStartNum, existingRefs, false, &hierarchy );
-            refs.UpdateAnnotation();
+            // Suffix mode numbers every instance of the sheet file together, so they share one base
+            std::vector<SCH_SHEET_PATH> paths = { targetPath };
+
+            if( schematic()->Settings().m_AnnotateReusedSheetSuffixes )
+            {
+                SCH_SHEET_LIST screenPaths = hierarchy.FindAllSheetsForScreen( targetPath.LastScreen() );
+                screenPaths.SortByPageNumbers();
+                paths.assign( screenPaths.begin(), screenPaths.end() );
+            }
+
+            AnnotateNewSymbol( symbol.get(), paths, existingRefs, schematic()->Settings(), &hierarchy );
         }
     }
 
@@ -3363,7 +3423,7 @@ HANDLER_RESULT<PlaceFromLibraryResponse> API_HANDLER_SCH::handlePlaceSymbolFromL
 
     kiapi::schematic::types::SchematicSymbolInstance packed;
 
-    if( PackSymbol( &packed, placed, targetPath ) )
+    if( PackSymbol( &packed, placed, targetPath, schematic() ) )
         response.mutable_item()->PackFrom( packed );
 
     return response;

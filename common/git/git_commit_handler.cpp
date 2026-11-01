@@ -45,13 +45,8 @@ CommitResult GIT_COMMIT_HANDLER::PerformAmend( const std::vector<wxString>& aFil
 }
 
 
-wxString GIT_COMMIT_HANDLER::GetErrorString() const
+UndoCommitResult GIT_COMMIT_HANDLER::PerformUndoLastCommit( const wxString& aExpectedBranch,
+                                                            const git_oid& aExpectedHead, wxString& aMessage )
 {
-    return m_errorString;
-}
-
-
-void GIT_COMMIT_HANDLER::AddErrorString( const wxString& aErrorString )
-{
-    m_errorString += aErrorString;
+    return GetGitBackend()->UndoLastCommit( this, aExpectedBranch, aExpectedHead, aMessage );
 }

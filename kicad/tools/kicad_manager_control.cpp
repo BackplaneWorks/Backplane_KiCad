@@ -34,6 +34,7 @@
 #include <system_error>
 #include <wx/msgdlg.h>
 #include <kiplatform/policy.h>
+#include <dialogs/git/git_credentials_prompt.h>
 #include <kiplatform/secrets.h>
 #include <kiplatform/ui.h>
 #include <confirm.h>
@@ -79,6 +80,7 @@ KICAD_MANAGER_CONTROL::KICAD_MANAGER_CONTROL() :
 
 void KICAD_MANAGER_CONTROL::Reset( RESET_REASON aReason )
 {
+    m_identityQuery.Cancel();
     m_frame = getEditFrame<KICAD_MANAGER_FRAME>();
 }
 
@@ -165,20 +167,21 @@ int KICAD_MANAGER_CONTROL::NewProject( const TOOL_EVENT& aEvent )
     wxString userTemplatesPath;
     wxString systemTemplatesPath;
 
-    auto resolveTemplateDir = []( const wxString& aValue ) -> wxString
-    {
-        wxString resolved = ExpandEnvVarSubstitutions( aValue, nullptr );
+    auto resolveTemplateDir =
+            []( const wxString& aValue ) -> wxString
+            {
+                wxString resolved = ExpandEnvVarSubstitutions( aValue, nullptr );
 
-        // Skip values with unresolved references so we don't seed the selector with a
-        // bogus path that doesn't exist on disk.
-        if( resolved.Contains( wxT( "${" ) ) || resolved.Contains( wxT( "$(" ) ) )
-            return wxEmptyString;
+                // Skip values with unresolved references so we don't seed the selector with a
+                // bogus path that doesn't exist on disk.
+                if( resolved.Contains( wxT( "${" ) ) || resolved.Contains( wxT( "$(" ) ) )
+                    return wxEmptyString;
 
-        wxFileName templatePath;
-        templatePath.AssignDir( resolved );
-        templatePath.Normalize( FN_NORMALIZE_FLAGS | wxPATH_NORM_ENV_VARS );
-        return templatePath.GetFullPath();
-    };
+                wxFileName templatePath;
+                templatePath.AssignDir( resolved );
+                templatePath.Normalize( FN_NORMALIZE_FLAGS | wxPATH_NORM_ENV_VARS );
+                return templatePath.GetFullPath();
+            };
 
     ENV_VAR_MAP_CITER itUser = Pgm().GetLocalEnvVariables().find( "KICAD_USER_TEMPLATE_DIR" );
 
@@ -414,32 +417,76 @@ int KICAD_MANAGER_CONTROL::NewFromRepository( const TOOL_EVENT& aEvent )
     if( !pro.IsOk() )
         return -1;
 
-    PROJECT_TREE_PANE *pane = static_cast<PROJECT_TREE_PANE*>( m_frame->GetToolCanvas() );
+    // No open project owns the repository being cloned, so use a scratch session.
+    KIGIT_COMMON cloneCommon( nullptr );
+    bool         retriedAfterTrust = false;
 
-
-    GIT_CLONE_HANDLER cloneHandler( pane->m_TreeProject->GitCommon() );
-    pane->m_TreeProject->GitCommon()->SetCancelled( false );
-
-    cloneHandler.SetRemote( dlg.GetFullURL() );
-    cloneHandler.SetClonePath( pro.GetPath() );
-    cloneHandler.SetUsername( dlg.GetUsername() );
-    cloneHandler.SetPassword( dlg.GetPassword() );
-    cloneHandler.SetSSHKey( dlg.GetRepoSSHPath() );
-
-    cloneHandler.SetProgressReporter( std::make_unique<WX_PROGRESS_REPORTER>( m_frame, _( "Clone Repository" ), 1,
-                                                                              PR_NO_ABORT ) );
-
-    if( !cloneHandler.PerformClone() )
+    while( true )
     {
-        DisplayErrorMessage( m_frame, cloneHandler.GetErrorString() );
+        bool     cloned = false;
+        bool     cancelled = false;
+        wxString error;
+        wxString details;
+
+        std::optional<KIGIT::HOST_KEY_FAILURE> hostKey;
+
+        // Scoped, so the progress window is gone before a prompt below
+        {
+            GIT_CLONE_HANDLER cloneHandler( &cloneCommon );
+
+            cloneHandler.SetRemote( dlg.GetRepoURL() );
+            cloneHandler.SetClonePath( pro.GetPath() );
+            cloneHandler.SetUsername( dlg.GetUsername() );
+            cloneHandler.SetPassword( dlg.GetPassword() );
+            cloneHandler.SetSSHKey( dlg.GetRepoSSHPath() );
+
+            cloneHandler.SetProgressReporter(
+                    std::make_unique<WX_PROGRESS_REPORTER>( m_frame, _( "Clone Repository" ), 1, PR_CAN_ABORT ) );
+
+            cloned = cloneHandler.PerformClone();
+            cancelled = !cloned && cloneHandler.IsThisOperationCancelled();
+
+            if( !cloned )
+            {
+                KIGIT_ERROR_MESSAGE message = cloneHandler.PopError();
+                error = message.summary;
+                details = message.details;
+                hostKey = cloneHandler.GetHostKeyFailure();
+            }
+        }
+
+        if( cloned )
+            break;
+
+        // Cancelling from the progress dialog is not an error.
+        if( cancelled )
+            return -1;
+
+        if( hostKey )
+        {
+            if( !KIGIT::PromptToTrustHost( m_frame, *hostKey, retriedAfterTrust ) )
+                return -1;
+
+            retriedAfterTrust = true;
+            continue;
+        }
+
+        DisplayErrorMessage( m_frame, error, details );
         return -1;
     }
 
-    std::vector<wxString> projects = cloneHandler.GetProjectDirs();
+    std::vector<wxString> projects = cloneCommon.GetProjectDirs();
+
+    // The project opens its own handle when it loads below, this one is done.
+    git_repository_free( cloneCommon.GetRepo() );
+    cloneCommon.SetRepo( nullptr );
 
     if( projects.empty() )
     {
-        DisplayErrorMessage( m_frame, _( "No project files were found in the repository." ) );
+        DisplayErrorMessage( m_frame, wxString::Format( _( "The repository has no KiCad project to open. Its files "
+                                                           "were cloned to '%s', which can be deleted if they are "
+                                                           "not needed." ),
+                                                        pro.GetPath() ) );
         return -1;
     }
 
@@ -448,9 +495,48 @@ int KICAD_MANAGER_CONTROL::NewFromRepository( const TOOL_EVENT& aEvent )
     wxString dest = pro.GetPath() + wxFileName::GetPathSeparator() + projects.front();
     m_frame->LoadProject( dest );
 
-    KIPLATFORM::SECRETS::StoreSecret( dlg.GetRepoURL(), dlg.GetUsername(), dlg.GetPassword() );
+    // A machine cloning for the first time usually has no git identity yet. Asking now makes
+    // the first commit work instead of failing.
+    struct IDENTITY_RESULT
+    {
+        bool                read = false;
+        KIGIT::GIT_IDENTITY identity;
+    };
+
+    auto common = Prj().GetGitCommon();
+    auto identity = std::make_shared<IDENTITY_RESULT>();
+
+    m_identityQuery.Run(
+            common,
+            [identity]( KIGIT_COMMON& aCommon )
+            {
+                identity->identity = KIGIT::ReadGitIdentity( aCommon );
+                identity->read = true;
+            },
+            [this, common, identity]()
+            {
+                if( !identity->read || !m_frame || m_frame->IsBeingDeleted() || !common || common->IsShuttingDown()
+                    || Prj().GetGitCommon() != common || !Pgm().GetCommonSettings()->m_Git.enableGit
+                    || Prj().GetLocalSettings().m_GitIntegrationDisabled )
+                {
+                    return;
+                }
+
+                KIGIT::EnsureGitIdentity( m_frame, m_frame, common, identity->identity );
+            } );
+
+    // Keyed like the attach-time lookup, which never sees credentials embedded in the address
+    KIPLATFORM::SECRETS::StoreSecret( KIGIT_COMMON::ParseRemoteURL( dlg.GetRepoURL() ).url, dlg.GetUsername(),
+                                      dlg.GetPassword() );
     Prj().GetLocalSettings().m_GitRepoUsername = dlg.GetUsername();
     Prj().GetLocalSettings().m_GitSSHKey = dlg.GetRepoSSHPath();
+
+    // The session attached when the project loaded, so it takes nothing more from the settings.
+    if( common )
+    {
+        common->SetUsername( dlg.GetUsername() );
+        common->SetSSHKey( dlg.GetRepoSSHPath() );
+    }
 
     if( dlg.GetRepoType() == KIGIT_COMMON::GIT_CONN_TYPE::GIT_CONN_SSH )
         Prj().GetLocalSettings().m_GitRepoType = "ssh";
@@ -789,6 +875,13 @@ int KICAD_MANAGER_CONTROL::ToggleLocalHistory( const TOOL_EVENT& aEvent )
 }
 
 
+int KICAD_MANAGER_CONTROL::ToggleGitCommitPane( const TOOL_EVENT& aEvent )
+{
+    m_frame->ToggleGitCommitPane();
+    return 0;
+}
+
+
 int KICAD_MANAGER_CONTROL::ViewDroppedViewers( const TOOL_EVENT& aEvent )
 {
     if( aEvent.Parameter<wxString*>() )
@@ -1015,8 +1108,6 @@ int KICAD_MANAGER_CONTROL::Execute( const TOOL_EVENT& aEvent )
 
     if( aEvent.IsAction( &KICAD_MANAGER_ACTIONS::viewGerbers ) )
         execFile = GERBVIEW_EXE;
-    else if( aEvent.IsAction( &KICAD_MANAGER_ACTIONS::convertImage ) )
-        execFile = BITMAPCONVERTER_EXE;
     else if( aEvent.IsAction( &KICAD_MANAGER_ACTIONS::showCalculator ) )
         execFile = PCB_CALCULATOR_EXE;
     else if( aEvent.IsAction( &KICAD_MANAGER_ACTIONS::editDrawingSheet ) )
@@ -1121,6 +1212,7 @@ void KICAD_MANAGER_CONTROL::setTransitions()
     Go( &KICAD_MANAGER_CONTROL::ExploreProject,     KICAD_MANAGER_ACTIONS::openProjectDirectory.MakeEvent() );
     Go( &KICAD_MANAGER_CONTROL::RestoreLocalHistory, KICAD_MANAGER_ACTIONS::restoreLocalHistory.MakeEvent() );
     Go( &KICAD_MANAGER_CONTROL::ToggleLocalHistory, KICAD_MANAGER_ACTIONS::showLocalHistory.MakeEvent() );
+    Go( &KICAD_MANAGER_CONTROL::ToggleGitCommitPane, ACTIONS::showGitCommitPane.MakeEvent() );
 
     Go( &KICAD_MANAGER_CONTROL::Refresh,            ACTIONS::zoomRedraw.MakeEvent() );
     Go( &KICAD_MANAGER_CONTROL::UpdateMenu,         ACTIONS::updateMenu.MakeEvent() );
@@ -1129,8 +1221,7 @@ void KICAD_MANAGER_CONTROL::setTransitions()
     Go( &KICAD_MANAGER_CONTROL::ShowPlayer,         KICAD_MANAGER_ACTIONS::editSymbols.MakeEvent() );
     Go( &KICAD_MANAGER_CONTROL::ShowPlayer,         KICAD_MANAGER_ACTIONS::editPCB.MakeEvent() );
     Go( &KICAD_MANAGER_CONTROL::ShowPlayer,         KICAD_MANAGER_ACTIONS::editFootprints.MakeEvent() );
-    Go( &KICAD_MANAGER_CONTROL::Execute,            KICAD_MANAGER_ACTIONS::viewGerbers.MakeEvent() );
-    Go( &KICAD_MANAGER_CONTROL::Execute,            KICAD_MANAGER_ACTIONS::convertImage.MakeEvent() );
+    Go( &KICAD_MANAGER_CONTROL::Execute, KICAD_MANAGER_ACTIONS::viewGerbers.MakeEvent() );
     Go( &KICAD_MANAGER_CONTROL::Execute,            KICAD_MANAGER_ACTIONS::showCalculator.MakeEvent() );
     Go( &KICAD_MANAGER_CONTROL::Execute,            KICAD_MANAGER_ACTIONS::editDrawingSheet.MakeEvent() );
     Go( &KICAD_MANAGER_CONTROL::Execute,            KICAD_MANAGER_ACTIONS::openTextEditor.MakeEvent() );

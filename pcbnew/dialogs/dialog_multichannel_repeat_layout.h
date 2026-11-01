@@ -54,11 +54,13 @@ private:
     };
 
     void OnGridCellLeftClick( wxGridEvent& aEvent );
+    void onOptionChanged();
+    void readWindow();
 
     std::vector<TABLE_ENTRY> m_targetRAs;
     MULTICHANNEL_TOOL*       m_parentTool;
-    BOARD*                   m_board;
     wxBitmapBundle           m_detailsIcon;
+    bool                     m_refreshPending = false;
 };
 
 #endif

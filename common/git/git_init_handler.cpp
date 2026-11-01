@@ -21,6 +21,7 @@
 #include "git_backend.h"
 #include <git/kicad_git_common.h>
 #include <git/kicad_git_memory.h>
+#include <git/project_git_utils.h>
 #include <paths.h>
 #include <trace_helpers.h>
 
@@ -30,71 +31,38 @@
 #include <string>
 
 #include <wx/ffile.h>
+#include <wx/file.h>
 #include <wx/filename.h>
 #include <wx/log.h>
 #include <wx/tokenzr.h>
 
 
-// Seed the project .gitignore with KiCad-generated paths that should never be
-// committed (local history, backups, autosaves, lock files, footprint cache,
-// project-local settings which may hold remote URLs and usernames).
-// Append-only: existing entries are preserved.
+// Seed a new .gitignore with the same generated paths the change list hides.
+// An existing file belongs to the team and is left alone.
 static void ensureProjectGitignore( const wxString& aProjectPath )
 {
-    static const wxString kicadEntries[] = {
-        wxS( ".history/" ),     wxS( "*-backups/" ), wxS( "_autosave-*" ),
-        wxS( "fp-info-cache" ), wxS( "~*.lck" ),     wxS( "*.kicad_prl" ),
-    };
+    wxFileName ignoreFile( aProjectPath, wxS( ".gitignore" ) );
 
-    wxFileName         ignoreFile( aProjectPath, wxS( ".gitignore" ) );
-    std::set<wxString> existing;
-    bool               fileExists = ignoreFile.FileExists();
-    bool               hasTrailingNewline = true;
-
-    if( fileExists )
-    {
-        wxFFile  in( ignoreFile.GetFullPath(), wxT( "r" ) );
-        wxString contents;
-
-        if( !in.IsOpened() || !in.ReadAll( &contents ) )
-            return;
-
-        hasTrailingNewline = contents.empty() || contents.EndsWith( wxS( "\n" ) );
-
-        wxStringTokenizer tok( contents, wxS( "\n" ) );
-
-        while( tok.HasMoreTokens() )
-        {
-            wxString line = tok.GetNextToken();
-            line.Trim().Trim( false );
-
-            if( !line.empty() && !line.StartsWith( wxS( "#" ) ) )
-                existing.insert( line );
-        }
-    }
-
-    wxString missing;
-
-    for( const wxString& entry : kicadEntries )
-    {
-        if( existing.find( entry ) == existing.end() )
-            missing += entry + wxS( "\n" );
-    }
-
-    if( missing.empty() )
+    if( ignoreFile.FileExists() )
         return;
 
-    wxFFile out( ignoreFile.GetFullPath(), wxT( "a" ) );
+    // Exclusive create, so a file that appears between the test above and here is left alone.
+    wxFile out;
 
-    if( !out.IsOpened() )
+    if( !out.Create( ignoreFile.GetFullPath(), false ) )
         return;
 
-    if( !fileExists )
-        out.Write( wxS( "# KiCad-generated files and directories.\n" ) );
-    else if( !hasTrailingNewline )
-        out.Write( wxS( "\n" ) );
+    wxString contents = wxS( "# KiCad-generated files and directories.\n" );
 
-    out.Write( missing );
+    for( const wxString& entry : KIGIT::PROJECT_GIT_UTILS::TransientGitIgnorePatterns() )
+        contents += entry + wxS( "\n" );
+
+    // A half written file would be taken for the team's own on every later init.
+    if( !out.Write( contents ) || !out.Close() )
+    {
+        out.Close();
+        wxRemoveFile( ignoreFile.GetFullPath() );
+    }
 }
 
 
@@ -341,10 +309,4 @@ void ApplyKicadGitConventions( const wxString& aProjectPath )
 bool GIT_INIT_HANDLER::SetupRemote( const RemoteConfig& aConfig )
 {
     return GetGitBackend()->SetupRemote( this, aConfig );
-}
-
-
-void GIT_INIT_HANDLER::UpdateProgress( int aCurrent, int aTotal, const wxString& aMessage )
-{
-    ReportProgress( aCurrent, aTotal, aMessage );
 }

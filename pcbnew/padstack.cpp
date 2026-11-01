@@ -26,6 +26,8 @@
 #include <api/api_utils.h>
 #include <api/api_pcb_utils.h>
 #include <api/board/board_types.pb.h>
+#include <board_design_settings.h>
+#include <board_stackup_manager/board_stackup.h>
 #include <layer_range.h>
 #include <macros.h>
 #include <magic_enum.hpp>
@@ -138,8 +140,15 @@ bool PADSTACK::operator==( const PADSTACK& aOther ) const
     if( m_layerSet != aOther.m_layerSet )
         return false;
 
-    if(  CustomName() != aOther.CustomName() )
+    if( m_customName && aOther.m_customName )
+    {
+        if( *m_customName != *aOther.m_customName )
+            return false;
+    }
+    else if( (bool) m_customName != (bool) m_customName )
+    {
         return false;
+    }
 
     if(  m_orientation != aOther.m_orientation )
         return false;
@@ -546,22 +555,26 @@ BACKDRILL_MODE PADSTACK::GetBackdrillMode() const
 
 void PADSTACK::SetBackdrillMode( BACKDRILL_MODE aMode )
 {
-    auto apply = [this]( bool aTop, bool aWant )
-    {
-        if( aWant )
-        {
-            DRILL_PROPS& drill = backdrillWriteSlot( aTop );
-            drill.start = aTop ? F_Cu : B_Cu;
-            drill.shape = PAD_DRILL_SHAPE::CIRCLE;
+    auto apply =
+            [this]( bool aTop, bool aWant )
+            {
+                if( aWant )
+                {
+                    DRILL_PROPS& drill = backdrillWriteSlot( aTop );
+                    drill.start = aTop ? F_Cu : B_Cu;
+                    drill.shape = PAD_DRILL_SHAPE::CIRCLE;
 
-            if( drill.size.x <= 0 )
-                drill.size = m_drill.size * 1.1; // Backdrill slightly larger than main drill
-        }
-        else
-        {
-            clearBackdrillSide( aTop );
-        }
-    };
+                    if( drill.end == UNDEFINED_LAYER )
+                        drill.end = drill.start;             // Must-cut a single copper layer
+
+                    if( drill.size.x <= 0 )
+                        drill.size = m_drill.size * 1.1;     // Backdrill slightly larger than main drill
+                }
+                else
+                {
+                    clearBackdrillSide( aTop );
+                }
+            };
 
     apply( true, aMode == BACKDRILL_MODE::BACKDRILL_TOP || aMode == BACKDRILL_MODE::BACKDRILL_BOTH );
     apply( false, aMode == BACKDRILL_MODE::BACKDRILL_BOTTOM || aMode == BACKDRILL_MODE::BACKDRILL_BOTH );
@@ -1187,17 +1200,37 @@ PADSTACK::COPPER_LAYER_PROPS& PADSTACK::CopperLayer( PCB_LAYER_ID aLayer )
     if( m_mode == MODE::NORMAL )
         return m_copperProps[ALL_LAYERS];
 
+    PCB_LAYER_ID key = aLayer;
+
     if( m_mode == MODE::FRONT_INNER_BACK )
     {
         if( IsFrontLayer( aLayer ) )
-            return m_copperProps[F_Cu];
+            key = F_Cu;
         else if( IsBackLayer( aLayer ) )
-            return m_copperProps[B_Cu];
+            key = B_Cu;
         else
-            return m_copperProps[INNER_LAYERS];
+            key = INNER_LAYERS;
     }
 
-    return m_copperProps[aLayer];
+    // A layer without an entry reads through to another one, so a new entry starts from what was read
+    const bool readsThrough = m_copperProps.contains( ALL_LAYERS )
+                              || ( m_mode == MODE::CUSTOM && !m_copperProps.empty() );
+
+    if( !m_copperProps.contains( key ) && readsThrough )
+    {
+        COPPER_LAYER_PROPS inherited = std::as_const( *this ).CopperLayer( aLayer );
+
+        // the new layer owns its primitives, as flipping or editing one layer must not change the other
+        for( std::shared_ptr<PCB_SHAPE>& shape : inherited.custom_shapes )
+        {
+            shape.reset( static_cast<PCB_SHAPE*>( shape->Clone() ) );
+            shape->SetParent( m_parent );
+        }
+
+        return m_copperProps.emplace( key, std::move( inherited ) ).first->second;
+    }
+
+    return m_copperProps[key];
 }
 
 
@@ -1328,6 +1361,80 @@ LSET PADSTACK::RelevantShapeLayers( const PADSTACK& aOther ) const
     }
 
     return layers;
+}
+
+
+// Only an oblong drill's narrow axis is cleared all the way round the hole
+static int effectiveDrillDiameter( const VECTOR2I& aSize )
+{
+    return aSize.y > 0 ? std::min( aSize.x, aSize.y ) : aSize.x;
+}
+
+
+static int surfaceKnockout( const BOARD_STACKUP& aStackup, const PADSTACK::POST_MACHINING_PROPS& aProps,
+                            PCB_LAYER_ID aSurface, PCB_LAYER_ID aLayer )
+{
+    if( !aProps.mode.has_value()
+            || *aProps.mode == PAD_DRILL_POST_MACHINING_MODE::NOT_POST_MACHINED
+            || *aProps.mode == PAD_DRILL_POST_MACHINING_MODE::UNKNOWN
+            || aProps.size <= 0 )
+    {
+        return 0;
+    }
+
+    bool   tapered = *aProps.mode == PAD_DRILL_POST_MACHINING_MODE::COUNTERSINK && aProps.angle > 0;
+    double tanHalfAngle = tapered ? tan( ( aProps.angle / 10.0 ) * M_PI / 360.0 ) : 0.0;
+    int    depth = aProps.depth;
+
+    // A countersink given no depth bottoms out where its taper closes on the drill
+    if( depth <= 0 && tapered )
+        depth = static_cast<int>( ( aProps.size / 2.0 ) / tanHalfAngle );
+
+    if( depth <= 0 )
+        return 0;
+
+    int layerDist = aStackup.GetLayerDistance( aSurface, aLayer );
+
+    if( layerDist >= depth )
+        return 0;
+
+    return std::max( 0, aProps.size - static_cast<int>( 2.0 * layerDist * tanHalfAngle ) );
+}
+
+
+int PADSTACK::PostMachiningKnockout( const BOARD_STACKUP& aStackup, PCB_LAYER_ID aLayer ) const
+{
+    return std::max( surfaceKnockout( aStackup, m_frontPostMachining, F_Cu, aLayer ),
+                     surfaceKnockout( aStackup, m_backPostMachining, B_Cu, aLayer ) );
+}
+
+
+int PADSTACK::MachiningKnockout( const BOARD& aBoard, PCB_LAYER_ID aLayer ) const
+{
+    if( m_secondaryDrill.size.x <= 0 && m_tertiaryDrill.size.x <= 0
+            && !m_frontPostMachining.mode.has_value() && !m_backPostMachining.mode.has_value() )
+    {
+        return 0;
+    }
+
+    int knockout = PostMachiningKnockout( aBoard.GetDesignSettings().GetStackupDescriptor(), aLayer );
+
+    for( const DRILL_PROPS* drill : { &m_secondaryDrill, &m_tertiaryDrill } )
+    {
+        if( drill->size.x <= 0 || drill->start == UNDEFINED_LAYER || drill->end == UNDEFINED_LAYER )
+            continue;
+
+        // An off-stack endpoint would widen the span onto layers the drill never reaches
+        if( !aBoard.IsLayerEnabled( drill->start ) || !aBoard.IsLayerEnabled( drill->end ) )
+            continue;
+
+        // Contains honours copper Z-order; comparing raw PCB_LAYER_ID values instead puts B_Cu
+        // above the inner layers and mis-spans any bottom-anchored backdrill
+        if( LAYER_RANGE::Contains( drill->start, drill->end, aLayer ) )
+            knockout = std::max( knockout, effectiveDrillDiameter( drill->size ) );
+    }
+
+    return knockout;
 }
 
 

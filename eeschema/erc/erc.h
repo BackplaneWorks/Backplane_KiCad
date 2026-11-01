@@ -102,6 +102,11 @@ public:
     int TestEmptyLabelNames();
 
     /**
+     * Check for power symbols whose value resolves to nothing, leaving their net unnamed.
+     */
+    int TestEmptyPowerValues();
+
+    /**
      * Test if all units of each multiunit symbol have the same footprint assigned.
      * @return The error count.
      */
@@ -219,6 +224,21 @@ public:
      * alternate symbol fails pin compatibility validation against the base symbol.
      */
     int TestVariantSymbols();
+
+    /**
+     * Test the annotation of every symbol: unannotated, duplicate and mismatched units.
+     */
+    int TestAnnotation();
+
+    /**
+     * Test that the instances of each reused sheet compose distinct reference suffixes.
+     */
+    int TestDuplicateSheetSuffixes();
+
+    /**
+     * Report symbols whose saved reference lacked the reference suffix of their sheet instance.
+     */
+    int TestRefSuffixMismatch();
 
     void RunTests( DS_PROXY_VIEW_ITEM* aDrawingSheet, SCH_EDIT_FRAME* aEditFrame,
                    KIFACE* aCvPcb, PROJECT* aProject, PROGRESS_REPORTER* aProgressReporter );

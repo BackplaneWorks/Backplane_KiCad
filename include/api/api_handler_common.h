@@ -29,6 +29,7 @@
 #include <api/backplane/capabilities.pb.h>
 #include <api/common/commands/base_commands.pb.h>
 #include <api/common/commands/project_commands.pb.h>
+#include <api/common/tasks.pb.h>
 
 using namespace kiapi::common;
 using kiapi::common::types::ProjectSpecifier;
@@ -127,6 +128,9 @@ private:
 
     HANDLER_RESULT<Empty> handleCloseAllDocuments(
         const HANDLER_CONTEXT<commands::CloseAllDocuments>& aCtx );
+
+    HANDLER_RESULT<tasks::TaskStatusResponse> handleGetTaskStatus(
+        const HANDLER_CONTEXT<tasks::GetTaskStatus>& aCtx );
 
 private:
     static tl::expected<bool, ApiResponseStatus> validateProject( const ProjectSpecifier& aProject,

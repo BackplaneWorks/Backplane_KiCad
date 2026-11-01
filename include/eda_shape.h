@@ -26,6 +26,7 @@
 #include <bezier_curves.h>
 #include <core/mirror.h>
 #include <geometry/ellipse.h>
+#include <geometry/seg.h>
 #include <geometry/shape_poly_set.h>
 #include <geometry/approximation.h>
 #include <geometry/shape_ellipse.h>
@@ -96,6 +97,8 @@ public:
     EDA_SHAPE& operator=( EDA_SHAPE&& ) noexcept = default;
 
     virtual ~EDA_SHAPE();
+
+    virtual EDA_ITEM* AsEdaItem() { return nullptr; }
 
     void SwapShape( EDA_SHAPE* aImage );
 
@@ -433,7 +436,7 @@ public:
     const ELLIPSE<int>& GetEllipse() const { return m_ellipse; }
 
     VECTOR2I getCenter() const;
-    void     SetCenter( const VECTOR2I& aCenter );
+    virtual void SetCenter( const VECTOR2I& aCenter );
 
     /**
      * Set the end point from the angle center and start.
@@ -479,6 +482,12 @@ public:
      * the scenes.  However, they are what SHOULD be stored.
      */
     virtual void SetArcGeometry( const VECTOR2I& aStart, const VECTOR2I& aMid, const VECTOR2I& aEnd );
+
+    /**
+     * Set the shape from three points, falling back to a SEGMENT from \a aStart to \a aEnd when the points
+     * are collinear and so have no finite arc center.
+     */
+    void SetArcOrSegment( const VECTOR2I& aStart, const VECTOR2I& aMid, const VECTOR2I& aEnd );
 
     /**
      * Set the data used for mid point caching.
@@ -675,6 +684,7 @@ protected:
     void move( const VECTOR2I& aMoveVector );
     void rotate( const VECTOR2I& aRotCentre, const EDA_ANGLE& aAngle );
     void flip( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection );
+    void mirror( const SEG& aAxis );
     void scale( double aScale );
 
     virtual EDA_ANGLE getDrawRotation() const { return ANGLE_0; }
@@ -778,4 +788,3 @@ DECLARE_ENUM_TO_WXANY( SHAPE_T );
 DECLARE_ENUM_TO_WXANY( LINE_STYLE );
 DECLARE_ENUM_TO_WXANY( LINE_ENDING_STYLE );
 DECLARE_ENUM_TO_WXANY( UI_FILL_MODE );
-

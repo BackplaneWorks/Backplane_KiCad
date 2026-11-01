@@ -22,8 +22,9 @@
 
 #include <memory>
 
-#include <eda_text.h>
 #include <board_item.h>
+#include <eda_text.h>
+#include <geometry/shape_poly_set.h>
 
 
 class LINE_READER;
@@ -131,6 +132,8 @@ public:
     void Rotate( const VECTOR2I& aRotCentre, const EDA_ANGLE& aAngle ) override;
 
     void Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
+
+    void Mirror( const SEG& aAxis ) override;
 
     void Flip( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
 

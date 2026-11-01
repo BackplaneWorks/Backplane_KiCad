@@ -50,6 +50,7 @@
 
 #include <plotters/pdf_stroke_font.h>
 #include <plotters/pdf_outline_font.h>
+#include <plotters/pdf_unicode.h>
 #include <plotters/plotters_pslike.h>
 #include <geometry/shape_rect.h>
 #include <text_eval/text_eval_wrapper.h>
@@ -68,8 +69,8 @@ std::string PDF_PLOTTER::encodeStringForPlotter( const wxString& aText )
 {
     // returns a string compatible with PDF string convention from a unicode string.
     // if the initial text is only ASCII7, return the text between ( and ) for a good readability
-    // if the initial text contains non ASCII7, return the text between < and > encoded using 16
-    // bit hexadecimal (4 digits) per wide char (unicode 16)
+    // if the initial text contains non ASCII7, return the text between < and > encoded using
+    // UTF-16 BE (big-endian).
     std::string result;
 
     // Is aText only ASCII7 ?
@@ -88,22 +89,25 @@ std::string PDF_PLOTTER::encodeStringForPlotter( const wxString& aText )
     {
         result = '(';
 
-        for( unsigned ii = 0; ii < aText.Len(); ii++ )
+        for( size_t ii = 0; ii < aText.Len(); ii++ )
         {
             unsigned int code = aText[ii];
 
-            // These characters must be escaped
-            switch( code )
+            if( code == '(' || code == ')' || code == '\\' )
             {
-            case '(':
-            case ')':
-            case '\\':
+                // These characters must be escaped.
                 result += '\\';
-                KI_FALLTHROUGH;
-
-            default:
-                result += code;
-                break;
+                result += static_cast<char>( code );
+            }
+            else if( code < 0x20 )
+            {
+                // Control characters (inc. null) are not illegal in principle,
+                // but we use octal escapes for them to avoid confusing parsers.
+                result += fmt::format( "\\{:03o}", code );
+            }
+            else
+            {
+                result += static_cast<char>( code );
             }
         }
 
@@ -111,12 +115,13 @@ std::string PDF_PLOTTER::encodeStringForPlotter( const wxString& aText )
     }
     else
     {
+        // UTF-16BE text string with BOM.
         result = "<FEFF";
 
         for( size_t ii = 0; ii < aText.Len(); ii++ )
         {
             unsigned int code = aText[ii];
-            result += fmt::format("{:04X}", code);
+            result += FormatPdfUtf16Hex( static_cast<uint32_t>( code ) );
         }
 
         result += '>';
@@ -234,22 +239,37 @@ void PDF_PLOTTER::SetCurrentLineWidth( int aWidth, void* aData )
 }
 
 
+int PDF_PLOTTER::getExtGStateHandleForAlpha( double aAlpha )
+{
+    auto [it, inserted] = m_alphaToExtGStateHandles.try_emplace( aAlpha );
+
+    if( inserted )
+        it->second = allocPdfObject();
+
+    return it->second;
+}
+
+
 void PDF_PLOTTER::emitSetRGBColor( double r, double g, double b, double a )
 {
     wxASSERT( m_workFile );
 
-    // PDF treats all colors as opaque, so the best we can do with alpha is generate an
-    // appropriate blended color assuming white paper.
-    if( a < 1.0 )
-    {
-        r = ( r * a ) + ( 1 - a );
-        g = ( g * a ) + ( 1 - a );
-        b = ( b * a ) + ( 1 - a );
-    }
-
     fmt::println( m_workFile, "{} {} {} rg {} {} {} RG",
                   encodeDoubleForPlotter( r ), encodeDoubleForPlotter( g ), encodeDoubleForPlotter( b ),
                   encodeDoubleForPlotter( r ), encodeDoubleForPlotter( g ), encodeDoubleForPlotter( b ) );
+
+    // PDF sets opacity through the graphics state
+    // It is 'sticky' and remains in effect until changed by another graphics state operator
+    // So change it if it differs from the current alpha value
+    if( a != m_currentAlpha )
+    {
+        const int extGStateHandle = getExtGStateHandleForAlpha( a );
+
+        // Apply that ExtGState to this context.
+        fmt::println( m_workFile, "/GS{} gs", extGStateHandle );
+
+        m_currentAlpha = a;
+    }
 }
 
 
@@ -624,7 +644,7 @@ void PDF_PLOTTER::PenTo( const VECTOR2I& pos, char plume )
 }
 
 
-void PDF_PLOTTER::PlotImage( const wxImage& aImage, const VECTOR2I& aPos, double aScaleFactor )
+void PDF_PLOTTER::PlotImage( const wxImage& aImage, const VECTOR2I& aPos, double aScaleFactor, double aAlpha )
 {
     wxASSERT( m_workFile );
     VECTOR2I pix_size( aImage.GetWidth(), aImage.GetHeight() );
@@ -703,6 +723,10 @@ void PDF_PLOTTER::PlotImage( const wxImage& aImage, const VECTOR2I& aPos, double
                   encodeDoubleForPlotter( dev_start.x ),
                   encodeDoubleForPlotter( dev_start.y ) );
 
+    // Apply any global alpha setting for this image (on top of the image's own alpha)
+    if( m_currentAlpha != aAlpha )
+        fmt::println( m_workFile, "/GS{} gs", getExtGStateHandleForAlpha( aAlpha ) );
+
     fmt::println( m_workFile, "/Im{} Do", imgHandle );
     fmt::println( m_workFile, "Q" );
 }
@@ -710,8 +734,7 @@ void PDF_PLOTTER::PlotImage( const wxImage& aImage, const VECTOR2I& aPos, double
 
 int PDF_PLOTTER::allocPdfObject()
 {
-    m_xrefTable.push_back( 0 );
-    return m_xrefTable.size() - 1;
+    return m_xrefTable.Allocate();
 }
 
 
@@ -720,10 +743,13 @@ int PDF_PLOTTER::startPdfObject( int aHandle )
     wxASSERT( m_outputFile );
     wxASSERT( !m_workFile );
 
-    if( aHandle < 0 )
+    if( !m_xrefTable.IsValid( aHandle ) )
+    {
+        wxASSERT_MSG( aHandle < 0, "PDF object handle given was not previously allocated" );
         aHandle = allocPdfObject();
+    }
 
-    m_xrefTable[aHandle] = ftell( m_outputFile );
+    m_xrefTable.SetOffset( aHandle, ftell( m_outputFile ) );
     fmt::println( m_outputFile, "{} 0 obj", aHandle );
     return aHandle;
 }
@@ -859,6 +885,9 @@ void PDF_PLOTTER::StartPage( const wxString& aPageNumber, const wxString& aPageN
     // Set m_currentPenWidth to a unused value to ensure the pen width
     // will be initialized to a the right value in pdf file by the first item to plot
     m_currentPenWidth = 0;
+
+    // Each page content stream starts with a default graphics state
+    m_currentAlpha = 1.0;
 
     if( !m_3dExportMode )
     {
@@ -1072,11 +1101,13 @@ void PDF_PLOTTER::ClosePage()
                 "/Resources <<\n"
                 "    /ProcSet [/PDF /Text /ImageC /ImageB]\n"
                 "    /Font {} 0 R\n"
-                "    /XObject {} 0 R >>\n"
+                "    /XObject {} 0 R\n"
+                "    /ExtGState {} 0 R >>\n"
                 "/MediaBox [0 0 {} {}]\n",
                 m_pageTreeHandle,
                 m_fontResDictHandle,
                 m_imgResDictHandle,
+                m_extGStateResDictHandle,
                 encodeDoubleForPlotter( psPaperSize.x ),
                 encodeDoubleForPlotter( psPaperSize.y ) );
 
@@ -1190,8 +1221,7 @@ bool PDF_PLOTTER::StartPlot( const wxString& aPageNumber, const wxString& aPageN
 
     // First things first: the customary null object
     m_pageHandles.clear();
-    m_xrefTable.clear();
-    m_xrefTable.push_back( 0 );
+    m_xrefTable.Reset();
     m_pageNumbers.clear();
     m_hyperlinksInPage.clear();
     m_hyperlinkMenusInPage.clear();
@@ -1199,6 +1229,7 @@ bool PDF_PLOTTER::StartPlot( const wxString& aPageNumber, const wxString& aPageN
     m_hyperlinkMenuHandles.clear();
     m_bookmarksInPage.clear();
     m_imageHandles.clear();
+    m_alphaToExtGStateHandles.clear();
     m_totalOutlineNodes = 0;
     m_usedBase14Fonts = false;
 
@@ -1227,6 +1258,8 @@ bool PDF_PLOTTER::StartPlot( const wxString& aPageNumber, const wxString& aPageN
     m_fontResDictHandle = allocPdfObject();
 
     m_imgResDictHandle = allocPdfObject();
+
+    m_extGStateResDictHandle = allocPdfObject();
 
     m_jsNamesHandle = allocPdfObject();
 
@@ -1617,6 +1650,31 @@ void PDF_PLOTTER::endPlotEmitResources()
 
     fmt::println( m_outputFile, ">>" );
     closePdfObject();
+
+    // Graphics state objects.
+    // For now, we have only alpha-setting graphics state objects.
+    // If we we had other types of graphics state objects, we would handle them here as well.
+    // We re-use the handle as the resource name: handle 42 -> '/GS42'
+    {
+        // First, write out all the external graphics state objects one at a time
+        for( const auto& [alpha, handle] : m_alphaToExtGStateHandles )
+        {
+            startPdfObject( handle );
+            fmt::println( m_outputFile, "<< /Type /ExtGState /ca {} /CA {} >>", encodeDoubleForPlotter( alpha ),
+                          encodeDoubleForPlotter( alpha ) );
+            closePdfObject();
+        }
+
+        // Now write out the external graphics state resource dictionary
+        startPdfObject( m_extGStateResDictHandle );
+        fmt::println( m_outputFile, "<<" );
+
+        for( const auto& [alpha, handle] : m_alphaToExtGStateHandles )
+            fmt::println( m_outputFile, "    /GS{} {} 0 R", handle, handle );
+
+        fmt::println( m_outputFile, ">>" );
+        closePdfObject();
+    }
 
     // Emit images with optional SMask for transparency
     for( const auto& [imgHandle, image] : m_imageHandles )
@@ -2111,14 +2169,16 @@ bool PDF_PLOTTER::EndPlot()
        be 20 bytes long, and object zero must be done in that way). Also
        the offset must be kept along for the trailer */
     long xref_start = ftell( m_outputFile );
+    const std::vector<long>& xrefEntries = m_xrefTable.Entries();
+
     fmt::print( m_outputFile,
                 "xref\n"
                 "0 {}\n"
                 "0000000000 65535 f \n",
-                m_xrefTable.size() );
+                xrefEntries.size() );
 
-    for( unsigned i = 1; i < m_xrefTable.size(); i++ )
-        fmt::print( m_outputFile, "{:010d} 00000 n \n", m_xrefTable[i] );
+    for( unsigned i = 1; i < xrefEntries.size(); i++ )
+        fmt::print( m_outputFile, "{:010d} 00000 n \n", xrefEntries[i] );
 
     // Done the xref, go for the trailer
     fmt::print( m_outputFile,
@@ -2127,7 +2187,7 @@ bool PDF_PLOTTER::EndPlot()
                 "startxref\n"
                 "{}\n" // The offset we saved before
                 "%%EOF\n",
-                m_xrefTable.size(),
+                xrefEntries.size(),
                 catalogHandle,
                 infoDictHandle,
                 xref_start );
@@ -2975,11 +3035,13 @@ void PDF_PLOTTER::Plot3DModel( const wxString& aSourcePath, const std::vector<PD
         int viewHandle = allocPdfObject();
         startPdfObject( viewHandle );
 
+        const std::string encodedName = encodeStringForPlotter( wxString::FromUTF8( view.m_name ) );
+
         fmt::print( m_outputFile,
                     "<<\n"
                     "/Type /3DView\n"
-                    "/XN ({})\n"
-                    "/IN ({})\n"
+                    "/XN {}\n"
+                    "/IN {}\n"
                     "/MS /M\n"
                     "/C2W [{:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f}]\n"
                     "/CO {:f}\n"
@@ -2994,7 +3056,8 @@ void PDF_PLOTTER::Plot3DModel( const wxString& aSourcePath, const std::vector<PD
                     "/Type /3DLightingScheme\n"
                     "/Subtype /CAD>>\n"
                     ">>\n",
-                    view.m_name, view.m_name, view.m_cameraMatrix[0],
+                    encodedName, encodedName,
+                    view.m_cameraMatrix[0],
                     view.m_cameraMatrix[1],
                     view.m_cameraMatrix[2], view.m_cameraMatrix[3], view.m_cameraMatrix[4],
                     view.m_cameraMatrix[5], view.m_cameraMatrix[6], view.m_cameraMatrix[7],

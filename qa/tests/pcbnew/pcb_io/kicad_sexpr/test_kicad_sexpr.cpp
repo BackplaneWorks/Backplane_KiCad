@@ -21,6 +21,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -43,6 +44,7 @@
 #include <footprint.h>
 #include <netinfo.h>
 #include <pad.h>
+#include <pcb_group.h>
 #include <pcb_shape.h>
 #include <pcb_track.h>
 #include <zone.h>
@@ -520,9 +522,7 @@ BOOST_AUTO_TEST_CASE( Issue24642_AppendBoardPromptsOnlyOnNameMismatch )
  */
 BOOST_AUTO_TEST_CASE( FootprintSave_OmitsNetsOnAllBoardConnectedItems )
 {
-    auto tmpLib = std::filesystem::temp_directory_path() / "qa_fp_save_netinfo.pretty";
-    std::filesystem::remove_all( tmpLib );
-    std::filesystem::create_directories( tmpLib );
+    KI_TEST::SCOPED_TEMP_DIR tmpLib( wxS( "qa_fp_save_netinfo" ) );
 
     std::unique_ptr<BOARD> board = std::make_unique<BOARD>();
 
@@ -558,9 +558,9 @@ BOOST_AUTO_TEST_CASE( FootprintSave_OmitsNetsOnAllBoardConnectedItems )
     BOOST_REQUIRE_EQUAL( zone->GetNet(), net );
 
     // Save into the scratch library via the public library-save API.  Must not throw.
-    BOOST_REQUIRE_NO_THROW( kicadPlugin.FootprintSave( tmpLib.string(), fp ) );
+    BOOST_REQUIRE_NO_THROW( kicadPlugin.FootprintSave( tmpLib.Path().string(), fp ) );
 
-    auto savedFile = tmpLib / "test_fp_save_netinfo.kicad_mod";
+    auto savedFile = tmpLib.Path() / "test_fp_save_netinfo.kicad_mod";
     BOOST_REQUIRE( std::filesystem::exists( savedFile ) );
 
     std::ifstream in( savedFile );
@@ -572,7 +572,7 @@ BOOST_AUTO_TEST_CASE( FootprintSave_OmitsNetsOnAllBoardConnectedItems )
     BOOST_REQUIRE( !in.bad() );
 
     // Windows refuses to unlink a file that still has an open handle, so release it before the
-    // remove_all() below.
+    // scoped directory teardown.
     in.close();
 
     const std::string contents = ss.str();
@@ -615,8 +615,6 @@ BOOST_AUTO_TEST_CASE( FootprintSave_OmitsNetsOnAllBoardConnectedItems )
     BOOST_CHECK_EQUAL( detachedPad->GetNet(), NETINFO_LIST::OrphanedItem() );
     BOOST_CHECK_EQUAL( detachedShape->GetNet(), NETINFO_LIST::OrphanedItem() );
     BOOST_CHECK_EQUAL( detachedZone->GetNet(), NETINFO_LIST::OrphanedItem() );
-
-    std::filesystem::remove_all( tmpLib );
 }
 
 
@@ -1016,6 +1014,91 @@ BOOST_AUTO_TEST_CASE( MissingLibraryThrowsOnEveryEnumerate )
     BOOST_CHECK_THROW( kicadPlugin.FootprintEnumerate( names, libPath.string(), false ), IO_ERROR );
 
     BOOST_CHECK_THROW( kicadPlugin.FootprintEnumerate( names, libPath.string(), false ), IO_ERROR );
+}
+
+
+// A library load must finish a footprint the way Parse() does, or the next save drops its groups
+BOOST_AUTO_TEST_CASE( LibraryFootprintKeepsGroupsAndLoadsUnlocked )
+{
+    KI_TEST::SCOPED_TEMP_DIR temp( wxS( "fp_finish" ) );
+
+    std::filesystem::path libPath = temp.Path() / "finish.pretty";
+    std::filesystem::create_directories( libPath );
+
+    std::filesystem::path source = std::filesystem::path( KI_TEST::GetTestDataRootDir() ) / "libraries"
+                                   / "Resistor_SMD.pretty" / "R_0402_1005Metric.kicad_mod";
+
+    wxString                   name;
+    std::unique_ptr<FOOTPRINT> footprint = kicadPlugin.ImportFootprint( wxString( source.string() ), name );
+
+    footprint->SetFPID( LIB_ID( wxEmptyString, wxS( "grouped" ) ) );
+    footprint->SetLocked( true );
+
+    PCB_GROUP* group = new PCB_GROUP( footprint.get() );
+    group->AddItem( footprint->Pads().front() );
+    footprint->Add( group );
+
+    kicadPlugin.FootprintSave( libPath.string(), footprint.get() );
+
+    std::unique_ptr<FOOTPRINT> loaded =
+            kicadPlugin.ImportFootprint( wxString( ( libPath / "grouped.kicad_mod" ).string() ), name );
+
+    BOOST_CHECK( !loaded->IsLocked() );
+    BOOST_REQUIRE_EQUAL( loaded->Groups().size(), 1u );
+    BOOST_CHECK_EQUAL( loaded->Groups().front()->GetBoardItems().size(), 1u );
+}
+
+
+// A parse warning leaves the footprint usable, so it must not stop the rest of the library loading
+// fails on revert, since the warning then makes the whole library fail
+BOOST_AUTO_TEST_CASE( ParseWarningDoesNotFailTheLibrary )
+{
+    KI_TEST::SCOPED_TEMP_DIR temp( wxS( "fp_warning" ) );
+
+    std::filesystem::path libPath = temp.Path() / "warning.pretty";
+    std::filesystem::create_directories( libPath );
+
+    std::filesystem::path source =
+            std::filesystem::path( KI_TEST::GetTestDataRootDir() ) / "libraries" / "Resistor_SMD.pretty";
+
+    for( const char* name : { "R_0402_1005Metric", "R_0603_1608Metric" } )
+        std::filesystem::copy_file( source / ( std::string( name ) + ".kicad_mod" ),
+                                    libPath / ( std::string( name ) + ".kicad_mod" ) );
+
+    // A zero size pad parses with a warning
+    std::filesystem::path zeroPad = libPath / "R_0402_1005Metric.kicad_mod";
+    std::ifstream         in( zeroPad );
+    std::string           text( ( std::istreambuf_iterator<char>( in ) ), std::istreambuf_iterator<char>() );
+    in.close();
+
+    size_t at = text.find( "(size 0.54 0.64)" );
+    BOOST_REQUIRE( at != std::string::npos );
+    text.replace( at, std::string( "(size 0.54 0.64)" ).size(), "(size 0 0)" );
+    std::ofstream( zeroPad ) << text;
+
+    wxArrayString names;
+
+    BOOST_CHECK_NO_THROW( kicadPlugin.FootprintEnumerate( names, libPath.string(), false ) );
+    BOOST_CHECK_EQUAL( names.size(), 2u );
+    BOOST_CHECK( names.Index( wxS( "R_0402_1005Metric" ) ) != wxNOT_FOUND );
+
+    // A file that does not parse still fails the library, as it always has
+    std::ofstream( libPath / "broken.kicad_mod" ) << "(footprint";
+
+    kicadPlugin.ClearCachedFootprints( libPath.string() );
+    names.clear();
+
+    BOOST_CHECK_THROW( kicadPlugin.FootprintEnumerate( names, libPath.string(), false ), IO_ERROR );
+}
+
+
+BOOST_AUTO_TEST_CASE( LegacyModuleFileImports )
+{
+    const std::string  fpPath = KI_TEST::GetPcbnewTestDataDir() + "legacy_module/Crystal_SMD_HC49-US.kicad_mod";
+    PCB_IO_KICAD_SEXPR kicadPlugin;
+    wxString           name;
+
+    BOOST_CHECK( kicadPlugin.ImportFootprint( fpPath, name ) != nullptr );
 }
 
 

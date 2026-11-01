@@ -70,6 +70,7 @@ NODE::OPT_OBSTACLE WALKAROUND::nearestObstacle( const LINE& aPath )
     else 
     {
         opts.m_filter = m_collisionFilter;
+        opts.m_overrideClearance = m_overrideClearance;
     }
 
     opts.m_useClearanceEpsilon = false;
@@ -118,6 +119,9 @@ bool WALKAROUND::singleStep()
 {
     TOPOLOGY topo( m_world );
     TOPOLOGY::CLUSTER pendingClusters[MaxWalkPolicies];
+    COLLISION_SEARCH_OPTIONS opts;
+
+    opts.m_overrideClearance = m_overrideClearance;
 
     for( int i = 0; i < MaxWalkPolicies; i++ )
     {
@@ -146,7 +150,16 @@ bool WALKAROUND::singleStep()
 
         int clusterMargin = 2 * obstacle->m_clearance + line.Width() ;
 
-        pendingClusters[ i ] = topo.AssembleCluster( obstacle->m_item, line.Layer(), 0.0, line.Net(), clusterMargin );
+        if( m_useClustering )
+        {
+            pendingClusters[ i ] = topo.AssembleCluster( obstacle->m_item, line.Layer(), 0.0, line.Net(), clusterMargin );
+        }
+        else
+        {
+            pendingClusters[ i ].m_key = nullptr;
+            pendingClusters[ i ].m_items = { obstacle->m_item };
+        }
+
         PNS_DBG( Dbg(), AddItem, obstacle->m_item, BLUE, 10000, wxString::Format( "col-item owner-depth %d cl-items=%d cl-margin=%d", static_cast<const NODE*>( obstacle->m_item->Owner() )->Depth(), (int) pendingClusters[i].m_items.size(), clusterMargin ) );
 
     }
@@ -178,7 +191,7 @@ bool WALKAROUND::singleStep()
                 return false;
             }
 
-            int clearance = m_world->GetClearance( clItem, &aLine, false );
+            int clearance = m_world->GetClearance( clItem, &aLine, false, opts );
             const SHAPE_LINE_CHAIN& cachedHull = m_world->GetRuleResolver()->HullCache(
                     clItem, clearance, aLine.Width(), aLine.Layer() );
 
@@ -191,6 +204,7 @@ bool WALKAROUND::singleStep()
                 hull.Append( bbox.GetRight(), bbox.GetTop()    );
                 hull.Append( bbox.GetRight(), bbox.GetBottom() );
                 hull.Append( bbox.GetLeft(),  bbox.GetBottom() );
+                hull.SetClosed( true );
             }
             else
             {
@@ -237,7 +251,6 @@ bool WALKAROUND::singleStep()
 
     if( m_enabledPolicies[WP_SHORTEST] )
     {
-        COLLISION_SEARCH_OPTIONS opts;
         LINE& line = m_currentResult.lines[WP_SHORTEST];
         LINE  path_cw( line ), path_ccw( line );
 
@@ -295,7 +308,7 @@ bool WALKAROUND::singleStep()
             for( auto& item : m_processedItems )
             {
                 std::set<PNS::OBSTACLE> obstacles;
-                PNS::COLLISION_SEARCH_CONTEXT ctx( obstacles );
+                PNS::COLLISION_SEARCH_CONTEXT ctx( obstacles, opts );
                 if( shortest->Collide( item, m_world, shortest->Layer(), &ctx ) )
                 {
                     anyColliding = true;
@@ -358,6 +371,7 @@ const WALKAROUND::RESULT WALKAROUND::Route( const LINE& aInitialPath )
 
     while( m_iteration < m_iterationLimit )
     {
+        bool finished = false;
         singleStep();
 
         bool stillInProgress = false;
@@ -369,6 +383,13 @@ const WALKAROUND::RESULT WALKAROUND::Route( const LINE& aInitialPath )
 
             auto& st = m_currentResult.status[pol];
             auto& ln = m_currentResult.lines[pol];
+
+            if ( st == ST_DONE && m_anyCompletePolicyIsSuccess )
+            {
+                finished = true;
+                break;
+            }
+
             double lengthFactor = (double) ln.CLine().Length() / (double) aInitialPath.CLine().Length();
             // In some situations, there isn't a trivial path (or even a path at all).  Hitting the
             // iteration limit causes lag, so we can exit out early if the walkaround path gets very long
@@ -386,8 +407,7 @@ const WALKAROUND::RESULT WALKAROUND::Route( const LINE& aInitialPath )
                 stillInProgress = true;
         }
 
-
-        if( !stillInProgress )
+        if( !stillInProgress || finished )
             break;
 
         m_iteration++;
@@ -421,14 +441,22 @@ const WALKAROUND::RESULT WALKAROUND::Route( const LINE& aInitialPath )
     return m_currentResult;
 }
 
-void WALKAROUND::SetAllowedPolicies( std::vector<WALK_POLICY> aPolicies)
+void WALKAROUND::SetAllowedPolicies( std::vector<WALK_POLICY> aPolicies, bool aAnyCompletePolicyIsSuccess )
 {
     for( int i = 0; i < MaxWalkPolicies; i++ )
         m_enabledPolicies[i] =  false;
 
     for ( auto p : aPolicies )
         m_enabledPolicies[p] = true;
+    
+    m_anyCompletePolicyIsSuccess = aAnyCompletePolicyIsSuccess;
 }
+
+void WALKAROUND::SetClearanceOverride( CLEARANCE_OVERRIDE_FUNC aFunc )
+{
+    m_overrideClearance = aFunc;
+}
+
 
 }
 

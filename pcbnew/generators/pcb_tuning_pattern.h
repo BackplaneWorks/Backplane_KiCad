@@ -23,6 +23,7 @@
 #include <bitmaps.h>
 #include <board.h>
 #include <pcb_generator.h>
+#include <pcb_track.h>
 #include <geometry/geometry_utils.h>
 #include <pcb_base_edit_frame.h>
 #include <router/pns_meander.h>
@@ -114,7 +115,7 @@ public:
     PCB_TUNING_PATTERN( BOARD_ITEM* aParent = nullptr, PCB_LAYER_ID aLayer = F_Cu,
                         LENGTH_TUNING_MODE aMode = LENGTH_TUNING_MODE::SINGLE );
 
-    wxString GetGeneratorType() const override { return wxS( "tuning_pattern" ); }
+    wxString GetGeneratorType() const override { return GENERATOR_TYPE; }
 
     wxString GetItemDescription( UNITS_PROVIDER* aUnitsProvider, bool aFull ) const override
     {
@@ -209,11 +210,16 @@ public:
 
     void Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override
     {
+        Mirror( MIRROR_AXIS( aCentre, aFlipDirection ) );
+    }
+
+    void Mirror( const SEG& aAxis ) override
+    {
         if( !this->HasFlag( IN_EDIT ) )
         {
-            PCB_GENERATOR::Mirror( aCentre, aFlipDirection );
+            PCB_GENERATOR::Mirror( aAxis );
 
-            baseMirror( aCentre, aFlipDirection );
+            baseMirror( aAxis );
         }
     }
 
@@ -341,6 +347,12 @@ public:
 
     void ViewDraw( int aLayer, KIGFX::VIEW* aView ) const override final;
 
+    /**
+     * Indicates that the tuning pattern can be selected as a connected entity:
+     * when the selection crosses one, it is included as part of the connected selection.
+     */
+    bool IsSelectableAsConnected() const override { return true; }
+
     const VECTOR2I& GetEnd() const { return m_end; }
     void            SetEnd( const VECTOR2I& aValue ) { m_end = aValue; }
 
@@ -454,6 +466,9 @@ public:
 
     /// True when CreateNew() took the targets from a DRC length, chain length or skew rule.
     bool HasRuleTarget() const { return m_hasRuleTarget; }
+
+    /// True when any member track leaves the baseline between its end caps, or there is no baseline.
+    bool HasMeanders() const;
 
     /**
      * Adopt the tuning tool's working settings.  A rule-derived target is kept unless the tool settings
@@ -613,17 +628,22 @@ protected:
 
     void baseMirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection )
     {
-        PCB_GENERATOR::baseMirror( aCentre, aFlipDirection );
+        baseMirror( MIRROR_AXIS( aCentre, aFlipDirection ) );
+    }
+
+    void baseMirror( const SEG& aAxis )
+    {
+        PCB_GENERATOR::baseMirror( aAxis );
 
         if( m_baseLine )
         {
-            m_baseLine->Mirror( aCentre, aFlipDirection );
+            m_baseLine->Mirror( aAxis );
             m_origin = m_baseLine->CPoint( 0 );
             m_end = m_baseLine->CLastPoint();
         }
 
         if( m_baseLineCoupled )
-            m_baseLineCoupled->Mirror( aCentre, aFlipDirection );
+            m_baseLineCoupled->Mirror( aAxis );
 
         if( m_settings.m_initialSide == PNS::MEANDER_SIDE_RIGHT )
             m_settings.m_initialSide = PNS::MEANDER_SIDE_LEFT;

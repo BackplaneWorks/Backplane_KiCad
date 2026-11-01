@@ -422,48 +422,13 @@ int SCH_EDITOR_CONTROL::SaveCurrSheetCopyAs( const TOOL_EVENT& aEvent )
 
 int SCH_EDITOR_CONTROL::Revert( const TOOL_EVENT& aEvent )
 {
-    SCHEMATIC& schematic = m_frame->Schematic();
-    SCH_SHEET& root = schematic.Root();
-
-    // Save original sheet path to restore if user cancels
-    SCH_SHEET_PATH originalSheet = m_frame->GetCurrentSheet();
-    bool wasOnSubsheet = ( m_frame->GetCurrentSheet().Last() != &root );
-
-    // Navigate to root sheet first (needed for proper reload), but don't repaint yet
-    if( wasOnSubsheet )
-    {
-        // Use the properly constructed root sheet path from the hierarchy
-        // (manually pushing root creates a path with empty KIID which causes assertions)
-        SCH_SHEET_PATH rootSheetPath = schematic.Hierarchy().at( 0 );
-
-        m_frame->GetToolManager()->RunAction<SCH_SHEET_PATH*>( SCH_ACTIONS::changeSheet,
-                                                               &rootSheetPath );
-        // Don't call wxSafeYield() here - avoid repainting the root sheet before the dialog
-    }
-
     wxString msg;
-    msg.Printf( _( "Revert '%s' (and all sub-sheets) to last version saved?" ), schematic.GetFileName() );
+    msg.Printf( _( "Revert '%s' (and all sub-sheets) to last version saved?" ), m_frame->Schematic().GetFileName() );
 
     if( !IsOK( m_frame, msg ) )
-    {
-        // User cancelled - navigate back to original sheet
-        if( wasOnSubsheet )
-        {
-            m_frame->GetToolManager()->RunAction<SCH_SHEET_PATH*>( SCH_ACTIONS::changeSheet,
-                                                                   &originalSheet );
-            wxSafeYield();
-        }
+        return 0;
 
-        return false;
-    }
-
-    SCH_SCREENS screenList( schematic.Root() );
-
-    for( SCH_SCREEN* screen = screenList.GetFirst(); screen; screen = screenList.GetNext() )
-        screen->SetContentModified( false );    // do not prompt the user for changes
-
-    m_frame->ReleaseFile();
-    m_frame->OpenProjectFiles( std::vector<wxString>( 1, schematic.GetFileName() ), KICTL_REVERT );
+    m_frame->ReloadFromDisk();
 
     return 0;
 }
@@ -1971,10 +1936,6 @@ bool SCH_EDITOR_CONTROL::doCopy( bool aUseDuplicateClipboard )
                         data->Add( htmlObj );
                     }
                 }
-                else
-                {
-                    wxLogDebug( wxS( "Failed to generate bitmap for clipboard" ) );
-                }
 
                 // Add SVG data
                 wxMemoryBuffer svgBuffer;
@@ -1984,10 +1945,6 @@ bool SCH_EDITOR_CONTROL::doCopy( bool aUseDuplicateClipboard )
                     wxCustomDataObject* svgObj = new wxCustomDataObject( wxDataFormat( "image/svg+xml" ) );
                     svgObj->SetData( svgBuffer.GetDataLen(), svgBuffer.GetData() );
                     data->Add( svgObj );
-                }
-                else
-                {
-                    wxLogDebug( wxS( "Failed to generate SVG for clipboard" ) );
                 }
             }
 
@@ -2228,31 +2185,6 @@ SCH_SHEET_PATH SCH_EDITOR_CONTROL::updatePastedSheet( SCH_SHEET* aSheet, const S
 }
 
 
-void SCH_EDITOR_CONTROL::setPastedSymbolInstances( const SCH_SCREEN* aScreen )
-{
-    wxCHECK( aScreen, /* void */ );
-
-    for( const SCH_ITEM* item : aScreen->Items() )
-    {
-        if( item->Type() == SCH_SYMBOL_T )
-        {
-            const SCH_SYMBOL* symbol = static_cast<const SCH_SYMBOL*>( item );
-
-            wxCHECK2( symbol, continue );
-
-            for( const SCH_SYMBOL_INSTANCE& symbolInstance : symbol->GetInstances() )
-            {
-                KIID_PATH pathWithSymbol = symbolInstance.m_Path;
-
-                pathWithSymbol.push_back( symbol->m_Uuid );
-
-                m_clipboardSymbolInstances[pathWithSymbol] = symbolInstance;
-            }
-        }
-    }
-}
-
-
 void SCH_EDITOR_CONTROL::prunePastedSymbolInstances()
 {
     wxCHECK( m_frame, /* void */ );
@@ -2424,10 +2356,6 @@ int SCH_EDITOR_CONTROL::Paste( const TOOL_EVENT& aEvent )
     }
 
     m_pastedSymbols.clear();
-    m_clipboardSymbolInstances.clear();
-
-    // Save pasted symbol instances in case the user chooses to keep existing symbol annotation.
-    setPastedSymbolInstances( tempScreen );
 
     tempScreen->MigrateSimModels();
 
@@ -2480,6 +2408,24 @@ int SCH_EDITOR_CONTROL::Paste( const TOOL_EVENT& aEvent )
 
     // Get set of sheet names in the current schematic to prevent duplicate sheet names on paste.
     std::set<wxString> existingSheetNames = pasteRoot.LastScreen()->GetSheetNames();
+    std::set<wxString> existingSuffixes;
+    std::set<wxString> composedSuffixes;
+
+    for( const SCH_SHEET_PATH& path : hierarchy )
+    {
+        const SCH_SHEET* sheet = path.Last();
+
+        composedSuffixes.insert( m_frame->Schematic().GetRefSuffix( path ) );
+
+        if( const SCH_FIELD* suffixField = sheet->GetField( FIELD_T::SHEET_REF_SUFFIX ) )
+        {
+            SCH_SHEET_PATH parentPath = path;
+            parentPath.pop_back();
+
+            existingSuffixes.insert( suffixField->GetText() );
+            existingSuffixes.insert( sheet->GetRefSuffix( parentPath ) );
+        }
+    }
 
     // Build symbol list for reannotation of duplicates
     SCH_REFERENCE_LIST existingRefs;
@@ -2492,7 +2438,7 @@ int SCH_EDITOR_CONTROL::Paste( const TOOL_EVENT& aEvent )
         existingRefsSet.insert( ref.GetRef() );
 
     // Build UUID map for fetching last-resolved-properties
-    std::map<KIID, EDA_ITEM*> itemMap;
+    std::unordered_map<KIID, EDA_ITEM*> itemMap;
     hierarchy.FillItemMap( itemMap );
 
     // Keep track of pasted sheets and symbols for the different paths to the hierarchy.
@@ -2572,6 +2518,16 @@ int SCH_EDITOR_CONTROL::Paste( const TOOL_EVENT& aEvent )
 
             if( source )
                 symbol->SetLibSymbol( new LIB_SYMBOL( *source ) );
+
+            for( const LIB_ID& alternate : symbol->GetVariantSymbolOverrides() )
+            {
+                wxString key = alternate.Format().wx_str();
+                auto     it = tempScreen->GetLibSymbols().find( key );
+
+                if( it != tempScreen->GetLibSymbols().end() && it->second
+                    && !currentScreen->GetLibSymbols().contains( key ) )
+                    currentScreen->AddLibSymbol( key, it->second->Flatten() );
+            }
 
             // If the symbol is already in the schematic we have to always keep the annotations. The exception
             // is if the user has chosen to remove them.
@@ -2683,10 +2639,69 @@ int SCH_EDITOR_CONTROL::Paste( const TOOL_EVENT& aEvent )
                     m_frame->InitSheet( sheet, sheet->GetFileName() );
             }
 
-            // Save the symbol instances in case the user chooses to keep the existing
-            // symbol annotation.
-            setPastedSymbolInstances( sheet->GetScreen() );
             sheetsPasted = true;
+
+            // The non-const GetField would add a suffix field to every pasted sheet
+            if( std::as_const( *sheet ).GetField( FIELD_T::SHEET_REF_SUFFIX ) )
+            {
+                SCH_FIELD*     suffixField = sheet->GetField( FIELD_T::SHEET_REF_SUFFIX );
+                wxString       pastedSuffix = suffixField->GetText();
+                SCH_SHEET_LIST subtree( sheet );
+
+                // Suffixes concatenate, so the sheet or any child below it can compose to one in use
+                auto composedBelowPaste =
+                        [&]()
+                        {
+                            std::vector<wxString> composed;
+
+                            for( const SCH_SHEET_PATH& parentPath : sheetPathsForScreen )
+                            {
+                                for( const SCH_SHEET_PATH& subPath : subtree )
+                                {
+                                    SCH_SHEET_PATH fullPath = parentPath;
+
+                                    for( size_t ii = 0; ii < subPath.size(); ++ii )
+                                        fullPath.push_back( subPath.at( ii ) );
+
+                                    composed.push_back( fullPath.ComposeRefSuffix() );
+                                }
+                            }
+
+                            return composed;
+                        };
+
+                auto resolvesTaken =
+                        [&]( const wxString& aCandidate )
+                        {
+                            suffixField->SetText( aCandidate );
+
+                            for( const SCH_SHEET_PATH& parentPath : sheetPathsForScreen )
+                            {
+                                if( existingSuffixes.contains( sheet->GetRefSuffix( parentPath ) ) )
+                                    return true;
+                            }
+
+                            for( const wxString& composed : composedBelowPaste() )
+                            {
+                                if( composedSuffixes.contains( composed ) )
+                                    return true;
+                            }
+
+                            return false;
+                        };
+
+                if( m_frame->Schematic().Settings().m_IncrementPastedSuffix )
+                    pastedSuffix = SCH_SHEET::NextRefSuffix( pastedSuffix, existingSuffixes, resolvesTaken );
+
+                suffixField->SetText( pastedSuffix );
+                existingSuffixes.insert( pastedSuffix );
+
+                for( const SCH_SHEET_PATH& parentPath : sheetPathsForScreen )
+                    existingSuffixes.insert( sheet->GetRefSuffix( parentPath ) );
+
+                for( const wxString& composed : composedBelowPaste() )
+                    composedSuffixes.insert( composed );
+            }
 
             // Push it to the clipboard path while it still has its old KIID
             clipPath.push_back( sheet->m_Uuid );
@@ -2911,6 +2926,31 @@ int SCH_EDITOR_CONTROL::Paste( const TOOL_EVENT& aEvent )
 
     allScreens.PruneOrphanedSymbolInstances( m_frame->Prj().GetProjectName(), sheets );
     allScreens.PruneOrphanedSheetInstances( m_frame->Prj().GetProjectName(), sheets );
+
+    // Unique paste needs the full annotator to share reused-sheet bases while keeping composed refs whole.
+    // Keep-existing paste must retain its references even when they duplicate existing symbols.
+    // Annotation resets the tools, so run it before the move setup.
+    if( schematicSettings.m_AnnotateReusedSheetSuffixes && pasteMode == PASTE_MODE::UNIQUE_ANNOTATIONS
+        && !loadedItems.empty() )
+    {
+        SCH_GROUP* enteredGroup = selTool->GetEnteredGroup();
+
+        m_toolMgr->RunAction( ACTIONS::selectionClear );
+        m_toolMgr->RunAction<EDA_ITEMS*>( ACTIONS::selectItems, &loadedItems );
+        m_frame->AnnotateSymbols( &commit, ANNOTATE_SELECTION,
+                                  static_cast<ANNOTATE_ORDER_T>( schematicSettings.m_AnnotateSortOrder ),
+                                  static_cast<ANNOTATE_ALGO_T>( schematicSettings.m_AnnotateMethod ), true,
+                                  schematicSettings.m_AnnotateStartNum, false, false, false,
+                                  NULL_REPORTER::GetInstance() );
+
+        // The reset also leaves the entered group, which the pasted items must join
+        if( enteredGroup && !selTool->GetEnteredGroup() )
+        {
+            selTool->ClearSelection();
+            selTool->AddItemToSel( enteredGroup );
+            selTool->EnterGroup();
+        }
+    }
 
     // Now clear the previous selection, select the pasted items, and fire up the "move" tool.
     m_toolMgr->RunAction( ACTIONS::selectionClear );
@@ -3193,7 +3233,7 @@ int SCH_EDITOR_CONTROL::IncrementAnnotations( const TOOL_EVENT& aEvent )
                     fullRef << num;
 
                     commit.Modify( ref.GetSymbol(), sheet.LastScreen(), RECURSE_MODE::NO_RECURSE );
-                    ref.GetSymbol()->SetRef( &sheet, From_UTF8( fullRef.c_str() ) );
+                    ref.GetSymbol()->SetUserRef( sheet, From_UTF8( fullRef.c_str() ) );
                 }
             }
         }
@@ -3387,6 +3427,13 @@ int SCH_EDITOR_CONTROL::ToggleProperties( const TOOL_EVENT& aEvent )
 }
 
 
+int SCH_EDITOR_CONTROL::ToggleGitCommitPane( const TOOL_EVENT& aEvent )
+{
+    getEditFrame<SCH_EDIT_FRAME>()->ToggleGitCommitPane();
+    return 0;
+}
+
+
 int SCH_EDITOR_CONTROL::ToggleLibraryTree( const TOOL_EVENT& aEvent )
 {
     getEditFrame<SCH_EDIT_FRAME>()->ToggleLibraryTree();
@@ -3406,7 +3453,7 @@ int SCH_EDITOR_CONTROL::ToggleHiddenPins( const TOOL_EVENT& aEvent )
     EESCHEMA_SETTINGS* cfg = m_frame->eeconfig();
     cfg->m_Appearance.show_hidden_pins = !cfg->m_Appearance.show_hidden_pins;
 
-    getView()->UpdateAllItems( KIGFX::REPAINT );
+    getView()->UpdateAllItems( KIGFX::LAYERS | KIGFX::GEOMETRY | KIGFX::REPAINT );
     m_frame->GetCanvas()->Refresh();
 
     return 0;
@@ -3420,7 +3467,7 @@ int SCH_EDITOR_CONTROL::ToggleHiddenFields( const TOOL_EVENT& aEvent )
 
     m_frame->GetRenderSettings()->m_ShowHiddenFields = cfg->m_Appearance.show_hidden_fields;
 
-    getView()->UpdateAllItems( KIGFX::REPAINT );
+    getView()->UpdateAllItems( KIGFX::LAYERS | KIGFX::GEOMETRY | KIGFX::REPAINT );
     m_frame->GetCanvas()->Refresh();
 
     return 0;
@@ -3432,7 +3479,7 @@ int SCH_EDITOR_CONTROL::ToggleDirectiveLabels( const TOOL_EVENT& aEvent )
     EESCHEMA_SETTINGS* cfg = m_frame->eeconfig();
     cfg->m_Appearance.show_directive_labels = !cfg->m_Appearance.show_directive_labels;
 
-    getView()->UpdateAllItems( KIGFX::REPAINT );
+    getView()->UpdateAllItems( KIGFX::LAYERS | KIGFX::GEOMETRY | KIGFX::REPAINT );
     m_frame->GetCanvas()->Refresh();
 
     return 0;
@@ -3556,7 +3603,7 @@ int SCH_EDITOR_CONTROL::TogglePinAltIcons( const TOOL_EVENT& aEvent )
 
     m_frame->GetRenderSettings()->m_ShowPinAltIcons = cfg->m_Appearance.show_pin_alt_icons;
 
-    getView()->UpdateAllItems( KIGFX::REPAINT );
+    getView()->UpdateAllItems( KIGFX::LAYERS | KIGFX::GEOMETRY | KIGFX::REPAINT );
     m_frame->GetCanvas()->Refresh();
 
     return 0;
@@ -3840,6 +3887,7 @@ void SCH_EDITOR_CONTROL::setTransitions()
     Go( &SCH_EDITOR_CONTROL::ShowHierarchy,           SCH_ACTIONS::showHierarchy.MakeEvent() );
     Go( &SCH_EDITOR_CONTROL::ShowNetNavigator,        SCH_ACTIONS::showNetNavigator.MakeEvent() );
     Go( &SCH_EDITOR_CONTROL::ToggleProperties,        ACTIONS::showProperties.MakeEvent() );
+    Go( &SCH_EDITOR_CONTROL::ToggleGitCommitPane, ACTIONS::showGitCommitPane.MakeEvent() );
     Go( &SCH_EDITOR_CONTROL::ToggleLibraryTree,       SCH_ACTIONS::showDesignBlockPanel.MakeEvent() );
     Go( &SCH_EDITOR_CONTROL::ToggleLibraryTree,       SCH_ACTIONS::showDesignBlockPanel.MakeEvent() );
     Go( &SCH_EDITOR_CONTROL::ToggleRemoteSymbolPanel, SCH_ACTIONS::showRemoteSymbolPanel.MakeEvent() );

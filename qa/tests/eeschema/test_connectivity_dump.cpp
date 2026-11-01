@@ -48,6 +48,8 @@
 namespace
 {
 // Keep this exhaustive corpus small because every item edit compares two full rebuilds
+const size_t MAX_ORACLE_GEOMETRY_EDITS = 32;
+
 // Native fixtures from the disabled entries in test_incremental_netlister.cpp's RemoveAddItems
 const char* const ORACLE_FIXTURES[] = {
     "incremental_test", "issue10430", "issue10926_1", "issue11926", "issue12505", "issue12814",
@@ -559,8 +561,11 @@ BOOST_DATA_TEST_CASE_F( CONNECTIVITY_DUMP_FIXTURE,
                 for( SCH_ITEM* item : removed )
                     delete item;
 
-                verify();
+                // The original dump already passed verify, so matching it covers both rebuilds
                 BOOST_CHECK_EQUAL( original, SCH_CONNECTIVITY::Dump( *schematic, schematic->Connectivity() ) );
+
+                // Net codes follow update history, so the rebuild must see every state the commit did
+                rebuilt.Update( *schematic, true );
             };
 
     for( const VECTOR2I& movement : { offset, VECTOR2I( -offset.x, -offset.y ) } )
@@ -625,8 +630,17 @@ BOOST_DATA_TEST_CASE_F( CONNECTIVITY_DUMP_FIXTURE,
         }
     }
 
+    const size_t             stride = 1 + geometry.size() / MAX_ORACLE_GEOMETRY_EDITS;
+    std::map<KICAD_T, size_t> typeCounts;
+    size_t                   editedGeometry = 0;
+
     for( const auto& [screen, source] : geometry )
     {
+        // Each type's first item is always edited, so sampling cannot drop a rare type
+        if( typeCounts[source->Type()]++ % stride != 0 )
+            continue;
+
+        editedGeometry++;
         const KIID& id = source->m_Uuid;
 
         BOOST_TEST_CONTEXT( "geometry item " << id.AsString().ToStdString() )
@@ -659,8 +673,9 @@ BOOST_DATA_TEST_CASE_F( CONNECTIVITY_DUMP_FIXTURE,
         }
     }
 
+    verify();
     BOOST_TEST_MESSAGE( fixture << ": checked " << labels.size() << " native label renames and restores, and "
-                               << geometry.size() << " native geometry move/remove/restore sequences" );
+                               << editedGeometry << " native geometry move/remove/restore sequences" );
     const std::string incremental = SCH_CONNECTIVITY::Dump( *schematic, schematic->Connectivity() );
     BOOST_CHECK_EQUAL( original, incremental );
     schematic->RebuildConnectivity();

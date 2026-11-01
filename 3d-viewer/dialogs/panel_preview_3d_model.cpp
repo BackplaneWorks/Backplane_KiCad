@@ -39,6 +39,7 @@
 #include <dpi_scaling_common.h>
 #include <footprint.h>
 #include <pad.h>
+#include <pcb_3d_body.h>
 #include <3d_math.h>
 #include <core/profile.h>
 #include <geometry/shape_poly_set.h>
@@ -235,8 +236,7 @@ PANEL_PREVIEW_3D_MODEL::PANEL_PREVIEW_3D_MODEL( wxWindow* aParent, PCB_BASE_FRAM
     }
     catch( ... )
     {
-        wxLogTrace( wxT( "KI_TRACE_NAVLIB" ),
-                    wxT( "Unknown exception during SpaceMouse initialization" ) );
+        wxLogTrace( wxT( "KI_TRACE_NAVLIB" ), wxT( "Unknown exception during SpaceMouse initialization" ) );
     }
 
     m_boardAdapter.SetBoard( m_dummyBoard );
@@ -246,10 +246,6 @@ PANEL_PREVIEW_3D_MODEL::PANEL_PREVIEW_3D_MODEL( wxWindow* aParent, PCB_BASE_FRAM
     m_boardAdapter.m_IsPreviewer = true;
 
     loadSettings();
-
-    // Don't show placeholder models in the footprint properties 3D preview
-    if( m_boardAdapter.m_Cfg )
-        m_boardAdapter.m_Cfg->m_Render.show_missing_models = false;
 
     // Create the manager
     m_toolManager = new TOOL_MANAGER;
@@ -310,9 +306,13 @@ PANEL_PREVIEW_3D_MODEL::~PANEL_PREVIEW_3D_MODEL()
     delete m_toolManager;
     delete m_actions;
 
-    // Restore the 3D viewer Render settings, that can be modified by the panel tools
+    // Restore the 3D viewer Render settings, that can be modified by the panel tools, and
+    // persist the projection, matching how the 3D viewer frame saves its camera settings.
     if( m_boardAdapter.m_Cfg )
+    {
         m_boardAdapter.m_Cfg->m_Render = m_initialRender;
+        m_boardAdapter.m_Cfg->m_Preview.projection_mode = m_currentCamera.GetProjection();
+    }
 
     // The canvas must stop its rendering worker before the board is destroyed.
     delete m_previewPane;
@@ -338,6 +338,8 @@ void PANEL_PREVIEW_3D_MODEL::loadSettings()
     // TODO(JE) use all control options
     m_boardAdapter.m_MousewheelPanning = settings->m_Input.scroll_modifier_zoom != 0;
 
+    PROJECTION_TYPE projectionMode = PROJECTION_TYPE::ORTHO;
+
     if( EDA_3D_VIEWER_SETTINGS* cfg = GetAppSettings<EDA_3D_VIEWER_SETTINGS>( "3d_viewer" ) )
     {
         // Save the 3D viewer render settings, to restore it after closing the preview
@@ -347,8 +349,10 @@ void PANEL_PREVIEW_3D_MODEL::loadSettings()
 
         m_previewPane->SetAnimationEnabled( cfg->m_Camera.animation_enabled );
         m_previewPane->SetMovingSpeedMultiplier( cfg->m_Camera.moving_speed_multiplier );
-        m_previewPane->SetProjectionMode( cfg->m_Camera.projection_mode );
+        projectionMode = cfg->m_Preview.projection_mode;
     }
+
+    m_previewPane->SetProjectionMode( projectionMode );
 }
 
 
@@ -432,9 +436,10 @@ const S3DMODEL* PANEL_PREVIEW_3D_MODEL::alignmentModel()
     }
 
     syncLocalEmbeddedFiles();
-    return m_boardAdapter.Get3dCacheManager()->GetModel(
-            m_parentModelList->at( m_selected ).m_Filename, basePath,
-            { m_dummyFootprint->GetEmbeddedFiles(), m_dummyBoard->GetEmbeddedFiles() } );
+    return m_boardAdapter.Get3dCacheManager()->GetModel( m_parentModelList->at( m_selected ).m_Filename,
+                                                         basePath,
+                                                         { m_dummyFootprint->GetEmbeddedFiles(),
+                                                           m_dummyBoard->GetEmbeddedFiles() } );
 }
 
 
@@ -451,8 +456,8 @@ void PANEL_PREVIEW_3D_MODEL::restoreAlignmentView()
 
     if( m_alignBodyShown )
     {
-        if( EXTRUDED_3D_BODY* body = m_dummyFootprint->GetExtrudedBody() )
-            body->m_show = *m_alignBodyShown;
+        if( PCB_3D_BODY* body = m_dummyFootprint->GetBody() )
+            body->MutableExtruded()->m_show = *m_alignBodyShown;
 
         m_alignBodyShown.reset();
     }
@@ -567,10 +572,10 @@ void PANEL_PREVIEW_3D_MODEL::onAlign( wxCommandEvent& aEvent )
             m_alignTriangleRegions.emplace( source, i );
     }
 
-    if( EXTRUDED_3D_BODY* body = m_dummyFootprint->GetExtrudedBody() )
+    if( PCB_3D_BODY* body = m_dummyFootprint->GetBody() )
     {
-        m_alignBodyShown = body->m_show;
-        body->m_show = false;
+        m_alignBodyShown = body->GetExtruded()->m_show;
+        body->MutableExtruded()->m_show = false;
     }
 
     m_alignLayers = m_boardAdapter.GetVisibleLayers();
@@ -664,10 +669,10 @@ bool PANEL_PREVIEW_3D_MODEL::pickAlignment( const RAY& aRay )
         pads.push_back( std::move( item ) );
     }
 
-    const auto& rotation = m_parentModelList->at( m_selected ).m_Rotation;
-    m_alignSolutions = MODEL_ALIGN::SolveAlignment(
-            m_alignRegions, m_alignSeed, MODEL_ALIGN::BuildPadGroup( pads, clickedIndex ), pads,
-            glm::dvec3( -rotation.x, -rotation.y, -rotation.z ) );
+    const VECTOR3D& rotation = m_parentModelList->at( m_selected ).m_Rotation;
+    m_alignSolutions = MODEL_ALIGN::SolveAlignment( m_alignRegions, m_alignSeed,
+                                                    MODEL_ALIGN::BuildPadGroup( pads, clickedIndex ),
+                                                    pads, glm::dvec3( -rotation.x, -rotation.y, -rotation.z ) );
 
     if( m_alignSolutions.empty() )
     {
@@ -846,9 +851,9 @@ std::optional<size_t> PANEL_PREVIEW_3D_MODEL::alignmentRegionAt( const RAY& aRay
     if( !m_alignGeometry || !canAlign() )
         return std::nullopt;
 
-    std::optional<EDA_3D_CANVAS::MODEL_HIT> hit =
-            m_previewPane->PickModel( aRay, *m_alignGeometry, m_parentModelList->at( m_selected ),
-                                      *m_dummyFootprint );
+    std::optional<EDA_3D_CANVAS::MODEL_HIT> hit = m_previewPane->PickModel( aRay, *m_alignGeometry,
+                                                                            m_parentModelList->at( m_selected ),
+                                                                            *m_dummyFootprint );
 
     if( !hit )
         return std::nullopt;
@@ -1018,24 +1023,26 @@ void PANEL_PREVIEW_3D_MODEL::SetSelectedModel( int idx )
 }
 
 
-void PANEL_PREVIEW_3D_MODEL::SetExtrusionTransformMode( EXTRUDED_3D_BODY* aBody )
+void PANEL_PREVIEW_3D_MODEL::SetExtrusionTransformMode( PCB_3D_BODY* aBody )
 {
     cancelAlignment();
     m_extrudedBody = aBody;
 
     if( aBody )
     {
-        xscale->ChangeValue( formatScaleValue( aBody->m_scale.x ) );
-        yscale->ChangeValue( formatScaleValue( aBody->m_scale.y ) );
-        zscale->ChangeValue( formatScaleValue( aBody->m_scale.z ) );
+        const EXTRUDED_3D_BODY& body = *aBody->GetExtruded();
 
-        xrot->ChangeValue( formatRotationValue( -aBody->m_rotation.x ) );
-        yrot->ChangeValue( formatRotationValue( -aBody->m_rotation.y ) );
-        zrot->ChangeValue( formatRotationValue( -aBody->m_rotation.z ) );
+        xscale->ChangeValue( formatScaleValue( body.m_scale.x ) );
+        yscale->ChangeValue( formatScaleValue( body.m_scale.y ) );
+        zscale->ChangeValue( formatScaleValue( body.m_scale.z ) );
 
-        xoff->ChangeValue( formatOffsetValue( aBody->m_offset.x ) );
-        yoff->ChangeValue( formatOffsetValue( aBody->m_offset.y ) );
-        zoff->ChangeValue( formatOffsetValue( aBody->m_offset.z ) );
+        xrot->ChangeValue( formatRotationValue( -body.m_rotation.x ) );
+        yrot->ChangeValue( formatRotationValue( -body.m_rotation.y ) );
+        zrot->ChangeValue( formatRotationValue( -body.m_rotation.z ) );
+
+        xoff->ChangeValue( formatOffsetValue( body.m_offset.x ) );
+        yoff->ChangeValue( formatOffsetValue( body.m_offset.y ) );
+        zoff->ChangeValue( formatOffsetValue( body.m_offset.z ) );
 
         m_opacity->SetValue( 100 );
         m_opacity->Enable( false );
@@ -1051,26 +1058,28 @@ void PANEL_PREVIEW_3D_MODEL::updateOrientation( wxCommandEvent &event )
 {
     if( m_extrudedBody )
     {
-        m_extrudedBody->m_scale.x = EDA_UNIT_UTILS::UI::DoubleValueFromString( unityScale, EDA_UNITS::UNSCALED,
-                                                                               evaluateTextCtrl( xscale->GetValue() ) );
-        m_extrudedBody->m_scale.y = EDA_UNIT_UTILS::UI::DoubleValueFromString( unityScale, EDA_UNITS::UNSCALED,
-                                                                               evaluateTextCtrl( yscale->GetValue() ) );
-        m_extrudedBody->m_scale.z = EDA_UNIT_UTILS::UI::DoubleValueFromString( unityScale, EDA_UNITS::UNSCALED,
-                                                                               evaluateTextCtrl( zscale->GetValue() ) );
+        EXTRUDED_3D_BODY& body = *m_extrudedBody->MutableExtruded();
 
-        m_extrudedBody->m_rotation.x = -rotationFromString( evaluateTextCtrl( xrot->GetValue() ) );
-        m_extrudedBody->m_rotation.y = -rotationFromString( evaluateTextCtrl( yrot->GetValue() ) );
-        m_extrudedBody->m_rotation.z = -rotationFromString( evaluateTextCtrl( zrot->GetValue() ) );
+        body.m_scale.x = EDA_UNIT_UTILS::UI::DoubleValueFromString( unityScale, EDA_UNITS::UNSCALED,
+                                                                    evaluateTextCtrl( xscale->GetValue() ) );
+        body.m_scale.y = EDA_UNIT_UTILS::UI::DoubleValueFromString( unityScale, EDA_UNITS::UNSCALED,
+                                                                    evaluateTextCtrl( yscale->GetValue() ) );
+        body.m_scale.z = EDA_UNIT_UTILS::UI::DoubleValueFromString( unityScale, EDA_UNITS::UNSCALED,
+                                                                    evaluateTextCtrl( zscale->GetValue() ) );
 
-        m_extrudedBody->m_offset.x = EDA_UNIT_UTILS::UI::DoubleValueFromString( pcbIUScale, m_userUnits,
-                                                                                evaluateTextCtrl( xoff->GetValue() ) )
-                                     / pcbIUScale.IU_PER_MM;
-        m_extrudedBody->m_offset.y = EDA_UNIT_UTILS::UI::DoubleValueFromString( pcbIUScale, m_userUnits,
-                                                                                evaluateTextCtrl( yoff->GetValue() ) )
-                                     / pcbIUScale.IU_PER_MM;
-        m_extrudedBody->m_offset.z = EDA_UNIT_UTILS::UI::DoubleValueFromString( pcbIUScale, m_userUnits,
-                                                                                evaluateTextCtrl( zoff->GetValue() ) )
-                                     / pcbIUScale.IU_PER_MM;
+        body.m_rotation.x = -rotationFromString( evaluateTextCtrl( xrot->GetValue() ) );
+        body.m_rotation.y = -rotationFromString( evaluateTextCtrl( yrot->GetValue() ) );
+        body.m_rotation.z = -rotationFromString( evaluateTextCtrl( zrot->GetValue() ) );
+
+        body.m_offset.x = EDA_UNIT_UTILS::UI::DoubleValueFromString( pcbIUScale, m_userUnits,
+                                                                     evaluateTextCtrl( xoff->GetValue() ) )
+                          / pcbIUScale.IU_PER_MM;
+        body.m_offset.y = EDA_UNIT_UTILS::UI::DoubleValueFromString( pcbIUScale, m_userUnits,
+                                                                     evaluateTextCtrl( yoff->GetValue() ) )
+                          / pcbIUScale.IU_PER_MM;
+        body.m_offset.z = EDA_UNIT_UTILS::UI::DoubleValueFromString( pcbIUScale, m_userUnits,
+                                                                     evaluateTextCtrl( zoff->GetValue() ) )
+                          / pcbIUScale.IU_PER_MM;
 
         UpdateDummyFootprint( true );
         onModify();
@@ -1146,7 +1155,7 @@ void PANEL_PREVIEW_3D_MODEL::setBodyStyleView( wxCommandEvent& event )
     if( !cfg )
         return;
 
-    cfg->m_Render.preview_show_board_body = !cfg->m_Render.preview_show_board_body;
+    cfg->m_Preview.show_board_body = !cfg->m_Preview.show_board_body;
 
     m_previewPane->ReloadRequest();
     m_previewPane->Refresh();
@@ -1372,9 +1381,7 @@ void PANEL_PREVIEW_3D_MODEL::onPanelShownEvent( wxCommandEvent& aEvent )
         cancelAlignment();
 
     if( m_spaceMouse )
-    {
         m_spaceMouse->SetFocus( static_cast<bool>( aEvent.GetInt() ) );
-    }
 
     aEvent.Skip();
 }
@@ -1394,8 +1401,7 @@ void PANEL_PREVIEW_3D_MODEL::UpdateDummyFootprint( bool aReloadRequired )
     for( FP_3DMODEL& model : *m_parentModelList )
     {
         if( m_alignState == ALIGN_STATE::PICK_FOOTPRINT
-            || ( m_alignState == ALIGN_STATE::PICK_MODEL
-                 && &model != &m_parentModelList->at( m_selected ) ) )
+            || ( m_alignState == ALIGN_STATE::PICK_MODEL && &model != &m_parentModelList->at( m_selected ) ) )
         {
             continue;
         }
@@ -1411,7 +1417,7 @@ void PANEL_PREVIEW_3D_MODEL::UpdateDummyFootprint( bool aReloadRequired )
 
     syncLocalEmbeddedFiles();
 
-    if( m_extrudedBody && !m_dummyFootprint->HasExtrudedBody() )
+    if( m_extrudedBody && !m_dummyFootprint->HasBody() )
         m_extrudedBody = nullptr;
 
     if( aReloadRequired )
@@ -1437,10 +1443,7 @@ void PANEL_PREVIEW_3D_MODEL::syncLocalEmbeddedFiles()
     if( m_localEmbeddedFiles )
     {
         for( const auto& [name, file] : m_localEmbeddedFiles->EmbeddedFileMap() )
-        {
-            m_dummyFootprint->AddFile(
-                    new EMBEDDED_FILES::EMBEDDED_FILE( *file ) );
-        }
+            m_dummyFootprint->AddFile( new EMBEDDED_FILES::EMBEDDED_FILE( *file ) );
     }
 }
 

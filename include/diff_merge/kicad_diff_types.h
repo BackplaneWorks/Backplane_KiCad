@@ -95,6 +95,32 @@ inline const wxString DOC_PROP_NET_CLASSES      = wxS( "Net Classes" );
 inline const wxString DOC_PROP_CUSTOM_RULES     = wxS( "Custom DRC Rules" );
 inline const wxString DOC_PROP_FP_LIB_TABLE     = wxS( "Footprint Library Table" );
 inline const wxString DOC_PROP_SYM_LIB_TABLE    = wxS( "Symbol Library Table" );
+inline const wxString DOC_PROP_EMBED_FONTS      = wxS( "Embed Fonts" );
+
+/// Prefix of the property for one embedded file, followed by the file name
+inline const wxString DOC_PROP_EMBEDDED_FILE    = wxS( "Embedded File: " );
+
+/// Title block fields. The comments are numbered from one, as the page settings dialog shows them.
+inline const wxString DOC_PROP_TITLE = wxS( "Title" );
+inline const wxString DOC_PROP_DATE = wxS( "Date" );
+inline const wxString DOC_PROP_REVISION = wxS( "Revision" );
+inline const wxString DOC_PROP_COMPANY = wxS( "Company" );
+
+/// Board-level settings stored in the board file
+inline const wxString DOC_PROP_PLOT_OPTIONS = wxS( "Plot Options" );
+inline const wxString DOC_PROP_LEGACY_TEARDROPS = wxS( "Legacy Teardrops" );
+
+/// Prefixes of the property for one board property or variant, followed by its name
+inline const wxString DOC_PROP_BOARD_PROPERTY = wxS( "Board Property: " );
+inline const wxString DOC_PROP_VARIANT = wxS( "Variant: " );
+
+/// Matches the count TITLE_BLOCK::Format writes, which is all a file can hold.
+inline constexpr int DOC_TITLE_BLOCK_COMMENTS = 9;
+
+inline wxString DocPropComment( int aIndex )
+{
+    return wxString::Format( wxS( "Comment %d" ), aIndex + 1 );
+}
 
 
 /// Sentinel KIID appended to a sheet's KIID_PATH to mark a per-sheet
@@ -282,16 +308,22 @@ struct KICOMMON_API PROPERTY_DELTA
  *
  * kind defaults to MODIFIED because that is the only kind an applier can act on without
  * materializing or deleting an item, so a record whose kind was never set stays inert.
+ *
+ * typeLabel is the translated name shown to the user. It is presentation only, so it is
+ * neither serialized nor compared; typeName stays the identity.
  */
 struct KICOMMON_API ITEM_CHANGE
 {
     KIID_PATH                   id;
     wxString                    typeName;
+    wxString                    typeLabel;
     CHANGE_KIND                 kind = CHANGE_KIND::MODIFIED;
     std::vector<PROPERTY_DELTA> properties;
     BOX2I                       bbox;
     std::optional<wxString>     refdes;
     std::vector<ITEM_CHANGE>    children;
+
+    const wxString& DisplayType() const { return typeLabel.IsEmpty() ? typeName : typeLabel; }
 
     bool operator==( const ITEM_CHANGE& aOther ) const;
     nlohmann::json     ToJson() const;

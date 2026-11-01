@@ -252,8 +252,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::logBoardStackupMessage( const wxString& aCadsta
 }
 
 
-void CADSTAR_PCB_ARCHIVE_LOADER::initStackupItem( const LAYER&          aCadstarLayer,
-                                                  BOARD_STACKUP_ITEM* aKiCadItem,
+void CADSTAR_PCB_ARCHIVE_LOADER::initStackupItem( const LAYER& aCadstarLayer, BOARD_STACKUP_ITEM* aKiCadItem,
                                                   int aDielectricSublayer )
 {
     if( !aCadstarLayer.MaterialId.IsEmpty() )
@@ -270,7 +269,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::initStackupItem( const LAYER&          aCadstar
         aKiCadItem->SetLayerName( aCadstarLayer.Name );
 
     if( aCadstarLayer.Thickness != 0 )
-        aKiCadItem->SetThickness( getKiCadLength( aCadstarLayer.Thickness ), aDielectricSublayer );
+        aKiCadItem->SetThickness( getKiCadLength( aCadstarLayer.Thickness, 0.01 ), aDielectricSublayer );
 }
 
 
@@ -735,7 +734,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadDesignRules()
                 if( spacingCodes.find( aID ) == spacingCodes.end() )
                     reportWarning( wxString::Format( _( "Design rule %s was not found. This was ignored." ), aID ) );
                 else
-                    *aVal = getKiCadLength( spacingCodes.at( aID ).Spacing );
+                    *aVal = getKiCadLength( spacingCodes.at( aID ).Spacing, UNDEFINED_VALUE );
             };
 
     //Note: for details on the different spacing codes see SPACINGCODE::ID
@@ -744,21 +743,22 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadDesignRules()
     applyRule( "C_B", &bds.m_CopperEdgeClearance );
     applyRule( "H_H", &bds.m_HoleToHoleMin );
 
-    bds.m_TrackMinWidth = getKiCadLength( Assignments.Technology.MinRouteWidth );
+    bds.m_TrackMinWidth = getKiCadLength( Assignments.Technology.MinRouteWidth, 0.2 );
     bds.m_ViasMinSize = bds.m_TrackMinWidth; // Not specified, assumed same as track width
     bds.m_ViasMinAnnularWidth = bds.m_TrackMinWidth / 2; // Not specified, assumed half track width
     bds.m_MinThroughDrill = PCB_IU_PER_MM * 0.0508; // CADSTAR does not specify a minimum hole size
-                                                   // so set to minimum permitted in KiCad (2 mils)
+                                                    // so set to minimum permitted in KiCad (2 mils)
     bds.m_HoleClearance = 0; // Testing suggests cadstar might not have a copper-to-hole clearance
 
-    auto applyNetClassRule = [&]( wxString aID, const std::shared_ptr<NETCLASS>& aNetClassPtr )
-    {
-        int value = -1;
-        applyRule( aID, &value );
+    auto applyNetClassRule =
+            [&]( const wxString& aID, const std::shared_ptr<NETCLASS>& aNetClassPtr )
+            {
+                int value = UNDEFINED_VALUE;
+                applyRule( aID, &value );
 
-        if( value != -1 )
-            aNetClassPtr->SetClearance( value );
-    };
+                if( value != UNDEFINED_VALUE )
+                    aNetClassPtr->SetClearance( value );
+            };
 
     applyNetClassRule( "T_T", bds.m_NetSettings->GetDefaultNetclass() );
 
@@ -840,7 +840,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadLibraryCoppers( const SYMDEF_PCB& aComponen
 {
     for( COMPONENT_COPPER compCopper : aComponent.ComponentCoppers )
     {
-        int lineThickness = getKiCadLength( getCopperCode( compCopper.CopperCodeID ).CopperWidth );
+        int lineThickness = getKiCadLength( getCopperCode( compCopper.CopperCodeID ).CopperWidth, 0.2 );
         LSET layers = getKiCadLayerSet( compCopper.LayerID );
         LSET copperLayers = LSET::AllCuMask() & layers;
         LSET remainingLayers = layers;
@@ -882,7 +882,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadLibraryCoppers( const SYMDEF_PCB& aComponen
             // pads and same size as the pad. Shape circle as it fits inside a rectangle
             // but not the other way round
             PADCODE  anchorpadcode = getPadCode( anchorPad.PadCodeID );
-            int      anchorSize = getKiCadLength( anchorpadcode.Shape.Size );
+            int      anchorSize = getKiCadLength( anchorpadcode.Shape.Size, 0.6 );
             VECTOR2I anchorPos = getKiCadPoint( anchorPad.Position );
 
             if( anchorSize <= 0 )
@@ -997,15 +997,15 @@ VECTOR2I CADSTAR_PCB_ARCHIVE_LOADER::applyPadShape( PAD* aPad, PCB_LAYER_ID aPad
     auto elongatedSize =
             [&]() -> VECTOR2I
             {
-                return { getKiCadLength( (long long) aShape.Size + (long long) aShape.LeftLength
-                                         + (long long) aShape.RightLength ),
-                         getKiCadLength( aShape.Size ) };
+                return { getKiCadLength( aShape.Size, 0.6 ) + getKiCadLength( aShape.LeftLength, 0.0 )
+                                                            + getKiCadLength( aShape.RightLength, 0.0 ),
+                         getKiCadLength( aShape.Size, 0.6 ) };
             };
 
     auto elongationOffset =
             [&]()
             {
-                offset.x = getKiCadLength( ( (long long) aShape.LeftLength / 2 )
+                offset.x = getKiCadOffset( ( (long long) aShape.LeftLength / 2 )
                                            - ( (long long) aShape.RightLength / 2 ) );
             };
 
@@ -1014,8 +1014,8 @@ VECTOR2I CADSTAR_PCB_ARCHIVE_LOADER::applyPadShape( PAD* aPad, PCB_LAYER_ID aPad
     case PAD_SHAPE_TYPE::ANNULUS:
         //todo fix: use custom shape instead (Donught shape, i.e. a circle with a hole)
         aPad->SetShape( aPadLayer, PAD_SHAPE::CIRCLE );
-        aPad->SetSize( aPadLayer, { getKiCadLength( aShape.Size ),
-                                    getKiCadLength( aShape.Size ) } );
+        aPad->SetSize( aPadLayer, { getKiCadLength( aShape.Size, 0.6 ),
+                                    getKiCadLength( aShape.Size, 0.6 ) } );
         break;
 
     case PAD_SHAPE_TYPE::BULLET:
@@ -1032,15 +1032,15 @@ VECTOR2I CADSTAR_PCB_ARCHIVE_LOADER::applyPadShape( PAD* aPad, PCB_LAYER_ID aPad
 
     case PAD_SHAPE_TYPE::CIRCLE:
         aPad->SetShape( aPadLayer, PAD_SHAPE::CIRCLE );
-        aPad->SetSize( aPadLayer, { getKiCadLength( aShape.Size ),
-                                    getKiCadLength( aShape.Size ) } );
+        aPad->SetSize( aPadLayer, { getKiCadLength( aShape.Size, 0.6 ),
+                                    getKiCadLength( aShape.Size, 0.6 ) } );
         break;
 
     case PAD_SHAPE_TYPE::DIAMOND:
     {
         // Cadstar diamond shape is a square rotated 45 degrees
         // We convert it in KiCad to a square with chamfered edges
-        int sizeOfSquare = (double) getKiCadLength( aShape.Size ) * sqrt(2.0);
+        int sizeOfSquare = (double) getKiCadLength( aShape.Size, 0.6 ) * sqrt(2.0);
         aPad->SetShape( aPadLayer, PAD_SHAPE::RECTANGLE );
         aPad->SetChamferRectRatio( aPadLayer, 0.5 );
         aPad->SetSize( aPadLayer, { sizeOfSquare, sizeOfSquare } );
@@ -1060,8 +1060,8 @@ VECTOR2I CADSTAR_PCB_ARCHIVE_LOADER::applyPadShape( PAD* aPad, PCB_LAYER_ID aPad
         aPad->SetShape( aPadLayer, PAD_SHAPE::CHAMFERED_RECT );
         aPad->SetChamferPositions( aPadLayer, RECT_CHAMFER_POSITIONS::RECT_CHAMFER_ALL );
         aPad->SetChamferRectRatio( aPadLayer, 0.25 );
-        aPad->SetSize( aPadLayer, { getKiCadLength( aShape.Size ),
-                                    getKiCadLength( aShape.Size ) } );
+        aPad->SetSize( aPadLayer, { getKiCadLength( aShape.Size, 0.6 ),
+                                    getKiCadLength( aShape.Size, 0.6 ) } );
         break;
 
     case PAD_SHAPE_TYPE::RECTANGLE:
@@ -1073,7 +1073,7 @@ VECTOR2I CADSTAR_PCB_ARCHIVE_LOADER::applyPadShape( PAD* aPad, PCB_LAYER_ID aPad
 
     case PAD_SHAPE_TYPE::ROUNDED_RECT:
         aPad->SetShape( aPadLayer, PAD_SHAPE::ROUNDRECT );
-        aPad->SetRoundRectCornerRadius( aPadLayer, getKiCadLength( aShape.InternalFeature ) );
+        aPad->SetRoundRectCornerRadius( aPadLayer, getKiCadLength( aShape.InternalFeature, 0.0 ) );
         aPad->SetSize( aPadLayer, elongatedSize() );
 
         elongationOffset();
@@ -1081,8 +1081,8 @@ VECTOR2I CADSTAR_PCB_ARCHIVE_LOADER::applyPadShape( PAD* aPad, PCB_LAYER_ID aPad
 
     case PAD_SHAPE_TYPE::SQUARE:
         aPad->SetShape( aPadLayer, PAD_SHAPE::RECTANGLE );
-        aPad->SetSize( aPadLayer, { getKiCadLength( aShape.Size ),
-                                    getKiCadLength( aShape.Size ) } );
+        aPad->SetSize( aPadLayer, { getKiCadLength( aShape.Size, 0.6 ),
+                                    getKiCadLength( aShape.Size, 0.6 ) } );
         break;
 
     default:
@@ -1137,7 +1137,10 @@ PAD* CADSTAR_PCB_ARCHIVE_LOADER::getKiCadPad( const COMPONENT_PAD& aCadstarPad, 
         }
         else
         {
-            int newMargin = getKiCadLength( shape.Size - csPadcode.Shape.Size ) / 2;
+            int newMargin = 0;
+
+            if( shape.Size != UNDEFINED_VALUE && csPadcode.Shape.Size != UNDEFINED_VALUE )
+                newMargin = getKiCadOffset( shape.Size - csPadcode.Shape.Size ) / 2;
 
             if( kiLayer == F_Mask || kiLayer == B_Mask )
             {
@@ -1211,29 +1214,29 @@ PAD* CADSTAR_PCB_ARCHIVE_LOADER::getKiCadPad( const COMPONENT_PAD& aCadstarPad, 
     }
 
     if( csPadcode.ReliefClearance != UNDEFINED_VALUE )
-        pad->SetThermalGap( getKiCadLength( csPadcode.ReliefClearance ) );
+        pad->SetThermalGap( getKiCadLength( csPadcode.ReliefClearance, 0.5 ) );
 
     if( csPadcode.ReliefWidth != UNDEFINED_VALUE )
-        pad->SetLocalThermalSpokeWidthOverride( getKiCadLength( csPadcode.ReliefWidth ) );
+        pad->SetLocalThermalSpokeWidthOverride( getKiCadLength( csPadcode.ReliefWidth, 0.5 ) );
 
     if( csPadcode.DrillDiameter != UNDEFINED_VALUE )
     {
         if( csPadcode.SlotLength != UNDEFINED_VALUE )
         {
             pad->SetDrillShape( PAD_DRILL_SHAPE::OBLONG );
-            pad->SetDrillSize( { getKiCadLength( (long long) csPadcode.SlotLength +
-                                                 (long long) csPadcode.DrillDiameter ),
-                                 getKiCadLength( csPadcode.DrillDiameter ) } );
+            pad->SetDrillSize( { getKiCadLength( csPadcode.DrillDiameter, 0.3 )
+                                     + getKiCadLength( csPadcode.SlotLength, 0.0 ),
+                                 getKiCadLength( csPadcode.DrillDiameter, 0.3 ) } );
         }
         else
         {
             pad->SetDrillShape( PAD_DRILL_SHAPE::CIRCLE );
-            pad->SetDrillSize( { getKiCadLength( csPadcode.DrillDiameter ),
-                    getKiCadLength( csPadcode.DrillDiameter ) } );
+            pad->SetDrillSize( { getKiCadLength( csPadcode.DrillDiameter, 0.3 ),
+                                 getKiCadLength( csPadcode.DrillDiameter, 0.3 ) } );
         }
 
-        drillOffset.x = -getKiCadLength( csPadcode.DrillXoffset );
-        drillOffset.y = getKiCadLength( csPadcode.DrillYoffset );
+        drillOffset.x = -getKiCadOffset( csPadcode.DrillXoffset );
+        drillOffset.y = getKiCadOffset( csPadcode.DrillYoffset );
 
         if( csPadcode.Plated )
             pad->SetAttribute( PAD_ATTRIB::PTH );
@@ -1499,7 +1502,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadDimensions()
                 m_board->Add( dimension, ADD_MODE::APPEND );
                 applyDimensionSettings( csDim, dimension );
 
-                dimension->SetExtensionHeight( getKiCadLength( csDim.ExtensionLineParams.Overshoot ) );
+                dimension->SetExtensionHeight( getKiCadLength( csDim.ExtensionLineParams.Overshoot, 0.0 ) );
 
                 // Calculate height:
                 VECTOR2I crossbarStart = getKiCadPoint( csDim.Line.Start );
@@ -1976,8 +1979,8 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadTemplates()
 
         if( csTemplate.Pouring.MinDisjointCopper != UNDEFINED_VALUE )
         {
-            minIslandArea = (long long) getKiCadLength( csTemplate.Pouring.MinDisjointCopper )
-                            * (long long) getKiCadLength( csTemplate.Pouring.MinDisjointCopper );
+            minIslandArea = (long long) getKiCadLength( csTemplate.Pouring.MinDisjointCopper, 0.2 )
+                            * (long long) getKiCadLength( csTemplate.Pouring.MinDisjointCopper, 0.2 );
 
             zone->SetIslandRemovalMode( ISLAND_REMOVAL_MODE::AREA );
         }
@@ -1990,13 +1993,13 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadTemplates()
 
         // In cadstar zone clearance is in addition to the global clearance.
         // TODO: need to create custom rules for individual items: zone to pad, zone to track, etc.
-        int clearance = getKiCadLength( csTemplate.Pouring.AdditionalIsolation );
+        int clearance = getKiCadLength( csTemplate.Pouring.AdditionalIsolation, 0.0005 );
         clearance += m_board->GetDesignSettings().m_MinClearance;
 
         zone->SetLocalClearance( clearance );
 
         COPPERCODE pouringCopperCode = getCopperCode( csTemplate.Pouring.CopperCodeID );
-        int        minThickness = getKiCadLength( pouringCopperCode.CopperWidth );
+        int        minThickness = getKiCadLength( pouringCopperCode.CopperWidth, 0.25 );
         zone->SetMinThickness( minThickness );
 
         if( csTemplate.Pouring.FillType == TEMPLATE::POURING::COPPER_FILL_TYPE::HATCHED )
@@ -2022,8 +2025,8 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadTemplates()
         }
 
         COPPERCODE reliefCopperCode = getCopperCode( csTemplate.Pouring.ReliefCopperCodeID );
-        int        spokeWidth = getKiCadLength( reliefCopperCode.CopperWidth );
-        int        reliefWidth = getKiCadLength( csTemplate.Pouring.ClearanceWidth );
+        int        spokeWidth = getKiCadLength( reliefCopperCode.CopperWidth, 0.5 );
+        int        reliefWidth = getKiCadLength( csTemplate.Pouring.ClearanceWidth, 0.5 );
 
         // Cadstar supports having a spoke width thinner than the minimum thickness of the zone, but
         // this is not permitted in KiCad. We load it as solid fill instead.
@@ -2037,8 +2040,8 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadTemplates()
                                                     "KiCad requires the minimum thickness of the zone to be preserved. "
                                                     "Therefore the minimum thickness has been applied as the new "
                                                     "spoke width and will be applied next time the zones are filled." ),
-                         csTemplate.Name, (double) getKiCadLength( spokeWidth ) / 1E6,
-                         (double) getKiCadLength( minThickness ) / 1E6 ) );
+                         csTemplate.Name, (double) getKiCadLength( spokeWidth, 0.5 ) / 1E6,
+                         (double) getKiCadLength( minThickness, 0.25 ) / 1E6 ) );
 
                 spokeWidth = minThickness;
             }
@@ -2112,7 +2115,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadCoppers()
     for( std::pair<COPPER_ID, COPPER> copPair : Layout.Coppers )
     {
         COPPER& csCopper = copPair.second;
-        int     copperWidth = getKiCadLength( getCopperCode( csCopper.CopperCodeID ).CopperWidth );
+        int     copperWidth = getKiCadLength( getCopperCode( csCopper.CopperCodeID ).CopperWidth, 0.2 );
 
 
         checkPoint();
@@ -2137,12 +2140,12 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadCoppers()
                     if( shape->GetShape() == SHAPE_T::ARC )
                     {
                         TransformArcToPolygon( poly, shape->GetStart(), shape->GetArcMid(), shape->GetEnd(),
-                                               copperWidth, ARC_HIGH_DEF, ERROR_LOC::ERROR_INSIDE );
+                                               copperWidth, pouredZone->GetMaxError(), ERROR_LOC::ERROR_INSIDE );
                     }
                     else
                     {
                         TransformOvalToPolygon( poly, shape->GetStart(), shape->GetEnd(), copperWidth,
-                                                ARC_HIGH_DEF, ERROR_LOC::ERROR_INSIDE );
+                                                pouredZone->GetMaxError(), ERROR_LOC::ERROR_INSIDE );
                     }
 
                     poly.ClearArcs();
@@ -2154,7 +2157,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadCoppers()
             {
                 fill = getPolySetFromCadstarShape( csCopper.Shape, -1 );
                 fill.ClearArcs();
-                fill.Inflate( copperWidth / 2, CORNER_STRATEGY::ROUND_ALL_CORNERS, ARC_HIGH_DEF );
+                fill.Inflate( copperWidth / 2, CORNER_STRATEGY::ROUND_ALL_CORNERS, pouredZone->GetMaxError() );
             }
 
             if( pouredZone->HasFilledPolysForLayer( getKiCadLayer( csCopper.LayerID ) ) )
@@ -2311,7 +2314,8 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadNets()
                 }
 
                 // padsize is used for calculating route offset (as done in CADSTAR post processor)
-                int padsize = std::min( pad->GetSizeX(), pad->GetSizeY() );
+                int padsize = std::min( pad->GetSize( PADSTACK::TEMP_ALL_LAYERS ).x,
+                                        pad->GetSize( PADSTACK::TEMP_ALL_LAYERS ).y );
                 netelementSizes.insert( { pinPair.first, padsize } );
             }
         }
@@ -2352,7 +2356,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadNets()
         auto getJunctionSize =
                 [&]( const NETELEMENT_ID& aJptNetElemId, const NET_PCB::CONNECTION_PCB& aConnectionToIgnore ) -> int
                 {
-                    int jptsize = std::numeric_limits<int>::max();
+                    int jptsize = 0;
 
                     for( NET_PCB::CONNECTION_PCB connection : net.Connections )
                     {
@@ -2368,19 +2372,18 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadNets()
                         if( connection.StartNode == aJptNetElemId )
                         {
                             int s = getKiCadLength( getVertexWidth( connection.Route.RouteVertices.front(),
-                                                                    connection.RouteCodeID ) );
+                                                                    connection.RouteCodeID ), 0.0 );
                             jptsize = std::max( jptsize, s );
                         }
                         else if( connection.EndNode == aJptNetElemId )
                         {
                             int s = getKiCadLength( getVertexWidth( connection.Route.RouteVertices.back(),
-                                                                    connection.RouteCodeID ) );
+                                                                    connection.RouteCodeID ), 0.0 );
                             jptsize = std::max( jptsize, s );
                         }
                     }
 
-                    if( jptsize == std::numeric_limits<int>::max()
-                        && !aConnectionToIgnore.Route.RouteVertices.empty() )
+                    if( jptsize == 0 && !aConnectionToIgnore.Route.RouteVertices.empty() )
                     {
                         // aConnectionToIgnore is actually the only one that has a route, so lets use that
                         // to determine junction size
@@ -2389,8 +2392,11 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadNets()
                         if( aConnectionToIgnore.EndNode == aJptNetElemId )
                             vertex = aConnectionToIgnore.Route.RouteVertices.back();
 
-                        jptsize = getKiCadLength( getVertexWidth( vertex, aConnectionToIgnore.RouteCodeID ) );
+                        jptsize = getKiCadLength( getVertexWidth( vertex, aConnectionToIgnore.RouteCodeID ), 0.0 );
                     }
+
+                    if( jptsize == 0 )
+                        jptsize = getKiCadLength( UNDEFINED_VALUE, 0.2 );
 
                     return jptsize;
                 };
@@ -2554,7 +2560,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::loadNetTracks( const NET_ID&         aCadstarNe
     {
         PCB_SHAPE* shape = getShapeFromVertex( prevEnd, v.Vertex );
         shape->SetLayer( getKiCadLayer( aCadstarRoute.LayerID ) );
-        shape->SetStroke( STROKE_PARAMS( getKiCadLength( v.RouteWidth ), LINE_STYLE::SOLID ) );
+        shape->SetStroke( STROKE_PARAMS( getKiCadLength( v.RouteWidth, 0.2 ), LINE_STYLE::SOLID ) );
         shape->SetLocked( v.Fixed );
         shapes.push_back( shape );
         prevEnd = v.Vertex.End;
@@ -2588,7 +2594,7 @@ int CADSTAR_PCB_ARCHIVE_LOADER::loadNetVia( const NET_ID& aCadstarNetID, const N
 
     via->SetPadstackMode( PADSTACK::MODE::NORMAL );
     via->SetPosition( getKiCadPoint( aCadstarVia.Location ) );
-    via->SetDrill( getKiCadLength( csViaCode.DrillDiameter ) );
+    via->SetDrill( getKiCadLength( csViaCode.DrillDiameter, 0.3 ) );
     via->SetLocked( aCadstarVia.Fixed );
 
     if( csViaCode.Shape.ShapeType != PAD_SHAPE_TYPE::CIRCLE )
@@ -2597,10 +2603,10 @@ int CADSTAR_PCB_ARCHIVE_LOADER::loadNetVia( const NET_ID& aCadstarNetID, const N
                                           "KiCad only supports circular vias so this via type has been changed to "
                                           "be a via with circular shape of %.2f mm diameter." ), //format:allow
                                        csViaCode.Name,
-                                       (double) getKiCadLength( csViaCode.Shape.Size ) / 1E6 ) );
+                                       (double) getKiCadLength( csViaCode.Shape.Size, 0.5 ) / 1E6 ) );
     }
 
-    via->SetWidth( PADSTACK::ALL_LAYERS, getKiCadLength( csViaCode.Shape.Size ) );
+    via->SetWidth( PADSTACK::ALL_LAYERS, getKiCadLength( csViaCode.Shape.Size, 0.5 ) );
 
     // A via code can reassign copper per layer, which KiCad holds as a full-custom padstack
     for( const auto& [layer, shape] : csViaCode.Reassigns )
@@ -2611,7 +2617,7 @@ int CADSTAR_PCB_ARCHIVE_LOADER::loadNetVia( const NET_ID& aCadstarNetID, const N
             continue;
 
         via->SetPadstackMode( PADSTACK::MODE::CUSTOM );
-        via->SetWidth( kiLayer, getKiCadLength( shape.Size ) );
+        via->SetWidth( kiLayer, getKiCadLength( shape.Size, 0.5 ) );
     }
 
     bool start_layer_outside = csLayerPair.PhysicalLayerStart == 1
@@ -3048,7 +3054,7 @@ SHAPE_POLY_SET CADSTAR_PCB_ARCHIVE_LOADER::getPolySetFromCadstarShape( const SHA
     polySet.ClearArcs();
 
     if( aLineThickness > 0 )
-        polySet.Inflate( aLineThickness / 2, CORNER_STRATEGY::ROUND_ALL_CORNERS, ARC_HIGH_DEF );
+        polySet.Inflate( aLineThickness / 2, CORNER_STRATEGY::ROUND_ALL_CORNERS, aContainer->GetMaxError() );
 
 #ifdef DEBUG
     for( int i = 0; i < polySet.OutlineCount(); ++i )
@@ -3368,7 +3374,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER:: applyTextCode( EDA_TEXT* aKiCadText, const TEX
 {
     TEXTCODE tc = getTextCode( aCadstarTextCodeID );
 
-    aKiCadText->SetTextThickness( getKiCadLength( tc.LineWidth ) );
+    aKiCadText->SetTextThickness( getKiCadLength( tc.LineWidth, 0.08 ) );
 
     if( tc.Font.Modifier1 == FONT_BOLD )
         aKiCadText->SetBold( true );
@@ -3377,14 +3383,14 @@ void CADSTAR_PCB_ARCHIVE_LOADER:: applyTextCode( EDA_TEXT* aKiCadText, const TEX
         aKiCadText->SetItalic( true );
 
     VECTOR2I textSize;
-    textSize.x = getKiCadLength( tc.Width );
+    textSize.x = getKiCadLength( tc.Width, 0.8 );
 
     // The width is zero for all non-cadstar fonts. Using a width equal to the height seems
     // to work well for most fonts.
     if( textSize.x == 0 )
-        textSize.x = getKiCadLength( tc.Height );
+        textSize.x = getKiCadLength( tc.Height, 0.8 );
 
-    textSize.y = KiROUND( TXT_HEIGHT_RATIO * (double) getKiCadLength( tc.Height ) );
+    textSize.y = KiROUND( TXT_HEIGHT_RATIO * (double) getKiCadLength( tc.Height, 0.8 ) );
 
     if( textSize.x == 0 || textSize.y == 0 )
     {
@@ -3429,9 +3435,9 @@ void CADSTAR_PCB_ARCHIVE_LOADER:: applyTextCode( EDA_TEXT* aKiCadText, const TEX
 int CADSTAR_PCB_ARCHIVE_LOADER::getLineThickness( const LINECODE_ID& aCadstarLineCodeID )
 {
     wxCHECK( Assignments.Codedefs.LineCodes.find( aCadstarLineCodeID ) != Assignments.Codedefs.LineCodes.end(),
-             m_board->GetDesignSettings().GetLineThickness( PCB_LAYER_ID::Edge_Cuts ) );
+             getKiCadLength( UNDEFINED_VALUE, 0.05 ) );
 
-    return getKiCadLength( Assignments.Codedefs.LineCodes.at( aCadstarLineCodeID ).Width );
+    return getKiCadLength( Assignments.Codedefs.LineCodes.at( aCadstarLineCodeID ).Width, 0.05 );
 }
 
 
@@ -3572,10 +3578,10 @@ int CADSTAR_PCB_ARCHIVE_LOADER::getKiCadHatchCodeThickness( const HATCHCODE_ID& 
     checkAndLogHatchCode( aCadstarHatchcodeID );
     HATCHCODE hcode = getHatchCode( aCadstarHatchcodeID );
 
-    if( hcode.Hatches.size() < 1 )
+    if( hcode.Hatches.size() < 1 || hcode.Hatches.at( 0 ).LineWidth == UNDEFINED_VALUE )
         return m_board->GetDesignSettings().GetDefaultZoneSettings().m_HatchThickness;
     else
-        return getKiCadLength( hcode.Hatches.at( 0 ).LineWidth );
+        return getKiCadLength( hcode.Hatches.at( 0 ).LineWidth, 1.0 );
 }
 
 
@@ -3584,10 +3590,10 @@ int CADSTAR_PCB_ARCHIVE_LOADER::getKiCadHatchCodeGap( const HATCHCODE_ID& aCadst
     checkAndLogHatchCode( aCadstarHatchcodeID );
     HATCHCODE hcode = getHatchCode( aCadstarHatchcodeID );
 
-    if( hcode.Hatches.size() < 1 )
+    if( hcode.Hatches.size() < 1 || hcode.Hatches.at( 0 ).LineWidth == UNDEFINED_VALUE )
         return m_board->GetDesignSettings().GetDefaultZoneSettings().m_HatchGap;
     else
-        return getKiCadLength( hcode.Hatches.at( 0 ).Step );
+        return getKiCadLength( hcode.Hatches.at( 0 ).Step, 1.5 );
 }
 
 
@@ -3626,7 +3632,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::checkAndLogHatchCode( const HATCHCODE_ID& aCads
                                                     "imported hatching uses the width defined in the first hatch "
                                                     "definition, i.e. %.2f mm." ),    //format:allow
                                                  hcode.Name,
-                                                 (double) getKiCadLength( hcode.Hatches.at( 0 ).LineWidth ) / 1E6 ) );
+                                                 (double) getKiCadLength( hcode.Hatches.at( 0 ).LineWidth, 1.0 ) / 1E6 ) );
             }
 
             if( hcode.Hatches.at( 0 ).Step != hcode.Hatches.at( 1 ).Step )
@@ -3636,7 +3642,7 @@ void CADSTAR_PCB_ARCHIVE_LOADER::checkAndLogHatchCode( const HATCHCODE_ID& aCads
                                                     "The imported hatching uses the step size defined in the first "
                                                     "hatching definition, i.e. %.2f mm." ), //format:allow
                                                  hcode.Name,
-                                                 (double) getKiCadLength( hcode.Hatches.at( 0 ).Step ) / 1E6 ) );
+                                                 (double) getKiCadLength( hcode.Hatches.at( 0 ).Step, 1.5 ) / 1E6 ) );
             }
 
             if( abs( hcode.Hatches.at( 0 ).OrientAngle - hcode.Hatches.at( 1 ).OrientAngle ) != 90000 )
@@ -3666,8 +3672,8 @@ void CADSTAR_PCB_ARCHIVE_LOADER::applyDimensionSettings( const DIMENSION&  aCads
     aKiCadDim->SetPrecision( static_cast<DIM_PRECISION>( aCadstarDim.Precision ) );
     aKiCadDim->SetStart( getKiCadPoint( aCadstarDim.ExtensionLineParams.Start ) );
     aKiCadDim->SetEnd( getKiCadPoint( aCadstarDim.ExtensionLineParams.End ) );
-    aKiCadDim->SetExtensionOffset( getKiCadLength( aCadstarDim.ExtensionLineParams.Offset ) );
-    aKiCadDim->SetLineThickness( getKiCadLength( linecode.Width ) );
+    aKiCadDim->SetExtensionOffset( getKiCadOffset( aCadstarDim.ExtensionLineParams.Offset ) );
+    aKiCadDim->SetLineThickness( getKiCadLength( linecode.Width, 0.05 ) );
 
     applyTextCode( aKiCadDim, aCadstarDim.Text.TextCodeID );
 
@@ -3740,7 +3746,7 @@ bool CADSTAR_PCB_ARCHIVE_LOADER::calculateZonePriorities( PCB_LAYER_ID& aLayer )
     auto inflateValue =
             [&]( ZONE* aZoneA, ZONE* aZoneB )
             {
-                int extra = getKiCadLength( Assignments.Codedefs.SpacingCodes.at( wxT( "C_C" ) ).Spacing )
+                int extra = getKiCadLength( Assignments.Codedefs.SpacingCodes.at( wxT( "C_C" ) ).Spacing, 0.2 )
                             - m_board->GetDesignSettings().m_MinClearance;
 
                 int retval = std::max( aZoneA->GetLocalClearance().value(), aZoneB->GetLocalClearance().value() );
@@ -3755,8 +3761,8 @@ bool CADSTAR_PCB_ARCHIVE_LOADER::calculateZonePriorities( PCB_LAYER_ID& aLayer )
             [&]( ZONE* aLowerZone, ZONE* aHigherZone ) -> double
             {
                 SHAPE_POLY_SET intersectShape( *aHigherZone->Outline() );
-                intersectShape.Inflate( inflateValue( aLowerZone, aHigherZone ),
-                                        CORNER_STRATEGY::ROUND_ALL_CORNERS, ARC_HIGH_DEF );
+                intersectShape.Inflate( inflateValue( aLowerZone, aHigherZone ), CORNER_STRATEGY::ROUND_ALL_CORNERS,
+                                        aLowerZone->GetMaxError() );
 
                 SHAPE_POLY_SET lowerZoneFill( *aLowerZone->GetFilledPolysList( aLayer ) );
                 SHAPE_POLY_SET lowerZoneOutline( *aLowerZone->Outline() );
@@ -3774,10 +3780,12 @@ bool CADSTAR_PCB_ARCHIVE_LOADER::calculateZonePriorities( PCB_LAYER_ID& aLayer )
             [&]( ZONE* aZoneA, ZONE* aZoneB ) -> double
             {
                 SHAPE_POLY_SET outLineA( *aZoneA->Outline() );
-                outLineA.Inflate( inflateValue( aZoneA, aZoneB ), CORNER_STRATEGY::ROUND_ALL_CORNERS, ARC_HIGH_DEF );
+                outLineA.Inflate( inflateValue( aZoneA, aZoneB ), CORNER_STRATEGY::ROUND_ALL_CORNERS,
+                                  aZoneA->GetMaxError() );
 
-                SHAPE_POLY_SET outLineB( *aZoneA->Outline() );
-                outLineB.Inflate( inflateValue( aZoneA, aZoneB ), CORNER_STRATEGY::ROUND_ALL_CORNERS, ARC_HIGH_DEF );
+                SHAPE_POLY_SET outLineB( *aZoneB->Outline() );
+                outLineB.Inflate( inflateValue( aZoneA, aZoneB ), CORNER_STRATEGY::ROUND_ALL_CORNERS,
+                                  aZoneA->GetMaxError() );
 
                 outLineA.BooleanIntersection( outLineB );
 
@@ -4004,7 +4012,7 @@ NETINFO_ITEM* CADSTAR_PCB_ARCHIVE_LOADER::getKiCadNet( const NET_ID& aCadstarNet
         }
 
         std::shared_ptr<NET_SETTINGS>& netSettings = m_board->GetDesignSettings().m_NetSettings;
-        NETINFO_ITEM*                  netInfo = new NETINFO_ITEM( m_board, newName, ++m_numNets );
+        NETINFO_ITEM*                  netInfo = m_board->FindOrAddNet( newName, ++m_numNets, ADD_MODE::APPEND );
         std::shared_ptr<NETCLASS>      netclass;
 
         std::tuple<ROUTECODE_ID, NETCLASS_ID, SPACING_CLASS_ID> key = { csNet.RouteCodeID,
@@ -4038,7 +4046,7 @@ NETINFO_ITEM* CADSTAR_PCB_ARCHIVE_LOADER::getKiCadNet( const NET_ID& aCadstarNet
 
             netclass.reset( new NETCLASS( netClassName ) );
             netSettings->SetNetclass( netClassName, netclass );
-            netclass->SetTrackWidth( getKiCadLength( rc.OptimalWidth ) );
+            netclass->SetTrackWidth( getKiCadLength( rc.OptimalWidth, 0.2 ) );
             m_netClassMap.insert( { key, netclass } );
         }
         else
@@ -4051,7 +4059,6 @@ NETINFO_ITEM* CADSTAR_PCB_ARCHIVE_LOADER::getKiCadNet( const NET_ID& aCadstarNet
         m_board->GetDesignSettings().m_NetSettings->SetNetclassPatternAssignment( newName, netclass->GetName() );
 
         netInfo->SetNetClass( netclass );
-        m_board->Add( netInfo, ADD_MODE::APPEND );
         m_netMap.insert( { aCadstarNetID, netInfo } );
         return netInfo;
     }

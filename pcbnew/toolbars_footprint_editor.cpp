@@ -104,7 +104,12 @@ std::optional<TOOLBAR_CONFIGURATION> FOOTPRINT_EDIT_TOOLBAR_SETTINGS::DefaultToo
               .AddAction( ACTIONS::selectSetLasso ) );
 
         config.AppendSeparator()
-              .AppendAction( PCB_ACTIONS::placePad )
+              .AppendGroup( TOOLBAR_GROUP_CONFIG( _( "Pads" ) )
+                            .AddAction( PCB_ACTIONS::placePad )
+                            .AddAction( PCB_ACTIONS::placeThtPad )
+                            .AddAction( PCB_ACTIONS::placeSmdPad )
+                            .AddAction( PCB_ACTIONS::placeNpthPad )
+                            .AddAction( PCB_ACTIONS::placePasteAperturePad ) )
               .AppendAction( PCB_ACTIONS::drawRuleArea );
 
         config.AppendSeparator()
@@ -202,7 +207,6 @@ std::optional<TOOLBAR_CONFIGURATION> FOOTPRINT_EDIT_TOOLBAR_SETTINGS::DefaultToo
         config.AppendSeparator()
               .AppendAction( PCB_ACTIONS::footprintProperties )
               .AppendAction( PCB_ACTIONS::padTable )
-              .AppendAction( PCB_ACTIONS::defaultPadProperties )
               .AppendAction( ACTIONS::showDatasheet )
               .AppendAction( PCB_ACTIONS::checkFootprint );
 

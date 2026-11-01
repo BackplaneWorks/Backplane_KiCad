@@ -25,7 +25,7 @@
 
 #include <trace_helpers.h>
 #include <connection_graph.h>
-#include <kiface_ids.h>
+#include <kiface_services.h>
 #include <kiway.h>
 #include <lib_id.h>
 #include <sch_pin.h>
@@ -228,7 +228,8 @@ wxString NETLIST_EXPORTER_BASE::MakeCommandLine( const wxString& aFormatString, 
 }
 
 
-SCH_SYMBOL* NETLIST_EXPORTER_BASE::findNextSymbol( EDA_ITEM* aItem, const SCH_SHEET_PATH& aSheetPath )
+SCH_SYMBOL* NETLIST_EXPORTER_BASE::findNextSymbol( EDA_ITEM* aItem, const SCH_SHEET_PATH& aSheetPath,
+                                                   const EXPORT_EXCLUSION& aExcluded )
 {
     wxCHECK( aItem, nullptr );
 
@@ -247,6 +248,10 @@ SCH_SYMBOL* NETLIST_EXPORTER_BASE::findNextSymbol( EDA_ITEM* aItem, const SCH_SH
     if( ref[0] == wxChar( '#' ) )
         return nullptr;
 
+    // An excluded unit must not claim the reference, or the package's exported units would be dropped with it
+    if( aExcluded && aExcluded( symbol, aSheetPath ) )
+        return nullptr;
+
     SCH_SCREEN* screen = aSheetPath.LastScreen();
 
     wxCHECK( screen, nullptr );
@@ -261,6 +266,10 @@ SCH_SYMBOL* NETLIST_EXPORTER_BASE::findNextSymbol( EDA_ITEM* aItem, const SCH_SH
     // If symbol is a "multi parts per package" type
     if( libSymbol->GetUnitCount() > 1 )
     {
+        // A package spanning sheets belongs to the unit on its suffix's sheet, so the footprint path matches the ref
+        if( packageOwnedElsewhere( symbol, aSheetPath, aExcluded ) )
+            return nullptr;
+
         // test if this reference has already been processed, and if so skip
         if( m_referencesAlreadyFound.Lookup( ref ) )
             return nullptr;
@@ -270,6 +279,52 @@ SCH_SYMBOL* NETLIST_EXPORTER_BASE::findNextSymbol( EDA_ITEM* aItem, const SCH_SH
     m_libParts.insert( libSymbol ); // rejects non-unique pointers
 
     return symbol;
+}
+
+
+EXPORT_EXCLUSION NETLIST_EXPORTER_BASE::boardExclusion() const
+{
+    return [this]( const SCH_SYMBOL* aSymbol, const SCH_SHEET_PATH& aSheet )
+           {
+               return aSymbol->GetExcludedFromBoard( &aSheet, m_exportVariant );
+           };
+}
+
+
+bool NETLIST_EXPORTER_BASE::packageOwnedElsewhere( const SCH_SYMBOL* aSymbol, const SCH_SHEET_PATH& aSheetPath,
+                                                   const EXPORT_EXCLUSION& aExcluded ) const
+{
+    const SCHEMATIC* schematic = aSymbol->Schematic();
+
+    if( !schematic )
+        return false;
+
+    const wxString suffix = schematic->GetPackageRefSuffix( aSymbol, aSheetPath );
+
+    if( suffix == schematic->GetRefSuffix( aSheetPath ) )
+        return false;
+
+    const wxString base = aSymbol->GetBaseRef( &aSheetPath );
+
+    for( const SCH_SHEET_PATH& path : m_exportSheets )
+    {
+        if( schematic->GetRefSuffix( path ) != suffix )
+            continue;
+
+        for( SCH_ITEM* item : path.LastScreen()->Items().OfType( SCH_SYMBOL_T ) )
+        {
+            const SCH_SYMBOL* other = static_cast<const SCH_SYMBOL*>( item );
+
+            if( other->GetLibId() == aSymbol->GetLibId() && other->GetBaseRef( &path ) == base
+                    && schematic->GetPackageRefSuffix( other, path ) == suffix
+                    && !( aExcluded && aExcluded( other, path ) ) )
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 
@@ -375,9 +430,10 @@ const std::set<wxString>& NETLIST_EXPORTER_BASE::footprintPads( const wxString& 
     {
         if( KIFACE* cvpcb = m_kiway->KiFACE( KIWAY::FACE_CVPCB ) )
         {
-            typedef void ( *PAD_NUMBERS_FN_PTR )( const wxString&, PROJECT*, std::set<wxString>& );
+            KIFACE_FOOTPRINT_PAD_NUMBERS_SERVICE::Type fetch =
+                    GetKifaceService<KIFACE_FOOTPRINT_PAD_NUMBERS_SERVICE>( cvpcb );
 
-            if( auto fetch = (PAD_NUMBERS_FN_PTR) cvpcb->IfaceOrAddress( KIFACE_FOOTPRINT_PAD_NUMBERS ) )
+            if( fetch )
                 fetch( aFootprintId, &m_schematic->Project(), pads );
         }
     }

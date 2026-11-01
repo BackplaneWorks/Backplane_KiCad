@@ -29,28 +29,36 @@
 #include <diff_merge/diff_scene.h>
 #include <diff_merge/kicad_merge_engine.h>
 
+#include <functional>
 #include <map>
+#include <optional>
 
 
 class WIDGET_DIFF_CANVAS;
 
 
 /**
- * 3-way merge resolution dialog (Phase 8).
+ * Resolve a three-way merge by choosing a version for each conflicting item.
  *
  * Takes a MERGE_PLAN with unresolved items and lets the user pick which side
  * to keep for each. Stores the per-item resolution choice back into the
  * plan. On Apply, the plan is returned via GetResolvedPlan() with every
  * conflict assigned a concrete kind (TAKE_OURS / TAKE_THEIRS / TAKE_ANCESTOR).
  *
- * Future revision: replace the text detail view with a GAL canvas plus the
- * three ancestor/ours/theirs thumbnails the plan calls for. Today the dialog
- * is text-based so the resolution workflow can run headlessly under Cairo
- * for the mergetool app even on systems without OpenGL.
+ * Unanswered conflicts stay unresolved. The canvas previews a version only
+ * after the user selects it.
  */
 class DIALOG_KICAD_MERGE_3WAY : public DIALOG_KICAD_MERGE_3WAY_BASE
 {
 public:
+    /// Which side's version the canvas should currently display.
+    enum class SIDE
+    {
+        OURS,
+        THEIRS,
+        ANCESTOR
+    };
+
     /**
      * Phase 8 context for the conflict canvas. Each side carries the
      * document geometry extracted from that side's loaded BOARD or
@@ -70,6 +78,21 @@ public:
         std::map<KIID_PATH, BOX2I>    ancestorBBoxes;
         std::map<KIID_PATH, BOX2I>    oursBBoxes;
         std::map<KIID_PATH, BOX2I>    theirsBBoxes;
+
+        /// Draw a side on the canvas with the editor's own painter. The geometry above
+        /// flattens every item to its bounding box, so without this a text change shows as an
+        /// empty rectangle and all three sides look alike. Left empty, the geometry is used.
+        ///
+        /// The conflict being decided is passed so a document made of several sheets can draw
+        /// the one the conflict is on.
+        std::function<void( WIDGET_DIFF_CANVAS&, SIDE, const std::optional<KIID_PATH>& )> drawSide;
+
+        /// Shown with the instructions when the merge cannot keep a side's file format.
+        wxString formatNotice;
+
+        /// Name an item the way the editor would, so a conflict can be told from its
+        /// neighbours. Left empty, or returning nothing, falls back to the item's identifier.
+        std::function<wxString( const KIID_PATH& )> describeItem;
     };
 
     DIALOG_KICAD_MERGE_3WAY( wxWindow* aParent, const KICAD_DIFF::MERGE_PLAN& aPlan,
@@ -100,12 +123,19 @@ private:
     /// side selection changes.
     void rebuildCanvas();
 
-    /// Which side's geometry the canvas should currently display.
-    enum class SIDE { OURS, THEIRS, ANCESTOR };
+    /// The side the canvas previews. Ours when none is picked, because a merge keeps ours
+    /// wherever both sides changed the same thing.
     SIDE activeSide() const;
+
+    /// The item's name from the editor, or aFallback when there is none.
+    wxString describe( const KIID_PATH& aId, const wxString& aFallback ) const;
 
     KICAD_DIFF::MERGE_PLAN          m_plan;
     CONFLICT_CONTEXT                m_context;
+
+    /// True where the engine combined both sides' edits, in the order of m_conflictActionIndex.
+    /// Read before any choice is made, so picking a side does not retract the offer.
+    std::vector<bool>               m_hasMergedEdit;
 
     /// Indices into m_plan.actions matching the order of m_listConflicts.
     std::vector<std::size_t>        m_conflictActionIndex;

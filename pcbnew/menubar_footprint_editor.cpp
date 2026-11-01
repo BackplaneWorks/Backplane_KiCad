@@ -122,9 +122,9 @@ void FOOTPRINT_EDIT_FRAME::doReCreateMenuBar()
 
     editMenu->AppendSeparator();
     editMenu->Add( PCB_ACTIONS::editTextAndGraphics );
+    editMenu->Add( PCB_ACTIONS::mirrorInteractive );
     editMenu->Add( PCB_ACTIONS::showLibFootprintFieldsTable );
     editMenu->Add( PCB_ACTIONS::padTable );
-    editMenu->Add( PCB_ACTIONS::defaultPadProperties );
     editMenu->Add( PCB_ACTIONS::extendGraphic );
     editMenu->Add( PCB_ACTIONS::trimGraphic );
     editMenu->Add( PCB_ACTIONS::enumeratePads );

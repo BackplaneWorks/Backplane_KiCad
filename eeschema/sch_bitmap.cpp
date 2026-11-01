@@ -33,7 +33,6 @@
 #include <plotters/plotter.h>
 #include <sch_draw_panel.h>
 #include <settings/color_settings.h>
-#include <trigo.h>
 #include <api/api_utils.h>
 #include <api/schematic/schematic_types.pb.h>
 
@@ -133,6 +132,10 @@ void SCH_BITMAP::Serialize( google::protobuf::Any& aContainer ) const
     m_referenceImage.PackToBytes( *image.mutable_image_data() );
 
     kiapi::common::PackCustomProperties( image.mutable_custom_properties(), *this );
+
+    image.mutable_orientation()->set_value_degrees( m_referenceImage.GetOrientation().AsDegrees() );
+    image.set_opacity( m_referenceImage.GetOpacity() );
+
     aContainer.PackFrom( image );
 }
 
@@ -162,6 +165,10 @@ bool SCH_BITMAP::Deserialize( const google::protobuf::Any& aContainer )
 
     SetLocked( image.locked() == types::LockedState::LS_LOCKED );
     kiapi::common::UnpackCustomProperties( image.custom_properties(), *this );
+
+    m_referenceImage.SetOrientation( EDA_ANGLE( image.orientation().value_degrees(), DEGREES_T ) );
+    m_referenceImage.SetOpacity( image.opacity() );
+
     return true;
 }
 
@@ -219,11 +226,10 @@ void SCH_BITMAP::Plot( PLOTTER* aPlotter, bool aBackground, const SCH_PLOT_OPTS&
 {
     if( aBackground )
     {
-        RENDER_SETTINGS* cfg = aPlotter->RenderSettings();
+        const RENDER_SETTINGS& cfg = *aPlotter->RenderSettings();
 
-        m_referenceImage.GetImage().PlotImage( aPlotter, GetPosition(),
-                                               cfg->GetLayerColor( GetLayer() ),
-                                               cfg->GetDefaultPenWidth() );
+        m_referenceImage.PlotImage( aPlotter, GetPosition(), cfg.GetLayerColor( GetLayer() ),
+                                    cfg.GetDefaultPenWidth() );
     }
 }
 
@@ -343,6 +349,30 @@ void SCH_BITMAP::SetHeight( int aHeight )
 }
 
 
+EDA_ANGLE SCH_BITMAP::GetOrientation() const
+{
+    return m_referenceImage.GetOrientation();
+}
+
+
+void SCH_BITMAP::SetOrientation( EDA_ANGLE aAngle )
+{
+    m_referenceImage.SetOrientation( aAngle );
+}
+
+
+double SCH_BITMAP::GetOpacity() const
+{
+    return m_referenceImage.GetOpacity();
+}
+
+
+void SCH_BITMAP::SetOpacity( double aOpacity )
+{
+    m_referenceImage.SetOpacity( aOpacity );
+}
+
+
 static struct SCH_BITMAP_DESC
 {
     SCH_BITMAP_DESC()
@@ -360,6 +390,7 @@ static struct SCH_BITMAP_DESC
 
         const wxString groupImage = _HKI( "Image Properties" );
 
+        // clang-format off
         propMgr.AddProperty( new PROPERTY<SCH_BITMAP, double>( _HKI( "Scale" ),
                     &SCH_BITMAP::SetImageScale, &SCH_BITMAP::GetImageScale ),
                     groupImage );
@@ -374,6 +405,15 @@ static struct SCH_BITMAP_DESC
                     PROPERTY_DISPLAY::PT_COORD, ORIGIN_TRANSFORMS::ABS_Y_COORD ),
                     groupImage );
 
+        propMgr.AddProperty( new PROPERTY<SCH_BITMAP, EDA_ANGLE>( _HKI( "Orientation" ),
+                    &SCH_BITMAP::SetOrientation, &SCH_BITMAP::GetOrientation,
+                    PROPERTY_DISPLAY::PT_DECIDEGREE ),
+                    groupImage );
+
+        propMgr.AddProperty( new PROPERTY<SCH_BITMAP, double>( _HKI( "Opacity" ),
+                    &SCH_BITMAP::SetOpacity, &SCH_BITMAP::GetOpacity ),
+                    groupImage );
+
         propMgr.AddProperty( new PROPERTY<SCH_BITMAP, int>( _HKI( "Width" ),
                     &SCH_BITMAP::SetWidth, &SCH_BITMAP::GetWidth, PROPERTY_DISPLAY::PT_COORD ),
                     groupImage );
@@ -381,5 +421,6 @@ static struct SCH_BITMAP_DESC
         propMgr.AddProperty( new PROPERTY<SCH_BITMAP, int>( _HKI( "Height" ),
                     &SCH_BITMAP::SetHeight, &SCH_BITMAP::GetHeight, PROPERTY_DISPLAY::PT_COORD ),
                     groupImage );
+        // clang-format on
     }
 } _SCH_BITMAP_DESC;

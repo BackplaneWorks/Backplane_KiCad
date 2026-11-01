@@ -29,25 +29,21 @@ class DIALOG_RESOLVE_FIELD_CASE_CONFLICTS : public DIALOG_RESOLVE_FIELD_CASE_CON
 {
 public:
     DIALOG_RESOLVE_FIELD_CASE_CONFLICTS( wxWindow* aParent, SCH_EDIT_FRAME* aFrame,
-                                         std::vector<FIELD_CASE_CONFLICT> aConflicts );
+                                         std::vector<FIELD_CASE_CONFLICT> conflicts );
+    ~DIALOG_RESOLVE_FIELD_CASE_CONFLICTS() override;
 
-private:
-    enum ACTION
-    {
-        ACTION_KEEP_FIRST,
-        ACTION_KEEP_SECOND,
-        ACTION_JOIN
-    };
-
+protected:
     void onActionCellChanged( wxGridEvent& event ) override;
     void onApplyAndContinue( wxCommandEvent& event ) override;
 
+private:
     void populateGrid();
     void applyResolutions();
 
     std::vector<int> findSiblingRows( int aRow ) const;
 
+private:
     SCH_EDIT_FRAME*                  m_frame;
     std::vector<FIELD_CASE_CONFLICT> m_conflicts;
-    std::vector<ACTION>              m_rowAction;
+    std::vector<int>                 m_rowAction;
 };

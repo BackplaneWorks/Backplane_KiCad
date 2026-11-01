@@ -49,7 +49,10 @@ public:
 protected:
     // event handlers
     void onPageChanged( wxBookCtrlEvent& aEvent ) override;
+    void onPageChanging( wxBookCtrlEvent& aEvent ) override;
     void onAuxiliaryAction( wxCommandEvent& aEvent ) override;
+    void onCancelButton( wxCommandEvent& aEvent );
+    void onCloseWindow( wxCloseEvent& aEvent );
 
     bool TransferDataFromWindow() override;
 
@@ -63,6 +66,8 @@ protected:
     PANEL_SETUP_NETCLASSES*             m_netClasses;
 
 private:
+    bool canDiscardChanges();
+
     size_t m_currentPage;              // the current page index
     size_t m_layersPage;
     size_t m_physicalStackupPage;
@@ -83,4 +88,5 @@ private:
     size_t m_severitiesPage;
     size_t m_embeddedFilesPage;
     size_t m_tuningProfilesPage;
+    bool   m_initComplete;
 };

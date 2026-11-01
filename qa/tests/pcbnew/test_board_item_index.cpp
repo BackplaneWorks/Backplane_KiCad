@@ -19,6 +19,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <chrono>
 #include <memory>
 
 #include <board.h>
@@ -27,9 +28,81 @@
 #include <pcb_shape.h>
 #include <pcb_table.h>
 #include <pcb_tablecell.h>
+#include <pcb_track.h>
 
 
 BOOST_AUTO_TEST_SUITE( BoardItemIndex )
+
+
+BOOST_AUTO_TEST_CASE( ResolveItemIdentityCachePurgedOnDestruction )
+{
+    BOARD board;
+
+    FOOTPRINT* footprint = new FOOTPRINT( &board );
+    board.Add( footprint );
+
+    PAD* pad = new PAD( footprint );
+    footprint->Pads().push_back( pad );
+    board.CacheItemById( *pad );
+
+    const KIID padId = pad->m_Uuid;
+
+    BOOST_REQUIRE( board.IsItemIndexedById( pad ) );
+    BOOST_REQUIRE_EQUAL( board.ResolveItem( padId, true ), static_cast<BOARD_ITEM*>( pad ) );
+
+    // Detach the pad from the footprint without FOOTPRINT::Remove()'s surgical eviction, leaving it
+    // parented to the still-board-attached footprint, then free it directly.  This stands in for the
+    // producer paths that free a board-parented item without touching the identity cache; only the
+    // ~BOARD_ITEM safety net can then keep ResolveItem() from returning a freed pointer.
+    std::deque<PAD*>& pads = footprint->Pads();
+    pads.erase( std::find( pads.begin(), pads.end(), pad ) );
+    delete pad;
+
+    BOOST_CHECK( board.ResolveItem( padId, true ) == nullptr );
+}
+
+
+// A never-indexed item parented to a freed board must not touch that board on destruction, the
+// crash from the "KiCad master crashes" report (follow-up to ac12a1c820).
+BOOST_AUTO_TEST_CASE( UncachedItemSurvivesBoardDestruction )
+{
+    BOARD*   board = new BOARD();
+    PCB_VIA* dummy = new PCB_VIA( board );
+
+    BOOST_REQUIRE( !dummy->IsIndexedInBoard() );
+
+    delete board;
+
+    BOOST_CHECK_NO_THROW( delete dummy );
+}
+
+
+// The indexed counterpart of the case above.  ~BOARD must clear the membership flag as it drops
+// the index, or a survivor still believes it is indexed and walks its parent chain into the
+// freed board.
+BOOST_AUTO_TEST_CASE( IndexedItemSurvivesBoardDestruction )
+{
+    BOARD*     board = new BOARD();
+    FOOTPRINT* footprint = new FOOTPRINT( board );
+
+    board->Add( footprint );
+
+    PAD* pad = new PAD( footprint );
+    footprint->Pads().push_back( pad );
+    board->CacheItemById( *pad );
+
+    BOOST_REQUIRE( pad->IsIndexedInBoard() );
+
+    // Detach without FOOTPRINT::Remove() so the board frees the footprint while the pad lives on,
+    // still parented to it.  This is the ownership hand-off the safety net in ~BOARD_ITEM covers.
+    std::deque<PAD*>& pads = footprint->Pads();
+    pads.erase( std::find( pads.begin(), pads.end(), pad ) );
+
+    delete board;
+
+    BOOST_CHECK( !pad->IsIndexedInBoard() );
+    BOOST_CHECK_NO_THROW( delete pad );
+}
 
 
 BOOST_AUTO_TEST_CASE( SwapItemDataReindexesFootprintChildren )
@@ -96,8 +169,8 @@ BOOST_AUTO_TEST_CASE( ResolvingNewUuidPurgesStaleOldAlias )
     const_cast<KIID&>( liveShape->m_Uuid ) = newId;
 
     BOOST_CHECK_EQUAL( board->ResolveItem( newId, true ), liveShape );
-    BOOST_CHECK( board->GetItemByIdCache().contains( newId ) );
-    BOOST_CHECK( !board->GetItemByIdCache().contains( oldId ) );
+    BOOST_CHECK( board->IsItemIndexedById( newId ) );
+    BOOST_CHECK( !board->IsItemIndexedById( oldId ) );
 
     delete board;
 }
@@ -113,11 +186,11 @@ BOOST_AUTO_TEST_CASE( RebindItemUuidUpdatesCacheAtomically )
     const KIID newId;
 
     board->Add( shape.release() );
-    board->RebindItemUuid( liveShape, newId );
+    board->RebindItemUuid( *liveShape, newId );
 
     BOOST_CHECK( liveShape->m_Uuid == newId );
-    BOOST_CHECK( !board->GetItemByIdCache().contains( oldId ) );
-    BOOST_CHECK( board->GetItemByIdCache().contains( newId ) );
+    BOOST_CHECK( !board->IsItemIndexedById( oldId ) );
+    BOOST_CHECK( board->IsItemIndexedById( newId ) );
     BOOST_CHECK_EQUAL( board->ResolveItem( newId, true ), liveShape );
 
     delete board;
@@ -140,8 +213,8 @@ BOOST_AUTO_TEST_CASE( AttachedChildSetUuidRebindsCache )
     livePad->SetUuid( newId );
 
     BOOST_CHECK( livePad->m_Uuid == newId );
-    BOOST_CHECK( !board->GetItemByIdCache().contains( oldId ) );
-    BOOST_CHECK( board->GetItemByIdCache().contains( newId ) );
+    BOOST_CHECK( !board->IsItemIndexedById( oldId ) );
+    BOOST_CHECK( board->IsItemIndexedById( newId ) );
     BOOST_CHECK_EQUAL( board->ResolveItem( newId, true ), livePad );
 
     delete board;
@@ -160,10 +233,10 @@ BOOST_AUTO_TEST_CASE( CacheItemByIdCanonicalizesRewrittenUuid )
     board->Add( shape.release() );
 
     const_cast<KIID&>( liveShape->m_Uuid ) = newId;
-    board->CacheItemById( liveShape );
+    board->CacheItemById( *liveShape );
 
-    BOOST_CHECK( !board->GetItemByIdCache().contains( oldId ) );
-    BOOST_CHECK( board->GetItemByIdCache().contains( newId ) );
+    BOOST_CHECK( !board->IsItemIndexedById( oldId ) );
+    BOOST_CHECK( board->IsItemIndexedById( newId ) );
     BOOST_CHECK_EQUAL( board->ResolveItem( newId, true ), liveShape );
 
     delete board;
@@ -226,7 +299,7 @@ BOOST_AUTO_TEST_CASE( RemovingResolvedChildEvictsCacheOnFootprintHolder )
 
     // Remove and destroy the pad through the footprint, as a footprint edit does.
     liveFootprint->Remove( pad );
-    const bool staleEntrySurvived = board->GetItemByIdCache().contains( padId );
+    const bool staleEntrySurvived = board->IsItemIndexedById( padId );
 
     delete pad;
     delete board;
@@ -256,8 +329,8 @@ BOOST_AUTO_TEST_CASE( TableCellResolvesToTheCellNotItsTable )
 
     // Caching the table under the cell's id also made the two lookups evict each other.
     BOOST_CHECK_EQUAL( board.ResolveItem( cellId, true ), cell );
-    BOOST_CHECK( board.GetItemByIdCache().contains( tableId ) );
-    BOOST_CHECK( board.GetItemByIdCache().contains( cellId ) );
+    BOOST_CHECK( board.IsItemIndexedById( tableId ) );
+    BOOST_CHECK( board.IsItemIndexedById( cellId ) );
 }
 
 
@@ -276,6 +349,59 @@ BOOST_AUTO_TEST_CASE( FootprintTableCellResolvesByItsOwnId )
     board.ClearItemByIdCache();
 
     BOOST_CHECK_EQUAL( board.ResolveItem( cell->m_Uuid, true ), cell );
+}
+
+
+// Unbinding an item the index never held must not scan the whole index, or comparing a few footprints
+// against a large board costs as much as the board each time
+BOOST_AUTO_TEST_CASE( UnbindingForeignSubtreesDoesNotScanTheIndex )
+{
+    BOARD board;
+
+    for( int i = 0; i < 20000; i++ )
+    {
+        FOOTPRINT* footprint = new FOOTPRINT( &board );
+
+        for( int j = 0; j < 4; j++ )
+            footprint->Add( new PAD( footprint ), ADD_MODE::APPEND );
+
+        board.Add( footprint );
+    }
+
+    FOOTPRINT foreign( &board );
+
+    for( int j = 0; j < 20; j++ )
+        foreign.Add( new PAD( &foreign ), ADD_MODE::APPEND );
+
+    auto start = std::chrono::steady_clock::now();
+
+    for( int i = 0; i < 300; i++ )
+        board.UncacheItemSubtreeById( foreign );
+
+    std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - start;
+
+    BOOST_CHECK_LT( elapsed.count(), 5.0 );
+}
+
+
+// Unbinding through one board must leave another board's claim on the item intact, or the item
+// is never evicted from the owner when it is destroyed
+BOOST_AUTO_TEST_CASE( UnbindingThroughAnotherBoardKeepsTheOwner )
+{
+    BOARD owner;
+    BOARD other;
+
+    auto* pad = new PAD( nullptr );
+    KIID  id = pad->m_Uuid;
+
+    owner.CacheItemById( *pad );
+    other.UncacheItemSubtreeById( *pad );
+
+    BOOST_CHECK( owner.IsItemIndexedById( id ) );
+
+    delete pad;
+
+    BOOST_CHECK( !owner.IsItemIndexedById( id ) );
 }
 
 

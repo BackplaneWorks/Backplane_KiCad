@@ -70,16 +70,16 @@ public:
 
     std::unordered_set<BOARD_ITEM*> GetBoardItems() const;
 
-    /*
+    /**
      * Search for highest level group inside of aScope, containing item.
      *
      * @param aScope restricts the search to groups within the group scope.
      * @param isFootprintEditor true if we should stop promoting at the footprint level
      * @return group inside of aScope, containing item, if exists, otherwise, nullptr
      */
-    static EDA_GROUP* TopLevelGroup( BOARD_ITEM* aItem, EDA_GROUP* aScope, bool isFootprintEditor );
+    static EDA_GROUP* TopLevelGroup( const BOARD_ITEM& aItem, const EDA_GROUP* aScope, bool isFootprintEditor );
 
-    static bool WithinScope( BOARD_ITEM* aItem, PCB_GROUP* aScope, bool isFootprintEditor );
+    static bool WithinScope( const BOARD_ITEM& aItem, const PCB_GROUP* aScope, bool isFootprintEditor );
 
     double Similarity( const BOARD_ITEM& aOther ) const override;
 
@@ -184,6 +184,8 @@ public:
 
     /// @copydoc BOARD_ITEM::Mirror
     void Mirror( const VECTOR2I& aCentre, FLIP_DIRECTION aFlipDirection ) override;
+
+    void Mirror( const SEG& aAxis ) override;
 
     /// @copydoc EDA_ITEM::GetItemDescription
     wxString GetItemDescription( UNITS_PROVIDER* aUnitsProvider, bool aFull ) const override;

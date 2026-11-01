@@ -33,6 +33,7 @@
 #include <pcb_field.h>
 #include <pcb_group.h>
 #include <pcb_point.h>
+#include <pcb_3d_body.h>
 #include <pcb_text.h>
 #include <zone.h>
 
@@ -174,6 +175,7 @@ static std::vector<std::pair<T*, T*>> matchItemsBySimilarity( const std::vector<
 
 
 void BOARD::ExchangeFootprint( FOOTPRINT* aExisting, FOOTPRINT* aNew, BOARD_COMMIT& aCommit,
+                               FLIP_DIRECTION aFlipDirection,
                                bool aMatchPadPositions,
                                bool aDeleteExtraTexts,
                                bool aResetTextLayers,
@@ -227,7 +229,7 @@ void BOARD::ExchangeFootprint( FOOTPRINT* aExisting, FOOTPRINT* aNew, BOARD_COMM
     aNew->SetPosition( position );
 
     if( aNew->GetLayer() != aExisting->GetLayer() )
-        aNew->Flip( aNew->GetPosition(), FLIP_DIRECTION::TOP_BOTTOM );
+        aNew->Flip( aNew->GetPosition(), aFlipDirection );
 
     if( aNew->GetOrientation() != orientation )
         aNew->SetOrientation( orientation );
@@ -249,6 +251,7 @@ void BOARD::ExchangeFootprint( FOOTPRINT* aExisting, FOOTPRINT* aNew, BOARD_COMM
     aNew->SetUuid( aExisting->m_Uuid );
     aNew->Reference().SetUuid( aExisting->Reference().m_Uuid );
     aNew->Value().SetUuid( aExisting->Value().m_Uuid );
+    aNew->SetHeight( aExisting->GetHeight() );
 
     std::vector<PAD*> oldPads;
     oldPads.reserve( aExisting->Pads().size() );
@@ -275,6 +278,17 @@ void BOARD::ExchangeFootprint( FOOTPRINT* aExisting, FOOTPRINT* aNew, BOARD_COMM
         newPad->SetLocalRatsnestVisible( oldPad->GetLocalRatsnestVisible() );
         newPad->SetPinFunction( oldPad->GetPinFunction() );
         newPad->SetPinType( oldPad->GetPinType() );
+
+        if( !aResetClearanceOverrides )
+        {
+            newPad->SetLocalClearance( oldPad->GetLocalClearance() );
+            newPad->SetLocalSolderMaskMargin( oldPad->GetLocalSolderMaskMargin() );
+            newPad->SetLocalSolderPasteMargin( oldPad->GetLocalSolderPasteMargin() );
+            newPad->SetLocalSolderPasteMarginRatio( oldPad->GetLocalSolderPasteMarginRatio() );
+            newPad->SetLocalZoneConnection( oldPad->GetLocalZoneConnection() );
+            newPad->SetLocalThermalSpokeWidthOverride( oldPad->GetLocalThermalSpokeWidthOverride() );
+            newPad->SetLocalThermalGapOverride( oldPad->GetLocalThermalGapOverride() );
+        }
 
         if( newPad->IsOnCopperLayer() )
             newPad->SetNetCode( oldPad->GetNetCode() );
@@ -653,10 +667,8 @@ void BOARD::ExchangeFootprint( FOOTPRINT* aExisting, FOOTPRINT* aNew, BOARD_COMM
         aNew->Models() = aExisting->Models();
 
         // Preserve extruded 3D body settings.
-        if( aExisting->HasExtrudedBody() )
-            aNew->SetExtrudedBody( std::make_unique<EXTRUDED_3D_BODY>( *aExisting->GetExtrudedBody() ) );
-        else
-            aNew->ClearExtrudedBody();
+        for( PCB_3D_BODY* body : aExisting->Bodies() )
+            aNew->Add( static_cast<PCB_3D_BODY*>( body->Clone() ), ADD_MODE::APPEND );
 
         for( const auto& [name, file] : aExisting->GetEmbeddedFiles()->EmbeddedFileMap() )
         {
@@ -674,6 +686,8 @@ void BOARD::ExchangeFootprint( FOOTPRINT* aExisting, FOOTPRINT* aNew, BOARD_COMM
     aNew->SetSheetname( aExisting->GetSheetname() );
     aNew->SetFilters( aExisting->GetFilters() );
     aNew->SetStaticComponentClass( aExisting->GetStaticComponentClass() );
+    aNew->SetVariants( aExisting->GetVariants() );
+    aNew->SetUnitInfo( aExisting->GetUnitInfo() );
 
     if( *aUpdated == false )
     {

@@ -28,6 +28,7 @@
 #include <jobs/job_special_execute.h>
 #include <kiway.h>
 #include <kiway_mail.h>
+#include <paths.h>
 #include <project/project_archiver.h>
 #include <reporter.h>
 #include <optional>
@@ -64,7 +65,7 @@ bool JOBS_RUNNER::RunJobsAllDestinations( bool aBail )
 int JOBS_RUNNER::runSpecialExecute( const JOBSET_JOB* aJob, REPORTER* aReporter, PROJECT* aProject )
 {
     JOB_SPECIAL_EXECUTE* specialJob = static_cast<JOB_SPECIAL_EXECUTE*>( aJob->m_job.get() );
-    wxString             cmd = ExpandEnvVarSubstitutions( specialJob->m_command, m_project );
+    wxString             cmd = ExpandExecuteCommand( specialJob->m_command, m_project );
 
     aReporter->Report( cmd, RPT_SEVERITY_INFO );
     aReporter->Report( wxEmptyString, RPT_SEVERITY_INFO );
@@ -115,24 +116,46 @@ int JOBS_RUNNER::runSpecialExecute( const JOBSET_JOB* aJob, REPORTER* aReporter,
 
         if( specialJob->m_recordOutput )
         {
-            if( specialJob->GetConfiguredOutputPath().IsEmpty() )
+            wxFileName defaultLog( aJob->m_id );
+            defaultLog.SetExt( wxT( "log" ) );
+
+            // The default name is not stored, a saved jobset must not carry it
+            // A folder gets the default log name inside it
+            wxString logPath =
+                    specialJob->GetConfiguredOutputPath().IsEmpty()
+                            ? specialJob->ResolveOutputPath( defaultLog.GetFullPath(), false, aProject )
+                            : JOB::AppendDefaultFileName( specialJob->GetFullOutputPath( aProject ),
+                                                          defaultLog.GetFullName() );
+
+            bool logWritten = false;
+
+            if( PATHS::EnsurePathExists( logPath, true ) )
             {
-                wxFileName fn( aJob->m_id );
-                fn.SetExt( wxT( "log" ) );
-                specialJob->SetConfiguredOutputPath( fn.GetFullPath() );
+                wxFileOutputStream procOutput( logPath );
+
+                // A command that fails to launch reports on stderr only, leaving an empty log
+                logWritten = procOutput.IsOk() && procOutput.WriteAll( memInBuf, memInBuf.GetDataLen() )
+                             && procOutput.WriteAll( memErrBuf, memErrBuf.GetDataLen() ) && procOutput.Close();
             }
 
-            wxFFileOutputStream procOutput( specialJob->GetFullOutputPath( aProject ) );
-
-            if( !procOutput.IsOk() )
+            if( !logWritten )
+            {
+                wxString msg = wxString::Format( _( "Command finished but its output could not be written to '%s'" ),
+                                                 logPath );
+                aReporter->Report( msg, RPT_SEVERITY_ERROR );
                 return CLI::EXIT_CODES::ERR_INVALID_OUTPUT_CONFLICT;
-
-            procOutput.WriteAll( memInBuf, memInBuf.GetDataLen() );
+            }
         }
     }
 
     if( specialJob->m_ignoreExitcode )
         return CLI::EXIT_CODES::OK;
+
+    if( result != CLI::EXIT_CODES::OK )
+    {
+        aReporter->Report( wxString::Format( _( "Command exited with code %d" ), result ),
+                           RPT_SEVERITY_ERROR );
+    }
 
     return result;
 }
@@ -175,6 +198,12 @@ int JOBS_RUNNER::runSpecialArchive( const JOBSET_JOB* aJob, REPORTER* aReporter,
         archiveJob->SetConfiguredOutputPath( wxT( "${PROJECTNAME}.zip" ) );
 
     wxString zipFile = archiveJob->GetFullOutputPath( aProject );
+
+    if( !PATHS::EnsurePathExists( zipFile, true ) )
+    {
+        aReporter->Report( _( "Failed to create output directory\n" ), RPT_SEVERITY_ERROR );
+        return CLI::EXIT_CODES::ERR_INVALID_OUTPUT_CONFLICT;
+    }
 
     if( !PROJECT_ARCHIVER::Archive( aProject->GetProjectPath(), zipFile, *aReporter, true,
                                     archiveJob->m_includeExtraFiles ) )

@@ -89,7 +89,8 @@ DIALOG_BOARD_SETUP::DIALOG_BOARD_SETUP( PCB_EDIT_FRAME* aFrame, wxWindow* aParen
         m_netclassesPage( 0 ),
         m_customRulesPage( 0 ),
         m_severitiesPage( 0 ),
-        m_tuningProfilesPage( 0 )
+        m_tuningProfilesPage( 0 ),
+        m_initComplete( false )
 {
     SetEvtHandlerEnabled( false );
 
@@ -288,10 +289,16 @@ DIALOG_BOARD_SETUP::DIALOG_BOARD_SETUP( PCB_EDIT_FRAME* aFrame, wxWindow* aParen
             },
             _( "Embedded Files" ) );
 
+    m_initComplete = true;
+
     for( size_t i = 0; i < m_treebook->GetPageCount(); ++i )
         m_treebook->ExpandNode( i );
 
     SetEvtHandlerEnabled( true );
+
+    // Bound after DIALOG_SHIM's handlers so these run first
+    Bind( wxEVT_BUTTON, &DIALOG_BOARD_SETUP::onCancelButton, this, wxID_CANCEL );
+    Bind( wxEVT_CLOSE_WINDOW, &DIALOG_BOARD_SETUP::onCloseWindow, this );
 
     finishDialogSettings();
 
@@ -309,6 +316,49 @@ DIALOG_BOARD_SETUP::DIALOG_BOARD_SETUP( PCB_EDIT_FRAME* aFrame, wxWindow* aParen
 
 DIALOG_BOARD_SETUP::~DIALOG_BOARD_SETUP()
 {
+    Unbind( wxEVT_BUTTON, &DIALOG_BOARD_SETUP::onCancelButton, this, wxID_CANCEL );
+    Unbind( wxEVT_CLOSE_WINDOW, &DIALOG_BOARD_SETUP::onCloseWindow, this );
+}
+
+
+bool DIALOG_BOARD_SETUP::canDiscardChanges()
+{
+    auto* rules = static_cast<PANEL_SETUP_RULES*>( m_treebook->GetResolvedPage( m_customRulesPage ) );
+
+    if( !rules || !rules->IsModified() )
+        return true;
+
+    return OKOrCancelDialog( this, _( "Confirmation" ), _( "Discard changes to custom rules?" ), wxEmptyString,
+                             _( "Discard Changes" ) ) == wxID_OK;
+}
+
+
+void DIALOG_BOARD_SETUP::onCancelButton( wxCommandEvent& aEvent )
+{
+    if( canDiscardChanges() )
+        aEvent.Skip();
+}
+
+
+void DIALOG_BOARD_SETUP::onCloseWindow( wxCloseEvent& aEvent )
+{
+    if( aEvent.CanVeto() && !canDiscardChanges() )
+    {
+        aEvent.Veto();
+        return;
+    }
+
+    aEvent.Skip();
+}
+
+
+void DIALOG_BOARD_SETUP::onPageChanging( wxBookCtrlEvent& aEvent )
+{
+    // Rules are written to disk only on OK so Cancel can still discard them
+    if( aEvent.GetOldSelection() == (int) m_customRulesPage )
+        return;
+
+    PAGED_DIALOG::onPageChanging( aEvent );
 }
 
 
@@ -360,10 +410,10 @@ void DIALOG_BOARD_SETUP::onPageChanged( wxBookCtrlEvent& aEvent )
 
     size_t page = aEvent.GetSelection();
 
-    if( m_physicalStackupPage > 0 )     // Don't run this during initialization
+    if( m_initComplete )
     {
         if( m_currentPage == m_physicalStackupPage || page == m_physicalStackupPage || page == m_netclassesPage
-            || page == m_tuningProfilesPage || page == m_zonesPage )
+            || page == m_tuningProfilesPage || page == m_zonesPage || page == m_boardFinishPage )
         {
             m_layers = RESOLVE_PAGE( PANEL_SETUP_LAYERS, m_layersPage );
             m_physicalStackup = RESOLVE_PAGE( PANEL_SETUP_BOARD_STACKUP, m_physicalStackupPage );
@@ -397,6 +447,12 @@ void DIALOG_BOARD_SETUP::onPageChanged( wxBookCtrlEvent& aEvent )
         else if( page == m_zonesPage )
         {
             m_zones->SyncCopperLayers( m_physicalStackup->GetCopperLayerCount() );
+        }
+
+        if( page == m_boardFinishPage )
+        {
+            m_physicalStackup->OnLayersOptionsChanged( m_layers->GetUILayerMask() );
+            m_boardFinish->SetStackup( m_physicalStackup->GetStackup(), m_physicalStackup->GetCopperLayerCount() );
         }
 
         if( Prj().IsReadOnly() )

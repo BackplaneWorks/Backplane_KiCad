@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version 4.2.1-0-g80c4cb6a)
+// C++ code generated with wxFormBuilder (version 4.2.1-0-g80c4cb6)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO *NOT* EDIT THIS FILE!
 ///////////////////////////////////////////////////////////////////////////
 
 #include "pcb_layer_box_selector.h"
+#include "widgets/via_cross_section_preview.h"
 
 #include "dialog_track_via_properties_base.h"
 
@@ -230,6 +231,12 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	m_sbViaSizer = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, _("Vias") ), wxVERTICAL );
 
+	wxBoxSizer* bSizerStackup;
+	bSizerStackup = new wxBoxSizer( wxHORIZONTAL );
+
+	wxBoxSizer* bSizerStackupProps;
+	bSizerStackupProps = new wxBoxSizer( wxVERTICAL );
+
 	wxBoxSizer* bSizerViaCols;
 	bSizerViaCols = new wxBoxSizer( wxHORIZONTAL );
 
@@ -247,19 +254,19 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 	m_ViaXLabel->Wrap( -1 );
 	fgViaPos->Add( m_ViaXLabel, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 1 );
 
-	m_ViaXCtrl = new wxTextCtrl( m_sbViaSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	m_ViaXCtrl = new wxTextCtrl( m_sbViaSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	fgViaPos->Add( m_ViaXCtrl, 0, wxEXPAND|wxALIGN_CENTER_VERTICAL, 3 );
 
 	m_ViaYLabel = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("Y:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_ViaYLabel->Wrap( -1 );
-	fgViaPos->Add( m_ViaYLabel, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 8 );
+	fgViaPos->Add( m_ViaYLabel, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 10 );
 
-	m_ViaYCtrl = new wxTextCtrl( m_sbViaSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	m_ViaYCtrl = new wxTextCtrl( m_sbViaSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	fgViaPos->Add( m_ViaYCtrl, 0, wxALIGN_CENTER_VERTICAL|wxEXPAND, 3 );
 
 	m_ViaYUnit = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("mm"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_ViaYUnit->Wrap( -1 );
-	fgViaPos->Add( m_ViaYUnit, 0, wxALIGN_CENTER_VERTICAL, 5 );
+	fgViaPos->Add( m_ViaYUnit, 0, wxALIGN_CENTER_VERTICAL, 3 );
 
 
 	bSizerViasLeftCol->Add( fgViaPos, 0, wxEXPAND|wxBOTTOM, 8 );
@@ -281,7 +288,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	m_predefinedViaSizesUnits = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("mm"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_predefinedViaSizesUnits->Wrap( -1 );
-	gbSizer3->Add( m_predefinedViaSizesUnits, wxGBPosition( 1, 2 ), wxGBSpan( 1, 1 ), wxALIGN_CENTER_VERTICAL, 5 );
+	gbSizer3->Add( m_predefinedViaSizesUnits, wxGBPosition( 1, 2 ), wxGBSpan( 1, 1 ), wxALIGN_CENTER_VERTICAL, 3 );
 
 	m_sbPadstackSettings = new wxBoxSizer( wxHORIZONTAL );
 
@@ -316,7 +323,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	m_ViaDiameterUnit = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("mm"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_ViaDiameterUnit->Wrap( -1 );
-	gbSizer3->Add( m_ViaDiameterUnit, wxGBPosition( 3, 2 ), wxGBSpan( 1, 1 ), wxALIGN_CENTER_VERTICAL, 5 );
+	gbSizer3->Add( m_ViaDiameterUnit, wxGBPosition( 3, 2 ), wxGBSpan( 1, 1 ), wxALIGN_CENTER_VERTICAL, 3 );
 
 	m_ViaDrillLabel = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("Via hole:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_ViaDrillLabel->Wrap( -1 );
@@ -327,7 +334,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	m_ViaDrillUnit = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("mm"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_ViaDrillUnit->Wrap( -1 );
-	gbSizer3->Add( m_ViaDrillUnit, wxGBPosition( 4, 2 ), wxGBSpan( 1, 1 ), wxALIGN_CENTER_VERTICAL, 5 );
+	gbSizer3->Add( m_ViaDrillUnit, wxGBPosition( 4, 2 ), wxGBSpan( 1, 1 ), wxALIGN_CENTER_VERTICAL, 3 );
 
 
 	gbSizer3->AddGrowableCol( 1 );
@@ -335,7 +342,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 	bSizerViasLeftCol->Add( gbSizer3, 1, wxEXPAND|wxTOP, 5 );
 
 
-	bSizerViaCols->Add( bSizerViasLeftCol, 1, wxEXPAND, 5 );
+	bSizerViaCols->Add( bSizerViasLeftCol, 0, wxEXPAND, 5 );
 
 
 	bSizerViaCols->Add( 0, 0, 0, wxEXPAND|wxRIGHT|wxLEFT, 15 );
@@ -398,13 +405,13 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	gbSizer4->AddGrowableCol( 1 );
 
-	viaRightColumn->Add( gbSizer4, 1, wxEXPAND, 5 );
+	viaRightColumn->Add( gbSizer4, 0, wxEXPAND, 5 );
 
 
-	bSizerViaCols->Add( viaRightColumn, 1, wxEXPAND, 5 );
+	bSizerViaCols->Add( viaRightColumn, 0, wxEXPAND, 5 );
 
 
-	m_sbViaSizer->Add( bSizerViaCols, 0, wxALL|wxEXPAND, 5 );
+	bSizerStackupProps->Add( bSizerViaCols, 0, wxALL|wxEXPAND, 5 );
 
 	wxBoxSizer* bBackdrillLabel;
 	bBackdrillLabel = new wxBoxSizer( wxHORIZONTAL );
@@ -413,7 +420,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 	bBackdrillLabel->Add( m_staticline2, 1, wxALIGN_CENTER_VERTICAL|wxTOP|wxBOTTOM|wxRIGHT, 3 );
 
 
-	m_sbViaSizer->Add( bBackdrillLabel, 0, wxEXPAND, 5 );
+	bSizerStackupProps->Add( bBackdrillLabel, 0, wxEXPAND, 5 );
 
 	wxBoxSizer* bSizerBackdrill;
 	bSizerBackdrill = new wxBoxSizer( wxHORIZONTAL );
@@ -453,7 +460,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	m_backdrillFrontSizeUnits = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("mm"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_backdrillFrontSizeUnits->Wrap( -1 );
-	bSizer31->Add( m_backdrillFrontSizeUnits, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 5 );
+	bSizer31->Add( m_backdrillFrontSizeUnits, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 3 );
 
 
 	fgSizer7->Add( bSizer31, 1, wxEXPAND, 5 );
@@ -485,7 +492,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	m_backdrillBackSizeUnits = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("mm"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_backdrillBackSizeUnits->Wrap( -1 );
-	bSizer32->Add( m_backdrillBackSizeUnits, 0, wxRIGHT|wxLEFT|wxALIGN_CENTER_VERTICAL, 5 );
+	bSizer32->Add( m_backdrillBackSizeUnits, 0, wxRIGHT|wxLEFT|wxALIGN_CENTER_VERTICAL, 3 );
 
 
 	fgSizer8->Add( bSizer32, 1, wxEXPAND, 5 );
@@ -503,7 +510,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 	bSizerBackdrill->Add( fgSizer8, 2, wxEXPAND, 5 );
 
 
-	m_sbViaSizer->Add( bSizerBackdrill, 0, wxEXPAND|wxTOP|wxRIGHT|wxLEFT, 5 );
+	bSizerStackupProps->Add( bSizerBackdrill, 0, wxEXPAND|wxTOP|wxRIGHT|wxLEFT, 5 );
 
 	wxBoxSizer* bPostMachineLabel;
 	bPostMachineLabel = new wxBoxSizer( wxHORIZONTAL );
@@ -516,7 +523,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 	bPostMachineLabel->Add( m_staticline21, 1, wxALIGN_CENTER_VERTICAL|wxTOP|wxRIGHT, 3 );
 
 
-	m_sbViaSizer->Add( bPostMachineLabel, 0, wxEXPAND, 5 );
+	bSizerStackupProps->Add( bPostMachineLabel, 0, wxEXPAND, 5 );
 
 	wxBoxSizer* bSizerPostMachine;
 	bSizerPostMachine = new wxBoxSizer( wxHORIZONTAL );
@@ -549,7 +556,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	m_topPostMachineSize1Units = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("mm"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_topPostMachineSize1Units->Wrap( -1 );
-	fgSizer9->Add( m_topPostMachineSize1Units, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 5 );
+	fgSizer9->Add( m_topPostMachineSize1Units, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 3 );
 
 	m_topPostMachineSize2Label = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("Angle:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_topPostMachineSize2Label->Wrap( -1 );
@@ -560,7 +567,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	m_topPostMachineSize2Units = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("deg"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_topPostMachineSize2Units->Wrap( -1 );
-	fgSizer9->Add( m_topPostMachineSize2Units, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 5 );
+	fgSizer9->Add( m_topPostMachineSize2Units, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 3 );
 
 
 	bSizerPostMachine->Add( fgSizer9, 1, wxEXPAND, 5 );
@@ -596,7 +603,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	m_bottomPostMachineSize1Units = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("mm"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_bottomPostMachineSize1Units->Wrap( -1 );
-	fgSizer10->Add( m_bottomPostMachineSize1Units, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 5 );
+	fgSizer10->Add( m_bottomPostMachineSize1Units, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 3 );
 
 	m_bottomPostMachineSize2Label = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("Angle:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_bottomPostMachineSize2Label->Wrap( -1 );
@@ -607,13 +614,30 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 
 	m_bottomPostMachineSize2Units = new wxStaticText( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("deg"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_bottomPostMachineSize2Units->Wrap( -1 );
-	fgSizer10->Add( m_bottomPostMachineSize2Units, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 5 );
+	fgSizer10->Add( m_bottomPostMachineSize2Units, 0, wxALIGN_CENTER_VERTICAL|wxRIGHT|wxLEFT, 3 );
 
 
 	bSizerPostMachine->Add( fgSizer10, 1, wxEXPAND, 5 );
 
 
-	m_sbViaSizer->Add( bSizerPostMachine, 0, wxEXPAND, 5 );
+	bSizerStackupProps->Add( bSizerPostMachine, 0, wxEXPAND, 5 );
+
+
+	bSizerStackup->Add( bSizerStackupProps, 0, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizerStackupPreview;
+	bSizerStackupPreview = new wxBoxSizer( wxVERTICAL );
+
+	m_viaPreview = new VIA_CROSS_SECTION_PREVIEW( m_sbViaSizer->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxSize( -1,-1 ), 0 );
+	m_viaPreview->SetMinSize( wxSize( 150,300 ) );
+
+	bSizerStackupPreview->Add( m_viaPreview, 1, wxEXPAND|wxLEFT, 15 );
+
+
+	bSizerStackup->Add( bSizerStackupPreview, 1, wxEXPAND|wxLEFT, 5 );
+
+
+	m_sbViaSizer->Add( bSizerStackup, 1, wxEXPAND|wxBOTTOM, 5 );
 
 	m_staticline4 = new wxStaticLine( m_sbViaSizer->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL );
 	m_sbViaSizer->Add( m_staticline4, 0, wxBOTTOM|wxEXPAND|wxTOP, 8 );
@@ -649,11 +673,8 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 	wxBoxSizer* bSizerLeftCol11;
 	bSizerLeftCol11 = new wxBoxSizer( wxVERTICAL );
 
-
-	bSizerLeftCol11->Add( 0, 2, 0, wxEXPAND, 5 );
-
 	m_cbTeardrops = new wxCheckBox( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("Add teardrops on via's track connections"), wxDefaultPosition, wxDefaultSize, wxCHK_3STATE|wxCHK_ALLOW_3RD_STATE_FOR_USER );
-	bSizerLeftCol11->Add( m_cbTeardrops, 0, wxBOTTOM|wxRIGHT|wxLEFT, 3 );
+	bSizerLeftCol11->Add( m_cbTeardrops, 0, wxBOTTOM|wxRIGHT|wxLEFT, 5 );
 
 	m_cbTeardropsUseNextTrack = new wxCheckBox( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("Allow teardrops to span two track segments"), wxDefaultPosition, wxDefaultSize, wxCHK_3STATE|wxCHK_ALLOW_3RD_STATE_FOR_USER );
 	m_cbTeardropsUseNextTrack->SetToolTip( _("Allows a teardrop to extend over the first 2 connected track segments if the first track segment is too short to accommodate the best length.") );
@@ -819,13 +840,13 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 	fgSizerRightCol->Add( m_stMaxWidthUnits, 0, wxALIGN_CENTER_VERTICAL, 3 );
 
 
-	bSizer20->Add( fgSizerRightCol, 1, wxEXPAND|wxLEFT|wxRIGHT|wxTOP, 5 );
+	bSizer20->Add( fgSizerRightCol, 0, wxEXPAND|wxLEFT|wxRIGHT|wxTOP, 5 );
 
 	wxBoxSizer* bSizer44;
 	bSizer44 = new wxBoxSizer( wxHORIZONTAL );
 
 	m_curvedEdges = new wxCheckBox( m_sbViaSizer->GetStaticBox(), wxID_ANY, _("Curved edges"), wxDefaultPosition, wxDefaultSize, wxCHK_3STATE|wxCHK_ALLOW_3RD_STATE_FOR_USER );
-	bSizer44->Add( m_curvedEdges, 0, wxALIGN_CENTER_VERTICAL|wxLEFT, 5 );
+	bSizer44->Add( m_curvedEdges, 0, wxALIGN_CENTER_VERTICAL|wxTOP|wxLEFT, 5 );
 
 
 	bSizer44->Add( 45, 0, 0, 0, 5 );
@@ -840,7 +861,7 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 	bSizerTeardrops->Add( bSizerShapeColumns, 1, wxEXPAND|wxBOTTOM, 3 );
 
 
-	m_sbViaSizer->Add( bSizerTeardrops, 1, wxEXPAND, 5 );
+	m_sbViaSizer->Add( bSizerTeardrops, 0, wxEXPAND, 5 );
 
 
 	m_MainSizer->Add( m_sbViaSizer, 0, wxEXPAND|wxTOP|wxRIGHT|wxLEFT, 10 );
@@ -874,11 +895,18 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::DIALOG_TRACK_VIA_PROPERTIES_BASE( wxWindow* pa
 	m_ViaTypeChoice->Connect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onViaEdit ), NULL, this );
 	m_ViaStartLayer->Connect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onViaEdit ), NULL, this );
 	m_ViaEndLayer->Connect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onViaEdit ), NULL, this );
+	m_protectionFeatures->Connect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onProtectionFeaturesChange ), NULL, this );
 	m_backdrillChoice->Connect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onBackdrillChange ), NULL, this );
+	m_backdrillFrontSizeCtrl->Connect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
 	m_backdrillFrontLayer->Connect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onViaEdit ), NULL, this );
+	m_backdrillBackSizeCtrl->Connect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
 	m_backdrillBackLayer->Connect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onViaEdit ), NULL, this );
 	m_topPostMachine->Connect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onTopPostMachineChange ), NULL, this );
+	m_topPostMachineSize1Ctrl->Connect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
+	m_topPostMachineSize2Ctrl->Connect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
 	m_bottomPostMachine->Connect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onBottomPostMachineChange ), NULL, this );
+	m_bottomPostMachineSize1Ctrl->Connect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
+	m_bottomPostMachineSize2Ctrl->Connect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
 	m_cbTeardrops->Connect( wxEVT_UPDATE_UI, wxUpdateUIEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onTeardropsUpdateUi ), NULL, this );
 	m_cbTeardropsUseNextTrack->Connect( wxEVT_UPDATE_UI, wxUpdateUIEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onTeardropsUpdateUi ), NULL, this );
 	m_stHDRatio->Connect( wxEVT_UPDATE_UI, wxUpdateUIEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onTeardropsUpdateUi ), NULL, this );
@@ -920,11 +948,18 @@ DIALOG_TRACK_VIA_PROPERTIES_BASE::~DIALOG_TRACK_VIA_PROPERTIES_BASE()
 	m_ViaTypeChoice->Disconnect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onViaEdit ), NULL, this );
 	m_ViaStartLayer->Disconnect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onViaEdit ), NULL, this );
 	m_ViaEndLayer->Disconnect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onViaEdit ), NULL, this );
+	m_protectionFeatures->Disconnect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onProtectionFeaturesChange ), NULL, this );
 	m_backdrillChoice->Disconnect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onBackdrillChange ), NULL, this );
+	m_backdrillFrontSizeCtrl->Disconnect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
 	m_backdrillFrontLayer->Disconnect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onViaEdit ), NULL, this );
+	m_backdrillBackSizeCtrl->Disconnect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
 	m_backdrillBackLayer->Disconnect( wxEVT_COMMAND_COMBOBOX_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onViaEdit ), NULL, this );
 	m_topPostMachine->Disconnect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onTopPostMachineChange ), NULL, this );
+	m_topPostMachineSize1Ctrl->Disconnect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
+	m_topPostMachineSize2Ctrl->Disconnect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
 	m_bottomPostMachine->Disconnect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onBottomPostMachineChange ), NULL, this );
+	m_bottomPostMachineSize1Ctrl->Disconnect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
+	m_bottomPostMachineSize2Ctrl->Disconnect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onMachiningEdit ), NULL, this );
 	m_cbTeardrops->Disconnect( wxEVT_UPDATE_UI, wxUpdateUIEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onTeardropsUpdateUi ), NULL, this );
 	m_cbTeardropsUseNextTrack->Disconnect( wxEVT_UPDATE_UI, wxUpdateUIEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onTeardropsUpdateUi ), NULL, this );
 	m_stHDRatio->Disconnect( wxEVT_UPDATE_UI, wxUpdateUIEventHandler( DIALOG_TRACK_VIA_PROPERTIES_BASE::onTeardropsUpdateUi ), NULL, this );

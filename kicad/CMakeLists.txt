@@ -81,6 +81,7 @@ set( KICAD_CLI_SRCS
     cli/command_pcb_export_gerber.cpp
     cli/command_pcb_export_gerbers.cpp
     cli/command_pcb_export_gencad.cpp
+    cli/command_pcb_export_specctra.cpp
     cli/command_pcb_export_hpgl.cpp
     cli/command_pcb_export_ipc2581.cpp
     cli/command_pcb_export_ipcd356.cpp
@@ -301,7 +302,6 @@ if( APPLE )
         endfunction( move_to_main_bundle )
 
         # move all app bundles
-        move_to_main_bundle( \"bitmap2component.app\" \"Image Converter.app\" )
         move_to_main_bundle( \"eeschema.app\" \"Schematic Editor.app\" )
         move_to_main_bundle( \"gerbview.app\" \"GerbView.app\" )
         move_to_main_bundle( \"pcb_calculator.app\" \"PCB Calculator.app\" )
