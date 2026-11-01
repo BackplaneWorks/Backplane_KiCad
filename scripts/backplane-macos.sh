@@ -6,7 +6,10 @@ cd "$(dirname "$0")/.."
 export HOMEBREW_NO_AUTO_UPDATE=1
 prefix=$(brew --prefix)
 export PATH="$prefix/opt/protobuf@29/bin:$prefix/bin:$PATH"
-export PKG_CONFIG_PATH="$prefix/lib/pkgconfig:$prefix/opt/curl/lib/pkgconfig"
+# KiCad uses the nng 1.x API; Homebrew's nng is 2.0, so CI builds 1.x separately.
+nng=${BACKPLANE_NNG_PREFIX:?set BACKPLANE_NNG_PREFIX to an nng 1.x install}
+[ ! -e "$prefix/include/nng/nng.h" ] || { echo "Homebrew nng would shadow nng 1.x; brew uninstall nng" >&2; exit 2; }
+export PKG_CONFIG_PATH="$nng/lib/pkgconfig:$prefix/lib/pkgconfig:$prefix/opt/curl/lib/pkgconfig"
 version=$(tr -d '\r\n' < BACKPLANE_VERSION)
 [[ "$version" =~ ^10\.99\.0-(bp\.[0-9]+)$ ]] || { echo 'Invalid Backplane release version' >&2; exit 2; }
 version_extra=${BASH_REMATCH[1]}
@@ -21,7 +24,7 @@ mkdir -p "$release"
 ccache --max-size=2G
 cmake -S . -B "$build" -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$stage" \
-  -DCMAKE_PREFIX_PATH="$prefix;$prefix/opt/protobuf@29;$prefix/opt/curl;$prefix/opt/opencascade" \
+  -DCMAKE_PREFIX_PATH="$nng;$prefix;$prefix/opt/protobuf@29;$prefix/opt/curl;$prefix/opt/opencascade" \
   -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
   -DOCC_INCLUDE_DIR="$(brew --prefix opencascade)/include/opencascade" \
   -DOCC_LIBRARY_DIR="$(brew --prefix opencascade)/lib" \
