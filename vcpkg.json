@@ -88,6 +88,11 @@
       "name": "protobuf",
       "version": "6.33.4#2",
       "$comment": "Pinned due to the MSVC C++20 linker mismatch with protobuf 7.36.2"
+    },
+    {
+      "name": "pcre2",
+      "version": "10.47#1",
+      "$comment": "Backplane: 10.49's sljit gitlink download fails vcpkg's hash check (baseline 15b12b99a2); 10.47#1 built under the previous baseline"
     }
   ]
 }
