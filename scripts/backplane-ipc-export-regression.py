@@ -31,6 +31,10 @@ def validate_output(path):
     elif suffix == ".zip":
         with zipfile.ZipFile(path) as archive:
             assert archive.namelist() and archive.testzip() is None, path
+    elif suffix == ".dsn":
+        assert data.lstrip().startswith(b"(pcb"), path
+        for section in (b"(structure", b"(placement", b"(library", b"(network"):
+            assert section in data, (path, section)
 
 
 def main():
@@ -109,6 +113,7 @@ def main():
                 format=pcb.PF_CSV, units=enums.U_MM, single_file=True,
                 side=pcb.PS_BOTH), "csv"),
             (types.DOCTYPE_PCB, pcb.RunBoardJobExportGencad(), "cad"),
+            (types.DOCTYPE_PCB, pcb.RunBoardJobExportSpecctraDsn(), "dsn"),
             (types.DOCTYPE_PCB, pcb.RunBoardJobExportIdf(units=enums.U_MM), "emn"),
             (types.DOCTYPE_PCB, pcb.RunBoardJobExportPng(
                 plot_settings=pcb.BoardPlotSettings(layers=[board.BL_F_Cu, board.BL_Edge_Cuts]),
