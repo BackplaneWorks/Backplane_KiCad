@@ -21,6 +21,7 @@
 #define KI_ERROR_H_
 
 #include <chrono>
+#include <string>
 
 #include <kicommon.h>
 #include <wx/string.h>
@@ -94,7 +95,8 @@ private:
 };
 
 
-// Provides {fmt} formatting
-auto format_as( const KI_ERROR& aError );
+// Provides {fmt} formatting.  The return type is spelled out: callers in other translation units
+// cannot deduce an `auto` return type from a declaration, and GCC 15 rejects that use.
+std::string format_as( const KI_ERROR& aError );
 
 #endif // KI_ERROR_H_
