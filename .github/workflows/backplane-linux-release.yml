@@ -425,8 +425,8 @@ jobs:
         if: always() && env.archive_root != ''
         shell: bash
         env:
-          STOCK_KICAD_DEB: https://ppa.launchpadcontent.net/kicad/kicad-10.0-releases/ubuntu/pool/main/k/kicad/kicad_10.0.7~ubuntu26.04.1_amd64.deb
-          STOCK_KICAD_SHA256: 0e0e03c74379be85f1e08ec27c047625f4490f357cb2896c962270e29bbb3099
+          STOCK_KICAD_DEB: https://ppa.launchpadcontent.net/kicad/kicad-10.0-releases/ubuntu/pool/main/k/kicad/kicad_10.0.8~ubuntu26.04.1_amd64.deb
+          STOCK_KICAD_SHA256: eb8e81d7e9fc468ba26264debb5ce089fc078d5f91025790ecc92f51b91e536c
         run: |
           set -euo pipefail
           unset LD_LIBRARY_PATH
