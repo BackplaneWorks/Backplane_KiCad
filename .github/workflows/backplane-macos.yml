@@ -25,7 +25,7 @@ jobs:
         env:
           HOMEBREW_NO_AUTO_UPDATE: '1'
         run: |
-          brew install cmake ninja pkg-config ccache boost cairo curl eigen fontconfig freetype glew glm harfbuzz libgit2 ngspice nng opencascade pixman protobuf@29 rapidjson unixodbc wxwidgets yaml-cpp zint zstd glslang spirv-tools spirv-cross
+          brew install cmake ninja pkg-config ccache boost cairo curl eigen fontconfig freetype glew glm harfbuzz libgit2 ngspice nng opencascade pixman protobuf@29 rapidjson sqlite unixodbc wxwidgets yaml-cpp zint zstd glslang spirv-tools spirv-cross
           python -m pip install protobuf==5.29.6 pynng==0.9.0
       - uses: actions/cache/restore@v4
         id: compiler-cache

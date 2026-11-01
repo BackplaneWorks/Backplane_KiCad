@@ -26,6 +26,7 @@ cmake -S . -B "$build" -G Ninja \
   -DOCC_INCLUDE_DIR="$(brew --prefix opencascade)/include/opencascade" \
   -DOCC_LIBRARY_DIR="$(brew --prefix opencascade)/lib" \
   -DNGSPICE_LIB_NAME=ngspice -DNGSPICE_ROOT_DIR="$(brew --prefix libngspice)" \
+  -DSQLite3_ROOT="$(brew --prefix sqlite)" \
   -DKICAD_BUILD_QA_TESTS=OFF -DKICAD_BUILD_I18N=OFF \
   -DKICAD_USE_SENTRY=OFF -DKICAD_USE_PCH=OFF \
   -DKICAD_VERSION_EXTRA="$version_extra" -DBACKPLANE_FORK_VERSION="$version" \
