@@ -1,7 +1,7 @@
 # Backplane KiCad
 
 - New commits must use author and committer `i2cjak <build@amemb.com>`. Verify `git var GIT_AUTHOR_IDENT` and `git var GIT_COMMITTER_IDENT` before committing.
-- Before every push, verify the authenticated account is `i2cjak`, the destination is the public `i2cjak/Backplane_KiCad` repository, and review the outgoing commits, diff, and relevant checks. Preserve upstream commit identities and history.
+- Before every push, verify the authenticated account is `i2cjak`, the destination is the public `BackplaneWorks/Backplane_KiCad` repository (moved from `i2cjak/Backplane_KiCad`, user-confirmed 2026-11-01; same repo id 1361902418), and review the outgoing commits, diff, and relevant checks. Preserve upstream commit identities and history.
 - Base the fork on upstream KiCad master (user decision, 2026-10-14), not on stable releases. `backplane/master` is a pinned upstream master commit plus a small patch set listed in `PATCHES.md`. Rebase onto upstream master regularly (weekly target); each release pins a known-good upstream commit and records it in the runtime manifest.
 - Keep patches small and focused, and record their upstream context (base commit, and the source commit when porting). Drop a patch once upstream covers it. Verify both schematic and PCB behavior over IPC. Never label an untested patch a working runtime.
 - Native files follow upstream master's format. Do not add fork-only tokens to `.kicad_pcb`/`.kicad_sch`; store fork-only data in adjacent `.backplane.json` / `.backplane-assembly.json` companions and preserve them through save, copy, export, and `kicad-cli ... downgrade`. Stock KiCad 10 users get a copy via `kicad-cli project downgrade --target 10.0`.
