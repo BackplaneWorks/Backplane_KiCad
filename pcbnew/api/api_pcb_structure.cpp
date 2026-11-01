@@ -166,7 +166,7 @@ HANDLER_RESULT<ViewerConstructionStateResponse> API_HANDLER_PCB::handleGetViewer
 
     ViewerConstructionStateResponse response;
     PCB_BASE_FRAME* frame = dynamic_cast<PCB_BASE_FRAME*>( m_frame );
-    EDA_3D_VIEWER_FRAME* viewer = frame ? frame->Get3DViewerFrame() : nullptr;
+    EDA_3D_VIEWER_FRAME* viewer = frame ? frame->GetOur3DViewerFrame() : nullptr;
     response.set_viewer_open( viewer != nullptr );
 
     if( viewer )
@@ -190,12 +190,12 @@ HANDLER_RESULT<ViewerConstructionStateResponse> API_HANDLER_PCB::handleSetViewer
         return tl::unexpected( documentValidation.error() );
 
     PCB_BASE_FRAME* frame = dynamic_cast<PCB_BASE_FRAME*>( m_frame );
-    EDA_3D_VIEWER_FRAME* viewer = frame ? frame->Get3DViewerFrame() : nullptr;
+    EDA_3D_VIEWER_FRAME* viewer = frame ? frame->GetOur3DViewerFrame() : nullptr;
 
     if( !viewer && frame && aCtx.Request.open_if_needed() )
     {
         frame->CreateAndShow3D_Frame();
-        viewer = frame->Get3DViewerFrame();
+        viewer = frame->GetOur3DViewerFrame();
     }
 
     if( !viewer )
