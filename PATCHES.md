@@ -1,6 +1,7 @@
 # Backplane_KiCad patch triage: backplane/10.0.6 → upstream master
 
-Base for the new branch: upstream master `fe761fb867` (2026-10-14, KiCad 10.99.0).
+Current upstream pin: `f4c75f251385065755b948fce210e5a029bcee5e` (2026-10-31, KiCad 10.99.0).
+Original port base: upstream master `fe761fb867` (2026-10-14). The initial triage below is retained as history.
 Old base: tag 10.0.6 `caf7377e9c`. 18 commits on backplane/10.0.6 plus 4 on origin/main.
 
 Classes: **DROP-UPSTREAM** = master has it; **DROP-OBSOLETE** = only meaningful on 10.0.6;
@@ -32,6 +33,24 @@ Classes: **DROP-UPSTREAM** = master has it; **DROP-OBSOLETE** = only meaningful 
 | — | 6c8feb7b9f | AGENTS.md | rewrite | New AGENTS.md for master base (2026-10-14 decision). |
 | — | (uncommitted) | rigid-flex, structure canvas/validation, assembly IPC | **PORT (phase 2)** | Was never committed; snapshotted to local branch `backplane/wip-structure-2026-09-12` (139 files, +17.8k). Data lives in `.kicad_pcb.backplane.json` sidecars and `.backplane-assembly.json`, no native tokens. Touches 3D viewer, router, STEP exporter, `api_handler_pcb.cpp` (split upstream): hard conflicts expected. |
 
+## Sync adaptations for upstream f4c75f2513
+
+The sync preserves upstream history and the fork patch set. Runtime validation is recorded per commit in CI;
+release archives must identify their own source and version rather than replace published bp.6 assets.
+
+| Area | Adaptation | Upstream context / evidence |
+|---|---|---|
+| fmt | Give `format_as(const KI_ERROR&)` a concrete `std::string` return type | Upstream `861742895e`; GCC 15 cannot deduce the forward declaration's `auto` return type. |
+| Windows dependencies | Pin pcre2 10.47#1 in the new vcpkg graph | The new pcre2 10.49 source download fails its upstream hash check; the retained release dependency passes the native build. |
+| Mac SQLite | Resolve Homebrew's keg-only SQLite explicitly | The new upstream configuration requires SQLite headers/library outside the default prefix search. |
+| Mac nng | Build nng 1.12.3 at `73f715235967afc783e0b99c52d015dc10897fda` | Homebrew 2.0 removed APIs KiCad uses. Preserve this separate dependency's notice, revision and matching source as well as Homebrew notices. |
+| Sketch router | Use `SetFixedClearanceOverride` for fixed values, including zero | Upstream `5ae319d9a2` changed the override into a function; assigning zero would clear it. |
+| Structure IPC viewer | Use `GetOur3DViewerFrame` for the internal frame | Upstream `2947344d3e` renamed the accessor when adding external viewer shutdown; all three fork calls follow it. |
+| IPC export regression | Exercise Specctra DSN with structural output checks | Upstream `e6e8b6bf5f` added the job; retain the guard against untested export jobs. |
+| Stock KiCad hand-off | Pin official PPA 10.0.8~ubuntu26.04.1 and its SHA-256 | The previous 10.0.7 URL was removed. Preserve actual stock round-trip and checksum verification. |
+
+Upstream now supplies the schematic polyline `custom_property` parser case; the merge keeps one upstream case.
+
 ## New fork patches (not in the old branch)
 | ID | Patch | Why |
 |---|---|---|
@@ -47,7 +66,7 @@ Classes: **DROP-UPSTREAM** = master has it; **DROP-OBSOLETE** = only meaningful 
 | W5 | headless CLI JSON DLL declarations | Native run `39211355156` passed the cross-drive checker and editor executable links, then failed at 2637/2643 on duplicate JSON definitions from `command_api_server.cpp.obj`. Include upstream `json_common.h` before the fork CLI's JSON instances; explicitly use the same header in the fork PCB structure adapter. Audited all fork-added JSON includes against the pinned upstream. Manifest and IPC behavior are unchanged. |
 | W6 | Windows build/test version contracts | Native run `39223192558` compiled and installed, but protoc 33.4 generated Python bindings newer than the pinned client. Use Python protobuf 6.33.4 and import bindings before compiling. Its retained runtime passed native IPC/exports, revealing PowerShell split the unquoted `bp.4-windows-ci` argument into `bp` and an ignored path. Quote `bp.4`, keep the manifest's platform separate from its fork version, assert CMake retained the suffix, and check live GetVersion against it. Backplane's strict identity check remains intact. |
 
-## Patch set on backplane/master (base fe761fb867; see `git log $(cat BACKPLANE_UPSTREAM)..backplane/master`)
+## Maintained fork patches (initial port base fe761fb867; current pin is BACKPLANE_UPSTREAM)
 | Commit | Patch | Source |
 |---|---|---|
 | docs | AGENTS.md (master base, 2026-10-14), PATCHES.md | new |
