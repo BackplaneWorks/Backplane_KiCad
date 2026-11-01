@@ -741,7 +741,7 @@ bool viaHolesClear( NODE* aNode, const VIA& aVia, int aHoleToHole )
 
     COLLISION_SEARCH_OPTIONS opts;
     opts.m_differentNetsOnly = false;
-    opts.m_overrideClearance = aHoleToHole;
+    opts.SetFixedClearanceOverride( aHoleToHole );
     opts.m_limitCount = 1;
     opts.m_kindMask = ITEM::HOLE_T;
     opts.m_useClearanceEpsilon = false;
@@ -1316,7 +1316,7 @@ private:
             // Keep vias off pads and other vias, including those of our own net
             COLLISION_SEARCH_OPTIONS opts;
             opts.m_differentNetsOnly = false;
-            opts.m_overrideClearance = 0;
+            opts.SetFixedClearanceOverride( 0 );
             opts.m_limitCount = 1;
             opts.m_kindMask = ITEM::SOLID_T | ITEM::VIA_T;
 
