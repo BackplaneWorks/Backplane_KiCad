@@ -56,9 +56,10 @@ host top-level (WM-managed)
   never maps or restacks it.
 - **Geometry is the host's.** The host moves and resizes frame windows inside the container
   (holder coordinates equal container coordinates) with `XMoveResizeWindow`, or passes the
-  rectangle in `ShowFrame`. The host may also map and unmap a frame window directly for instant
-  switching once it has been shown by `ShowFrame`; `HideFrame`/`ShowFrame` do the same through
-  KiCad.
+  rectangle in `ShowFrame`. The host may also map and unmap a frame window directly
+  (`XMapWindow`/`XUnmapWindow`) for instant switching once it has been shown by `ShowFrame`;
+  `HideFrame`/`ShowFrame` do the same through KiCad. KiCad reports `shown` from the window's
+  real map state, and a later `ShowFrame` maps a window the host unmapped itself.
 - **The host must put the holder in its save-set**, preferably with
   `XFixesChangeSaveSet(dpy, holder, SetModeInsert, SaveSetRoot, SaveSetUnmap)` (the holder id
   is in `AttachToParentResponse` and `GetFramesResponse`). If the host's connection closes, the
@@ -113,8 +114,8 @@ wParam = l[3], lParam = l[0])`.
 | Command | Response | Notes |
 |---|---|---|
 | `AttachToParent {window, toplevel, scale}` | `{holder, frames}` | Re-parents the holder (and so every frame) under `window`; `window` 0 parks everything unmapped. `toplevel` 0 keeps the previous one. Focus/key messages go to `window`. `scale` is recorded and reported; GTK follows `Xft.dpi` (start KiCad with `GDK_SCALE=1`). |
-| `ShowFrame {kind, document?, item?, focus?, x, y, width, height}` | `{frame}` | Opens the frame if needed (through the project manager, as KiCad's own buttons do; `FK_PCB_3D` loads the board hidden first), applies the geometry, maps it, then navigates: SCH `document` = sheet file; PCB/SCH `item` = reference to select and centre; symbol/footprint editor `item` = LIB_ID. `AS_BUSY` if a frame would have to be opened while a modal dialog is up. |
-| `HideFrame {kind or window}` | `{}` | Unmaps without closing. |
+| `ShowFrame {kind, document?, item?, focus?, x, y, width, height, prewarm?}` | `{frame, frames}` | Opens the frame if needed (through the project manager, as KiCad's own buttons do; `FK_PCB_3D` loads the board hidden first), applies the geometry, maps it, then navigates: SCH `document` = sheet file; PCB/SCH `item` = reference to select and centre; symbol/footprint editor `item` = LIB_ID. `AS_BUSY` if a frame would have to be opened while a modal dialog is up. |
+| `HideFrame {kind or window}` | `{frames}` | Unmaps without closing. |
 | `GetFrames {}` | `{frames, parent, toplevel, holder, scale, reserved_keys, events_socket}` | |
 | `NextEvents {since, wait_ms, max}` | `{events, next, lost}` | Long poll on `events_socket` (`<api-socket>.events`, a second REQ/REP socket that serves only this command, so a waiting poll never blocks other requests). On the main socket `wait_ms` is ignored. `lost` = events after `since` were dropped (buffer 1024); resync with `GetFrames`. Event seqs start at 1 per process. |
 | `SetChrome {menubar?, top_toolbar?, side_toolbars?, status_bar?}` | the current values | Applies now and to frames opened later (and survives menubar rebuilds). |
@@ -208,10 +209,45 @@ footprint editor's `.kicad_mod` of the footprint on screen.
 plus frame state across HideFrame/ShowFrame, popups/tooltips/3D-viewer dialogs never escaping,
 and re-attaching after the host's connection dies; CI runs it beside the bp.8 check.
 
+### Prewarm and batched replies
+
+`ShowFrame{kind, width, height, prewarm: true}` replies at once; at the UI thread's next idle
+time KiCad opens the frame if needed without mapping it on screen, lays it out and paints it once
+off-screen at that size (canvas, GL context and first view built), then hides it again.
+`ET_FRAME_OPENED` follows; there is no `ET_SHOW_REQUESTED`, `ET_SHOWN` or `ET_HIDDEN` for a
+prewarm, and it is skipped while a modal dialog is up. The reply's `frame` is filled when the
+frame already existed (else only `kind`). A later plain `ShowFrame` maps it in a few ms.
+`ShowFrameResponse.frames` and `HideFrameResponse.frames` hold every frame's state after the
+call, so a switch needs no `GetFrames`.
+
+### Frame-time trace
+
+`BACKPLANE_KICAD_FRAMETRACE=<file>` makes KiCad append JSON lines: one
+`{"kind":"loop","t","ms","ran":[...]}` per UI-thread loop iteration over 8 ms (`t` in ms since
+the epoch; `ran` = what ran in it, with counts: event types and the window class/frame they hit,
+tool actions, IPC commands, timers, `redraw_by:<paint|idle|refresh|force|timer>`), and
+`{"kind":"span","t","ms","what"}` for timed sections (`gal_redraw@<frame>`, `save:pcb[:write|
+history|...]`, `save:sch`, `ipc:<command>`, `embed:show@<frame>`, `embed:prewarm@<frame>`, ...).
+`scripts/backplane-embed-perf.py <kicad> <kicad-cli> --out DIR [--prewarm]` drives first
+opens, IPC and host-local switches and saves on a private Xvfb and summarises the trace.
+
+### Speed (bp.9)
+
+- A save no longer rebuilds the menubar (and relayouts the whole frame) when the file is
+  already first in the recent-files list; the embed chrome only relayouts when something changed.
+- The local-history snapshot after a save copies the files of clean documents (the board just
+  saved, unmodified schematic sheets) on its background thread instead of formatting them again
+  on the UI thread.
+- Embedded canvases paint once for the exposes a show delivers together.
+
 ## Known limitations (as of bp.9)
 
 - `ListActions` (the palette feed).
 - Live scale changes: `AttachToParent.scale` is only recorded.
 - Windows and macOS are untested.
+- An IPC `ShowFrame` of a frame already open still repaints its canvas twice (a host-local
+  `XMapWindow` repaints once).
+- The save itself still runs on the UI thread (board write ~8-12 ms plus the snapshot step
+  ~10 ms on the demo board).
 - KiCad's 3D viewer binds Ctrl+Tab / Shift+Tab to cycle its presets and viewports; with the
   default reserved keys Ctrl+Tab goes to the host instead.

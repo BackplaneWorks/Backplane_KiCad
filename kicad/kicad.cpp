@@ -107,6 +107,10 @@ PGM_KICAD& PgmTop()
 
 bool PGM_KICAD::OnPgmInit()
 {
+    // BACKPLANE_KICAD_FRAMETRACE=<file>: UI-thread frame times for an embedding host (any mode)
+    if( wxString trace; wxGetEnv( wxS( "BACKPLANE_KICAD_FRAMETRACE" ), &trace ) && !trace.IsEmpty() )
+        BACKPLANE_EMBED::Get().TraceStart( trace );
+
     App().SetAppDisplayName( wxT( "KiCad" ) );
 
 #if defined(DEBUG)

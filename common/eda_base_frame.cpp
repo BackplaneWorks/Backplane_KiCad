@@ -451,10 +451,15 @@ void EDA_BASE_FRAME::Raise()
 
 void EDA_BASE_FRAME::ApplyEmbedChrome( const EMBED_CHROME& aChrome )
 {
+    // Only what changes is touched: a relayout of the whole frame costs a redraw of every
+    // panel and the canvas, and this runs again each time the menubar is rebuilt.
+    bool changed = false;
+
     // Embedded frames are child windows: an AUI pane must never float off as a top-level.
     if( m_auimgr.GetManagedWindow() )
     {
-        m_auimgr.SetFlags( m_auimgr.GetFlags() & ~wxAUI_MGR_ALLOW_FLOATING );
+        if( m_auimgr.GetFlags() & wxAUI_MGR_ALLOW_FLOATING )
+            m_auimgr.SetFlags( m_auimgr.GetFlags() & ~wxAUI_MGR_ALLOW_FLOATING );
 
         wxAuiPaneInfoArray& panes = m_auimgr.GetAllPanes();
 
@@ -463,7 +468,10 @@ void EDA_BASE_FRAME::ApplyEmbedChrome( const EMBED_CHROME& aChrome )
             wxAuiPaneInfo& pane = panes.Item( ii );
 
             if( pane.IsFloating() )
+            {
                 pane.Dock();
+                changed = true;
+            }
 
             pane.Floatable( false );
         }
@@ -475,30 +483,42 @@ void EDA_BASE_FRAME::ApplyEmbedChrome( const EMBED_CHROME& aChrome )
 
                             wxAuiPaneInfo& pane = m_auimgr.GetPane( aToolbar );
 
-                            if( pane.IsOk() )
+                            if( pane.IsOk() && pane.IsShown() != aShow )
+                            {
                                 pane.Show( aShow );
+                                changed = true;
+                            }
                         };
 
         showPane( m_tbTopMain, aChrome.topToolbar );
         showPane( m_tbTopAux, aChrome.topToolbar );
         showPane( m_tbLeft, aChrome.sideToolbars );
         showPane( m_tbRight, aChrome.sideToolbars );
-        m_auimgr.Update();
+
+        if( changed )
+            m_auimgr.Update();
     }
 
     if( wxMenuBar* menuBar = GetMenuBar() )
     {
         if( menuBar->IsShown() != aChrome.menubar )
+        {
             menuBar->Show( aChrome.menubar );
+            changed = true;
+        }
     }
 
     if( wxStatusBar* statusBar = GetStatusBar() )
     {
         if( statusBar->IsShown() != aChrome.statusBar )
+        {
             statusBar->Show( aChrome.statusBar );
+            changed = true;
+        }
     }
 
-    SendSizeEvent();
+    if( changed )
+        SendSizeEvent();
 }
 
 
@@ -1624,10 +1644,15 @@ void EDA_BASE_FRAME::UpdateFileHistory( const wxString& FullFileName, FILE_HISTO
 
     wxASSERT( aFileHistory );
 
+    // Saving the file already at the top of the list changes nothing in the menu, and
+    // rebuilding the menubar relayouts the whole frame (hundreds of ms on a large window)
+    bool unchanged = aFileHistory->GetCount() > 0
+                     && wxFileName( aFileHistory->GetHistoryFile( 0 ) ) == wxFileName( FullFileName );
+
     aFileHistory->AddFileToHistory( FullFileName );
 
     // Update the menubar to update the file history menu
-    if( !m_isClosing && GetMenuBar() )
+    if( !unchanged && !m_isClosing && GetMenuBar() )
     {
         ReCreateMenuBar();
         GetMenuBar()->Refresh();

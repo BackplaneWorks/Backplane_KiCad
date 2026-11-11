@@ -1156,6 +1156,7 @@ bool SCH_EDIT_FRAME::saveSchematicFile( SCH_SHEET* aSheet, const wxString& aSave
     {
         // Our own write is not an external change to reload from (embedded mode).
         BACKPLANE_EMBED::WRITE_SCOPE writing( schematicFileName.GetFullPath() );
+        BACKPLANE_EMBED::TRACE_SCOPE trace( "save:sch:write" );
 
         pi->SaveSchematicFile( schematicFileName.GetFullPath(), aSheet, &Schematic() );
         success = true;
@@ -1255,6 +1256,8 @@ bool PrepareSaveAsFiles( SCHEMATIC& aSchematic, SCH_SCREENS& aScreens, const wxF
 
 bool SCH_EDIT_FRAME::SaveProject( bool aSaveAs )
 {
+    BACKPLANE_EMBED::TRACE_SCOPE traceSave( "save:sch" );
+
     wxString msg;
     SCH_SCREEN* screen;
     SCH_SCREENS screens( Schematic().Root() );

@@ -23,6 +23,7 @@
 #include <sstream>
 #include <cctype>
 #include <chrono>
+#include <cstdio>
 
 #include <wx/app.h>
 #include <wx/dialog.h>
@@ -32,6 +33,7 @@
 #include <wx/toplevel.h>
 #include <wx/filename.h>
 #include <wx/time.h>
+#include <wx/weakref.h>
 
 #if defined( __unix__ ) || defined( __APPLE__ )
 #include <signal.h>
@@ -328,7 +330,7 @@ EMBED_FRAME_INFO BACKPLANE_EMBED::info( const FRAME_ENTRY& aEntry ) const
     result.minHeight = aEntry.minHeight;
     result.frameName = aEntry.frame->GetName();
     result.title = aEntry.frame->GetTitle();
-    result.shown = aEntry.frame->IsShown();
+    result.shown = aEntry.frame->IsShown() && KIPLATFORM::EMBED::IsMapped( aEntry.frame );
     result.focused = result.shown && KIPLATFORM::EMBED::HasFocus( aEntry.frame );
 
     if( aEntry.ops.document )
@@ -479,8 +481,8 @@ std::optional<bool> BACKPLANE_EMBED::OnFrameShow( wxFrame* aFrame, FRAME_T aType
     }
 
 
-    if( aShow && !aFrame->IsShown() && m_showAllowed == 0 && m_reloading > 0 )
-        return false;   // reopening a document re-shows its frame; the host's choice stands
+    if( aShow && !aFrame->IsShown() && m_showAllowed == 0 && ( m_reloading > 0 || m_quietShowRequests > 0 ) )
+        return false;   // a reload or a prewarm re-shows its frame; the host's choice stands
 
     if( aShow && !aFrame->IsShown() && m_showAllowed == 0 )
     {
@@ -516,7 +518,7 @@ bool BACKPLANE_EMBED::OnFrameRaise( wxFrame* aFrame, FRAME_T aType, bool aIsModa
         e = entry( aFrame );
     }
 
-    if( !aFrame->IsShown() && m_showAllowed == 0 )
+    if( !aFrame->IsShown() && m_showAllowed == 0 && m_quietShowRequests == 0 && m_reloading == 0 )
         PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ) );
 
     return true;
@@ -546,6 +548,7 @@ void BACKPLANE_EMBED::OnFrameDestroyed( wxFrame* aFrame )
 
     m_frames.erase( it );
     m_conflicts.erase( aFrame );
+    m_prewarming.erase( aFrame );
     PushEvent( EMBED_EVENT_TYPE::FRAME_CLOSED, closed );
 }
 
@@ -573,7 +576,18 @@ bool BACKPLANE_EMBED::ShowEmbedded( wxFrame* aFrame, bool aShow )
     if( !IsEmbedded( aFrame ) )
         return false;
 
+    TRACE_SCOPE trace( std::string( aShow ? "embed:show@" : "embed:hide@" )
+                       + aFrame->GetName().ToStdString( wxConvUTF8 ) );
+
+    if( aShow )
+        EndPrewarm( aFrame );
+
     WithShowAllowed( [&]() { aFrame->Show( aShow ); } );
+
+    // The host may have unmapped it itself (a local tab switch); wx still thinks it shown
+    if( aShow )
+        KIPLATFORM::EMBED::EnsureMapped( aFrame );
+
     return true;
 }
 
@@ -768,10 +782,54 @@ void BACKPLANE_EMBED::onFrameActivate( wxFrame* aFrame, bool aActive )
 
 int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
 {
+    wxEventType type = aEvent.GetEventType();
+
+    if( m_traceFile )
+    {
+        const char* name = nullptr;
+
+        if( type == wxEVT_PAINT ) name = "paint";
+        else if( type == wxEVT_SIZE ) name = "size";
+        else if( type == wxEVT_TIMER ) name = "timer";
+        else if( type == wxEVT_IDLE ) name = "idle";
+        else if( type == wxEVT_SHOW ) name = "show";
+        else if( type == wxEVT_ACTIVATE ) name = "activate";
+        else if( type == wxEVT_CHAR_HOOK || type == wxEVT_KEY_DOWN ) name = "key";
+        else if( type == wxEVT_LEFT_DOWN || type == wxEVT_RIGHT_DOWN || type == wxEVT_MIDDLE_DOWN ) name = "click";
+        else if( type == wxEVT_MOTION ) name = "motion";
+        else if( type == wxEVT_MOUSEWHEEL ) name = "wheel";
+        else if( type == wxEVT_MENU || type == wxEVT_TOOL ) name = "command";
+        else if( type == wxEVT_UPDATE_UI ) name = "update_ui";
+        else if( type == wxEVT_SYS_COLOUR_CHANGED ) name = "colours";
+
+        static std::string other;
+
+        if( !name && type != wxEVT_ENTER_WINDOW && type != wxEVT_LEAVE_WINDOW )
+        {
+            other = "ev" + std::to_string( static_cast<int>( type ) ) + ":"
+                    + wxString( aEvent.GetClassInfo() ? aEvent.GetClassInfo()->GetClassName()
+                                                      : wxT( "?" ) ).ToStdString();
+            name = other.c_str();
+        }
+
+        if( name )
+        {
+            wxObject* object = aEvent.GetEventObject();
+            wxWindow* window = wxDynamicCast( object, wxWindow );
+            wxWindow* top = window ? wxGetTopLevelParent( window ) : nullptr;
+            std::string where = top ? top->GetName().ToStdString( wxConvUTF8 ) : std::string();
+            std::string what( name );
+
+            // Which window resized or appeared: a layout change behind a redraw storm
+            if( window && ( type == wxEVT_SIZE || type == wxEVT_SHOW || type == wxEVT_PAINT ) )
+                what += ":" + wxString( window->GetClassInfo()->GetClassName() ).ToStdString().substr( 0, 40 );
+
+            TraceNote( where.empty() ? what : what + "@" + where );
+        }
+    }
+
     if( !m_enabled )
         return -1;
-
-    wxEventType type = aEvent.GetEventType();
 
     bool buttonDown = type == wxEVT_LEFT_DOWN || type == wxEVT_RIGHT_DOWN
                       || type == wxEVT_MIDDLE_DOWN || type == wxEVT_AUX1_DOWN
@@ -894,6 +952,8 @@ std::optional<wxString> BACKPLANE_EMBED::ModalBlocker()
 
 void BACKPLANE_EMBED::onPoll( wxTimerEvent& )
 {
+    TRACE_SCOPE trace( "embed:poll", 1.0 );
+
     pollFiles();
 
     for( FRAME_ENTRY& e : m_frames )
@@ -901,7 +961,11 @@ void BACKPLANE_EMBED::onPoll( wxTimerEvent& )
         wxString title = e.frame->GetTitle();
         wxString document = e.ops.document ? e.ops.document() : wxString();
         bool     modified = e.ops.modified ? e.ops.modified() : false;
-        bool     shown = e.frame->IsShown();
+        // A frame being prewarmed off-screen is not shown to anyone
+        if( m_prewarming.count( e.frame ) )
+            continue;
+
+        bool     shown = e.frame->IsShown() && KIPLATFORM::EMBED::IsMapped( e.frame );
 
         if( shown != e.shown )
         {
@@ -1324,11 +1388,15 @@ std::string contentHash( const std::string& aContent )
 
 void BACKPLANE_EMBED::baseline( const wxString& aPath )
 {
+    TRACE_SCOPE trace( "embed:baseline", 0.5 );
+
+    // Only the file's signature (a stat): reading and hashing it here would put the whole
+    // file's I/O on the UI thread after every save.  With no hash, the next change of signature
+    // counts as a change (a touch without new content reloads a clean document once).
     FILE_STATE& state = m_files[aPath];
-    std::string content;
 
     state.signature = fileSignature( aPath );
-    state.hash = readFile( aPath, content ) ? contentHash( content ) : std::string();
+    state.hash.clear();
     state.pendingSig.clear();
     state.pendingSince = 0;
 }
@@ -1454,7 +1522,7 @@ void BACKPLANE_EMBED::pollFiles()
             state.pendingSig.clear();
             std::string hash = contentHash( content );
 
-            if( hash == state.hash )
+            if( !state.hash.empty() && hash == state.hash )
                 continue;
 
             state.hash = hash;
@@ -1509,6 +1577,7 @@ EMBED_RELOAD_RESULT BACKPLANE_EMBED::doReload( wxFrame* aFrame )
 
     ++m_reloading;
     bool ok = false;
+    TRACE_SCOPE trace( "embed:reload" );
 
     try
     {
@@ -1554,11 +1623,11 @@ EMBED_RELOAD_RESULT BACKPLANE_EMBED::Reload( wxFrame* aFrame, bool aDiscard )
 
         for( const wxString& file : e->ops.watchedFiles() )
         {
-            wxString    path = normalPath( file );
-            std::string content;
-            auto        it = m_files.find( path );
+            // Untouched since the frame loaded or saved it: same signature (a stat, no read).
+            wxString path = normalPath( file );
+            auto     it = m_files.find( path );
 
-            if( it == m_files.end() || !readFile( path, content ) || contentHash( content ) != it->second.hash )
+            if( it == m_files.end() || fileSignature( path ) != it->second.signature )
                 same = false;
         }
 
@@ -1594,4 +1663,195 @@ EMBED_RELOAD_RESULT BACKPLANE_EMBED::ResolveConflict( wxFrame* aFrame, bool aRel
         e->ops.showConflict( wxEmptyString );
 
     return EMBED_RELOAD_RESULT::UNCHANGED;
+}
+
+
+// ---- Frame trace ---------------------------------------------------------------------------
+
+namespace
+{
+long long nowUs()
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+                   std::chrono::system_clock::now().time_since_epoch() )
+            .count();
+}
+
+
+std::string jsonEscape( const std::string& aText )
+{
+    std::string out;
+
+    for( char c : aText )
+    {
+        if( c == '"' || c == '\\' )
+            out += '\\';
+
+        if( static_cast<unsigned char>( c ) >= 0x20 )
+            out += c;
+    }
+
+    return out;
+}
+} // namespace
+
+
+bool BACKPLANE_EMBED::TraceStart( const wxString& aPath, double aThresholdMs )
+{
+    m_traceFile = fopen( aPath.ToStdString( wxConvUTF8 ).c_str(), "a" );
+
+    if( !m_traceFile )
+        return false;
+
+    setvbuf( m_traceFile, nullptr, _IOLBF, 0 );
+    m_traceThreshold = aThresholdMs;
+    KIPLATFORM::EMBED::InstallLoopTimer( [this]( double aStart, double aDur ) { traceLoop( aStart, aDur ); } );
+    fprintf( m_traceFile, "{\"kind\":\"start\",\"t\":%.3f,\"threshold_ms\":%.1f}\n", nowUs() / 1000.0,
+             aThresholdMs );
+    return true;
+}
+
+
+void BACKPLANE_EMBED::TraceNote( const std::string& aWhat )
+{
+    if( !m_traceFile )
+        return;
+
+    std::lock_guard<std::mutex> lock( m_traceMutex );
+
+    for( std::pair<std::string, int>& note : m_traceNotes )
+    {
+        if( note.first == aWhat )
+        {
+            note.second++;
+            return;
+        }
+    }
+
+    if( m_traceNotes.size() < 64 )
+        m_traceNotes.emplace_back( aWhat, 1 );
+}
+
+
+void BACKPLANE_EMBED::TraceSpan( const std::string& aWhat, double aMs )
+{
+    if( !m_traceFile )
+        return;
+
+    TraceNote( aWhat );
+    fprintf( m_traceFile, "{\"kind\":\"span\",\"t\":%.3f,\"ms\":%.3f,\"what\":\"%s\"}\n",
+             nowUs() / 1000.0 - aMs, aMs, jsonEscape( aWhat ).c_str() );
+}
+
+
+void BACKPLANE_EMBED::traceLoop( double aStartMs, double aDurMs )
+{
+    std::vector<std::pair<std::string, int>> notes;
+
+    {
+        std::lock_guard<std::mutex> lock( m_traceMutex );
+        notes.swap( m_traceNotes );
+    }
+
+    if( !m_traceFile || aDurMs < m_traceThreshold )
+        return;
+
+    std::string ran;
+
+    for( const auto& [note, count] : notes )
+    {
+        ran += ( ran.empty() ? "\"" : ",\"" ) + jsonEscape( note );
+        ran += ( count > 1 ? "*" + std::to_string( count ) : std::string() ) + "\"";
+    }
+
+    fprintf( m_traceFile, "{\"kind\":\"loop\",\"t\":%.3f,\"ms\":%.3f,\"ran\":[%s]}\n", aStartMs,
+             aDurMs, ran.c_str() );
+}
+
+
+BACKPLANE_EMBED::TRACE_SCOPE::TRACE_SCOPE( std::string aWhat, double aMinMs ) :
+        m_what( std::move( aWhat ) ),
+        m_minMs( aMinMs ),
+        m_startUs( 0 ),
+        m_on( BACKPLANE_EMBED::Get().Tracing() )
+{
+    if( m_on )
+        m_startUs = nowUs();
+}
+
+
+BACKPLANE_EMBED::TRACE_SCOPE::~TRACE_SCOPE()
+{
+    if( !m_on )
+        return;
+
+    double ms = ( nowUs() - m_startUs ) / 1000.0;
+
+    if( ms >= m_minMs )
+        BACKPLANE_EMBED::Get().TraceSpan( m_what, ms );
+    else
+        BACKPLANE_EMBED::Get().TraceNote( m_what );
+}
+
+
+// ---- Prewarm --------------------------------------------------------------------------------
+
+void BACKPLANE_EMBED::Prewarm( wxFrame* aFrame, int aWidth, int aHeight )
+{
+    if( !IsEmbedded( aFrame ) || aFrame->IsShown() || m_prewarming.count( aFrame ) )
+        return;
+
+    // Lay it out and paint it once off-screen (clipped by the container, so nothing shows),
+    // which builds its layout, its canvas's GL context and its first view; then hide it again.
+    m_prewarming.insert( aFrame );
+    TRACE_SCOPE trace( "embed:prewarm@" + aFrame->GetName().ToStdString( wxConvUTF8 ) );
+    KIPLATFORM::EMBED::SetFrameGeometry( aFrame, -30000, -30000, std::max( aWidth, 400 ), std::max( aHeight, 300 ) );
+    WithShowAllowed( [&]() { aFrame->Show( true ); } );
+
+    wxWeakRef<wxFrame> weak( aFrame );
+
+    // Hidden again after it has had time to paint (the paint comes from the next frames)
+    aFrame->CallAfter(
+            [this, weak, aWidth, aHeight]()
+            {
+                wxFrame* frame = weak.get();
+
+                if( !frame )
+                    return;
+
+                wxTimer* later = new wxTimer();
+                later->Bind( wxEVT_TIMER,
+                             [this, weak, later, aWidth, aHeight]( wxTimerEvent& )
+                             {
+                                 later->Stop();
+
+                                 if( wxFrame* f = weak.get(); f && m_prewarming.count( f ) )
+                                 {
+                                     WithShowAllowed( [&]() { f->Show( false ); } );
+                                     KIPLATFORM::EMBED::SetFrameGeometry( f, 0, 0, std::max( aWidth, 400 ),
+                                                                          std::max( aHeight, 300 ) );
+                                     m_prewarming.erase( f );
+                                 }
+
+                                 wxTheApp->CallAfter( [later]() { delete later; } );
+                             } );
+                later->StartOnce( 400 );
+            } );
+}
+
+
+void BACKPLANE_EMBED::EndPrewarm( wxFrame* aFrame )
+{
+    if( m_prewarming.erase( aFrame ) )
+    {
+        // Shown for real before the off-screen paint finished: back to the holder's origin
+        wxSize size = aFrame->GetSize();
+        KIPLATFORM::EMBED::SetFrameGeometry( aFrame, 0, 0, size.x, size.y );
+    }
+}
+
+
+bool BACKPLANE_EMBED::Prewarming() const
+{
+    return !m_prewarming.empty() || m_quietShowRequests > 0;
 }

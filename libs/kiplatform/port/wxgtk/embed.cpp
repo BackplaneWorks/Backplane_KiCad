@@ -516,6 +516,31 @@ uint64_t KIPLATFORM::EMBED::WindowId( wxWindow* aWindow )
 }
 
 
+bool KIPLATFORM::EMBED::IsMapped( wxWindow* aFrame )
+{
+    GtkWidget* widget = aFrame ? static_cast<GtkWidget*>( aFrame->GetHandle() ) : nullptr;
+    GdkWindow* window = widget ? gtk_widget_get_window( widget ) : nullptr;
+
+    // GDK follows MapNotify/UnmapNotify, so a host's own XMapWindow/XUnmapWindow counts
+    return window && gdk_window_is_visible( window );
+}
+
+
+void KIPLATFORM::EMBED::EnsureMapped( wxWindow* aFrame )
+{
+    GtkWidget* widget = aFrame ? static_cast<GtkWidget*>( aFrame->GetHandle() ) : nullptr;
+    GdkWindow* window = widget ? gtk_widget_get_window( widget ) : nullptr;
+
+    if( window && gtk_widget_get_visible( widget ) && !gdk_window_is_visible( window ) )
+        gdk_window_show_unraised( window );
+
+    // Wait for the server to map it, so its exposes are queued before the first paint: the
+    // canvas then paints once for all of them instead of once early and again on the expose.
+    if( window )
+        gdk_display_sync( gdk_window_get_display( window ) );
+}
+
+
 bool KIPLATFORM::EMBED::HasFocus( wxWindow* aFrame )
 {
 #ifdef GDK_WINDOWING_X11
@@ -635,6 +660,37 @@ static bool themeHasDarkVariant( const gchar* aTheme )
     }
 
     return false;
+}
+
+
+static std::function<void( double, double )> s_loopTimer;
+static GPollFunc                             s_originalPoll = nullptr;
+static gint64                                s_dispatchStart = 0;
+
+/// The poll that ends one iteration and starts the next: the time since the last poll returned
+/// is how long that iteration's dispatching took.
+static gint loopTimedPoll( GPollFD* aFds, guint aCount, gint aTimeout )
+{
+    gint64 now = g_get_real_time();
+
+    if( s_dispatchStart && s_loopTimer )
+        s_loopTimer( s_dispatchStart / 1000.0, ( now - s_dispatchStart ) / 1000.0 );
+
+    gint result = s_originalPoll( aFds, aCount, aTimeout );
+    s_dispatchStart = g_get_real_time();
+    return result;
+}
+
+
+void KIPLATFORM::EMBED::InstallLoopTimer( std::function<void( double, double )> aFunc )
+{
+    s_loopTimer = std::move( aFunc );
+
+    if( !s_originalPoll )
+    {
+        s_originalPoll = g_main_context_get_poll_func( nullptr );
+        g_main_context_set_poll_func( nullptr, loopTimedPoll );
+    }
 }
 
 

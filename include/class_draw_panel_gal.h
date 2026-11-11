@@ -464,6 +464,7 @@ protected:
 
     /// True when canvas needs to be refreshed from idle handler
     bool                     m_needIdleRefresh;
+    bool                     m_paintQueued = false;   ///< An embedded paint waits for idle
 
     /** The refresh timer was armed by Refresh() for a repaint it postponed */
     bool                     m_refreshDeferred = false;

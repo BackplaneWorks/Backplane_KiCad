@@ -209,6 +209,14 @@ public:
     /// Show or hide an embedded frame for the host (bypasses the show filter).
     bool ShowEmbedded( wxFrame* aFrame, bool aShow );
 
+    /// Lay out and paint a hidden frame once off-screen, then hide it again (ShowFrame.prewarm).
+    void Prewarm( wxFrame* aFrame, int aWidth, int aHeight );
+    void EndPrewarm( wxFrame* aFrame );
+    bool Prewarming() const;
+
+    /// While > 0, KiCad's own show requests are swallowed silently (a frame opened for a prewarm).
+    int m_quietShowRequests = 0;
+
     /// Run aFunc with KiCad's own Show() calls allowed to map embedded frames.
     void WithShowAllowed( const std::function<void()>& aFunc );
 
@@ -324,6 +332,30 @@ public:
     /// True while a reload is in progress (KiCad's own Show() calls are not host requests).
     bool Reloading() const { return m_reloading > 0; }
 
+    // ---- Frame trace (BACKPLANE_KICAD_FRAMETRACE=<file>) ----
+
+    /// Log every UI-thread loop iteration over aThresholdMs (with what ran in it) and every
+    /// span reported with TraceSpan (GAL redraws, saves, IPC commands) to aPath, JSON lines.
+    bool TraceStart( const wxString& aPath, double aThresholdMs = 8.0 );
+    bool Tracing() const { return m_traceFile != nullptr; }
+
+    /// Something that ran in the current loop iteration ("paint", "ipc:ShowFrame", ...).
+    void TraceNote( const std::string& aWhat );
+
+    /// A timed piece of work; always logged when tracing.
+    void TraceSpan( const std::string& aWhat, double aMs );
+
+    /// RAII: TraceSpan( aWhat, elapsed ) when it ends (if tracing and over aMinMs), and a note.
+    struct KICOMMON_API TRACE_SCOPE
+    {
+        TRACE_SCOPE( std::string aWhat, double aMinMs = 0.0 );
+        ~TRACE_SCOPE();
+        std::string m_what;
+        double      m_minMs;
+        long long   m_startUs;
+        bool        m_on;
+    };
+
     ~BACKPLANE_EMBED();
 
 private:
@@ -404,7 +436,15 @@ private:
     int         m_reloading = 0;
 
     std::map<wxString, FILE_STATE> m_files;
+
+    FILE*                    m_traceFile = nullptr;
+    double                   m_traceThreshold = 8.0;
+    std::vector<std::pair<std::string, int>> m_traceNotes;
+    std::mutex               m_traceMutex;
+
+    void traceLoop( double aStartMs, double aDurMs );
     std::map<wxFrame*, wxString>   m_conflicts;   ///< frame -> file with a pending conflict
+    std::set<wxFrame*>             m_prewarming;  ///< frames being painted off-screen
 
     wxTimer m_pollTimer;
     wxTimer m_parentTimer;

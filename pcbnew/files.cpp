@@ -1087,6 +1087,8 @@ bool PCB_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
 bool PCB_EDIT_FRAME::SavePcbFile( const wxString& aFileName, bool addToHistory,
                                   bool aChangeProject )
 {
+    BACKPLANE_EMBED::TRACE_SCOPE traceSave( "save:pcb" );
+
     // please, keep it simple.  prompting goes elsewhere.
     wxFileName pcbFileName = aFileName;
 
@@ -1159,6 +1161,7 @@ bool PCB_EDIT_FRAME::SavePcbFile( const wxString& aFileName, bool addToHistory,
 
         // Our own write is not an external change to reload from (embedded mode).
         BACKPLANE_EMBED::WRITE_SCOPE writing( pcbFileName.GetFullPath() );
+        BACKPLANE_EMBED::TRACE_SCOPE trace( "save:pcb:write" );
 
         pi->SaveBoard( pcbFileName.GetFullPath(), *GetBoard(), nullptr );
     }
@@ -1173,7 +1176,10 @@ bool PCB_EDIT_FRAME::SavePcbFile( const wxString& aFileName, bool addToHistory,
     WX_STRING_REPORTER backupReporter;
 
     if( !Kiface().IsSingle() )
+    {
+        BACKPLANE_EMBED::TRACE_SCOPE traceBackup( "save:pcb:backup" );
         GetSettingsManager()->TriggerBackupIfNeeded( backupReporter );
+    }
 
     GetBoard()->SetFileName( pcbFileName.GetFullPath() );
 
@@ -1201,15 +1207,19 @@ bool PCB_EDIT_FRAME::SavePcbFile( const wxString& aFileName, bool addToHistory,
         m_infoBar->ShowMessageFor( backupMsg.Trim(), 10000, wxICON_WARNING );
     }
 
-    GetScreen()->SetContentModified( false );
-    UpdateTitle();
-    UpdateStatusBar();
+    {
+        BACKPLANE_EMBED::TRACE_SCOPE traceTitle( "save:pcb:title" );
+        GetScreen()->SetContentModified( false );
+        UpdateTitle();
+        UpdateStatusBar();
+    }
 
     // Capture entire project state for PCB save events. Skip when running standalone
     // without a project loaded - the save path can land anywhere on the filesystem and
     // there is no project context for a snapshot to live under.
     if( !Prj().IsNullProject() )
     {
+        BACKPLANE_EMBED::TRACE_SCOPE traceHistory( "save:pcb:history" );
         Kiway().LocalHistory().RunRegisteredSaversAndCommit( Prj().GetProjectPath(), wxS( "PCB Save" ), wxS( "pcb" ) );
 
         // Drop the autosave file for the board we just persisted.  Scope to the PCB
@@ -1225,6 +1235,7 @@ bool PCB_EDIT_FRAME::SavePcbFile( const wxString& aFileName, bool addToHistory,
     m_autoSavePending = false;
     m_autoSaveRequired = false;
 
+    BACKPLANE_EMBED::TRACE_SCOPE traceGit( "save:pcb:git" );
     RefreshGitCommitPane();
 
     return true;

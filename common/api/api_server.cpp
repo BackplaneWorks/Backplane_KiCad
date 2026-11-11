@@ -333,6 +333,8 @@ void KICAD_API_SERVER::handleApiEvent( wxCommandEvent& aEvent )
 
 void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
 {
+    std::unique_ptr<BACKPLANE_EMBED::TRACE_SCOPE> trace;
+
     m_handledRequestCount.fetch_add( 1, std::memory_order_relaxed );
 
     ApiRequest request;
@@ -353,6 +355,12 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
 
     if( ADVANCED_CFG::GetCfg().m_EnableAPILogging )
         log( "Request: " + request.Utf8DebugString() );
+
+    if( BACKPLANE_EMBED::Get().Tracing() )
+    {
+        std::string type = request.message().type_url();
+        trace = std::make_unique<BACKPLANE_EMBED::TRACE_SCOPE>( "ipc:" + type.substr( type.rfind( '.' ) + 1 ) );
+    }
 
     if( !request.header().kicad_token().empty() &&
         request.header().kicad_token().compare( m_token ) != 0 )

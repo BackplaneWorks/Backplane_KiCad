@@ -94,11 +94,19 @@ message ShowFrame
   int32     y        = 6;
   int32     width    = 7;
   int32     height   = 8;
+
+  // Open the frame without showing it (bp.9): loaded, laid out and painted once off-screen so its
+  // canvas and GL context are ready, then left hidden; no map in the host's view, no flash.  The
+  // work is queued for the UI thread's next idle time and the reply comes at once (the frame,
+  // shown=false, when it is already open; kind only otherwise).  ET_FRAME_OPENED follows; no
+  // ET_SHOW_REQUESTED, ET_FRAME_SHOWN or ET_FRAME_HIDDEN is posted for a prewarm.
+  bool      prewarm  = 9;
 }
 
 message ShowFrameResponse
 {
-  FrameInfo frame = 1;
+  FrameInfo          frame  = 1;
+  repeated FrameInfo frames = 2;  // every frame after the change (bp.9), so no GetFrames is needed
 }
 
 // Hide (unmap) a frame without closing it.  Selects by kind, or by window when given.
@@ -110,6 +118,7 @@ message HideFrame
 
 message HideFrameResponse
 {
+  repeated FrameInfo frames = 1;  // every frame after the change (bp.9)
 }
 
 message GetFrames

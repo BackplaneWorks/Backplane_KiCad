@@ -20,6 +20,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include <backplane_embed.h>
 #include <wx/dcclient.h>
 
 #include <chrono>
@@ -346,14 +347,54 @@ void EDA_DRAW_PANEL_GAL::SetFocus()
 }
 
 
+namespace
+{
+/// What asked for the repaint in progress (frame tracing only): the outermost caller wins.
+const char* g_redrawCause = nullptr;
+
+struct REDRAW_CAUSE
+{
+    explicit REDRAW_CAUSE( const char* aCause ) : m_prev( g_redrawCause )
+    {
+        if( !g_redrawCause )
+            g_redrawCause = aCause;
+    }
+
+    ~REDRAW_CAUSE() { g_redrawCause = m_prev; }
+
+    const char* m_prev;
+};
+} // namespace
+
+
 void EDA_DRAW_PANEL_GAL::onPaint( wxPaintEvent& WXUNUSED( aEvent ) )
 {
+    REDRAW_CAUSE cause( "paint" );
     // Consuming the paint region stops GTK3 clearing the modern canvas between presents. The other
     // backends repost their child's paint event here with no native paint context, where a wxPaintDC asserts.
     std::optional<wxPaintDC> dc;
 
     if( m_backend == GAL_TYPE_MODERN )
         dc.emplace( this );
+
+    // Embedded, a show delivers several exposes at once (the frame's and the canvas's own
+    // window, the host's map): paint once for all of them, after the toolkit has handed them
+    // over, instead of a full redraw for each.
+    if( m_backend != GAL_TYPE_MODERN && BACKPLANE_EMBED::Get().Enabled() )
+    {
+        if( !m_paintQueued )
+        {
+            m_paintQueued = true;
+            CallAfter( [this]()
+                       {
+                           REDRAW_CAUSE queuedCause( "paint" );
+                           m_paintQueued = false;
+                           DoRePaint( false );
+                       } );
+        }
+
+        return;
+    }
 
     DoRePaint( false );
 }
@@ -603,8 +644,17 @@ void EDA_DRAW_PANEL_GAL::submitCachedScene()
 }
 
 
+
+
 bool EDA_DRAW_PANEL_GAL::DoRePaint( bool aAllowSkip )
 {
+    if( BACKPLANE_EMBED::Get().Tracing() )
+        BACKPLANE_EMBED::Get().TraceNote( std::string( "redraw_by:" ) + ( g_redrawCause ? g_redrawCause : "direct" ) );
+
+    // Embedding-host frame traces: every redraw that took real time
+    BACKPLANE_EMBED::TRACE_SCOPE trace( "gal_redraw@" + GetParent()->GetName().ToStdString( wxConvUTF8 ),
+                                        0.5 );
+
     if( !m_refreshMutex.try_lock() )
     {
         wxLogTrace( traceRhi, wxS( "DrawPanel: DoRePaint SKIP (mutex locked)" ) );
@@ -1114,6 +1164,8 @@ wxSize EDA_DRAW_PANEL_GAL::backendScreenSize() const
 
 void EDA_DRAW_PANEL_GAL::ResizeGal( bool aForce )
 {
+    BACKPLANE_EMBED::TRACE_SCOPE trace( "resize_gal", 2.0 );
+
     // If we get a second wx update call before the first finishes, don't crash
     if( m_gal->IsContextLocked() )
         return;
@@ -1235,6 +1287,7 @@ float EDA_DRAW_PANEL_GAL::displayRefreshRate()
 
 void EDA_DRAW_PANEL_GAL::Refresh( bool aEraseBackground, const wxRect* aRect )
 {
+    REDRAW_CAUSE cause( "refresh" );
     auto now = std::chrono::steady_clock::now();
     auto delta = std::chrono::duration_cast<std::chrono::milliseconds>( now - m_lastRepaintStart ).count();
     bool galInitialized = m_gal && m_gal->IsInitialized();
@@ -1270,6 +1323,11 @@ void EDA_DRAW_PANEL_GAL::Refresh( bool aEraseBackground, const wxRect* aRect )
 
 void EDA_DRAW_PANEL_GAL::ForceRefresh()
 {
+    if( BACKPLANE_EMBED::Get().Tracing() )
+        BACKPLANE_EMBED::Get().TraceNote( "force_refresh" );
+
+    REDRAW_CAUSE cause( "force" );
+
     wxLogTrace( traceRhi, wxS( "DrawPanel: ForceRefresh windowId=%u drawEnabled=%d "
                                 "IsShown=%d IsShownOnScreen=%d galInit=%d" ),
                 m_windowId, m_drawingEnabled, IsShown(), IsShownOnScreen(),
@@ -1748,6 +1806,7 @@ void EDA_DRAW_PANEL_GAL::onLostFocus( wxFocusEvent& aEvent )
 
 void EDA_DRAW_PANEL_GAL::onIdle( wxIdleEvent& aEvent )
 {
+    REDRAW_CAUSE cause( "idle" );
     if( m_needIdleRefresh )
     {
         wxLogTrace( traceRhi, wxS( "DrawPanel: onIdle refresh windowId=%u IsShown=%d "
@@ -1764,6 +1823,11 @@ void EDA_DRAW_PANEL_GAL::onIdle( wxIdleEvent& aEvent )
 
 void EDA_DRAW_PANEL_GAL::onRefreshTimer( wxTimerEvent& aEvent )
 {
+    if( BACKPLANE_EMBED::Get().Tracing() )
+        BACKPLANE_EMBED::Get().TraceNote( "refresh_timer" );
+
+    REDRAW_CAUSE cause( "timer" );
+
     const bool deferred = m_refreshDeferred;
 
     m_refreshDeferred = false;

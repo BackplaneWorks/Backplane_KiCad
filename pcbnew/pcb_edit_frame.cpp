@@ -2918,6 +2918,29 @@ void PCB_EDIT_FRAME::ProjectChanged()
                     if( filterClean && !IsContentModified() )
                         return;
 
+                    // A board with no unsaved change (as right after a save) is its file: the
+                    // history thread copies it rather than the UI thread formatting it again.
+                    wxString boardPath = GetBoard()->GetFileName();
+
+                    if( !IsContentModified() && boardPath.StartsWith( aProjectPath )
+                        && wxFileName::FileExists( boardPath ) )
+                    {
+                        HISTORY_FILE_DATA entry;
+                        entry.relativePath = boardPath.Mid( aProjectPath.length() );
+                        entry.sourcePath = boardPath;
+                        aFileData.push_back( std::move( entry ) );
+
+                        if( wxFileName::FileExists( boardPath + wxS( ".backplane.json" ) ) )
+                        {
+                            HISTORY_FILE_DATA companion;
+                            companion.relativePath = entry.relativePath + wxS( ".backplane.json" );
+                            companion.sourcePath = boardPath + wxS( ".backplane.json" );
+                            aFileData.push_back( std::move( companion ) );
+                        }
+
+                        return;
+                    }
+
                     GetBoard()->SaveToHistory( aProjectPath, aFileData );
                 },
                 GetBoard()->GetHistoryLifetimeToken() );

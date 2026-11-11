@@ -85,6 +85,13 @@ namespace EMBED
     /// The native window of a top-level wx window (0 if not realized).
     uint64_t WindowId( wxWindow* aWindow );
 
+    /// True if aFrame's native window is mapped (shown), whoever mapped or unmapped it.
+    bool IsMapped( wxWindow* aFrame );
+
+    /// Map aFrame's native window if the toolkit thinks it shown but it was unmapped from outside,
+    /// then wait for the display server so the map's exposes are queued together.
+    void EnsureMapped( wxWindow* aFrame );
+
     /// True if the keyboard focus is in aFrame (the window or a descendant).
     bool HasFocus( wxWindow* aFrame );
 
@@ -113,6 +120,12 @@ namespace EMBED
      * dark variant is now preferred.
      */
     bool SetPreferDark( int aMode );
+
+    /**
+     * Time the UI thread's event-loop iterations: aFunc gets each iteration's start (ms since
+     * the epoch) and how long it ran (from the poll returning to the next poll).
+     */
+    void InstallLoopTimer( std::function<void( double aStartMs, double aDurMs )> aFunc );
 
     /// Make a top-level dialog transient for aToplevel and centre it on aToplevel.
     void MakeTransientFor( wxWindow* aDialog, uint64_t aToplevel );

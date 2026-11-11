@@ -3677,6 +3677,29 @@ void SCHEMATIC::SaveToHistory( const wxString& aProjectPath, std::vector<HISTORY
 
         wxString rel = absPath.Mid( projPath.length() );
 
+        // A sheet with no unsaved change is its file: the history thread copies that instead
+        // of the UI thread formatting every sheet again (a save of the board snapshots the
+        // whole project, so this ran for every clean sheet on each board save).
+        if( !screen->IsContentModified() && wxFileName::FileExists( absPath ) )
+        {
+            HISTORY_FILE_DATA entry;
+            entry.relativePath = rel;
+            entry.sourcePath = absPath;
+            aFileData.push_back( std::move( entry ) );
+
+            const auto& metadata = screen->BackplaneMetadata();
+
+            if( metadata.HasExtensionHistory() )
+            {
+                HISTORY_FILE_DATA companion;
+                companion.relativePath = rel + wxS( ".backplane.json" );
+                companion.content = metadata.ToJson().dump( 2 ) + "\n";
+                aFileData.push_back( std::move( companion ) );
+            }
+
+            continue;
+        }
+
         try
         {
             STRING_FORMATTER formatter;

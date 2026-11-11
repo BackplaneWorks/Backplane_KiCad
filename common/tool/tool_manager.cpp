@@ -20,6 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <core/kicad_algo.h>
 #include <scoped_set_reset.h>
 #include <optional>
@@ -336,6 +337,9 @@ VECTOR2D TOOL_MANAGER::GetCursorPosition() const
 bool TOOL_MANAGER::doRunAction( const TOOL_ACTION& aAction, bool aNow, const ki::any& aParam,
                                 COMMIT* aCommit, bool aFromAPI )
 {
+    if( BACKPLANE_EMBED::Get().Tracing() )
+        BACKPLANE_EMBED::Get().TraceNote( "action:" + aAction.GetName() );
+
     if( m_shuttingDown )
         return true;
 

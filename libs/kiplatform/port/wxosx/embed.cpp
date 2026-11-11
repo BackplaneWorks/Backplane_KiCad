@@ -31,5 +31,8 @@ void KIPLATFORM::EMBED::TakeFocus( wxWindow* ) {}
 void KIPLATFORM::EMBED::SendHostMessage( uint64_t, const char*, int, const long[5] ) {}
 void KIPLATFORM::EMBED::SetFrameGeometry( wxWindow*, int, int, int, int ) {}
 bool KIPLATFORM::EMBED::SetPreferDark( int ) { return false; }
+void KIPLATFORM::EMBED::InstallLoopTimer( std::function<void( double, double )> ) {}
+bool KIPLATFORM::EMBED::IsMapped( wxWindow* aFrame ) { return aFrame && aFrame->IsShown(); }
+void KIPLATFORM::EMBED::EnsureMapped( wxWindow* ) {}
 bool KIPLATFORM::EMBED::NativeModalTitle( wxString& ) { return false; }
 void KIPLATFORM::EMBED::MakeTransientFor( wxWindow*, uint64_t ) {}

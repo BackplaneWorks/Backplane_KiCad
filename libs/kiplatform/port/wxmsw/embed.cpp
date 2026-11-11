@@ -131,6 +131,24 @@ bool KIPLATFORM::EMBED::SetPreferDark( int aMode )
 }
 
 
+void KIPLATFORM::EMBED::InstallLoopTimer( std::function<void( double, double )> )
+{
+}
+
+
+bool KIPLATFORM::EMBED::IsMapped( wxWindow* aFrame )
+{
+    return aFrame && IsWindowVisible( static_cast<HWND>( aFrame->GetHWND() ) );
+}
+
+
+void KIPLATFORM::EMBED::EnsureMapped( wxWindow* aFrame )
+{
+    if( aFrame && aFrame->IsShown() )
+        ShowWindow( static_cast<HWND>( aFrame->GetHWND() ), SW_SHOWNA );
+}
+
+
 bool KIPLATFORM::EMBED::NativeModalTitle( wxString& )
 {
     return false;

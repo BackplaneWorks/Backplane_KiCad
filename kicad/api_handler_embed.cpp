@@ -133,6 +133,65 @@ HANDLER_RESULT<AttachToParentResponse> API_HANDLER_EMBED::handleAttachToParent(
 }
 
 
+namespace
+{
+/// Open a frame of aKind through the manager (as KiCad's own buttons do).  With aShow false
+/// it stays hidden and KiCad's own show requests for it are dropped silently.
+bool openFrame( EMBED_FRAME_KIND aKind, bool aShow )
+{
+    BACKPLANE_EMBED&       embed = BACKPLANE_EMBED::Get();
+    const EMBED_FRAME_OPS& managerOps = embed.ManagerOps();
+
+    if( !managerOps.runAction )
+        return false;
+
+    if( !aShow )
+        embed.m_quietShowRequests++;
+
+    auto run = [&]( const std::function<void()>& aFunc )
+               {
+                   if( aShow )
+                       embed.WithShowAllowed( aFunc );
+                   else
+                       aFunc();
+               };
+
+    if( aKind == EMBED_FRAME_KIND::PCB_3D )
+    {
+        wxFrame* pcb = embed.FindFrame( EMBED_FRAME_KIND::PCB );
+
+        // Load the board without showing its editor; the 3D viewer belongs to it.
+        if( !pcb )
+        {
+            embed.m_quietShowRequests++;
+            managerOps.runAction( "kicad.Control.editPCB" );
+            embed.m_quietShowRequests--;
+            pcb = embed.FindFrame( EMBED_FRAME_KIND::PCB );
+        }
+
+        if( const EMBED_FRAME_OPS* pcbOps = pcb ? embed.Ops( pcb ) : nullptr; pcbOps && pcbOps->runAction )
+            run( [&]() { pcbOps->runAction( "common.Control.show3DViewer" ); } );
+    }
+    else if( const char* action = managerActionFor( aKind ) )
+    {
+        run( [&]() { managerOps.runAction( action ); } );
+    }
+
+    if( !aShow )
+        embed.m_quietShowRequests--;
+
+    return embed.FindFrame( aKind ) != nullptr;
+}
+
+
+void fillAllFrames( google::protobuf::RepeatedPtrField<FrameInfo>* aOut )
+{
+    for( const EMBED_FRAME_INFO& frame : BACKPLANE_EMBED::Get().AllInfo() )
+        fillFrame( aOut->Add(), frame );
+}
+} // namespace
+
+
 HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
         const HANDLER_CONTEXT<ShowFrame>& aCtx )
 {
@@ -147,6 +206,43 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
     }
 
     wxFrame* frame = embed.FindFrame( kind );
+
+    if( aCtx.Request.prewarm() )
+    {
+        // Open (if needed) and paint off-screen at the UI thread's next idle time; reply now.
+        int w = aCtx.Request.width() > 0 ? aCtx.Request.width() : 1280;
+        int h = aCtx.Request.height() > 0 ? aCtx.Request.height() : 800;
+
+        if( wxFrame* manager = embed.Manager() )
+        {
+            manager->CallAfter(
+                    [kind, w, h]()
+                    {
+                        BACKPLANE_EMBED& e = BACKPLANE_EMBED::Get();
+
+                        if( BACKPLANE_EMBED::ModalBlocker() )
+                            return;   // never open frames under a modal dialog
+
+                        wxFrame* f = e.FindFrame( kind );
+
+                        if( !f && openFrame( kind, false ) )
+                            f = e.FindFrame( kind );
+
+                        if( f && !f->IsShown() )
+                            e.Prewarm( f, w, h );
+                    } );
+        }
+
+        ShowFrameResponse response;
+
+        if( frame )
+            fillFrame( response.mutable_frame(), embed.Info( frame ) );
+        else
+            response.mutable_frame()->set_kind( aCtx.Request.kind() );
+
+        fillAllFrames( response.mutable_frames() );
+        return response;
+    }
 
     // A board or schematic frame without its document (opened hidden by some other path)
     // goes through the manager, which loads the project's file.
@@ -164,40 +260,13 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
                                  dialog->ToStdString( wxConvUTF8 ) ) ) );
         }
 
-        const EMBED_FRAME_OPS& managerOps = embed.ManagerOps();
-
-        if( !managerOps.runAction )
+        if( !embed.ManagerOps().runAction )
         {
             return tl::unexpected( failure( ApiStatusCode::AS_NOT_READY,
                                             "the project manager is not ready" ) );
         }
 
-        if( kind == EMBED_FRAME_KIND::PCB_3D )
-        {
-            wxFrame* pcb = embed.FindFrame( EMBED_FRAME_KIND::PCB );
-
-            // Load the board without showing its editor; the 3D viewer belongs to it.
-            if( !pcb )
-            {
-                managerOps.runAction( "kicad.Control.editPCB" );
-                pcb = embed.FindFrame( EMBED_FRAME_KIND::PCB );
-            }
-
-            const EMBED_FRAME_OPS* pcbOps = pcb ? embed.Ops( pcb ) : nullptr;
-
-            if( !pcbOps || !pcbOps->runAction )
-            {
-                return tl::unexpected( failure( ApiStatusCode::AS_INTERNAL_ERROR,
-                                                "the PCB editor could not be opened" ) );
-            }
-
-            embed.WithShowAllowed( [&]() { pcbOps->runAction( "common.Control.show3DViewer" ); } );
-        }
-        else
-        {
-            embed.WithShowAllowed( [&]() { managerOps.runAction( managerActionFor( kind ) ); } );
-        }
-
+        openFrame( kind, true );
         frame = embed.FindFrame( kind );
 
         if( !frame )
@@ -250,6 +319,7 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
 
     ShowFrameResponse response;
     fillFrame( response.mutable_frame(), embed.Info( frame ) );
+    fillAllFrames( response.mutable_frames() );
     return response;
 }
 
@@ -265,7 +335,10 @@ HANDLER_RESULT<HideFrameResponse> API_HANDLER_EMBED::handleHideFrame(
         return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST, "no such frame" ) );
 
     embed.ShowEmbedded( frame, false );
-    return HideFrameResponse();
+
+    HideFrameResponse response;
+    fillAllFrames( response.mutable_frames() );
+    return response;
 }
 
 
