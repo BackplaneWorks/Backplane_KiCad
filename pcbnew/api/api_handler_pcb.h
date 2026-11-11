@@ -21,6 +21,7 @@
 #ifndef KICAD_API_HANDLER_PCB_H
 #define KICAD_API_HANDLER_PCB_H
 
+#include <api/backplane/embed.pb.h>
 #include <api/api_handler_board.h>
 #include <api/pcb_context.h>
 #include <api/backplane/structure.pb.h>
@@ -281,6 +282,9 @@ private:
 
     HANDLER_RESULT<commands::CrossProbeAnnounceResponse> handleCrossProbeAnnounce(
             const HANDLER_CONTEXT<commands::CrossProbeAnnounce>& aCtx );
+
+    HANDLER_RESULT<kiapi::backplane::embed::SelectItemsResponse> handleSelectItems(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::SelectItems>& aCtx );
 
     HANDLER_RESULT<commands::SyncSelectionResponse> handleSyncSelection(
             const HANDLER_CONTEXT<commands::SyncSelection>& aCtx );

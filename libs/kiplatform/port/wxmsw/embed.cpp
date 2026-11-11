@@ -125,6 +125,12 @@ void KIPLATFORM::EMBED::SetFrameGeometry( wxWindow* aFrame, int aX, int aY, int 
 }
 
 
+bool KIPLATFORM::EMBED::SetPreferDark( int aMode )
+{
+    return aMode == 2;
+}
+
+
 bool KIPLATFORM::EMBED::NativeModalTitle( wxString& )
 {
     return false;

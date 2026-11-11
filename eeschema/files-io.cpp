@@ -21,6 +21,7 @@
  */
 
 
+#include <backplane_embed.h>
 #include <algorithm>
 
 #include <confirm.h>
@@ -67,6 +68,7 @@
 #include <tool/actions.h>
 #include <tool/tool_manager.h>
 #include <tools/sch_actions.h>
+#include <view/view.h>
 #include <tools/sch_editor_control.h>
 #include <tools/sch_navigate_tool.h>
 #include <trace_helpers.h>
@@ -121,6 +123,92 @@ bool SCH_EDIT_FRAME::ReloadFromDisk()
 
     ReleaseFile();
     return OpenProjectFiles( std::vector<wxString>( 1, file ), KICTL_REVERT );
+}
+
+
+std::vector<wxString> SCH_EDIT_FRAME::EmbedWatchedFiles() const
+{
+    std::vector<wxString> files;
+
+    if( Schematic().GetFileName().IsEmpty() )
+        return files;
+
+    // Every sheet file of the hierarchy, once.
+    SCH_SCREENS screens( Schematic().Root() );
+
+    for( SCH_SCREEN* screen = screens.GetFirst(); screen; screen = screens.GetNext() )
+    {
+        wxString file = Prj().AbsolutePath( screen->GetFileName() );
+
+        if( !file.IsEmpty() && wxFileName::FileExists( file )
+            && std::find( files.begin(), files.end(), file ) == files.end() )
+        {
+            files.push_back( file );
+        }
+    }
+
+    return files;
+}
+
+
+bool SCH_EDIT_FRAME::EmbedReload()
+{
+    KIGFX::VIEW*      view = GetCanvas()->GetView();
+    const VECTOR2D    center = view->GetCenter();
+    const double      scale = view->GetScale();
+    const KIID_PATH   sheetPath = GetCurrentSheet().Path();
+    std::vector<KIID> selected;
+
+    if( SCH_SELECTION_TOOL* selTool = m_toolManager->GetTool<SCH_SELECTION_TOOL>() )
+    {
+        for( EDA_ITEM* item : selTool->GetSelection() )
+            selected.push_back( item->m_Uuid );
+    }
+
+    if( !ReloadFromDisk() )
+        return false;
+
+    auto restore =
+            [this, center, scale, sheetPath, selected]()
+            {
+                // Back to the sheet the person was on (ReloadFromDisk starts at the root).
+                if( std::optional<SCH_SHEET_PATH> sheet = Schematic().Hierarchy().GetSheetPathByKIIDPath( sheetPath );
+                    sheet && sheet->Path() != GetCurrentSheet().Path() )
+                {
+                    SCH_SHEET_PATH target = *sheet;
+                    m_toolManager->RunAction<SCH_SHEET_PATH*>( SCH_ACTIONS::changeSheet, &target );
+                }
+
+                KIGFX::VIEW* newView = GetCanvas()->GetView();
+                newView->SetScale( scale );
+                newView->SetCenter( center );
+
+                std::vector<EDA_ITEM*> items;
+
+                for( const KIID& id : selected )
+                {
+                    SCH_SHEET_PATH where;
+
+                    if( SCH_ITEM* item = Schematic().ResolveItem( id, &where, true );
+                        item && where.Path() == GetCurrentSheet().Path() )
+                    {
+                        items.push_back( item );
+                    }
+                }
+
+                BACKPLANE_EMBED::SELECTION_SCOPE quiet;
+                m_toolManager->RunAction( ACTIONS::selectionClear );
+
+                if( !items.empty() )
+                    m_toolManager->RunAction<std::vector<EDA_ITEM*>*>( ACTIONS::selectItems, &items );
+
+                GetCanvas()->Refresh();
+            };
+
+    // Opening zooms to fit, partly after idle; put the view back now and after that.
+    restore();
+    CallAfter( restore );
+    return true;
 }
 
 
@@ -1066,6 +1154,9 @@ bool SCH_EDIT_FRAME::saveSchematicFile( SCH_SHEET* aSheet, const wxString& aSave
 
     try
     {
+        // Our own write is not an external change to reload from (embedded mode).
+        BACKPLANE_EMBED::WRITE_SCOPE writing( schematicFileName.GetFullPath() );
+
         pi->SaveSchematicFile( schematicFileName.GetFullPath(), aSheet, &Schematic() );
         success = true;
     }

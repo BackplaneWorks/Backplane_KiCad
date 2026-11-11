@@ -70,6 +70,8 @@
 #include <widgets/wx_grid.h>
 #include <widgets/wx_treebook.h>
 #include <wx/app.h>
+#include <wx/button.h>
+#include <wx/filename.h>
 #include <wx/config.h>
 #include <wx/display.h>
 #include <wx/stdpaths.h>
@@ -364,7 +366,59 @@ EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
                     };
     ops.document = [this]() { return GetCurrentFileName(); };
     ops.modified = [this]() { return IsContentModified(); };
+    ops.settingsChanged = [this]() { CommonSettingsChanged( 0 ); };
+    ops.watchedFiles = [this]() { return EmbedWatchedFiles(); };
+    ops.reload = [this]() { return EmbedReload(); };
+    ops.showConflict = [this]( const wxString& aPath ) { ShowEmbedReloadConflict( aPath ); };
     return ops;
+}
+
+
+std::vector<wxString> EDA_BASE_FRAME::EmbedWatchedFiles() const
+{
+    wxString file = GetCurrentFileName();
+
+    if( file.IsEmpty() || !wxFileName::FileExists( file ) )
+        return {};
+
+    return { file };
+}
+
+
+void EDA_BASE_FRAME::ShowEmbedReloadConflict( const wxString& aPath )
+{
+    WX_INFOBAR* infobar = GetInfoBar();
+
+    if( !infobar )
+        return;
+
+    if( aPath.IsEmpty() )
+    {
+        infobar->RemoveAllButtons();
+        infobar->Dismiss();
+        return;
+    }
+
+    infobar->RemoveAllButtons();
+
+    // The handlers run after the click: resolving rebuilds the infobar, which owns the buttons.
+    wxButton* reload = new wxButton( infobar, wxID_ANY, _( "Reload (lose your edits)" ) );
+    reload->Bind( wxEVT_BUTTON,
+                  [this]( wxCommandEvent& )
+                  {
+                      CallAfter( [this]() { BACKPLANE_EMBED::Get().ResolveConflict( this, true ); } );
+                  } );
+
+    wxButton* keep = new wxButton( infobar, wxID_ANY, _( "Keep yours" ) );
+    keep->Bind( wxEVT_BUTTON,
+                [this]( wxCommandEvent& )
+                {
+                    CallAfter( [this]() { BACKPLANE_EMBED::Get().ResolveConflict( this, false ); } );
+                } );
+
+    infobar->AddButton( reload );
+    infobar->AddButton( keep );
+    infobar->ShowMessage( _( "This file changed on disk." ), wxICON_WARNING );
 }
 
 

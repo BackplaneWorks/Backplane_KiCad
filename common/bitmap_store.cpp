@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <limits>
 #include <set>
 
@@ -398,8 +399,14 @@ wxImage BITMAP_STORE::getImage( BITMAPS aBitmapId, int aHeight )
 void BITMAP_STORE::ThemeChanged()
 {
     BITMAP_INFO::THEME oldTheme = m_theme;
+    EMBED_THEME        hostTheme = BACKPLANE_EMBED::Get().Theme();
 
-    if( COMMON_SETTINGS* settings = Pgm().GetCommonSettings() )
+    if( hostTheme != EMBED_THEME::OWN_SETTINGS )
+    {
+        // An embedding host chose light or dark for the whole process.
+        m_theme = hostTheme == EMBED_THEME::DARK_MODE ? BITMAP_INFO::THEME::DARK : BITMAP_INFO::THEME::LIGHT;
+    }
+    else if( COMMON_SETTINGS* settings = Pgm().GetCommonSettings() )
     {
         switch( settings->m_Appearance.icon_theme )
         {

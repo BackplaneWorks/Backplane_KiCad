@@ -147,6 +147,16 @@ public:
     /// The operations the embedding state uses on this frame.
     EMBED_FRAME_OPS embedOps();
 
+    /// Files whose external changes reload this frame (embedded mode).  Default: the current file.
+    virtual std::vector<wxString> EmbedWatchedFiles() const;
+
+    /// Reload the document from disk keeping the view, layer, selection and sheet.  The caller
+    /// has decided that unsaved changes may go.  False if this frame cannot reload.
+    virtual bool EmbedReload() { return false; }
+
+    /// Show (non-empty aPath) or hide KiCad's "changed on disk" infobar for an embedding host.
+    void ShowEmbedReloadConflict( const wxString& aPath );
+
     /// Named here rather than beside the editors' other panes, because the project manager
     /// docks this one too.
     static const wxString GitCommitPaneName() { return wxS( "GitCommitPane" ); }

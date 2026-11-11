@@ -595,3 +595,48 @@ static const std::map<int, COLOR4D> s_classicTheme =
         };
 
 #endif
+
+
+// Overrides on top of the default theme for the fork's "Backplane Dark" (an embedding host's
+// dark mode).  Everything not listed keeps the default colour.
+static const std::map<int, COLOR4D> s_backplaneDarkOverrides =
+        {
+            { LAYER_SCHEMATIC_BACKGROUND,   CSS_COLOR( 30,  30,  32,  1 ) },
+            { LAYER_SCHEMATIC_AUX_ITEMS,    CSS_COLOR( 200, 200, 200, 1 ) },
+            { LAYER_SCHEMATIC_ANCHOR,       CSS_COLOR( 100, 160, 255, 1 ) },
+            { LAYER_HOVERED,                CSS_COLOR( 100, 160, 255, 1 ) },
+            { LAYER_BUS,                    CSS_COLOR( 100, 150, 255, 1 ) },
+            { LAYER_BUS_JUNCTION,           CSS_COLOR( 100, 150, 255, 1 ) },
+            { LAYER_DEVICE_BACKGROUND,      CSS_COLOR( 52,  48,  40,  1 ) },
+            { LAYER_DEVICE,                 CSS_COLOR( 222, 112, 100, 1 ) },
+            { LAYER_SCHEMATIC_CURSOR,       CSS_COLOR( 230, 230, 230, 1 ) },
+            { LAYER_FIELDS,                 CSS_COLOR( 205, 145, 225, 1 ) },
+            { LAYER_SCHEMATIC_GRID,         CSS_COLOR( 85,  85,  90,  1 ) },
+            { LAYER_SCHEMATIC_GRID_AXES,    CSS_COLOR( 100, 150, 255, 1 ) },
+            { LAYER_HIDDEN,                 CSS_COLOR( 115, 115, 120, 1 ) },
+            { LAYER_JUNCTION,               CSS_COLOR( 90,  205, 115, 1 ) },
+            { LAYER_GLOBLABEL,              CSS_COLOR( 240, 115, 100, 1 ) },
+            { LAYER_HIERLABEL,              CSS_COLOR( 225, 185, 85,  1 ) },
+            { LAYER_LOCLABEL,               CSS_COLOR( 230, 230, 230, 1 ) },
+            { LAYER_NETCLASS_REFS,          CSS_COLOR( 180, 180, 180, 1 ) },
+            { LAYER_NOCONNECT,              CSS_COLOR( 100, 150, 255, 1 ) },
+            { LAYER_NOTES,                  CSS_COLOR( 125, 165, 255, 1 ) },
+            { LAYER_PRIVATE_NOTES,          CSS_COLOR( 140, 140, 255, 1 ) },
+            { LAYER_PIN,                    CSS_COLOR( 222, 112, 100, 1 ) },
+            { LAYER_PINNAM,                 CSS_COLOR( 85,  205, 205, 1 ) },
+            { LAYER_PINNUM,                 CSS_COLOR( 225, 125, 115, 1 ) },
+            { LAYER_REFERENCEPART,          CSS_COLOR( 85,  205, 205, 1 ) },
+            { LAYER_VALUEPART,              CSS_COLOR( 85,  205, 205, 1 ) },
+            { LAYER_SHEET,                  CSS_COLOR( 222, 112, 100, 1 ) },
+            { LAYER_SHEET_BACKGROUND,       CSS_COLOR( 0,   0,   0,   0 ) },
+            { LAYER_SHEETFILENAME,          CSS_COLOR( 225, 185, 85,  1 ) },
+            { LAYER_SHEETFIELDS,            CSS_COLOR( 205, 145, 225, 1 ) },
+            { LAYER_SHEETLABEL,             CSS_COLOR( 85,  205, 205, 1 ) },
+            { LAYER_SHEETNAME,              CSS_COLOR( 85,  205, 205, 1 ) },
+            { LAYER_WIRE,                   CSS_COLOR( 90,  205, 115, 1 ) },
+            { LAYER_SCHEMATIC_DRAWINGSHEET, CSS_COLOR( 200, 105, 95,  1 ) },
+            { LAYER_SCHEMATIC_PAGE_LIMITS,  CSS_COLOR( 95,  95,  100, 1 ) },
+            { LAYER_PCB_BACKGROUND,         CSS_COLOR( 18,  18,  20,  1 ) },
+            { LAYER_3D_BACKGROUND_TOP,      COLOR4D( 0.20, 0.20, 0.22, 1.0 ) },
+            { LAYER_3D_BACKGROUND_BOTTOM,   COLOR4D( 0.06, 0.06, 0.07, 1.0 ) },
+        };

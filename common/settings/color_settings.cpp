@@ -491,10 +491,26 @@ std::vector<COLOR_SETTINGS*> COLOR_SETTINGS::CreateBuiltinColorSettings()
     for( const std::pair<int, COLOR4D> entry : s_classicTheme )
         classicTheme->m_colors[entry.first] = entry.second;
 
+    // The dark theme an embedding host can switch every editor to (see BACKPLANE_EMBED): KiCad
+    // Default with a dark schematic/symbol palette, a near-black board and a dark 3D backdrop.
+    COLOR_SETTINGS* darkTheme = new COLOR_SETTINGS( wxS( "_builtin_backplane_dark" ) );
+    darkTheme->SetName( _( "Backplane Dark" ) );
+    darkTheme->m_writeFile = false;
+    darkTheme->Load();
+
+    for( PARAM_BASE* param : darkTheme->m_params )
+        delete param;
+
+    darkTheme->m_params.clear(); // Disable load/store
+
+    for( const std::pair<int, COLOR4D> entry : s_backplaneDarkOverrides )
+        darkTheme->m_colors[entry.first] = entry.second;
+
     std::vector<COLOR_SETTINGS*> ret;
 
     ret.push_back( defaultTheme );
     ret.push_back( classicTheme );
+    ret.push_back( darkTheme );
 
     return ret;
 }

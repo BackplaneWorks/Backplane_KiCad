@@ -125,6 +125,7 @@ message GetFramesResponse
   double             scale    = 5;
   repeated string    reserved_keys = 6;
   string             events_socket = 7;  // ipc:// URL of the long-poll socket for NextEvents
+  ThemeMode          theme = 8;          // the theme set by SetTheme or --theme (bp.9)
 }
 
 enum EventType
@@ -144,6 +145,13 @@ enum EventType
   ET_DIALOG_CLOSED    = 11;
   ET_DETACHED         = 12; // the parent window went away; frames are parked, unmapped
   ET_DOCUMENT_CHANGED = 13; // a frame's document path changed
+  ET_SELECTION_CHANGED = 14; // the person changed the selection in the PCB or schematic editor;
+                             // Event.selection holds the new selection (empty = cleared)
+  ET_DOCUMENT_RELOADED = 15; // the frame's document was reloaded from disk; detail = the file
+  ET_RELOAD_CONFLICT   = 16; // the file changed on disk while the frame has unsaved changes;
+                             // nothing was reloaded; detail = the file.  Resolve with
+                             // ResolveConflict (or the person uses KiCad's infobar)
+  ET_THEME_CHANGED     = 17; // the theme was applied; detail = "light", "dark" or "kicad"
 }
 
 message Event
@@ -152,6 +160,7 @@ message Event
   EventType type   = 2;
   FrameInfo frame  = 3;
   string    detail = 4;
+  ItemNames selection = 5;  // ET_SELECTION_CHANGED only
 }
 
 // Long poll.  Returns the events with seq > since, waiting up to wait_ms (at most 60000)
@@ -225,4 +234,111 @@ message CloseResponse
 {
   repeated FrameInfo modified = 1;  // the frames that were (or, when refused, are) modified
   bool               exiting  = 2;
+}
+
+
+// ---- bp.9 ----------------------------------------------------------------------------------
+
+enum ThemeMode
+{
+  TM_KICAD = 0;  // no override: the person's own KiCad settings (colour themes, icons, GTK)
+  TM_LIGHT = 1;
+  TM_DARK  = 2;
+}
+
+// Switch the whole process live: GTK prefer-dark for wx/GTK widgets, the colour theme of every
+// editor canvas (PCB, schematic, symbol and footprint editors) and the 3D viewer background,
+// and KiCad's light/dark icon set.  Nothing is written to the person's KiCad settings files.
+// Also `kicad --theme light|dark` at launch.
+message SetTheme
+{
+  ThemeMode mode = 1;
+}
+
+message SetThemeResponse
+{
+  ThemeMode mode        = 1;
+  bool      gtk_dark    = 2;  // GTK prefer-dark as applied
+  string    color_theme = 3;  // the colour theme now drawn ("_builtin_default", "_builtin_backplane_dark", ...)
+  string    icon_theme  = 4;  // "light" or "dark"
+}
+
+// Names of schematic/board items, as people write them.
+message ItemNames
+{
+  repeated string references = 1;  // "U3"
+  repeated string nets       = 2;  // "/SDA", "GND"
+  repeated string pins       = 3;  // "<reference>.<pin number>", e.g. "U3.4"
+}
+
+// Select (replacing the selection), highlight and optionally zoom to items in the PCB editor
+// or the schematic editor, whether that frame is shown or hidden (it must be open: use
+// ShowFrame/HideFrame first otherwise).  Served by the frame itself, so it is routed by `kind`;
+// a kind whose frame is not open answers AS_UNHANDLED.  Nets are highlighted (and their items
+// selected in the schematic); references select symbols/footprints; pins select pins/pads.
+// While a modal dialog is open it answers AS_BUSY.
+message SelectItems
+{
+  FrameKind       kind       = 1;  // FK_PCB or FK_SCH
+  repeated string references = 2;
+  repeated string nets       = 3;
+  repeated string pins       = 4;  // "U3.4"
+  bool            zoom       = 5;  // zoom to fit what was found
+}
+
+message SelectItemsResponse
+{
+  ItemNames found     = 1;
+  ItemNames not_found = 2;
+  FrameKind kind      = 3;
+}
+
+enum ReloadMode
+{
+  RM_IF_CLEAN = 0;  // reload only if the document has no unsaved changes
+  RM_DISCARD  = 1;  // reload even over unsaved changes (they are lost)
+}
+
+enum ReloadResult
+{
+  RR_UNKNOWN   = 0;
+  RR_RELOADED  = 1;  // reloaded; view, active layer, selection (by UUID) and sheet kept
+  RR_UNCHANGED = 2;  // the file on disk is what the frame already has
+  RR_CONFLICT  = 3;  // RM_IF_CLEAN and the document has unsaved changes: nothing done
+}
+
+// Reload a frame's document from disk.  Selects the frame by kind (FK_PCB, FK_SCH) or by the
+// absolute path of its file.
+message ReloadDocument
+{
+  FrameKind  kind = 1;
+  string     path = 2;
+  ReloadMode mode = 3;
+}
+
+message ReloadDocumentResponse
+{
+  ReloadResult result = 1;
+  FrameInfo    frame  = 2;
+}
+
+enum ConflictChoice
+{
+  CC_UNKNOWN = 0;
+  CC_KEEP    = 1;  // keep the person's edits (and undo stack); the next save overwrites the file
+  CC_RELOAD  = 2;  // drop the edits and reload from disk
+}
+
+// Answer a pending ET_RELOAD_CONFLICT (and hide KiCad's infobar for it).
+message ResolveConflict
+{
+  FrameKind      kind   = 1;
+  string         path   = 2;
+  ConflictChoice choice = 3;
+}
+
+message ResolveConflictResponse
+{
+  ReloadResult result = 1;  // RR_RELOADED for CC_RELOAD, RR_UNCHANGED for CC_KEEP
+  FrameInfo    frame  = 2;
 }

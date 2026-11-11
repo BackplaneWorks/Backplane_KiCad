@@ -18,6 +18,8 @@
 #include <kiplatform/embed.h>
 
 #include <algorithm>
+#include <string>
+#include <vector>
 #include <cstdio>
 #include <cstdlib>
 
@@ -570,6 +572,71 @@ void KIPLATFORM::EMBED::SetFrameGeometry( wxWindow* aFrame, int aX, int aY, int 
         return;
 
     aFrame->SetSize( aX, aY, std::max( 1, aWidth ), std::max( 1, aHeight ) );
+}
+
+
+/// True if GTK can load aTheme's dark variant (built in, or an installed gtk-dark.css).
+static bool themeHasDarkVariant( const gchar* aTheme )
+{
+    if( g_strcmp0( aTheme, "Adwaita" ) == 0 )
+        return true;
+
+    std::vector<std::string> roots;
+    roots.push_back( std::string( g_get_user_data_dir() ) + "/themes" );
+    roots.push_back( std::string( g_get_home_dir() ) + "/.themes" );
+
+    for( const gchar* const* dir = g_get_system_data_dirs(); dir && *dir; ++dir )
+        roots.push_back( std::string( *dir ) + "/themes" );
+
+    for( const std::string& root : roots )
+    {
+        std::string file = root + "/" + aTheme + "/gtk-3.0/gtk-dark.css";
+
+        if( g_file_test( file.c_str(), G_FILE_TEST_EXISTS ) )
+            return true;
+    }
+
+    return false;
+}
+
+
+bool KIPLATFORM::EMBED::SetPreferDark( int aMode )
+{
+    GtkSettings* settings = gtk_settings_get_default();
+
+    if( !settings )
+        return false;
+
+    // The toolkit's own values before the first override, restored by aMode 0.
+    static int    s_originalDark = -1;
+    static gchar* s_originalTheme = nullptr;
+
+    gboolean current = FALSE;
+    gchar*   theme = nullptr;
+    g_object_get( settings, "gtk-application-prefer-dark-theme", &current, "gtk-theme-name", &theme,
+                  nullptr );
+
+    if( s_originalDark < 0 )
+    {
+        s_originalDark = current ? 1 : 0;
+        s_originalTheme = g_strdup( theme ? theme : "Adwaita" );
+    }
+
+    g_free( theme );
+
+    gboolean wanted = aMode == 2 ? TRUE : aMode == 1 ? FALSE : ( s_originalDark == 1 );
+
+    // A theme without a dark variant (or one configured but not installed, which GTK replaces
+    // with plain Adwaita) ignores prefer-dark; use Adwaita's dark variant then.
+    const gchar* themeName = s_originalTheme;
+
+    if( wanted && !themeHasDarkVariant( s_originalTheme ) )
+        themeName = "Adwaita";
+
+    g_object_set( settings, "gtk-theme-name", themeName, "gtk-application-prefer-dark-theme", wanted,
+                  nullptr );
+
+    return wanted == TRUE;
 }
 
 

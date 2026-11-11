@@ -145,11 +145,63 @@ paint inside the host's container; click-to-focus and `_BACKPLANE_FOCUS`; `Ctrl+
 connection dying; `SetChrome`; `Close` refusing, saving one frame and discarding everything
 without a prompt. CI runs it in `backplane-linux-release.yml`.
 
+## bp.9: theme, cross-probe, reload on disk change
+
+### Theme
+`SetTheme{mode}` (`TM_KICAD` = the person's own settings, `TM_LIGHT`, `TM_DARK`) switches the
+running process; `kicad --theme light|dark` sets it before the first paint. It answers
+`{mode, gtk_dark, color_theme, icon_theme}` and posts `ET_THEME_CHANGED` (detail `light`, `dark`
+or `kicad`); `GetFramesResponse.theme` reports it. Nothing is written to KiCad's settings files.
+- Toolkit: GTK prefer-dark for the process. If the configured GTK theme has no dark variant
+  installed (`<theme>/gtk-3.0/gtk-dark.css`), dark mode uses Adwaita's dark variant, and
+  `TM_LIGHT`/`TM_KICAD` restore the original theme.
+- Canvases: every editor draws with `_builtin_default` (light) or the fork's built-in
+  `_builtin_backplane_dark` (KiCad Default with a dark schematic/symbol palette, a near-black
+  board background and a dark 3D gradient), whatever theme each editor is set to. The 3D
+  viewer's backdrop follows it whatever preset is active.
+- Icons: KiCad's light or dark icon set.
+
+### Cross-probe
+- `SelectItems{kind, references, nets, pins, zoom}` is served by the PCB or schematic editor
+  itself (the other answers `AS_UNHANDLED`, so the server passes it on), shown or hidden; the
+  frame must be open. It replaces the selection, highlights nets (and selects their items in the
+  schematic), and with `zoom` fits the view to what it found. Pins are `<reference>.<number>`.
+  It answers `found` and `not_found` (`ItemNames`). In the schematic only one sheet is shown: the
+  sheet of the first hit. Net names match with or without a leading `/`.
+- `ET_SELECTION_CHANGED`: `Event.frame` is the editor, `Event.selection` the person's selection
+  after the change (empty = cleared): footprint/symbol references, pads/pins as `U3.4`, and the
+  nets of selected tracks, vias, zones, wires and labels. Not emitted for SelectItems, reloads,
+  or selections KiCad's own PCB↔SCH cross-probe makes.
+- KiCad's own cross-probe (KIWAY ExpressMail between the embedded frames) works with either
+  frame hidden: a host SelectItems in one editor also selects in the other.
+
+### Reload on disk change
+The board file, every schematic sheet file, and each other embedded frame's current file are
+watched (polled every 250 ms).
+- A change counts once the file has been quiet for 300 ms, is a complete s-expression
+  (parentheses balance) and its content differs from what the frame has. An atomic rename-over
+  and a slow partial write therefore reload once, complete. KiCad's own saves (GUI or IPC
+  SaveDocument) are not changes.
+- No unsaved changes: the document reloads in place keeping zoom/pan, the active layer, the
+  selection (by UUID) and the schematic sheet; `ET_DOCUMENT_RELOADED` (detail = the file).
+- Unsaved changes: nothing is reloaded. `ET_RELOAD_CONFLICT` and KiCad's infobar "This file
+  changed on disk." with **Reload (lose your edits)** and **Keep yours**. `ResolveConflict{kind or
+  path, CC_KEEP | CC_RELOAD}` answers it from the host (`RR_UNCHANGED` / `RR_RELOADED`); Keep
+  leaves the edits and the undo stack; the next save overwrites the file.
+- `ReloadDocument{kind or path, RM_IF_CLEAN | RM_DISCARD}` answers `RR_RELOADED`, `RR_UNCHANGED`
+  (the file is what the frame has) or `RR_CONFLICT` (unsaved changes, `RM_IF_CLEAN`).
+- Under a modal dialog `SelectItems`, `ReloadDocument` and `ResolveConflict` answer `AS_BUSY`.
+- Library editors are watched by their current file but do not reload themselves yet.
+
+`scripts/backplane-embed-features-check.py <kicad> <kicad-cli> --out <dir>` tests all of this,
+plus frame state across HideFrame/ShowFrame, popups/tooltips/3D-viewer dialogs never escaping,
+and re-attaching after the host's connection dies; CI runs it beside the bp.8 check.
+
 ## Not in bp.8
 
-- `ListActions` (the palette feed) and selection-change events; `GetSelection` and the
-  cross-probe commands work as before.
+- `ListActions` (the palette feed).
 - Live scale changes: `AttachToParent.scale` is only recorded.
+- Library editors reloading themselves on a disk change (bp.9 watches but does not reload them).
 - Windows and macOS are untested.
 - KiCad's 3D viewer binds Ctrl+Tab / Shift+Tab to cycle its presets and viewports; with the
   default reserved keys Ctrl+Tab goes to the host instead.

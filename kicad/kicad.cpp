@@ -33,6 +33,8 @@
 
 #include <api/api_server.h>
 #include <backplane_embed.h>
+#include <bitmaps/bitmap_types.h>
+#include <bitmap_store.h>
 #include <local_history.h>
 #include <tool/tool_manager.h>
 #include <common.h>
@@ -147,6 +149,9 @@ bool PGM_KICAD::OnPgmInit()
           "Serve the API at this socket path, whatever the API preference; fail if it cannot",
           wxCMD_LINE_VAL_STRING, 0 },
         { wxCMD_LINE_OPTION, nullptr, "parent-pid", "Exit when this process exits",
+          wxCMD_LINE_VAL_STRING, 0 },
+        { wxCMD_LINE_OPTION, nullptr, "theme",
+          "light or dark: override the colour themes, icons and toolkit theme (--embedded)",
           wxCMD_LINE_VAL_STRING, 0 },
         { wxCMD_LINE_PARAM, nullptr, nullptr, "File to load", wxCMD_LINE_VAL_STRING,
           wxCMD_LINE_PARAM_MULTIPLE | wxCMD_LINE_PARAM_OPTIONAL },
@@ -274,6 +279,25 @@ bool PGM_KICAD::OnPgmInit()
         wxFprintf( stderr, wxT( "kicad: --embedded needs an X11 display (GDK_BACKEND=x11) or "
                                 "Windows\n" ) );
         return false;
+    }
+
+    if( wxString theme; parser.Found( "theme", &theme ) )
+    {
+        if( theme.CmpNoCase( wxS( "dark" ) ) == 0 )
+        {
+            BACKPLANE_EMBED::Get().SetTheme( EMBED_THEME::DARK_MODE, false );
+        }
+        else if( theme.CmpNoCase( wxS( "light" ) ) == 0 )
+        {
+            BACKPLANE_EMBED::Get().SetTheme( EMBED_THEME::LIGHT_MODE, false );
+        }
+        else
+        {
+            wxFprintf( stderr, wxT( "kicad: --theme expects light or dark, got '%s'\n" ), theme );
+            return false;
+        }
+
+        GetBitmapStore()->ThemeChanged();
     }
 
 

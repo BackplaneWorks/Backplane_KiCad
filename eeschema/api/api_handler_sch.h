@@ -21,6 +21,7 @@
 #ifndef KICAD_API_HANDLER_SCH_H
 #define KICAD_API_HANDLER_SCH_H
 
+#include <api/backplane/embed.pb.h>
 #include <api/api_handler_editor.h>
 #include <api/sch_context.h>
 #include <api/common/commands/cross_probe_commands.pb.h>
@@ -185,6 +186,9 @@ private:
 
     HANDLER_RESULT<commands::SyncSelectionResponse>
     handleSyncSelection( const HANDLER_CONTEXT<commands::SyncSelection>& aCtx );
+
+    HANDLER_RESULT<kiapi::backplane::embed::SelectItemsResponse>
+    handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embed::SelectItems>& aCtx );
 
     HANDLER_RESULT<commands::HighlightNetsResponse> handleHighlightNets(
             const HANDLER_CONTEXT<commands::HighlightNets>& aCtx );

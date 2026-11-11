@@ -408,6 +408,9 @@ public:
      */
     bool ReloadFromDisk();
 
+    /// Embedded mode: reload keeping zoom/pan, active layer and selection (by UUID).
+    bool EmbedReload() override;
+
     /**
      * Write the board data structures to \a a aFileName.
      *

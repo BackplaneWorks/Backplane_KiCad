@@ -67,7 +67,13 @@ static bool isReadOnlyRequest( const std::string& aType )
     {
         // Window placement and the event feed must keep working; ShowFrame checks itself
         // whether it would have to open a frame.
-        return aType != embedPackage + "Close";
+        for( const char* changing : { "Close", "SelectItems", "ReloadDocument", "ResolveConflict" } )
+        {
+            if( aType == embedPackage + changing )
+                return false;
+        }
+
+        return true;
     }
 
     std::string name = aType.substr( aType.rfind( '.' ) + 1 );

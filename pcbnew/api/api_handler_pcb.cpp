@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <magic_enum.hpp>
 #include <memory>
 #include <pgm_base.h>
@@ -86,6 +87,7 @@
 #include <project.h>
 #include <project/project_file.h>
 #include <tool/actions.h>
+#include <view/view.h>
 #include <string_utils.h>
 #include <tool/tool_manager.h>
 #include <tools/pcb_actions.h>
@@ -268,6 +270,8 @@ API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDI
 
     registerHandler<CrossProbeAnnounce, CrossProbeAnnounceResponse>( &API_HANDLER_PCB::handleCrossProbeAnnounce );
     registerHandler<SyncSelection, SyncSelectionResponse>( &API_HANDLER_PCB::handleSyncSelection );
+    registerHandler<kiapi::backplane::embed::SelectItems, kiapi::backplane::embed::SelectItemsResponse>(
+            &API_HANDLER_PCB::handleSelectItems );
     registerHandler<HighlightNets, HighlightNetsResponse>( &API_HANDLER_PCB::handleHighlightNets );
 
     registerHandler<PlaceFootprintFromLibrary, PlaceFromLibraryResponse>(
@@ -3073,6 +3077,126 @@ HANDLER_RESULT<CrossProbeAnnounceResponse> API_HANDLER_PCB::handleCrossProbeAnno
 
     CrossProbeAnnounceResponse response;
     response.set_status( CPS_OK );
+    return response;
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::SelectItemsResponse>
+API_HANDLER_PCB::handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embed::SelectItems>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    // Routed by frame kind: the schematic editor's handler serves FK_SCH.
+    if( aCtx.Request.kind() != embed::FK_PCB )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "SelectItems" ) )
+        return tl::unexpected( *headless );
+
+    embed::SelectItemsResponse response;
+    response.set_kind( embed::FK_PCB );
+
+    std::vector<EDA_ITEM*> items;
+    std::vector<wxString>  nets;
+    BOX2I                  bbox;
+
+    auto grow = [&]( const BOX2I& aBox )
+                {
+                    if( bbox.GetWidth() == 0 && bbox.GetHeight() == 0 )
+                        bbox = aBox;
+                    else
+                        bbox.Merge( aBox );
+                };
+
+    for( const std::string& ref : aCtx.Request.references() )
+    {
+        if( FOOTPRINT* fp = board()->FindFootprintByReference( wxString::FromUTF8( ref ) ) )
+        {
+            items.push_back( fp );
+            grow( fp->GetBoundingBox() );
+            response.mutable_found()->add_references( ref );
+        }
+        else
+        {
+            response.mutable_not_found()->add_references( ref );
+        }
+    }
+
+    for( const std::string& pinName : aCtx.Request.pins() )
+    {
+        wxString text = wxString::FromUTF8( pinName );
+        int      dot = text.Find( '.', true );
+        bool     found = false;
+
+        if( dot > 0 )
+        {
+            if( FOOTPRINT* fp = board()->FindFootprintByReference( text.Left( dot ) ) )
+            {
+                for( PAD* pad : fp->Pads() )
+                {
+                    if( pad->GetNumber() == text.Mid( dot + 1 ) )
+                    {
+                        items.push_back( pad );
+                        grow( pad->GetBoundingBox() );
+                        found = true;
+                    }
+                }
+            }
+        }
+
+        if( found )
+            response.mutable_found()->add_pins( pinName );
+        else
+            response.mutable_not_found()->add_pins( pinName );
+    }
+
+    for( const std::string& netName : aCtx.Request.nets() )
+    {
+        wxString      name = wxString::FromUTF8( netName );
+        NETINFO_ITEM* net = board()->FindNet( name );
+
+        if( net && net->GetNetCode() > 0 )
+        {
+            nets.push_back( name );
+            response.mutable_found()->add_nets( netName );
+
+            for( BOARD_CONNECTED_ITEM* item : board()->AllConnectedItems() )
+            {
+                if( item->GetNetCode() == net->GetNetCode() )
+                    grow( item->GetBoundingBox() );
+            }
+        }
+        else
+        {
+            response.mutable_not_found()->add_nets( netName );
+        }
+    }
+
+    {
+        // The host's selection is not reported back to it; KiCad's own cross-probe to the
+        // schematic still runs.
+        BACKPLANE_EMBED::SELECTION_SCOPE quiet;
+        TOOL_MANAGER* mgr = frame()->GetToolManager();
+
+        mgr->RunAction( ACTIONS::selectionClear );
+
+        if( !items.empty() )
+            mgr->RunAction<std::vector<EDA_ITEM*>*>( ACTIONS::selectItems, &items );
+
+        frame()->HandleRemoteNetHighlight( nets );
+    }
+
+    if( aCtx.Request.zoom() && ( bbox.GetWidth() > 0 || bbox.GetHeight() > 0 ) )
+    {
+        bbox.Inflate( std::max( bbox.GetWidth(), bbox.GetHeight() ) / 5 + pcbIUScale.mmToIU( 1 ) );
+        frame()->GetCanvas()->GetView()->SetViewport( BOX2D( bbox.GetOrigin(), bbox.GetSize() ) );
+    }
+
+    frame()->GetCanvas()->Refresh();
     return response;
 }
 

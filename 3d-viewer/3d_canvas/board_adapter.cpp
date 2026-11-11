@@ -19,6 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include "board_adapter.h"
 
 #include <wx/log.h>
@@ -746,6 +747,14 @@ std::map<int, COLOR4D> BOARD_ADAPTER::GetLayerColors() const
 
         for( const auto& [ layer, defaultColor /* unused */ ] : GetDefaultColors() )
             colors[ layer ] = settings->GetColor( layer );
+    }
+
+    // An embedding host's light/dark theme also sets the backdrop, whatever the preset.
+    if( !BACKPLANE_EMBED::Get().ColorThemeOverride().IsEmpty() )
+    {
+        COLOR_SETTINGS* theme = ::GetColorSettings( BACKPLANE_EMBED::Get().ColorThemeOverride() );
+        colors[ LAYER_3D_BACKGROUND_TOP ] = theme->GetColor( LAYER_3D_BACKGROUND_TOP );
+        colors[ LAYER_3D_BACKGROUND_BOTTOM ] = theme->GetColor( LAYER_3D_BACKGROUND_BOTTOM );
     }
 
     if( m_Cfg->m_UseStackupColors && m_board )

@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include "settings/json_settings.h"
 #include <regex>
 #include <set>
@@ -270,6 +271,14 @@ void SETTINGS_MANAGER::FlushAndRelease( JSON_SETTINGS* aSettings, bool aSave )
 
 COLOR_SETTINGS* SETTINGS_MANAGER::GetColorSettings( const wxString& aName )
 {
+    // An embedding host's light/dark theme applies to every canvas, whatever theme each editor
+    // is set to.  Nothing is written: the person's own choice is back when the host clears it.
+    if( wxString theme = BACKPLANE_EMBED::Get().ColorThemeOverride();
+        !theme.IsEmpty() && m_color_settings.count( theme ) )
+    {
+        return m_color_settings.at( theme );
+    }
+
     // Find settings the fast way
     if( m_color_settings.count( aName ) )
         return m_color_settings.at( aName );

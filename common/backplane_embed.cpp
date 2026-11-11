@@ -18,6 +18,9 @@
 #include <backplane_embed.h>
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 #include <cctype>
 #include <chrono>
 
@@ -27,6 +30,8 @@
 #include <wx/frame.h>
 #include <wx/log.h>
 #include <wx/toplevel.h>
+#include <wx/filename.h>
+#include <wx/time.h>
 
 #if defined( __unix__ ) || defined( __APPLE__ )
 #include <signal.h>
@@ -467,6 +472,9 @@ std::optional<bool> BACKPLANE_EMBED::OnFrameShow( wxFrame* aFrame, FRAME_T aType
     }
 
 
+    if( aShow && !aFrame->IsShown() && m_showAllowed == 0 && m_reloading > 0 )
+        return false;   // reopening a document re-shows its frame; the host's choice stands
+
     if( aShow && !aFrame->IsShown() && m_showAllowed == 0 )
     {
         // KiCad asked for a hidden frame (Edit Symbol, the 3D viewer, the second Show() of the
@@ -530,6 +538,7 @@ void BACKPLANE_EMBED::OnFrameDestroyed( wxFrame* aFrame )
     closed.frameName = aFrame->GetName();
 
     m_frames.erase( it );
+    m_conflicts.erase( aFrame );
     PushEvent( EMBED_EVENT_TYPE::FRAME_CLOSED, closed );
 }
 
@@ -878,6 +887,8 @@ std::optional<wxString> BACKPLANE_EMBED::ModalBlocker()
 
 void BACKPLANE_EMBED::onPoll( wxTimerEvent& )
 {
+    pollFiles();
+
     for( FRAME_ENTRY& e : m_frames )
     {
         wxString title = e.frame->GetTitle();
@@ -979,6 +990,19 @@ void BACKPLANE_EMBED::WatchParentPid( long long aPid, std::function<void()> aOnG
         m_parentTimer.Start( 500 );
     else
         m_parentTimer.Stop();
+}
+
+
+static void FillItemNames( kiapi::backplane::embed::ItemNames* aOut, const EMBED_ITEM_NAMES& aIn )
+{
+    for( const std::string& name : aIn.references )
+        aOut->add_references( name );
+
+    for( const std::string& name : aIn.nets )
+        aOut->add_nets( name );
+
+    for( const std::string& name : aIn.pins )
+        aOut->add_pins( name );
 }
 
 
@@ -1101,6 +1125,7 @@ void BACKPLANE_EMBED::eventServerThread()
                 out->set_type( static_cast<kiapi::backplane::embed::EventType>( event.type ) );
                 fillFrame( out->mutable_frame(), event.frame );
                 out->set_detail( event.detail );
+                FillItemNames( out->mutable_selection(), event.selection );
             }
 
             response.mutable_status()->set_status( ApiStatusCode::AS_OK );
@@ -1114,4 +1139,443 @@ void BACKPLANE_EMBED::eventServerThread()
 
         nng_send( s_eventSocket, out.data(), out.size(), 0 );
     }
+}
+
+
+// ---- bp.9: theme ---------------------------------------------------------------------------
+
+const wxString BACKPLANE_EMBED::COLOR_THEME_DARK = wxS( "_builtin_backplane_dark" );
+
+
+wxString BACKPLANE_EMBED::ColorThemeOverride() const
+{
+    switch( m_theme )
+    {
+    case EMBED_THEME::LIGHT_MODE: return wxS( "_builtin_default" );
+    case EMBED_THEME::DARK_MODE:  return COLOR_THEME_DARK;
+    default:                 return wxEmptyString;
+    }
+}
+
+
+void BACKPLANE_EMBED::SetTheme( EMBED_THEME aTheme, bool aRefresh )
+{
+    m_theme = aTheme;
+    m_gtkDark = KIPLATFORM::EMBED::SetPreferDark( static_cast<int>( aTheme ) );
+
+    if( !aRefresh )
+        return;
+
+    // Widgets drawn from wx's system colours repaint on this; GTK restyles native ones itself.
+    for( wxWindow* window : wxTopLevelWindows )
+    {
+        wxSysColourChangedEvent event;
+        event.SetEventObject( window );
+        window->GetEventHandler()->ProcessEvent( event );
+    }
+
+    // Canvases reload their colour theme, toolbars their icons.
+    for( wxFrame* frame : Frames() )
+    {
+        if( const EMBED_FRAME_OPS* ops = Ops( frame ); ops && ops->settingsChanged )
+            ops->settingsChanged();
+    }
+
+    if( m_managerOps.settingsChanged )
+        m_managerOps.settingsChanged();
+
+    PushEvent( EMBED_EVENT_TYPE::THEME_CHANGED, {},
+               aTheme == EMBED_THEME::DARK_MODE ? "dark" : aTheme == EMBED_THEME::LIGHT_MODE ? "light" : "kicad" );
+}
+
+
+// ---- bp.9: selection -----------------------------------------------------------------------
+
+void BACKPLANE_EMBED::SelectionChanged( wxFrame* aFrame, const EMBED_ITEM_NAMES& aSelection )
+{
+    if( !m_enabled || m_hostSelecting > 0 )
+        return;
+
+    const FRAME_ENTRY* e = entry( aFrame );
+
+    if( !e )
+        return;
+
+    {
+        std::lock_guard<std::mutex> lock( m_eventMutex );
+
+        EMBED_EVENT event;
+        event.seq = m_nextSeq++;
+        event.type = EMBED_EVENT_TYPE::SELECTION_CHANGED;
+        event.frame = info( *e );
+        event.selection = aSelection;
+        m_events.push_back( event );
+
+        while( m_events.size() > MAX_EVENTS )
+            m_events.pop_front();
+    }
+
+    m_eventCv.notify_all();
+}
+
+
+// ---- bp.9: reload on disk change -----------------------------------------------------------
+
+namespace
+{
+wxString normalPath( const wxString& aPath )
+{
+    wxFileName fn( aPath );
+    fn.MakeAbsolute();
+    fn.Normalize( wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE );
+    return fn.GetFullPath();
+}
+
+
+/// mtime, size: changes on every write and on an atomic rename-over.  Empty if missing.
+std::string fileSignature( const wxString& aPath )
+{
+    std::error_code       ec;
+    std::filesystem::path path( aPath.ToStdString( wxConvUTF8 ) );
+    auto                  time = std::filesystem::last_write_time( path, ec );
+
+    if( ec )
+        return std::string();
+
+    auto size = std::filesystem::file_size( path, ec );
+
+    if( ec )
+        return std::string();
+
+    return std::to_string( time.time_since_epoch().count() ) + ":" + std::to_string( size );
+}
+
+
+bool readFile( const wxString& aPath, std::string& aContent )
+{
+    std::ifstream in( aPath.ToStdString( wxConvUTF8 ), std::ios::binary );
+
+    if( !in )
+        return false;
+
+    std::ostringstream buffer;
+    buffer << in.rdbuf();
+    aContent = buffer.str();
+    return true;
+}
+
+
+/// A KiCad s-expression file that is complete: starts with '(' and its parentheses balance.
+/// A writer still in the middle of the file fails this.
+bool completeSexpr( const std::string& aText )
+{
+    size_t first = aText.find_first_not_of( " \t\r\n" );
+
+    if( first == std::string::npos || aText[first] != '(' )
+        return false;
+
+    long depth = 0;
+    bool inString = false;
+
+    for( size_t ii = first; ii < aText.size(); ++ii )
+    {
+        char c = aText[ii];
+
+        if( inString )
+        {
+            if( c == '\\' )
+                ++ii;
+            else if( c == '"' )
+                inString = false;
+        }
+        else if( c == '"' )
+        {
+            inString = true;
+        }
+        else if( c == '(' )
+        {
+            ++depth;
+        }
+        else if( c == ')' )
+        {
+            if( --depth < 0 )
+                return false;
+        }
+    }
+
+    return depth == 0 && !inString;
+}
+
+
+std::string contentHash( const std::string& aContent )
+{
+    return std::to_string( std::hash<std::string>()( aContent ) ) + ":"
+           + std::to_string( aContent.size() );
+}
+} // namespace
+
+
+void BACKPLANE_EMBED::baseline( const wxString& aPath )
+{
+    FILE_STATE& state = m_files[aPath];
+    std::string content;
+
+    state.signature = fileSignature( aPath );
+    state.hash = readFile( aPath, content ) ? contentHash( content ) : std::string();
+    state.pendingSig.clear();
+    state.pendingSince = 0;
+}
+
+
+void BACKPLANE_EMBED::NoteWriting( const wxString& aPath )
+{
+    if( m_enabled )
+        m_files[normalPath( aPath )].writing++;
+}
+
+
+void BACKPLANE_EMBED::NoteWritten( const wxString& aPath )
+{
+    if( !m_enabled )
+        return;
+
+    wxString    path = normalPath( aPath );
+    FILE_STATE& state = m_files[path];
+
+    if( state.writing > 0 )
+        state.writing--;
+
+    baseline( path );
+}
+
+
+wxFrame* BACKPLANE_EMBED::FindFrameByFile( const wxString& aPath ) const
+{
+    wxString path = normalPath( aPath );
+
+    for( const FRAME_ENTRY& e : m_frames )
+    {
+        if( !e.ops.watchedFiles )
+            continue;
+
+        for( const wxString& file : e.ops.watchedFiles() )
+        {
+            if( normalPath( file ) == path )
+                return e.frame;
+        }
+    }
+
+    return nullptr;
+}
+
+
+void BACKPLANE_EMBED::pollFiles()
+{
+    if( m_reloading > 0 )
+        return;
+
+    long long now = wxGetUTCTimeMillis().GetValue();
+
+    // Copy: a reload can open or close frames.
+    std::vector<wxFrame*> frames = Frames();
+
+    for( wxFrame* frame : frames )
+    {
+        const FRAME_ENTRY* e = entry( frame );
+
+        if( !e || !e->ops.watchedFiles )
+            continue;
+
+        std::vector<wxString> files = e->ops.watchedFiles();
+
+        for( const wxString& file : files )
+        {
+            if( file.IsEmpty() )
+                continue;
+
+            wxString path = normalPath( file );
+            auto     it = m_files.find( path );
+
+            if( it == m_files.end() )
+            {
+                baseline( path );   // first sight: what the frame loaded
+                continue;
+            }
+
+            FILE_STATE& state = it->second;
+
+            if( state.writing > 0 )
+                continue;
+
+            std::string signature = fileSignature( path );
+
+            if( signature.empty() )
+                continue;           // missing for a moment (a rename-over in progress)
+
+            if( signature == state.signature )
+            {
+                state.pendingSig.clear();
+                continue;
+            }
+
+            // Debounce: act only after the file has been quiet for 300 ms.
+            if( signature != state.pendingSig )
+            {
+                state.pendingSig = signature;
+                state.pendingSince = now;
+                continue;
+            }
+
+            if( now - state.pendingSince < 300 )
+                continue;
+
+            std::string content;
+
+            if( !readFile( path, content ) || !completeSexpr( content ) )
+            {
+                state.pendingSince = now;   // a partial write: wait for it to finish
+                continue;
+            }
+
+            // Stable over the quiet period and complete.  Only a real content change counts.
+            state.signature = signature;
+            state.pendingSig.clear();
+            std::string hash = contentHash( content );
+
+            if( hash == state.hash )
+                continue;
+
+            state.hash = hash;
+            externalChange( frame, path );
+            return;   // one change per poll; frames may have changed
+        }
+    }
+}
+
+
+void BACKPLANE_EMBED::externalChange( wxFrame* aFrame, const wxString& aPath )
+{
+    const FRAME_ENTRY* e = entry( aFrame );
+
+    if( !e )
+        return;
+
+    if( e->ops.modified && e->ops.modified() )
+    {
+        // Never clobber the person's edits: ask, here and in KiCad's infobar.
+        m_conflicts[aFrame] = aPath;
+
+        if( e->ops.showConflict )
+            e->ops.showConflict( aPath );
+
+        PushEvent( EMBED_EVENT_TYPE::RELOAD_CONFLICT, info( *e ), aPath.ToStdString( wxConvUTF8 ) );
+        return;
+    }
+
+    if( doReload( aFrame ) == EMBED_RELOAD_RESULT::RELOADED )
+    {
+        if( const FRAME_ENTRY* after = entry( aFrame ) )
+        {
+            PushEvent( EMBED_EVENT_TYPE::DOCUMENT_RELOADED, info( *after ),
+                       aPath.ToStdString( wxConvUTF8 ) );
+        }
+    }
+}
+
+
+EMBED_RELOAD_RESULT BACKPLANE_EMBED::doReload( wxFrame* aFrame )
+{
+    const FRAME_ENTRY* e = entry( aFrame );
+
+    if( !e || !e->ops.reload )
+        return EMBED_RELOAD_RESULT::UNKNOWN;
+
+    EMBED_FRAME_OPS ops = e->ops;
+
+    if( m_conflicts.erase( aFrame ) && ops.showConflict )
+        ops.showConflict( wxEmptyString );
+
+    ++m_reloading;
+    bool ok = false;
+
+    try
+    {
+        ok = ops.reload();
+    }
+    catch( ... )
+    {
+        ok = false;
+    }
+
+    --m_reloading;
+
+    // What is on disk now is what the frame has.
+    if( entry( aFrame ) && ops.watchedFiles )
+    {
+        for( const wxString& file : ops.watchedFiles() )
+            baseline( normalPath( file ) );
+    }
+
+    return ok ? EMBED_RELOAD_RESULT::RELOADED : EMBED_RELOAD_RESULT::UNKNOWN;
+}
+
+
+EMBED_RELOAD_RESULT BACKPLANE_EMBED::Reload( wxFrame* aFrame, bool aDiscard )
+{
+    const FRAME_ENTRY* e = entry( aFrame );
+
+    if( !e )
+        return EMBED_RELOAD_RESULT::UNKNOWN;
+
+    bool modified = e->ops.modified && e->ops.modified();
+
+    if( modified && !aDiscard )
+        return EMBED_RELOAD_RESULT::CONFLICT;
+
+    if( !modified && e->ops.watchedFiles )
+    {
+        bool same = true;
+
+        for( const wxString& file : e->ops.watchedFiles() )
+        {
+            wxString    path = normalPath( file );
+            std::string content;
+            auto        it = m_files.find( path );
+
+            if( it == m_files.end() || !readFile( path, content ) || contentHash( content ) != it->second.hash )
+                same = false;
+        }
+
+        if( same )
+            return EMBED_RELOAD_RESULT::UNCHANGED;
+    }
+
+    EMBED_RELOAD_RESULT result = doReload( aFrame );
+
+    if( result == EMBED_RELOAD_RESULT::RELOADED )
+    {
+        if( const FRAME_ENTRY* after = entry( aFrame ) )
+            PushEvent( EMBED_EVENT_TYPE::DOCUMENT_RELOADED, info( *after ),
+                       after->document.ToStdString( wxConvUTF8 ) );
+    }
+
+    return result;
+}
+
+
+EMBED_RELOAD_RESULT BACKPLANE_EMBED::ResolveConflict( wxFrame* aFrame, bool aReload )
+{
+    const FRAME_ENTRY* e = entry( aFrame );
+
+    if( !e )
+        return EMBED_RELOAD_RESULT::UNKNOWN;
+
+    if( aReload )
+        return Reload( aFrame, true );
+
+    // Keep the person's edits (and their undo stack); the next save overwrites the file.
+    if( m_conflicts.erase( aFrame ) && e->ops.showConflict )
+        e->ops.showConflict( wxEmptyString );
+
+    return EMBED_RELOAD_RESULT::UNCHANGED;
 }

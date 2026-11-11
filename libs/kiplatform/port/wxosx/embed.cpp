@@ -30,5 +30,6 @@ bool KIPLATFORM::EMBED::HasFocus( wxWindow* ) { return false; }
 void KIPLATFORM::EMBED::TakeFocus( wxWindow* ) {}
 void KIPLATFORM::EMBED::SendHostMessage( uint64_t, const char*, int, const long[5] ) {}
 void KIPLATFORM::EMBED::SetFrameGeometry( wxWindow*, int, int, int, int ) {}
+bool KIPLATFORM::EMBED::SetPreferDark( int ) { return false; }
 bool KIPLATFORM::EMBED::NativeModalTitle( wxString& ) { return false; }
 void KIPLATFORM::EMBED::MakeTransientFor( wxWindow*, uint64_t ) {}

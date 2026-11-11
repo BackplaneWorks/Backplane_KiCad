@@ -20,6 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <string>
 #include <vector>
 
@@ -79,6 +80,8 @@
 #include <tools/pcb_actions.h>
 #include <tools/board_editor_control.h>
 #include <tools/zone_filler_tool.h>
+#include <tools/pcb_selection_tool.h>
+#include <view/view.h>
 #include <board_commit.h>
 #include <reporter.h>
 #include <zone_filler.h>
@@ -484,6 +487,57 @@ bool PCB_EDIT_FRAME::ReloadFromDisk()
     GetScreen()->SetContentModified( false );
     ReleaseFile();
     return OpenProjectFiles( std::vector<wxString>( 1, fileName ), KICTL_REVERT );
+}
+
+
+bool PCB_EDIT_FRAME::EmbedReload()
+{
+    KIGFX::VIEW*      view = GetCanvas()->GetView();
+    const VECTOR2D    center = view->GetCenter();
+    const double      scale = view->GetScale();
+    const PCB_LAYER_ID layer = GetActiveLayer();
+    std::vector<KIID> selected;
+
+    if( PCB_SELECTION_TOOL* selTool = m_toolManager->GetTool<PCB_SELECTION_TOOL>() )
+    {
+        for( EDA_ITEM* item : selTool->GetSelection() )
+            selected.push_back( item->m_Uuid );
+    }
+
+    if( !ReloadFromDisk() )
+        return false;
+
+    auto restore =
+            [this, center, scale, layer, selected]()
+            {
+                if( GetBoard()->IsLayerEnabled( layer ) )
+                    SetActiveLayer( layer );
+
+                KIGFX::VIEW* newView = GetCanvas()->GetView();
+                newView->SetScale( scale );
+                newView->SetCenter( center );
+
+                std::vector<EDA_ITEM*> items;
+
+                for( const KIID& id : selected )
+                {
+                    if( BOARD_ITEM* item = GetBoard()->ResolveItem( id, true ) )
+                        items.push_back( item );
+                }
+
+                BACKPLANE_EMBED::SELECTION_SCOPE quiet;
+                m_toolManager->RunAction( ACTIONS::selectionClear );
+
+                if( !items.empty() )
+                    m_toolManager->RunAction<std::vector<EDA_ITEM*>*>( ACTIONS::selectItems, &items );
+
+                GetCanvas()->Refresh();
+            };
+
+    // Opening zooms to fit, partly after idle; put the view back now and after that.
+    restore();
+    CallAfter( restore );
+    return true;
 }
 
 
@@ -1086,6 +1140,9 @@ bool PCB_EDIT_FRAME::SavePcbFile( const wxString& aFileName, bool addToHistory,
     try
     {
         IO_RELEASER<PCB_IO> pi( PCB_IO_MGR::FindPlugin( PCB_IO_MGR::KICAD_SEXP ) );
+
+        // Our own write is not an external change to reload from (embedded mode).
+        BACKPLANE_EMBED::WRITE_SCOPE writing( pcbFileName.GetFullPath() );
 
         pi->SaveBoard( pcbFileName.GetFullPath(), *GetBoard(), nullptr );
     }

@@ -57,6 +57,15 @@ private:
     HANDLER_RESULT<kiapi::backplane::embed::CloseResponse> handleClose(
             const HANDLER_CONTEXT<kiapi::backplane::embed::Close>& aCtx );
 
+    HANDLER_RESULT<kiapi::backplane::embed::SetThemeResponse> handleSetTheme(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::SetTheme>& aCtx );
+
+    HANDLER_RESULT<kiapi::backplane::embed::ReloadDocumentResponse> handleReloadDocument(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::ReloadDocument>& aCtx );
+
+    HANDLER_RESULT<kiapi::backplane::embed::ResolveConflictResponse> handleResolveConflict(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::ResolveConflict>& aCtx );
+
     KIWAY& m_kiway;
 };
 

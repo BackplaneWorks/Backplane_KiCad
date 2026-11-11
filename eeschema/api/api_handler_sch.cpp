@@ -18,6 +18,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
+#include <connection_graph.h>
+#include <sch_connection.h>
+#include <sch_pin.h>
 #include <api/api_handler_sch.h>
 #include <api/api_enums.h>
 #include <api/api_sch_utils.h>
@@ -40,6 +44,8 @@
 #include <sch_group.h>
 #include <common.h>
 #include <connection_graph.h>
+#include <sch_connection.h>
+#include <sch_pin.h>
 #include <connectivity/conn_facade.h>
 #include <advanced_config.h>
 #include <sch_commit.h>
@@ -61,6 +67,7 @@
 #include <schematic.h>
 #include <variant_proxy_undo_item.h>
 #include <tool/actions.h>
+#include <view/view.h>
 #include <tool/common_tools.h>
 #include <tool/tool_manager.h>
 #include <tools/sch_actions.h>
@@ -262,6 +269,8 @@ API_HANDLER_SCH::API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext,
             &API_HANDLER_SCH::handleGetErcTaskResult, true );
     registerHandler<SyncSelection, SyncSelectionResponse>( &API_HANDLER_SCH::handleSyncSelection );
     registerHandler<HighlightNets, HighlightNetsResponse>( &API_HANDLER_SCH::handleHighlightNets );
+    registerHandler<kiapi::backplane::embed::SelectItems, kiapi::backplane::embed::SelectItemsResponse>(
+            &API_HANDLER_SCH::handleSelectItems );
     registerHandler<GetVariants, VariantsResponse>( &API_HANDLER_SCH::handleGetVariants );
     registerHandler<AddVariant, Empty>( &API_HANDLER_SCH::handleAddVariant );
     registerHandler<DeleteVariant, Empty>( &API_HANDLER_SCH::handleDeleteVariant );
@@ -2815,6 +2824,188 @@ HANDLER_RESULT<SyncSelectionResponse> API_HANDLER_SCH::handleSyncSelection(
     }
 
     response.set_status( CPS_OK );
+    return response;
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::SelectItemsResponse>
+API_HANDLER_SCH::handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embed::SelectItems>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    // Routed by frame kind: the board editor's handler serves FK_PCB.
+    if( aCtx.Request.kind() != embed::FK_SCH )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "SelectItems" ) )
+        return tl::unexpected( *headless );
+
+    embed::SelectItemsResponse response;
+    response.set_kind( embed::FK_SCH );
+
+    SCHEMATIC&     sch = frame()->Schematic();
+    SCH_SHEET_LIST sheets = sch.Hierarchy();
+
+    // Everything found, with the sheet it is on.  Only one sheet can be shown: the first item's.
+    std::vector<std::pair<SCH_SHEET_PATH, SCH_ITEM*>> hits;
+
+    auto findSymbol = [&]( const wxString& aRef ) -> std::vector<std::pair<SCH_SHEET_PATH, SCH_SYMBOL*>>
+                      {
+                          std::vector<std::pair<SCH_SHEET_PATH, SCH_SYMBOL*>> symbols;
+
+                          for( const SCH_SHEET_PATH& path : sheets )
+                          {
+                              for( SCH_ITEM* item : path.LastScreen()->Items().OfType( SCH_SYMBOL_T ) )
+                              {
+                                  SCH_SYMBOL* symbol = static_cast<SCH_SYMBOL*>( item );
+
+                                  if( symbol->GetRef( &path, false ) == aRef )
+                                      symbols.emplace_back( path, symbol );
+                              }
+                          }
+
+                          return symbols;
+                      };
+
+    for( const std::string& ref : aCtx.Request.references() )
+    {
+        auto symbols = findSymbol( wxString::FromUTF8( ref ) );
+
+        for( auto& [path, symbol] : symbols )
+            hits.emplace_back( path, symbol );
+
+        if( symbols.empty() )
+            response.mutable_not_found()->add_references( ref );
+        else
+            response.mutable_found()->add_references( ref );
+    }
+
+    for( const std::string& pinName : aCtx.Request.pins() )
+    {
+        wxString text = wxString::FromUTF8( pinName );
+        int      dot = text.Find( '.', true );
+        bool     found = false;
+
+        if( dot > 0 )
+        {
+            for( auto& [path, symbol] : findSymbol( text.Left( dot ) ) )
+            {
+                if( SCH_PIN* pin = symbol->GetPin( text.Mid( dot + 1 ) ) )
+                {
+                    hits.emplace_back( path, pin );
+                    found = true;
+                }
+            }
+        }
+
+        if( found )
+            response.mutable_found()->add_pins( pinName );
+        else
+            response.mutable_not_found()->add_pins( pinName );
+    }
+
+    wxString highlightNet;
+
+    for( const std::string& netName : aCtx.Request.nets() )
+    {
+        wxString name = wxString::FromUTF8( netName );
+        bool     found = false;
+
+        // Net names as people write them: "GND" also matches a local "/GND" and vice versa.
+        auto matches = [&]( const wxString& aNet )
+                       {
+                           return aNet == name || aNet == wxS( "/" ) + name || wxS( "/" ) + aNet == name;
+                       };
+
+        for( const SCH_SHEET_PATH& path : sheets )
+        {
+            for( SCH_ITEM* item : path.LastScreen()->Items() )
+            {
+                if( item->Type() == SCH_SYMBOL_T )
+                {
+                    for( SCH_PIN* pin : static_cast<SCH_SYMBOL*>( item )->GetPins( &path ) )
+                    {
+                        if( std::optional<wxString> net = pin->GetConnectionName( &path );
+                            net && matches( *net ) )
+                        {
+                            hits.emplace_back( path, pin );
+                            found = true;
+                        }
+                    }
+                }
+                else if( std::optional<wxString> net = item->GetConnectionName( &path );
+                         net && matches( *net ) )
+                {
+                    hits.emplace_back( path, item );
+                    found = true;
+                }
+            }
+        }
+
+
+        if( found )
+        {
+            response.mutable_found()->add_nets( netName );
+
+            if( highlightNet.IsEmpty() )
+                highlightNet = name;
+        }
+        else
+        {
+            response.mutable_not_found()->add_nets( netName );
+        }
+    }
+
+    TOOL_MANAGER* mgr = frame()->GetToolManager();
+
+    // Show the sheet of the first hit.
+    if( !hits.empty() && hits.front().first.Path() != frame()->GetCurrentSheet().Path() )
+    {
+        SCH_SHEET_PATH target = hits.front().first;
+        mgr->RunAction<SCH_SHEET_PATH*>( SCH_ACTIONS::changeSheet, &target );
+    }
+
+    std::vector<EDA_ITEM*> items;
+    BOX2I                  bbox;
+    const KIID_PATH        shown = frame()->GetCurrentSheet().Path();
+
+    for( auto& [path, item] : hits )
+    {
+        if( path.Path() != shown )
+            continue;
+
+        items.push_back( item );
+
+        if( items.size() == 1 )
+            bbox = item->GetBoundingBox();
+        else
+            bbox.Merge( item->GetBoundingBox() );
+    }
+
+    {
+        // The host's selection is not reported back to it; KiCad's own cross-probe to the
+        // board still runs.
+        BACKPLANE_EMBED::SELECTION_SCOPE quiet;
+
+        mgr->RunAction( ACTIONS::selectionClear );
+
+        if( !items.empty() )
+            mgr->RunAction<std::vector<EDA_ITEM*>*>( ACTIONS::selectItems, &items );
+
+        frame()->HandleRemoteNetHighlight( highlightNet );
+    }
+
+    if( aCtx.Request.zoom() && !items.empty() )
+    {
+        bbox.Inflate( std::max( bbox.GetWidth(), bbox.GetHeight() ) / 5 + schIUScale.MilsToIU( 100 ) );
+        frame()->GetCanvas()->GetView()->SetViewport( BOX2D( bbox.GetOrigin(), bbox.GetSize() ) );
+    }
+
+    frame()->GetCanvas()->Refresh();
     return response;
 }
 

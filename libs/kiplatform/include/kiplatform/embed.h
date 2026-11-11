@@ -103,6 +103,13 @@ namespace EMBED
      */
     bool NativeModalTitle( wxString& aTitle );
 
+    /**
+     * Ask the toolkit for its dark (aMode 2) or light (1) variant for this process, or restore
+     * what it had before the first call (0).  Existing windows restyle.  Returns whether the
+     * dark variant is now preferred.
+     */
+    bool SetPreferDark( int aMode );
+
     /// Make a top-level dialog transient for aToplevel and centre it on aToplevel.
     void MakeTransientFor( wxWindow* aDialog, uint64_t aToplevel );
 } // namespace EMBED

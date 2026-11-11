@@ -105,6 +105,9 @@ API_HANDLER_EMBED::API_HANDLER_EMBED( KIWAY& aKiway ) :
     registerHandler<SetReservedKeys, SetReservedKeysResponse>(
             &API_HANDLER_EMBED::handleSetReservedKeys, true );
     registerHandler<Close, CloseResponse>( &API_HANDLER_EMBED::handleClose );
+    registerHandler<SetTheme, SetThemeResponse>( &API_HANDLER_EMBED::handleSetTheme, true );
+    registerHandler<ReloadDocument, ReloadDocumentResponse>( &API_HANDLER_EMBED::handleReloadDocument );
+    registerHandler<ResolveConflict, ResolveConflictResponse>( &API_HANDLER_EMBED::handleResolveConflict );
 }
 
 
@@ -280,6 +283,7 @@ HANDLER_RESULT<GetFramesResponse> API_HANDLER_EMBED::handleGetFrames(
     response.set_holder( embed.Holder() );
     response.set_scale( embed.Scale() );
     response.set_events_socket( embed.EventServerUrl() );
+    response.set_theme( static_cast<ThemeMode>( embed.Theme() ) );
 
     for( const std::string& chord : embed.ReservedKeys() )
         response.add_reserved_keys( chord );
@@ -308,6 +312,15 @@ HANDLER_RESULT<NextEventsResponse> API_HANDLER_EMBED::handleNextEvents(
         out->set_type( static_cast<EventType>( event.type ) );
         fillFrame( out->mutable_frame(), event.frame );
         out->set_detail( event.detail );
+
+        for( const std::string& name : event.selection.references )
+            out->mutable_selection()->add_references( name );
+
+        for( const std::string& name : event.selection.nets )
+            out->mutable_selection()->add_nets( name );
+
+        for( const std::string& name : event.selection.pins )
+            out->mutable_selection()->add_pins( name );
     }
 
     return response;
@@ -437,6 +450,98 @@ HANDLER_RESULT<CloseResponse> API_HANDLER_EMBED::handleClose( const HANDLER_CONT
                     } );
         }
     }
+
+    return response;
+}
+
+
+HANDLER_RESULT<SetThemeResponse> API_HANDLER_EMBED::handleSetTheme( const HANDLER_CONTEXT<SetTheme>& aCtx )
+{
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    if( aCtx.Request.mode() < TM_KICAD || aCtx.Request.mode() > TM_DARK )
+        return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST, "unknown theme mode" ) );
+
+    embed.SetTheme( static_cast<EMBED_THEME>( aCtx.Request.mode() ) );
+
+    SetThemeResponse response;
+    response.set_mode( static_cast<ThemeMode>( embed.Theme() ) );
+    response.set_gtk_dark( embed.GtkDark() );
+
+    wxString colorTheme = embed.ColorThemeOverride();
+
+    if( colorTheme.IsEmpty() )
+        colorTheme = wxS( "(the person's own)" );
+
+    response.set_color_theme( colorTheme.ToStdString( wxConvUTF8 ) );
+
+    bool darkIcons = embed.Theme() == EMBED_THEME::DARK_MODE
+                     || ( embed.Theme() == EMBED_THEME::OWN_SETTINGS && embed.GtkDark() );
+    response.set_icon_theme( darkIcons ? "dark" : "light" );
+    return response;
+}
+
+
+namespace
+{
+wxFrame* frameForDocument( FrameKind aKind, const std::string& aPath )
+{
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    if( !aPath.empty() )
+        return embed.FindFrameByFile( wxString::FromUTF8( aPath ) );
+
+    return embed.FindFrame( static_cast<EMBED_FRAME_KIND>( aKind ) );
+}
+} // namespace
+
+
+HANDLER_RESULT<ReloadDocumentResponse> API_HANDLER_EMBED::handleReloadDocument(
+        const HANDLER_CONTEXT<ReloadDocument>& aCtx )
+{
+    wxFrame* frame = frameForDocument( aCtx.Request.kind(), aCtx.Request.path() );
+
+    if( !frame )
+        return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST, "no frame has that document" ) );
+
+    BACKPLANE_EMBED&    embed = BACKPLANE_EMBED::Get();
+    EMBED_RELOAD_RESULT result = embed.Reload( frame, aCtx.Request.mode() == RM_DISCARD );
+
+    if( result == EMBED_RELOAD_RESULT::UNKNOWN )
+        return tl::unexpected( failure( ApiStatusCode::AS_INTERNAL_ERROR, "the reload failed (see KiCad's log)" ) );
+
+    ReloadDocumentResponse response;
+    response.set_result( static_cast<ReloadResult>( result ) );
+
+    if( embed.IsEmbedded( frame ) )
+        fillFrame( response.mutable_frame(), embed.Info( frame ) );
+
+    return response;
+}
+
+
+HANDLER_RESULT<ResolveConflictResponse> API_HANDLER_EMBED::handleResolveConflict(
+        const HANDLER_CONTEXT<ResolveConflict>& aCtx )
+{
+    if( aCtx.Request.choice() != CC_KEEP && aCtx.Request.choice() != CC_RELOAD )
+        return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST, "choice must be CC_KEEP or CC_RELOAD" ) );
+
+    wxFrame* frame = frameForDocument( aCtx.Request.kind(), aCtx.Request.path() );
+
+    if( !frame )
+        return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST, "no frame has that document" ) );
+
+    BACKPLANE_EMBED&    embed = BACKPLANE_EMBED::Get();
+    EMBED_RELOAD_RESULT result = embed.ResolveConflict( frame, aCtx.Request.choice() == CC_RELOAD );
+
+    if( result == EMBED_RELOAD_RESULT::UNKNOWN )
+        return tl::unexpected( failure( ApiStatusCode::AS_INTERNAL_ERROR, "the reload failed (see KiCad's log)" ) );
+
+    ResolveConflictResponse response;
+    response.set_result( static_cast<ReloadResult>( result ) );
+
+    if( embed.IsEmbedded( frame ) )
+        fillFrame( response.mutable_frame(), embed.Info( frame ) );
 
     return response;
 }

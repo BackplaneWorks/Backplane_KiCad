@@ -433,6 +433,9 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE=1 "$RUNNER_TEMP/ipc-smoke-venv/bin/python" \
             scripts/backplane-embed-x11-check.py "release/${archive_root}/bin/kicad" \
             "release/${archive_root}/bin/kicad-cli" --out "$RUNNER_TEMP/embed-x11"
+          LIBGL_ALWAYS_SOFTWARE=1 "$RUNNER_TEMP/ipc-smoke-venv/bin/python" \
+            scripts/backplane-embed-features-check.py "release/${archive_root}/bin/kicad" \
+            "release/${archive_root}/bin/kicad-cli" --out "$RUNNER_TEMP/embed-x11/features"
 
       - name: Upload embedded GUI screenshots
         if: always() && env.archive_root != ''

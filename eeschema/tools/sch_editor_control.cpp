@@ -18,6 +18,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
+#include <sch_connection.h>
+#include <sch_pin.h>
+#include <sch_symbol.h>
 #include <advanced_config.h>
 #include <symbol_edit_frame.h>
 #include "tools/sch_editor_control.h"
@@ -589,6 +593,43 @@ void SCH_EDITOR_CONTROL::doCrossProbeSchToPcb( const TOOL_EVENT& aEvent, bool aF
 
     SCH_SELECTION_TOOL* selTool = m_toolMgr->GetTool<SCH_SELECTION_TOOL>();
     SCH_SELECTION&      selection = aForce ? selTool->RequestSelection() : selTool->GetSelection();
+
+    // An embedding host mirrors the person's selection.
+    if( BACKPLANE_EMBED::Get().Enabled() )
+    {
+        EMBED_ITEM_NAMES      names;
+        const SCH_SHEET_PATH& sheet = m_frame->GetCurrentSheet();
+
+        auto addUnique = []( std::vector<std::string>& aList, const wxString& aName )
+                         {
+                             std::string name = aName.ToStdString( wxConvUTF8 );
+
+                             if( !name.empty() && std::find( aList.begin(), aList.end(), name ) == aList.end() )
+                                 aList.push_back( name );
+                         };
+
+        for( EDA_ITEM* item : selection )
+        {
+            if( item->Type() == SCH_SYMBOL_T )
+            {
+                addUnique( names.references, static_cast<SCH_SYMBOL*>( item )->GetRef( &sheet, false ) );
+            }
+            else if( item->Type() == SCH_PIN_T )
+            {
+                SCH_PIN* pin = static_cast<SCH_PIN*>( item );
+
+                if( SYMBOL* symbol = pin->GetParentSymbol() )
+                    addUnique( names.pins, symbol->GetRef( &sheet, false ) + wxS( "." ) + pin->GetNumber() );
+            }
+            else if( SCH_ITEM* schItem = dynamic_cast<SCH_ITEM*>( item ) )
+            {
+                if( std::optional<wxString> net = schItem->GetConnectionName( &sheet ) )
+                    addUnique( names.nets, *net );
+            }
+        }
+
+        BACKPLANE_EMBED::Get().SelectionChanged( m_frame, names );
+    }
 
     m_frame->SendSelectItemsToPcb( selection.GetItemsSortedBySelectionOrder(), aForce );
 }

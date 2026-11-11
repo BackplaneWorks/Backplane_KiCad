@@ -72,7 +72,38 @@ enum class EMBED_EVENT_TYPE : int
     DIALOG_OPENED = 10,
     DIALOG_CLOSED = 11,
     DETACHED = 12,
-    DOCUMENT_CHANGED = 13
+    DOCUMENT_CHANGED = 13,
+    SELECTION_CHANGED = 14,
+    DOCUMENT_RELOADED = 15,
+    RELOAD_CONFLICT = 16,
+    THEME_CHANGED = 17
+};
+
+/// Values match kiapi.backplane.embed.ThemeMode.
+enum class EMBED_THEME : int
+{
+    OWN_SETTINGS = 0,  ///< no override: the person's own settings
+    LIGHT_MODE = 1,
+    DARK_MODE = 2
+};
+
+/// Values match kiapi.backplane.embed.ReloadResult.
+enum class EMBED_RELOAD_RESULT : int
+{
+    UNKNOWN = 0,
+    RELOADED = 1,
+    UNCHANGED = 2,
+    CONFLICT = 3
+};
+
+/// Item names as people write them (kiapi.backplane.embed.ItemNames).
+struct EMBED_ITEM_NAMES
+{
+    std::vector<std::string> references;
+    std::vector<std::string> nets;
+    std::vector<std::string> pins;   ///< "U3.4"
+
+    bool Empty() const { return references.empty() && nets.empty() && pins.empty(); }
 };
 
 struct EMBED_CHROME
@@ -93,6 +124,10 @@ struct EMBED_FRAME_OPS
     std::function<bool( const std::string& )>  runAction;
     std::function<wxString()>                  document;
     std::function<bool()>                      modified;
+    std::function<void()>                      settingsChanged;  ///< CommonSettingsChanged()
+    std::function<std::vector<wxString>()>     watchedFiles;     ///< files to reload from
+    std::function<bool()>                      reload;           ///< reload, keeping the view
+    std::function<void( const wxString& )>     showConflict;     ///< infobar; empty hides it
 };
 
 struct EMBED_FRAME_INFO
@@ -115,6 +150,7 @@ struct EMBED_EVENT
     EMBED_EVENT_TYPE type = EMBED_EVENT_TYPE::UNKNOWN;
     EMBED_FRAME_INFO frame;
     std::string      detail;
+    EMBED_ITEM_NAMES selection;
 };
 
 
@@ -232,6 +268,60 @@ public:
     /// Parse a chord.  Returns false if it does not parse.
     static bool ParseChord( const std::string& aChord, int& aModifiers, int& aKeyCode );
 
+    // ---- Theme (bp.9) ----
+
+    /// Apply a theme override live (GTK prefer-dark, colour themes, icons).  aRefresh false
+    /// is for the command line, before any frame exists.
+    void SetTheme( EMBED_THEME aTheme, bool aRefresh = true );
+    EMBED_THEME Theme() const { return m_theme; }
+    bool        GtkDark() const { return m_gtkDark; }
+
+    /// The colour theme every canvas draws with while a theme override is set, else empty.
+    wxString ColorThemeOverride() const;
+
+    /// Name of the fork's built-in dark colour theme.
+    static const wxString COLOR_THEME_DARK;
+
+    // ---- Selection (bp.9) ----
+
+    /// A frame's selection changed because the person changed it.  Ignored while a host or
+    /// cross-probe selection is being applied (see SelectionScope).
+    void SelectionChanged( wxFrame* aFrame, const EMBED_ITEM_NAMES& aSelection );
+
+    /// While alive, selection changes are not reported (SelectItems applying the host's).
+    struct KICOMMON_API SELECTION_SCOPE
+    {
+        SELECTION_SCOPE() { ++BACKPLANE_EMBED::Get().m_hostSelecting; }
+        ~SELECTION_SCOPE() { --BACKPLANE_EMBED::Get().m_hostSelecting; }
+    };
+
+    // ---- Reload on disk change (bp.9) ----
+
+    /// KiCad is about to write / has written aPath itself: not an external change.
+    void NoteWriting( const wxString& aPath );
+    void NoteWritten( const wxString& aPath );
+
+    /// RAII around a save of aPath.
+    struct KICOMMON_API WRITE_SCOPE
+    {
+        explicit WRITE_SCOPE( const wxString& aPath ) : m_path( aPath )
+        {
+            BACKPLANE_EMBED::Get().NoteWriting( m_path );
+        }
+        ~WRITE_SCOPE() { BACKPLANE_EMBED::Get().NoteWritten( m_path ); }
+        wxString m_path;
+    };
+
+    /// ReloadDocument / ResolveConflict.  aDiscard reloads over unsaved changes.
+    EMBED_RELOAD_RESULT Reload( wxFrame* aFrame, bool aDiscard );
+    EMBED_RELOAD_RESULT ResolveConflict( wxFrame* aFrame, bool aReload );
+
+    /// The frame whose watched files include aPath.
+    wxFrame* FindFrameByFile( const wxString& aPath ) const;
+
+    /// True while a reload is in progress (KiCad's own Show() calls are not host requests).
+    bool Reloading() const { return m_reloading > 0; }
+
     ~BACKPLANE_EMBED();
 
 private:
@@ -259,6 +349,20 @@ private:
     EMBED_FRAME_INFO   info( const FRAME_ENTRY& aEntry ) const;
 
     bool registerFrame( wxFrame* aFrame, FRAME_T aType, const EMBED_FRAME_OPS& aOps );
+
+    struct FILE_STATE
+    {
+        std::string signature;      ///< mtime, size, inode as last accepted
+        std::string hash;           ///< content hash as last accepted
+        std::string pendingSig;     ///< a signature seen but not yet quiet long enough
+        long long   pendingSince = 0;
+        int         writing = 0;    ///< KiCad itself is writing it
+    };
+
+    void pollFiles();
+    void baseline( const wxString& aPath );
+    void externalChange( wxFrame* aFrame, const wxString& aPath );
+    EMBED_RELOAD_RESULT doReload( wxFrame* aFrame );
     void onPoll( wxTimerEvent& aEvent );
     void onFrameActivate( wxFrame* aFrame, bool aActive );
     bool isUnmanaged( uint64_t aWindow ) const;
@@ -291,6 +395,14 @@ private:
     std::vector<CHORD> m_reserved;
 
     std::optional<int> m_unsavedAnswer;
+
+    EMBED_THEME m_theme = EMBED_THEME::OWN_SETTINGS;
+    bool        m_gtkDark = false;
+    int         m_hostSelecting = 0;
+    int         m_reloading = 0;
+
+    std::map<wxString, FILE_STATE> m_files;
+    std::map<wxFrame*, wxString>   m_conflicts;   ///< frame -> file with a pending conflict
 
     wxTimer m_pollTimer;
     wxTimer m_parentTimer;

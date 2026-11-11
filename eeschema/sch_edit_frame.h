@@ -514,6 +514,10 @@ public:
      */
     bool ReloadFromDisk();
 
+    /// Embedded mode: every sheet file, and a reload keeping the sheet, view and selection.
+    std::vector<wxString> EmbedWatchedFiles() const override;
+    bool                  EmbedReload() override;
+
     void SetSchematic( SCHEMATIC* aSchematic );
 
     wxString GetCurrentFileName() const override;

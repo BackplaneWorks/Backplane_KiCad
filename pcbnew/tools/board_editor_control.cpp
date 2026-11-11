@@ -19,6 +19,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
+#include <footprint.h>
+#include <pad.h>
 #include "board_editor_control.h"
 
 #include <algorithm>
@@ -2181,6 +2184,42 @@ void BOARD_EDITOR_CONTROL::doCrossProbePcbToSch( const TOOL_EVENT& aEvent, bool 
     PCB_SELECTION_TOOL*  selTool = m_toolMgr->GetTool<PCB_SELECTION_TOOL>();
     const PCB_SELECTION& selection = selTool->GetSelection();
     EDA_ITEM*            focusItem = nullptr;
+
+    // An embedding host mirrors the person's selection.
+    if( BACKPLANE_EMBED::Get().Enabled() )
+    {
+        EMBED_ITEM_NAMES names;
+
+        auto addUnique = []( std::vector<std::string>& aList, const wxString& aName )
+                         {
+                             std::string name = aName.ToStdString( wxConvUTF8 );
+
+                             if( !name.empty() && std::find( aList.begin(), aList.end(), name ) == aList.end() )
+                                 aList.push_back( name );
+                         };
+
+        for( EDA_ITEM* item : selection )
+        {
+            if( item->Type() == PCB_FOOTPRINT_T )
+            {
+                addUnique( names.references, static_cast<FOOTPRINT*>( item )->GetReference() );
+            }
+            else if( item->Type() == PCB_PAD_T )
+            {
+                PAD* pad = static_cast<PAD*>( item );
+
+                if( FOOTPRINT* fp = pad->GetParentFootprint() )
+                    addUnique( names.pins, fp->GetReference() + wxS( "." ) + pad->GetNumber() );
+            }
+            else if( BOARD_CONNECTED_ITEM* connected = dynamic_cast<BOARD_CONNECTED_ITEM*>( item ) )
+            {
+                if( connected->GetNetCode() > 0 )
+                    addUnique( names.nets, connected->GetNetname() );
+            }
+        }
+
+        BACKPLANE_EMBED::Get().SelectionChanged( m_frame, names );
+    }
 
     if( aEvent.Matches( EVENTS::PointSelectedEvent ) )
         focusItem = selection.GetLastAddedItem();
