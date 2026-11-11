@@ -198,6 +198,13 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
                 m_parent = 0;
                 PushEvent( EMBED_EVENT_TYPE::DETACHED, {} );
             };
+    hooks.reparented =
+            [this]( uint64_t aParent )
+            {
+                // The host moved the holder itself: same as an AttachToParent to that window.
+                m_parent = aParent;
+                PushEvent( EMBED_EVENT_TYPE::ATTACHED, {}, std::to_string( aParent ) );
+            };
 
     KIPLATFORM::EMBED::Install( hooks );
 

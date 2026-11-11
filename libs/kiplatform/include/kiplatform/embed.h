@@ -49,8 +49,12 @@ namespace EMBED
         /// A top-level window other than an embedded frame was mapped (true) or unmapped.
         std::function<void( uint64_t aWindow, bool aMapped, const wxString& aTitle )> dialog;
 
-        /// The holder was taken away from its parent (the host's window was destroyed).
+        /// The holder was taken away from its parent (the host's window was destroyed, or the
+        /// host parked the holder on the root).
         std::function<void()> detached;
+
+        /// The host moved the holder into another of its windows, which is the parent now.
+        std::function<void( uint64_t aParent )> reparented;
     };
 
     /// True if the running toolkit backend can embed (X11 or Windows; not Wayland or macOS).

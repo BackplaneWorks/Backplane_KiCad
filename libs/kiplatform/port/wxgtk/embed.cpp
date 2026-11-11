@@ -121,13 +121,51 @@ GdkFilterReturn holderFilter( GdkXEvent* aXEvent, GdkEvent*, gpointer )
 
         trapped( [&]() { XResizeWindow( display, s_holder, w, h ); } );
     }
+    else if( ev->type == ReparentNotify && ev->xreparent.window == s_holder
+             && ev->xreparent.parent != s_parent
+             && ev->xreparent.parent != DefaultRootWindow( ev->xany.display ) )
+    {
+        // The host moved the holder into another of its windows itself (a pane moved to another
+        // window, or the frames parked on View taken back).  Follow it: that window is the parent
+        // now (its size, and where focus/key messages go).  Our own reparenting never gets here:
+        // s_parent is updated first.
+        Display* display = ev->xany.display;
+        Window   oldParent = s_parent;
+        Window   parent = ev->xreparent.parent;
+        int      w = 1, h = 1;
+
+        s_parent = parent;
+
+        trapped( [&]()
+                 {
+                     if( oldParent )
+                         XSelectInput( display, oldParent, NoEventMask );
+
+                     XSelectInput( display, parent, StructureNotifyMask );
+
+                     XWindowAttributes attrs;
+
+                     if( XGetWindowAttributes( display, parent, &attrs ) )
+                     {
+                         w = std::max( 1, attrs.width );
+                         h = std::max( 1, attrs.height );
+                     }
+
+                     XMoveResizeWindow( display, s_holder, 0, 0, w, h );
+                     XMapWindow( display, s_holder );
+                 } );
+
+        if( s_hooks.reparented )
+            s_hooks.reparented( parent );
+    }
     else if( ( ev->type == ReparentNotify && ev->xreparent.window == s_holder && s_parent
                && ev->xreparent.parent != s_parent )
              || ( ev->type == DestroyNotify && s_parent && ev->xdestroywindow.window == s_parent ) )
     {
-        // The host's window went away.  If the host had the holder in its save-set the server
-        // moved it to the root (mapped); park it unmapped.  Frames stay alive until the next
-        // AttachToParent.  Our own reparenting never gets here: s_parent is updated first.
+        // The holder went to the root (the host parked it there, or its connection closed and
+        // the server moved it, being in the host's save-set), or the host's window went away.
+        // Park it unmapped; frames stay alive until the next AttachToParent or until the host
+        // moves the holder into a window again.
         Display* display = ev->xany.display;
         s_parent = 0;
 

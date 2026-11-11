@@ -143,7 +143,8 @@ enum EventType
                             // the host decides, with ShowFrame
   ET_DIALOG_OPENED    = 10; // a dialog (or modal frame) was mapped; detail = its title
   ET_DIALOG_CLOSED    = 11;
-  ET_DETACHED         = 12; // the parent window went away; frames are parked, unmapped
+  ET_DETACHED         = 12; // the parent window went away, or the host moved the holder to the
+                            // root itself; frames are parked, unmapped
   ET_DOCUMENT_CHANGED = 13; // a frame's document path changed
   ET_SELECTION_CHANGED = 14; // the person changed the selection in the PCB or schematic editor;
                              // Event.selection holds the new selection (empty = cleared)
@@ -152,6 +153,9 @@ enum EventType
                              // nothing was reloaded; detail = the file.  Resolve with
                              // ResolveConflict (or the person uses KiCad's infobar)
   ET_THEME_CHANGED     = 17; // the theme was applied; detail = "light", "dark" or "kicad"
+  ET_ATTACHED          = 18; // the host moved the holder into another of its windows itself
+                             // (XReparentWindow); that window is the parent now (focus/key
+                             // messages go there).  detail = its id, decimal
 }
 
 message Event

@@ -76,7 +76,8 @@ enum class EMBED_EVENT_TYPE : int
     SELECTION_CHANGED = 14,
     DOCUMENT_RELOADED = 15,
     RELOAD_CONFLICT = 16,
-    THEME_CHANGED = 17
+    THEME_CHANGED = 17,
+    ATTACHED = 18
 };
 
 /// Values match kiapi.backplane.embed.ThemeMode.

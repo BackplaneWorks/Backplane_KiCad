@@ -363,6 +363,34 @@ def main():
         s.xdotool("key", "Escape")
         time.sleep(1)
 
+        # The host moves the holder itself: into another of its windows (adopted), to the root
+        # (parked) and back (adopted again).
+        screen = disp.screen()
+        other = host.top.create_window(0, 0, w, h, 0, screen.root_depth, 1, 0, background_pixel=0x202020)
+        other.map()
+        holder_window = disp.create_resource_object("window", holder)
+        events()
+        holder_window.reparent(other, 0, 0)
+        disp.sync()
+        attached = wait_event(embed.ET_ATTACHED, 5)
+        frames_now = api.request(embed.GetFrames(), embed.GetFramesResponse)
+        pcb_now = frames()[embed.FK_PCB].window
+        check(bool(attached) and frames_now.parent == other.id and viewable(disp, holder)
+              and not any(e.type == embed.ET_DETACHED for e in attached),
+              f"a holder the host moves into another window is adopted (ET_ATTACHED, parent {frames_now.parent:#x})")
+        holder_window.unmap()
+        holder_window.reparent(host.root, 0, 0)
+        disp.sync()
+        check(bool(wait_event(embed.ET_DETACHED, 5)) and not viewable(disp, holder),
+              "a holder the host moves to the root is parked (ET_DETACHED)")
+        holder_window.reparent(host.container, 0, 0)
+        disp.sync()
+        check(bool(wait_event(embed.ET_ATTACHED, 5)) and viewable(disp, holder)
+              and api.request(embed.GetFrames(), embed.GetFramesResponse).parent == host.container.id,
+              "taken back from the root by the host, it is adopted again and shown")
+        other.destroy()
+        disp.sync()
+
         # Host death, then a new host window.
         child = subprocess.Popen([sys.executable, "-c", f"""
 import ctypes, sys, time

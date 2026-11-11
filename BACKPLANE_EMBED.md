@@ -69,6 +69,11 @@ host top-level (WM-managed)
   reparented by the WM; under a reparenting WM the server puts the holder in the WM's frame,
   and KiCad moves it to the root at once, racing the WM's cleanup. Without a save-set entry a
   host crash destroys KiCad's windows and KiCad exits.
+- **The host may move the holder itself.** Reparenting it into another of the host's windows
+  (a pane moved to another window) is adopted: that window becomes the parent (the holder
+  follows its size, focus/key messages go there, `GetFrames.parent` reports it) and
+  `ET_ATTACHED` (detail = its id) is posted. Moving it to the root parks it like a detach
+  (`ET_DETACHED`, holder unmapped); moving it back into a window adopts it again.
 - **Moves without a resize** are the host's to announce: send each mapped frame a synthetic
   `ConfigureNotify` with its new root position (ICCCM 4.2.3), or popups open at stale positions.
 - **Dialogs** (every WM-managed GTK top-level that is not an embedded frame and would be
