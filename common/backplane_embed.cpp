@@ -333,6 +333,7 @@ EMBED_FRAME_INFO BACKPLANE_EMBED::info( const FRAME_ENTRY& aEntry ) const
     result.title = aEntry.frame->GetTitle();
     result.shown = aEntry.frame->IsShown() && KIPLATFORM::EMBED::IsMapped( aEntry.frame );
     result.focused = result.shown && KIPLATFORM::EMBED::HasFocus( aEntry.frame );
+    result.realized = aEntry.frame->IsShown() && !m_prewarming.count( aEntry.frame );
 
     if( aEntry.ops.document )
         result.document = aEntry.ops.document();
@@ -1792,7 +1793,10 @@ void BACKPLANE_EMBED::Prewarm( wxFrame* aFrame, int aWidth, int aHeight )
 
                                  if( wxFrame* f = weak.get(); f && m_prewarming.count( f ) )
                                  {
-                                     WithShowAllowed( [&]() { f->Show( false ); } );
+                                     // Unmapped natively rather than hidden: it stays shown
+                                     // to the toolkit, so the host may map it directly
+                                     // (FrameInfo.realized), with no first-map cost
+                                     KIPLATFORM::EMBED::UnmapNative( f );
                                      KIPLATFORM::EMBED::SetFrameGeometry( f, 0, 0, std::max( aWidth, 400 ),
                                                                           std::max( aHeight, 300 ) );
                                      m_prewarming.erase( f );

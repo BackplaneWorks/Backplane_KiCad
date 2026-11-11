@@ -74,6 +74,38 @@ def main():
         canvas = f"{w // 4}x{h // 4}+{w * 3 // 8}+{h * 3 // 8}"
         menubar = f"{w // 3}x14+{w // 2}+2"
 
+        def colour_count(path, crop):
+            out = subprocess.run(["convert", str(path), "-crop", crop, "+repage", "-format", "%k", "info:"],
+                                 text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.strip()
+            return int(out) if out.isdigit() else 0
+
+        # ---------------- 0. Prewarm, then the host maps the frame itself ----------------
+        t = time.monotonic()
+        reply = api.request(embed.ShowFrame(kind=embed.FK_SCH, prewarm=True, width=w, height=h),
+                            embed.ShowFrameResponse)
+        check(reply.frame.kind == embed.FK_SCH and time.monotonic() - t < 1.0,
+              "ShowFrame prewarm replies at once")
+        check(wait_for(lambda: embed.FK_SCH in frames() and frames()[embed.FK_SCH].realized
+                       and not frames()[embed.FK_SCH].shown, 40, 0.2),
+              "a prewarmed schematic is realized and not shown")
+        pre = frames()[embed.FK_SCH]
+        print(f"  (prewarmed: realized={pre.realized} shown={pre.shown})", flush=True)
+        check(not viewable(disp, pre.window), "and its window is not mapped")
+        check(not any(e.type in (embed.ET_SHOW_REQUESTED, embed.ET_FRAME_SHOWN) for e in events()),
+              "a prewarm sends no show events")
+        disp.create_resource_object("window", pre.window).map()
+        disp.sync()
+        wait_for(lambda: viewable(disp, pre.window), 5)
+        time.sleep(1.5)
+        host.pump(0.1)
+        local = s.shot("00-sch-prewarm-local-map")
+        check(wait_for(lambda: frames()[embed.FK_SCH].shown, 3), "the host's own XMapWindow of it counts as shown")
+        check(colour_count(local, canvas) >= 4, f"and it shows the drawn schematic ({colour_count(local, canvas)} colours)")
+        disp.create_resource_object("window", pre.window).unmap()
+        disp.sync()
+        check(wait_for(lambda: not frames()[embed.FK_SCH].shown, 3) and frames()[embed.FK_SCH].realized,
+              "unmapped by the host: not shown, still realized")
+
         # ---------------- 1. Theme ----------------
         check(frames0.theme == embed.TM_DARK, "--theme dark is reported by GetFrames")
         _, dark_pcb = show(embed.FK_PCB, "01-pcb-dark", 4)

@@ -92,6 +92,10 @@ namespace EMBED
     /// then wait for the display server so the map's exposes are queued together.
     void EnsureMapped( wxWindow* aFrame );
 
+    /// Unmap aFrame's native window as a host's own XUnmapWindow would, leaving the toolkit's
+    /// shown state alone, so the host may map it again directly.  Elsewhere it hides the frame.
+    void UnmapNative( wxWindow* aFrame );
+
     /// True if the keyboard focus is in aFrame (the window or a descendant).
     bool HasFocus( wxWindow* aFrame );
 

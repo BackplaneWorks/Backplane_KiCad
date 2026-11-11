@@ -217,6 +217,10 @@ off-screen at that size (canvas, GL context and first view built), then hides it
 `ET_FRAME_OPENED` follows; there is no `ET_SHOW_REQUESTED`, `ET_SHOWN` or `ET_HIDDEN` for a
 prewarm, and it is skipped while a modal dialog is up. The reply's `frame` is filled when the
 frame already existed (else only `kind`). A later plain `ShowFrame` maps it in a few ms.
+A prewarm ends with the frame realized (shown to the toolkit) but its window unmapped, and
+`FrameInfo.realized` true: the host may `XMapWindow` it directly for its first show, with no IPC
+and no first-map cost, exactly as for a frame `ShowFrame` showed and the host unmapped.
+`realized` is true for any frame the host may map and unmap itself; `HideFrame` clears it.
 `ShowFrameResponse.frames` and `HideFrameResponse.frames` hold every frame's state after the
 call, so a switch needs no `GetFrames`.
 

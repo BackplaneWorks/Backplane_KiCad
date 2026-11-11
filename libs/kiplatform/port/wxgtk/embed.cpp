@@ -521,8 +521,22 @@ bool KIPLATFORM::EMBED::IsMapped( wxWindow* aFrame )
     GtkWidget* widget = aFrame ? static_cast<GtkWidget*>( aFrame->GetHandle() ) : nullptr;
     GdkWindow* window = widget ? gtk_widget_get_window( widget ) : nullptr;
 
-    // GDK follows MapNotify/UnmapNotify, so a host's own XMapWindow/XUnmapWindow counts
-    return window && gdk_window_is_visible( window );
+    if( !window )
+        return false;
+
+#ifdef GDK_WINDOWING_X11
+    // Ask the server: GDK does not always follow an outside XUnmapWindow of a toplevel's
+    // window, and the host maps and unmaps frame windows itself
+    if( Display* display = xDisplay(); display && GDK_IS_X11_WINDOW( window ) )
+    {
+        XWindowAttributes attributes;
+
+        if( XGetWindowAttributes( display, GDK_WINDOW_XID( window ), &attributes ) )
+            return attributes.map_state != IsUnmapped;
+    }
+#endif
+
+    return gdk_window_is_visible( window );
 }
 
 
@@ -531,13 +545,40 @@ void KIPLATFORM::EMBED::EnsureMapped( wxWindow* aFrame )
     GtkWidget* widget = aFrame ? static_cast<GtkWidget*>( aFrame->GetHandle() ) : nullptr;
     GdkWindow* window = widget ? gtk_widget_get_window( widget ) : nullptr;
 
-    if( window && gtk_widget_get_visible( widget ) && !gdk_window_is_visible( window ) )
-        gdk_window_show_unraised( window );
+    if( window && gtk_widget_get_visible( widget ) && !IsMapped( aFrame ) )
+    {
+#ifdef GDK_WINDOWING_X11
+        // Mapped as the host would: GDK may still think the window it never saw unmapped is shown
+        if( Display* display = xDisplay(); display && GDK_IS_X11_WINDOW( window ) )
+            XMapWindow( display, GDK_WINDOW_XID( window ) );
+        else
+#endif
+            gdk_window_show_unraised( window );
+    }
 
     // Wait for the server to map it, so its exposes are queued before the first paint: the
     // canvas then paints once for all of them instead of once early and again on the expose.
     if( window )
         gdk_display_sync( gdk_window_get_display( window ) );
+}
+
+
+void KIPLATFORM::EMBED::UnmapNative( wxWindow* aFrame )
+{
+#ifdef GDK_WINDOWING_X11
+    Display* display = xDisplay();
+    Window   window = (Window) WindowId( aFrame );
+
+    if( display && window )
+    {
+        XUnmapWindow( display, window );
+        XFlush( display );
+        return;
+    }
+#endif
+
+    if( aFrame )
+        aFrame->Show( false );
 }
 
 

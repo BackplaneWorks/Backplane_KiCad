@@ -142,6 +142,7 @@ struct EMBED_FRAME_INFO
     bool             modified = false;
     bool             shown = false;
     bool             focused = false;
+    bool             realized = false;  ///< the host may map/unmap its window directly
     uint64_t         window = 0;
     int              minWidth = 0;
     int              minHeight = 0;

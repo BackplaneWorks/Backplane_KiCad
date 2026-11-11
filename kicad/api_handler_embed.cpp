@@ -47,6 +47,7 @@ void fillFrame( FrameInfo* aOut, const EMBED_FRAME_INFO& aIn )
     aOut->set_min_height( aIn.minHeight );
     aOut->set_shown( aIn.shown );
     aOut->set_focused( aIn.focused );
+    aOut->set_realized( aIn.realized );
     aOut->set_frame_name( aIn.frameName.ToStdString( wxConvUTF8 ) );
 }
 

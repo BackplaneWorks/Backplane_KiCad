@@ -149,6 +149,13 @@ void KIPLATFORM::EMBED::EnsureMapped( wxWindow* aFrame )
 }
 
 
+void KIPLATFORM::EMBED::UnmapNative( wxWindow* aFrame )
+{
+    if( aFrame )
+        ShowWindow( static_cast<HWND>( aFrame->GetHWND() ), SW_HIDE );
+}
+
+
 bool KIPLATFORM::EMBED::NativeModalTitle( wxString& )
 {
     return false;

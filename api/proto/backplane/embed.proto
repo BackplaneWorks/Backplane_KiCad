@@ -52,6 +52,8 @@ message FrameInfo
   bool      shown      = 8;  // KiCad has the frame shown (mapped) inside the holder
   bool      focused    = 9;  // the frame has the keyboard
   string    frame_name = 10; // KiCad's internal frame name, for diagnostics
+  bool      realized   = 11; // shown to the toolkit (by ShowFrame or a prewarm): the host may
+                             // XMapWindow/XUnmapWindow `window` itself; HideFrame clears it
 }
 
 // Parent (or re-parent) every embedded frame under a host window.
