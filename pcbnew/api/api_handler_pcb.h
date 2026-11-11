@@ -315,6 +315,8 @@ protected:
 
     void onModified() override;
 
+    void onItemsCommitted() override;
+
     void onNetSettingsChanged() override;
 
     HANDLER_RESULT<commands::GetDocumentModifiedStateResponse>

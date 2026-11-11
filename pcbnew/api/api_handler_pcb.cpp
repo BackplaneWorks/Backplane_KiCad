@@ -1529,6 +1529,21 @@ void API_HANDLER_PCB::onModified()
 }
 
 
+void API_HANDLER_PCB::onItemsCommitted()
+{
+    // BOARD_COMMIT::Push already updated the view, the connectivity, the ratsnest and the
+    // message panel and called OnModify; only the document's own flag is left
+    pcbContext()->SetContentModified();
+
+    if( !frame() )
+        return;
+
+    // A commit made without the frame (no OnModify) still has to show the board as modified
+    if( !frame()->IsContentModified() )
+        frame()->OnModify();
+}
+
+
 void API_HANDLER_PCB::onNetSettingsChanged()
 {
     if( BOARD* brd = board() )

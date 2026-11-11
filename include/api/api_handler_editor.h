@@ -144,6 +144,10 @@ protected:
 
     virtual void onModified() {}
 
+    /// After a pushed commit that only added, changed or removed items: the commit already
+    /// updated the view, connectivity and the frame's modified state.
+    virtual void onItemsCommitted() { onModified(); }
+
 protected:
     std::map<std::string, std::pair<KIID, std::unique_ptr<COMMIT>>> m_commits;
 

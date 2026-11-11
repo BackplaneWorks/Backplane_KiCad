@@ -1761,6 +1761,9 @@ bool PCB_EDIT_FRAME::canCloseWindow( wxCloseEvent& aEvent )
 
 void PCB_EDIT_FRAME::doCloseWindow()
 {
+    // A save's history snapshot still waiting for idle time runs before the board goes
+    runSaveHistorySnapshot();
+
     // Unregister the autosave saver before any cleanup that might invalidate the board
     if( GetBoard() )
         Kiway().LocalHistory().UnregisterSaver( GetBoard() );
@@ -2922,7 +2925,8 @@ void PCB_EDIT_FRAME::ProjectChanged()
                     // history thread copies it rather than the UI thread formatting it again.
                     wxString boardPath = GetBoard()->GetFileName();
 
-                    if( !IsContentModified() && boardPath.StartsWith( aProjectPath )
+                    if( ( m_historyFromSavedFile || !IsContentModified() )
+                        && boardPath.StartsWith( aProjectPath )
                         && wxFileName::FileExists( boardPath ) )
                     {
                         HISTORY_FILE_DATA entry;

@@ -832,6 +832,12 @@ public:
 
     bool      m_ZoneFillsDirty;          // Board has been modified since last zone fill.
 
+    /// The local-history snapshot of a save, run at the next idle time (see SavePcbFile)
+    void      runSaveHistorySnapshot();
+    bool      m_historySnapshotPending = false;
+    bool      m_historyFromSavedFile = false;
+    wxString  m_historySnapshotFile;
+
     bool      m_ProbingSchToPcb;         // Recursion guard when synchronizing selection from schematic
 
     /// Reactive text-var invalidation listener state. The handle alone is

@@ -136,10 +136,25 @@ void API_HANDLER_BOARD::pushCurrentCommit( const std::string& aClientName,
     auto       it = m_commits.find( aClientName );
     const bool changed = it != m_commits.end() && !it->second.second->Empty();
 
-    API_HANDLER_EDITOR::pushCurrentCommit( aClientName, aMessage );
+    // Nets and the board itself feed the layer box, the appearance and net panels; plain items
+    // do not, and rebuilding those panels after every edit relayouts the whole frame
+    bool structural = false;
 
     if( changed )
+    {
+        for( const auto& [item, type] : it->second.second->StagedItems() )
+        {
+            if( item && ( item->Type() == PCB_NETINFO_T || item->Type() == PCB_T ) )
+                structural = true;
+        }
+    }
+
+    API_HANDLER_EDITOR::pushCurrentCommit( aClientName, aMessage );
+
+    if( changed && structural )
         onModified();
+    else if( changed )
+        onItemsCommitted();
 }
 
 
