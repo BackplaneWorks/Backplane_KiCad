@@ -121,7 +121,13 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
     if( apiServer() )
     {
         for( const std::string& command : apiServer()->RegisteredCommands() )
+        {
             reply.add_commands( command );
+
+            // Only the GUI started with --embedded registers the embed commands.
+            if( command == "kiapi.backplane.embed.GetFrames" )
+                reply.add_capabilities( "embed" );
+        }
     }
 
     return reply;

@@ -22,6 +22,7 @@ set( KIAPI_PROTO_SRCS
     common/envelope.proto
     backplane/capabilities.proto
     backplane/lifecycle.proto
+    backplane/embed.proto
     backplane/assembly.proto
     common/tasks.proto
 

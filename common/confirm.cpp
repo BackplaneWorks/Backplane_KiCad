@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <confirm.h>
 
 #include <functional>
@@ -61,6 +62,15 @@ int UnsavedChangesDialog( wxWindow* parent, const wxString& aMessage, bool* aApp
 {
     static bool s_apply_to_all = false;
 
+    // An embedding host decided already (kiapi.backplane.embed.Close).
+    if( std::optional<int> answer = BACKPLANE_EMBED::Get().UnsavedChangesAnswer() )
+    {
+        if( aApplyToAll )
+            *aApplyToAll = true;
+
+        return *answer;
+    }
+
     KICAD_RICH_MESSAGE_DIALOG_BASE dlg( parent, aMessage, _( "Save Changes?" ),
                                         wxYES_NO | wxCANCEL |
                                         wxYES_DEFAULT | wxICON_WARNING | wxCENTER );
@@ -86,6 +96,9 @@ int UnsavedChangesDialog( wxWindow* parent, const wxString& aMessage, bool* aApp
 
 int UnsavedChangesDialog( wxWindow* parent, const wxString& aMessage )
 {
+    if( std::optional<int> answer = BACKPLANE_EMBED::Get().UnsavedChangesAnswer() )
+        return *answer;
+
 #ifdef __APPLE__
     // wxMessageDialog gets the button order (and spacing) wrong on Mac so we have to use
     // wxRichMessageDialog.

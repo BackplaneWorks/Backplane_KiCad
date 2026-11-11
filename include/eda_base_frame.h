@@ -63,6 +63,8 @@
 #define KICAD_MANAGER_FRAME_NAME   wxT( "KicadFrame" )
 
 
+struct EMBED_CHROME;
+struct EMBED_FRAME_OPS;
 class wxChoice;
 class wxEvent;
 class wxFileName;
@@ -130,6 +132,20 @@ public:
                     const wxString& aFrameName, KIWAY* aKiway, const EDA_IU_SCALE& aIuScale );
 
     ~EDA_BASE_FRAME();
+
+    /**
+     * With `kicad --embedded`, a frame is parked in the host's window before its first show,
+     * and KiCad's own requests to show or raise a hidden frame are passed to the host (see
+     * BACKPLANE_EMBED).  Otherwise these behave as wxFrame's.
+     */
+    bool Show( bool aShow = true ) override;
+    void Raise() override;
+
+    /// Apply the embedding host's chrome choices (menubar, toolbars, status bar) to this frame.
+    void ApplyEmbedChrome( const EMBED_CHROME& aChrome );
+
+    /// The operations the embedding state uses on this frame.
+    EMBED_FRAME_OPS embedOps();
 
     /// Named here rather than beside the editors' other panes, because the project manager
     /// docks this one too.

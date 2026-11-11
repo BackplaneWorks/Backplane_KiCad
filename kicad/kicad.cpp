@@ -32,6 +32,9 @@
 #include <wx/cmdline.h>
 
 #include <api/api_server.h>
+#include <backplane_embed.h>
+#include <local_history.h>
+#include <tool/tool_manager.h>
 #include <common.h>
 #include <env_vars.h>
 #include <file_history.h>
@@ -56,6 +59,7 @@
 #include <git/git_backend.h>
 #include <git/libgit_backend.h>
 #include <cstdlib>
+#include <cstdio>
 
 #include "pgm_kicad.h"
 #include "kicad_manager_frame.h"
@@ -129,6 +133,21 @@ bool PGM_KICAD::OnPgmInit()
         { wxCMD_LINE_SWITCH, nullptr, "software-rendering", "Use software rendering instead of OpenGL",
           wxCMD_LINE_VAL_NONE, 0 },
 #endif
+        { wxCMD_LINE_SWITCH, nullptr, "embedded",
+          "Run inside a host application's window (see BACKPLANE_EMBED.md): no project manager "
+          "window, no first-run wizard or update prompts, frames are child windows of "
+          "--parent-window",
+          wxCMD_LINE_VAL_NONE, 0 },
+        { wxCMD_LINE_OPTION, nullptr, "parent-window",
+          "Native window (X11 XID or HWND, decimal or 0x hex) to embed frames in",
+          wxCMD_LINE_VAL_STRING, 0 },
+        { wxCMD_LINE_OPTION, nullptr, "toplevel-window",
+          "The host's top-level window: dialogs are transient for it", wxCMD_LINE_VAL_STRING, 0 },
+        { wxCMD_LINE_OPTION, nullptr, "api-socket",
+          "Serve the API at this socket path, whatever the API preference; fail if it cannot",
+          wxCMD_LINE_VAL_STRING, 0 },
+        { wxCMD_LINE_OPTION, nullptr, "parent-pid", "Exit when this process exits",
+          wxCMD_LINE_VAL_STRING, 0 },
         { wxCMD_LINE_PARAM, nullptr, nullptr, "File to load", wxCMD_LINE_VAL_STRING,
           wxCMD_LINE_PARAM_MULTIPLE | wxCMD_LINE_PARAM_OPTIONAL },
         { wxCMD_LINE_NONE, nullptr, nullptr, nullptr, wxCMD_LINE_VAL_NONE, 0 }
@@ -139,6 +158,52 @@ bool PGM_KICAD::OnPgmInit()
     parser.Parse( false );
 
     bool mergetoolMode = parser.FoundSwitch( "mergetool" ) == wxCMD_SWITCH_ON;
+    bool embedded = parser.FoundSwitch( "embedded" ) == wxCMD_SWITCH_ON;
+
+    auto parseId = [&]( const wxString& aName, unsigned long long& aValue ) -> bool
+    {
+        wxString text;
+        aValue = 0;
+
+        if( !parser.Found( aName, &text ) )
+            return true;
+
+        char* end = nullptr;
+        std::string utf8 = text.ToStdString( wxConvUTF8 );
+        aValue = std::strtoull( utf8.c_str(), &end, 0 );
+
+        if( utf8.empty() || !end || *end != '\0' )
+        {
+            wxFprintf( stderr, wxT( "kicad: --%s expects a number, got '%s'\n" ), aName, text );
+            return false;
+        }
+
+        return true;
+    };
+
+    unsigned long long parentWindow = 0, toplevelWindow = 0, parentPid = 0;
+
+    if( !parseId( wxS( "parent-window" ), parentWindow )
+        || !parseId( wxS( "toplevel-window" ), toplevelWindow )
+        || !parseId( wxS( "parent-pid" ), parentPid ) )
+    {
+        return false;
+    }
+
+    wxString apiSocket;
+    parser.Found( "api-socket", &apiSocket );
+
+    if( apiSocket.StartsWith( wxS( "ipc://" ), &apiSocket ) )
+    {
+        // The flag takes a filesystem path; accept the URL form too.
+    }
+
+    if( embedded && ( mergetoolMode || parser.Found( "frame" ) ) )
+    {
+        wxFprintf( stderr, wxT( "kicad: --embedded runs the project suite; it cannot be combined "
+                                "with --frame or --mergetool\n" ) );
+        return false;
+    }
 
     if( mergetoolMode && parser.GetParamCount() != 4 )
     {
@@ -203,6 +268,13 @@ bool PGM_KICAD::OnPgmInit()
 
     if( !InitPgm( false ) )
         return false;
+
+    if( embedded && !BACKPLANE_EMBED::Get().Enable( parentWindow, toplevelWindow ) )
+    {
+        wxFprintf( stderr, wxT( "kicad: --embedded needs an X11 display (GDK_BACKEND=x11) or "
+                                "Windows\n" ) );
+        return false;
+    }
 
 
     m_bm.InitSettings( new KICAD_SETTINGS );
@@ -279,12 +351,43 @@ bool PGM_KICAD::OnPgmInit()
     // contending for the singleton IPC socket.
     if( appType != FRAME_MERGETOOL )
     {
-        m_api_server = std::make_unique<KICAD_API_SERVER>();
+        if( apiSocket.IsEmpty() )
+        {
+            m_api_server = std::make_unique<KICAD_API_SERVER>();
+        }
+        else
+        {
+            // The caller told its clients where to connect: serve there or not at all.
+            m_api_server = std::make_unique<KICAD_API_SERVER>( false );
+            m_api_server->SetSocketPath( apiSocket, true );
+
+            if( !m_api_server->Start() )
+            {
+                wxFprintf( stderr, wxT( "kicad: cannot serve the API at %s\n" ), apiSocket );
+                return false;
+            }
+
+            if( embedded
+                && !BACKPLANE_EMBED::Get().StartEventServer( m_api_server->SocketPath() + ".events",
+                                                             m_api_server->Token() ) )
+            {
+                wxFprintf( stderr, wxT( "kicad: cannot serve embed events at %s.events\n" ),
+                           apiSocket );
+                return false;
+            }
+        }
+
         m_api_common_handler = std::make_unique<API_HANDLER_COMMON>();
         m_api_server->RegisterHandler( m_api_common_handler.get() );
         m_api_libraries_handler = std::make_unique<API_HANDLER_LIBRARIES>(
                 LIBRARY_TABLE_TYPE::DESIGN_BLOCK );
         m_api_server->RegisterHandler( m_api_libraries_handler.get() );
+
+        if( embedded )
+        {
+            m_api_embed_handler = std::make_unique<API_HANDLER_EMBED>( Kiway );
+            m_api_server->RegisterHandler( m_api_embed_handler.get() );
+        }
     }
 
     if( appType == FRAME_MERGETOOL )
@@ -300,8 +403,20 @@ bool PGM_KICAD::OnPgmInit()
                                                 wxWindow::FromDIP( wxSize( 775, -1 ), NULL ) );
         frame = managerFrame;
 
-        STARTWIZARD startWizard;
-        startWizard.CheckAndRun( frame );
+        if( embedded )
+        {
+            EMBED_FRAME_OPS ops;
+            ops.runAction = [managerFrame]( const std::string& aName )
+                            {
+                                return managerFrame->GetToolManager()->RunAction( aName );
+                            };
+            BACKPLANE_EMBED::Get().SetManager( managerFrame, ops );
+        }
+        else
+        {
+            STARTWIZARD startWizard;
+            startWizard.CheckAndRun( frame );
+        }
     }
     else
     {
@@ -469,7 +584,7 @@ bool PGM_KICAD::OnPgmInit()
                     mergeToolFrameRef->Close( true );
                 } );
     }
-    else
+    else if( !embedded )
     {
         frame->Show( true );
         frame->Raise();
@@ -481,6 +596,35 @@ bool PGM_KICAD::OnPgmInit()
 
     if( m_api_server )
         m_api_server->SetReadyToReply();
+
+    if( parentPid > 0 )
+    {
+        BACKPLANE_EMBED::Get().WatchParentPid(
+                static_cast<long long>( parentPid ),
+                []()
+                {
+                    // As after a crash: autosave and local history are kept and offered back
+                    // on the next open; nothing is saved or discarded here.
+                    wxFprintf( stderr, wxT( "kicad: parent process exited; exiting\n" ) );
+                    Kiway.LocalHistory().WaitForPendingSave();
+                    std::fflush( nullptr );
+                    std::_Exit( 0 );
+                } );
+    }
+
+    if( m_api_server && !apiSocket.IsEmpty() )
+    {
+        if( embedded )
+        {
+            wxFprintf( stdout, wxT( "KiCad embed events at %s\n" ),
+                       wxString::FromUTF8( BACKPLANE_EMBED::Get().EventServerUrl() ) );
+        }
+
+        // The same readiness line as `kicad-cli api-server`.
+        wxFprintf( stdout, wxT( "KiCad API server listening at %s\n" ),
+                   wxString::FromUTF8( m_api_server->SocketPath() ) );
+        std::fflush( stdout );
+    }
 
     return true;
 }
@@ -505,6 +649,7 @@ void PGM_KICAD::OnPgmExit()
 
     Kiway.OnKiwayEnd();
 
+    BACKPLANE_EMBED::Get().StopEventServer();
     m_api_server.reset();
 
     if( m_settings_manager && m_settings_manager->IsOK() )
@@ -652,6 +797,9 @@ struct APP_KICAD : public wxApp
 
     int FilterEvent( wxEvent& aEvent ) override
     {
+        if( int embedResult = BACKPLANE_EMBED::Get().FilterEvent( aEvent ); embedResult != -1 )
+            return embedResult;
+
         if( aEvent.GetEventType() == wxEVT_SHOW )
         {
             wxShowEvent& event = static_cast<wxShowEvent&>( aEvent );

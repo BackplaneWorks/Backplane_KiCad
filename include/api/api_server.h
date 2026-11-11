@@ -61,7 +61,12 @@ public:
 
     ~KICAD_API_SERVER();
 
-    void Start();
+    /**
+     * Start listening.  Returns false if the server could not start.  With a strict socket path
+     * (see SetSocketPath) an existing live socket is an error rather than a reason to listen at
+     * a per-process path instead.
+     */
+    bool Start();
 
     void Stop();
 
@@ -86,12 +91,21 @@ public:
         m_readyToReply.store( aReady, std::memory_order_release );
     }
 
-    void SetSocketPath( const wxString& aSocketPath )
+    /**
+     * Listen at aSocketPath instead of the standard path.  A strict path (from the command line)
+     * is never swapped for a per-process path, and the server then stays on regardless of the
+     * user's API preference.
+     */
+    void SetSocketPath( const wxString& aSocketPath, bool aStrict = false )
     {
         m_socketPathOverride = aSocketPath;
+        m_socketPathStrict = aStrict;
     }
 
     std::string SocketPath() const;
+
+    /// True if the socket path was set strictly (the server is required, not a preference).
+    bool IsSocketPathStrict() const { return m_socketPathStrict; }
 
     /**
      * Return the fully-qualified protobuf type names registered by all handlers.
@@ -175,6 +189,8 @@ private:
     std::function<void( kiapi::common::types::DocumentType, const wxString&, const wxString& )> m_renameListener;
 
     wxString m_socketPathOverride;
+
+    bool m_socketPathStrict = false;
 
     static wxString s_logFileName;
 

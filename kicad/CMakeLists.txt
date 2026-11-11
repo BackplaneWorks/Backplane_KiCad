@@ -42,6 +42,7 @@ set( KICAD_SRCS
     jobs_runner.cpp
     import_proj.cpp
     import_project.cpp
+    api_handler_embed.cpp
     kicad_manager_frame.cpp
     local_history_pane.cpp
     menubar.cpp

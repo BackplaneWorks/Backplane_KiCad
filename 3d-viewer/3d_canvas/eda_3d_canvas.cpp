@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <kicad_gl/kiglu.h> // Must be included first
 #include <kicad_gl/gl_utils.h>
 #include <kicad_gl/gl_context_mgr.h>
@@ -419,6 +420,20 @@ void EDA_3D_CANVAS::OnPaint( wxPaintEvent& aEvent )
 }
 
 
+/**
+ * The board editor that owns the viewer is alive: shown, or (embedded in a host window, see
+ * BACKPLANE_EMBED) hidden by the host while the 3D viewer is on screen on its own.
+ */
+static bool ownerAlive( wxWindow* aOwner )
+{
+    if( aOwner->IsShownOnScreen() )
+        return true;
+
+    wxFrame* frame = dynamic_cast<wxFrame*>( aOwner );
+    return frame && !frame->IsBeingDeleted() && BACKPLANE_EMBED::Get().IsEmbedded( frame );
+}
+
+
 void EDA_3D_CANVAS::DoRePaint()
 {
     if( m_is_currently_painting.test_and_set() )
@@ -441,7 +456,7 @@ void EDA_3D_CANVAS::DoRePaint()
     wxWindow* viewer = wxGetTopLevelParent( this );
     wxWindow* owner = viewer ? viewer->GetParent() : nullptr;
 
-    if( owner && !owner->IsShownOnScreen() )
+    if( owner && !ownerAlive( owner ) )
     {
         m_is_currently_painting.clear();
         return; // The parent board editor frame is no more alive
@@ -685,7 +700,7 @@ void EDA_3D_CANVAS::RenderToFrameBuffer( unsigned char* buffer, int width, int h
 
     // Because the board to draw is handled by the parent viewer frame,
     // ensure this parent is still alive
-    if( !GetParent() || !GetParent()->GetParent() || !GetParent()->GetParent()->IsShownOnScreen() )
+    if( !GetParent() || !GetParent()->GetParent() || !ownerAlive( GetParent()->GetParent() ) )
     {
         m_is_currently_painting.clear();
         return;

@@ -419,6 +419,29 @@ jobs:
             exit 1
           fi
 
+      # `kicad --embedded` (BACKPLANE_EMBED.md) on a private X server with a window manager:
+      # every frame kind inside a host window, focus, reserved keys, dialogs, AS_BUSY, Close.
+      - name: Embedded GUI check on Xvfb
+        if: always() && env.archive_root != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get install --no-install-recommends -y xvfb i3 xdotool imagemagick x11-utils \
+            libgl1-mesa-dri libxfixes3
+          "$RUNNER_TEMP/ipc-smoke-venv/bin/pip" install python-xlib
+          unset LD_LIBRARY_PATH
+          LIBGL_ALWAYS_SOFTWARE=1 "$RUNNER_TEMP/ipc-smoke-venv/bin/python" \
+            scripts/backplane-embed-x11-check.py "release/${archive_root}/bin/kicad" \
+            "release/${archive_root}/bin/kicad-cli" --out "$RUNNER_TEMP/embed-x11"
+
+      - name: Upload embedded GUI screenshots
+        if: always() && env.archive_root != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: embed-x11-screenshots
+          path: ${{ runner.temp }}/embed-x11
+          if-no-files-found: ignore
+
       # KiCad 10 hand-off (CONTRACT A6): exports from 'kicad-cli ... downgrade --target 10.0'
       # must open in an unmodified KiCad 10.0.x. Uses the stock PPA build, unpacked, never installed.
       - name: KiCad 10 round-trip in stock KiCad 10.0.x

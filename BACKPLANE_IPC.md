@@ -80,6 +80,12 @@ Board-structure (rigid-flex) and assembly commands are added by the phase-2 port
 `backplane/structure.proto` and `backplane/assembly.proto`; check `GetCapabilities` for
 `board-structure` and `assembly`.
 
+The GUI started with `kicad --embedded` adds `kiapi.backplane.embed` (`backplane/embed.proto`:
+`AttachToParent`, `ShowFrame`, `HideFrame`, `GetFrames`, `NextEvents`, `SetChrome`,
+`SetReservedKeys`, `Close`) and the `embed` capability; see `BACKPLANE_EMBED.md`. In every GUI
+process, a request that changes state while a modal dialog is open answers `AS_BUSY` with the
+dialog's title; reads still work.
+
 Gate features on capability or command names, not on version numbers.
 
 ## Files

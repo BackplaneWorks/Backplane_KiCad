@@ -22,6 +22,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <kicad_gl/kiglu.h> // Must be included first
 #include <kicad_gl/gl_utils.h>
 
@@ -528,6 +529,9 @@ wxString OPENGL_GAL::CheckFeatures( GAL_DISPLAY_OPTIONS& aOptions )
     {
         KIGFX::VC_SETTINGS dummy;
         opengl_gal = new KIGFX::OPENGL_GAL( dummy, aOptions, testFrame );
+
+        // Embedded in a host window, the probe frame must not become a window-manager top-level.
+        BACKPLANE_EMBED::Get().ParkWindow( testFrame );
 
         testFrame->Raise();
         testFrame->Show();

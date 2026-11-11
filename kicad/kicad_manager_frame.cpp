@@ -46,6 +46,7 @@
 #include <local_history.h>
 #include <policy_keys.h>
 #include <gestfich.h>
+#include <backplane_embed.h>
 #include <kiplatform/app.h>
 #include <kiplatform/environment.h>
 #include <kiplatform/ui.h>
@@ -1431,7 +1432,10 @@ void KICAD_MANAGER_FRAME::OnIdle( wxIdleEvent& aEvent )
 
     m_openSavedWindows = false;
 
-    if( Pgm().GetCommonSettings()->m_Session.remember_open_files )
+    // An embedding host decides which frames open; it also owns update checks and prompts.
+    bool embedded = BACKPLANE_EMBED::Get().Enabled();
+
+    if( Pgm().GetCommonSettings()->m_Session.remember_open_files && !embedded )
     {
         int previousOpenCount = std::count_if( Prj().GetLocalSettings().m_files.begin(),
                                                Prj().GetLocalSettings().m_files.end(),
@@ -1494,7 +1498,8 @@ void KICAD_MANAGER_FRAME::OnIdle( wxIdleEvent& aEvent )
 
     KICAD_SETTINGS* settings = kicadSettings();
 
-    if( KIPLATFORM::POLICY::GetPolicyBool( POLICY_KEY_PCM ) != KIPLATFORM::POLICY::PBOOL::DISABLED
+    if( !embedded
+        && KIPLATFORM::POLICY::GetPolicyBool( POLICY_KEY_PCM ) != KIPLATFORM::POLICY::PBOOL::DISABLED
         && settings->m_PcmUpdateCheck )
     {
         if( !m_pcm )
@@ -1504,7 +1509,7 @@ void KICAD_MANAGER_FRAME::OnIdle( wxIdleEvent& aEvent )
     }
 
 #ifdef KICAD_UPDATE_CHECK
-    if( !m_updateManager && settings->m_KiCadUpdateCheck )
+    if( !embedded && !m_updateManager && settings->m_KiCadUpdateCheck )
     {
         m_updateManager = std::make_unique<UPDATE_MANAGER>();
         m_updateManager->CheckForUpdate( this );
@@ -1512,7 +1517,8 @@ void KICAD_MANAGER_FRAME::OnIdle( wxIdleEvent& aEvent )
 #endif
 
     // This little diddy is needed to get the window put into the Mac dock icon's context menu.
-    Raise();
+    if( !embedded )
+        Raise();
 }
 
 

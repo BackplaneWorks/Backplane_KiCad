@@ -1,0 +1,228 @@
+/*
+ * This program source code file is part of KiCad, a free EDA CAD application.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*
+ * Embedding the KiCad GUI in a host application's window (fork-only).
+ *
+ * These commands are served by the GUI `kicad` started with `--embedded`; see
+ * BACKPLANE_EMBED.md for the flags, the window tree and the X11 messages.  They are
+ * host-agnostic: nothing here names a particular host application.
+ *
+ * Window ids are native: an X11 XID on Linux, an HWND on Windows.  0 means none.
+ */
+
+syntax = "proto3";
+
+package kiapi.backplane.embed;
+
+enum FrameKind
+{
+  FK_UNKNOWN          = 0;
+  FK_PCB              = 1;  // PCB_EDIT_FRAME
+  FK_SCH              = 2;  // SCH_EDIT_FRAME
+  FK_SYMBOL_EDITOR    = 3;  // SYMBOL_EDIT_FRAME
+  FK_FOOTPRINT_EDITOR = 4;  // FOOTPRINT_EDIT_FRAME
+  FK_PCB_3D           = 5;  // EDA_3D_VIEWER_FRAME of the PCB editor
+  FK_OTHER            = 6;  // any other embedded, non-modal frame (viewers, calculator, ...)
+}
+
+message FrameInfo
+{
+  FrameKind kind       = 1;
+  string    document   = 2;  // absolute path of the frame's current file, if any
+  string    title      = 3;
+  bool      modified   = 4;
+  uint64    window     = 5;  // the frame's native window (a child of the holder)
+  int32     min_width  = 6;  // KiCad's own minimum size for the frame, device pixels
+  int32     min_height = 7;
+  bool      shown      = 8;  // KiCad has the frame shown (mapped) inside the holder
+  bool      focused    = 9;  // the frame has the keyboard
+  string    frame_name = 10; // KiCad's internal frame name, for diagnostics
+}
+
+// Parent (or re-parent) every embedded frame under a host window.
+// `window` 0 detaches: the holder and every frame are unmapped and parked off-screen,
+// never left as window-manager top-levels.
+message AttachToParent
+{
+  uint64 window   = 1;  // container: X11 window with the root visual (24-bit), or an HWND
+  uint64 toplevel = 2;  // the host's top-level window: dialogs are transient for it and are
+                        // centred on it.  0 keeps the previous value (or, if none, uses
+                        // `window`).  _BACKPLANE_FOCUS / _BACKPLANE_KEY go to `window`.
+  double scale    = 3;  // the host's UI scale; recorded and reported (see BACKPLANE_EMBED.md)
+}
+
+message AttachToParentResponse
+{
+  uint64             holder = 1;  // the fork's holder window inside `window` (0 if detached)
+  repeated FrameInfo frames = 2;
+}
+
+// Open a frame if needed and show (map) it inside the holder.  Geometry is the host's job: it
+// moves and resizes the frame's window itself (XMoveResizeWindow / SetWindowPos), or passes
+// the rectangle here.  While a modal dialog is open, ShowFrame answers AS_BUSY if it would
+// have to open a frame; showing an open one still works.  `document` and `item` are optional:
+//   FK_SCH: document = a sheet file to navigate to; item = a reference to cross-probe ("U3").
+//   FK_PCB: item = a reference to select and centre ("U3").
+//   FK_SYMBOL_EDITOR: item = a LIB_ID to load ("Device:R").
+//   FK_FOOTPRINT_EDITOR: item = a LIB_ID to load ("Resistor_SMD:R_0603_1608Metric").
+//   FK_PCB_3D: opens the PCB editor's 3D viewer (the PCB editor is loaded, hidden, if needed).
+message ShowFrame
+{
+  FrameKind kind     = 1;
+  string    document = 2;
+  string    item     = 3;
+  bool      focus    = 4;  // also give the frame the keyboard
+
+  // Optional geometry in holder (= container) coordinates, device pixels, applied before the
+  // frame is mapped so it never appears at a stale position.  Used when width and height > 0.
+  int32     x        = 5;
+  int32     y        = 6;
+  int32     width    = 7;
+  int32     height   = 8;
+}
+
+message ShowFrameResponse
+{
+  FrameInfo frame = 1;
+}
+
+// Hide (unmap) a frame without closing it.  Selects by kind, or by window when given.
+message HideFrame
+{
+  FrameKind kind   = 1;
+  uint64    window = 2;
+}
+
+message HideFrameResponse
+{
+}
+
+message GetFrames
+{
+}
+
+message GetFramesResponse
+{
+  repeated FrameInfo frames   = 1;
+  uint64             parent   = 2;
+  uint64             toplevel = 3;
+  uint64             holder   = 4;
+  double             scale    = 5;
+  repeated string    reserved_keys = 6;
+  string             events_socket = 7;  // ipc:// URL of the long-poll socket for NextEvents
+}
+
+enum EventType
+{
+  ET_UNKNOWN          = 0;
+  ET_FRAME_OPENED     = 1;  // a frame was created and parked in the holder (frame set)
+  ET_FRAME_CLOSED     = 2;  // a frame was destroyed (frame set, window no longer valid)
+  ET_FRAME_SHOWN      = 3;
+  ET_FRAME_HIDDEN     = 4;
+  ET_TITLE_CHANGED    = 5;
+  ET_MODIFIED_CHANGED = 6;
+  ET_FOCUS_IN         = 7;  // a frame took the keyboard (for example after a click)
+  ET_FOCUS_OUT        = 8;
+  ET_SHOW_REQUESTED   = 9;  // KiCad itself asked to show a hidden frame (Edit Symbol, 3D, ...);
+                            // the host decides, with ShowFrame
+  ET_DIALOG_OPENED    = 10; // a dialog (or modal frame) was mapped; detail = its title
+  ET_DIALOG_CLOSED    = 11;
+  ET_DETACHED         = 12; // the parent window went away; frames are parked, unmapped
+  ET_DOCUMENT_CHANGED = 13; // a frame's document path changed
+}
+
+message Event
+{
+  uint64    seq    = 1;
+  EventType type   = 2;
+  FrameInfo frame  = 3;
+  string    detail = 4;
+}
+
+// Long poll.  Returns the events with seq > since, waiting up to wait_ms (at most 60000)
+// for the first one.  On the main API socket wait_ms is ignored (treated as 0) so that a
+// poll never blocks other requests; send long polls to GetFramesResponse.events_socket.
+message NextEvents
+{
+  uint64 since   = 1;
+  int32  wait_ms = 2;
+  int32  max     = 3;  // 0 = up to 256
+}
+
+message NextEventsResponse
+{
+  repeated Event events = 1;
+  uint64         next   = 2;  // pass as `since` next time
+  bool           lost   = 3;  // events after `since` were dropped; call GetFrames to resync
+}
+
+// Show or hide KiCad's own chrome on every embedded frame (now and when frames open later).
+// Unset fields keep their current value.  The defaults are all shown.
+message SetChrome
+{
+  optional bool menubar       = 1;
+  optional bool top_toolbar   = 2;  // the main and auxiliary top toolbars
+  optional bool side_toolbars = 3;  // the left and right toolbars
+  optional bool status_bar    = 4;
+}
+
+message SetChromeResponse
+{
+  bool menubar       = 1;
+  bool top_toolbar   = 2;
+  bool side_toolbars = 3;
+  bool status_bar    = 4;
+}
+
+// Chords KiCad forwards to the host instead of handling, outside dialogs.
+// Syntax: modifiers Ctrl, Shift, Alt, Meta joined with '+', then a key: one character
+// ("K", "`") or Tab, Esc, Enter, Space, Backspace, Delete, Insert, Home, End, PageUp,
+// PageDown, Left, Right, Up, Down, F1..F24.  An empty list forwards nothing.
+// Default: Ctrl+K, Ctrl+J, Ctrl+Tab, Ctrl+Shift+Tab, Ctrl+`.
+message SetReservedKeys
+{
+  repeated string chords = 1;
+}
+
+message SetReservedKeysResponse
+{
+  repeated string chords = 1;  // normalised; a chord that does not parse fails the request
+}
+
+enum CloseMode
+{
+  CM_FAIL_IF_MODIFIED = 0;  // refuse (AS_BAD_REQUEST, with the modified frames) if anything is unsaved
+  CM_SAVE             = 1;  // save every modified document, then close
+  CM_DISCARD          = 2;  // close without saving
+}
+
+// Close without KiCad's own "save changes?" prompts.  With kind FK_UNKNOWN and window 0
+// every frame is closed and the process exits after the reply.  Otherwise only the selected
+// frame is closed.
+message Close
+{
+  CloseMode mode   = 1;
+  FrameKind kind   = 2;
+  uint64    window = 3;
+}
+
+message CloseResponse
+{
+  repeated FrameInfo modified = 1;  // the frames that were (or, when refused, are) modified
+  bool               exiting  = 2;
+}

@@ -20,6 +20,7 @@
 
 #include <fmt/format.h>
 #include <algorithm>
+#include <cstring>
 #include <exception>
 #include <wx/app.h>
 #include <wx/datetime.h>
@@ -27,6 +28,7 @@
 #include <wx/stdpaths.h>
 
 #include <advanced_config.h>
+#include <backplane_embed.h>
 #include <api/api_handler.h>
 #include <api/api_task_scheduler.h>
 #include <api/api_utils.h> // traceApi
@@ -51,6 +53,33 @@ wxString KICAD_API_SERVER::s_logFileName = "api.log";
 
 
 wxDEFINE_EVENT( API_REQUEST_EVENT, KICAD_API_REQUEST_EVENT );
+
+
+/**
+ * Requests that only read state, and so may run while a modal dialog's nested event loop is
+ * dispatching (a changing request there could pull a document out from under the dialog).
+ */
+static bool isReadOnlyRequest( const std::string& aType )
+{
+    static const std::string embedPackage = "kiapi.backplane.embed.";
+
+    if( aType.compare( 0, embedPackage.size(), embedPackage ) == 0 )
+    {
+        // Window placement and the event feed must keep working; ShowFrame checks itself
+        // whether it would have to open a frame.
+        return aType != embedPackage + "Close";
+    }
+
+    std::string name = aType.substr( aType.rfind( '.' ) + 1 );
+
+    for( const char* prefix : { "Get", "List", "Ping", "HitTest", "Check", "Expand" } )
+    {
+        if( name.compare( 0, std::strlen( prefix ), prefix ) == 0 )
+            return true;
+    }
+
+    return false;
+}
 
 
 KICAD_API_SERVER::KICAD_API_SERVER( bool aAutoStart ) :
@@ -100,10 +129,10 @@ std::string KICAD_API_SERVER::StandardSocketUrl()
 }
 
 
-void KICAD_API_SERVER::Start()
+bool KICAD_API_SERVER::Start()
 {
     if( Running() )
-        return;
+        return true;
 
     wxFileName socket;
 
@@ -123,7 +152,7 @@ void KICAD_API_SERVER::Start()
     {
         wxLogTrace( traceApi, wxString::Format( "Server: socket path %s could not be created",
                                                 socket.GetPath() ) );
-        return;
+        return false;
     }
 
 #ifndef __WINDOWS__
@@ -148,13 +177,22 @@ void KICAD_API_SERVER::Start()
 
     if( socket.Exists() )
     {
+        // A caller that chose the path (and tells its clients about it) must not silently get
+        // a different one.
+        if( m_socketPathStrict )
+        {
+            wxLogTrace( traceApi, wxString::Format( "Server: socket path %s is in use",
+                                                    socket.GetFullPath() ) );
+            return false;
+        }
+
         socket.SetFullName( wxString::Format( wxS( "api-%lu.sock" ), ::wxGetProcessId() ) );
 
         if( socket.Exists() )
         {
             wxLogTrace( traceApi, wxString::Format( "Server: PID socket path %s already exists!",
                                                     socket.GetFullPath() ) );
-            return;
+            return false;
         }
     }
 
@@ -166,7 +204,7 @@ void KICAD_API_SERVER::Start()
     {
         wxLogTrace( traceApi, "Server: failed to start KINNG listener thread" );
         m_server.reset( nullptr );
-        return;
+        return false;
     }
 
     m_logFilePath.AssignDir( PATHS::GetLogsPath() );
@@ -180,6 +218,7 @@ void KICAD_API_SERVER::Start()
 
     wxLogTrace( traceApi, wxString::Format( "Server: listening at %s", SocketPath() ) );
     Bind( API_REQUEST_EVENT, &KICAD_API_SERVER::handleApiEvent, this );
+    return true;
 }
 
 
@@ -353,6 +392,35 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
                 error.mutable_status()->set_status( ApiStatusCode::AS_BUSY );
                 error.mutable_status()->set_error_message(
                         "a task is running; only task status and result queries are available until it completes" );
+                m_server->Reply( error.SerializeAsString() );
+
+                if( ADVANCED_CFG::GetCfg().m_EnableAPILogging )
+                    log( "Response (ERROR): " + error.Utf8DebugString() );
+
+                return;
+            }
+        }
+    }
+
+    // A modal or quasi-modal dialog runs a nested event loop, which also dispatches API requests.
+    // Changing state from inside it can invalidate what the dialog is editing, so only reads
+    // are served until it closes.
+    if( request.has_message() )
+    {
+        std::string requestType;
+
+        if( google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &requestType )
+            && !isReadOnlyRequest( requestType ) )
+        {
+            if( std::optional<wxString> dialog = BACKPLANE_EMBED::ModalBlocker() )
+            {
+                ApiResponse error;
+                error.mutable_header()->set_kicad_token( m_token );
+                error.mutable_status()->set_status( ApiStatusCode::AS_BUSY );
+                error.mutable_status()->set_error_message( fmt::format(
+                        "KiCad is showing the dialog '{}'; only reads are served until it is "
+                        "closed",
+                        dialog->ToStdString( wxConvUTF8 ) ) );
                 m_server->Reply( error.SerializeAsString() );
 
                 if( ADVANCED_CFG::GetCfg().m_EnableAPILogging )

@@ -404,6 +404,7 @@ set( KICOMMON_SRCS
 
     singleton.cpp
     pgm_base.cpp
+    backplane_embed.cpp
 
     io/kicad/kicad_io_utils.cpp    # needed by richio
     io/io_base.cpp

@@ -24,6 +24,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <functional>
+#include <future>
 #include <mutex>
 #include <thread>
 
@@ -35,6 +36,10 @@ public:
 
     ~KINNG_REQUEST_SERVER();
 
+    /**
+     * Start the listener thread.  Returns false (and stays stopped) if the socket cannot be
+     * opened or bound, so callers can report the failure instead of serving nothing.
+     */
     bool Start();
 
     void Stop();
@@ -48,7 +53,7 @@ public:
     const std::string& SocketPath() const { return m_socketUrl; }
 
 private:
-    void listenThread();
+    void listenThread( std::promise<bool>* aStarted );
 
     std::thread m_thread;
 

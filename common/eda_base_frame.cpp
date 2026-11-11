@@ -79,6 +79,7 @@
 #include <kiplatform/app.h>
 #include <kiplatform/io.h>
 #include <kiplatform/ui.h>
+#include <backplane_embed.h>
 
 #include <nlohmann/json.hpp>
 
@@ -339,6 +340,8 @@ void EDA_BASE_FRAME::windowClosing( wxCloseEvent& event )
 
 EDA_BASE_FRAME::~EDA_BASE_FRAME()
 {
+    BACKPLANE_EMBED::Get().OnFrameDestroyed( this );
+
     Disconnect( ID_AUTO_SAVE_TIMER, wxEVT_TIMER, wxTimerEventHandler( EDA_BASE_FRAME::onAutoSaveTimer ) );
     Disconnect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( EDA_BASE_FRAME::windowClosing ) );
 
@@ -348,6 +351,101 @@ EDA_BASE_FRAME::~EDA_BASE_FRAME()
     ClearUndoRedoList();
 
     KIPLATFORM::APP::RemoveShutdownBlockReason( this );
+}
+
+
+EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
+{
+    EMBED_FRAME_OPS ops;
+    ops.applyChrome = [this]( const EMBED_CHROME& aChrome ) { ApplyEmbedChrome( aChrome ); };
+    ops.runAction = [this]( const std::string& aName )
+                    {
+                        return m_toolManager && m_toolManager->RunAction( aName );
+                    };
+    ops.document = [this]() { return GetCurrentFileName(); };
+    ops.modified = [this]() { return IsContentModified(); };
+    return ops;
+}
+
+
+bool EDA_BASE_FRAME::Show( bool aShow )
+{
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    if( embed.Enabled() )
+    {
+        if( std::optional<bool> result = embed.OnFrameShow( this, m_ident, IsModal(), aShow,
+                                                            embedOps() ) )
+        {
+            return *result;
+        }
+    }
+
+    return wxFrame::Show( aShow );
+}
+
+
+void EDA_BASE_FRAME::Raise()
+{
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    if( embed.Enabled() && embed.OnFrameRaise( this, m_ident, IsModal(), embedOps() ) )
+        return;
+
+    wxFrame::Raise();
+}
+
+
+void EDA_BASE_FRAME::ApplyEmbedChrome( const EMBED_CHROME& aChrome )
+{
+    // Embedded frames are child windows: an AUI pane must never float off as a top-level.
+    if( m_auimgr.GetManagedWindow() )
+    {
+        m_auimgr.SetFlags( m_auimgr.GetFlags() & ~wxAUI_MGR_ALLOW_FLOATING );
+
+        wxAuiPaneInfoArray& panes = m_auimgr.GetAllPanes();
+
+        for( size_t ii = 0; ii < panes.GetCount(); ++ii )
+        {
+            wxAuiPaneInfo& pane = panes.Item( ii );
+
+            if( pane.IsFloating() )
+                pane.Dock();
+
+            pane.Floatable( false );
+        }
+
+        auto showPane = [&]( wxWindow* aToolbar, bool aShow )
+                        {
+                            if( !aToolbar )
+                                return;
+
+                            wxAuiPaneInfo& pane = m_auimgr.GetPane( aToolbar );
+
+                            if( pane.IsOk() )
+                                pane.Show( aShow );
+                        };
+
+        showPane( m_tbTopMain, aChrome.topToolbar );
+        showPane( m_tbTopAux, aChrome.topToolbar );
+        showPane( m_tbLeft, aChrome.sideToolbars );
+        showPane( m_tbRight, aChrome.sideToolbars );
+        m_auimgr.Update();
+    }
+
+    if( wxMenuBar* menuBar = GetMenuBar() )
+    {
+        if( menuBar->IsShown() != aChrome.menubar )
+            menuBar->Show( aChrome.menubar );
+    }
+
+    if( wxStatusBar* statusBar = GetStatusBar() )
+    {
+        if( statusBar->IsShown() != aChrome.statusBar )
+            statusBar->Show( aChrome.statusBar );
+    }
+
+    SendSizeEvent();
 }
 
 
@@ -892,6 +990,10 @@ void EDA_BASE_FRAME::ReCreateMenuBar()
 
                    doReCreateMenuBar();
 
+                   // A new menubar is shown; keep an embedding host's choice.
+                   if( BACKPLANE_EMBED::Get().IsEmbedded( this ) )
+                       ApplyEmbedChrome( BACKPLANE_EMBED::Get().Chrome() );
+
                    // A submenu entry gets a new automatic id in each menubar, and its handler
                    // is registered under that id, so the ones of the old menubar are dead
                    wxMenuBar* menuBar = GetMenuBar();
@@ -975,7 +1077,7 @@ void EDA_BASE_FRAME::CommonSettingsChanged( int aFlags )
 
     bool running = Pgm().GetApiServer().Running();
 
-    if( running && !settings->m_Api.enable_server )
+    if( running && !settings->m_Api.enable_server && !Pgm().GetApiServer().IsSocketPathStrict() )
     {
         Pgm().GetApiServer().Stop();
     }

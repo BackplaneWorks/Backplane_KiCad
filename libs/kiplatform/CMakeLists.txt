@@ -3,18 +3,21 @@ set( PLATFORM_COMPILE_DEFS "" )
 # Add port-specific files and definitions
 if( KICAD_WX_PORT STREQUAL osx )
     set( PLATFORM_SRCS
+        port/wxosx/embed.cpp
         port/wxosx/touchpad.mm
         port/wxosx/ui.mm
         port/wxosx/webview.mm
         )
 elseif( KICAD_WX_PORT STREQUAL msw )
     set( PLATFORM_SRCS
+        port/wxmsw/embed.cpp
         port/wxmsw/touchpad.cpp
         port/wxmsw/ui.cpp
         port/wxmsw/webview.cpp
         )
 elseif( KICAD_WX_PORT STREQUAL gtk )
     set( PLATFORM_SRCS
+        port/wxgtk/embed.cpp
         port/wxgtk/touchpad.cpp
         port/wxgtk/ui.cpp
         port/wxgtk/webview.cpp
