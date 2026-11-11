@@ -47,9 +47,11 @@ public:
 private:
     using ITEM_BOX = std::pair<SCH_ITEM*, BOX2I>;
 
+    /// A locked item's value, else the one under the cursor's, else the first in aItems (sorted
+    /// by GetSelections), or with aFirstSelected (Backplane: align centre) the first selected.
     template< typename T >
     int selectTarget( const std::vector<ITEM_BOX>& aItems, const std::vector<ITEM_BOX>& aLocked,
-                      T aGetValue );
+                      T aGetValue, bool aFirstSelected = false );
 
     template< typename T >
     size_t GetSelections( std::vector<ITEM_BOX>& aItemsToAlign, std::vector<ITEM_BOX>& aLockedItems,
@@ -62,5 +64,6 @@ private:
 
 private:
     CONDITIONAL_MENU* m_alignMenu;
+    SCH_ITEM*         m_firstSelected = nullptr;  ///< by GetSelections, in selection order
 };
 

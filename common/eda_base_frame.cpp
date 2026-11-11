@@ -1098,7 +1098,8 @@ void EDA_BASE_FRAME::AddStandardHelpMenu( wxMenuBar* aMenuBar )
     helpMenu->AppendSeparator();
     helpMenu->Add( ACTIONS::about );
 
-    aMenuBar->Append( helpMenu, _( "&Help" ) );
+    // Backplane: Alt+H aligns (backplane_hotkeys.h), so Help is Alt+L
+    aMenuBar->Append( helpMenu, _( "He&lp" ) );
 }
 
 

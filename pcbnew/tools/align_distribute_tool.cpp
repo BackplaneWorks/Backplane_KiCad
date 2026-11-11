@@ -99,7 +99,7 @@ BOX2I getBoundingBox( BOARD_ITEM* aItem )
 template< typename T >
 int ALIGN_DISTRIBUTE_TOOL::selectTarget( std::vector<std::pair<BOARD_ITEM*, BOX2I>>& aItems,
                                          std::vector<std::pair<BOARD_ITEM*, BOX2I>>& aLocked,
-                                         T aGetValue )
+                                         T aGetValue, bool aFirstSelected )
 {
     VECTOR2I curPos = getViewControls()->GetCursorPosition();
 
@@ -121,6 +121,15 @@ int ALIGN_DISTRIBUTE_TOOL::selectTarget( std::vector<std::pair<BOARD_ITEM*, BOX2
     {
         if( item.second.Contains( curPos ) )
             return aGetValue( item );
+    }
+
+    if( aFirstSelected )
+    {
+        for( const std::pair<BOARD_ITEM*, BOX2I>& item : aItems )
+        {
+            if( item.first == m_firstSelected )
+                return aGetValue( item );
+        }
     }
 
     return aGetValue( aItems.front() );
@@ -185,7 +194,10 @@ size_t ALIGN_DISTRIBUTE_TOOL::GetSelections( std::vector<std::pair<BOARD_ITEM*, 
                 list.emplace_back( std::make_pair( listItem, getBoundingBox( item ) ) );
             };
 
-    for( EDA_ITEM* item : selection )
+    m_firstSelected = nullptr;
+
+    // In selection order, so that the first item listed is the first the person selected
+    for( EDA_ITEM* item : selection.GetItemsSortedBySelectionOrder() )
     {
         if( !item->IsBOARD_ITEM() || item->Type() == PCB_TABLECELL_T )
             continue;
@@ -209,6 +221,9 @@ size_t ALIGN_DISTRIBUTE_TOOL::GetSelections( std::vector<std::pair<BOARD_ITEM*, 
         else
             addToList( aItemsToAlign, boardItem, nullptr );
     }
+
+    if( !aItemsToAlign.empty() )
+        m_firstSelected = aItemsToAlign.front().first;
 
     std::sort( aItemsToAlign.begin(), aItemsToAlign.end(), aCompare );
     std::sort( aLockedItems.begin(), aLockedItems.end(), aCompare );
@@ -415,7 +430,7 @@ int ALIGN_DISTRIBUTE_TOOL::AlignCenterX( const TOOL_EVENT& aEvent )
             []( const std::pair<BOARD_ITEM*, BOX2I>& aVal )
             {
                 return aVal.second.Centre().x;
-            } );
+            }, true );
 
     // Move the selected items
     for( const auto& [item, bbox] : itemsToAlign )
@@ -454,7 +469,7 @@ int ALIGN_DISTRIBUTE_TOOL::AlignCenterY( const TOOL_EVENT& aEvent )
             []( const std::pair<BOARD_ITEM*, BOX2I>& aVal )
             {
                 return aVal.second.Centre().y;
-            } );
+            }, true );
 
     // Move the selected items
     for( const auto& [item, bbox] : itemsToAlign )

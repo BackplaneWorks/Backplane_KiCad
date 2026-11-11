@@ -521,7 +521,9 @@ void PCB_EDIT_FRAME::doReCreateMenuBar()
     //
     menuBar->Append( fileMenu,    _( "&File" ) );
     menuBar->Append( editMenu,    _( "&Edit" ) );
-    menuBar->Append( viewMenu,    _( "&View" ) );
+    // Backplane: Alt+V aligns (backplane_hotkeys.h); Alt+W is the router's, so View has no
+    // mnemonic here
+    menuBar->Append( viewMenu,    _( "View" ) );
     menuBar->Append( placeMenu,   _( "&Place" ) );
     menuBar->Append( routeMenu,   _( "Ro&ute" ) );
     menuBar->Append( inspectMenu, _( "&Inspect" ) );

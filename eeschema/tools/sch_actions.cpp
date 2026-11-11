@@ -20,6 +20,7 @@
 
 #include "tools/sch_actions.h"
 
+#include <backplane_hotkeys.h>
 #include <bitmaps.h>
 #include <core/typeinfo.h>
 #include <layer_ids.h>
@@ -1825,16 +1826,18 @@ TOOL_ACTION SCH_ACTIONS::alignRight( TOOL_ACTION_ARGS()
 TOOL_ACTION SCH_ACTIONS::alignCenterX( TOOL_ACTION_ARGS()
         .Name( "eeschema.Align.alignCenterX" )
         .Scope( AS_GLOBAL )
+        .DefaultHotkey( BACKPLANE_HK_ALIGN_VERTICAL )
         .FriendlyName( _( "Align to Horizontal Center" ) )
-        .Tooltip( _( "Aligns selected items to the horizontal center of the item under the cursor" ) )
+        .Tooltip( _( "Aligns selected items on a common vertical line (X centre): to the item under the cursor, else the first selected; snapped to the grid" ) )
         .Icon( BITMAPS::align_items_middle )
         .Flags( AF_ACTIVATE ) );
 
 TOOL_ACTION SCH_ACTIONS::alignCenterY( TOOL_ACTION_ARGS()
         .Name( "eeschema.Align.alignCenterY" )
         .Scope( AS_GLOBAL )
+        .DefaultHotkey( BACKPLANE_HK_ALIGN_HORIZONTAL )
         .FriendlyName( _( "Align to Vertical Center" ) )
-        .Tooltip( _( "Aligns selected items to the vertical center of the item under the cursor" ) )
+        .Tooltip( _( "Aligns selected items on a common horizontal line (Y centre): to the item under the cursor, else the first selected; snapped to the grid" ) )
         .Icon( BITMAPS::align_items_center )
         .Flags( AF_ACTIVATE ) );
 

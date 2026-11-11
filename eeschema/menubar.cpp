@@ -380,7 +380,8 @@ void SCH_EDIT_FRAME::doReCreateMenuBar()
     //
     menuBar->Append( fileMenu,    _( "&File" ) );
     menuBar->Append( editMenu,    _( "&Edit" ) );
-    menuBar->Append( viewMenu,    _( "&View" ) );
+    // Backplane: Alt+V aligns (backplane_hotkeys.h), so View is Alt+W
+    menuBar->Append( viewMenu,    _( "Vie&w" ) );
     menuBar->Append( placeMenu,   _( "&Place" ) );
     menuBar->Append( inspectMenu, _( "&Inspect" ) );
     menuBar->Append( toolsMenu,   _( "&Tools" ) );

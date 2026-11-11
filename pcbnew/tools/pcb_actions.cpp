@@ -22,6 +22,7 @@
 #include "pcb_actions.h"
 #include "tool/tool_action.h"
 #include "tool/tool_event.h"
+#include <backplane_hotkeys.h>
 #include <tool/arc_draw_mode.h>
 #include <pcbnew_id.h>
 #include <bitmaps.h>
@@ -2858,15 +2859,17 @@ TOOL_ACTION PCB_ACTIONS::alignRight( TOOL_ACTION_ARGS()
 TOOL_ACTION PCB_ACTIONS::alignCenterY( TOOL_ACTION_ARGS()
         .Name( "pcbnew.AlignAndDistribute.alignCenterY" )
         .Scope( AS_GLOBAL )
+        .DefaultHotkey( BACKPLANE_HK_ALIGN_HORIZONTAL )
         .FriendlyName( _( "Align to Vertical Center" ) )
-        .Tooltip( _( "Aligns selected items to the vertical center of the item under the cursor" ) )
+        .Tooltip( _( "Aligns selected items on a common horizontal line (Y centre): to the item under the cursor, else the first selected" ) )
         .Icon( BITMAPS::align_items_center ) );
 
 TOOL_ACTION PCB_ACTIONS::alignCenterX( TOOL_ACTION_ARGS()
         .Name( "pcbnew.AlignAndDistribute.alignCenterX" )
         .Scope( AS_GLOBAL )
+        .DefaultHotkey( BACKPLANE_HK_ALIGN_VERTICAL )
         .FriendlyName( _( "Align to Horizontal Center" ) )
-        .Tooltip( _( "Aligns selected items to the horizontal center of the item under the cursor" ) )
+        .Tooltip( _( "Aligns selected items on a common vertical line (X centre): to the item under the cursor, else the first selected" ) )
         .Icon( BITMAPS::align_items_middle ) );
 
 TOOL_ACTION PCB_ACTIONS::distributeHorizontallyCenters( TOOL_ACTION_ARGS()

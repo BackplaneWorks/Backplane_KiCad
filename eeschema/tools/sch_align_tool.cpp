@@ -83,7 +83,8 @@ bool SCH_ALIGN_TOOL::Init()
 
 template< typename T >
 int SCH_ALIGN_TOOL::selectTarget( const std::vector<ITEM_BOX>& aItems,
-                                  const std::vector<ITEM_BOX>& aLocked, T aGetValue )
+                                  const std::vector<ITEM_BOX>& aLocked, T aGetValue,
+                                  bool aFirstSelected )
 {
     VECTOR2I cursorPos = getViewControls()->GetCursorPosition();
 
@@ -104,6 +105,15 @@ int SCH_ALIGN_TOOL::selectTarget( const std::vector<ITEM_BOX>& aItems,
             return aGetValue( item );
     }
 
+    if( aFirstSelected )
+    {
+        for( const ITEM_BOX& item : aItems )
+        {
+            if( item.first == m_firstSelected )
+                return aGetValue( item );
+        }
+    }
+
     return aGetValue( aItems.front() );
 }
 
@@ -114,7 +124,10 @@ size_t SCH_ALIGN_TOOL::GetSelections( std::vector<ITEM_BOX>& aItemsToAlign,
 {
     SCH_SELECTION& selection = m_selectionTool->RequestSelection( SCH_COLLECTOR::MovableItems );
 
-    for( EDA_ITEM* item : selection )
+    m_firstSelected = nullptr;
+
+    // In selection order, so that the first item listed is the first the person selected
+    for( EDA_ITEM* item : selection.GetItemsSortedBySelectionOrder() )
     {
         if( !item->IsSCH_ITEM() )
             continue;
@@ -131,6 +144,9 @@ size_t SCH_ALIGN_TOOL::GetSelections( std::vector<ITEM_BOX>& aItemsToAlign,
         else
             aItemsToAlign.emplace_back( schItem, bbox );
     }
+
+    if( !aItemsToAlign.empty() )
+        m_firstSelected = aItemsToAlign.front().first;
 
     std::sort( aItemsToAlign.begin(), aItemsToAlign.end(), aCompare );
     std::sort( aLockedItems.begin(), aLockedItems.end(), aCompare );
@@ -345,7 +361,7 @@ int SCH_ALIGN_TOOL::AlignCenterX( const TOOL_EVENT& aEvent )
             []( const ITEM_BOX& item )
             {
                 return item.second.Centre().x;
-            } );
+            }, true );
 
     for( const ITEM_BOX& item : itemsToAlign )
     {
@@ -380,7 +396,7 @@ int SCH_ALIGN_TOOL::AlignCenterY( const TOOL_EVENT& aEvent )
             []( const ITEM_BOX& item )
             {
                 return item.second.Centre().y;
-            } );
+            }, true );
 
     for( const ITEM_BOX& item : itemsToAlign )
     {

@@ -99,9 +99,15 @@ private:
                           std::vector<std::pair<BOARD_ITEM*, BOX2I>>& aLockedItems,
                           T aCompare );
 
+    /**
+     * The target value: a locked item's, else the one under the cursor's, else the first in
+     * aItems (sorted by aCompare), or with aFirstSelected (Backplane: align centre) the item
+     * the person selected first.
+     */
     template< typename T >
     int selectTarget( std::vector<std::pair<BOARD_ITEM*, BOX2I>>& aItems,
-                      std::vector<std::pair<BOARD_ITEM*, BOX2I>>& aLocked, T aGetValue );
+                      std::vector<std::pair<BOARD_ITEM*, BOX2I>>& aLocked, T aGetValue,
+                      bool aFirstSelected = false );
 
     /**
      * Sets X coordinate of the selected items to the value of the left-most selected item
@@ -145,6 +151,7 @@ private:
     PCB_SELECTION_TOOL*  m_selectionTool;
     CONDITIONAL_MENU*    m_placementMenu;
     PCB_BASE_FRAME*      m_frame;
+    BOARD_ITEM*          m_firstSelected = nullptr;  ///< by GetSelections, in selection order
 };
 
 #endif /* ALIGN_DISTRIBUTE_TOOL_H_ */
