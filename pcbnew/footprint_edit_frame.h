@@ -374,6 +374,10 @@ public:
      */
     void ReloadFootprint( FOOTPRINT* aFootprint ) override;
 
+    /// Embedded mode: the edited footprint's .kicad_mod, reloaded keeping view and selection.
+    std::vector<wxString> EmbedWatchedFiles() const override;
+    bool                  EmbedReload() override;
+
     /**
      * Update visible items after a language change.
      */

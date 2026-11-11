@@ -128,6 +128,7 @@ struct EMBED_FRAME_OPS
     std::function<std::vector<wxString>()>     watchedFiles;     ///< files to reload from
     std::function<bool()>                      reload;           ///< reload, keeping the view
     std::function<void( const wxString& )>     showConflict;     ///< infobar; empty hides it
+    std::function<bool()>                      busy;             ///< a dialog or tool is active
 };
 
 struct EMBED_FRAME_INFO

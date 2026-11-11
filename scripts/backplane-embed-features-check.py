@@ -282,6 +282,44 @@ def main():
         check(bool(reloaded) and frames()[embed.FK_SCH].title == title_before and "pic_sockets" in title_before,
               f"an external change to a sub-sheet reloads and stays on that sheet ({title_before})")
 
+        # Library editors: the edited symbol's library and the edited footprint's file.
+        symbol_lib = s.project_dir / "pic_programmer.kicad_sym"
+        w_, h_ = host.size
+        api.request(embed.ShowFrame(kind=embed.FK_SYMBOL_EDITOR, item="pic_programmer:24C16",
+                                    x=0, y=0, width=w_, height=h_), embed.ShowFrameResponse)
+        time.sleep(3)
+        symbol_before = s.shot("13a-symbol-before")
+        events()
+        text = symbol_lib.read_text()
+        assert '(name "A0"' in text
+        temporary = symbol_lib.with_suffix(".tmp-write")
+        temporary.write_text(text.replace('(name "A0"', '(name "EXTERNAL_PIN"', 1))
+        os.replace(temporary, symbol_lib)
+        reloaded = [e for e in wait_event(embed.ET_DOCUMENT_RELOADED) if e.frame.kind == embed.FK_SYMBOL_EDITOR]
+        time.sleep(2)
+        symbol_after = s.shot("13b-symbol-reloaded")
+        check(bool(reloaded) and not frames()[embed.FK_SYMBOL_EDITOR].modified
+              and mean_difference(symbol_before, symbol_after, f"{w * 2 // 3}x{h * 2 // 3}+{w // 6}+{h // 10}") > 0.001,
+              "an external change to the edited symbol's library reloads the symbol editor")
+
+        footprint_file = s.project_dir / "libs/pic_programmer_fp.pretty/TO-92.kicad_mod"
+        api.request(embed.ShowFrame(kind=embed.FK_FOOTPRINT_EDITOR, item="footprints:TO-92",
+                                    x=0, y=0, width=w_, height=h_), embed.ShowFrameResponse)
+        time.sleep(3)
+        footprint_before = s.shot("13c-footprint-before")
+        events()
+        text = footprint_file.read_text()
+        footprint_file.write_text(text.replace("REF**", "EXTERNAL_REF", 1))
+        reloaded = [e for e in wait_event(embed.ET_DOCUMENT_RELOADED) if e.frame.kind == embed.FK_FOOTPRINT_EDITOR]
+        time.sleep(2)
+        footprint_after = s.shot("13d-footprint-reloaded")
+        check(bool(reloaded) and not frames()[embed.FK_FOOTPRINT_EDITOR].modified
+              and mean_difference(footprint_before, footprint_after, f"{w * 2 // 3}x{h * 2 // 3}+{w // 6}+{h // 10}") > 0.001,
+              "an external change to the edited footprint's file reloads the footprint editor")
+        result = api.request(embed.ReloadDocument(kind=embed.FK_FOOTPRINT_EDITOR, mode=embed.RM_IF_CLEAN),
+                             embed.ReloadDocumentResponse)
+        check(result.result == embed.RR_UNCHANGED, "ReloadDocument on the footprint editor, file unchanged")
+
         # ---------------- 4. Robustness ----------------
         api.request(embed.SelectItems(kind=embed.FK_PCB, references=["U4"], zoom=True), embed.SelectItemsResponse)
         show(embed.FK_PCB, wait=2)

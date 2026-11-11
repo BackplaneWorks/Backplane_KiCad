@@ -370,6 +370,9 @@ EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
     ops.watchedFiles = [this]() { return EmbedWatchedFiles(); };
     ops.reload = [this]() { return EmbedReload(); };
     ops.showConflict = [this]( const wxString& aPath ) { ShowEmbedReloadConflict( aPath ); };
+
+    // A reload frees what a modal dialog or a running interactive tool is holding: wait.
+    ops.busy = [this]() { return !IsEnabled() || !ToolStackIsEmpty(); };
     return ops;
 }
 

@@ -21,6 +21,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <boost/version.hpp>
 #include <boost/uuid/entropy_error.hpp>
 
@@ -1098,6 +1099,11 @@ void PCB_BASE_FRAME::setFPWatcher( FOOTPRINT* aFootprint )
         m_watcher->SetOwner( nullptr );
         m_watcher.reset();
     }
+
+    // Embedded in a host window, the footprint editor reloads through BACKPLANE_EMBED (no modal
+    // prompt, conflicts go to the host and an infobar).
+    if( BACKPLANE_EMBED::Get().Enabled() )
+        return;
 
     wxString libfullname;
     FOOTPRINT_LIBRARY_ADAPTER* adapter = PROJECT_PCB::FootprintLibAdapter( &Prj() );

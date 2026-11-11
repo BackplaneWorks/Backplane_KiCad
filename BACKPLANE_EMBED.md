@@ -176,7 +176,9 @@ or `kicad`); `GetFramesResponse.theme` reports it. Nothing is written to KiCad's
   frame hidden: a host SelectItems in one editor also selects in the other.
 
 ### Reload on disk change
-The board file and every schematic sheet file are watched (polled every 250 ms).
+Watched (polled every 250 ms): the board file, every schematic sheet file, the symbol
+editor's library of the symbol on screen (its file in a `.kicad_symdir` library), and the
+footprint editor's `.kicad_mod` of the footprint on screen.
 - A change counts once the file has been quiet for 300 ms, is a complete s-expression
   (parentheses balance) and its content differs from what the frame has. An atomic rename-over
   and a slow partial write therefore reload once, complete. KiCad's own saves (GUI or IPC
@@ -190,7 +192,12 @@ The board file and every schematic sheet file are watched (polled every 250 ms).
 - `ReloadDocument{kind or path, RM_IF_CLEAN | RM_DISCARD}` answers `RR_RELOADED`, `RR_UNCHANGED`
   (the file is what the frame has) or `RR_CONFLICT` (unsaved changes, `RM_IF_CLEAN`).
 - Under a modal dialog `SelectItems`, `ReloadDocument` and `ResolveConflict` answer `AS_BUSY`.
-- Library editors are not watched yet (see Known limitations).
+- Library editors reload the library item on screen: the symbol editor drops its buffer for
+  that library and reloads the symbol (same unit and body style); the footprint editor reloads
+  the footprint keeping item UUIDs and the selection. In embedded mode KiCad's own footprint
+  watcher (and its modal "reload?" prompt) is off; conflicts go through the event and infobar.
+  A library editor counts as having unsaved changes if any of its libraries does.
+- A reload waits while a dialog is open on the frame or an interactive tool is running.
 
 `scripts/backplane-embed-features-check.py <kicad> <kicad-cli> --out <dir>` tests all of this,
 plus frame state across HideFrame/ShowFrame, popups/tooltips/3D-viewer dialogs never escaping,
@@ -198,15 +205,6 @@ and re-attaching after the host's connection dies; CI runs it beside the bp.8 ch
 
 ## Known limitations (as of bp.9)
 
-- **Library editors do not reload themselves on a disk change (candidate for bp.10).** The
-  symbol and footprint editors' library files are not watched: an external write to them
-  (kicad-cli, a script, git) does not reload the editor's library buffer or the item on
-  screen, and raises neither `ET_DOCUMENT_RELOADED` nor `ET_RELOAD_CONFLICT`; `ReloadDocument`
-  on such a frame answers `AS_UNIMPLEMENTED`. The editor keeps what it loaded until it is
-  closed and reopened, and a save from it overwrites the external change. PCB and schematic
-  documents (every sheet) reload as described above. The fix belongs in
-  `SYMBOL_EDIT_FRAME`/`FOOTPRINT_EDIT_FRAME::EmbedReload()` (refresh the library adapter, reload
-  the shown symbol/footprint when its buffer is unmodified, keep the conflict path otherwise).
 - `ListActions` (the palette feed).
 - Live scale changes: `AttachToParent.scale` is only recorded.
 - Windows and macOS are untested.

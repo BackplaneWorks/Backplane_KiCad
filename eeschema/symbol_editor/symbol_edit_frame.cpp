@@ -19,6 +19,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
+#include <libraries/library_manager.h>
+#include <view/view.h>
 #include <bitmaps.h>
 #include <api/api_handler_common.h>
 #include <api/api_handler_libraries.h>
@@ -2549,4 +2552,66 @@ bool SYMBOL_EDIT_FRAME::GetShowInvisiblePins()
 {
     // Returns the current render option for invisible pins
     return libeditconfig()->m_ShowHiddenPins;
+}
+
+
+std::vector<wxString> SYMBOL_EDIT_FRAME::EmbedWatchedFiles() const
+{
+    if( !m_symbol || m_symbol->GetLibId().GetLibNickname().empty() )
+        return {};
+
+    const LIB_ID            id = m_symbol->GetLibId();
+    std::optional<wxString> uri = Pgm().GetLibraryManager().GetFullURI( LIBRARY_TABLE_TYPE::SYMBOL,
+                                                                        id.GetLibNickname(), true );
+
+    if( !uri )
+        return {};
+
+    wxFileName file( *uri );
+
+    // A .kicad_symdir library keeps one file per symbol.
+    if( wxFileName::DirExists( *uri ) )
+        file = wxFileName( *uri, id.GetUniStringLibItemName(), FILEEXT::KiCadSymbolLibFileExtension );
+
+    if( !file.FileExists() )
+        return {};
+
+    return { file.GetFullPath() };
+}
+
+
+bool SYMBOL_EDIT_FRAME::EmbedReload()
+{
+    if( !m_symbol )
+        return false;
+
+    const LIB_ID   id = m_symbol->GetLibId();
+    const wxString library = id.GetLibNickname();
+    const int      unit = m_unit;
+    const int      bodyStyle = m_bodyStyle;
+
+    KIGFX::VIEW*   view = GetCanvas()->GetView();
+    const VECTOR2D center = view->GetCenter();
+    const double   scale = view->GetScale();
+
+    // The edited symbol lives in the library buffer that is about to go.
+    emptyScreen();
+    m_libMgr->RevertLibrary( library );
+    SyncLibraries( false, false, library );
+
+    if( !m_libMgr->SymbolExists( id.GetLibItemName(), library ) || !LoadSymbol( id, unit, bodyStyle ) )
+        return false;
+
+    auto restore =
+            [this, center, scale]()
+            {
+                KIGFX::VIEW* newView = GetCanvas()->GetView();
+                newView->SetScale( scale );
+                newView->SetCenter( center );
+                GetCanvas()->Refresh();
+            };
+
+    restore();
+    CallAfter( restore );
+    return true;
 }

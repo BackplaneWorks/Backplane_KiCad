@@ -1437,6 +1437,11 @@ void BACKPLANE_EMBED::pollFiles()
                 continue;
             }
 
+            // A clean frame reloads; not while a dialog or an interactive tool holds its items.
+            // Keep the change pending and look again on the next poll.
+            if( e->ops.busy && e->ops.busy() && !( e->ops.modified && e->ops.modified() ) )
+                continue;
+
             // Stable over the quiet period and complete.  Only a real content change counts.
             state.signature = signature;
             state.pendingSig.clear();

@@ -388,6 +388,11 @@ public:
      */
     bool LoadSymbol( const LIB_ID& aLibId, int aUnit, int aBodyStyle );
 
+    /// Embedded mode: the edited symbol's library file (or its file in a .kicad_symdir), and a
+    /// reload of that library from disk keeping the symbol, unit and view.
+    std::vector<wxString> EmbedWatchedFiles() const override;
+    bool                  EmbedReload() override;
+
     /**
      * Create the SVG print file for the current edited symbol.
      * @param aFullFileName is the full filename

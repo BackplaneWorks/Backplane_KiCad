@@ -507,10 +507,10 @@ HANDLER_RESULT<ReloadDocumentResponse> API_HANDLER_EMBED::handleReloadDocument(
     BACKPLANE_EMBED&    embed = BACKPLANE_EMBED::Get();
     EMBED_FRAME_KIND    kind = embed.Info( frame ).kind;
 
-    if( kind != EMBED_FRAME_KIND::PCB && kind != EMBED_FRAME_KIND::SCH )
+    if( kind == EMBED_FRAME_KIND::PCB_3D || kind == EMBED_FRAME_KIND::OTHER )
     {
         return tl::unexpected( failure( ApiStatusCode::AS_UNIMPLEMENTED,
-                                        "only the PCB and schematic editors reload from disk" ) );
+                                        "this frame has no document to reload" ) );
     }
 
     EMBED_RELOAD_RESULT result = embed.Reload( frame, aCtx.Request.mode() == RM_DISCARD );

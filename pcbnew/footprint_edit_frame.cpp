@@ -20,6 +20,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
+#include <libraries/library_manager.h>
 #include "tool/embed_tool.h"
 #include "tools/convert_tool.h"
 #include "tools/constraint_edit_tool.h"
@@ -2506,4 +2508,109 @@ void FOOTPRINT_EDIT_FRAME::OnSaveFootprintAsPng( wxCommandEvent& event )
     // to refresh the screen before creating the PNG or JPEG image from screen
     wxYield();
     this->SaveCanvasImageToFile( dlg.GetPath(), BITMAP_TYPE::PNG );
+}
+
+
+std::vector<wxString> FOOTPRINT_EDIT_FRAME::EmbedWatchedFiles() const
+{
+    FOOTPRINT* fp = GetBoard() ? GetBoard()->GetFirstFootprint() : nullptr;
+
+    if( !fp || fp->GetFPID().GetLibNickname().empty() )
+        return {};
+
+    FOOTPRINT_LIBRARY_ADAPTER* adapter = PROJECT_PCB::FootprintLibAdapter( &Prj() );
+
+    if( !adapter )
+        return {};
+
+    try
+    {
+        std::optional<LIBRARY_TABLE_ROW*> row = adapter->GetRow( fp->GetFPID().GetLibNickname() );
+
+        if( !row )
+            return {};
+
+        wxFileName file( LIBRARY_MANAGER::GetFullURI( *row, true ), fp->GetFPID().GetLibItemName(),
+                         FILEEXT::KiCadFootprintFileExtension );
+
+        if( file.FileExists() )
+            return { file.GetFullPath() };
+    }
+    catch( ... )
+    {
+    }
+
+    return {};
+}
+
+
+bool FOOTPRINT_EDIT_FRAME::EmbedReload()
+{
+    FOOTPRINT*                 fp = GetBoard() ? GetBoard()->GetFirstFootprint() : nullptr;
+    FOOTPRINT_LIBRARY_ADAPTER* adapter = PROJECT_PCB::FootprintLibAdapter( &Prj() );
+
+    if( !fp || !adapter )
+        return false;
+
+    KIGFX::VIEW*      view = GetCanvas()->GetView();
+    const VECTOR2D    center = view->GetCenter();
+    const double      scale = view->GetScale();
+    std::vector<KIID> selected;
+
+    for( const EDA_ITEM* item : GetCurrentSelection() )
+        selected.emplace_back( item->m_Uuid );
+
+    FOOTPRINT* newfp = nullptr;
+
+    try
+    {
+        // The adapter keeps parsed footprints per library; take the new file.
+        adapter->RefreshLibraryIfChanged( fp->GetFPID().GetLibNickname() );
+
+        // Keep the item UUIDs, as loading into the footprint editor always does.
+        newfp = adapter->LoadFootprint( fp->GetFPID().GetLibNickname(), fp->GetFPID().GetLibItemName(),
+                                        true );
+    }
+    catch( const IO_ERROR& )
+    {
+        return false;
+    }
+
+    if( !newfp )
+        return false;
+
+    m_toolManager->ResetTools( TOOL_BASE::MODEL_RELOAD );
+    ReloadFootprint( newfp );
+    newfp->ClearAllNets();
+    GetCanvas()->UpdateColors();
+    GetCanvas()->DisplayBoard( GetBoard() );
+    m_toolManager->ResetTools( TOOL_BASE::MODEL_RELOAD );
+    GetScreen()->SetContentModified( false );
+
+    auto restore =
+            [this, center, scale, selected]()
+            {
+                KIGFX::VIEW* newView = GetCanvas()->GetView();
+                newView->SetScale( scale );
+                newView->SetCenter( center );
+
+                std::vector<EDA_ITEM*> items;
+
+                for( const KIID& id : selected )
+                {
+                    if( BOARD_ITEM* item = GetBoard()->ResolveItem( id, true ) )
+                        items.push_back( item );
+                }
+
+                BACKPLANE_EMBED::SELECTION_SCOPE quiet;
+
+                if( !items.empty() )
+                    m_toolManager->RunAction<std::vector<EDA_ITEM*>*>( ACTIONS::selectItems, &items );
+
+                GetCanvas()->Refresh();
+            };
+
+    restore();
+    CallAfter( restore );
+    return true;
 }
