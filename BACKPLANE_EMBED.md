@@ -176,8 +176,7 @@ or `kicad`); `GetFramesResponse.theme` reports it. Nothing is written to KiCad's
   frame hidden: a host SelectItems in one editor also selects in the other.
 
 ### Reload on disk change
-The board file, every schematic sheet file, and each other embedded frame's current file are
-watched (polled every 250 ms).
+The board file and every schematic sheet file are watched (polled every 250 ms).
 - A change counts once the file has been quiet for 300 ms, is a complete s-expression
   (parentheses balance) and its content differs from what the frame has. An atomic rename-over
   and a slow partial write therefore reload once, complete. KiCad's own saves (GUI or IPC
@@ -191,8 +190,7 @@ watched (polled every 250 ms).
 - `ReloadDocument{kind or path, RM_IF_CLEAN | RM_DISCARD}` answers `RR_RELOADED`, `RR_UNCHANGED`
   (the file is what the frame has) or `RR_CONFLICT` (unsaved changes, `RM_IF_CLEAN`).
 - Under a modal dialog `SelectItems`, `ReloadDocument` and `ResolveConflict` answer `AS_BUSY`.
-- Library editors are watched by their current file but do not reload themselves yet (see
-  Known limitations).
+- Library editors are not watched yet (see Known limitations).
 
 `scripts/backplane-embed-features-check.py <kicad> <kicad-cli> --out <dir>` tests all of this,
 plus frame state across HideFrame/ShowFrame, popups/tooltips/3D-viewer dialogs never escaping,
@@ -201,10 +199,10 @@ and re-attaching after the host's connection dies; CI runs it beside the bp.8 ch
 ## Known limitations (as of bp.9)
 
 - **Library editors do not reload themselves on a disk change (candidate for bp.10).** The
-  symbol and footprint editors' current library files are watched, but an external write to
-  them (kicad-cli, a script, git) does not reload the editor's library buffer or the item on
+  symbol and footprint editors' library files are not watched: an external write to them
+  (kicad-cli, a script, git) does not reload the editor's library buffer or the item on
   screen, and raises neither `ET_DOCUMENT_RELOADED` nor `ET_RELOAD_CONFLICT`; `ReloadDocument`
-  on such a frame fails with `AS_INTERNAL_ERROR`. The editor keeps what it loaded until it is
+  on such a frame answers `AS_UNIMPLEMENTED`. The editor keeps what it loaded until it is
   closed and reopened, and a save from it overwrites the external change. PCB and schematic
   documents (every sheet) reload as described above. The fix belongs in
   `SYMBOL_EDIT_FRAME`/`FOOTPRINT_EDIT_FRAME::EmbedReload()` (refresh the library adapter, reload

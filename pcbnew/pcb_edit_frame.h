@@ -408,8 +408,9 @@ public:
      */
     bool ReloadFromDisk();
 
-    /// Embedded mode: reload keeping zoom/pan, active layer and selection (by UUID).
-    bool EmbedReload() override;
+    /// Embedded mode: the board file, and a reload keeping zoom/pan, active layer and selection.
+    std::vector<wxString> EmbedWatchedFiles() const override;
+    bool                  EmbedReload() override;
 
     /**
      * Write the board data structures to \a a aFileName.

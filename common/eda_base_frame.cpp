@@ -376,12 +376,8 @@ EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
 
 std::vector<wxString> EDA_BASE_FRAME::EmbedWatchedFiles() const
 {
-    wxString file = GetCurrentFileName();
-
-    if( file.IsEmpty() || !wxFileName::FileExists( file ) )
-        return {};
-
-    return { file };
+    // Only frames that can reload (EmbedReload) watch their files.
+    return {};
 }
 
 

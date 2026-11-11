@@ -147,7 +147,7 @@ public:
     /// The operations the embedding state uses on this frame.
     EMBED_FRAME_OPS embedOps();
 
-    /// Files whose external changes reload this frame (embedded mode).  Default: the current file.
+    /// Files whose external changes reload this frame (embedded mode).  Default: none.
     virtual std::vector<wxString> EmbedWatchedFiles() const;
 
     /// Reload the document from disk keeping the view, layer, selection and sheet.  The caller

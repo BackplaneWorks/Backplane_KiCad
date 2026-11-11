@@ -1527,6 +1527,10 @@ EMBED_RELOAD_RESULT BACKPLANE_EMBED::Reload( wxFrame* aFrame, bool aDiscard )
     if( !e )
         return EMBED_RELOAD_RESULT::UNKNOWN;
 
+    // Only frames that watch files can reload (not yet the library editors).
+    if( !e->ops.watchedFiles || e->ops.watchedFiles().empty() )
+        return EMBED_RELOAD_RESULT::UNKNOWN;
+
     bool modified = e->ops.modified && e->ops.modified();
 
     if( modified && !aDiscard )

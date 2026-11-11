@@ -490,6 +490,22 @@ bool PCB_EDIT_FRAME::ReloadFromDisk()
 }
 
 
+std::vector<wxString> PCB_EDIT_FRAME::EmbedWatchedFiles() const
+{
+    wxString file = GetBoard() ? GetBoard()->GetFileName() : wxString();
+
+    if( file.IsEmpty() )
+        return {};
+
+    file = Prj().AbsolutePath( file );
+
+    if( !wxFileName::FileExists( file ) )
+        return {};
+
+    return { file };
+}
+
+
 bool PCB_EDIT_FRAME::EmbedReload()
 {
     KIGFX::VIEW*      view = GetCanvas()->GetView();
