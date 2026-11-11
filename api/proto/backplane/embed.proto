@@ -165,6 +165,9 @@ enum EventType
   ET_ATTACHED          = 18; // the host moved the holder into another of its windows itself
                              // (XReparentWindow); that window is the parent now (focus/key
                              // messages go there).  detail = its id, decimal
+  ET_COMMENT           = 19; // the person sent a note about the selection with "Comment to
+                             // Backplane..." (or CommentSelection did); Event.comment holds it,
+                             // Event.selection its ItemNames, detail = the note (bp.10)
 }
 
 message Event
@@ -173,7 +176,8 @@ message Event
   EventType type   = 2;
   FrameInfo frame  = 3;
   string    detail = 4;
-  ItemNames selection = 5;  // ET_SELECTION_CHANGED only
+  ItemNames selection = 5;  // ET_SELECTION_CHANGED and ET_COMMENT
+  Comment   comment   = 6;  // ET_COMMENT only
 }
 
 // Long poll.  Returns the events with seq > since, waiting up to wait_ms (at most 60000)
@@ -354,4 +358,81 @@ message ResolveConflictResponse
 {
   ReloadResult result = 1;  // RR_RELOADED for CC_RELOAD, RR_UNCHANGED for CC_KEEP
   FrameInfo    frame  = 2;
+}
+
+
+// ---- bp.10: comments on a selection --------------------------------------------------------
+//
+// Coordinates are millimetres in the document's own frame, as written in the file: origin at the
+// sheet/board origin (not the drill/aux or grid origin), X to the right, Y DOWN.
+
+message BoxMm
+{
+  double x_min = 1;
+  double y_min = 2;
+  double x_max = 3;
+  double y_max = 4;
+}
+
+// One selected item.
+message CommentItem
+{
+  string kind       = 1;  // KiCad's class name: FOOTPRINT, PAD, PCB_TRACK, PCB_ARC, PCB_VIA,
+                          // ZONE, PCB_SHAPE, PCB_TEXT, PCB_FIELD, ...; SCH_SYMBOL, SCH_PIN,
+                          // SCH_LINE (wire/bus/graphic), SCH_LABEL, SCH_GLOBALLABEL,
+                          // SCH_HIERLABEL, SCH_JUNCTION, SCH_NO_CONNECT, SCH_SHEET, SCH_FIELD, ...
+  string id         = 2;  // the item's KIID (UUID)
+  string reference  = 3;  // a footprint's or symbol's reference; the parent's for pads, pins and
+                          // fields ("U3"); empty otherwise
+  string pin        = 4;  // pads and pins: "<reference>.<number>" ("U3.4")
+  string net        = 5;  // the item's net, if it has one ("/SDA")
+  string layer      = 6;  // PCB: the item's layer ("F.Cu"); through-hole pads and vias: the
+                          // first copper layer of their set; empty in the schematic
+  string sheet_path = 7;  // schematic: the human sheet path the item is on ("/", "/Power/");
+                          // empty on the PCB
+  double x_mm       = 8;  // the item's position (anchor: footprint/symbol origin, pad/pin
+  double y_mm       = 9;  // position, a track's start, ...)
+  BoxMm  bbox       = 10; // the item's bounding box
+  string value      = 11; // footprints and symbols: their value ("10k"); empty otherwise
+}
+
+message Comment
+{
+  string               note       = 1;  // what the person typed (UTF-8, may span lines)
+  ItemNames            names      = 2;  // references, nets and pins of the selection (as in
+                                        // ET_SELECTION_CHANGED), also copied to Event.selection
+  repeated CommentItem items      = 3;  // every selected item, in selection order (at most 500;
+                                        // `truncated` is set when there were more)
+  bool                 truncated  = 4;
+  BoxMm                bbox       = 5;  // the whole selection's bounding box.  With nothing
+                                        // selected: the area of the canvas in view, and
+                                        // `items` is empty (a comment on that region)
+  bool                 empty_selection = 6;
+  string               sheet_path = 7;  // schematic: the sheet shown when the comment was made
+  string               screenshot = 8;  // absolute path of a PNG of the canvas around `bbox`
+                                        // (padded, at most 800 px on its long side), under
+                                        // <dir of the API socket>/backplane-comments/.  Empty
+                                        // when none could be taken (say, the frame is hidden).
+                                        // KiCad keeps the 32 newest; copy it if you need it.
+  BoxMm                screenshot_region = 9;  // the document area the PNG shows, mm
+  int32                screenshot_width  = 10; // pixels
+  int32                screenshot_height = 11;
+  bool                 from_api   = 12; // made by CommentSelection, not the person's dialog
+}
+
+// Make a comment on the current selection of the PCB editor or the schematic editor without the
+// dialog, exactly as if the person had typed `note` in "Comment to Backplane..." and pressed OK:
+// an ET_COMMENT event is pushed.  Routed by `kind` like SelectItems: the frame must be open (a
+// kind whose frame is not open answers AS_UNHANDLED).  The screenshot needs the frame shown.
+// While a modal dialog is open it answers AS_BUSY.
+message CommentSelection
+{
+  FrameKind kind = 1;  // FK_PCB or FK_SCH
+  string    note = 2;
+}
+
+message CommentSelectionResponse
+{
+  uint64  seq     = 1;  // the seq of the ET_COMMENT event pushed
+  Comment comment = 2;  // the same comment
 }
