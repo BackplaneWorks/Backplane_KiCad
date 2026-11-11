@@ -191,17 +191,26 @@ watched (polled every 250 ms).
 - `ReloadDocument{kind or path, RM_IF_CLEAN | RM_DISCARD}` answers `RR_RELOADED`, `RR_UNCHANGED`
   (the file is what the frame has) or `RR_CONFLICT` (unsaved changes, `RM_IF_CLEAN`).
 - Under a modal dialog `SelectItems`, `ReloadDocument` and `ResolveConflict` answer `AS_BUSY`.
-- Library editors are watched by their current file but do not reload themselves yet.
+- Library editors are watched by their current file but do not reload themselves yet (see
+  Known limitations).
 
 `scripts/backplane-embed-features-check.py <kicad> <kicad-cli> --out <dir>` tests all of this,
 plus frame state across HideFrame/ShowFrame, popups/tooltips/3D-viewer dialogs never escaping,
 and re-attaching after the host's connection dies; CI runs it beside the bp.8 check.
 
-## Not in bp.8
+## Known limitations (as of bp.9)
 
+- **Library editors do not reload themselves on a disk change (candidate for bp.10).** The
+  symbol and footprint editors' current library files are watched, but an external write to
+  them (kicad-cli, a script, git) does not reload the editor's library buffer or the item on
+  screen, and raises neither `ET_DOCUMENT_RELOADED` nor `ET_RELOAD_CONFLICT`; `ReloadDocument`
+  on such a frame fails with `AS_INTERNAL_ERROR`. The editor keeps what it loaded until it is
+  closed and reopened, and a save from it overwrites the external change. PCB and schematic
+  documents (every sheet) reload as described above. The fix belongs in
+  `SYMBOL_EDIT_FRAME`/`FOOTPRINT_EDIT_FRAME::EmbedReload()` (refresh the library adapter, reload
+  the shown symbol/footprint when its buffer is unmodified, keep the conflict path otherwise).
 - `ListActions` (the palette feed).
 - Live scale changes: `AttachToParent.scale` is only recorded.
-- Library editors reloading themselves on a disk change (bp.9 watches but does not reload them).
 - Windows and macOS are untested.
 - KiCad's 3D viewer binds Ctrl+Tab / Shift+Tab to cycle its presets and viewports; with the
   default reserved keys Ctrl+Tab goes to the host instead.
