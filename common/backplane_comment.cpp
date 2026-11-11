@@ -122,6 +122,9 @@ public:
         m_note->SetName( wxS( "BackplaneCommentNote" ) );
         main->Add( m_note, 1, wxLEFT | wxRIGHT | wxEXPAND, 10 );
 
+        // Every comment starts empty: not the last one's text restored by DIALOG_SHIM
+        OptOut( m_note );
+
         wxStdDialogButtonSizer* buttons = new wxStdDialogButtonSizer();
         buttons->AddButton( new wxButton( this, wxID_OK ) );
         buttons->AddButton( new wxButton( this, wxID_CANCEL ) );

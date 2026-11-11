@@ -56,6 +56,8 @@ def main():
         api.request(embed.SetChrome(), embed.SetChromeResponse)
         events_since = [0]
 
+        w, h = host.size
+
         def events():
             reply = api.request(embed.NextEvents(since=events_since[0]), embed.NextEventsResponse)
             events_since[0] = reply.next
@@ -93,16 +95,27 @@ def main():
             return {i.reference: i.bbox for i in reply.comment.items
                     if i.kind in ("FOOTPRINT", "SCH_SYMBOL")}
 
-        def run(action):
-            api.request(editor.RunAction(action=action), editor.RunActionResponse)
-            time.sleep(0.8)
+        hotkeys = {"alignCenterX": "alt+v", "alignCenterY": "alt+h", "undo": "ctrl+z"}
 
-        w, h = host.size
+        def run(kind, action):
+            """RunAction is served by the board editor only: the schematic gets the keys, with the
+            pointer low on the canvas's left (inside the canvas, off the selected items)."""
+            if kind == embed.FK_PCB:
+                full = "common.Interactive.undo" if action == "undo" else f"pcbnew.AlignAndDistribute.{action}"
+                api.request(editor.RunAction(action=full), editor.RunActionResponse)
+            else:
+                # The host's size now (the WM may have resized it); left of here are KiCad's panels
+                host.pump(0.05)
+                cw, ch = host.size
+                s.xdotool("mousemove", str(int(cw * 0.26)), str(int(ch * 0.86)))
+                time.sleep(0.3)
+                s.xdotool("key", hotkeys[action])
+            time.sleep(1.0)
+
         refs = ["R2", "R1", "R3"]     # R2 first: the anchor
 
         # ---------------- 1. Alignment ----------------
-        for kind, prefix, grid in ((embed.FK_PCB, "pcbnew.AlignAndDistribute", 0.0),
-                                   (embed.FK_SCH, "eeschema.Align", 1.27)):
+        for kind, grid in ((embed.FK_PCB, 0.0), (embed.FK_SCH, 1.27)):
             label = "pcb" if kind == embed.FK_PCB else "sch"
             show(kind)
             # The pointer is kept off the items (on the host's top edge): no item under the cursor
@@ -116,7 +129,7 @@ def main():
 
             select(kind, refs)
             s.shot(f"{label}-01-before-align")
-            run(f"{prefix}.alignCenterX")
+            run(kind, "alignCenterX")
             after = boxes(kind, refs)
             s.shot(f"{label}-02-after-align-x")
             xs = [centre(after[r])[0] for r in refs]
@@ -125,47 +138,48 @@ def main():
                   f"({anchor_x:.3f} mm: {[round(x, 3) for x in xs]})")
             check(all(abs(centre(after[r])[1] - centre(before[r])[1]) < 0.01 for r in refs),
                   f"{label}: align centre X leaves Y alone")
-            run("common.Interactive.undo")
+            run(kind, "undo")
 
             select(kind, refs)
-            run(f"{prefix}.alignCenterY")
+            run(kind, "alignCenterY")
             after = boxes(kind, refs)
             ys = [centre(after[r])[1] for r in refs]
             check(all(abs(y - anchor_y) <= tolerance for y in ys),
                   f"{label}: align centre Y puts every Y centre on R2's ({anchor_y:.3f} mm: "
                   f"{[round(y, 3) for y in ys]})")
-            run("common.Interactive.undo")
+            run(kind, "undo")
 
             if kind == embed.FK_SCH:
                 # Pins stay on the connection grid: every symbol's anchor is a multiple of 1.27 mm
                 select(kind, refs)
-                run(f"{prefix}.alignCenterX")
+                run(kind, "alignCenterX")
                 reply = api.request(embed.CommentSelection(kind=kind, note="(grid)"),
                                     embed.CommentSelectionResponse)
                 on_grid = [abs(i.x_mm / 1.27 - round(i.x_mm / 1.27)) < 1e-3
                            for i in reply.comment.items if i.kind == "SCH_SYMBOL"]
                 check(bool(on_grid) and all(on_grid), "sch: aligned symbols stay on the 1.27 mm grid")
-                run("common.Interactive.undo")
+                run(kind, "undo")
 
             # The hotkeys themselves (the pointer on the canvas; any anchor will do here)
             select(kind, refs)
             s.xdotool("mousemove", str(w // 2), str(h // 2))
             time.sleep(0.3)
             s.xdotool("key", "alt+v")
-            time.sleep(1.2)
+            time.sleep(1.2)  # pointer at the centre: Alt+V there, whatever the anchor
             s.shot(f"{label}-03-after-alt-v")
             after = boxes(kind, refs)
             spread = max(centre(after[r])[0] for r in refs) - min(centre(after[r])[0] for r in refs)
             check(spread <= 2 * tolerance, f"{label}: Alt+V aligns the X centres (spread {spread:.3f} mm)")
-            run("common.Interactive.undo")
+            run(kind, "undo")
             select(kind, refs)
+            s.xdotool("mousemove", str(w // 2), str(h // 2))
             s.xdotool("key", "alt+h")
             time.sleep(1.2)
             s.shot(f"{label}-04-after-alt-h")
             after = boxes(kind, refs)
             spread = max(centre(after[r])[1] for r in refs) - min(centre(after[r])[1] for r in refs)
             check(spread <= 2 * tolerance, f"{label}: Alt+H aligns the Y centres (spread {spread:.3f} mm)")
-            run("common.Interactive.undo")
+            run(kind, "undo")
 
             # Hotkeys and the context menu show the bindings
             select(kind, refs)
@@ -176,9 +190,15 @@ def main():
             time.sleep(0.5)
 
         # ---------------- 2. Comment to Backplane ----------------
-        for kind, refs_c, label in ((embed.FK_PCB, ["U1", "C1"], "pcb"), (embed.FK_SCH, ["U2", "C1"], "sch")):
+        # The pin is of a part not selected itself: the PCB editor keeps only a footprint when it
+        # and its own pad are selected (the schematic keeps both)
+        for kind, refs_c, pin, label in ((embed.FK_PCB, ["U1", "C1"], "R1.1", "pcb"),
+                                         (embed.FK_SCH, ["U2", "C1"], "C1.1", "sch")):
             show(kind)
-            select(kind, refs_c)
+            # Footprints/symbols give references; a pin gives its net (as ET_SELECTION_CHANGED)
+            api.request(embed.SelectItems(kind=kind, references=refs_c, pins=[pin], zoom=True),
+                        embed.SelectItemsResponse)
+            time.sleep(0.8)
             events()
             before_windows = set(s.watcher.current())
             # Right-click on the canvas keeps the selection; Up from a fresh GTK menu is its last item
@@ -220,8 +240,8 @@ def main():
                   f"{label}: the event carries the frame and the note ({e.frame.kind}, {c.note!r})")
             check(sorted(c.names.references) == sorted(refs_c) and list(e.selection.references) == list(c.names.references),
                   f"{label}: references {list(c.names.references)}")
-            check(len(c.names.nets) > 0 if kind == embed.FK_PCB else True,
-                  f"{label}: nets of the selection's pads/pins ({list(c.names.nets)[:6]})")
+            check(len(c.names.nets) > 0 and pin in c.names.pins,
+                  f"{label}: the selected pin {pin} and its net ({list(c.names.pins)}, {list(c.names.nets)[:6]})")
             union = [min(i.bbox.x_min for i in c.items), min(i.bbox.y_min for i in c.items),
                      max(i.bbox.x_max for i in c.items), max(i.bbox.y_max for i in c.items)]
             check(all(abs(a - b) < 1e-3 for a, b in zip(union, [c.bbox.x_min, c.bbox.y_min, c.bbox.x_max, c.bbox.y_max]))
@@ -266,7 +286,7 @@ def main():
                   f"{label}: CommentSelection pushes the same event (seq {reply.seq})")
 
             # Nothing selected: the area in view
-            api.request(editor.RunAction(action="common.InteractiveSelection.clear"), editor.RunActionResponse)
+            select(kind, [], zoom=False)   # SelectItems with nothing clears the selection
             time.sleep(0.5)
             reply = api.request(embed.CommentSelection(kind=kind, note="this area"), embed.CommentSelectionResponse)
             check(reply.comment.empty_selection and not reply.comment.items
