@@ -405,6 +405,7 @@ set( KICOMMON_SRCS
     singleton.cpp
     pgm_base.cpp
     backplane_embed.cpp
+    backplane_embed_comment.cpp
 
     io/kicad/kicad_io_utils.cpp    # needed by richio
     io/io_base.cpp
@@ -960,6 +961,7 @@ set( COMMON_SRCS
     gr_text.cpp
     eda_base_frame.cpp
     eda_draw_frame.cpp
+    backplane_comment.cpp
     eda_group.cpp
     backplane_document_metadata.cpp
     eda_item.cpp

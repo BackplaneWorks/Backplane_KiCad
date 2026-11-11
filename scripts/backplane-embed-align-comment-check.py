@@ -1,0 +1,288 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""bp.10 checks for `kicad --embedded`: Alt+V / Alt+H alignment and "Comment to Backplane..."
+in the PCB and schematic editors.
+
+- Alignment: the actions over IPC (RunAction) and the hotkeys themselves (xdotool Alt+V/Alt+H),
+  coordinates read back from the items' boxes; the anchor is the first item selected; the
+  schematic stays on its grid.
+- Comments: the context-menu item is there and opens a dialog transient for the host; OK pushes
+  ET_COMMENT with the references, nets, boxes and a non-blank PNG; CommentSelection does the
+  same without the dialog; an empty selection comments on the area in view.
+
+Runs on a private Xvfb + i3 with a python-xlib stand-in host; saves screenshots to --out.
+"""
+
+import argparse
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from backplane_embed_test_support import (FAILURES, IpcSession, Session, check,  # noqa: E402
+                                          viewable, wait_for)
+
+
+def png_stats(path):
+    """(width, height, standard deviation 0..1) of a PNG, or None."""
+    result = subprocess.run(["identify", "-format", "%w %h %[fx:standard_deviation]", str(path)],
+                            text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    try:
+        w, h, sd = result.stdout.split()
+        return int(w), int(h), float(sd)
+    except ValueError:
+        return None
+
+
+def centre(box):
+    return ((box.x_min + box.x_max) / 2, (box.y_min + box.y_max) / 2)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("kicad", type=Path)
+    parser.add_argument("kicad_cli", type=Path)
+    parser.add_argument("--out", type=Path, default=Path("embed-align-comment-out"))
+    args = parser.parse_args()
+    source = Path(__file__).resolve().parents[1] / "demos/pic_programmer"
+
+    with Session(args.kicad, args.out, source) as s, \
+            IpcSession(args.kicad_cli, api_socket=s.socket, timeout=120000) as api:
+        embed = api.module("backplane.embed")
+        editor = api.module("common.commands.editor_commands")
+        disp, host = s.host.display, s.host
+        top = host.top.id
+        api.request(embed.SetChrome(), embed.SetChromeResponse)
+        events_since = [0]
+
+        def events():
+            reply = api.request(embed.NextEvents(since=events_since[0]), embed.NextEventsResponse)
+            events_since[0] = reply.next
+            return list(reply.events)
+
+        def frames():
+            return {f.kind: f for f in api.request(embed.GetFrames(), embed.GetFramesResponse).frames}
+
+        def show(kind, wait=2.5):
+            for other in frames().values():
+                if other.shown and other.kind != kind:
+                    api.request(embed.HideFrame(window=other.window), embed.HideFrameResponse)
+            w, h = host.size
+            reply = api.request(embed.ShowFrame(kind=kind, x=0, y=0, width=w, height=h, focus=True),
+                                embed.ShowFrameResponse)
+            wait_for(lambda: viewable(disp, reply.frame.window), 30)
+            time.sleep(wait)
+            host.pump(0.1)
+            return reply.frame.window
+
+        def wait_event(kind, seconds=8):
+            found = []
+            wait_for(lambda: found.extend(e for e in events() if e.type == kind) or bool(found), seconds, 0.2)
+            return found
+
+        def select(kind, refs, zoom=True):
+            api.request(embed.SelectItems(kind=kind, references=refs, zoom=zoom), embed.SelectItemsResponse)
+            time.sleep(0.8)
+
+        def boxes(kind, refs):
+            """Each reference's box (mm), read back through CommentSelection."""
+            select(kind, refs, zoom=False)
+            reply = api.request(embed.CommentSelection(kind=kind, note="(probe)"),
+                                embed.CommentSelectionResponse)
+            return {i.reference: i.bbox for i in reply.comment.items
+                    if i.kind in ("FOOTPRINT", "SCH_SYMBOL")}
+
+        def run(action):
+            api.request(editor.RunAction(action=action), editor.RunActionResponse)
+            time.sleep(0.8)
+
+        w, h = host.size
+        refs = ["R2", "R1", "R3"]     # R2 first: the anchor
+
+        # ---------------- 1. Alignment ----------------
+        for kind, prefix, grid in ((embed.FK_PCB, "pcbnew.AlignAndDistribute", 0.0),
+                                   (embed.FK_SCH, "eeschema.Align", 1.27)):
+            label = "pcb" if kind == embed.FK_PCB else "sch"
+            show(kind)
+            # The pointer is kept off the items (on the host's top edge): no item under the cursor
+            s.xdotool("mousemove", str(w - 5), "3")
+            before = boxes(kind, refs)
+            check(set(before) == set(refs), f"{label}: the three resistors are found ({sorted(before)})")
+            if set(before) != set(refs):
+                continue
+            anchor_x, anchor_y = centre(before["R2"])
+            tolerance = grid / 2 + 0.01
+
+            select(kind, refs)
+            s.shot(f"{label}-01-before-align")
+            run(f"{prefix}.alignCenterX")
+            after = boxes(kind, refs)
+            s.shot(f"{label}-02-after-align-x")
+            xs = [centre(after[r])[0] for r in refs]
+            check(all(abs(x - anchor_x) <= tolerance for x in xs),
+                  f"{label}: align centre X puts every X centre on the first selected R2's "
+                  f"({anchor_x:.3f} mm: {[round(x, 3) for x in xs]})")
+            check(all(abs(centre(after[r])[1] - centre(before[r])[1]) < 0.01 for r in refs),
+                  f"{label}: align centre X leaves Y alone")
+            run("common.Interactive.undo")
+
+            select(kind, refs)
+            run(f"{prefix}.alignCenterY")
+            after = boxes(kind, refs)
+            ys = [centre(after[r])[1] for r in refs]
+            check(all(abs(y - anchor_y) <= tolerance for y in ys),
+                  f"{label}: align centre Y puts every Y centre on R2's ({anchor_y:.3f} mm: "
+                  f"{[round(y, 3) for y in ys]})")
+            run("common.Interactive.undo")
+
+            if kind == embed.FK_SCH:
+                # Pins stay on the connection grid: every symbol's anchor is a multiple of 1.27 mm
+                select(kind, refs)
+                run(f"{prefix}.alignCenterX")
+                reply = api.request(embed.CommentSelection(kind=kind, note="(grid)"),
+                                    embed.CommentSelectionResponse)
+                on_grid = [abs(i.x_mm / 1.27 - round(i.x_mm / 1.27)) < 1e-3
+                           for i in reply.comment.items if i.kind == "SCH_SYMBOL"]
+                check(bool(on_grid) and all(on_grid), "sch: aligned symbols stay on the 1.27 mm grid")
+                run("common.Interactive.undo")
+
+            # The hotkeys themselves (the pointer on the canvas; any anchor will do here)
+            select(kind, refs)
+            s.xdotool("mousemove", str(w // 2), str(h // 2))
+            time.sleep(0.3)
+            s.xdotool("key", "alt+v")
+            time.sleep(1.2)
+            s.shot(f"{label}-03-after-alt-v")
+            after = boxes(kind, refs)
+            spread = max(centre(after[r])[0] for r in refs) - min(centre(after[r])[0] for r in refs)
+            check(spread <= 2 * tolerance, f"{label}: Alt+V aligns the X centres (spread {spread:.3f} mm)")
+            run("common.Interactive.undo")
+            select(kind, refs)
+            s.xdotool("key", "alt+h")
+            time.sleep(1.2)
+            s.shot(f"{label}-04-after-alt-h")
+            after = boxes(kind, refs)
+            spread = max(centre(after[r])[1] for r in refs) - min(centre(after[r])[1] for r in refs)
+            check(spread <= 2 * tolerance, f"{label}: Alt+H aligns the Y centres (spread {spread:.3f} mm)")
+            run("common.Interactive.undo")
+
+            # Hotkeys and the context menu show the bindings
+            select(kind, refs)
+            s.xdotool("mousemove", str(w // 2), str(h // 2), "click", "3")
+            time.sleep(1.5)
+            s.shot(f"{label}-05-context-menu")
+            s.xdotool("key", "Escape")
+            time.sleep(0.5)
+
+        # ---------------- 2. Comment to Backplane ----------------
+        for kind, refs_c, label in ((embed.FK_PCB, ["U1", "C1"], "pcb"), (embed.FK_SCH, ["U2", "C1"], "sch")):
+            show(kind)
+            select(kind, refs_c)
+            events()
+            before_windows = set(s.watcher.current())
+            # Right-click on the canvas keeps the selection; Up from a fresh GTK menu is its last item
+            s.xdotool("mousemove", str(w // 2), str(h // 2), "click", "3")
+            time.sleep(1.5)
+            s.shot(f"{label}-10-comment-menu")
+            s.xdotool("key", "Up")
+            time.sleep(0.5)
+            s.shot(f"{label}-11-comment-menu-item")
+            s.xdotool("key", "Return")
+            appeared = wait_for(lambda: set(s.watcher.current()) - before_windows - {top}, 10)
+            time.sleep(1.0)
+            dialogs = set(s.watcher.current()) - before_windows - {top}
+            names = []
+            for d in dialogs:
+                try:
+                    names.append(disp.create_resource_object("window", d).get_wm_name() or "")
+                except Exception:
+                    names.append("")
+            transient_ok = bool(dialogs) and all(
+                (disp.create_resource_object("window", d).get_wm_transient_for() or type("n", (), {"id": 0})).id == top
+                for d in dialogs)
+            check(appeared and any("Comment to Backplane" in str(n) for n in names),
+                  f"{label}: the context menu's last item opens 'Comment to Backplane' ({names})")
+            check(transient_ok, f"{label}: the comment dialog is transient for the host")
+            check(any(e.type == embed.ET_DIALOG_OPENED for e in events()), f"{label}: ET_DIALOG_OPENED for it")
+            note = f"Check the {label} decoupling near {refs_c[0]}"
+            s.xdotool("type", "--delay", "20", note)
+            time.sleep(0.5)
+            s.shot(f"{label}-12-comment-dialog")
+            s.xdotool("key", "ctrl+Return")
+            got = wait_event(embed.ET_COMMENT, 10)
+            check(bool(got), f"{label}: OK pushes ET_COMMENT")
+            if not got:
+                continue
+            e = got[-1]
+            c = e.comment
+            check(e.frame.kind == kind and c.note == note and e.detail == note and not c.from_api,
+                  f"{label}: the event carries the frame and the note ({e.frame.kind}, {c.note!r})")
+            check(sorted(c.names.references) == sorted(refs_c) and list(e.selection.references) == list(c.names.references),
+                  f"{label}: references {list(c.names.references)}")
+            check(len(c.names.nets) > 0 if kind == embed.FK_PCB else True,
+                  f"{label}: nets of the selection's pads/pins ({list(c.names.nets)[:6]})")
+            union = [min(i.bbox.x_min for i in c.items), min(i.bbox.y_min for i in c.items),
+                     max(i.bbox.x_max for i in c.items), max(i.bbox.y_max for i in c.items)]
+            check(all(abs(a - b) < 1e-3 for a, b in zip(union, [c.bbox.x_min, c.bbox.y_min, c.bbox.x_max, c.bbox.y_max]))
+                  and c.bbox.x_max > c.bbox.x_min and c.bbox.y_max > c.bbox.y_min,
+                  f"{label}: the overall bbox is the union of the items' ({c.bbox.x_min:.2f},{c.bbox.y_min:.2f})-"
+                  f"({c.bbox.x_max:.2f},{c.bbox.y_max:.2f}) mm")
+            for item in c.items:
+                if item.reference == refs_c[0] and item.kind in ("FOOTPRINT", "SCH_SYMBOL"):
+                    check(item.bbox.x_min <= item.x_mm <= item.bbox.x_max or kind == embed.FK_SCH,
+                          f"{label}: {item.reference} has kind {item.kind}, position and bbox, "
+                          f"layer '{item.layer}' sheet '{item.sheet_path}'")
+            stats = png_stats(c.screenshot) if c.screenshot else None
+            check(bool(c.screenshot) and Path(c.screenshot).is_file()
+                  and Path(c.screenshot).parent.parent == s.socket.parent,
+                  f"{label}: the PNG is written under the API socket's directory ({c.screenshot})")
+            check(stats is not None and max(stats[0], stats[1]) <= 800 and stats[2] > 0.02
+                  and (stats[0], stats[1]) == (c.screenshot_width, c.screenshot_height),
+                  f"{label}: the PNG is at most 800 px and not blank ({stats})")
+            if c.screenshot:
+                subprocess.run(["cp", c.screenshot, str(args.out / f"{label}-13-comment-screenshot.png")])
+            check(c.screenshot_region.x_min <= c.bbox.x_min and c.screenshot_region.x_max >= c.bbox.x_max,
+                  f"{label}: the PNG's region contains the selection")
+
+            # Cancel: nothing is sent
+            before_windows = set(s.watcher.current())
+            s.xdotool("mousemove", str(w // 2), str(h // 2), "click", "3")
+            time.sleep(1.2)
+            s.xdotool("key", "Up")
+            s.xdotool("key", "Return")
+            wait_for(lambda: set(s.watcher.current()) - before_windows - {top}, 10)
+            time.sleep(0.8)
+            s.xdotool("key", "Escape")
+            time.sleep(1.0)
+            check(not any(e.type == embed.ET_COMMENT for e in events()), f"{label}: Cancel sends nothing")
+
+            # Over IPC
+            reply = api.request(embed.CommentSelection(kind=kind, note="from the API"),
+                                embed.CommentSelectionResponse)
+            got = wait_event(embed.ET_COMMENT, 5)
+            check(bool(got) and got[-1].seq == reply.seq and got[-1].comment.from_api
+                  and sorted(reply.comment.names.references) == sorted(refs_c),
+                  f"{label}: CommentSelection pushes the same event (seq {reply.seq})")
+
+            # Nothing selected: the area in view
+            api.request(editor.RunAction(action="common.InteractiveSelection.clear"), editor.RunActionResponse)
+            time.sleep(0.5)
+            reply = api.request(embed.CommentSelection(kind=kind, note="this area"), embed.CommentSelectionResponse)
+            check(reply.comment.empty_selection and not reply.comment.items
+                  and reply.comment.bbox.x_max > reply.comment.bbox.x_min and bool(reply.comment.screenshot),
+                  f"{label}: an empty selection comments on the area in view")
+            if reply.comment.screenshot:
+                subprocess.run(["cp", reply.comment.screenshot, str(args.out / f"{label}-14-area-screenshot.png")])
+
+        missing = api.request_raw(embed.CommentSelection(kind=embed.FK_FOOTPRINT_EDITOR, note="x"))
+        check(missing.status.status == api.envelope.AS_UNHANDLED, "CommentSelection for a kind without a handler is AS_UNHANDLED")
+        shots = sorted((s.socket.parent / "backplane-comments").glob("comment-*.png"))
+        check(0 < len(shots) <= 32, f"the screenshot folder is bounded ({len(shots)} files)")
+
+    print(f"\n{len(FAILURES)} failure(s)")
+    return 1 if FAILURES else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

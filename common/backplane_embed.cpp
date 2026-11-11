@@ -50,6 +50,7 @@
 
 #include <api/common/envelope.pb.h>
 #include <api/backplane/embed.pb.h>
+#include <backplane_embed_proto.h>
 
 
 namespace
@@ -1064,37 +1065,6 @@ void BACKPLANE_EMBED::WatchParentPid( long long aPid, std::function<void()> aOnG
 }
 
 
-static void FillItemNames( kiapi::backplane::embed::ItemNames* aOut, const EMBED_ITEM_NAMES& aIn )
-{
-    for( const std::string& name : aIn.references )
-        aOut->add_references( name );
-
-    for( const std::string& name : aIn.nets )
-        aOut->add_nets( name );
-
-    for( const std::string& name : aIn.pins )
-        aOut->add_pins( name );
-}
-
-
-namespace
-{
-void fillFrame( kiapi::backplane::embed::FrameInfo* aOut, const EMBED_FRAME_INFO& aIn )
-{
-    aOut->set_kind( static_cast<kiapi::backplane::embed::FrameKind>( aIn.kind ) );
-    aOut->set_document( aIn.document.ToStdString( wxConvUTF8 ) );
-    aOut->set_title( aIn.title.ToStdString( wxConvUTF8 ) );
-    aOut->set_modified( aIn.modified );
-    aOut->set_window( aIn.window );
-    aOut->set_min_width( aIn.minWidth );
-    aOut->set_min_height( aIn.minHeight );
-    aOut->set_shown( aIn.shown );
-    aOut->set_focused( aIn.focused );
-    aOut->set_frame_name( aIn.frameName.ToStdString( wxConvUTF8 ) );
-}
-} // namespace
-
-
 bool BACKPLANE_EMBED::StartEventServer( const std::string& aUrl, const std::string& aToken )
 {
     StopEventServer();
@@ -1191,12 +1161,7 @@ void BACKPLANE_EMBED::eventServerThread()
 
             for( const EMBED_EVENT& event : events )
             {
-                kiapi::backplane::embed::Event* out = reply.add_events();
-                out->set_seq( event.seq );
-                out->set_type( static_cast<kiapi::backplane::embed::EventType>( event.type ) );
-                fillFrame( out->mutable_frame(), event.frame );
-                out->set_detail( event.detail );
-                FillItemNames( out->mutable_selection(), event.selection );
+                FillEmbedEvent( reply.add_events(), event );
             }
 
             response.mutable_status()->set_status( ApiStatusCode::AS_OK );

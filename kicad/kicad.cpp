@@ -395,13 +395,18 @@ bool PGM_KICAD::OnPgmInit()
                 return false;
             }
 
-            if( embedded
-                && !BACKPLANE_EMBED::Get().StartEventServer( m_api_server->SocketPath() + ".events",
-                                                             m_api_server->Token() ) )
+            // A Backplane host is there: "Comment to Backplane..." is offered (bp.10), and its
+            // events are served without --embedded too (then a failure is not fatal).
+            BACKPLANE_EMBED::Get().SetApiSocket( m_api_server->SocketPath() );
+
+            if( !BACKPLANE_EMBED::Get().StartEventServer( m_api_server->SocketPath() + ".events",
+                                                          m_api_server->Token() ) )
             {
                 wxFprintf( stderr, wxT( "kicad: cannot serve embed events at %s.events\n" ),
                            apiSocket );
-                return false;
+
+                if( embedded )
+                    return false;
             }
         }
 

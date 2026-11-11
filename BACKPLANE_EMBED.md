@@ -240,6 +240,86 @@ opens, IPC and host-local switches and saves on a private Xvfb and summarises th
   on the UI thread.
 - Embedded canvases paint once for the exposes a show delivers together.
 
+## bp.10: alignment hotkeys, "Comment to Backplane..."
+
+### Alt+V / Alt+H (every process, not only `--embedded`)
+
+| Key | Action | Result |
+|---|---|---|
+| Alt+V | `pcbnew.AlignAndDistribute.alignCenterX`, `eeschema.Align.alignCenterX` | the selection on a common X centre (a vertical line) |
+| Alt+H | `pcbnew.AlignAndDistribute.alignCenterY`, `eeschema.Align.alignCenterY` | the selection on a common Y centre (a horizontal line) |
+
+These are KiCad's own align-centre actions, now with default hotkeys (`include/backplane_hotkeys.h`).
+They are listed in Preferences > Hotkeys, where they can be rebound, and in the selection's
+Align/Distribute (PCB) and Align (schematic) context submenus. Centres are bounding-box centres
+(a footprint's without its texts). The anchor is the first match in this order:
+
+1. a locked item in the selection (it cannot move);
+2. the selected item under the cursor (KiCad's own rule);
+3. the item the person selected first. KiCad records selection order; upstream used the
+   left-/top-most item here.
+
+In the schematic each moved item is snapped to the connection grid (KiCad's align tool already
+did this), so pins stay connectable. Centres then agree to within half a grid step.
+
+Upstream, Alt+V and Alt+H are the View and Help menu mnemonics. They have moved:
+
+- Help is "He&lp" (Alt+L) in every frame.
+- The schematic editor's View is "Vie&w" (Alt+W).
+- The PCB editor's View has no mnemonic. Alt+W there is the router's default Track Corner
+  Mode Arc 90 hotkey, and View's other letters belong to Inspect and Edit.
+
+Other frames that have a View menu keep "&View". Only the PCB and schematic editors handle
+Alt+V/Alt+H.
+
+### Comment to Backplane...
+
+The context menu of the PCB editor and the schematic editor ends with **Comment to Backplane...**
+when a Backplane host is present, that is, in `--embedded` processes or when `--api-socket` was
+given. It is on every right-click: footprints, symbols, pads, pins, tracks, wires, a box
+selection, or nothing (then the comment is about the area in view).
+
+It opens a small dialog (transient for the host's top-level like every dialog) that says what is
+selected and takes a note. Send (or Ctrl+Enter) pushes `ET_COMMENT = 19`. Cancel, or an empty
+note, sends nothing.
+
+`Event.comment` (`Comment`, see embed.proto for every field):
+
+- `note`.
+- `names`: references, nets and pins, as in `ET_SELECTION_CHANGED`; also copied to
+  `Event.selection`. `Event.detail` = the note.
+- `items`, in selection order (at most 500, then `truncated`). Each has `kind` (KiCad's class
+  name: FOOTPRINT, PAD, PCB_TRACK, PCB_VIA, ZONE, SCH_SYMBOL, SCH_PIN, SCH_LINE, SCH_LABEL, ...),
+  `id` (KIID), `reference` (the parent's for pads, pins and fields), `pin` ("U3.4"), `net`,
+  `layer` (PCB) or `sheet_path` (schematic), `x_mm`/`y_mm` and `bbox`, and `value`.
+- `bbox`, the union of the items' boxes. With nothing selected it is the area in view, and
+  `empty_selection` is set.
+- `sheet_path`: the schematic sheet shown.
+- `screenshot`: the canvas around `bbox`, padded by a tenth of its size and at least 2 mm, as a
+  PNG at most 800 px on its long side. It is written to
+  `<dir of the API socket>/backplane-comments/comment-<pid>-<ms>-<n>.png`. KiCad keeps the 32
+  newest there, so the host copies what it keeps. `screenshot_region` is the document area the
+  PNG shows; `screenshot_width` and `screenshot_height` are its size. If the selection is already
+  in view and at least 240 px on screen, the shot is cropped from the canvas as drawn. Otherwise
+  the view is zoomed onto it for one frame and put back. With the frame hidden there is no
+  screenshot (`screenshot` empty).
+- `from_api`.
+
+Coordinates are millimetres in the document's own frame, as in the file: origin at the
+sheet/board origin, X right, Y down.
+
+`CommentSelection {kind, note}` → `{seq, comment}` does the same without the dialog, on the
+current selection of `kind`'s frame (FK_PCB or FK_SCH). It is routed by kind like `SelectItems`
+(AS_UNHANDLED for any other kind) and answers AS_BUSY while a modal dialog is up.
+
+Without `--embedded`, `--api-socket` alone also starts the `<api-socket>.events` socket, so a
+host can long-poll `NextEvents` for ET_COMMENT there. Such frames are not registered with the
+embedder, so `frame` carries only kind, title and shown/focused. A bind failure of that socket
+is not fatal without `--embedded`.
+
+`scripts/backplane-embed-align-comment-check.py <kicad> <kicad-cli> --out <dir>` tests all of
+this in both editors.
+
 ## Known limitations (as of bp.9)
 
 - `ListActions` (the palette feed).

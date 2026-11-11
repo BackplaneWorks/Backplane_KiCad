@@ -1338,6 +1338,14 @@ TOOL_ACTION ACTIONS::showProperties( TOOL_ACTION_ARGS()
         .ToolbarState( TOOLBAR_STATE::TOGGLE )
         .Icon( BITMAPS::tools ) );
 
+// Backplane fork: shown only when a Backplane host is there (BACKPLANE_EMBED::CommentsAvailable)
+TOOL_ACTION ACTIONS::commentToBackplane( TOOL_ACTION_ARGS()
+        .Name( "common.Control.commentToBackplane" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Comment to Backplane..." ) )
+        .Tooltip( _( "Send a note about the selection, with a picture of it, to Backplane" ) )
+        .Icon( BITMAPS::text ) );
+
 TOOL_ACTION ACTIONS::showGitCommitPane( TOOL_ACTION_ARGS()
                                                 .Name( "common.Control.showGitCommitPane" )
                                                 .Scope( AS_GLOBAL )

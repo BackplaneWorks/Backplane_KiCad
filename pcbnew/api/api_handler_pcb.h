@@ -286,6 +286,9 @@ private:
     HANDLER_RESULT<kiapi::backplane::embed::SelectItemsResponse> handleSelectItems(
             const HANDLER_CONTEXT<kiapi::backplane::embed::SelectItems>& aCtx );
 
+    HANDLER_RESULT<kiapi::backplane::embed::CommentSelectionResponse> handleCommentSelection(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::CommentSelection>& aCtx );
+
     HANDLER_RESULT<commands::SyncSelectionResponse> handleSyncSelection(
             const HANDLER_CONTEXT<commands::SyncSelection>& aCtx );
 

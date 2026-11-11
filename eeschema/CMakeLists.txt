@@ -490,6 +490,7 @@ set( EESCHEMA_SRCS
     sch_connection.cpp
     sch_draw_panel.cpp
     sch_edit_frame.cpp
+    backplane_comment_sch.cpp
     sch_field.cpp
     sch_footprint_field_reconciler.cpp
     sch_group.cpp

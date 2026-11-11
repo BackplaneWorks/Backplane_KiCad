@@ -126,6 +126,9 @@ public:
     /// Equivalent to the above, but initiated by the user.
     int ExplicitCrossProbeToSch( const TOOL_EVENT& aEvent );
 
+    /// Backplane fork: "Comment to Backplane..." on the selection (bp.10).
+    int CommentToBackplane( const TOOL_EVENT& aEvent );
+
     /// Assign a netclass to a labelled net.
     int AssignNetclass( const TOOL_EVENT& aEvent );
 

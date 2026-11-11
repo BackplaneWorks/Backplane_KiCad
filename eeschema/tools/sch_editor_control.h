@@ -81,6 +81,9 @@ public:
     /// Equivalent to the above, but initiated by the user.
     int ExplicitCrossProbeToPcb( const TOOL_EVENT& aEvent );
 
+    /// Backplane fork: "Comment to Backplane..." on the selection (bp.10).
+    int CommentToBackplane( const TOOL_EVENT& aEvent );
+
     int ExportSymbolsToLibrary( const TOOL_EVENT& aEvent );
 
     int SimProbe( const TOOL_EVENT& aEvent );

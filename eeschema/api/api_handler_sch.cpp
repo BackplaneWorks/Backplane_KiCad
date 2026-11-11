@@ -19,6 +19,8 @@
  */
 
 #include <backplane_embed.h>
+#include <backplane_embed_proto.h>
+#include <backplane_comment_sch.h>
 #include <connection_graph.h>
 #include <sch_connection.h>
 #include <sch_pin.h>
@@ -271,6 +273,9 @@ API_HANDLER_SCH::API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext,
     registerHandler<HighlightNets, HighlightNetsResponse>( &API_HANDLER_SCH::handleHighlightNets );
     registerHandler<kiapi::backplane::embed::SelectItems, kiapi::backplane::embed::SelectItemsResponse>(
             &API_HANDLER_SCH::handleSelectItems );
+    registerHandler<kiapi::backplane::embed::CommentSelection,
+                    kiapi::backplane::embed::CommentSelectionResponse>(
+            &API_HANDLER_SCH::handleCommentSelection );
     registerHandler<GetVariants, VariantsResponse>( &API_HANDLER_SCH::handleGetVariants );
     registerHandler<AddVariant, Empty>( &API_HANDLER_SCH::handleAddVariant );
     registerHandler<DeleteVariant, Empty>( &API_HANDLER_SCH::handleDeleteVariant );
@@ -2824,6 +2829,35 @@ HANDLER_RESULT<SyncSelectionResponse> API_HANDLER_SCH::handleSyncSelection(
     }
 
     response.set_status( CPS_OK );
+    return response;
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::CommentSelectionResponse>
+API_HANDLER_SCH::handleCommentSelection(
+        const HANDLER_CONTEXT<kiapi::backplane::embed::CommentSelection>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    // Routed by frame kind: the board editor's handler serves FK_PCB.
+    if( aCtx.Request.kind() != embed::FK_SCH )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "CommentSelection" ) )
+        return tl::unexpected( *headless );
+
+    BOX2I         box;
+    EMBED_COMMENT comment = BackplaneBuildSchComment( frame(), box );
+    comment.note = aCtx.Request.note();
+    comment.fromApi = true;
+
+    embed::CommentSelectionResponse response;
+    response.set_seq( BackplaneSendSchComment( frame(), comment, box ) );
+    FillEmbedComment( response.mutable_comment(), comment );
     return response;
 }
 

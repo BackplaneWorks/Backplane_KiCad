@@ -260,6 +260,7 @@ public:
     static TOOL_ACTION updatePcbFromSchematic;
     static TOOL_ACTION updateSchematicFromPcb;
     static TOOL_ACTION showProperties;
+    static TOOL_ACTION commentToBackplane;   ///< Backplane fork: note on the selection
     static TOOL_ACTION showGitCommitPane;
     static TOOL_ACTION showDatasheet;
 

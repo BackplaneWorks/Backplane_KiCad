@@ -19,6 +19,8 @@
  */
 
 #include <backplane_embed.h>
+#include <backplane_embed_proto.h>
+#include <backplane_comment_pcb.h>
 #include <magic_enum.hpp>
 #include <memory>
 #include <pgm_base.h>
@@ -272,6 +274,9 @@ API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDI
     registerHandler<SyncSelection, SyncSelectionResponse>( &API_HANDLER_PCB::handleSyncSelection );
     registerHandler<kiapi::backplane::embed::SelectItems, kiapi::backplane::embed::SelectItemsResponse>(
             &API_HANDLER_PCB::handleSelectItems );
+    registerHandler<kiapi::backplane::embed::CommentSelection,
+                    kiapi::backplane::embed::CommentSelectionResponse>(
+            &API_HANDLER_PCB::handleCommentSelection );
     registerHandler<HighlightNets, HighlightNetsResponse>( &API_HANDLER_PCB::handleHighlightNets );
 
     registerHandler<PlaceFootprintFromLibrary, PlaceFromLibraryResponse>(
@@ -3197,6 +3202,35 @@ API_HANDLER_PCB::handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embe
     }
 
     frame()->GetCanvas()->Refresh();
+    return response;
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::CommentSelectionResponse>
+API_HANDLER_PCB::handleCommentSelection(
+        const HANDLER_CONTEXT<kiapi::backplane::embed::CommentSelection>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    // Routed by frame kind: the schematic editor's handler serves FK_SCH.
+    if( aCtx.Request.kind() != embed::FK_PCB )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "CommentSelection" ) )
+        return tl::unexpected( *headless );
+
+    BOX2I         box;
+    EMBED_COMMENT comment = BackplaneBuildPcbComment( frame(), box );
+    comment.note = aCtx.Request.note();
+    comment.fromApi = true;
+
+    embed::CommentSelectionResponse response;
+    response.set_seq( BackplaneSendPcbComment( frame(), comment, box ) );
+    FillEmbedComment( response.mutable_comment(), comment );
     return response;
 }
 

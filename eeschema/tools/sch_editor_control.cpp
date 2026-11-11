@@ -19,6 +19,8 @@
  */
 
 #include <backplane_embed.h>
+#include <backplane_comment.h>
+#include <backplane_comment_sch.h>
 #include <sch_connection.h>
 #include <sch_pin.h>
 #include <sch_symbol.h>
@@ -574,6 +576,24 @@ int SCH_EDITOR_CONTROL::CrossProbeToPcb( const TOOL_EVENT& aEvent )
 {
     m_frame->Schematic().OnSchSelectionChanged();
     doCrossProbeSchToPcb( aEvent, false );
+    return 0;
+}
+
+
+int SCH_EDITOR_CONTROL::CommentToBackplane( const TOOL_EVENT& aEvent )
+{
+    if( !BACKPLANE_EMBED::Get().CommentsAvailable() )
+        return 0;
+
+    BOX2I         box;
+    EMBED_COMMENT comment = BackplaneBuildSchComment( m_frame, box );
+    wxString      note;
+
+    if( !BackplaneCommentDialog( m_frame, BackplaneCommentSummary( comment ), note ) )
+        return 0;
+
+    comment.note = note.ToStdString( wxConvUTF8 );
+    BackplaneSendSchComment( m_frame, comment, box );
     return 0;
 }
 
@@ -3858,6 +3878,7 @@ int SCH_EDITOR_CONTROL::CopyVariant( const TOOL_EVENT& aEvent )
 
 void SCH_EDITOR_CONTROL::setTransitions()
 {
+    Go( &SCH_EDITOR_CONTROL::CommentToBackplane,      ACTIONS::commentToBackplane.MakeEvent() );
     Go( &SCH_EDITOR_CONTROL::New,                     ACTIONS::doNew.MakeEvent() );
     Go( &SCH_EDITOR_CONTROL::Open,                    ACTIONS::open.MakeEvent() );
     Go( &SCH_EDITOR_CONTROL::Save,                    ACTIONS::save.MakeEvent() );

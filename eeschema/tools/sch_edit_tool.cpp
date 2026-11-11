@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <symbol_edit_frame.h>
 #include <tool/tool_manager.h>
 #include <tools/sch_selection_tool.h>
@@ -968,6 +969,16 @@ bool SCH_EDIT_TOOL::Init()
 
     selToolMenu.AddItem( SCH_ACTIONS::cleanupSheetPins, sheetHasUndefinedPins, 250 );
     selToolMenu.AddMenu( makeLockMenu( m_selectionTool ), S_C::NotEmpty, 250 );
+
+    // Backplane fork: only when a Backplane host is there
+    auto backplaneCondition =
+            []( const SELECTION& )
+            {
+                return BACKPLANE_EMBED::Get().CommentsAvailable();
+            };
+
+    selToolMenu.AddSeparator( backplaneCondition, 1000 );
+    selToolMenu.AddItem( ACTIONS::commentToBackplane, backplaneCondition, 1000 );
 
     selToolMenu.AddSeparator( 300 );
     selToolMenu.AddItem( ACTIONS::cut,                 S_C::IdleSelection, 300 );

@@ -20,6 +20,8 @@
  */
 
 #include <backplane_embed.h>
+#include <backplane_comment.h>
+#include <backplane_comment_pcb.h>
 #include <footprint.h>
 #include <pad.h>
 #include "board_editor_control.h"
@@ -443,6 +445,16 @@ bool BOARD_EDITOR_CONTROL::Init()
         menu.AddMenu( lockMenu.get(), SELECTION_CONDITIONS::NotEmpty, 100 );
 
         menu.AddMenu( zoneMenu.get(), SELECTION_CONDITIONS::OnlyTypes( { PCB_ZONE_T } ), 100 );
+
+        // Backplane fork: only when a Backplane host is there
+        auto backplaneCondition =
+                []( const SELECTION& )
+                {
+                    return BACKPLANE_EMBED::Get().CommentsAvailable();
+                };
+
+        menu.AddSeparator( backplaneCondition, 1000 );
+        menu.AddItem( ACTIONS::commentToBackplane, backplaneCondition, 1000 );
     }
 
     DRAWING_TOOL* drawingTool = m_toolMgr->GetTool<DRAWING_TOOL>();
@@ -2231,6 +2243,24 @@ void BOARD_EDITOR_CONTROL::doCrossProbePcbToSch( const TOOL_EVENT& aEvent, bool 
 }
 
 
+int BOARD_EDITOR_CONTROL::CommentToBackplane( const TOOL_EVENT& aEvent )
+{
+    if( !BACKPLANE_EMBED::Get().CommentsAvailable() )
+        return 0;
+
+    BOX2I         box;
+    EMBED_COMMENT comment = BackplaneBuildPcbComment( m_frame, box );
+    wxString      note;
+
+    if( !BackplaneCommentDialog( m_frame, BackplaneCommentSummary( comment ), note ) )
+        return 0;
+
+    comment.note = note.ToStdString( wxConvUTF8 );
+    BackplaneSendPcbComment( m_frame, comment, box );
+    return 0;
+}
+
+
 int BOARD_EDITOR_CONTROL::AssignNetclass( const TOOL_EVENT& aEvent )
 {
     PCB_SELECTION_TOOL*  selectionTool = m_toolMgr->GetTool<PCB_SELECTION_TOOL>();
@@ -2400,6 +2430,7 @@ int BOARD_EDITOR_CONTROL::DrillOrigin( const TOOL_EVENT& aEvent )
 
 void BOARD_EDITOR_CONTROL::setTransitions()
 {
+    Go( &BOARD_EDITOR_CONTROL::CommentToBackplane, ACTIONS::commentToBackplane.MakeEvent() );
     Go( &BOARD_EDITOR_CONTROL::New,                    ACTIONS::doNew.MakeEvent() );
     Go( &BOARD_EDITOR_CONTROL::Open,                   ACTIONS::open.MakeEvent() );
     Go( &BOARD_EDITOR_CONTROL::Save,                   ACTIONS::save.MakeEvent() );

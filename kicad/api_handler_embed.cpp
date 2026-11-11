@@ -22,6 +22,7 @@
 #include <wx/frame.h>
 
 #include <backplane_embed.h>
+#include <backplane_embed_proto.h>
 #include <kiplatform/embed.h>
 #include <kiway.h>
 #include <mail_type.h>
@@ -380,20 +381,7 @@ HANDLER_RESULT<NextEventsResponse> API_HANDLER_EMBED::handleNextEvents(
 
     for( const EMBED_EVENT& event : events )
     {
-        Event* out = response.add_events();
-        out->set_seq( event.seq );
-        out->set_type( static_cast<EventType>( event.type ) );
-        fillFrame( out->mutable_frame(), event.frame );
-        out->set_detail( event.detail );
-
-        for( const std::string& name : event.selection.references )
-            out->mutable_selection()->add_references( name );
-
-        for( const std::string& name : event.selection.nets )
-            out->mutable_selection()->add_nets( name );
-
-        for( const std::string& name : event.selection.pins )
-            out->mutable_selection()->add_pins( name );
+        FillEmbedEvent( response.add_events(), event );
     }
 
     return response;

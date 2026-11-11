@@ -67,7 +67,8 @@ static bool isReadOnlyRequest( const std::string& aType )
     {
         // Window placement and the event feed must keep working; ShowFrame checks itself
         // whether it would have to open a frame.
-        for( const char* changing : { "Close", "SelectItems", "ReloadDocument", "ResolveConflict" } )
+        for( const char* changing : { "Close", "SelectItems", "ReloadDocument", "ResolveConflict",
+                                       "CommentSelection" } )
         {
             if( aType == embedPackage + changing )
                 return false;

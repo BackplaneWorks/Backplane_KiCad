@@ -485,6 +485,7 @@ set( PCBNEW_CLASS_SRCS
     pcb_design_block_utils.cpp
     pcb_layer_box_selector.cpp
     pcb_edit_frame.cpp
+    backplane_comment_pcb.cpp
     pcb_plotter.cpp
     pcbnew_config.cpp
     pcbnew_jobs_handler.cpp

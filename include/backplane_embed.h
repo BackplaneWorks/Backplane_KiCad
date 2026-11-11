@@ -77,7 +77,8 @@ enum class EMBED_EVENT_TYPE : int
     DOCUMENT_RELOADED = 15,
     RELOAD_CONFLICT = 16,
     THEME_CHANGED = 17,
-    ATTACHED = 18
+    ATTACHED = 18,
+    COMMENT = 19
 };
 
 /// Values match kiapi.backplane.embed.ThemeMode.
@@ -146,6 +147,46 @@ struct EMBED_FRAME_INFO
     int              minHeight = 0;
 };
 
+/// A box in millimetres, the document's own frame (Y down), kiapi.backplane.embed.BoxMm.
+struct EMBED_BOX_MM
+{
+    double xMin = 0, yMin = 0, xMax = 0, yMax = 0;
+};
+
+/// One selected item of a comment (kiapi.backplane.embed.CommentItem).
+struct EMBED_COMMENT_ITEM
+{
+    std::string  kind;        ///< KiCad class name (FOOTPRINT, PAD, SCH_SYMBOL, ...)
+    std::string  id;          ///< KIID
+    std::string  reference;
+    std::string  pin;         ///< "U3.4"
+    std::string  net;
+    std::string  layer;       ///< PCB only
+    std::string  sheetPath;   ///< schematic only
+    std::string  value;
+    double       x = 0, y = 0;
+    EMBED_BOX_MM bbox;
+};
+
+/// "Comment to Backplane..." (kiapi.backplane.embed.Comment).
+struct EMBED_COMMENT
+{
+    static constexpr size_t MAX_ITEMS = 500;
+
+    std::string                     note;
+    EMBED_ITEM_NAMES                names;
+    std::vector<EMBED_COMMENT_ITEM> items;
+    bool                            truncated = false;
+    EMBED_BOX_MM                    bbox;
+    bool                            emptySelection = false;
+    std::string                     sheetPath;
+    std::string                     screenshot;   ///< absolute PNG path, or empty
+    EMBED_BOX_MM                    screenshotRegion;
+    int                             screenshotWidth = 0;
+    int                             screenshotHeight = 0;
+    bool                            fromApi = false;
+};
+
 struct EMBED_EVENT
 {
     uint64_t         seq = 0;
@@ -153,6 +194,7 @@ struct EMBED_EVENT
     EMBED_FRAME_INFO frame;
     std::string      detail;
     EMBED_ITEM_NAMES selection;
+    std::shared_ptr<const EMBED_COMMENT> comment;   ///< COMMENT only
 };
 
 
@@ -305,6 +347,27 @@ public:
         ~SELECTION_SCOPE() { --BACKPLANE_EMBED::Get().m_hostSelecting; }
     };
 
+    // ---- Comments (bp.10) ----
+
+    /// The API socket given with --api-socket (a Backplane host is there even if not embedded).
+    void SetApiSocket( const std::string& aPath ) { m_apiSocket = aPath; }
+    const std::string& ApiSocket() const { return m_apiSocket; }
+
+    /// "Comment to Backplane..." is offered: embedded, or a Backplane API socket is configured.
+    bool CommentsAvailable() const { return m_enabled || !m_apiSocket.empty(); }
+
+    /**
+     * A new PNG path for a comment's screenshot, in <dir of the API socket>/backplane-comments/
+     * (created), keeping the newest MAX_SCREENSHOTS - 1 there.  Empty if there is no socket or
+     * the folder cannot be made.
+     */
+    wxString NewCommentScreenshotPath();
+    static constexpr int MAX_SCREENSHOTS = 32;
+
+    /// Push ET_COMMENT for aFrame (its kind aKind if it is not an embedded frame).  Returns its
+    /// seq.  detail = the note, selection = the comment's names.
+    uint64_t PushComment( wxFrame* aFrame, EMBED_FRAME_KIND aKind, const EMBED_COMMENT& aComment );
+
     // ---- Reload on disk change (bp.9) ----
 
     /// KiCad is about to write / has written aPath itself: not an external change.
@@ -402,6 +465,9 @@ private:
     bool isUnmanaged( uint64_t aWindow ) const;
     void sendFocusMessage( wxFrame* aFrame );
     void eventServerThread();
+
+    std::string m_apiSocket;
+    int         m_commentCounter = 0;
 
     bool     m_enabled = false;
     uint64_t m_parent = 0;
