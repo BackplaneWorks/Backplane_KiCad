@@ -209,6 +209,99 @@ def embedded_broken_prewarm(kicad, kicad_cli, out, source):
         check(reply.frame.shown, "pre-warm: the schematic then shows")
 
 
+def embedded_undo(kicad, kicad_cli, out, source):
+    """The schematic twin of the board's undo check: a schematic edit through the API is undoable.
+    Backplane's own client (a BOM panel edit, "backplane-<pid>") is the person's: their undo takes it
+    back.  An agent's ("agent:<thread>") is its own: the person's undo leaves it, the agent's takes it."""
+    staged = Path(tempfile.mkdtemp(prefix="bp-sch-undo-")) / "complex_hierarchy"
+    make_project(source, staged)
+    with Session(kicad, out / "undo", staged) as s, \
+            IpcSession(kicad_cli, api_socket=s.socket, timeout=120000, client_name="host") as api:
+        embed = api.module("backplane.embed")
+        editor = api.module("common.commands.editor_commands")
+        base = api.module("common.types.base_types")
+        enums = api.module("common.types.enums")
+        sch = api.module("schematic.schematic_types")
+        w, h = s.host.size
+        api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        wait_for(lambda: bool(api.request(editor.GetOpenDocuments(type=base.DOCTYPE_SCHEMATIC),
+                                          editor.GetOpenDocumentsResponse).documents), 60)
+        time.sleep(3)
+        doc = api.request(editor.GetOpenDocuments(type=base.DOCTYPE_SCHEMATIC),
+                          editor.GetOpenDocumentsResponse).documents[0]
+        person = IpcSession(kicad_cli, api_socket=s.socket, timeout=120000, client_name="backplane-4242")
+        person.__enter__()
+        agent = IpcSession(kicad_cli, api_socket=s.socket, timeout=120000, client_name="agent:tundo")
+        agent.__enter__()
+
+        def symbols(client):
+            r = client.request(editor.GetItems(header=base.ItemHeader(document=doc), types=[enums.KOT_SCH_SYMBOL]),
+                               editor.GetItemsResponse)
+            out_ = []
+            for packed in r.items:
+                sym = sch.SchematicSymbolInstance()
+                packed.Unpack(sym)
+                out_.append(sym)
+            return out_
+
+        target = next(sym for sym in symbols(api) if sym.reference_field.text.text.startswith(("R", "C")))
+        kiid = target.id.value
+
+        def value():
+            return next(sym for sym in symbols(api) if sym.id.value == kiid).value_field.text.text
+
+        original = value()
+
+        def edit(client, text, message):
+            sym = next(x for x in symbols(client) if x.id.value == kiid)
+            sym.value_field.text.text = text
+            begin = client.request(editor.BeginCommit(header=base.ItemHeader(document=doc)), editor.BeginCommitResponse)
+            up = editor.UpdateItems()
+            up.header.document.CopyFrom(doc)
+            up.items.add().Pack(sym)
+            client.request(up, editor.UpdateItemsResponse)
+            client.request(editor.EndCommit(header=base.ItemHeader(document=doc), id=begin.id,
+                                            action=editor.CMA_COMMIT, message=message), editor.EndCommitResponse)
+            time.sleep(0.5)
+
+        coedit = api.module("backplane.coedit")
+
+        def person_undo():
+            # RunAction is served by the board editor only: the person's Ctrl+Z on the schematic
+            # canvas (low on its left, off the items).
+            s.host.pump(0.05)
+            cw, ch = s.host.size
+            s.xdotool("mousemove", str(int(cw * 0.26)), str(int(ch * 0.86)))
+            time.sleep(0.3)
+            s.xdotool("click", "1")
+            time.sleep(0.3)
+            s.xdotool("key", "ctrl+z")
+            time.sleep(1.0)
+
+        def agent_undo(actor):
+            changes = api.request(coedit.GetChanges(since=0, doc="sch"), coedit.GetChangesResponse).changes
+            mine = [c for c in changes if c.actor == actor and not c.undo]
+            if not mine:
+                return False
+            r = agent.request(coedit.UndoAgentChange(document=doc, seq=mine[-1].seq),
+                              coedit.UndoAgentChangeResponse)
+            time.sleep(0.8)
+            return r.undone
+
+        edit(person, "BP-PERSON", "BOM: value")
+        check(value() == "BP-PERSON", f"undo: Backplane's own edit applies live ({value()!r})")
+        person_undo()
+        check(value() == original, f"undo: the person's Ctrl+Z takes Backplane's (their) edit back ({value()!r})")
+        edit(agent, "BP-AGENT", "agent: value")
+        check(value() == "BP-AGENT", "undo: the agent's edit applies live")
+        person_undo()
+        check(value() == "BP-AGENT", f"undo: the person's Ctrl+Z leaves the agent's edit ({value()!r})")
+        undone = agent_undo("agent:tundo")
+        check(undone and value() == original, f"undo: UndoAgentChange takes the agent's edit back ({value()!r})")
+        for client in (person, agent):
+            client.__exit__(None, None, None)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("kicad", type=Path)
@@ -220,6 +313,7 @@ def main():
     headless(a.kicad_cli, a.out, source)
     embedded(a.kicad, a.kicad_cli, a.out, source)
     embedded_broken_prewarm(a.kicad, a.kicad_cli, a.out, source)
+    embedded_undo(a.kicad, a.kicad_cli, a.out, source)
     print(f"{len(FAILURES)} failure(s)")
     return 1 if FAILURES else 0
 

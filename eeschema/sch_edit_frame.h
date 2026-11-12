@@ -771,6 +771,10 @@ public:
      */
     bool UndoRedoForActor( bool aUndo );
 
+    /// Undo the change with this change-log number (an agent's, from the Agents panel or
+    /// UndoAgentChange), with every newer change that touches the same items.
+    bool UndoChangeBySeq( uint64_t aSeq, std::string& aError );
+
     /// After a change is pushed: per-actor redo clearing and the change log.
     void coeditPushed( PICKED_ITEMS_LIST& aList );
 
@@ -1221,6 +1225,8 @@ private:
     std::unique_ptr<API_HANDLER_LIBRARIES> m_apiLibrariesHandler;
 
     bool                        m_embedRepairNoticeShown = false;   ///< said once per session
+
+    void takeBack( bool aUndo, int aIndex );
 };
 
 

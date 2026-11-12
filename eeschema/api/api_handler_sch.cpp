@@ -292,6 +292,16 @@ API_HANDLER_SCH::API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext,
 }
 
 
+bool API_HANDLER_SCH::undoChangeBySeq( uint64_t aSeq, std::string& aError )
+{
+    if( m_frame )
+        return static_cast<SCH_EDIT_FRAME*>( m_frame )->UndoChangeBySeq( aSeq, aError );
+
+    aError = "the headless server keeps no undo history";
+    return false;
+}
+
+
 std::unique_ptr<COMMIT> API_HANDLER_SCH::createCommit()
 {
     if( m_frame )

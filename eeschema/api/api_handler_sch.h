@@ -58,6 +58,7 @@ protected:
     std::unique_ptr<COMMIT> createCommit() override;
 
     COEDIT::HOLDS currentHolds() override;
+    bool undoChangeBySeq( uint64_t aSeq, std::string& aError ) override;
 
     EDA_ITEM* resolveLiveItem( const KIID& aId ) override;
 

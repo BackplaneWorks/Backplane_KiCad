@@ -267,14 +267,51 @@ void SCH_EDIT_FRAME::coeditPushed( PICKED_ITEMS_LIST& aList )
 
 bool SCH_EDIT_FRAME::UndoRedoForActor( bool aUndo )
 {
-    // The actor's newest change, plus every newer change of another actor that touches the same
-    // items (taken back first, newest first), so the rest of the stack stays valid.
     UNDO_REDO_CONTAINER& stack = aUndo ? m_undoList : m_redoList;
-    const std::string&   actor = COEDIT::CurrentActor();
-    int                  idx = stack.FindNewest( actor );
+    int                  idx = stack.FindNewest( COEDIT::CurrentActor() );
 
     if( idx < 0 )
         return false;
+
+    takeBack( aUndo, idx );
+    return true;
+}
+
+
+bool SCH_EDIT_FRAME::UndoChangeBySeq( uint64_t aSeq, std::string& aError )
+{
+    int idx = -1;
+
+    for( int i = 0; i < (int) m_undoList.m_CommandsList.size(); ++i )
+    {
+        if( m_undoList.m_CommandsList[i]->GetSeq() == aSeq )
+            idx = i;
+    }
+
+    if( idx < 0 )
+    {
+        aError = "no change with that number can be undone (already undone, or not in the undo list)";
+        return false;
+    }
+
+    m_toolManager->ProcessEvent( { TC_MESSAGE, TA_UNDO_REDO_PRE, AS_GLOBAL } );
+    takeBack( true, idx );
+
+    if( SCH_SELECTION_TOOL* selTool = m_toolManager->GetTool<SCH_SELECTION_TOOL>() )
+        selTool->RebuildSelection();
+
+    GetCanvas()->Refresh();
+    OnModify();
+    return true;
+}
+
+
+void SCH_EDIT_FRAME::takeBack( bool aUndo, int idx )
+{
+    // The change at idx, plus every newer change of another actor that touches the same items
+    // (taken back first, newest first), so the rest of the stack stays valid.
+    UNDO_REDO_CONTAINER& stack = aUndo ? m_undoList : m_redoList;
+    const std::string&   actor = COEDIT::CurrentActor();
 
     std::vector<PICKED_ITEMS_LIST*> lists;
     std::vector<int>                deps = stack.DependentsAfter( idx );
@@ -314,8 +351,6 @@ bool SCH_EDIT_FRAME::UndoRedoForActor( bool aUndo )
         else
             PushCommandToUndoList( list );
     }
-
-    return true;
 }
 
 
