@@ -2494,8 +2494,11 @@ void DRC_ENGINE::ReportViolation( const std::shared_ptr<DRC_ITEM>& aItem, const 
 
     if( aPathGenerator )
     {
-        // Path generators capture the provider's locals by reference, so run them now.
-        pending.path = std::make_shared<PATH_CAPTURE_MARKER>( aItem, aPos, aMarkerLayer );
+        // Path generators capture the provider's locals by reference, so run them now.  The
+        // capture marker holds no item: a marker sets itself as its item's parent and clears it
+        // when destroyed, which would orphan the item from the real marker made at flush.
+        pending.path = std::make_shared<PATH_CAPTURE_MARKER>( std::shared_ptr<DRC_ITEM>(), aPos,
+                                                              aMarkerLayer );
         aPathGenerator( pending.path.get() );
     }
 
