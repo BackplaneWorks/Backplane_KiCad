@@ -377,8 +377,11 @@ bool PGM_BASE::InitPgm( bool aHeadless, bool aIsUnitTest )
 
     APP_MONITOR::SENTRY::Instance()->Init();
 
-    // Initialize the singleton instance
-    m_singleton.Init();
+    // Initialize the singleton instance.  A headless program (kicad-cli, the API server) gets at
+    // most 8 pool threads by default: DRC, zone filling and exports gain little past 8 and every
+    // thread costs memory, which matters when the caller runs it in a memory-capped scope.  The
+    // MaximumThreads advanced setting still overrides this.
+    m_singleton.Init( aHeadless && !aIsUnitTest ? 8 : 0 );
 
     wxString pgm_name;
 
