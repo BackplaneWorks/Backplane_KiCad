@@ -161,6 +161,54 @@ def embedded(kicad, kicad_cli, out, source):
         check(s.kicad_process.poll() is None, "embedded: KiCad is still running")
 
 
+def embedded_broken_prewarm(kicad, kicad_cli, out, source):
+    """A project whose files another writer already broke, pre-warmed hidden (the host's first step):
+    no modal (a dialog on a frame nobody sees blocks KiCad), and not marked modified."""
+    staged = Path(tempfile.mkdtemp(prefix="bp-sch-toplevel-broken-")) / "complex_hierarchy"
+    file_uuid = make_project(source, staged)
+    for sch in staged.glob("*.kicad_sch"):
+        sch.write_text(sch.read_text().replace(f'(path "/{PROJECT_ROOT}', f'(path "/{file_uuid}'))
+    with Session(kicad, out / "prewarm", staged) as s, \
+            IpcSession(kicad_cli, api_socket=s.socket, timeout=120000, client_name="host") as api:
+        embed = api.module("backplane.embed")
+        editor = api.module("common.commands.editor_commands")
+        base = api.module("common.types.base_types")
+        w, h = s.host.size
+        api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=w, height=h, prewarm=True),
+                    embed.ShowFrameResponse)
+
+        def open_docs():
+            r = api.request_raw(editor.GetOpenDocuments(type=base.DOCTYPE_SCHEMATIC))
+            if r.status.status != api.envelope.AS_OK:
+                return []
+            docs = editor.GetOpenDocumentsResponse()
+            r.message.Unpack(docs)
+            return list(docs.documents)
+
+        wait_for(lambda: bool(open_docs()), 60)
+        time.sleep(3)
+        doc = open_docs()
+        check(bool(doc), "pre-warm: the broken schematic loaded hidden")
+        if not doc:
+            return
+        r = api.request_raw(editor.BeginCommit(header=base.ItemHeader(document=doc[0])))
+        modal = r.status.status != api.envelope.AS_OK
+        if not modal:
+            begin = editor.BeginCommitResponse()
+            r.message.Unpack(begin)
+            api.request(editor.EndCommit(header=base.ItemHeader(document=doc[0]), id=begin.id,
+                                         action=editor.CMA_DROP), editor.EndCommitResponse)
+        check(not modal, f"pre-warm: no modal repair dialog on the hidden frame ({r.status})")
+        state = api.request(editor.GetDocumentModifiedState(document=doc[0]),
+                            editor.GetDocumentModifiedStateResponse).state
+        check(state != editor.DMS_MODIFIED, "pre-warm: a load-time repair does not mark the schematic modified")
+        reply = api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=w, height=h),
+                            embed.ShowFrameResponse)
+        time.sleep(2)
+        s.shot("prewarm-then-shown")
+        check(reply.frame.shown, "pre-warm: the schematic then shows")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("kicad", type=Path)
@@ -171,6 +219,7 @@ def main():
     source = Path(__file__).resolve().parents[1] / "demos/complex_hierarchy"
     headless(a.kicad_cli, a.out, source)
     embedded(a.kicad, a.kicad_cli, a.out, source)
+    embedded_broken_prewarm(a.kicad, a.kicad_cli, a.out, source)
     print(f"{len(FAILURES)} failure(s)")
     return 1 if FAILURES else 0
 

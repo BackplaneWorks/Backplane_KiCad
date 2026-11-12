@@ -229,6 +229,10 @@ bool SCH_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
     // implement the pseudo code from KIWAY_PLAYER.h:
     wxString msg;
 
+    // Embedded: a load-time repair is told in the infobar, never a modal (a pre-warm loads hidden), and
+    // is not the person's edit.
+    bool embedLoadRepaired = false;
+
     EESCHEMA_SETTINGS* cfg = dynamic_cast<EESCHEMA_SETTINGS*>( Kiface().KifaceSettings() );
 
     // This is for python:
@@ -597,18 +601,20 @@ bool SCH_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
         {
             BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
 
-            if( embed.Enabled() && embed.Reloading() )
+            if( embed.Enabled() )
             {
-                // A reload after another writer (an agent, a script) saved the files: said once, never
-                // per sheet or reload (EmbedReload does not count the repair as the person's edit).
+                // Embedded (a first load, a hidden pre-warm, a reload after another writer saved the
+                // files): never a modal, which would block a frame nobody sees; said once in the infobar,
+                // which shows with the frame.  Not the person's edit either (cleared at the end).
+                embedLoadRepaired = true;
+
                 if( !m_embedRepairNoticeShown )
                 {
                     m_embedRepairNoticeShown = true;
                     m_infoBar->RemoveAllButtons();
                     m_infoBar->AddCloseButton();
-                    m_infoBar->ShowMessage( _( "Another program wrote this schematic with errors that "
-                                               "KiCad fixed on loading.  Save the schematic to keep the "
-                                               "fixes in its files." ),
+                    m_infoBar->ShowMessage( _( "This schematic had errors that KiCad fixed on loading.  "
+                                               "Save the schematic to keep the fixes in its files." ),
                                             wxICON_INFORMATION, WX_INFOBAR::MESSAGE_TYPE::GENERIC );
                 }
             }
@@ -993,6 +999,12 @@ bool SCH_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
 
     // A standalone editor has no project manager to attach the git session for it.
     RefreshGitCommitPane();
+
+    if( embedLoadRepaired && IsContentModified() )
+    {
+        Schematic().Hierarchy().ClearModifyStatus();
+        updateTitle();
+    }
 
     return true;
 }
