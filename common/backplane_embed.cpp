@@ -1058,6 +1058,10 @@ void BACKPLANE_EMBED::PushEvent( EMBED_EVENT_TYPE aType, const EMBED_FRAME_INFO&
 uint64_t BACKPLANE_EMBED::NextEvents( uint64_t aSince, int aWaitMs, size_t aMax,
                                       std::vector<EMBED_EVENT>& aEvents, bool& aLost )
 {
+    m_lastPollMs.store( std::chrono::duration_cast<std::chrono::milliseconds>(
+                                std::chrono::steady_clock::now().time_since_epoch() )
+                                .count() );
+
     std::unique_lock<std::mutex> lock( m_eventMutex );
 
     auto ready = [&]()
@@ -1173,18 +1177,37 @@ void BACKPLANE_EMBED::eventServerThread()
         ApiResponse response;
         response.mutable_header()->set_kicad_token( s_eventToken );
 
-        kiapi::backplane::embed::NextEvents poll;
+        kiapi::backplane::embed::NextEvents     poll;
+        kiapi::backplane::embed::CancelProgress cancel;
 
         if( !parsed )
         {
             response.mutable_status()->set_status( ApiStatusCode::AS_BAD_REQUEST );
             response.mutable_status()->set_error_message( "request could not be parsed" );
         }
+        else if( request.message().UnpackTo( &cancel ) )
+        {
+            // Also here: a job started by an API request (a ShowFrame that loads a board) keeps
+            // the main socket waiting for that request's reply, so a cancel can only come here.
+            if( RequestCancel( cancel.id() ) )
+            {
+                kiapi::backplane::embed::CancelProgressResponse reply;
+                reply.set_cancelling( true );
+                response.mutable_status()->set_status( ApiStatusCode::AS_OK );
+                response.mutable_message()->PackFrom( reply );
+            }
+            else
+            {
+                response.mutable_status()->set_status( ApiStatusCode::AS_BAD_REQUEST );
+                response.mutable_status()->set_error_message(
+                        "no running cancellable job with that id" );
+            }
+        }
         else if( !request.message().UnpackTo( &poll ) )
         {
             response.mutable_status()->set_status( ApiStatusCode::AS_UNHANDLED );
             response.mutable_status()->set_error_message(
-                    "this socket serves only kiapi.backplane.embed.NextEvents" );
+                    "this socket serves only kiapi.backplane.embed.NextEvents and CancelProgress" );
         }
         else
         {

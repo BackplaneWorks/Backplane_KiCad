@@ -113,6 +113,21 @@ void FillEmbedEvent( kiapi::backplane::embed::Event* aOut, const EMBED_EVENT& aI
 
     if( aIn.comment )
         FillEmbedComment( aOut->mutable_comment(), *aIn.comment );
+
+    if( aIn.progress )
+        FillEmbedProgress( aOut->mutable_progress(), *aIn.progress );
+}
+
+
+void FillEmbedProgress( kiapi::backplane::embed::Progress* aOut, const EMBED_PROGRESS& aIn )
+{
+    aOut->set_id( aIn.id );
+    aOut->set_title( aIn.title.ToStdString( wxConvUTF8 ) );
+    aOut->set_detail( aIn.detail.ToStdString( wxConvUTF8 ) );
+    aOut->set_fraction( aIn.fraction );
+    aOut->set_done( aIn.done );
+    aOut->set_cancellable( aIn.cancellable );
+    aOut->set_cancelled( aIn.cancelled );
 }
 
 

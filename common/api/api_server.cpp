@@ -43,6 +43,7 @@
 #include <string_utils.h>
 
 #include <api/common/envelope.pb.h>
+#include <api/backplane/embed.pb.h>
 
 #ifdef __UNIX__
 #include <sys/file.h>
@@ -315,6 +316,47 @@ void KICAD_API_SERVER::onApiRequest( std::string* aRequest )
         m_server->Reply( notHandled.SerializeAsString() );
         log( "Got incoming request but was not yet ready to reply." );
         return;
+    }
+
+    // CancelProgress is answered here, on the server's thread: the job it stops is what keeps
+    // the UI thread busy (BACKPLANE_EMBED::RequestCancel is thread-safe).
+    if( aRequest->find( "CancelProgress" ) != std::string::npos )
+    {
+        ApiRequest  request;
+        std::string type;
+
+        if( request.ParseFromString( *aRequest )
+            && google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &type )
+            && type == "kiapi.backplane.embed.CancelProgress" )
+        {
+            ApiResponse response;
+            response.mutable_header()->set_kicad_token( m_token );
+            kiapi::backplane::embed::CancelProgress cancel;
+
+            if( !request.header().kicad_token().empty() && request.header().kicad_token() != m_token )
+            {
+                response.mutable_status()->set_status( ApiStatusCode::AS_TOKEN_MISMATCH );
+                response.mutable_status()->set_error_message(
+                        "the provided kicad_token did not match this KiCad instance's token" );
+            }
+            else if( request.message().UnpackTo( &cancel )
+                     && BACKPLANE_EMBED::Get().RequestCancel( cancel.id() ) )
+            {
+                kiapi::backplane::embed::CancelProgressResponse reply;
+                reply.set_cancelling( true );
+                response.mutable_status()->set_status( ApiStatusCode::AS_OK );
+                response.mutable_message()->PackFrom( reply );
+            }
+            else
+            {
+                response.mutable_status()->set_status( ApiStatusCode::AS_BAD_REQUEST );
+                response.mutable_status()->set_error_message(
+                        "no running cancellable job with that id" );
+            }
+
+            m_server->Reply( response.SerializeAsString() );
+            return;
+        }
     }
 
     KICAD_API_REQUEST_EVENT* evt = new KICAD_API_REQUEST_EVENT( API_REQUEST_EVENT );

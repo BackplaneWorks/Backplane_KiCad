@@ -30,6 +30,8 @@ KICOMMON_API void FillEmbedItemNames( kiapi::backplane::embed::ItemNames* aOut,
                                       const EMBED_ITEM_NAMES& aIn );
 KICOMMON_API void FillEmbedComment( kiapi::backplane::embed::Comment* aOut,
                                     const EMBED_COMMENT& aIn );
+KICOMMON_API void FillEmbedProgress( kiapi::backplane::embed::Progress* aOut,
+                                     const EMBED_PROGRESS& aIn );
 KICOMMON_API void FillEmbedEvent( kiapi::backplane::embed::Event* aOut, const EMBED_EVENT& aIn );
 
 #endif // BACKPLANE_EMBED_PROTO_H_

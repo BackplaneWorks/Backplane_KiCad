@@ -676,6 +676,24 @@ void KIPLATFORM::EMBED::SetFrameGeometry( wxWindow* aFrame, int aX, int aY, int 
         return;
 
     aFrame->SetSize( aX, aY, std::max( 1, aWidth ), std::max( 1, aHeight ) );
+
+    // wx skips a move to where it believes the frame already is, and its idea of a frame inside
+    // the holder can be stale; GTK keeps its own requested position and re-applies it when it
+    // configures the window.  Set both, and the X window itself, or a prewarmed frame stays at
+    // its off-screen -30000.
+    if( GtkWidget* widget = static_cast<GtkWidget*>( aFrame->GetHandle() ); widget && GTK_IS_WINDOW( widget ) )
+        gtk_window_move( GTK_WINDOW( widget ), aX, aY );
+
+#ifdef GDK_WINDOWING_X11
+    if( Display* display = xDisplay() )
+    {
+        if( Window window = (Window) WindowId( aFrame ) )
+        {
+            XMoveResizeWindow( display, window, aX, aY, std::max( 1, aWidth ), std::max( 1, aHeight ) );
+            XFlush( display );
+        }
+    }
+#endif
 }
 
 

@@ -20,18 +20,25 @@
 #include <wx/version.h>
 #include <wx/sizer.h>
 #include <widgets/app_progress_dialog.h>
+#include <backplane_embed.h>
 #include <widgets/wx_event_utils.h>
 
 APP_PROGRESS_DIALOG::APP_PROGRESS_DIALOG( const wxString& aTitle, const wxString& aMessage,
                                           int aMaximum, wxWindow* aParent,
                                           bool aIndeterminateTaskBarStatus, int aStyle )
-        : APP_PROGRESS_DIALOG_BASE( aTitle,
-                            aMessage == wxEmptyString ? wxString( wxT( " " ) ) : aMessage,
-                            aMaximum, aParent, aStyle ),
+        : APP_PROGRESS_DIALOG_BASE(),
           m_appProgressIndicator( aParent, aMaximum ),
-          m_indeterminateTaskBarStatus( aIndeterminateTaskBarStatus )
+          m_indeterminateTaskBarStatus( aIndeterminateTaskBarStatus ),
+          m_maximum( aMaximum )
 
 {
+    // Embedded, the host draws it (ET_PROGRESS) and the dialog never maps; see Show().
+    if( BACKPLANE_EMBED::Get().Enabled() )
+        m_embedJob = BACKPLANE_EMBED::Get().ProgressBegin( aParent, aTitle, ( aStyle & wxPD_CAN_ABORT ) != 0 );
+
+    APP_PROGRESS_DIALOG_BASE::Create( aTitle, aMessage == wxEmptyString ? wxString( wxT( " " ) ) : aMessage,
+                                      aMaximum, aParent, aStyle );
+
     if( m_indeterminateTaskBarStatus )
     {
         m_appProgressIndicator.Pulse();
@@ -44,8 +51,45 @@ APP_PROGRESS_DIALOG::APP_PROGRESS_DIALOG( const wxString& aTitle, const wxString
 }
 
 
+APP_PROGRESS_DIALOG::~APP_PROGRESS_DIALOG()
+{
+    if( m_embedJob )
+        BACKPLANE_EMBED::Get().ProgressEnd( m_embedJob );
+}
+
+
+bool APP_PROGRESS_DIALOG::Show( bool aShow )
+{
+    if( aShow && m_embedJob )
+        return false;
+
+    return APP_PROGRESS_DIALOG_BASE::Show( aShow );
+}
+
+
+bool APP_PROGRESS_DIALOG::Pulse( const wxString& aNewMsg, bool* aSkip )
+{
+    if( m_embedJob )
+    {
+        BACKPLANE_EMBED::Get().ProgressUpdate( m_embedJob, -1.0, aNewMsg );
+        DrainPendingEvents();
+        return !BACKPLANE_EMBED::Get().ProgressCancelled( m_embedJob );
+    }
+
+    return APP_PROGRESS_DIALOG_BASE::Pulse( aNewMsg, aSkip );
+}
+
+
 bool APP_PROGRESS_DIALOG::Update( int aValue, const wxString& aNewMsg, bool* aSkip )
 {
+    if( m_embedJob )
+    {
+        BACKPLANE_EMBED::Get().ProgressUpdate( m_embedJob, m_maximum > 0 ? double( aValue ) / m_maximum : -1.0,
+                                               aNewMsg );
+        DrainPendingEvents();
+        return !BACKPLANE_EMBED::Get().ProgressCancelled( m_embedJob );
+    }
+
     if( !m_indeterminateTaskBarStatus )
     {
         m_appProgressIndicator.SetValue( aValue );

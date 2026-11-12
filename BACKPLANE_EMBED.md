@@ -335,6 +335,23 @@ is not fatal without `--embedded`.
 `scripts/backplane-embed-align-comment-check.py <kicad> <kicad-cli> --out <dir>` tests all of
 this in both editors.
 
+## bp.12: progress without windows
+
+In `--embedded` KiCad shows no progress window: `WX_PROGRESS_REPORTER` and
+`APP_PROGRESS_DIALOG` (board and schematic loads, zone fills, imports, plots, …) are created
+and never mapped, and background jobs (library loads) are reported too. Each job is an
+`ET_PROGRESS` event with `Event.progress` = `Progress{id, title, detail, fraction (0..1 or -1),
+done, cancellable, cancelled}` and `Event.frame` = the frame it runs in (FK_UNKNOWN when none).
+The first event is sent at once, updates at most every 100 ms (none in a job's first 150 ms),
+and `done` always, also after a cancel or failure. `GetFramesResponse.progress` lists the jobs
+running now. `CancelProgress{id}` asks a cancellable job to stop; it is answered at once on
+either socket, including `events_socket`, which is the one to use while a job started by an API
+request (a `ShowFrame` that loads a board) holds the main socket. When no host has polled
+`NextEvents` for 5 s, the job's title and percentage show in its frame's status bar instead.
+Real questions (save/discard, errors, file pickers) stay dialogs, transient for the host and
+centred on it. The features check asserts load, zone fill and library load jobs end `done` and
+that no progress window is ever mapped.
+
 ## Known limitations (as of bp.9)
 
 - `ListActions` (the palette feed).
