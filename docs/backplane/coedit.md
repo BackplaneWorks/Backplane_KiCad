@@ -89,6 +89,57 @@ A `BeginCommit`/`EndCommit` group with some deferred operations pushes the rest 
 Modal dialogs no longer refuse writes wholesale: `ModalBlocker` becomes an exclusive hold only
 for structural dialogs.
 
+## Collisions: the only thing that asks the person
+
+Everything that does not collide merges silently, item by item and field by field. A collision is
+the same field of the same item changed by both sides:
+
+- while the person is editing it (a hold, above), or
+- since the agent last read the document: every `Get*` request records the change-log seq the
+  client has seen (`COEDIT::NoteRead`); an update of an item the person changed after that is
+  merged from what the agent saw (the person's undo copy of the item), not applied over the
+  person's change.
+
+The non-colliding fields apply at once; the colliding ones keep the person's value and the person
+gets one small prompt (the editor's infobar, one at a time, "(1 of n)"):
+
+> Agent t123 wants to move U3; you changed it 2 min ago.  **Keep yours** · **Take agent's** · **See both**
+
+*See both* draws the agent's version dashed over the person's, with an arrow, and zooms to both;
+the prompt stays. The agent gets a `collision` notice, then `collision_resolved`
+(`kept_persons` / `took_agents`). `GetHolds` reports waiting collisions, and the host can answer
+one for the person with `ResolveCollision` (refused for `agent:*` clients).
+
+## Rules and settings merge, never overwrite
+
+The documents beside the board are edited by both sides too, and used to lose edits:
+
+- **The project file** (`.kicad_pro`: net classes, board setup constraints, severities). Every
+  board save rewrote it from the editor's in-memory copy, reverting what an agent (or the
+  headless server) had written. Now `PROJECT_FILE` merges: it keeps the JSON it last read or
+  wrote as the base, and a save (or a change noticed on disk, polled with the board) merges the
+  file's changes in, per key and per named entry (net classes by name). A real conflict keeps the
+  editor's value and posts a `settings_conflict` notice.
+- **The custom rules** (`.kicad_dru`). `SetCustomDesignRules` rewrote the whole file from the
+  client's list, and Board Setup's rules page wrote its whole text. Both now merge per rule (by
+  name) from what they read, keeping comments and everything else. `EditCustomRules` upserts and
+  removes rules by name. The open board's DRC engine (router, live DRC) was loaded once, at board
+  load: it now reloads whenever the rules change (API, Board Setup, or the file on disk).
+
+## Visibility: what the agents are doing
+
+- The host tells the editor each agent's task (`SetAgentActivity{actor, task, state}`; Backplane
+  sends the thread's title on its KiCad calls and `idle` at its turn's end).
+- The canvas draws a dashed frame around the area each working agent's recent (10 min) changes
+  cover, with a chip `agent t123 · Reroute the DDR bus`; grey when paused. Each agent change still
+  flashes briefly where it lands.
+- The **Agents** panel (shown the first time an agent works) lists each agent with its task and
+  how many items it touches, with **Pause** / **Resume** and **Steer…**, and the agents' changes,
+  newest first: double-click shows a change's items, **Undo this change** undoes it
+  (`UndoAgentChange{seq}` over IPC; newer changes on the same items go back first, with notices).
+- Pause and steer reach the host as `ET_AGENT_CONTROL`: Backplane holds the paused thread's KiCad
+  writes until Resume (the turn keeps running) and delivers Steer text into the thread.
+
 ## Per-actor undo
 
 - Ctrl+Z (the person) undoes the person's newest entry, skipping agent entries.
@@ -141,6 +192,13 @@ during an interactive operation is deferred until it ends (the board is mid-edit
   (`the person moved U3, R5`); `ET_AGENT_OP_REBASED` is returned to the agent with the tool
   result of its next KiCad call.
 
+## Agents never ask the person to close KiCad or wait
+
+There is no path left where an agent needs the editor closed or the person to stop: edits go to
+the open document over IPC (Backplane publishes the open editor's socket as `live.sock` beside
+the headless servers' for agents' own scripts), saves include both sides' work, and rules and
+settings merge. The agent prompt and KiStack's skills say so.
+
 ## Tests
 
 `qa/backplane/coedit_stress.py`: on Xvfb, a person driver (xdotool: select, drag footprints,
@@ -150,5 +208,9 @@ and delete footprints, commits) run together for N minutes on one board. Checks:
 reported dropped; the person's Ctrl+Z only ever reverts person entries; the saved board reloads
 and matches the live one.
 
-Unit tests (`qa/tests/pcbnew/test_coedit.cpp`): proto three-way merge, overlap detection,
-out-of-order undo, append-per-actor, redo dropping.
+`scripts/backplane-coedit-scenarios.py`: (1) the person and the agent move the same footprint:
+one prompt, and each answer does what it says; (2) a long agent workflow beside the person's
+edits: no prompt, no busy, nothing lost; (3) the agent edits a rule while another writer edits
+another, and net classes from both: everything survives, live and saved.
+
+`qa/backplane/merge_test.cpp`: the JSON and per-rule merges.

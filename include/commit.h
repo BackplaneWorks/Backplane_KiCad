@@ -24,6 +24,7 @@
 #pragma once
 
 #include <set>
+#include <string>
 #include <vector>
 #include <wx/string.h>
 #include <undo_redo_container.h>
@@ -163,6 +164,26 @@ public:
         return items;
     };
 
+    /// Who opened this commit (docs/backplane/coedit.md): empty for the person.
+    const std::string& GetActor() const { return m_actor; }
+
+    /// Items this commit modifies or removes, with the copy made when each was staged (the
+    /// item as it was before; null when the commit made none).
+    std::vector<std::pair<EDA_ITEM*, EDA_ITEM*>> StagedOriginals() const
+    {
+        std::vector<std::pair<EDA_ITEM*, EDA_ITEM*>> items;
+
+        for( const COMMIT_LINE& entry : m_entries )
+        {
+            int type = entry.m_type & CHT_TYPE;
+
+            if( type == CHT_MODIFY || type == CHT_REMOVE )
+                items.emplace_back( entry.m_item, entry.m_copy );
+        }
+
+        return items;
+    }
+
 protected:
     struct COMMIT_LINE
     {
@@ -223,4 +244,5 @@ protected:
     std::set<std::pair<EDA_ITEM*, BASE_SCREEN*>> m_changedItems;
     std::set<std::pair<EDA_ITEM*, BASE_SCREEN*>> m_deletedItems;
     std::vector<COMMIT_LINE>                     m_entries;
+    std::string                                  m_actor;
 };

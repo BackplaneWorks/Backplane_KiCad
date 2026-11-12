@@ -26,6 +26,7 @@
 #include <eda_draw_frame.h>
 #include <gal/gal_display_options.h>
 #include <tool/editor_conditions.h>
+#include <backplane_coedit.h>
 #include <tool/selection.h>
 
 #include <functional>
@@ -154,13 +155,13 @@ bool EDITOR_CONDITIONS::contentModifiedFunc( const SELECTION& aSelection, EDA_BA
 
 bool EDITOR_CONDITIONS::undoFunc( const SELECTION& aSelection, EDA_BASE_FRAME* aFrame )
 {
-    return aFrame->GetUndoCommandCount() > 0;
+    return aFrame->HasUndoFor( COEDIT::CurrentActor() );
 }
 
 
 bool EDITOR_CONDITIONS::redoFunc( const SELECTION& aSelection, EDA_BASE_FRAME* aFrame )
 {
-    return aFrame->GetRedoCommandCount() > 0;
+    return aFrame->HasRedoFor( COEDIT::CurrentActor() );
 }
 
 

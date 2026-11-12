@@ -18,6 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_coedit.h>
+#include <nlohmann/json.hpp>
 #include <sch_actions.h>
 #include <advanced_config.h>
 #include <sch_edit_frame.h>
@@ -86,16 +88,13 @@ void SCH_EDIT_FRAME::SaveCopyInUndoList( SCH_SCREEN* aScreen, SCH_ITEM* aItem, U
 
     wxCHECK( aItem, /* void */ );
 
-    PICKED_ITEMS_LIST* lastUndo = PopCommandFromUndoList();
+    // Co-editing (docs/backplane/coedit.md): append only to this actor's own newest change.
+    int                idx = m_undoList.FindNewest( COEDIT::CurrentActor() );
+    PICKED_ITEMS_LIST* lastUndo = idx >= 0 ? m_undoList.m_CommandsList[idx] : nullptr;
 
     // If the last stack was empty, use that one instead of creating a new stack
-    if( lastUndo )
-    {
-        if( aAppend || !lastUndo->GetCount() )
-            commandToUndo = lastUndo;
-        else
-            PushCommandToUndoList( lastUndo );
-    }
+    if( lastUndo && ( aAppend || !lastUndo->GetCount() ) )
+        commandToUndo = m_undoList.Extract( idx );
 
     if( !commandToUndo )
     {
@@ -128,7 +127,7 @@ void SCH_EDIT_FRAME::SaveCopyInUndoList( SCH_SCREEN* aScreen, SCH_ITEM* aItem, U
         PushCommandToUndoList( commandToUndo );
 
         /* Clear redo list, because after new save there is no redo to do */
-        ClearUndoORRedoList( REDO_LIST );
+        coeditPushed( *commandToUndo );
     }
     else
     {
@@ -145,16 +144,13 @@ void SCH_EDIT_FRAME::SaveCopyInUndoList( const PICKED_ITEMS_LIST& aItemsList, UN
     if( !aItemsList.GetCount() )
         return;
 
-    PICKED_ITEMS_LIST* lastUndo = PopCommandFromUndoList();
+    // Co-editing (docs/backplane/coedit.md): append only to this actor's own newest change.
+    int                idx = m_undoList.FindNewest( COEDIT::CurrentActor() );
+    PICKED_ITEMS_LIST* lastUndo = idx >= 0 ? m_undoList.m_CommandsList[idx] : nullptr;
 
     // If the last stack was empty, use that one instead of creating a new stack
-    if( lastUndo )
-    {
-        if( aAppend || !lastUndo->GetCount() )
-            commandToUndo = lastUndo;
-        else
-            PushCommandToUndoList( lastUndo );
-    }
+    if( lastUndo && ( aAppend || !lastUndo->GetCount() ) )
+        commandToUndo = m_undoList.Extract( idx );
 
     if( !commandToUndo )
     {
@@ -233,12 +229,93 @@ void SCH_EDIT_FRAME::SaveCopyInUndoList( const PICKED_ITEMS_LIST& aItemsList, UN
         PushCommandToUndoList( commandToUndo );
 
         /* Clear redo list, because after new save there is no redo to do */
-        ClearUndoORRedoList( REDO_LIST );
+        coeditPushed( *commandToUndo );
     }
     else    // Should not occur
     {
         delete commandToUndo;
     }
+}
+
+
+void SCH_EDIT_FRAME::coeditPushed( PICKED_ITEMS_LIST& aList )
+{
+    // An agent's change keeps the person's redo list unless it touches the same items.
+    bool clearRedo = true;
+
+    if( aList.IsAgent() )
+    {
+        clearRedo = false;
+
+        for( PICKED_ITEMS_LIST* redo : m_redoList.m_CommandsList )
+        {
+            if( redo->Overlaps( aList ) )
+            {
+                clearRedo = true;
+                break;
+            }
+        }
+    }
+
+    if( clearRedo )
+        ClearUndoORRedoList( REDO_LIST );
+
+    COEDIT::CHANGE change = COEDIT::ChangeFromUndoList( aList, "sch" );
+    aList.SetSeq( COEDIT::RecordChange( std::move( change ) ) );
+}
+
+
+bool SCH_EDIT_FRAME::UndoRedoForActor( bool aUndo )
+{
+    // The actor's newest change, plus every newer change of another actor that touches the same
+    // items (taken back first, newest first), so the rest of the stack stays valid.
+    UNDO_REDO_CONTAINER& stack = aUndo ? m_undoList : m_redoList;
+    const std::string&   actor = COEDIT::CurrentActor();
+    int                  idx = stack.FindNewest( actor );
+
+    if( idx < 0 )
+        return false;
+
+    std::vector<PICKED_ITEMS_LIST*> lists;
+    std::vector<int>                deps = stack.DependentsAfter( idx );
+
+    for( auto it = deps.rbegin(); it != deps.rend(); ++it )
+        lists.push_back( stack.Extract( *it ) );
+
+    PICKED_ITEMS_LIST* mine = stack.Extract( idx );
+    lists.push_back( mine );
+
+    for( PICKED_ITEMS_LIST* list : lists )
+    {
+        if( list != mine && list->IsAgent() )
+        {
+            COEDIT::NOTICE notice;
+            notice.kind = "undo_took_back";
+            notice.actor = list->GetActor();
+            notice.doc = "sch";
+            notice.json = nlohmann::json(
+                    { { "seq", list->GetSeq() },
+                      { "description", list->GetDescription().ToStdString( wxConvUTF8 ) },
+                      { "because", mine->GetDescription().ToStdString( wxConvUTF8 ) },
+                      { "by", actor.empty() ? "person" : actor } } ).dump();
+            COEDIT::PostNotice( notice );
+        }
+
+        PutDataInPreviousState( list );
+
+        COEDIT::CHANGE change = COEDIT::ChangeFromUndoList( *list, "sch" );
+        change.undo = true;
+        COEDIT::RecordChange( std::move( change ) );
+
+        list->ReversePickersListOrder();
+
+        if( aUndo )
+            PushCommandToRedoList( list );
+        else
+            PushCommandToUndoList( list );
+    }
+
+    return true;
 }
 
 

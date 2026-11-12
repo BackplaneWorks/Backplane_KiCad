@@ -59,6 +59,10 @@ public:
 protected:
     std::unique_ptr<COMMIT> createCommit() override;
 
+    EDA_ITEM* resolveLiveItem( const KIID& aId ) override;
+
+    wxString describeItem( EDA_ITEM* aItem ) const override;
+
     void deleteItemsInternal( std::map<KIID, ItemDeletionStatus>& aItemsToDelete,
                               const std::string& aClientName ) override;
 

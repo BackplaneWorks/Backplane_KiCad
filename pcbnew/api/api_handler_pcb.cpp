@@ -18,6 +18,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <drc/drc_engine.h>
+#include <fstream>
+#include <kiplatform/io.h>
+#include <backplane_coedit.h>
+#include <backplane_merge.h>
 #include <backplane_embed.h>
 #include <backplane_embed_proto.h>
 #include <backplane_comment_pcb.h>
@@ -30,6 +35,7 @@
 #include <common.h>
 #include <fmt.h>
 #include <api/api_handler_pcb.h>
+#include <api/proto_merge.h>
 #include <api/api_pcb_utils.h>
 #include <api/api_enums.h>
 #include <api/api_server.h>
@@ -163,6 +169,8 @@ API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDI
     registerHandler<SetBoardDesignRules, BoardDesignRulesResponse>( &API_HANDLER_PCB::handleSetBoardDesignRules );
     registerHandler<GetCustomDesignRules, CustomRulesResponse>( &API_HANDLER_PCB::handleGetCustomDesignRules );
     registerHandler<SetCustomDesignRules, CustomRulesResponse>( &API_HANDLER_PCB::handleSetCustomDesignRules );
+    registerHandler<kiapi::backplane::coedit::EditCustomRules, CustomRulesResponse>(
+            &API_HANDLER_PCB::handleEditCustomRules );
     registerHandler<GetEmbeddedFiles, common::types::EmbeddedFiles>( &API_HANDLER_PCB::handleGetEmbeddedFiles );
     registerHandler<AddEmbeddedFiles, Empty>( &API_HANDLER_PCB::handleAddEmbeddedFiles );
     registerHandler<SetEmbeddedFiles, Empty>( &API_HANDLER_PCB::handleSetEmbeddedFiles );
@@ -180,6 +188,17 @@ API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDI
     registerHandler<RefillZones, Empty>( &API_HANDLER_PCB::handleRefillZones );
     registerHandler<kiapi::backplane::SketchRoute, kiapi::backplane::SketchRouteResponse>(
             &API_HANDLER_PCB::handleSketchRoute );
+
+    {
+        using namespace kiapi::backplane::plan;
+        registerHandler<GetPlan, PlanResponse>( &API_HANDLER_PCB::handleGetPlan );
+        registerHandler<ProposePlan, ProposePlanResponse>( &API_HANDLER_PCB::handleProposePlan );
+        registerHandler<UpdatePlan, UpdatePlanResponse>( &API_HANDLER_PCB::handleUpdatePlan );
+        registerHandler<ApprovePlan, PlanResponse>( &API_HANDLER_PCB::handleApprovePlan );
+        registerHandler<RoutePlan, RoutePlanResponse>( &API_HANDLER_PCB::handleRoutePlan );
+        registerHandler<StopPlanRouting, PlanResponse>( &API_HANDLER_PCB::handleStopPlanRouting );
+        registerHandler<VerifyPlan, VerifyPlanResponse>( &API_HANDLER_PCB::handleVerifyPlan );
+    }
     registerHandler<kiapi::backplane::ListAssemblyComponents, kiapi::backplane::AssemblyResponse>(
             &API_HANDLER_PCB::handleListAssemblyComponents );
     registerHandler<kiapi::backplane::MoveAssemblyComponent, kiapi::backplane::AssemblyResponse>(
@@ -1186,6 +1205,89 @@ HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::handleGetCustomDesignRules(
         return response;
     }
 
+    m_rulesBase[aCtx.ClientName] = std::string( content.ToUTF8() );
+
+    CustomRulesResponse built = rulesToProto( content, parsedRules );
+    *response.mutable_rules() = built.rules();
+    response.set_status( CRS_VALID );
+    return response;
+}
+
+
+HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::handleSetCustomDesignRules(
+        const HANDLER_CONTEXT<SetCustomDesignRules>& aCtx )
+{
+    HANDLER_RESULT<bool> documentValidation = validateDocument( aCtx.Request.board() );
+
+    if( !documentValidation )
+        return tl::unexpected( documentValidation.error() );
+
+    // Co-editing (docs/backplane/coedit.md): merge per rule, never overwrite the file.  The
+    // base is what this client last read; rules it did not change keep their exact text.
+    std::vector<std::string> upserts;
+    std::set<std::string>    named;
+
+    for( const board::CustomRule& rule : aCtx.Request.rules() )
+    {
+        wxString serializationError;
+        wxString serializedRule = DRC_RULE::FormatRuleFromProto( rule, &serializationError );
+
+        if( serializedRule.IsEmpty() )
+        {
+            CustomRulesResponse response;
+            response.set_status( CRS_INVALID );
+            response.set_error_text( serializationError.IsEmpty()
+                                             ? std::string( "Failed to serialize custom rule" )
+                                             : std::string( serializationError.ToUTF8() ) );
+            return response;
+        }
+
+        named.insert( rule.name() );
+        upserts.push_back( serializedRule.ToStdString( wxConvUTF8 ) );
+    }
+
+    std::string disk = readRulesFile();
+    std::string base = m_rulesBase.count( aCtx.ClientName ) ? m_rulesBase[aCtx.ClientName] : disk;
+
+    // Unchanged rules (same canonical text as in the base) keep the base's text and comments.
+    std::map<std::string, std::string> canonicalBase = canonicalRules( base );
+    std::vector<std::string>           changed;
+
+    for( const std::string& text : upserts )
+    {
+        std::string name = BACKPLANE_MERGE::RuleName( text );
+        auto        it = canonicalBase.find( name );
+
+        if( it == canonicalBase.end() || it->second != text )
+            changed.push_back( text );
+    }
+
+    std::vector<std::string> removed;
+
+    for( const auto& [name, text] : canonicalBase )
+        if( !named.count( name ) )
+            removed.push_back( name );
+
+    std::string ours = BACKPLANE_MERGE::EditRules( base, changed, removed );
+
+    if( HANDLER_RESULT<CustomRulesResponse> written = writeMergedRules( aCtx.ClientName, base, ours,
+                                                                       disk, "Set custom rules" );
+        !written || written->status() == CRS_INVALID )
+    {
+        return written;
+    }
+
+    HANDLER_CONTEXT<GetCustomDesignRules> getCtx = { aCtx.ClientName, GetCustomDesignRules() };
+    *getCtx.Request.mutable_board() = aCtx.Request.board();
+    return handleGetCustomDesignRules( getCtx );
+}
+
+
+CustomRulesResponse API_HANDLER_PCB::rulesToProto( const wxString& content,
+                                                  const std::vector<std::shared_ptr<DRC_RULE>>& parsedRules )
+{
+    CustomRulesResponse response;
+
     for( const std::shared_ptr<DRC_RULE>& rule : parsedRules )
     {
         // TODO(JE) since we now need this for both here and the rules editor, maybe it's time
@@ -1230,68 +1332,72 @@ HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::handleGetCustomDesignRules(
             customRule->set_comments( comment );
     }
 
-    response.set_status( CRS_VALID );
     return response;
 }
 
 
-HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::handleSetCustomDesignRules(
-        const HANDLER_CONTEXT<SetCustomDesignRules>& aCtx )
+std::string API_HANDLER_PCB::readRulesFile()
 {
-    HANDLER_RESULT<bool> documentValidation = validateDocument( aCtx.Request.board() );
-
-    if( !documentValidation )
-        return tl::unexpected( documentValidation.error() );
-
     wxString rulesPath = board()->GetDesignRulesPath();
 
-    if( aCtx.Request.rules_size() == 0 )
-    {
-        if( wxFileName::FileExists( rulesPath ) )
-        {
-            if( !wxRemoveFile( rulesPath ) )
-            {
-                CustomRulesResponse response;
-                response.set_status( CRS_INVALID );
-                response.set_error_text( "Failed to remove custom rules file" );
-                return response;
-            }
-        }
+    if( rulesPath.IsEmpty() || !wxFileName::IsFileReadable( rulesPath ) )
+        return "";
 
-        CustomRulesResponse response;
-        response.set_status( CRS_NONE );
-        return response;
+    std::ifstream in( rulesPath.fn_str(), std::ios::in | std::ios::binary );
+    return std::string( ( std::istreambuf_iterator<char>( in ) ), std::istreambuf_iterator<char>() );
+}
+
+
+std::map<std::string, std::string> API_HANDLER_PCB::canonicalRules( const std::string& aText )
+{
+    // Each rule as FormatRuleFromProto would write it: comparable with what a client sends.
+    std::map<std::string, std::string> out;
+
+    if( aText.empty() )
+        return out;
+
+    HANDLER_CONTEXT<GetCustomDesignRules> ctx;
+    std::vector<std::shared_ptr<DRC_RULE>> parsed;
+    wxString content = wxString::FromUTF8( aText );
+
+    try
+    {
+        DRC_RULES_PARSER parser( content, "File" );
+        parser.Parse( parsed, nullptr );
+    }
+    catch( const IO_ERROR& )
+    {
+        return out;
     }
 
-    wxString rulesText;
-    rulesText << "(version 2)\n";
+    CustomRulesResponse protos = rulesToProto( content, parsed );
 
-    for( const board::CustomRule& rule : aCtx.Request.rules() )
+    for( const board::CustomRule& rule : protos.rules() )
     {
-        wxString serializationError;
-        wxString serializedRule = DRC_RULE::FormatRuleFromProto( rule, &serializationError );
+        wxString text = DRC_RULE::FormatRuleFromProto( rule, nullptr );
 
-        if( serializedRule.IsEmpty() )
-        {
-            CustomRulesResponse response;
-            response.set_status( CRS_INVALID );
-
-            if( serializationError.IsEmpty() )
-                response.set_error_text( "Failed to serialize custom rule" );
-            else
-                response.set_error_text( serializationError.ToUTF8() );
-
-            return response;
-        }
-
-        rulesText << "\n" << serializedRule;
+        if( !text.IsEmpty() )
+            out[rule.name()] = text.ToStdString( wxConvUTF8 );
     }
 
-    // Validate generated file text before writing so callers get parser errors in response.
+    return out;
+}
+
+
+HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::writeMergedRules( const std::string& aClient,
+                                                                      const std::string& aBase,
+                                                                      const std::string& aOurs,
+                                                                      const std::string& aDisk,
+                                                                      const std::string& aWhat )
+{
+    std::vector<BACKPLANE_MERGE::CONFLICT> conflicts;
+    std::string merged = BACKPLANE_MERGE::MergeRules( aBase, aOurs, aDisk, conflicts );
+
+    // Validate before writing so callers get parser errors in the response.
     try
     {
         std::vector<std::shared_ptr<DRC_RULE>> parsedRules;
-        DRC_RULES_PARSER parser( rulesText, "SetCustomDesignRules" );
+        DRC_RULES_PARSER parser( wxString::FromUTF8( merged ), "EditCustomRules" );
         parser.Parse( parsedRules, nullptr );
     }
     catch( const IO_ERROR& ioe )
@@ -1302,27 +1408,92 @@ HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::handleSetCustomDesignRules(
         return response;
     }
 
-    wxFFile file( rulesPath, "w" );
+    wxString rulesPath = board()->GetDesignRulesPath();
+    wxString writeError;
 
-    if( !file.IsOpened() )
+    if( merged != aDisk
+        && !KIPLATFORM::IO::AtomicWriteFile( rulesPath, merged.data(), merged.size(), &writeError ) )
     {
         CustomRulesResponse response;
         response.set_status( CRS_INVALID );
-        response.set_error_text( "Failed to open custom rules file for writing" );
+        response.set_error_text( "Failed to write custom rules file: " + writeError.ToStdString() );
         return response;
     }
 
-    if( !file.Write( rulesText ) )
+    m_rulesBase[aClient] = merged;
+
+    // The open editor's DRC engine (router, live DRC) uses the rules at once.
+    if( PCB_EDIT_FRAME* f = frame() )
+        f->ReloadCustomRules();
+    else
+        board()->GetDesignSettings().m_DRCEngine->InitEngine( rulesPath );
+
+    COEDIT::CHANGE change;
+    change.doc = "rules";
+    change.actor = aClient;
+    change.description = aWhat;
+
+    for( const BACKPLANE_MERGE::CONFLICT& c : conflicts )
+        change.modified.push_back( c.path );
+
+    COEDIT::RecordChange( change );
+
+    if( !conflicts.empty() )
     {
-        file.Close();
+        COEDIT::NOTICE notice;
+        notice.kind = "rules_conflict";
+        notice.actor = aClient;
+        notice.doc = "rules";
+        nlohmann::json list = nlohmann::json::array();
 
-        CustomRulesResponse response;
-        response.set_status( CRS_INVALID );
-        response.set_error_text( "Failed to write custom rules file" );
-        return response;
+        for( const BACKPLANE_MERGE::CONFLICT& c : conflicts )
+            list.push_back( { { "rule", c.path }, { "kept_yours", c.ours }, { "file_had", c.theirs } } );
+
+        notice.json = list.dump();
+        COEDIT::PostNotice( notice );
     }
 
-    file.Close();
+    CustomRulesResponse response;
+    response.set_status( CRS_VALID );
+    return response;
+}
+
+
+HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::handleEditCustomRules(
+        const HANDLER_CONTEXT<kiapi::backplane::coedit::EditCustomRules>& aCtx )
+{
+    HANDLER_RESULT<bool> documentValidation = validateDocument( aCtx.Request.board() );
+
+    if( !documentValidation )
+        return tl::unexpected( documentValidation.error() );
+
+    std::vector<std::string> upserts;
+
+    for( const board::CustomRule& rule : aCtx.Request.upsert() )
+    {
+        wxString error;
+        wxString text = DRC_RULE::FormatRuleFromProto( rule, &error );
+
+        if( text.IsEmpty() )
+        {
+            CustomRulesResponse response;
+            response.set_status( CRS_INVALID );
+            response.set_error_text( "rule '" + rule.name() + "': " + error.ToStdString() );
+            return response;
+        }
+
+        upserts.push_back( text.ToStdString( wxConvUTF8 ) );
+    }
+
+    std::vector<std::string> removes( aCtx.Request.remove().begin(), aCtx.Request.remove().end() );
+    std::string disk = readRulesFile();
+    std::string ours = BACKPLANE_MERGE::EditRules( disk, upserts, removes );
+
+    HANDLER_RESULT<CustomRulesResponse> written = writeMergedRules( aCtx.ClientName, disk, ours, disk,
+                                                                   "Edit custom rules" );
+
+    if( !written || written->status() == CRS_INVALID )
+        return written;
 
     HANDLER_CONTEXT<GetCustomDesignRules> getCtx = { aCtx.ClientName, GetCustomDesignRules() };
     *getCtx.Request.mutable_board() = aCtx.Request.board();
@@ -3707,4 +3878,131 @@ API_HANDLER_PCB::handlePlaceFootprintFromLibrary( const HANDLER_CONTEXT<PlaceFoo
     placed->Serialize( *response.mutable_item() );
 
     return response;
+}
+
+
+COEDIT::HOLDS API_HANDLER_PCB::currentHolds()
+{
+    COEDIT::HOLDS   holds;
+    PCB_EDIT_FRAME* editFrame = frame();
+
+    if( !editFrame )
+        return holds;   // headless: nobody to hold anything
+
+    bool holdSelection = false;
+
+    if( std::optional<COEDIT::MODAL> modal = COEDIT::OpenModal() )
+    {
+        if( modal->structural )
+        {
+            holds.exclusive = true;
+            holds.reason = modal->title;
+            return holds;
+        }
+
+        // An ordinary modal edits the selection; it may keep pointers to anything it shows.
+        holds.reason = modal->title;
+        holds.deferDeletes = true;
+        holdSelection = true;
+    }
+
+    if( editFrame->InteractiveOperationInProgress() )
+    {
+        holds.deferDeletes = true;
+        holdSelection = true;
+    }
+
+    if( editFrame->CopperOperationInProgress() )
+        holds.allCopper = true;
+
+    if( holdSelection )
+    {
+        for( const KIID& id : editFrame->SelectedItemIds() )
+            holds.items.insert( id );
+    }
+
+    // Whatever an open person commit has staged is mid-edit.
+    for( COMMIT* commit : COEDIT::LiveCommits() )
+    {
+        if( !commit->GetActor().empty() || commit->Empty() )
+            continue;
+
+        for( const auto& [item, type] : commit->StagedItems() )
+        {
+            if( item )
+                holds.items.insert( item->m_Uuid );
+        }
+    }
+
+    return holds;
+}
+
+
+bool API_HANDLER_PCB::isHeld( const COEDIT::HOLDS& aHolds, EDA_ITEM* aItem ) const
+{
+    if( API_HANDLER_EDITOR::isHeld( aHolds, aItem ) )
+        return true;
+
+    if( aHolds.allCopper && aItem )
+    {
+        switch( aItem->Type() )
+        {
+        case PCB_TRACE_T:
+        case PCB_ARC_T:
+        case PCB_VIA_T:
+        case PCB_PAD_T:
+        case PCB_FOOTPRINT_T:
+        case PCB_ZONE_T:
+            return true;
+
+        default:
+            break;
+        }
+    }
+
+    return false;
+}
+
+
+void API_HANDLER_PCB::showAgentGhost( const google::protobuf::Any& aAgent, const wxString& aLabel,
+                                      bool aShow )
+{
+    PCB_EDIT_FRAME* f = frame();
+
+    if( !f )
+        return;
+
+    if( !aShow )
+    {
+        f->ShowAgentGhost( false );
+        return;
+    }
+
+    std::optional<std::string> id = PROTO_MERGE::ItemId( aAgent );
+    EDA_ITEM* live = id ? resolveLiveItem( KIID( *id ) ) : nullptr;
+    BOARD_ITEM* item = dynamic_cast<BOARD_ITEM*>( live );
+
+    if( !item )
+        return;
+
+    // The agent's version: the live item's box moved to the agent's position.
+    BOX2I    mine = item->GetBoundingBox();
+    BOX2I    theirs = mine;
+    VECTOR2I agentPos = item->GetPosition();
+
+    if( std::optional<VECTOR2I> pos = PROTO_MERGE::Position( aAgent ) )
+        agentPos = *pos;
+
+    theirs.Move( agentPos - item->GetPosition() );
+    f->ShowAgentGhost( true, mine, theirs, aLabel );
+}
+
+
+bool API_HANDLER_PCB::undoChangeBySeq( uint64_t aSeq, std::string& aError )
+{
+    if( PCB_EDIT_FRAME* f = frame() )
+        return f->UndoChangeBySeq( aSeq, aError );
+
+    aError = "the headless server keeps no undo history";
+    return false;
 }

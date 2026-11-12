@@ -26,14 +26,19 @@
 #include <eda_item.h>
 #include <eda_group.h>
 #include <macros.h>
+#include <backplane_coedit.h>
 
-COMMIT::COMMIT()
+COMMIT::COMMIT() :
+        m_actor( COEDIT::CurrentActor() )
 {
+    COEDIT::RegisterCommit( this );
 }
 
 
 COMMIT::~COMMIT()
 {
+    COEDIT::UnregisterCommit( this );
+
     for( COMMIT_LINE& ent : m_entries )
         delete ent.m_copy;
 }

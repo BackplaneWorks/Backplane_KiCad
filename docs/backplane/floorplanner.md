@@ -55,7 +55,43 @@ any design file. JSON because agents, the hub and Backplane's viewer read it dir
 
 Units are millimetres, board coordinates, Y down (as KiCad's own files). Layers use KiCad's
 canonical names. `status` is one of `proposed`, `approved`, `rejected`, `routing`, `routed`,
-`failed`. `history` keeps the newest 500 operations; git keeps the rest.
+`verified`, `failed`. Corridors and planes also carry `edited` (the person changed it since the
+agent proposed it) and, once routing starts, `progress: {routed, total}` (connections).
+
+### Progress and status, as the person sees it
+
+| State | Stored as | Drawn as |
+|---|---|---|
+| Proposed | `status: proposed` | translucent band, dashed outline |
+| Edited by the person | `edited: true` | solid outline, small pencil mark |
+| Approved | `status: approved` | solid band, ✓ in the label ("14 ✓") |
+| Routing | `status: routing`, `progress` | the band fills from source toward destination as connections land; label "9/14" |
+| Routed | `status: routed` | the band fades to a thin outline so the copper shows through |
+| Verified | `status: verified` | green outline, "14 ✓✓" |
+| Problem | derived (audit + DRC) | red outline with a ⚠ count; clicking it zooms to the first issue |
+| Locked | `locked: true` | 🔒 in the label; agent updates are refused |
+
+*Verified* is set by `VerifyPlan` (and after `RoutePlan`) when, for the group: DRC has no
+violations on its nets, its length range and skew are within the group's `max_skew` /
+`length` targets (when given), and none of its nets has an unrouted connection. A later edit of
+its copper or the item drops it back to `routed`.
+
+*Problems* are never stored: crossings, congestion, split crossings, missing nets, DRC markers on
+the group's nets and unrouted connections after routing, each with a location.
+
+**Parts**: in plan view each part's outline fill shows pin completion: empty when none of its
+connected pins is routed, partly filled (proportional, bottom-up) when some are, solid when
+all are (from the board's connectivity, live).
+
+**Per layer**: the layer header (and each layer row in the panel) has a progress bar, "SIG1 ·
+3/4 groups", counting groups on that layer that are routed or verified.
+
+**Board checklist** (the Routing plan panel): every group with its state, progress and problem
+count; a row click selects and zooms to it; "Hide done" hides verified groups.
+
+`GetPlan` returns all of this (`derived.items[id]`: `{state, progress, problems[], verified}`,
+`derived.layers[layer]`: `{groups, done}`, `derived.parts[ref]`: `{pins, routed}`), so agents
+and Backplane's own viewer show the same states. `history` keeps the newest 500 operations; git keeps the rest.
 
 `format` is the schema version; a newer format than the reader knows opens read-only.
 `revision` increases by one per accepted change; every update carries the revision it was based
@@ -87,7 +123,7 @@ estimates.
   centred in the largest region.
 - **Header**: top-left of the canvas, the layer chip `L6 · SIG1` (index · name), the stack-up
   line underneath, and the layer status (proposed / approved).
-- **Plan view** (toggle, `Shift+P`): dims copper, zones and silkscreen to ghost level, draws
+- **Plan view** (toggle, `Alt+P`): dims copper, zones and silkscreen to ghost level, draws
   footprints as outlined courtyards with their reference centred, and draws only the active
   layer's plan items at full strength (others faint). This is the look of the reference: dark
   board, white outline, grey parts, coloured bands.

@@ -129,6 +129,31 @@ BOARD_ITEM_CONTAINER* API_HANDLER_BOARD::getDefaultContainer()
 }
 
 
+wxString API_HANDLER_BOARD::describeItem( EDA_ITEM* aItem ) const
+{
+    if( FOOTPRINT* fp = dynamic_cast<FOOTPRINT*>( aItem ) )
+        return fp->GetReference();
+
+    if( BOARD_CONNECTED_ITEM* ci = dynamic_cast<BOARD_CONNECTED_ITEM*>( aItem ) )
+    {
+        if( FOOTPRINT* parent = ci->GetParentFootprint() )
+            return parent->GetReference() + wxS( " " ) + aItem->GetFriendlyName();
+
+        return wxString::Format( _( "%s on %s (%s)" ), aItem->GetFriendlyName(),
+                                 ci->GetLayerName(), ci->GetNetname() );
+    }
+
+    return API_HANDLER_EDITOR::describeItem( aItem );
+}
+
+
+EDA_ITEM* API_HANDLER_BOARD::resolveLiveItem( const KIID& aId )
+{
+    BOARD* board = this->board();
+    return board ? board->ResolveItem( aId, true ) : nullptr;
+}
+
+
 void API_HANDLER_BOARD::pushCurrentCommit( const std::string& aClientName,
                                             const wxString& aMessage )
 {
