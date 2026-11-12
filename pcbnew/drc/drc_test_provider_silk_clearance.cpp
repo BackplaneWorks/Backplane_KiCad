@@ -17,6 +17,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <functional>
+#include <optional>
+#include <shared_mutex>
 #include <unordered_map>
 
 #include <common.h>
@@ -173,6 +176,7 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
         outlineBBox = boardOutline->GetOutline().BBoxFromCaches();
 
     std::unordered_map<const SHAPE*, bool> outlineCollisionCache;
+    std::shared_mutex                      outlineCollisionCacheMutex;
 
     const std::vector<DRC_RTREE::LAYER_PAIR> layerPairs =
     {
@@ -196,9 +200,47 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
         DRC_RTREE::LAYER_PAIR( B_SilkS, Margin )
     };
 
-    targetTree.QueryCollidingPairs( &silkTree, layerPairs,
+
+    // The collision tests run in parallel.  SHAPE_POLY_SET::Collide() triangulates lazily, which
+    // is not safe to do from several threads at once, so triangulate every polygon the tests can
+    // touch first.
+    if( boardOutline )
+        const_cast<SHAPE_POLY_SET&>( boardOutline->GetOutline() ).CacheTriangulation( false, {}, true );
+
+    auto prepareShapes =
+            [&]( DRC_RTREE& aTree, const LSET& aLayers )
+            {
+                for( PCB_LAYER_ID layer : aLayers )
+                {
+                    for( DRC_RTREE::ITEM_WITH_SHAPE* itemShape : aTree.OnLayer( layer ) )
+                    {
+                        if( itemShape->shape->Type() == SH_POLY_SET )
+                        {
+                            const SHAPE_POLY_SET* poly = static_cast<const SHAPE_POLY_SET*>( itemShape->shape );
+                            const_cast<SHAPE_POLY_SET*>( poly )->CacheTriangulation( false, {}, true );
+                        }
+                    }
+                }
+            };
+
+    prepareShapes( silkTree, silkLayers );
+    prepareShapes( targetTree, targetLayers );
+
+    // A collision found by a worker, reported on the calling thread in serial order.
+    struct SILK_HIT
+    {
+        std::shared_ptr<DRC_ITEM> drcItem;
+        VECTOR2I                  pos;
+        PCB_LAYER_ID              layer = UNDEFINED_LAYER;
+        bool                      hasPoints = false;
+        VECTOR2I                  ptA;
+        VECTOR2I                  ptB;
+    };
+
+    std::function<bool( const DRC_RTREE::LAYER_PAIR&, DRC_RTREE::ITEM_WITH_SHAPE*,
+                        DRC_RTREE::ITEM_WITH_SHAPE*, SILK_HIT& )> test =
             [&]( const DRC_RTREE::LAYER_PAIR& aLayers, DRC_RTREE::ITEM_WITH_SHAPE* aRefItemShape,
-                 DRC_RTREE::ITEM_WITH_SHAPE* aTestItemShape, bool* aCollisionDetected ) -> bool
+                 DRC_RTREE::ITEM_WITH_SHAPE* aTestItemShape, SILK_HIT& aHit ) -> bool
             {
                 BOARD_ITEM*  refItem = aRefItemShape->parent;
                 const SHAPE* refShape = aRefItemShape->shape;
@@ -207,14 +249,8 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
 
                 std::shared_ptr<SHAPE> hole;
 
-                if( m_drcEngine->IsErrorLimitExceeded( DRCE_SILK_CLEARANCE )
-                        && m_drcEngine->IsErrorLimitExceeded( DRCE_SILK_MASK_CLEARANCE ) )
-                {
-                    return false;
-                }
-
                 if( isInvisibleText( refItem ) || isInvisibleText( testItem ) )
-                    return true;
+                    return false;
 
                 if( testItem->IsTented( aLayers.first ) )
                 {
@@ -225,14 +261,14 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
                     }
                     else
                     {
-                        return true;
+                        return false;
                     }
                 }
 
                 if( boardOutline )
                 {
                     if( !testItem->GetBoundingBox().Intersects( outlineBBox ) )
-                        return true;
+                        return false;
 
                     // Only cache for shapes owned by the R-tree (stable pointers).  Hole
                     // shapes are freshly created per visitor call via shared_ptr, so their
@@ -241,12 +277,27 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
 
                     if( testShape == aTestItemShape->shape )
                     {
-                        auto [it, inserted] = outlineCollisionCache.try_emplace( testShape, false );
+                        std::optional<bool> cached;
 
-                        if( inserted )
-                            it->second = testShape->Collide( &boardOutline->GetOutline() );
+                        {
+                            std::shared_lock lock( outlineCollisionCacheMutex );
+                            auto             it = outlineCollisionCache.find( testShape );
 
-                        collidesOutline = it->second;
+                            if( it != outlineCollisionCache.end() )
+                                cached = it->second;
+                        }
+
+                        if( cached )
+                        {
+                            collidesOutline = *cached;
+                        }
+                        else
+                        {
+                            collidesOutline = testShape->Collide( &boardOutline->GetOutline() );
+
+                            std::unique_lock lock( outlineCollisionCacheMutex );
+                            outlineCollisionCache.try_emplace( testShape, collidesOutline );
+                        }
                     }
                     else
                     {
@@ -254,7 +305,7 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
                     }
 
                     if( !collidesOutline )
-                        return true;
+                        return false;
                 }
 
                 int            errorCode = DRCE_SILK_CLEARANCE;
@@ -273,8 +324,10 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
                     errorCode = DRCE_SILK_MASK_CLEARANCE;
                 }
 
+                // Error limits are only consumed when the provider's violations are flushed,
+                // so this reads the same for every pair of this run.
                 if( minClearance < 0 || m_drcEngine->IsErrorLimitExceeded( errorCode ) )
-                    return true;
+                    return false;
 
                 int      actual;
                 VECTOR2I pos;
@@ -284,7 +337,7 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
                 if( refItem->Type() == PCB_SHAPE_T && testItem->Type() == PCB_SHAPE_T
                          && refItem->GetParentFootprint() == testItem->GetParentFootprint() )
                 {
-                    return true;
+                    return false;
                 }
 
                 // Collide (and generate violations) based on a well-defined order so that
@@ -298,30 +351,60 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
                     }
                 }
 
-                if( refShape->Collide( testShape, minClearance, &actual, &pos ) )
+                if( !refShape->Collide( testShape, minClearance, &actual, &pos ) )
+                    return false;
+
+                std::shared_ptr<DRC_ITEM> drcItem = DRC_ITEM::Create( errorCode );
+
+                if( minClearance > 0 )
                 {
-                    std::shared_ptr<DRC_ITEM> drcItem = DRC_ITEM::Create( errorCode );
+                    drcItem->SetErrorDetail( formatMsg( _( "(%s clearance %s; actual %s)" ),
+                                                        constraint.GetName(),
+                                                        minClearance,
+                                                        actual ) );
+                }
 
-                    if( minClearance > 0 )
-                    {
-                        drcItem->SetErrorDetail( formatMsg( _( "(%s clearance %s; actual %s)" ),
-                                                            constraint.GetName(),
-                                                            minClearance,
-                                                            actual ) );
-                    }
+                drcItem->SetItems( refItem, testItem );
+                drcItem->SetViolatingRule( constraint.GetParentRule() );
 
-                    drcItem->SetItems( refItem, testItem );
-                    drcItem->SetViolatingRule( constraint.GetParentRule() );
-                    reportTwoShapeGeometry( drcItem, pos, refShape, testShape, aLayers.second, actual );
-                    *aCollisionDetected = true;
+                aHit.drcItem = drcItem;
+                aHit.pos = pos;
+                aHit.layer = aLayers.second;
+
+                // The geometry reportTwoShapeGeometry() would draw, computed while the
+                // shapes (and any hole shape) are still alive.
+                if( actual == 0 )
+                {
+                    aHit.hasPoints = true;
+                    aHit.ptA = pos;
+                    aHit.ptB = pos;
+                }
+                else if( refShape->NearestPoints( testShape, aHit.ptA, aHit.ptB ) )
+                {
+                    aHit.hasPoints = true;
                 }
 
                 return true;
-            },
+            };
+
+    std::function<void( SILK_HIT& )> commit =
+            [&]( SILK_HIT& aHit )
+            {
+                if( aHit.hasPoints )
+                    reportTwoPointGeometry( aHit.drcItem, aHit.pos, aHit.ptA, aHit.ptB, aHit.layer );
+                else
+                    reportViolation( aHit.drcItem, aHit.pos, aHit.layer );
+            };
+
+    targetTree.QueryCollidingPairsParallel<SILK_HIT>( &silkTree, layerPairs, test, commit,
             m_largestClearance,
             [&]( int aCount, int aSize ) -> bool
             {
                 return reportProgress( aCount, aSize, progressDelta );
+            },
+            [&]() -> bool
+            {
+                return m_drcEngine->IsCancelled();
             } );
 
     return !m_drcEngine->IsCancelled();
