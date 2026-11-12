@@ -110,6 +110,7 @@ API_HANDLER_EMBED::API_HANDLER_EMBED( KIWAY& aKiway ) :
     registerHandler<SetTheme, SetThemeResponse>( &API_HANDLER_EMBED::handleSetTheme, true );
     registerHandler<ReloadDocument, ReloadDocumentResponse>( &API_HANDLER_EMBED::handleReloadDocument );
     registerHandler<ResolveConflict, ResolveConflictResponse>( &API_HANDLER_EMBED::handleResolveConflict );
+    registerHandler<CancelProgress, CancelProgressResponse>( &API_HANDLER_EMBED::handleCancelProgress, true );
 }
 
 
@@ -359,6 +360,9 @@ HANDLER_RESULT<GetFramesResponse> API_HANDLER_EMBED::handleGetFrames(
     response.set_scale( embed.Scale() );
     response.set_events_socket( embed.EventServerUrl() );
     response.set_theme( static_cast<ThemeMode>( embed.Theme() ) );
+
+    for( const EMBED_PROGRESS& job : embed.ActiveProgress() )
+        FillEmbedProgress( response.add_progress(), job );
 
     for( const std::string& chord : embed.ReservedKeys() )
         response.add_reserved_keys( chord );
@@ -613,5 +617,22 @@ HANDLER_RESULT<ResolveConflictResponse> API_HANDLER_EMBED::handleResolveConflict
     if( embed.IsEmbedded( frame ) )
         fillFrame( response.mutable_frame(), embed.Info( frame ) );
 
+    return response;
+}
+
+
+HANDLER_RESULT<CancelProgressResponse> API_HANDLER_EMBED::handleCancelProgress(
+        const HANDLER_CONTEXT<CancelProgress>& aCtx )
+{
+    // Usually answered on the API server's own thread (KICAD_API_SERVER::onApiRequest), as a job
+    // keeps the UI thread busy; this is the same answer when it does reach the UI thread.
+    if( !BACKPLANE_EMBED::Get().RequestCancel( aCtx.Request.id() ) )
+    {
+        return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST,
+                                        "no running cancellable job with that id" ) );
+    }
+
+    CancelProgressResponse response;
+    response.set_cancelling( true );
     return response;
 }

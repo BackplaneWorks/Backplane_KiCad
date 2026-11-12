@@ -26,6 +26,7 @@
 #include <wx/progdlg.h>
 #include <wx/gauge.h>
 #include <wx/appprogress.h>
+#include <cstdint>
 
 #include <core/throttle.h>
 #include <widgets/progress_reporter_base.h>
@@ -34,12 +35,11 @@
 #define PR_CAN_ABORT wxPD_CAN_ABORT
 
 
-#if defined( _WIN32 ) && wxCHECK_VERSION( 3, 3, 0 )
-// In order to get a dark mode compatible progress dialog on Windows with wx 3.3
+// The generic dialog everywhere: dark mode compatible on Windows with wx 3.3, and created in
+// two steps, so in --embedded (kicad --embedded) it can be created and never shown; its progress
+// goes to the embedding host as ET_PROGRESS instead (BACKPLANE_EMBED::ProgressBegin).
+#include <wx/generic/progdlgg.h>
 #define WX_PROGRESS_REPORTER_BASE wxGenericProgressDialog
-#else
-#define WX_PROGRESS_REPORTER_BASE wxProgressDialog
-#endif
 
 /**
  * Multi-thread safe progress reporter dialog, intended for use of tasks that parallel reporting
@@ -73,10 +73,10 @@ public:
     /**
      * Change the title displayed on the window caption.
      */
-    void SetTitle( const wxString& aTitle ) override
-    {
-        WX_PROGRESS_REPORTER_BASE::SetTitle( aTitle );
-    }
+    void SetTitle( const wxString& aTitle ) override;
+
+    /// Embedded, the dialog never maps (vetoed here); see m_embedJob.
+    bool Show( bool aShow = true ) override;
 
     void SetIndeterminate( bool aIndeterminate ) override { m_indeterminate.store( aIndeterminate ); }
 
@@ -100,6 +100,7 @@ private:
     THROTTLE               m_updateThrottle;
     std::atomic_bool       m_lastUpdateResult;
     std::atomic_bool       m_indeterminate;
+    uint64_t               m_embedJob = 0;   ///< the host's ET_PROGRESS job, when embedded
 };
 
 

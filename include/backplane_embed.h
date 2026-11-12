@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <deque>
 #include <functional>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -82,7 +83,8 @@ enum class EMBED_EVENT_TYPE : int
     DOCUMENT_EDITED = 20,
     AGENT_NOTICE = 21,
     PLAN_CHANGED = 22,
-    AGENT_CONTROL = 23
+    AGENT_CONTROL = 23,
+    PROGRESS = 24
 };
 
 /// Values match kiapi.backplane.embed.ThemeMode.
@@ -193,6 +195,19 @@ struct EMBED_COMMENT
     bool                            fromApi = false;
 };
 
+/// One long job's progress, kiapi.backplane.embed.Progress (bp.12).
+struct EMBED_PROGRESS
+{
+    uint64_t id = 0;
+    wxString title;
+    wxString detail;
+    double   fraction = -1.0;   ///< 0..1, or -1 when indeterminate
+    bool     done = false;
+    bool     cancellable = false;
+    bool     cancelled = false;
+};
+
+
 struct EMBED_EVENT
 {
     uint64_t         seq = 0;
@@ -201,6 +216,7 @@ struct EMBED_EVENT
     std::string      detail;
     EMBED_ITEM_NAMES selection;
     std::shared_ptr<const EMBED_COMMENT> comment;   ///< COMMENT only
+    std::shared_ptr<const EMBED_PROGRESS> progress; ///< PROGRESS only
 };
 
 
@@ -301,6 +317,27 @@ public:
      * While one is open, API requests that change state are refused with AS_BUSY.
      */
     static std::optional<wxString> ModalBlocker();
+
+    // Progress of long jobs (bp.12): in --embedded the progress dialogs stay hidden and report
+    // here instead; the host hears ET_PROGRESS.  Begin/Update/End are main-thread only;
+    // RequestCancel and ProgressCancelled are thread-safe.
+
+    /// A job starts in aOwner's frame (any window inside it, or null).
+    uint64_t ProgressBegin( wxWindow* aOwner, const wxString& aTitle, bool aCancellable );
+
+    /// aFraction 0..1 or -1 when indeterminate; an empty aDetail keeps the last one.
+    void ProgressUpdate( uint64_t aId, double aFraction, const wxString& aDetail = wxEmptyString,
+                         const wxString& aTitle = wxEmptyString );
+
+    void ProgressEnd( uint64_t aId );
+
+    /// The host asked to stop it (CancelProgress).
+    bool ProgressCancelled( uint64_t aId ) const;
+
+    /// CancelProgress{id}: true if the job is running and cancellable.  Any thread.
+    bool RequestCancel( uint64_t aId );
+
+    std::vector<EMBED_PROGRESS> ActiveProgress() const;
 
     // Events (thread-safe)
     void PushEvent( EMBED_EVENT_TYPE aType, const EMBED_FRAME_INFO& aFrame,
@@ -524,6 +561,24 @@ private:
     std::function<void()> m_onParentGone;
 
     // Event queue
+    struct PROGRESS_JOB
+    {
+        EMBED_PROGRESS                        state;
+        wxFrame*                              frame = nullptr;  ///< checked against the frame list before use
+        std::chrono::steady_clock::time_point started;
+        std::chrono::steady_clock::time_point lastSent;
+        bool                                  statusShown = false;
+    };
+
+    void pushProgress( const PROGRESS_JOB& aJob );
+    void showProgressInStatusBar( PROGRESS_JOB& aJob, bool aClear );
+
+    mutable std::mutex                   m_progressMutex;
+    std::map<uint64_t, PROGRESS_JOB>     m_progress;
+    std::set<uint64_t>                   m_cancelRequests;
+    uint64_t                             m_nextProgressId = 1;
+    std::atomic<int64_t>                 m_lastPollMs{ 0 };   ///< when the host last asked NextEvents
+
     mutable std::mutex       m_eventMutex;
     std::condition_variable  m_eventCv;
     std::deque<EMBED_EVENT>  m_events;

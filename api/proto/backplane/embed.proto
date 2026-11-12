@@ -137,6 +137,7 @@ message GetFramesResponse
   repeated string    reserved_keys = 6;
   string             events_socket = 7;  // ipc:// URL of the long-poll socket for NextEvents
   ThemeMode          theme = 8;          // the theme set by SetTheme or --theme (bp.9)
+  repeated Progress  progress = 9;       // jobs running now, for a resync after `lost` (bp.12)
 }
 
 enum EventType
@@ -180,6 +181,9 @@ enum EventType
                              // detail = JSON {board, revision, actor, ops} (bp.11)
   ET_AGENT_CONTROL     = 23; // the person paused, resumed or steered an agent from KiCad;
                              // detail = JSON {actor, action: "pause"|"resume"|"steer", text} (bp.11)
+  ET_PROGRESS          = 24; // a long job (load, zone fill, DRC, library load, plot) started,
+                             // progressed or ended; Event.progress (bp.12).  In --embedded no
+                             // progress window is shown; the host draws it
 }
 
 message Event
@@ -190,6 +194,7 @@ message Event
   string    detail = 4;
   ItemNames selection = 5;  // ET_SELECTION_CHANGED and ET_COMMENT
   Comment   comment   = 6;  // ET_COMMENT only
+  Progress  progress  = 7;  // ET_PROGRESS only
 }
 
 // Long poll.  Returns the events with seq > since, waiting up to wait_ms (at most 60000)
@@ -447,4 +452,32 @@ message CommentSelectionResponse
 {
   uint64  seq     = 1;  // the seq of the ET_COMMENT event pushed
   Comment comment = 2;  // the same comment
+}
+
+
+// One long job's progress (bp.12).  Event.frame is the frame the job runs in (kind FK_UNKNOWN
+// when none).  The first event is sent at once, updates at most every 100 ms (none in a job's
+// first 150 ms), and `done` always.
+message Progress
+{
+  uint64 id          = 1;  // the job, unique per process, the same from start to done
+  string title       = 2;  // "Loading Schematic", "Filling Zones", ...
+  string detail      = 3;  // the current step or item; may be empty
+  double fraction    = 4;  // 0..1, or -1 when indeterminate
+  bool   done        = 5;  // the job's last event, also after a cancel or a failure
+  bool   cancellable = 6;  // CancelProgress{id} stops it
+  bool   cancelled   = 7;  // with done: it ended because it was cancelled
+}
+
+// Ask a running cancellable job to stop.  Answered at once, even while the job keeps KiCad's
+// UI thread busy; the job ends with a done event (cancelled true) when it reaches its next
+// check.
+message CancelProgress
+{
+  uint64 id = 1;
+}
+
+message CancelProgressResponse
+{
+  bool cancelling = 1;
 }
