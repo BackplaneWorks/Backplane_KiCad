@@ -26,8 +26,9 @@
 
 namespace
 {
-constexpr double FLASH_SECONDS = 2.0;
-constexpr double HOLD_SECONDS = 0.6;   // full strength before fading
+// Shown at full strength, then removed: no fade, so an edit costs two overlay repaints
+// (each one a full-frame composite, ~13 ms on a software renderer), not fifty.
+constexpr double FLASH_SECONDS = 1.5;
 }
 
 
@@ -74,8 +75,9 @@ void AGENT_EDIT_FLASH::Flash( const std::vector<BOX2I>& aBoxes, const wxString& 
 
     repaint();
 
+    // One wake-up when the oldest flash is due to go (not a frame clock).
     if( !m_timer.IsRunning() )
-        m_timer.Start( 40 );
+        m_timer.StartOnce( (int) ( FLASH_SECONDS * 1000 ) + 20 );
 }
 
 
@@ -134,10 +136,7 @@ double AGENT_EDIT_FLASH::alpha( const ENTRY& aEntry ) const
 {
     double t = std::chrono::duration<double>( std::chrono::steady_clock::now() - aEntry.start ).count();
 
-    if( t <= HOLD_SECONDS )
-        return 1.0;
-
-    return std::clamp( 1.0 - ( t - HOLD_SECONDS ) / ( FLASH_SECONDS - HOLD_SECONDS ), 0.0, 1.0 );
+    return t < FLASH_SECONDS ? 1.0 : 0.0;
 }
 
 
@@ -145,16 +144,20 @@ void AGENT_EDIT_FLASH::onTimer( wxTimerEvent& aEvent )
 {
     std::erase_if( m_entries, [&]( const ENTRY& e ) { return alpha( e ) <= 0.0; } );
 
-    // Only fades animate: static zones and a ghost were painted once when they were set.
     if( m_entries.empty() )
     {
-        m_timer.Stop();
-
         if( m_added && !m_ghostShown && m_zones.empty() )
         {
             m_view->Remove( this );
             m_added = false;
         }
+    }
+    else
+    {
+        // Wake again when the next oldest is due.
+        double age = std::chrono::duration<double>( std::chrono::steady_clock::now()
+                                                    - m_entries.front().start ).count();
+        m_timer.StartOnce( std::max( 20, (int) ( ( FLASH_SECONDS - age ) * 1000 ) + 20 ) );
     }
 
     repaint();

@@ -33,6 +33,7 @@
 #include <api/api_task_scheduler.h>
 #include <api/api_utils.h> // traceApi
 #include <api/api_server.h>
+#include <set>
 #include <backplane_coedit.h>
 #include <kiid.h>
 #include <kinng.h>
@@ -434,7 +435,19 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
             std::optional<COEDIT::MODAL> modal = COEDIT::OpenModal();
             std::optional<wxString>      dialog;
 
-            if( modal && modal->structural )
+            // Under an ordinary dialog only the hold-aware item operations go through (they defer
+            // what the dialog may be editing); tool actions and other changes still wait.
+            static const std::set<std::string> holdAware = {
+                "kiapi.common.commands.CreateItems",
+                "kiapi.common.commands.UpdateItems",
+                "kiapi.common.commands.DeleteItems",
+                "kiapi.common.commands.BeginCommit",
+                "kiapi.common.commands.EndCommit",
+                "kiapi.backplane.coedit.SetAgentActivity",
+                "kiapi.backplane.coedit.EditCustomRules",
+            };
+
+            if( modal && ( modal->structural || !holdAware.count( requestType ) ) )
                 dialog = modal->title;
 
             if( dialog )
@@ -443,8 +456,8 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
                 error.mutable_header()->set_kicad_token( m_token );
                 error.mutable_status()->set_status( ApiStatusCode::AS_BUSY );
                 error.mutable_status()->set_error_message( fmt::format(
-                        "KiCad is showing the dialog '{}', which rewrites the document; only reads "
-                        "are served until it is closed",
+                        "KiCad is showing the dialog '{}'; only reads and item edits are served "
+                        "until it is closed",
                         dialog->ToStdString( wxConvUTF8 ) ) );
                 m_server->Reply( error.SerializeAsString() );
 

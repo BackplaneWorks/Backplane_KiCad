@@ -17,8 +17,8 @@
 
 /*
  * Attribution of agent edits (docs/backplane/coedit.md): the items an agent just changed
- * flash in the agent colour with a label "<agent> · <description>", fading over two seconds.
- * Repaints only while a flash is fading.
+ * flash in the agent colour with a label "<agent> · <description>" for a moment, then go: two
+ * overlay repaints per edit, no animation.
  */
 
 #pragma once
