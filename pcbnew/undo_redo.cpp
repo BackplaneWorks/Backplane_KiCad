@@ -266,6 +266,35 @@ static bool undoListContainsDrillMap( const PICKED_ITEMS_LIST* aList )
 
 void PCB_BASE_EDIT_FRAME::coeditRecord( PICKED_ITEMS_LIST& aList, bool aUndo )
 {
+    // Debug (BACKPLANE_COEDIT_CHECK=1): after every pushed change, two footprints must never
+    // share a KIID.  Logs the change that made one.
+    static const bool check = wxGetEnv( wxS( "BACKPLANE_COEDIT_CHECK" ), nullptr );
+
+    if( check && GetBoard() )
+    {
+        std::map<KIID, int> seen;
+
+        for( FOOTPRINT* fp : GetBoard()->Footprints() )
+        {
+            if( ++seen[fp->m_Uuid] == 2 )
+            {
+                fprintf( stderr, "COEDIT_CHECK duplicate %s %s after '%s' by '%s' (undo=%d, %u items:",
+                         fp->GetReference().ToStdString().c_str(), fp->m_Uuid.AsStdString().c_str(),
+                         aList.GetDescription().ToStdString().c_str(), aList.GetActor().c_str(),
+                         (int) aUndo, aList.GetCount() );
+
+                for( unsigned ii = 0; ii < aList.GetCount(); ++ii )
+                {
+                    EDA_ITEM* it = aList.GetPickedItem( ii );
+                    fprintf( stderr, " %s:%d", it ? it->m_Uuid.AsStdString().substr( 0, 8 ).c_str() : "-",
+                             (int) aList.GetPickedItemStatus( ii ) );
+                }
+
+                fprintf( stderr, ")\n" );
+            }
+        }
+    }
+
     COEDIT::CHANGE change = COEDIT::ChangeFromUndoList(
             aList, IsType( FRAME_PCB_EDITOR ) ? "pcb" : "footprint" );
     change.undo = aUndo;

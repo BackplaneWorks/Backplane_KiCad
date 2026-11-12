@@ -972,6 +972,18 @@ void API_HANDLER_EDITOR::ProcessDeferred()
         bool still = op.remove ? ( holds.deferDeletes || isHeld( holds, live ) )
                                : isHeld( holds, live );
 
+        // An open API commit (this agent's or another's) has staged this item: applying now
+        // would replace it under that commit, whose push would then add a second copy.  Wait
+        // for the commit to end.
+        for( const auto& [client, entry] : m_commits )
+        {
+            for( const auto& [item, type] : entry.second->StagedItems() )
+            {
+                if( item && item->m_Uuid == op.id )
+                    still = true;
+            }
+        }
+
         if( still )
             keep.push_back( std::move( op ) );
         else
