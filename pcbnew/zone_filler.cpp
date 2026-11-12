@@ -59,6 +59,7 @@
 #include <geometry/poly_ystripes_index.h>
 #include <kidialog.h>
 #include <thread_pool.h>
+#include <drc/drc_profile.h>
 #include <math/util.h>      // for KiROUND
 #include "zone_filler.h"
 #include "project.h"
@@ -589,6 +590,7 @@ bool ZONE_FILLER::zoneKnockoutMayInteract( const ZONE* aZone, const ZONE* aKnock
  */
 bool ZONE_FILLER::Fill( const std::vector<ZONE*>& aZones, bool aCheck, wxWindow* aParent )
 {
+    DRC_PROFILE_PROBE fillProbe( "zone_filler.fill" );
     std::lock_guard<KISPINLOCK> lock( m_board->GetConnectivity()->GetLock() );
 
     // Keyed on knockout geometry only; valid for this fill's passes (pre-knockout fill is rebuilt
