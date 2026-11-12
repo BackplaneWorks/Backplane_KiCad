@@ -339,6 +339,23 @@ void RN_NET::compute()
 
 void RN_NET::OptimizeRNEdges()
 {
+    // An item's connections are kept sorted by address, which varies from run to run once
+    // items are allocated from several threads.  Visit them in list order instead so that ties
+    // between equally close zone points (and zone pairs) resolve the same way every time.
+    auto connectedInListOrder =
+            []( const CN_ITEM* aItem )
+            {
+                std::vector<CN_ITEM*> items = aItem->ConnectedItems();
+
+                std::sort( items.begin(), items.end(),
+                           []( const CN_ITEM* a, const CN_ITEM* b )
+                           {
+                               return a->ListIndex() < b->ListIndex();
+                           } );
+
+                return items;
+            };
+
     auto optimizeZoneAnchor =
             [&]( const VECTOR2I& aPos, const LSET& aLayerSet,
                  const std::shared_ptr<const CN_ANCHOR>& aAnchor,
@@ -348,7 +365,7 @@ void RN_NET::OptimizeRNEdges()
                 VECTOR2I    closest_pt;
                 CN_ITEM*    closest_item = nullptr;
 
-                for( CN_ITEM* item : aAnchor->Item()->ConnectedItems() )
+                for( CN_ITEM* item : connectedInListOrder( aAnchor->Item() ) )
                 {
                     // Don't consider shorted items
                     if( aAnchor->Item()->Net() != item->Net() )
@@ -403,8 +420,8 @@ void RN_NET::OptimizeRNEdges()
             size_t  idB;
         };
 
-        const std::vector<CN_ITEM*>& connectedItemsA = a->Item()->ConnectedItems();
-        const std::vector<CN_ITEM*>& connectedItemsB = b->Item()->ConnectedItems();
+        const std::vector<CN_ITEM*> connectedItemsA = connectedInListOrder( a->Item() );
+        const std::vector<CN_ITEM*> connectedItemsB = connectedInListOrder( b->Item() );
 
         std::vector<CENTER> centersA( connectedItemsA.size() );
         std::vector<CENTER> centersB( connectedItemsB.size() );
@@ -455,10 +472,17 @@ void RN_NET::OptimizeRNEdges()
             }
         }
 
+        // Total order, so equally distant pairs keep their (list) order
         std::sort( pairsToTest.begin(), pairsToTest.end(),
                    []( const DIST_PAIR& dp_a, const DIST_PAIR& dp_b )
                    {
-                       return dp_a.dist_sq < dp_b.dist_sq;
+                       if( dp_a.dist_sq != dp_b.dist_sq )
+                           return dp_a.dist_sq < dp_b.dist_sq;
+
+                       if( dp_a.idA != dp_b.idA )
+                           return dp_a.idA < dp_b.idA;
+
+                       return dp_a.idB < dp_b.idB;
                    } );
 
         const int c_polyPairsLimit = 3;
