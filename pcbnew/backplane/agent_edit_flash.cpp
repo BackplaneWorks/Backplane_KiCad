@@ -72,7 +72,7 @@ void AGENT_EDIT_FLASH::Flash( const std::vector<BOX2I>& aBoxes, const wxString& 
         m_added = true;
     }
 
-    m_view->Update( this, KIGFX::GEOMETRY );
+    repaint();
 
     if( !m_timer.IsRunning() )
         m_timer.Start( 40 );
@@ -89,13 +89,7 @@ void AGENT_EDIT_FLASH::SetZones( const std::vector<ZONE>& aZones )
         m_added = true;
     }
 
-    if( m_added )
-        m_view->Update( this, KIGFX::GEOMETRY | KIGFX::REPAINT );
-
-    m_view->MarkDirty();
-
-    if( m_refresh )
-        m_refresh();
+    repaint();
 }
 
 
@@ -118,10 +112,18 @@ void AGENT_EDIT_FLASH::SetGhost( bool aShow, const BOX2I& aMine, const BOX2I& aA
         m_added = false;
     }
 
+    repaint();
+}
+
+
+void AGENT_EDIT_FLASH::repaint()
+{
+    // Only this overlay item: the overlay target composites over the cached board layers, so
+    // nothing of the board is redrawn (never MarkDirty(), which redraws every target).
     if( m_added )
         m_view->Update( this, KIGFX::GEOMETRY | KIGFX::REPAINT );
 
-    m_view->MarkDirty();
+    m_view->MarkTargetDirty( KIGFX::TARGET_OVERLAY );
 
     if( m_refresh )
         m_refresh();
@@ -143,25 +145,19 @@ void AGENT_EDIT_FLASH::onTimer( wxTimerEvent& aEvent )
 {
     std::erase_if( m_entries, [&]( const ENTRY& e ) { return alpha( e ) <= 0.0; } );
 
-    if( m_entries.empty() && !m_ghostShown && m_zones.empty() )
+    // Only fades animate: static zones and a ghost were painted once when they were set.
+    if( m_entries.empty() )
     {
         m_timer.Stop();
 
-        if( m_added )
+        if( m_added && !m_ghostShown && m_zones.empty() )
         {
             m_view->Remove( this );
             m_added = false;
         }
     }
-    else
-    {
-        m_view->Update( this, KIGFX::GEOMETRY | KIGFX::REPAINT );
-    }
 
-    m_view->MarkDirty();
-
-    if( m_refresh )
-        m_refresh();
+    repaint();
 }
 
 

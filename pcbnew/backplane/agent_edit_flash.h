@@ -83,6 +83,7 @@ private:
     };
 
     double alpha( const ENTRY& aEntry ) const;
+    void   repaint();
     void   onTimer( wxTimerEvent& aEvent );
 
     std::vector<ZONE>     m_zones;
