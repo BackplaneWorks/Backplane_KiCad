@@ -24,6 +24,9 @@
 #include <board_item.h>
 #include <pcb_field.h>
 #include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <functional>
 #include <memory>
 #include <unordered_set>
 #include <set>
@@ -35,6 +38,7 @@
 #include <math/vector2d.h>
 #include "geometry/shape_null.h"
 #include "board.h"
+#include <drc/drc_parallel.h>
 
 #define ATOMIC_TABLES true
 
@@ -560,15 +564,18 @@ public:
         ITEM_WITH_SHAPE* testItem;
     };
 
-    int QueryCollidingPairs( DRC_RTREE* aRefTree, std::vector<LAYER_PAIR> aLayerPairs,
-                             std::function<bool( const LAYER_PAIR&, ITEM_WITH_SHAPE*,
-                                                 ITEM_WITH_SHAPE*, bool* aCollision )> aVisitor,
-                             int aMaxClearance,
-                             std::function<bool(int, int )> aProgressReporter ) const
+    /**
+     * Collect the (reference item, test item) pairs on each layer pair whose bounding boxes,
+     * inflated by @a aMaxClearance, overlap; in a fixed order (layer pair, then reference tree
+     * order, then search order).
+     */
+    std::vector<PAIR_INFO> collectCollidingPairs( DRC_RTREE* aRefTree,
+                                                  const std::vector<LAYER_PAIR>& aLayerPairs,
+                                                  int aMaxClearance ) const
     {
         std::vector<PAIR_INFO> pairsToVisit;
 
-        for( LAYER_PAIR& layerPair : aLayerPairs )
+        for( const LAYER_PAIR& layerPair : aLayerPairs )
         {
             const PCB_LAYER_ID refLayer = layerPair.first;
             const PCB_LAYER_ID targetLayer = layerPair.second;
@@ -599,6 +606,30 @@ public:
             };
         }
 
+        return pairsToVisit;
+    }
+
+    /// Canonical (unordered) key of the items of a pair, for "already found colliding".
+    static PTR_PTR_CACHE_KEY pairKey( const PAIR_INFO& aPair )
+    {
+        BOARD_ITEM* a = aPair.refItem->parent;
+        BOARD_ITEM* b = aPair.testItem->parent;
+
+        // store canonical order so we don't collide in both directions (a:b and b:a)
+        if( static_cast<void*>( a ) > static_cast<void*>( b ) )
+            std::swap( a, b );
+
+        return { a, b };
+    }
+
+    int QueryCollidingPairs( DRC_RTREE* aRefTree, std::vector<LAYER_PAIR> aLayerPairs,
+                             std::function<bool( const LAYER_PAIR&, ITEM_WITH_SHAPE*,
+                                                 ITEM_WITH_SHAPE*, bool* aCollision )> aVisitor,
+                             int aMaxClearance,
+                             std::function<bool(int, int )> aProgressReporter ) const
+    {
+        std::vector<PAIR_INFO> pairsToVisit = collectCollidingPairs( aRefTree, aLayerPairs, aMaxClearance );
+
         // keep track of BOARD_ITEMs pairs that have been already found to collide (some items
         // might be build of COMPOUND/triangulated shapes and a single subshape collision
         // means we have a hit)
@@ -612,15 +643,10 @@ public:
             if( !aProgressReporter( progress++, count ) )
                 break;
 
-            BOARD_ITEM* a = pair.refItem->parent;
-            BOARD_ITEM* b = pair.testItem->parent;
-
-            // store canonical order so we don't collide in both directions (a:b and b:a)
-            if( static_cast<void*>( a ) > static_cast<void*>( b ) )
-                std::swap( a, b );
+            PTR_PTR_CACHE_KEY key = pairKey( pair );
 
             // don't report multiple collisions for compound or triangulated shapes
-            if( collidingCompounds.count( { a, b } ) )
+            if( collidingCompounds.count( key ) )
                 continue;
 
             bool collisionDetected = false;
@@ -629,10 +655,83 @@ public:
                 break;
 
             if( collisionDetected )
-                collidingCompounds[ { a, b } ] = 1;
+                collidingCompounds[ key ] = 1;
         }
 
         return 0;
+    }
+
+    /**
+     * QueryCollidingPairs() with the tests run in parallel and the same outcome.
+     *
+     * @a aTest runs on the thread pool, concurrently, and must be thread-safe: it returns true and
+     * fills its RESULT when the pair collides.  @a aCommit then runs on the calling thread for the
+     * colliding pairs in the serial order, skipping a pair whose items were already found
+     * colliding through an earlier pair, exactly as QueryCollidingPairs() would.  Tests the serial
+     * version would skip are still run (their results are dropped), so aTest must have no side
+     * effects beyond its RESULT.
+     *
+     * @return false if cancelled through @a aProgressReporter.
+     */
+    template <typename RESULT>
+    bool QueryCollidingPairsParallel( DRC_RTREE* aRefTree, const std::vector<LAYER_PAIR>& aLayerPairs,
+                                      const std::function<bool( const LAYER_PAIR&, ITEM_WITH_SHAPE*,
+                                                                ITEM_WITH_SHAPE*, RESULT& )>& aTest,
+                                      const std::function<void( RESULT& )>& aCommit,
+                                      int aMaxClearance,
+                                      const std::function<bool( int, int )>& aProgressReporter,
+                                      const std::function<bool()>& aCancelled ) const
+    {
+        std::vector<PAIR_INFO> pairsToVisit = collectCollidingPairs( aRefTree, aLayerPairs, aMaxClearance );
+        size_t                 count = pairsToVisit.size();
+
+        std::vector<std::unique_ptr<RESULT>> results( count );
+        std::atomic<size_t>                  done( 0 );
+
+        auto futures = DrcParallelFor( count,
+                [&]( size_t ii )
+                {
+                    if( !aCancelled() )
+                    {
+                        const PAIR_INFO& pair = pairsToVisit[ii];
+                        auto             result = std::make_unique<RESULT>();
+
+                        if( aTest( pair.layerPair, pair.refItem, pair.testItem, *result ) )
+                            results[ii] = std::move( result );
+                    }
+
+                    done.fetch_add( 1, std::memory_order_relaxed );
+                } );
+
+        bool cancelled = false;
+
+        while( done.load() < count )
+        {
+            if( !cancelled && !aProgressReporter( (int) done.load(), (int) count ) )
+                cancelled = true;
+
+            futures.wait_for( std::chrono::milliseconds( 100 ) );
+        }
+
+        futures.wait();
+
+        if( cancelled || aCancelled() )
+            return false;
+
+        std::unordered_set<PTR_PTR_CACHE_KEY> collidingCompounds;
+
+        for( size_t ii = 0; ii < count; ++ii )
+        {
+            if( !results[ii] )
+                continue;
+
+            if( !collidingCompounds.insert( pairKey( pairsToVisit[ii] ) ).second )
+                continue;
+
+            aCommit( *results[ii] );
+        }
+
+        return true;
     }
 
     /**
