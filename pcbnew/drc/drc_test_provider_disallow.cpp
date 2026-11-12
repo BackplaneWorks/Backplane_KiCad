@@ -28,6 +28,7 @@
 #include <pad.h>
 #include <progress_reporter.h>
 #include <thread_pool.h>
+#include <drc/drc_parallel.h>
 #include <zone.h>
 #include <pcb_track.h>
 #include <mutex>
@@ -163,8 +164,7 @@ bool DRC_TEST_PROVIDER_DISALLOW::Run()
                 return 1;
             };
 
-    thread_pool& tp = GetKiCadThreadPool();
-    auto futures = tp.submit_loop( 0, toCache.size(), query_keepouts, toCache.size() );
+    auto futures = DrcParallelFor( toCache.size(), query_keepouts );
 
     for( auto& ret : futures )
     {
@@ -351,7 +351,7 @@ bool DRC_TEST_PROVIDER_DISALLOW::Run()
                     // EvalRules to distinguish hole-specific disallow constraints.
                     // This is a non-atomic read-modify-write on m_flags, so this
                     // provider must run with each item processed by only one thread
-                    // at a time (guaranteed by submit_loop's work partitioning).
+                    // at a time (guaranteed by DrcParallelFor's work partitioning).
                     if( item->HasHole() )
                     {
                         item->SetFlags( HOLE_PROXY );
@@ -372,7 +372,7 @@ bool DRC_TEST_PROVIDER_DISALLOW::Run()
                 return 1;
             };
 
-    auto itemFutures = tp.submit_loop( 0, itemCount, processItem, itemCount );
+    auto itemFutures = DrcParallelFor( itemCount, processItem );
 
     while( itemsDone < itemCount )
     {

@@ -34,6 +34,7 @@
 #include <drc/drc_test_provider.h>
 #include <drc/drc_rtree.h>
 #include <thread_pool.h>
+#include <drc/drc_parallel.h>
 #include <mutex>
 #include <set>
 #include <tuple>
@@ -320,8 +321,7 @@ void DRC_TEST_PROVIDER_EDGE_CLEARANCE::testCopperOutsideBoard( const std::vector
                 return 1;
             };
 
-    thread_pool& tp = GetKiCadThreadPool();
-    auto         futures = tp.submit_loop( 0, aCopperItems.size(), testItem );
+    auto         futures = DrcParallelFor( aCopperItems.size(), testItem );
 
     futures.wait();
 }
@@ -621,9 +621,7 @@ bool DRC_TEST_PROVIDER_EDGE_CLEARANCE::Run()
                 return 1;
             };
 
-    thread_pool& tp = GetKiCadThreadPool();
-    size_t       numBlocks = count;
-    auto         futures = tp.submit_loop( 0, count, processWorkUnit, numBlocks );
+    auto         futures = DrcParallelFor( count, processWorkUnit );
 
     while( done < count )
     {
