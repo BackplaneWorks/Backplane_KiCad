@@ -401,8 +401,11 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
 
     // Co-editing: what the agents are doing, with Pause / Steer and their changes' Undo.
     m_agentsPanel = new AGENTS_PANEL( this, this );
+    // In the panel column (layer 4, with Appearance and the selection filter), never in the right
+    // toolbar's dock (layer 3): a dock takes its widest pane's size, and a toolbar dock as wide as a
+    // panel squeezed the canvas.
     m_auimgr.AddPane( m_agentsPanel, EDA_PANE().Name( wxS( "AgentsPanel" ) )
-                      .Right().Layer( 3 ).Position( 3 )
+                      .Right().Layer( 4 ).Position( 3 )
                       .Caption( _( "Agents" ) ).PaneBorder( false )
                       .MinSize( FromDIP( wxSize( 260, 120 ) ) )
                       .BestSize( FromDIP( wxSize( 320, 260 ) ) )
@@ -467,7 +470,7 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
 
     // The Agents pane opens itself when an agent works (RefreshAgentZones); a saved layout (wx 3.3's
     // aui_state keeps every pane, shown or not, with its last size) never brings it back at start.
-    m_auimgr.GetPane( m_agentsPanel ).Show( false );
+    m_auimgr.GetPane( m_agentsPanel ).Right().Layer( 4 ).Position( 3 ).Show( false );
 
     // A saved layout brings its own minimum, so the one the panel needs is set again.
     m_auimgr.GetPane( GitCommitPaneName() ).min_size.x = m_gitCommitPane->GetMinDockWidth();
