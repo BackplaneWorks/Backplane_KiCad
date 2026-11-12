@@ -39,6 +39,7 @@
 #include <drc/drc_test_provider.h>
 #include <drc/drc_item.h>
 #include <drc/drc_cache_generator.h>
+#include <drc/drc_profile.h>
 #include <board.h>
 #include <pcb_marker.h>
 #include <footprint.h>
@@ -935,7 +936,8 @@ void DRC_ENGINE::InitEngine( const wxFileName& aRulePath )
 
 void DRC_ENGINE::RunTests( EDA_UNITS aUnits, bool aReportAllTrackErrors, bool aTestFootprints, BOARD_COMMIT* aCommit )
 {
-    PROF_TIMER timer;
+    PROF_TIMER        timer;
+    DRC_PROFILE_PROBE totalProbe( "drc.total" );
 
     SetUserUnits( aUnits );
 
@@ -959,8 +961,12 @@ void DRC_ENGINE::RunTests( EDA_UNITS aUnits, bool aReportAllTrackErrors, bool aT
     DRC_CACHE_GENERATOR cacheGenerator;
     cacheGenerator.SetDRCEngine( this );
 
-    if( !cacheGenerator.Run() )         // ... and regenerate them.
-        return;
+    {
+        DRC_PROFILE_PROBE cacheProbe( "drc.cache_generator" );
+
+        if( !cacheGenerator.Run() )         // ... and regenerate them.
+            return;
+    }
 
     // Recompute component classes
     m_board->GetComponentClassManager().ForceComponentClassRecalculation();
@@ -973,8 +979,14 @@ void DRC_ENGINE::RunTests( EDA_UNITS aUnits, bool aReportAllTrackErrors, bool aT
             m_logReporter->Report( wxString::Format( wxT( "Run DRC provider: '%s'" ), provider->GetName() ) );
 
         PROF_TIMER providerTimer;
+        bool       keepGoing;
 
-        if( !provider->RunTests( aUnits ) )
+        {
+            DRC_PROFILE_PROBE providerProbe( "drc.provider." + provider->GetName().ToStdString() );
+            keepGoing = provider->RunTests( aUnits );
+        }
+
+        if( !keepGoing )
             break;
 
         providerTimer.Stop();
