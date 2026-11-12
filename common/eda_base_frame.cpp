@@ -1548,6 +1548,13 @@ void EDA_BASE_FRAME::RestoreAuiLayout()
     if( !ADVANCED_CFG::GetCfg().m_EnableUseAuiPerspective )
         return;
 
+    // An embedded frame lives in the host's pane, not the person's standalone window: a saved
+    // layout's dock sizes do not fit it, and on Windows (wx 3.3's aui_state) a dock whose panes
+    // are hidden after the restore kept its saved width, an empty band beside the canvas.  The
+    // panes' visibility still follows the settings, applied by each frame after this.
+    if( BACKPLANE_EMBED::Get().Enabled() )
+        return;
+
     bool restored = false;
 
 #if wxCHECK_VERSION( 3, 3, 0 )

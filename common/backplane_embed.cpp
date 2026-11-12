@@ -1291,6 +1291,25 @@ void BACKPLANE_EMBED::SetTheme( EMBED_THEME aTheme, bool aRefresh )
     if( m_managerOps.settingsChanged )
         m_managerOps.settingsChanged();
 
+    // Repaint what is on screen now, after the frames have taken the new colours (some of that
+    // is deferred to the event loop).  GTK restyles and repaints mapped windows itself; on Windows
+    // a frame the host keeps shown by its own map got no paint until its next show.
+    if( wxTheApp )
+    {
+        wxTheApp->CallAfter(
+                [this]()
+                {
+                    for( wxFrame* frame : Frames() )
+                    {
+                        if( frame->IsShown() && KIPLATFORM::EMBED::IsMapped( frame ) )
+                        {
+                            frame->Refresh();
+                            frame->Update();
+                        }
+                    }
+                } );
+    }
+
     PushEvent( EMBED_EVENT_TYPE::THEME_CHANGED, {},
                aTheme == EMBED_THEME::DARK_MODE ? "dark" : aTheme == EMBED_THEME::LIGHT_MODE ? "light" : "kicad" );
 }
