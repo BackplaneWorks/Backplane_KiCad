@@ -18,6 +18,8 @@
 #include <kiplatform/embed.h>
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 
 #include <wx/app.h>
 #include <wx/window.h>
@@ -65,6 +67,12 @@ void becomeChildOf( HWND aHolder, HWND aParent )
     LONG_PTR style = GetWindowLongPtrW( aHolder, GWL_STYLE );
     style = ( style & ~WS_POPUP ) | WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
     SetWindowLongPtrW( aHolder, GWL_STYLE, style );
+
+    // The parked popup's WS_EX_NOACTIVATE would answer every click inside with MA_NOACTIVATE:
+    // no focus, no activation for menus and mouse capture.  Only the parked holder has them.
+    LONG_PTR exStyle = GetWindowLongPtrW( aHolder, GWL_EXSTYLE );
+    exStyle &= ~( WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE );
+    SetWindowLongPtrW( aHolder, GWL_EXSTYLE, exStyle );
     SetParent( aHolder, aParent );
     SetWindowPos( aHolder, HWND_TOP, 0, 0, 0, 0,
                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED );
@@ -82,6 +90,10 @@ void park( HWND aHolder )
     LONG_PTR style = GetWindowLongPtrW( aHolder, GWL_STYLE );
     style = ( style & ~WS_CHILD ) | WS_POPUP | WS_CLIPCHILDREN;
     SetWindowLongPtrW( aHolder, GWL_STYLE, style );
+
+    // Never in the taskbar or Alt+Tab, never activated while parked
+    LONG_PTR exStyle = GetWindowLongPtrW( aHolder, GWL_EXSTYLE );
+    SetWindowLongPtrW( aHolder, GWL_EXSTYLE, exStyle | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE );
     SetWindowPos( aHolder, nullptr, PARK_X, PARK_Y, 0, 0,
                   SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED );
 }
@@ -89,6 +101,20 @@ void park( HWND aHolder )
 
 LRESULT CALLBACK holderProc( HWND aHwnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam )
 {
+    // BACKPLANE_KICAD_EMBED_TRACE=1: the holder's input-related messages on stderr
+    static const bool trace = _wgetenv( L"BACKPLANE_KICAD_EMBED_TRACE" ) != nullptr;
+
+    if( trace && ( aMsg == WM_MOUSEACTIVATE || aMsg == WM_SETCURSOR || aMsg == WM_CONTEXTMENU
+                   || aMsg == WM_PARENTNOTIFY || aMsg == WM_CAPTURECHANGED
+                   || aMsg == WM_ACTIVATE || aMsg == WM_SETFOCUS || aMsg == WM_KILLFOCUS ) )
+    {
+        LRESULT result = DefWindowProcW( aHwnd, aMsg, aWParam, aLParam );
+        fprintf( stderr, "embed holder: msg 0x%04x wparam 0x%llx lparam 0x%llx -> 0x%llx\n", aMsg,
+                 (unsigned long long) aWParam, (unsigned long long) aLParam,
+                 (unsigned long long) result );
+        return result;
+    }
+
     if( aMsg == WM_TIMER && aWParam == HOLDER_TIMER && aHwnd == s_holder )
     {
         HWND actual = GetParent( aHwnd );
@@ -233,9 +259,19 @@ uint64_t KIPLATFORM::EMBED::PrepareFrame( wxWindow* aFrame, uint64_t aHolder )
     exStyle &= ~( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE );
     SetWindowLongPtr( hwnd, GWL_EXSTYLE, exStyle );
 
-    SetParent( hwnd, reinterpret_cast<HWND>( aHolder ) );
-    SetWindowPos( hwnd, nullptr, 0, 0, 0, 0,
-                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED );
+    HWND holder = reinterpret_cast<HWND>( aHolder );
+    SetParent( hwnd, holder );
+
+    // Fill the holder from the start (its client area is the container's): a new frame must
+    // not show at its own default position and size until the host resizes it
+    RECT client = { 0, 0, 0, 0 };
+    GetClientRect( holder, &client );
+    UINT flags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
+
+    if( client.right <= 0 || client.bottom <= 0 )
+        flags |= SWP_NOSIZE;
+
+    SetWindowPos( hwnd, nullptr, 0, 0, client.right, client.bottom, flags );
 
     return reinterpret_cast<uint64_t>( hwnd );
 }
