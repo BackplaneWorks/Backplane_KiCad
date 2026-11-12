@@ -627,6 +627,16 @@ bool BACKPLANE_EMBED::ShowEmbedded( wxFrame* aFrame, bool aShow )
     if( aShow )
         KIPLATFORM::EMBED::EnsureMapped( aFrame );
 
+    // A frame first laid out at another size (its default, or the parked holder's) and resized
+    // natively while hidden can keep that layout: on Windows the canvas stayed a narrow column
+    // with a toolbar mid-pane.  Lay it out again whenever it is shown at a new size; an
+    // unchanged size (every later tab switch) costs nothing.
+    if( FRAME_ENTRY* e = entry( aFrame ); aShow && e && aFrame->GetSize() != e->shownSize )
+    {
+        e->shownSize = aFrame->GetSize();
+        aFrame->SendSizeEvent();
+    }
+
     return true;
 }
 

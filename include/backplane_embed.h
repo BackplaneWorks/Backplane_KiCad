@@ -34,6 +34,7 @@
 #include <vector>
 
 #include <wx/event.h>
+#include <wx/gdicmn.h>
 #include <wx/string.h>
 #include <wx/timer.h>
 
@@ -482,6 +483,7 @@ private:
         bool             modified = false;
         bool             shown = false;
         bool             focused = false;
+        wxSize           shownSize;   ///< its size at the last ShowEmbedded; a change relayouts
     };
 
     FRAME_ENTRY*       entry( const wxFrame* aFrame );
