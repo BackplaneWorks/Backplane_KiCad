@@ -2029,7 +2029,18 @@ void LIBRARY_MANAGER_ADAPTER::AsyncLoad()
 }
 
 
-void LIBRARY_MANAGER_ADAPTER::asyncLoadLocked()
+void LIBRARY_MANAGER_ADAPTER::AsyncLoad( const std::set<wxString>& aNicknames )
+{
+    std::unique_lock<std::mutex> asyncLock( m_loadMutex, std::try_to_lock );
+
+    if( !asyncLock )
+        return;
+
+    asyncLoadLocked( &aNicknames );
+}
+
+
+void LIBRARY_MANAGER_ADAPTER::asyncLoadLocked( const std::set<wxString>* aOnly )
 {
     std::erase_if( m_futures,
                    []( std::future<void>& aFuture )
@@ -2086,7 +2097,7 @@ void LIBRARY_MANAGER_ADAPTER::asyncLoadLocked()
 
         // Disabled libraries must never be contacted; skipping here keeps a broken or slow
         // backend (e.g. an unreachable HTTP library) from blocking startup loads
-        if( row->Disabled() )
+        if( row->Disabled() || ( aOnly && !aOnly->contains( nickname ) ) )
         {
             m_loadTotal.fetch_sub( 1 );
             continue;

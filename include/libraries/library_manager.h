@@ -159,6 +159,10 @@ public:
     /// Loads all available libraries for this adapter type in the background
     void AsyncLoad();
 
+    /// Loads only the named libraries in the background, for a caller that needs a known few
+    /// (e.g. DRC's library parity check needs only the libraries the board's footprints use).
+    void AsyncLoad( const std::set<wxString>& aNicknames );
+
     virtual std::optional<LIB_STATUS> LoadOne( LIB_DATA* aLib ) = 0;
 
     /// Validates that a library is loadable.  May not necessarily load the library!
@@ -356,8 +360,9 @@ private:
         wxString            uri;
     };
 
-    /// The body of AsyncLoad(), run with m_loadMutex already held by the caller
-    void asyncLoadLocked();
+    /// The body of AsyncLoad(), run with m_loadMutex already held by the caller.  When
+    /// @a aOnly is given, rows whose nickname is not in it are skipped.
+    void asyncLoadLocked( const std::set<wxString>* aOnly = nullptr );
 
     /// Loads one queued library on a worker thread.
     /// @return false when a cancel cut the load short, so the row is not counted

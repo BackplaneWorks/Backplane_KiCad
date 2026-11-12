@@ -2984,9 +2984,21 @@ int PCBNEW_JOBS_HANDLER::JobExportDrc( JOB* aJob )
     if( !brd )
         return CLI::EXIT_CODES::ERR_INVALID_INPUT_FILE;
 
-    // Running DRC requires libraries be loaded, so make sure they have been
+    // The library parity check needs the libraries the board's footprints come from.  Load only
+    // those: loading every library in the table costs seconds of CPU and gigabytes of memory and
+    // changes no result, since the check never looks at a library no footprint names.
     FOOTPRINT_LIBRARY_ADAPTER* adapter = PROJECT_PCB::FootprintLibAdapter( brd->GetProject() );
-    adapter->AsyncLoad();
+    std::set<wxString>         usedLibraries;
+
+    for( const FOOTPRINT* footprint : brd->Footprints() )
+    {
+        wxString nickname = footprint->GetFPID().GetLibNickname();
+
+        if( !nickname.IsEmpty() )
+            usedLibraries.insert( nickname );
+    }
+
+    adapter->AsyncLoad( usedLibraries );
     adapter->BlockUntilLoaded();
 
     if( drcJob->GetConfiguredOutputPath().IsEmpty() )
