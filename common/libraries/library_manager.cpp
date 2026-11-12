@@ -25,6 +25,7 @@
 #include <list>
 #include <magic_enum.hpp>
 #include <thread_pool.h>
+#include <background_jobs_monitor.h>
 #include <ranges>
 #include <set>
 #include <thread>
@@ -1609,8 +1610,14 @@ bool LIBRARY_MANAGER_ADAPTER::RunPreload( PROGRESS_REPORTER& aReporter, std::ato
 
         if( progress.value_or( 1 ) >= 1 )
         {
-            // Workers can still be retiring once the count reaches the total
-            BlockUntilLoaded();
+            // Workers can still be retiring once the count reaches the total.  Only this load's
+            // workers: BlockUntilLoaded() would also start a deferred full load (DeferFullLoad),
+            // which a second, partial preload must not do.
+            std::unique_lock<std::mutex> asyncLock( m_loadMutex );
+
+            for( const std::future<void>& future : m_futures )
+                future.wait();
+
             return true;
         }
     }
@@ -1944,6 +1951,106 @@ std::optional<const LIB_DATA*> LIBRARY_MANAGER_ADAPTER::fetchIfLoaded( const wxS
 
 
 std::optional<LIB_DATA*> LIBRARY_MANAGER_ADAPTER::fetchIfLoaded( const wxString& aNickname )
+{
+    std::optional<LIB_DATA*> found = fetchLoaded( aNickname );
+
+    // With the full load deferred (DeferFullLoad), a library asked for by name loads now,
+    // alone: placing or loading one footprint or symbol must not depend on the full load.
+    // Only on the UI thread, where nothing of the load machinery is held.
+    if( !found && m_fullLoadDeferred.load() && !m_abort.load() && wxIsMainThread()
+        && m_manager.GetRow( Type(), aNickname ) )
+    {
+        loadNowDeferred( aNickname );
+        found = fetchLoaded( aNickname );
+    }
+
+    return found;
+}
+
+
+bool LIBRARY_MANAGER_ADAPTER::StartDeferredFullLoad()
+{
+    if( !m_fullLoadDeferred.load() || m_abort.load() )
+        return false;
+
+    std::unique_lock<std::mutex> asyncLock( m_loadMutex, std::try_to_lock );
+
+    if( !asyncLock )
+        return false;
+
+    std::erase_if( m_futures,
+                   []( std::future<void>& aFuture )
+                   {
+                       return aFuture.valid() && aFuture.wait_for( 0s ) == std::future_status::ready;
+                   } );
+
+    if( !m_futures.empty() )
+        return false;   // the partial load is still running
+
+    m_fullLoadDeferred.store( false );
+    asyncLoadLocked();
+
+    if( m_futures.empty() )
+        return true;    // everything was loaded already
+
+    // Report it while it runs (in --embedded, the host's ET_PROGRESS); kept with the load's own
+    // futures, so a wait or an abort covers it too
+    wxString title = Type() == LIBRARY_TABLE_TYPE::SYMBOL ? _( "Loading Symbol Libraries" )
+                     : Type() == LIBRARY_TABLE_TYPE::FOOTPRINT ? _( "Loading Footprint Libraries" )
+                                                                : _( "Loading Libraries" );
+    std::shared_ptr<BACKGROUND_JOB> job = Pgm().GetBackgroundJobMonitor().Create( title );
+
+    m_futures.emplace_back( GetKiCadThreadPool().submit_task(
+            [this, job]()
+            {
+                while( !m_abort.load() )
+                {
+                    std::optional<float> progress = AsyncLoadProgress();
+                    job->m_reporter->SetCurrentProgress( progress.value_or( 1.0f ) );
+
+                    if( progress.value_or( 1.0f ) >= 1.0f )
+                        break;
+
+                    std::this_thread::sleep_for( std::chrono::milliseconds( 150 ) );
+                }
+
+                Pgm().GetBackgroundJobMonitor().Remove( job );
+            } ) );
+
+    return true;
+}
+
+
+void LIBRARY_MANAGER_ADAPTER::loadNowDeferred( const wxString& aNickname )
+{
+    const std::set<wxString> one{ aNickname };
+
+    // A load in flight drops a new request (AsyncLoad's try_lock), so wait for it and ask again
+    for( int attempt = 0; attempt < 2; ++attempt )
+    {
+        {
+            std::unique_lock<std::mutex> asyncLock( m_loadMutex );
+
+            for( const std::future<void>& future : m_futures )
+                future.wait();
+
+            asyncLoadLocked( &one );
+        }
+
+        {
+            std::unique_lock<std::mutex> asyncLock( m_loadMutex );
+
+            for( const std::future<void>& future : m_futures )
+                future.wait();
+        }
+
+        if( IsLibraryLoaded( aNickname ) )
+            return;
+    }
+}
+
+
+std::optional<LIB_DATA*> LIBRARY_MANAGER_ADAPTER::fetchLoaded( const wxString& aNickname )
 {
     {
         std::shared_lock lock( m_librariesMutex );

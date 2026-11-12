@@ -198,6 +198,11 @@ public:
 
     bool FullLoadDeferred() const { return m_fullLoadDeferred.load(); }
 
+    /// Start the deferred full load in the background, without waiting (for a view that fills
+    /// itself as libraries arrive, like the symbol chooser).  False when nothing was started: no
+    /// load deferred, or a load still running (call again later).  Reported as a background job.
+    bool StartDeferredFullLoad();
+
     /// Aborts any async load in progress; blocks until fully done aborting.
     /// This is the public interface to allow LIBRARY_MANAGER to abort loads before project changes.
     /// Only a caller that discards the libraries, or leaves them to RestartAsyncLoad(), passes true to end the
@@ -270,6 +275,12 @@ protected:
     std::optional<const LIB_DATA*> fetchIfLoaded( const wxString& aNickname ) const;
 
     std::optional<LIB_DATA*> fetchIfLoaded( const wxString& aNickname );
+
+    /// fetchIfLoaded() without the on-demand load of a deferred library
+    std::optional<LIB_DATA*> fetchLoaded( const wxString& aNickname );
+
+    /// Load one library now while the full load is deferred (see DeferFullLoad)
+    void loadNowDeferred( const wxString& aNickname );
 
     /// Fetches a loaded library, triggering a load of that library if it isn't loaded yet
     LIBRARY_RESULT<LIB_DATA*> loadIfNeeded( const wxString& aNickname );

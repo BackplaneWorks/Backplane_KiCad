@@ -193,6 +193,11 @@ void SYMBOL_TREE_MODEL_ADAPTER::AddLibraries( SCH_BASE_FRAME* aFrame )
         }
     }
 
+    // Libraries an embedded KiCad left for later (DeferFullLoad) are loaded now, in the
+    // background; the timer below adds them as they arrive, as for a preload still running
+    if( !m_pending_load_libraries.empty() )
+        m_adapter->StartDeferredFullLoad();
+
     if( !m_pending_load_libraries.empty() && !m_check_pending_libraries_timer )
     {
         m_check_pending_libraries_timer = std::make_unique<wxTimer>( aFrame );
