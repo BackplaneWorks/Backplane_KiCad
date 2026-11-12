@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -281,6 +282,14 @@ public:
 
     bool RulesValid() { return m_rulesValid; }
 
+    /**
+     * Report a violation found by a test provider.
+     *
+     * During RunTests() violations are buffered per provider and handed to the violation handler
+     * when the provider finishes, sorted by a key that depends only on the violation's content,
+     * so the report is the same whatever the number of threads and their scheduling.  Outside
+     * RunTests() they are handed on at once.
+     */
     void ReportViolation( const std::shared_ptr<DRC_ITEM>& aItem, const VECTOR2I& aPos,
                           int aMarkerLayer, const std::function<void( PCB_MARKER* )>& aPathGenerator = {} );
 
@@ -367,6 +376,15 @@ private:
     void loadImplicitRules();
     std::shared_ptr<DRC_RULE> createImplicitRule( const wxString& name, DRC_IMPLICIT_SOURCE aImplicitSource );
 
+    /// Hand a violation to the handler and log reporter, counting it against its error limit.
+    void dispatchViolation( const std::shared_ptr<DRC_ITEM>& aItem, const VECTOR2I& aPos,
+                            int aMarkerLayer, const std::function<void( PCB_MARKER* )>& aPathGenerator );
+
+    /// Hand the violations buffered while a provider ran to the handler, in canonical order.
+    void flushPendingViolations();
+
+    struct PENDING_VIOLATION;
+
 protected:
     BOARD_DESIGN_SETTINGS*     m_designSettings;
     BOARD*                     m_board;
@@ -377,8 +395,14 @@ protected:
     bool                                    m_rulesValid;
     std::vector<DRC_TEST_PROVIDER*>         m_testProviders;
 
-    std::vector<int>           m_errorLimits;
-    mutable std::mutex         m_errorLimitsMutex;
+    // Remaining violations each error code may report.  Atomic so providers running in
+    // parallel can poll IsErrorLimitExceeded() without contending on a lock.
+    std::unique_ptr<std::atomic<int>[]>         m_errorLimits;
+
+    // Violations reported by the running provider, per error code, while m_bufferViolations.
+    bool                                          m_bufferViolations = false;
+    std::mutex                                    m_pendingMutex;
+    std::vector<std::vector<PENDING_VIOLATION>>   m_pending;
     bool                       m_reportAllTrackErrors;
     bool                       m_testFootprints;
 

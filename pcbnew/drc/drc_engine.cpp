@@ -19,7 +19,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <atomic>
+#include <iterator>
 #include <set>
 #include <wx/log.h>
 #include <reporter.h>
@@ -97,7 +99,8 @@ DRC_ENGINE::DRC_ENGINE( BOARD* aBoard, BOARD_DESIGN_SETTINGS *aSettings ) :
         m_logReporter( nullptr ),
         m_progressReporter( nullptr )
 {
-    m_errorLimits.resize( DRCE_LAST + 1 );
+    m_errorLimits = std::make_unique<std::atomic<int>[]>( DRCE_LAST + 1 );
+    m_pending.resize( DRCE_LAST + 1 );
 
     for( int ii = DRCE_FIRST; ii <= DRCE_LAST; ++ii )
         m_errorLimits[ii] = ERROR_LIMIT;
@@ -983,7 +986,12 @@ void DRC_ENGINE::RunTests( EDA_UNITS aUnits, bool aReportAllTrackErrors, bool aT
 
         {
             DRC_PROFILE_PROBE providerProbe( "drc.provider." + provider->GetName().ToStdString() );
+
+            m_bufferViolations = true;
             keepGoing = provider->RunTests( aUnits );
+            m_bufferViolations = false;
+
+            flushPendingViolations();
         }
 
         if( !keepGoing )
@@ -2358,34 +2366,202 @@ void DRC_ENGINE::ProcessAssertions( const BOARD_ITEM* a, std::function<void( con
 bool DRC_ENGINE::IsErrorLimitExceeded( int error_code )
 {
     assert( error_code >= 0 && error_code <= DRCE_LAST );
-    std::lock_guard<std::mutex> lock( m_errorLimitsMutex );
-    return m_errorLimits[ error_code ] <= 0;
+    return m_errorLimits[ error_code ].load( std::memory_order_relaxed ) <= 0;
 }
 
 
 int DRC_ENGINE::GetErrorLimit( int error_code )
 {
     assert( error_code >= 0 && error_code <= DRCE_LAST );
-    std::lock_guard<std::mutex> lock( m_errorLimitsMutex );
-    return std::max( 0, m_errorLimits[ error_code ] );
+    return std::max( 0, m_errorLimits[ error_code ].load( std::memory_order_relaxed ) );
 }
+
+
+namespace
+{
+/// Captures the path a provider's path generator sets on a marker, so it can be replayed onto
+/// the real marker after the violation has been buffered.
+class PATH_CAPTURE_MARKER : public PCB_MARKER
+{
+public:
+    using PCB_MARKER::PCB_MARKER;
+
+    const VECTOR2I& PathStart() const { return m_pathStart; }
+    const VECTOR2I& PathEnd() const { return m_pathEnd; }
+};
+
+
+int compareKiids( const std::vector<KIID>& a, const std::vector<KIID>& b )
+{
+    for( size_t ii = 0; ii < std::min( a.size(), b.size() ); ++ii )
+    {
+        if( a[ii] < b[ii] )
+            return -1;
+
+        if( b[ii] < a[ii] )
+            return 1;
+    }
+
+    return a.size() < b.size() ? -1 : ( a.size() > b.size() ? 1 : 0 );
+}
+} // namespace
+
+
+struct DRC_ENGINE::PENDING_VIOLATION
+{
+    std::shared_ptr<DRC_ITEM>            item;
+    VECTOR2I                             pos;
+    int                                  layer = UNDEFINED_LAYER;
+    std::shared_ptr<PATH_CAPTURE_MARKER> path;     // set when the provider gave a path generator
+
+    // Canonical order: everything the report shows about the violation, so that two violations
+    // which compare equal are indistinguishable in the report.
+    std::vector<KIID>                    ids;
+    wxString                             message;
+    wxString                             rule;
+
+    bool operator<( const PENDING_VIOLATION& aOther ) const
+    {
+        if( item->GetErrorCode() != aOther.item->GetErrorCode() )
+            return item->GetErrorCode() < aOther.item->GetErrorCode();
+
+        if( pos.x != aOther.pos.x )
+            return pos.x < aOther.pos.x;
+
+        if( pos.y != aOther.pos.y )
+            return pos.y < aOther.pos.y;
+
+        if( layer != aOther.layer )
+            return layer < aOther.layer;
+
+        if( int cmp = compareKiids( ids, aOther.ids ) )
+            return cmp < 0;
+
+        if( int cmp = message.Cmp( aOther.message ) )
+            return cmp < 0;
+
+        if( int cmp = rule.Cmp( aOther.rule ) )
+            return cmp < 0;
+
+        if( !path || !aOther.path )
+            return !path && aOther.path;
+
+        // VECTOR2I's operator< compares lengths, which is not a total order on points
+        auto pointLess =
+                []( const VECTOR2I& a, const VECTOR2I& b )
+                {
+                    return a.x != b.x ? a.x < b.x : a.y < b.y;
+                };
+
+        if( path->PathStart() != aOther.path->PathStart() )
+            return pointLess( path->PathStart(), aOther.path->PathStart() );
+
+        if( path->PathEnd() != aOther.path->PathEnd() )
+            return pointLess( path->PathEnd(), aOther.path->PathEnd() );
+
+        return path->GetPath().size() < aOther.path->GetPath().size();
+    }
+};
 
 
 void DRC_ENGINE::ReportViolation( const std::shared_ptr<DRC_ITEM>& aItem, const VECTOR2I& aPos,
                                   int aMarkerLayer, const std::function<void( PCB_MARKER* )>& aPathGenerator )
 {
+    const int code = aItem->GetErrorCode();
+
+    if( !m_bufferViolations )
     {
-        std::lock_guard<std::mutex> lock( m_errorLimitsMutex );
-
-        // Providers pre-check IsErrorLimitExceeded(), but that check is racy when items
-        // are processed in parallel, letting many threads slip past the cap and overshoot
-        // it.  Enforce the per-code limit atomically here so the reported count is exact
-        // and reproducible regardless of worker scheduling.
-        if( m_errorLimits[ aItem->GetErrorCode() ] <= 0 )
-            return;
-
-        m_errorLimits[ aItem->GetErrorCode() ] -= 1;
+        dispatchViolation( aItem, aPos, aMarkerLayer, aPathGenerator );
+        return;
     }
+
+    // The limit is only consumed when the buffer is flushed, so it reads as it stood when the
+    // provider started: a code with nothing left to report is dropped here.
+    const int limit = m_errorLimits[ code ].load( std::memory_order_relaxed );
+
+    if( limit <= 0 )
+        return;
+
+    PENDING_VIOLATION pending;
+    pending.item = aItem;
+    pending.pos = aPos;
+    pending.layer = aMarkerLayer;
+    pending.ids = aItem->GetIDs();
+    pending.message = aItem->GetErrorMessage( false );
+
+    if( DRC_RULE* rule = aItem->GetViolatingRule() )
+        pending.rule = rule->m_Name;
+
+    if( aPathGenerator )
+    {
+        // Path generators capture the provider's locals by reference, so run them now.
+        pending.path = std::make_shared<PATH_CAPTURE_MARKER>( aItem, aPos, aMarkerLayer );
+        aPathGenerator( pending.path.get() );
+    }
+
+    std::lock_guard<std::mutex> lock( m_pendingMutex );
+    std::vector<PENDING_VIOLATION>& bucket = m_pending[ code ];
+
+    bucket.push_back( std::move( pending ) );
+
+    // Only the first `limit` violations in canonical order can be reported; keep memory bounded
+    // on boards with very many violations of one kind by dropping the rest from time to time.
+    if( bucket.size() >= 2 * (size_t) limit + 256 )
+    {
+        std::partial_sort( bucket.begin(), bucket.begin() + limit, bucket.end() );
+        bucket.resize( limit );
+    }
+}
+
+
+void DRC_ENGINE::flushPendingViolations()
+{
+    std::vector<PENDING_VIOLATION> all;
+
+    {
+        std::lock_guard<std::mutex> lock( m_pendingMutex );
+
+        for( std::vector<PENDING_VIOLATION>& bucket : m_pending )
+        {
+            std::move( bucket.begin(), bucket.end(), std::back_inserter( all ) );
+            bucket.clear();
+        }
+    }
+
+    std::sort( all.begin(), all.end() );
+
+    for( const PENDING_VIOLATION& pending : all )
+    {
+        if( pending.path )
+        {
+            dispatchViolation( pending.item, pending.pos, pending.layer,
+                               [&]( PCB_MARKER* aMarker )
+                               {
+                                   aMarker->SetPath( pending.path->GetPath(), pending.path->PathStart(),
+                                                     pending.path->PathEnd() );
+                               } );
+        }
+        else
+        {
+            dispatchViolation( pending.item, pending.pos, pending.layer, {} );
+        }
+    }
+}
+
+
+void DRC_ENGINE::dispatchViolation( const std::shared_ptr<DRC_ITEM>& aItem, const VECTOR2I& aPos,
+                                    int aMarkerLayer, const std::function<void( PCB_MARKER* )>& aPathGenerator )
+{
+    // Enforce the per-code limit atomically so the reported count is exact even when violations
+    // are reported from several threads (outside RunTests()).
+    std::atomic<int>& remaining = m_errorLimits[ aItem->GetErrorCode() ];
+    int               left = remaining.load( std::memory_order_relaxed );
+
+    do
+    {
+        if( left <= 0 )
+            return;
+    } while( !remaining.compare_exchange_weak( left, left - 1, std::memory_order_relaxed ) );
 
     if( m_violationHandler )
     {
