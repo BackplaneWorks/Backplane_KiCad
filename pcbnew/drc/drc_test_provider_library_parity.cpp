@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <set>
 #include <cmath>
 #include <layer_range.h>
 #include <layer_utils.h>
@@ -1169,6 +1170,39 @@ bool DRC_TEST_PROVIDER_LIBRARY_PARITY::Run()
 
     FOOTPRINT_LIBRARY_ADAPTER* adapter = PROJECT_PCB::FootprintLibAdapter( project );
     wxString      msg;
+
+    // The check below reads a library that isn't loaded as missing, so load the libraries the
+    // board's footprints come from (and only those) before starting.  A load already running
+    // (e.g. the editor's background preload) is waited for; if it didn't include them, ask again.
+    auto librariesToLoad =
+            [&]()
+            {
+                std::set<wxString> nicknames;
+
+                for( FOOTPRINT* footprint : board->Footprints() )
+                {
+                    wxString nickname = footprint->GetFPID().GetLibNickname();
+
+                    if( !nickname.IsEmpty() && adapter->HasLibrary( nickname, true )
+                            && !adapter->IsLibraryLoaded( nickname ) )
+                    {
+                        nicknames.insert( nickname );
+                    }
+                }
+
+                return nicknames;
+            };
+
+    for( int attempt = 0; attempt < 2; ++attempt )
+    {
+        std::set<wxString> nicknames = librariesToLoad();
+
+        if( nicknames.empty() )
+            break;
+
+        adapter->AsyncLoad( nicknames );
+        adapter->BlockUntilLoaded();
+    }
     int           ii = 0;
     const int     progressDelta = 250;
 
