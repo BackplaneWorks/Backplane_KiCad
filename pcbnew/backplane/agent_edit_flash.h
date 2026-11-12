@@ -54,7 +54,8 @@ public:
 
     using ZONE = AGENT_EDIT_FLASH_ZONE;
 
-    void SetZones( const std::vector<ZONE>& aZones );
+    /// aRefresh false: called during an edit's commit, whose own redraw paints the zones.
+    void SetZones( const std::vector<ZONE>& aZones, bool aRefresh = true );
 
     /// "See both" for a collision: the agent's version of an item (dashed, labelled) with an
     /// arrow from the person's.  Stays until cleared (aShow false).
@@ -83,7 +84,7 @@ private:
     };
 
     double alpha( const ENTRY& aEntry ) const;
-    void   repaint();
+    void   repaint( bool aRefresh );
     void   onTimer( wxTimerEvent& aEvent );
 
     std::vector<ZONE>     m_zones;

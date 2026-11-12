@@ -345,10 +345,15 @@ void PCB_BASE_EDIT_FRAME::flashAgentEdit( const PICKED_ITEMS_LIST& aList )
         label += wxString::FromUTF8( " \xC2\xB7 " ) + aList.GetDescription();
 
     m_agentFlash->Flash( boxes, label );
+
+    // The working-area frames move with this edit: update them now, so they are drawn in the
+    // same redraw as the edit itself rather than in a second one.
+    refreshAgentZonesNow();
 }
 
 
-void PCB_BASE_EDIT_FRAME::ShowAgentZones( const std::vector<AGENT_EDIT_FLASH_ZONE>& aZones )
+void PCB_BASE_EDIT_FRAME::ShowAgentZones( const std::vector<AGENT_EDIT_FLASH_ZONE>& aZones,
+                                          bool aRefresh )
 {
     EDA_DRAW_PANEL_GAL* canvas = GetCanvas();
 
@@ -364,7 +369,7 @@ void PCB_BASE_EDIT_FRAME::ShowAgentZones( const std::vector<AGENT_EDIT_FLASH_ZON
                                                            [this]() { GetCanvas()->Refresh(); } );
     }
 
-    m_agentFlash->SetZones( aZones );
+    m_agentFlash->SetZones( aZones, aRefresh );
 }
 
 

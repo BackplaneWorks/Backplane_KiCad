@@ -2555,7 +2555,7 @@ void PCB_EDIT_FRAME::ProjectSettingsMerged( const std::string& aWhat )
 }
 
 
-void PCB_EDIT_FRAME::RefreshAgentZones()
+void PCB_EDIT_FRAME::RefreshAgentZones( bool aRefresh )
 {
     std::vector<AGENT_EDIT_FLASH::ZONE> zones;
     bool                                anyAgent = false;
@@ -2599,7 +2599,7 @@ void PCB_EDIT_FRAME::RefreshAgentZones()
     if( !COEDIT::AgentChanges( 1 ).empty() )
         anyAgent = true;
 
-    ShowAgentZones( zones );
+    ShowAgentZones( zones, aRefresh );
 
     // The panel shows itself the first time an agent is at work; after that it is the person's.
     if( anyAgent && !m_agentsPaneShown && m_agentsPanel )

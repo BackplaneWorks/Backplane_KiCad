@@ -151,11 +151,14 @@ protected:
     /// Briefly highlights an agent's change on the canvas, labelled with its actor.
     virtual void flashAgentEdit( const PICKED_ITEMS_LIST& aList );
 
+    /// The working agents' areas, updated in the same frame as an agent edit's own redraw.
+    virtual void refreshAgentZonesNow() {}
+
     std::unique_ptr<AGENT_EDIT_FLASH> m_agentFlash;
 
 public:
     /// Co-editing: the working agents' areas on the canvas.
-    void ShowAgentZones( const std::vector<AGENT_EDIT_FLASH_ZONE>& aZones );
+    void ShowAgentZones( const std::vector<AGENT_EDIT_FLASH_ZONE>& aZones, bool aRefresh = true );
 
     /// Co-editing: undo one change by its change-log seq (the Agents panel, UndoAgentChange).
     bool UndoChangeBySeq( uint64_t aSeq, std::string& aError );

@@ -435,7 +435,12 @@ public:
 
     /// Co-editing visibility: redraw the working agents' areas (from their recent changes), and
     /// show the Agents panel once an agent is active.
-    void RefreshAgentZones();
+    void RefreshAgentZones( bool aRefresh = true );
+
+protected:
+    void refreshAgentZonesNow() override { RefreshAgentZones( false ); }
+
+public:
 
     /// Select and zoom to the items of an agent change (from the Agents panel).
     void ShowAgentItems( const std::vector<std::string>& aIds );

@@ -162,8 +162,9 @@ Both editors implement this (`PCB_BASE_EDIT_FRAME`, `SCH_EDIT_FRAME`); the share
 
 After an agent group is pushed, the touched items' bounding boxes flash (`AGENT_EDIT_FLASH`, a
 `VIEW_ITEM` on `LAYER_SELECT_OVERLAY`): a translucent fill and an outline in the agent colour
-with a label `<agent> · <description>`, shown for 1.5 s and then removed: two overlay repaints per
-edit and no animation (each overlay repaint composites the whole frame, ~13 ms on a software
+with a label `<agent> · <description>`, shown at least 1.5 s and taken away by the next edit's own
+redraw (or, after 4 s without one, by a repaint of its own); the working-area frames update in the
+same redraw. So while an agent works an edit costs the one redraw it always did, with no animation (each overlay repaint composites the whole frame, ~13 ms on a software
 renderer, so a fade at 25 Hz kept the UI thread a third busy). The status bar keeps the last agent change; the undo history shows the actor.
 
 ## The agent sees the person

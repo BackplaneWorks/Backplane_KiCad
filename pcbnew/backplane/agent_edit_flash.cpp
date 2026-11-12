@@ -29,6 +29,10 @@ namespace
 // Shown at full strength, then removed: no fade, so an edit costs two overlay repaints
 // (each one a full-frame composite, ~13 ms on a software renderer), not fifty.
 constexpr double FLASH_SECONDS = 1.5;
+
+// An expired flash goes with the next edit's own redraw; only after this long without one is
+// it removed by a repaint of its own.  So while an agent works, an edit costs one redraw.
+constexpr int IDLE_REMOVE_MS = 4000;
 }
 
 
@@ -65,6 +69,8 @@ void AGENT_EDIT_FLASH::Flash( const std::vector<BOX2I>& aBoxes, const wxString& 
     if( aBoxes.empty() || !m_view )
         return;
 
+    // Expired flashes leave in this same repaint.
+    std::erase_if( m_entries, [&]( const ENTRY& e ) { return alpha( e ) <= 0.0; } );
     m_entries.push_back( { aBoxes, aLabel, std::chrono::steady_clock::now() } );
 
     if( !m_added )
@@ -73,15 +79,14 @@ void AGENT_EDIT_FLASH::Flash( const std::vector<BOX2I>& aBoxes, const wxString& 
         m_added = true;
     }
 
-    repaint();
+    repaint( false );   // drawn by the edit's own redraw
 
-    // One wake-up when the oldest flash is due to go (not a frame clock).
-    if( !m_timer.IsRunning() )
-        m_timer.StartOnce( (int) ( FLASH_SECONDS * 1000 ) + 20 );
+    // One wake-up, only if no further edit comes to take the flash away with its own redraw.
+    m_timer.StartOnce( IDLE_REMOVE_MS );
 }
 
 
-void AGENT_EDIT_FLASH::SetZones( const std::vector<ZONE>& aZones )
+void AGENT_EDIT_FLASH::SetZones( const std::vector<ZONE>& aZones, bool aRefresh )
 {
     auto same = [&]()
     {
@@ -111,7 +116,7 @@ void AGENT_EDIT_FLASH::SetZones( const std::vector<ZONE>& aZones )
         m_added = true;
     }
 
-    repaint();
+    repaint( aRefresh );
 }
 
 
@@ -134,11 +139,11 @@ void AGENT_EDIT_FLASH::SetGhost( bool aShow, const BOX2I& aMine, const BOX2I& aA
         m_added = false;
     }
 
-    repaint();
+    repaint( true );
 }
 
 
-void AGENT_EDIT_FLASH::repaint()
+void AGENT_EDIT_FLASH::repaint( bool aRefresh )
 {
     // Only this overlay item: the overlay target composites over the cached board layers, so
     // nothing of the board is redrawn (never MarkDirty(), which redraws every target).
@@ -147,7 +152,9 @@ void AGENT_EDIT_FLASH::repaint()
 
     m_view->MarkTargetDirty( KIGFX::TARGET_OVERLAY );
 
-    if( m_refresh )
+    // Inside an edit's commit the board's own redraw follows and paints this too: asking for a
+    // paint here would draw the frame twice.
+    if( aRefresh && m_refresh )
         m_refresh();
 }
 
@@ -174,13 +181,10 @@ void AGENT_EDIT_FLASH::onTimer( wxTimerEvent& aEvent )
     }
     else
     {
-        // Wake again when the next oldest is due.
-        double age = std::chrono::duration<double>( std::chrono::steady_clock::now()
-                                                    - m_entries.front().start ).count();
-        m_timer.StartOnce( std::max( 20, (int) ( ( FLASH_SECONDS - age ) * 1000 ) + 20 ) );
+        m_timer.StartOnce( IDLE_REMOVE_MS );
     }
 
-    repaint();
+    repaint( true );
 }
 
 
