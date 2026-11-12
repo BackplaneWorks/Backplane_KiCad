@@ -465,6 +465,10 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
 
     RestoreAuiLayout();
 
+    // The Agents pane opens itself when an agent works (RefreshAgentZones); a saved layout (wx 3.3's
+    // aui_state keeps every pane, shown or not, with its last size) never brings it back at start.
+    m_auimgr.GetPane( m_agentsPanel ).Show( false );
+
     // A saved layout brings its own minimum, so the one the panel needs is set again.
     m_auimgr.GetPane( GitCommitPaneName() ).min_size.x = m_gitCommitPane->GetMinDockWidth();
 
