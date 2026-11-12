@@ -445,6 +445,15 @@ bool DRC_TEST_PROVIDER_CONNECTION_WIDTH::Run()
                                 contributingItems.push_back( zone );
                         }
 
+                        // GetObjectsAt() returns a hash set of pointers and the zone R-trees are
+                        // keyed by zone address, so this order followed heap addresses; report
+                        // (and evaluate the rule on) the items in a fixed order instead.
+                        std::sort( contributingItems.begin(), contributingItems.end(),
+                                   []( const BOARD_ITEM* a, const BOARD_ITEM* b )
+                                   {
+                                       return a->m_Uuid < b->m_Uuid;
+                                   } );
+
                         if( !contributingItems.empty() )
                         {
                             BOARD_ITEM* item1 = contributingItems[0];
