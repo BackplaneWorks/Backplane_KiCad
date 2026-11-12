@@ -533,10 +533,10 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
     if( actor.empty() )
         actor = "api";
 
-    // Backplane's own client ("backplane-<pid>") acts for the person in Backplane's UI (a BOM edit, a
-    // panel's button): the person's change, in their undo, not an actor of its own (agents are
-    // "agent:<thread>").
-    if( actor.rfind( "backplane-", 0 ) == 0 )
+    // A client named "person:<anything>" acts for the person (Backplane's own UI: a BOM edit, a
+    // panel's button): the person's change, in their undo.  Every other name is an actor of its own
+    // ("agent:<thread>" for agents), with its own undo, as before.
+    if( actor.rfind( "person:", 0 ) == 0 )
         actor.clear();
 
     COEDIT::ACTOR_SCOPE actorScope( actor );

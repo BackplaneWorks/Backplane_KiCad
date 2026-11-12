@@ -211,8 +211,10 @@ def embedded_broken_prewarm(kicad, kicad_cli, out, source):
 
 def embedded_undo(kicad, kicad_cli, out, source):
     """The schematic twin of the board's undo check: a schematic edit through the API is undoable.
-    Backplane's own client (a BOM panel edit, "backplane-<pid>") is the person's: their undo takes it
-    back.  An agent's ("agent:<thread>") is its own: the person's undo leaves it, the agent's takes it."""
+    A client named "person:..." (Backplane's own UI, a BOM panel edit) is the person: their Ctrl+Z
+    takes it back.  Any other name is an actor of its own: "agent:<thread>", and also Backplane's
+    shared transport "backplane-<pid>" that agents' kicad_ipc goes through: the person's Ctrl+Z leaves
+    its edit, UndoAgentChange takes it back."""
     staged = Path(tempfile.mkdtemp(prefix="bp-sch-undo-")) / "complex_hierarchy"
     make_project(source, staged)
     with Session(kicad, out / "undo", staged) as s, \
@@ -229,7 +231,7 @@ def embedded_undo(kicad, kicad_cli, out, source):
         time.sleep(3)
         doc = api.request(editor.GetOpenDocuments(type=base.DOCTYPE_SCHEMATIC),
                           editor.GetOpenDocumentsResponse).documents[0]
-        person = IpcSession(kicad_cli, api_socket=s.socket, timeout=120000, client_name="backplane-4242")
+        person = IpcSession(kicad_cli, api_socket=s.socket, timeout=120000, client_name="person:backplane-4242")
         person.__enter__()
         agent = IpcSession(kicad_cli, api_socket=s.socket, timeout=120000, client_name="agent:tundo")
         agent.__enter__()
@@ -298,6 +300,20 @@ def embedded_undo(kicad, kicad_cli, out, source):
         check(value() == "BP-AGENT", f"undo: the person's Ctrl+Z leaves the agent's edit ({value()!r})")
         undone = agent_undo("agent:tundo")
         check(undone and value() == original, f"undo: UndoAgentChange takes the agent's edit back ({value()!r})")
+        hub = IpcSession(kicad_cli, api_socket=s.socket, timeout=120000, client_name="backplane-4242")
+        hub.__enter__()
+        edit(hub, "BP-HUB-AGENT", "kicad_ipc via the hub's transport")
+        person_undo()
+        check(value() == "BP-HUB-AGENT",
+              f"undo: an edit on the hub's shared transport (backplane-<pid>) is not the person's ({value()!r})")
+        changes = api.request(coedit.GetChanges(since=0, doc="sch"), coedit.GetChangesResponse).changes
+        mine = [c for c in changes if c.actor == "backplane-4242" and not c.undo]
+        r = hub.request(coedit.UndoAgentChange(document=doc, seq=mine[-1].seq), coedit.UndoAgentChangeResponse) \
+            if mine else None
+        time.sleep(0.8)
+        check(bool(r and r.undone) and value() == original,
+              f"undo: UndoAgentChange takes the hub-transport edit back ({value()!r})")
+        hub.__exit__(None, None, None)
         for client in (person, agent):
             client.__exit__(None, None, None)
 
