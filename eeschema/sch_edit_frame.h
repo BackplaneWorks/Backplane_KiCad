@@ -1219,6 +1219,8 @@ private:
     std::unique_ptr<API_HANDLER_SCH> m_apiHandler;
     std::unique_ptr<API_HANDLER_COMMON> m_apiHandlerCommon;
     std::unique_ptr<API_HANDLER_LIBRARIES> m_apiLibrariesHandler;
+
+    bool                        m_embedRepairNoticeShown = false;   ///< said once per session
 };
 
 

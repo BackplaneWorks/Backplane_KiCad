@@ -216,3 +216,16 @@ edits: no prompt, no busy, nothing lost; (3) the agent edits a rule while anothe
 another, and net classes from both: everything survives, live and saved.
 
 `qa/backplane/merge_test.cpp`: the JSON and per-rule merges.
+
+## Schematic files another writer saved
+
+- KiCad 10.99 roots every symbol and sheet instance path at the project's top-level sheet UUID
+  (`.kicad_pro` `schematic.top_level_sheets`), which differs from the root file's own UUID once
+  the editor has saved the project.  The headless loader (`EESCHEMA_HELPERS::LoadSchematic`,
+  used by `kicad-cli api-server`) kept the file's UUID for a single top-level sheet, so a
+  headless save rewrote every path to it, and the open editor "repaired" them on each load.  It
+  now takes the project's UUID, as the editor does.
+- An embedded reload (a file changed on disk while the frame was clean) never shows the modal
+  "automatically fixed" dialog: an infobar says it once per session.  What the load fixed is not
+  counted as the person's edit, so the next change on disk reloads too instead of asking them.
+- `scripts/backplane-sch-toplevel-check.py` checks both.

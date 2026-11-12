@@ -168,6 +168,15 @@ bool SCH_EDIT_FRAME::EmbedReload()
     if( !ReloadFromDisk() )
         return false;
 
+    // A clean frame was reloaded: anything modified now is a load-time fix of what another writer saved
+    // (repaired instance paths, pruned orphans), made again on every load and not the person's edit.  Left
+    // modified, the next change on disk would ask the person instead of reloading.
+    if( IsContentModified() )
+    {
+        Schematic().Hierarchy().ClearModifyStatus();
+        updateTitle();
+    }
+
     auto restore =
             [this, center, scale, sheetPath, selected]()
             {
@@ -586,10 +595,30 @@ bool SCH_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
         // fixed (modified).
         if( sheetList.IsModified() || repairedPageNumbers )
         {
-            DisplayInfoMessage( this, _( "An error was found when loading the schematic that has been "
-                                         "automatically fixed.  Please save the schematic to repair the "
-                                         "broken file or it may not be usable with other versions of "
-                                         "KiCad." ) );
+            BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+            if( embed.Enabled() && embed.Reloading() )
+            {
+                // A reload after another writer (an agent, a script) saved the files: said once, never
+                // per sheet or reload (EmbedReload does not count the repair as the person's edit).
+                if( !m_embedRepairNoticeShown )
+                {
+                    m_embedRepairNoticeShown = true;
+                    m_infoBar->RemoveAllButtons();
+                    m_infoBar->AddCloseButton();
+                    m_infoBar->ShowMessage( _( "Another program wrote this schematic with errors that "
+                                               "KiCad fixed on loading.  Save the schematic to keep the "
+                                               "fixes in its files." ),
+                                            wxICON_INFORMATION, WX_INFOBAR::MESSAGE_TYPE::GENERIC );
+                }
+            }
+            else
+            {
+                DisplayInfoMessage( this, _( "An error was found when loading the schematic that has been "
+                                             "automatically fixed.  Please save the schematic to repair the "
+                                             "broken file or it may not be usable with other versions of "
+                                             "KiCad." ) );
+            }
         }
 
         UpdateFileHistory( fullFileName );
