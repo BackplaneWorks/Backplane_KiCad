@@ -511,10 +511,9 @@ x.XSync(d, 0); print('ok', flush=True); time.sleep(600)
                   f"Close fail_if_modified refuses ({refused.status.error_message})")
             closed = api.request(embed.Close(mode=embed.CM_SAVE, kind=embed.FK_PCB), embed.CloseResponse)
             saved = hashlib.sha256(board_file.read_bytes()).hexdigest()
-            print(f"close save: modified={list(closed.modified)} saved_changed={saved != original} "
-                  f"pcb_open={embed.FK_PCB in frame_windows()}", flush=True)
-            check(len(closed.modified) == 1 and saved != original
-                  and embed.FK_PCB not in frame_windows(),
+            # The frame is destroyed a moment after the reply (KiCad closes it from its event loop)
+            gone = wait_for(lambda: embed.FK_PCB not in frame_windows(), 10, 0.1)
+            check(len(closed.modified) == 1 and saved != original and gone,
                   "Close save on the PCB saves and closes it without a prompt")
             show(embed.FK_PCB, "10-pcb-reopened")
             modify_board()

@@ -419,6 +419,15 @@ bool IsStructuralDialog( const std::string& aTypeName )
         "DIALOG_EDIT_SYMBOLS_LIBID",
         "DIALOG_FIELD_PROPERTIES_GLOBAL",
         "DIALOG_GLOBAL_EDIT_TEXT_AND_GRAPHICS_BASE",
+        // Filter- or board-wide edits, and generators that rebuild their children
+        "DIALOG_GLOBAL_EDIT_TEARDROPS",
+        "DIALOG_UNUSED_PAD_LAYERS",
+        "DIALOG_GENERATORS",
+        "DIALOG_TUNING_PATTERN_PROPERTIES",
+        "DIALOG_MULTICHANNEL_GENERATE_RULE_AREAS",
+        "DIALOG_GENERATED_TABLE_PROPERTIES",
+        // Footprint editor: edits the whole footprint, not the selection
+        "DIALOG_ENUM_PADS",
     };
 
     for( const char* name : structural )

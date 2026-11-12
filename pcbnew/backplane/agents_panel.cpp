@@ -28,6 +28,7 @@
 #include <wx/stattext.h>
 #include <wx/textdlg.h>
 #include <wx/time.h>
+#include <wx/datetime.h>
 
 
 namespace
@@ -39,15 +40,8 @@ wxString agentName( const std::string& aActor )
 
 wxString ago( int64_t aMs )
 {
-    int64_t secs = ( wxGetUTCTimeMillis().GetValue() - aMs ) / 1000;
-
-    if( secs < 60 )
-        return _( "now" );
-
-    if( secs < 3600 )
-        return wxString::Format( _( "%d min" ), (int) ( secs / 60 ) );
-
-    return wxString::Format( _( "%d h" ), (int) ( secs / 3600 ) );
+    // The clock time: rows are not redrawn, so a relative "2 min" would go stale.
+    return wxDateTime( (wxLongLong) aMs ).Format( wxS( "%H:%M:%S" ) );
 }
 } // namespace
 
@@ -97,7 +91,29 @@ AGENTS_PANEL::~AGENTS_PANEL()
 
 void AGENTS_PANEL::Rebuild()
 {
-    // One row per agent: what it does, what it touches, and the person's controls.
+    // Cheap on every agent edit: the agent rows are rebuilt only when what they show changed,
+    // and the change list only gets the new rows at its top.
+    rebuildAgents();
+    addChanges();
+    m_frame->RefreshAgentZones();
+}
+
+
+void AGENTS_PANEL::rebuildAgents()
+{
+    std::string key;
+
+    for( const COEDIT::ACTIVITY& a : COEDIT::Activities() )
+    {
+        if( a.state != "idle" )
+            key += a.actor + "|" + a.task + "|" + a.state + "|"
+                   + std::to_string( COEDIT::RecentItems( a.actor, 10 * 60 * 1000 ).size() ) + "\n";
+    }
+
+    if( key == m_activityKey )
+        return;
+
+    m_activityKey = key;
     m_agents->Clear( true );
 
     for( const COEDIT::ACTIVITY& a : COEDIT::Activities() )
@@ -142,17 +158,36 @@ void AGENTS_PANEL::Rebuild()
         m_agents->Add( row, 0, wxEXPAND | wxBOTTOM, 2 );
     }
 
-    // The agents' changes, newest first.
-    m_log->DeleteAllItems();
-    m_rowSeqs.clear();
-    m_rowItems.clear();
+    Layout();
+}
+
+
+void AGENTS_PANEL::addChanges()
+{
+    // New agent changes, oldest first, each inserted at the top.
+    std::vector<COEDIT::CHANGE> fresh;
 
     for( const COEDIT::CHANGE& c : COEDIT::AgentChanges( 200 ) )
     {
-        if( c.doc != "pcb" && c.doc != "rules" && c.doc != "project" )
-            continue;
+        if( c.seq <= m_lastSeq )
+            break;
 
-        long row = m_log->InsertItem( m_log->GetItemCount(), ago( c.at ) );
+        if( c.doc == "pcb" || c.doc == "rules" || c.doc == "project" )
+            fresh.push_back( c );
+    }
+
+    if( !COEDIT::AgentChanges( 1 ).empty() )
+        m_lastSeq = std::max( m_lastSeq, COEDIT::AgentChanges( 1 ).front().seq );
+
+    if( fresh.empty() )
+        return;
+
+    m_log->Freeze();
+
+    for( auto it = fresh.rbegin(); it != fresh.rend(); ++it )
+    {
+        const COEDIT::CHANGE& c = *it;
+        long row = m_log->InsertItem( 0, ago( c.at ) );
         m_log->SetItem( row, 1, agentName( c.actor ) );
         wxString what = wxString::FromUTF8( c.description );
 
@@ -160,15 +195,22 @@ void AGENTS_PANEL::Rebuild()
             what << _( " (after your edit)" );
 
         m_log->SetItem( row, 2, what );
-        m_rowSeqs.push_back( c.seq );
+        m_rowSeqs.insert( m_rowSeqs.begin(), c.seq );
 
         std::vector<std::string> items = c.created;
         items.insert( items.end(), c.modified.begin(), c.modified.end() );
-        m_rowItems.push_back( items );
+        m_rowItems.insert( m_rowItems.begin(), items );
     }
 
-    m_frame->RefreshAgentZones();
-    Layout();
+    // Keep the newest 200.
+    while( m_log->GetItemCount() > 200 )
+    {
+        m_log->DeleteItem( m_log->GetItemCount() - 1 );
+        m_rowSeqs.pop_back();
+        m_rowItems.pop_back();
+    }
+
+    m_log->Thaw();
 }
 
 

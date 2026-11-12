@@ -83,6 +83,26 @@ void AGENT_EDIT_FLASH::Flash( const std::vector<BOX2I>& aBoxes, const wxString& 
 
 void AGENT_EDIT_FLASH::SetZones( const std::vector<ZONE>& aZones )
 {
+    auto same = [&]()
+    {
+        if( aZones.size() != m_zones.size() )
+            return false;
+
+        for( size_t ii = 0; ii < aZones.size(); ++ii )
+        {
+            if( aZones[ii].box != m_zones[ii].box || aZones[ii].label != m_zones[ii].label
+                || aZones[ii].paused != m_zones[ii].paused )
+            {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    if( same() )
+        return;   // nothing to repaint
+
     m_zones = aZones;
 
     if( !m_zones.empty() && !m_added )

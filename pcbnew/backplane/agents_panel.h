@@ -55,4 +55,9 @@ private:
     std::vector<uint64_t> m_rowSeqs;
     std::vector<std::vector<std::string>> m_rowItems;
     bool                  m_pending = false;
+    uint64_t              m_lastSeq = 0;          ///< newest change shown in the list
+    std::string           m_activityKey;          ///< what the agent rows show now
+
+    void rebuildAgents();
+    void addChanges();
 };
