@@ -379,7 +379,17 @@ bool DRC_TEST_PROVIDER_CONNECTION_WIDTH::Run()
 
                 ITEMS_POLY& itemsPoly = dataset[ { aNetcode, aLayer } ];
 
-                for( BOARD_ITEM* item : itemsPoly.Items )
+                // Items is ordered by address; add them in id order so the merged polygon (and
+                // so where its outlines start and which necks are reported) is the same each run
+                std::vector<BOARD_ITEM*> items( itemsPoly.Items.begin(), itemsPoly.Items.end() );
+
+                std::sort( items.begin(), items.end(),
+                           []( const BOARD_ITEM* a, const BOARD_ITEM* b )
+                           {
+                               return a->m_Uuid < b->m_Uuid;
+                           } );
+
+                for( BOARD_ITEM* item : items )
                     addItemPolysWithEndings( item, itemsPoly.Poly, aLayer, 0, ARC_HIGH_DEF, ERROR_OUTSIDE );
 
                 itemsPoly.Poly.Fracture();
