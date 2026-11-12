@@ -25,6 +25,7 @@
 #include <pad.h>
 #include <pcb_track.h>
 #include <thread_pool.h>
+#include <drc/drc_parallel.h>
 #include <zone.h>
 
 #include <geometry/seg.h>
@@ -726,9 +727,8 @@ void DRC_TEST_PROVIDER_COPPER_CLEARANCE::testTrackClearances()
                 done.fetch_add( 1 );
             };
 
-    thread_pool& tp = GetKiCadThreadPool();
 
-    auto track_futures = tp.submit_loop( 0, m_board->Tracks().size(), testTrack, m_board->Tracks().size() );
+    auto track_futures = DrcParallelFor( m_board->Tracks().size(), testTrack );
 
     while( done < count )
     {
@@ -973,7 +973,6 @@ bool DRC_TEST_PROVIDER_COPPER_CLEARANCE::testPadAgainstItem( PAD* pad, const std
 
 void DRC_TEST_PROVIDER_COPPER_CLEARANCE::testPadClearances( )
 {
-    thread_pool&        tp = GetKiCadThreadPool();
     std::atomic<size_t> done( 1 );
 
     LSET boardCopperLayers = LSET::AllCuMask( m_board->GetCopperLayerCount() );
@@ -1034,7 +1033,7 @@ void DRC_TEST_PROVIDER_COPPER_CLEARANCE::testPadClearances( )
             };
 
     size_t numFootprints = m_board->Footprints().size();
-    auto returns = tp.submit_loop( 0, numFootprints, fp_check, numFootprints );
+    auto returns = DrcParallelFor( numFootprints, fp_check );
 
     // Wait for all threads to finish
     for( const std::future<void>& ret : returns )
