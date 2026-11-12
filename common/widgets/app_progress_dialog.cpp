@@ -19,9 +19,20 @@
 
 #include <wx/version.h>
 #include <wx/sizer.h>
+#include <wx/evtloop.h>
+#include <wx/utils.h>
 #include <widgets/app_progress_dialog.h>
 #include <backplane_embed.h>
 #include <widgets/wx_event_utils.h>
+
+/// What wxGenericProgressDialog::Update() does after each update (UI events only, no input);
+/// the hidden embedded dialog skips its Update, so do it here.
+static void yieldLikeTheDialog()
+{
+    if( wxEventLoopBase* loop = wxEventLoopBase::GetActive() )
+        loop->YieldFor( wxEVT_CATEGORY_UI );
+}
+
 
 APP_PROGRESS_DIALOG::APP_PROGRESS_DIALOG( const wxString& aTitle, const wxString& aMessage,
                                           int aMaximum, wxWindow* aParent,
@@ -33,7 +44,7 @@ APP_PROGRESS_DIALOG::APP_PROGRESS_DIALOG( const wxString& aTitle, const wxString
 
 {
     // Embedded, the host draws it (ET_PROGRESS) and the dialog never maps; see Show().
-    if( BACKPLANE_EMBED::Get().Enabled() )
+    if( BACKPLANE_EMBED::Get().Enabled() && !wxGetEnv( wxS( "BACKPLANE_KICAD_PROGRESS_DIALOGS" ), nullptr ) )
         m_embedJob = BACKPLANE_EMBED::Get().ProgressBegin( aParent, aTitle, ( aStyle & wxPD_CAN_ABORT ) != 0 );
 
     APP_PROGRESS_DIALOG_BASE::Create( aTitle, aMessage == wxEmptyString ? wxString( wxT( " " ) ) : aMessage,
@@ -72,6 +83,7 @@ bool APP_PROGRESS_DIALOG::Pulse( const wxString& aNewMsg, bool* aSkip )
     if( m_embedJob )
     {
         BACKPLANE_EMBED::Get().ProgressUpdate( m_embedJob, -1.0, aNewMsg );
+        yieldLikeTheDialog();
         DrainPendingEvents();
         return !BACKPLANE_EMBED::Get().ProgressCancelled( m_embedJob );
     }
@@ -86,6 +98,7 @@ bool APP_PROGRESS_DIALOG::Update( int aValue, const wxString& aNewMsg, bool* aSk
     {
         BACKPLANE_EMBED::Get().ProgressUpdate( m_embedJob, m_maximum > 0 ? double( aValue ) / m_maximum : -1.0,
                                                aNewMsg );
+        yieldLikeTheDialog();
         DrainPendingEvents();
         return !BACKPLANE_EMBED::Get().ProgressCancelled( m_embedJob );
     }

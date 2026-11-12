@@ -169,6 +169,26 @@ def main():
               and list(result.found.nets) == ["VCC"], f"SelectItems on the hidden schematic ({result})")
         check(selection_count(base.DOCTYPE_PCB) >= 1, "schematic → board cross-probe with the schematic hidden")
         _, sch_selected = show(embed.FK_SCH, "09-sch-select-u2", 3)
+
+        # The host placing the frame again (ShowFrame geometry, same and new size, as on a
+        # window move or a tab switch) keeps the selection and the view: the selected symbol
+        # stays under the same screen point
+        sch_count = selection_count(base.DOCTYPE_SCHEMATIC)
+        w0, h0 = host.size
+        for gw, gh in ((w0, h0), (w0 - 120, h0 - 80), (w0, h0)):
+            api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=gw, height=gh),
+                        embed.ShowFrameResponse)
+            time.sleep(1.2)
+            host.pump(0.1)
+        replaced = s.shot("09b-sch-after-geometry")
+        win = frames()[embed.FK_SCH].window
+        geom = disp.create_resource_object("window", win).get_geometry()
+        check(selection_count(base.DOCTYPE_SCHEMATIC) == sch_count and sch_count >= 1,
+              f"ShowFrame geometry keeps the schematic selection ({sch_count} items)")
+        check((geom.x, geom.y, geom.width, geom.height) == (0, 0, w0, h0),
+              f"ShowFrame geometry puts the frame exactly there ({geom.x},{geom.y} {geom.width}x{geom.height})")
+        check(mean_difference(sch_selected, replaced, canvas) < 0.05,
+              "and the view is where it was (the canvas looks the same)")
         missing = api.request_raw(embed.SelectItems(kind=embed.FK_FOOTPRINT_EDITOR, references=["U1"]))
         check(missing.status.status == api.envelope.AS_UNHANDLED, "a frame kind without a handler is AS_UNHANDLED")
 
@@ -468,7 +488,11 @@ x.XSync(d, 0); print('ok', flush=True); time.sleep(600)
             events()
             before_fill = set(s.watcher.current())
             editor = api.module("common.commands.editor_commands")
-            api.request(editor.RunAction(action="pcbnew.ZoneFiller.zoneFillAll"), editor.RunActionResponse)
+            # RefillZones names the board, so it reaches the PCB editor whichever frame is active
+            # (a RunAction goes to the first board-like handler, which may be the footprint editor)
+            board_commands = api.module("board.board_commands")
+            fill = api.request_raw(board_commands.RefillZones(board=document(base.DOCTYPE_PCB)))
+            print(f"  RefillZones: status {fill.status.status} {fill.status.error_message}", flush=True)
             wait_for(lambda: any(e.type == embed.ET_PROGRESS and e.progress.done and "Zone" in e.progress.title
                                  for e in events()), 30, 0.2)
             events()

@@ -679,20 +679,33 @@ void KIPLATFORM::EMBED::SetFrameGeometry( wxWindow* aFrame, int aX, int aY, int 
 
     // wx skips a move to where it believes the frame already is, and its idea of a frame inside
     // the holder can be stale; GTK keeps its own requested position and re-applies it when it
-    // configures the window.  Set both, and the X window itself, or a prewarmed frame stays at
-    // its off-screen -30000.
+    // configures the window.  Only when the X window is not where it was asked to be (a
+    // prewarmed frame left at its off-screen -30000) set GTK's position and move the X window
+    // too: an unconditional gtk_window_move shifted frames that were already in place.
+#ifdef GDK_WINDOWING_X11
+    Display* display = xDisplay();
+    Window   window = (Window) WindowId( aFrame );
+
+    if( !display || !window )
+        return;
+
+    XSync( display, False );
+
+    Window       root = 0;
+    int          x = 0, y = 0;
+    unsigned int w = 0, h = 0, border = 0, depth = 0;
+
+    if( !XGetGeometry( display, window, &root, &x, &y, &w, &h, &border, &depth ) )
+        return;
+
+    if( x == aX && y == aY )
+        return;
+
     if( GtkWidget* widget = static_cast<GtkWidget*>( aFrame->GetHandle() ); widget && GTK_IS_WINDOW( widget ) )
         gtk_window_move( GTK_WINDOW( widget ), aX, aY );
 
-#ifdef GDK_WINDOWING_X11
-    if( Display* display = xDisplay() )
-    {
-        if( Window window = (Window) WindowId( aFrame ) )
-        {
-            XMoveResizeWindow( display, window, aX, aY, std::max( 1, aWidth ), std::max( 1, aHeight ) );
-            XFlush( display );
-        }
-    }
+    XMoveResizeWindow( display, window, aX, aY, std::max( 1, aWidth ), std::max( 1, aHeight ) );
+    XFlush( display );
 #endif
 }
 

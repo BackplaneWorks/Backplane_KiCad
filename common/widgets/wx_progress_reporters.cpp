@@ -21,9 +21,21 @@
  */
 
 #include <thread>
+#include <wx/evtloop.h>
+#include <wx/utils.h>
 #include <backplane_embed.h>
 #include <widgets/wx_event_utils.h>
 #include <widgets/wx_progress_reporters.h>
+
+
+/// What wxGenericProgressDialog::Update() does after each update and the hidden dialog no longer
+/// does: let pending UI events (sizes, layout, paints) run, but no user input.  A load relies on
+/// it: a frame being laid out during it gets its real size before the load's zoom-to-fit.
+static void yieldLikeTheDialog()
+{
+    if( wxEventLoopBase* loop = wxEventLoopBase::GetActive() )
+        loop->YieldFor( wxEVT_CATEGORY_UI );
+}
 
 
 static wxString getPlaceholderText()
@@ -46,7 +58,7 @@ WX_PROGRESS_REPORTER::WX_PROGRESS_REPORTER( wxWindow* aParent, const wxString& a
 {
     // Embedded, the job is the host's to draw: the dialog is created (Create() shows it, which
     // Show() vetoes) and never maps.  Before Create(), so that veto already holds.
-    if( BACKPLANE_EMBED::Get().Enabled() )
+    if( BACKPLANE_EMBED::Get().Enabled() && !wxGetEnv( wxS( "BACKPLANE_KICAD_PROGRESS_DIALOGS" ), nullptr ) )
         m_embedJob = BACKPLANE_EMBED::Get().ProgressBegin( aParent, aTitle, aCanAbort != 0 );
 
     WX_PROGRESS_REPORTER_BASE::Create( aTitle,
@@ -124,6 +136,7 @@ bool WX_PROGRESS_REPORTER::updateUI()
         // The host draws it; nothing here is shown.  The UI keeps handling events as before.
         BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
         embed.ProgressUpdate( m_embedJob, m_indeterminate.load() ? -1.0 : cur / 1000.0, message );
+        yieldLikeTheDialog();
         DrainPendingEvents();
 
         bool keepGoing = !embed.ProgressCancelled( m_embedJob );
