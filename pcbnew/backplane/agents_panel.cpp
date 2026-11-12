@@ -57,7 +57,7 @@ AGENTS_PANEL::AGENTS_PANEL( wxWindow* aParent, PCB_EDIT_FRAME* aFrame ) :
 
     m_log = new wxListCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                             wxLC_REPORT | wxLC_SINGLE_SEL );
-    m_log->AppendColumn( _( "When" ), wxLIST_FORMAT_LEFT, FromDIP( 50 ) );
+    m_log->AppendColumn( _( "When" ), wxLIST_FORMAT_LEFT, FromDIP( 66 ) );
     m_log->AppendColumn( _( "Agent" ), wxLIST_FORMAT_LEFT, FromDIP( 80 ) );
     m_log->AppendColumn( _( "Change" ), wxLIST_FORMAT_LEFT, FromDIP( 220 ) );
     m_log->Bind( wxEVT_LIST_ITEM_ACTIVATED, &AGENTS_PANEL::onShow, this );
