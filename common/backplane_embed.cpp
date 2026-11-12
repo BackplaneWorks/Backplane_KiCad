@@ -16,6 +16,8 @@
  */
 
 #include <backplane_embed.h>
+#include <backplane_coedit.h>
+#include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <filesystem>
@@ -227,6 +229,41 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
     m_parent = aParent;
     m_toplevel = aToplevel;
     m_pollTimer.Start( 250 );
+
+    // Co-editing (docs/backplane/coedit.md): the host hears every change and every notice.
+    COEDIT::SetChangeListener(
+            [this]( const COEDIT::CHANGE& aChange )
+            {
+                nlohmann::json j = { { "seq", aChange.seq },
+                                     { "doc", aChange.doc },
+                                     { "actor", aChange.actor },
+                                     { "description", aChange.description },
+                                     { "created", aChange.created },
+                                     { "modified", aChange.modified },
+                                     { "deleted", aChange.deleted },
+                                     { "rebased", aChange.rebased },
+                                     { "undo", aChange.undo } };
+                PushEvent( EMBED_EVENT_TYPE::DOCUMENT_EDITED, EMBED_FRAME_INFO(), j.dump() );
+            } );
+
+    COEDIT::SetNoticeListener(
+            [this]( const COEDIT::NOTICE& aNotice )
+            {
+                nlohmann::json j = { { "kind", aNotice.kind },
+                                     { "actor", aNotice.actor },
+                                     { "doc", aNotice.doc },
+                                     { "details", nlohmann::json::parse( aNotice.json, nullptr,
+                                                                         false ) } };
+                PushEvent( EMBED_EVENT_TYPE::AGENT_NOTICE, EMBED_FRAME_INFO(), j.dump() );
+            } );
+
+    COEDIT::SetControlListener(
+            [this]( const std::string& aActor, const std::string& aAction, const std::string& aText )
+            {
+                nlohmann::json j = { { "actor", aActor }, { "action", aAction }, { "text", aText } };
+                PushEvent( EMBED_EVENT_TYPE::AGENT_CONTROL, EMBED_FRAME_INFO(), j.dump() );
+            } );
+
     return true;
 }
 
@@ -1419,6 +1456,17 @@ void BACKPLANE_EMBED::pollFiles()
 
     // Copy: a reload can open or close frames.
     std::vector<wxFrame*> frames = Frames();
+
+    // Project settings and custom rules written by another process merge into the open editor
+    // (not under a dialog, which may be editing them; its own save merges).
+    if( !ModalBlocker() )
+    {
+        for( wxFrame* frame : frames )
+        {
+            if( const FRAME_ENTRY* e = entry( frame ); e && e->ops.syncSideFiles )
+                e->ops.syncSideFiles();
+        }
+    }
 
     for( wxFrame* frame : frames )
     {

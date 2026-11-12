@@ -43,6 +43,9 @@ class PCB_VERTEX_EDITOR_PANE;
 /**
  * Common, abstract interface for edit frames.
  */
+class AGENT_EDIT_FLASH;
+struct AGENT_EDIT_FLASH_ZONE;
+
 class PCB_BASE_EDIT_FRAME : public PCB_BASE_FRAME
 {
 public:
@@ -135,6 +138,35 @@ public:
      *  - Get an old version of the board from Redo list
      */
     void RestoreCopyFromRedoList( wxCommandEvent& aEvent );
+
+protected:
+    /// Co-editing (docs/backplane/coedit.md).
+    void coeditRecord( PICKED_ITEMS_LIST& aList, bool aUndo );
+    void applyUndoRedo( std::vector<PICKED_ITEMS_LIST*>& aLists, bool aUndo );
+    std::vector<PICKED_ITEMS_LIST*> takeForUndoRedo( UNDO_REDO_CONTAINER& aStack,
+                                                     const std::string& aActor );
+    std::vector<PICKED_ITEMS_LIST*> takeAt( UNDO_REDO_CONTAINER& aStack, int aIndex,
+                                            const std::string& aBy );
+
+    /// Briefly highlights an agent's change on the canvas, labelled with its actor.
+    virtual void flashAgentEdit( const PICKED_ITEMS_LIST& aList );
+
+    std::unique_ptr<AGENT_EDIT_FLASH> m_agentFlash;
+
+public:
+    /// Co-editing: the working agents' areas on the canvas.
+    void ShowAgentZones( const std::vector<AGENT_EDIT_FLASH_ZONE>& aZones );
+
+    /// Co-editing: undo one change by its change-log seq (the Agents panel, UndoAgentChange).
+    bool UndoChangeBySeq( uint64_t aSeq, std::string& aError );
+
+    /// Co-editing collision "See both": the agent's version of an item over the person's.
+    void ShowAgentGhost( bool aShow, const BOX2I& aMine = BOX2I(), const BOX2I& aAgents = BOX2I(),
+                         const wxString& aLabel = wxEmptyString );
+
+protected:
+
+public:
 
     /**
      * Undo the last edit:

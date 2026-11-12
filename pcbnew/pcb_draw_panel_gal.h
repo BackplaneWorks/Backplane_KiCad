@@ -33,6 +33,7 @@ class DS_PROXY_VIEW_ITEM;
 class RATSNEST_VIEW_ITEM;
 class CONNECTIVITY_DATA;
 class BOARD_STRUCTURE_VIEW_ITEM;
+class PLAN_VIEW_ITEM;
 class PROGRESS_REPORTER;
 
 /// Apply pcbnew's canonical GAL layer order (copper and zones below silk, fab
@@ -133,6 +134,12 @@ public:
     void SetStructureVisible( int aCategory, bool aVisible );
     bool IsStructureVisible( int aCategory ) const;
     void RefreshStructure();
+
+    /// The routing plan overlay (docs/backplane/floorplanner.md).
+    PLAN_VIEW_ITEM* GetPlanView() const { return m_planView.get(); }
+
+    /// Redraw the plan overlay after the plan or its view state changed.
+    void RefreshPlan();
     void SetActiveConstructionLayer( CONSTRUCTION_LAYER aLayer );
     CONSTRUCTION_LAYER GetActiveConstructionLayer() const { return m_constructionLayer; }
 
@@ -176,6 +183,9 @@ protected:
     std::unique_ptr<RATSNEST_VIEW_ITEM> m_ratsnest;      ///< Ratsnest view item
     std::unique_ptr<RATSNEST_VIEW_ITEM> m_localRatsnest; /**< Moving items' part, when split off */
     std::unique_ptr<BOARD_STRUCTURE_VIEW_ITEM> m_structureView;
+    std::unique_ptr<PLAN_VIEW_ITEM>            m_planView;
+    bool                                       m_planViewMode = false;
+    bool                                       m_planShown = true;
     std::array<bool, 7> m_structureVisible{ true, true, true, true, true, true, true };
     CONSTRUCTION_LAYER m_constructionLayer = CONSTRUCTION_LAYER::NONE;
 };

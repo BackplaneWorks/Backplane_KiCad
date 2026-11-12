@@ -508,6 +508,141 @@ TOOL_ACTION PCB_ACTIONS::editStructureBoundary( TOOL_ACTION_ARGS()
         .Tooltip( _( "Move, edit, or delete a structure boundary" ) )
         .Flags( AF_ACTIVATE ) );
 
+
+// Routing plan (docs/backplane/floorplanner.md)
+
+TOOL_ACTION PCB_ACTIONS::planToggleView( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.togglePlanView" )
+        .Scope( AS_GLOBAL )
+        .DefaultHotkey( MD_ALT + 'P' )
+        .FriendlyName( _( "Plan View" ) )
+        .Tooltip( _( "Show the board the way the routing plan reads, and steer the plan" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planToggleShow( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.toggleShowPlan" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Show Routing Plan" ) )
+        .Tooltip( _( "Show or hide the routing plan overlay" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planEdit( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.edit" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Edit Routing Plan" ) )
+        .Tooltip( _( "Select, move and reshape routing plan corridors and plane regions" ) )
+        .Flags( AF_ACTIVATE ) );
+
+TOOL_ACTION PCB_ACTIONS::planAccept( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.accept" )
+        .Scope( AS_CONTEXT )
+        .DefaultHotkey( 'A' )
+        .FriendlyName( _( "Accept" ) )
+        .Tooltip( _( "Accept the selected plan items" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planReject( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.reject" )
+        .Scope( AS_CONTEXT )
+        .DefaultHotkey( 'R' )
+        .FriendlyName( _( "Reject" ) )
+        .Tooltip( _( "Reject the selected plan items" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planToggleLock( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.toggleLock" )
+        .Scope( AS_CONTEXT )
+        .DefaultHotkey( 'L' )
+        .FriendlyName( _( "Lock / Unlock" ) )
+        .Tooltip( _( "Lock the selected plan items so the agent cannot change them" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planRouteEarlier( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.routeEarlier" )
+        .Scope( AS_CONTEXT )
+        .DefaultHotkey( '[' )
+        .FriendlyName( _( "Route Earlier" ) )
+        .Tooltip( _( "Move the selected corridors earlier in the routing order" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planRouteLater( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.routeLater" )
+        .Scope( AS_CONTEXT )
+        .DefaultHotkey( ']' )
+        .FriendlyName( _( "Route Later" ) )
+        .Tooltip( _( "Move the selected corridors later in the routing order" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planWider( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.wider" )
+        .Scope( AS_CONTEXT )
+        .DefaultHotkey( 'W' )
+        .FriendlyName( _( "Wider" ) )
+        .Tooltip( _( "Widen the selected corridors" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planNarrower( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.narrower" )
+        .Scope( AS_CONTEXT )
+        .DefaultHotkey( MD_SHIFT + 'W' )
+        .FriendlyName( _( "Narrower" ) )
+        .Tooltip( _( "Narrow the selected corridors" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planMoveToLayer( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.moveToLayer" )
+        .Scope( AS_CONTEXT )
+        .FriendlyName( _( "Move to Layer..." ) )
+        .Tooltip( _( "Move the selected plan items to another copper layer" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planMergeGroups( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.mergeGroups" )
+        .Scope( AS_CONTEXT )
+        .FriendlyName( _( "Merge Groups" ) )
+        .Tooltip( _( "Merge the groups of the selected corridors into one" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planSplitGroup( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.splitGroup" )
+        .Scope( AS_CONTEXT )
+        .FriendlyName( _( "Split Group..." ) )
+        .Tooltip( _( "Split some nets of the selected corridor's group into a new group" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planAddNote( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.addNote" )
+        .Scope( AS_CONTEXT )
+        .DefaultHotkey( 'N' )
+        .FriendlyName( _( "Add Note..." ) )
+        .Tooltip( _( "Add a note for the agent, at the cursor" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planDelete( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.deleteItems" )
+        .Scope( AS_CONTEXT )
+        .FriendlyName( _( "Delete" ) )
+        .Tooltip( _( "Delete the selected plan items" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planDrawCorridor( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.drawCorridor" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Draw Corridor" ) )
+        .Tooltip( _( "Draw a routing corridor for a group of nets" ) )
+        .Flags( AF_ACTIVATE ) );
+
+TOOL_ACTION PCB_ACTIONS::planDrawPlane( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.drawPlane" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Draw Plane Region" ) )
+        .Tooltip( _( "Draw a plane region for a net" ) )
+        .Flags( AF_ACTIVATE ) );
+
+TOOL_ACTION PCB_ACTIONS::planApproveLayer( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.approveLayer" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Approve Layer" ) )
+        .Tooltip( _( "Approve every plan item on the active layer: routing may use them" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planRejectLayer( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.rejectLayer" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Reject Layer" ) )
+        .Tooltip( _( "Reject the active layer's plan" ) ) );
+
+TOOL_ACTION PCB_ACTIONS::planRequestReplan( TOOL_ACTION_ARGS()
+        .Name( "pcbnew.Plan.requestReplan" )
+        .Scope( AS_GLOBAL )
+        .FriendlyName( _( "Back to Planning" ) )
+        .Tooltip( _( "Stop routing and ask the agent to re-plan with your edits and notes" ) ) );
+
 TOOL_ACTION PCB_ACTIONS::drawBoardStructureRegion( TOOL_ACTION_ARGS()
         .Name( "pcbnew.BoardStructure.drawRegion" )
         .Scope( AS_GLOBAL )

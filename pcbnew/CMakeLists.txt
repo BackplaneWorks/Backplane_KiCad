@@ -482,6 +482,9 @@ set( PCBNEW_CLASS_SRCS
     menubar_pcb_editor.cpp
     padstack.cpp
     pcb_base_edit_frame.cpp
+    backplane/agent_edit_flash.cpp
+    backplane/plan_tool.cpp
+    backplane/agents_panel.cpp
     pcb_design_block_utils.cpp
     pcb_layer_box_selector.cpp
     pcb_edit_frame.cpp
@@ -516,6 +519,7 @@ set( PCBNEW_CLASS_SRCS
     api/api_handler_pcb.cpp
     api/api_pcb_assembly.cpp
     api/api_pcb_sketch_route.cpp
+    api/api_pcb_plan.cpp
     api/api_handler_pcb_tasks.cpp
     api/footprint_context.cpp
     api/headless_pcb_context.cpp
