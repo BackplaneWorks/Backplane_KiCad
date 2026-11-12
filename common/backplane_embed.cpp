@@ -17,7 +17,7 @@
 
 #include <backplane_embed.h>
 #include <backplane_coedit.h>
-#include <nlohmann/json.hpp>
+#include <json_common.h>
 
 #include <algorithm>
 #include <filesystem>

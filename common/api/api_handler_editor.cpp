@@ -22,7 +22,7 @@
 #include <api/proto_merge.h>
 #include <backplane_coedit.h>
 #include <commit.h>
-#include <nlohmann/json.hpp>
+#include <json_common.h>
 #include <wx/timer.h>
 #include <set>
 #include <wx/button.h>

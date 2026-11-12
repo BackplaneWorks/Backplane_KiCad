@@ -20,7 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <nlohmann/json.hpp>
+#include <json_common.h>
 #include <backplane_embed.h>
 #include <backplane/plan_undo_item.h>
 #include <backplane/plan_tool.h>

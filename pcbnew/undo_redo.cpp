@@ -24,7 +24,7 @@
 #include <backplane_coedit.h>
 #include <backplane/agent_edit_flash.h>
 #include <backplane/plan_undo_item.h>
-#include <nlohmann/json.hpp>
+#include <json_common.h>
 #include <functional>
 using namespace std::placeholders;
 #include <component_classes/component_class_manager.h>

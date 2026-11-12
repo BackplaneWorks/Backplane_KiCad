@@ -19,7 +19,7 @@
  */
 
 #include <backplane_coedit.h>
-#include <nlohmann/json.hpp>
+#include <json_common.h>
 #include <sch_actions.h>
 #include <advanced_config.h>
 #include <sch_edit_frame.h>

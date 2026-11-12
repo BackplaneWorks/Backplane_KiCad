@@ -31,7 +31,7 @@
 #include <pcb_marker.h>
 #include <drc/drc_item.h>
 
-#include <nlohmann/json.hpp>
+#include <json_common.h>
 #include <wx/datetime.h>
 #include <wx/ffile.h>
 #include <wx/filefn.h>

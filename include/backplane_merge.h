@@ -26,7 +26,7 @@
 #define BACKPLANE_MERGE_H
 
 #include <kicommon.h>
-#include <nlohmann/json.hpp>
+#include <json_common.h>
 
 #include <string>
 #include <vector>

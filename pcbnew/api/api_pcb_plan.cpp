@@ -39,7 +39,7 @@
 #include <zone.h>
 #include <zone_filler.h>
 
-#include <nlohmann/json.hpp>
+#include <json_common.h>
 
 #include <set>
 
