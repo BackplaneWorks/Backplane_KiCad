@@ -63,6 +63,11 @@ protected:
 
     wxString describeItem( EDA_ITEM* aItem ) const override;
 
+    bool updateReplacesObject( EDA_ITEM* aItem ) const override
+    {
+        return aItem && ( aItem->Type() == PCB_FOOTPRINT_T || aItem->Type() == PCB_GROUP_T );
+    }
+
     void deleteItemsInternal( std::map<KIID, ItemDeletionStatus>& aItemsToDelete,
                               const std::string& aClientName ) override;
 

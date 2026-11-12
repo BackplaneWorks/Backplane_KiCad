@@ -76,7 +76,7 @@ class EmbeddedKiCad:
         self.socket.parent.mkdir(parents=True, exist_ok=True)
         log = (self.out / "kicad.log").open("w")
         self.kicad = subprocess.Popen(
-            [str(self.kicad_bin), "--embedded", "--parent-window", hex(self.host.container.id),
+            [*os.environ.get("KICAD_WRAPPER", "").split(), str(self.kicad_bin), "--embedded", "--parent-window", hex(self.host.container.id),
              "--toplevel-window", str(self.host.top.id), "--api-socket", str(self.socket),
              "--parent-pid", str(os.getpid()), str(self.project)],
             env=env, stdout=subprocess.PIPE, stderr=log, text=True)

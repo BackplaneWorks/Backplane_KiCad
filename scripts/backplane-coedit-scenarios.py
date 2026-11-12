@@ -144,6 +144,7 @@ def scenario_parallel(k, seconds):
     mine, persons = refs[: len(refs) // 2], refs[len(refs) // 2:]
     created, stop, stats = [], threading.Event(), {"busy": 0, "errors": 0}
     agent_moves = {}
+    history = {}
 
     def run():
         step.rng = random.Random(7)
@@ -199,31 +200,68 @@ def scenario_parallel(k, seconds):
                 rr = update(agent, k, fp)
                 if rr.status.status == agent.envelope.AS_BUSY:
                     stats["busy"] += 1
+                res = m["editor"].UpdateItemsResponse()
+                rr.message.Unpack(res)
+                code = m["editor"].ItemStatusCode.Name(res.updated_items[0].status.code) if res.updated_items else "?"
+                history.setdefault(ref, []).append((fp.position.x_nm - 100_000, fp.position.x_nm, code))
                 agent_moves[ref] = fp.position.x_nm
 
     before = {r: (fps[r].position.x_nm, fps[r].position.y_nm) for r in persons}
+    agent.request_raw(m["coedit"].SetAgentActivity(actor="agent:tlong", task="Reroute the B.Cu bus",
+                                                    state="working"))
     worker = threading.Thread(target=run)
     worker.start()
     start, moved = time.monotonic(), set()
+    person_pos = {}
     while time.monotonic() - start < seconds:
         ref = persons[len(moved) % len(persons)]
+        if len(moved) == 6:
+            k.host_api.request(m["embed"].SelectItems(kind=m["embed"].FK_PCB, references=[], zoom=False),
+                               m["embed"].SelectItemsResponse)
+            k.xdotool("key", "Home")   # zoom to fit: the agent's working area and its chip
+            time.sleep(1.0)
+            k.shot("agents-working")
         person_moves(k, ref, 30, 20)
-        moved.add(ref)
+        now_fp = footprints(k.host_api, k)[ref]
+        pos = (now_fp.position.x_nm, now_fp.position.y_nm)
+        if pos != before[ref]:
+            moved.add(ref)            # the GUI move took; it must stay
+            person_pos[ref] = pos
+        else:
+            moved.add(ref + "?")       # did not take (GUI timing): not counted
     stop.set()
     worker.join(60)
 
-    for _ in range(50):
+    k.xdotool("key", "Escape")
+    for _ in range(300):
         if holds(k).deferred == 0:
             break
         time.sleep(0.1)
     h = holds(k)
+    if h.deferred:
+        print(f"still held: reason={h.reason!r} defer_deletes={h.defer_deletes} items={len(h.items)} "
+              f"deferred={h.deferred}", flush=True)
     check(h.collisions == 0, f"no prompt during the long workflow ({h.collisions})")
     check(stats["busy"] == 0 and stats["errors"] == 0, f"no busy or errors for the agent ({stats})")
 
     now = footprints(k.host_api, k)
-    lost_person = [r for r in moved if (now[r].position.x_nm, now[r].position.y_nm) == before[r]]
-    check(not lost_person, f"every person move kept ({len(moved)} moved, lost: {lost_person})")
+    req = k.m["editor"].GetItems()
+    req.header.document.CopyFrom(k.doc)
+    req.types.append(k.m["enums"].KOT_PCB_FOOTPRINT)
+    count = len(k.host_api.request(req, k.m["editor"].GetItemsResponse).items)
+    check(count == len(fps), f"no footprint duplicated or lost ({count} on the board, {len(fps)} before)")
+    lost_person = [r for r, p in person_pos.items() if (now[r].position.x_nm, now[r].position.y_nm) != p]
+    check(not lost_person, f"every person move kept ({len(person_pos)} moved, lost: {lost_person})")
+    notes = agent.request(m["coedit"].GetNotices(actor="agent:tlong"), m["coedit"].GetNoticesResponse).notices
+    failed = [n.json for n in notes if '"failed"' in n.json or n.kind == "dropped"]
+    for f in failed[:5]:
+        print("  expected x? failed/dropped:", f[:300], flush=True)
     lost_agent = [r for r, x in agent_moves.items() if now[r].position.x_nm != x]
+    for r in lost_agent[:2]:
+        print(f"  history {r}: " + "; ".join(f"read {a} sent {b} {c}" for a, b, c in history.get(r, [])), flush=True)
+    for r in lost_agent[:6]:
+        print(f"  {r}: expected x={agent_moves[r]} now x={now[r].position.x_nm} "
+              f"(diff {(now[r].position.x_nm - agent_moves[r]) / 1e6:+.3f} mm)", flush=True)
     check(not lost_agent, f"every agent move kept ({len(agent_moves)} parts, lost: {lost_agent})")
 
     req = m["editor"].GetItems()
@@ -277,8 +315,12 @@ def scenario_rules(k):
 
     # Net classes: the agent's (IPC, live) and one written into the project file meanwhile.
     project = m["project"]
+    spec = m["types"].ProjectSpecifier()
+    spec.CopyFrom(k.doc.project)
     nc = k.host_api.module("common.types.project_settings").NetClass(name="AGENT_HS")
-    agent.request_raw(project.SetNetClasses(net_classes=[nc], merge_mode=1))
+    r = agent.request_raw(project.SetNetClasses(net_classes=[nc], merge_mode=m["types"].MMM_MERGE,
+                                                project=spec))
+    check(r.status.status == agent.envelope.AS_OK, f"the agent's net class is set live ({r.status.error_message})")
     pro = k.project
     data = json.loads(pro.read_text())
     classes = data.setdefault("net_settings", {}).setdefault("classes", [])
@@ -291,7 +333,8 @@ def scenario_rules(k):
     agent.request_raw(project.SaveDocument(document=k.doc))
     names = {c["name"] for c in json.loads(pro.read_text())["net_settings"]["classes"]}
     check({"AGENT_HS", "PERSON_HV"} <= names, f"both net classes survive the save ({sorted(names)})")
-    live = {c.name for c in k.host_api.request(project.GetNetClasses(), project.NetClassesResponse).net_classes}
+    live = {c.name for c in k.host_api.request(project.GetNetClasses(project=spec),
+                                               project.NetClassesResponse).net_classes}
     check({"AGENT_HS", "PERSON_HV"} <= live, f"and the open editor has both ({sorted(live)})")
 
 

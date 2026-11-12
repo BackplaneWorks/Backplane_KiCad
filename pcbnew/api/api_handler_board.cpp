@@ -762,7 +762,21 @@ HANDLER_RESULT<ItemRequestStatus> API_HANDLER_BOARD::handleCreateUpdateItemsInte
                 // Save group membership before removal, since Remove() severs the relationship
                 PCB_GROUP* parentGroup = dynamic_cast<PCB_GROUP*>( boardItem->GetParentGroup() );
 
-                commit->Remove( boardItem );
+                // A second update of the same item in one commit replaces the first one's new
+                // object; it never adds a second item with the same KIID.
+                for( const auto& [staged, type] : commit->StagedItems() )
+                {
+                    if( staged && staged != boardItem && ( type & CHT_TYPE ) == CHT_ADD
+                        && staged->m_Uuid == boardItem->m_Uuid )
+                    {
+                        commit->Unstage( staged, nullptr );
+                        break;
+                    }
+                }
+
+                if( !( commit->GetStatus( boardItem ) & CHT_REMOVE ) )
+                    commit->Remove( boardItem );
+
                 item->Serialize( newItem );
 
                 BOARD_ITEM* newBoardItem = item.release();

@@ -87,6 +87,10 @@ protected:
     /// True if an agent update of aItem must wait for aHolds to end.
     virtual bool isHeld( const COEDIT::HOLDS& aHolds, EDA_ITEM* aItem ) const;
 
+    /// True when an update of aItem replaces the object (removes it and adds a new one): such
+    /// an update waits like a delete while the person is in a tool or a dialog.
+    virtual bool updateReplacesObject( EDA_ITEM* aItem ) const { return false; }
+
     /// "pcb", "sch", "footprint" or "symbol": the change log's document kind.
     virtual std::string coeditDocKind() const { return "doc"; }
 

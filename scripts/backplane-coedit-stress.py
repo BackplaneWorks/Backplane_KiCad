@@ -201,6 +201,8 @@ def main():
     parser.add_argument("--out", type=Path, default=Path("coedit-stress-out"))
     parser.add_argument("--seconds", type=int, default=120)
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--person", default="move,drag,dialog,undo",
+                        help="what the person driver does (none = only the agent edits)")
     parser.add_argument("--xvfb", default=shutil.which("Xvfb") or "Xvfb")
     parser.add_argument("--i3", default=shutil.which("i3") or "i3")
     args = parser.parse_args()
@@ -263,7 +265,7 @@ def main():
         socket = work / "run/kicad/api.sock"
         socket.parent.mkdir(parents=True, exist_ok=True)
         log = (args.out / "kicad.log").open("w")
-        kicad = subprocess.Popen([str(args.kicad), "--embedded", "--parent-window",
+        kicad = subprocess.Popen([*os.environ.get("KICAD_WRAPPER", "").split(), str(args.kicad), "--embedded", "--parent-window",
                                   hex(host.container.id), "--toplevel-window", str(host.top.id),
                                   "--api-socket", str(socket), "--parent-pid", str(os.getpid()),
                                   str(project)],
@@ -333,12 +335,18 @@ def main():
             while time.monotonic() - start < args.seconds:
                 if kicad.poll() is not None:
                     break
+                allowed = [a for a in args.person.split(",") if a in ("move", "drag", "dialog", "undo")]
+                if not allowed:
+                    time.sleep(0.5)
+                    continue
                 ref = rng.choice(refs)
                 api.request(embed.SelectItems(kind=embed.FK_PCB, references=[ref], zoom=True),
                             embed.SelectItemsResponse)
                 time.sleep(0.3)
                 xdotool("mousemove", cx, cy)
-                roll = rng.random()
+                weights = {"move": 0.40, "drag": 0.25, "dialog": 0.20, "undo": 0.15}
+                action = rng.choices(allowed, [weights[a] for a in allowed])[0]
+                roll = {"move": 0.1, "drag": 0.5, "dialog": 0.7, "undo": 0.9}[action]
                 if roll < 0.40:
                     # Move with M: the tool runs while the agent keeps editing.
                     xdotool("key", "m")
@@ -360,7 +368,10 @@ def main():
                     if shots < 3:
                         shot(f"10-dialog-{shots}")
                         shots += 1
-                    xdotool("key", "Escape")
+                    # Escape to the dialog itself (under i3 the canvas may keep the keyboard)
+                    subprocess.run(["xdotool", "search", "--name", "Properties", "windowactivate",
+                                    "--sync", "key", "Escape"], env=env, check=False,
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
                     person["dialogs"] += 1
                 else:
                     xdotool("key", "ctrl+z")
@@ -395,6 +406,10 @@ def main():
                 if holds.deferred == 0:
                     break
                 time.sleep(0.1)
+            if holds is not None and holds.deferred:
+                print(f"holds: reason={holds.reason!r} defer_deletes={holds.defer_deletes} "
+                      f"all_copper={holds.all_copper} items={len(holds.items)} "
+                      f"deferred={holds.deferred}", flush=True)
             check(holds is not None and holds.deferred == 0, "every deferred operation was applied")
 
             notices = api.request(coedit.GetNotices(actor="agent:stress"),

@@ -157,6 +157,10 @@ void merge( const Message& aBase, const Message& aPerson, const Message& aAgent,
         if( !agentChanged )
             continue;   // aOut already has the person's value
 
+        // Both landed on the same value: agreement, not a conflict.
+        if( sameFields( aPerson, aAgent, group ) )
+            continue;
+
         bool personChanged = !sameFields( aBase, aPerson, group );
 
         if( !personChanged )

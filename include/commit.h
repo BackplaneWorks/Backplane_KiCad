@@ -124,6 +124,10 @@ public:
                            BASE_SCREEN *aScreen = nullptr );
 
     void Unstage( EDA_ITEM* aItem, BASE_SCREEN* aScreen );
+
+    /// Co-editing: forget a staged removal of an item that stays where it is (never deletes
+    /// it; Unstage is only for never-committed new items, which it deletes).
+    void UnstageRemoval( EDA_ITEM* aItem, BASE_SCREEN* aScreen );
     void Unmodify( EDA_ITEM* aItem, BASE_SCREEN* aScreen );
 
     /// Execute the changes.

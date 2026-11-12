@@ -24,6 +24,7 @@
 #include <commit.h>
 #include <nlohmann/json.hpp>
 #include <wx/timer.h>
+#include <set>
 #include <wx/button.h>
 #include <widgets/wx_infobar.h>
 #include <undo_redo_container.h>
@@ -168,20 +169,55 @@ HANDLER_RESULT<EndCommitResponse> API_HANDLER_EDITOR::handleEndCommit(
         }
 
         // A removal staged before the person picked the item up (or started a tool) waits.
+        // An update that replaces the object (a footprint: REMOVE old + ADD new, same KIID) is
+        // an update: it waits only if the person holds the item, and then as a rebased update.
         if( holds.Active() )
         {
-            for( const auto& [item, type] : commit->StagedItems() )
+            std::vector<std::pair<EDA_ITEM*, int>> staged = commit->StagedItems();
+            std::map<KIID, std::vector<EDA_ITEM*>>  added;
+            std::set<EDA_ITEM*>                     removalsDone;
+
+            for( const auto& [item, type] : staged )
             {
-                if( ( type & CHT_TYPE ) != CHT_REMOVE || !item )
+                if( item && ( type & CHT_TYPE ) == CHT_ADD )
+                    added[item->m_Uuid].push_back( item );
+            }
+
+            for( const auto& [item, type] : staged )
+            {
+                if( !item || ( type & CHT_TYPE ) != CHT_REMOVE || removalsDone.count( item ) )
                     continue;
 
-                if( holds.deferDeletes || isHeld( holds, item ) )
+                removalsDone.insert( item );
+                auto replacement = added.find( item->m_Uuid );
+
+                if( replacement != added.end() && !replacement->second.empty() )
+                {
+                    if( !isHeld( holds, item ) && !holds.deferDeletes )
+                        continue;
+
+                    // The newest replacement is the agent's version; every one is unstaged.
+                    DEFERRED_OP op;
+                    op.client = aCtx.ClientName;
+                    op.header.mutable_document()->CopyFrom( aCtx.Request.header().document() );
+                    op.id = item->m_Uuid;
+                    replacement->second.back()->Serialize( op.agent );
+                    heldBase( item )->Serialize( op.base );
+                    commit->UnstageRemoval( item, nullptr );
+
+                    for( EDA_ITEM* added_item : replacement->second )
+                        commit->Unstage( added_item, nullptr );   // never committed: freed
+
+                    replacement->second.clear();
+                    deferOp( std::move( op ) );
+                }
+                else if( holds.deferDeletes || isHeld( holds, item ) )
                 {
                     DEFERRED_OP op;
                     op.client = aCtx.ClientName;
                     op.remove = true;
                     op.id = item->m_Uuid;
-                    commit->Unstage( item, nullptr );
+                    commit->UnstageRemoval( item, nullptr );
                     deferOp( std::move( op ) );
                 }
             }
@@ -340,7 +376,8 @@ HANDLER_RESULT<UpdateItemsResponse> API_HANDLER_EDITOR::handleUpdateItems(
             if( std::optional<std::string> id = PROTO_MERGE::ItemId( item ) )
                 live = resolveLiveItem( KIID( *id ) );
 
-            if( live && isHeld( holds, live ) )
+            if( live && ( isHeld( holds, live )
+                          || ( holds.deferDeletes && updateReplacesObject( live ) ) ) )
             {
                 DEFERRED_OP op;
                 op.client = aCtx.ClientName;
@@ -1006,8 +1043,24 @@ void API_HANDLER_EDITOR::ProcessDeferred()
 
         if( header && !items.empty() )
         {
-            handleCreateUpdateItemsInternal( false, commitClient, *header, items,
-                                             []( ItemStatus, google::protobuf::Any ) {} );
+            HANDLER_RESULT<ItemRequestStatus> result = handleCreateUpdateItemsInternal(
+                    false, commitClient, *header, items,
+                    [&]( ItemStatus aStatus, google::protobuf::Any aItem )
+                    {
+                        if( aStatus.code() != ItemStatusCode::ISC_OK )
+                        {
+                            report.push_back( { { "op", "update" },
+                                                { "item", PROTO_MERGE::ItemId( aItem ).value_or( "" ) },
+                                                { "outcome", "failed" },
+                                                { "error", aStatus.error_message() } } );
+                        }
+                    } );
+
+            if( !result )
+            {
+                report.push_back( { { "op", "update" }, { "outcome", "failed" },
+                                    { "error", result.error().error_message() } } );
+            }
         }
 
         if( !deletes.empty() )
@@ -1132,8 +1185,12 @@ const EDA_ITEM* API_HANDLER_EDITOR::personBaseSince( EDA_ITEM* aLive, uint64_t a
 
         for( unsigned ii = 0; ii < list->GetCount(); ++ii )
         {
-            if( list->GetPickedItem( ii ) == aLive
-                && list->GetPickedItemStatus( ii ) == UNDO_REDO::CHANGED )
+            const EDA_ITEM* picked = list->GetPickedItem( ii );
+
+            // By KIID: an update may have replaced the object since (a footprint is).
+            if( picked && picked->m_Uuid == aLive->m_Uuid
+                && list->GetPickedItemStatus( ii ) == UNDO_REDO::CHANGED
+                && list->GetPickedItemLink( ii ) )
             {
                 return list->GetPickedItemLink( ii );
             }

@@ -1279,7 +1279,9 @@ HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::handleSetCustomDesignRules(
 
     HANDLER_CONTEXT<GetCustomDesignRules> getCtx = { aCtx.ClientName, GetCustomDesignRules() };
     *getCtx.Request.mutable_board() = aCtx.Request.board();
-    return handleGetCustomDesignRules( getCtx );
+    HANDLER_RESULT<CustomRulesResponse> reply = handleGetCustomDesignRules( getCtx );
+    m_rulesBase[aCtx.ClientName] = ours;   // what it set, not the others' rules it was handed back
+    return reply;
 }
 
 
@@ -1420,7 +1422,9 @@ HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::writeMergedRules( const std
         return response;
     }
 
-    m_rulesBase[aClient] = merged;
+    // What this client now believes the rules are: what it read plus its own edits (not the
+    // other writers' changes it has not seen, or a later whole-list Set would undo them).
+    m_rulesBase[aClient] = aOurs;
 
     // The open editor's DRC engine (router, live DRC) uses the rules at once.
     if( PCB_EDIT_FRAME* f = frame() )
@@ -1489,6 +1493,11 @@ HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::handleEditCustomRules(
     std::string disk = readRulesFile();
     std::string ours = BACKPLANE_MERGE::EditRules( disk, upserts, removes );
 
+    // What this client believes afterwards: what it read before plus these edits.
+    std::string belief = BACKPLANE_MERGE::EditRules(
+            m_rulesBase.count( aCtx.ClientName ) ? m_rulesBase[aCtx.ClientName] : disk, upserts,
+            removes );
+
     HANDLER_RESULT<CustomRulesResponse> written = writeMergedRules( aCtx.ClientName, disk, ours, disk,
                                                                    "Edit custom rules" );
 
@@ -1497,7 +1506,9 @@ HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::handleEditCustomRules(
 
     HANDLER_CONTEXT<GetCustomDesignRules> getCtx = { aCtx.ClientName, GetCustomDesignRules() };
     *getCtx.Request.mutable_board() = aCtx.Request.board();
-    return handleGetCustomDesignRules( getCtx );
+    HANDLER_RESULT<CustomRulesResponse> reply = handleGetCustomDesignRules( getCtx );
+    m_rulesBase[aCtx.ClientName] = belief;   // the reply above is not a read the agent asked for
+    return reply;
 }
 
 
@@ -3910,6 +3921,9 @@ COEDIT::HOLDS API_HANDLER_PCB::currentHolds()
     {
         holds.deferDeletes = true;
         holdSelection = true;
+
+        if( holds.reason.IsEmpty() && toolManager() && toolManager()->GetCurrentTool() )
+            holds.reason = wxString::FromUTF8( toolManager()->GetCurrentTool()->GetName() );
     }
 
     if( editFrame->CopperOperationInProgress() )
