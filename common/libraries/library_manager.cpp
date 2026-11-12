@@ -19,6 +19,7 @@
  */
 
 #include <chrono>
+#include <fstream>
 #include <common.h>
 #include <env_vars.h>
 #include <list>
@@ -38,6 +39,7 @@
 #include <wildcards_and_files_ext.h>
 
 #include <libraries/library_manager.h>
+#include <backplane_embed.h>
 
 using namespace std::chrono_literals;
 #include <settings/common_settings.h>
@@ -1588,11 +1590,15 @@ std::optional<float> LIBRARY_MANAGER_ADAPTER::AsyncLoadProgress() const
 }
 
 
-bool LIBRARY_MANAGER_ADAPTER::RunPreload( PROGRESS_REPORTER& aReporter, std::atomic_bool& aAbort )
+bool LIBRARY_MANAGER_ADAPTER::RunPreload( PROGRESS_REPORTER& aReporter, std::atomic_bool& aAbort,
+                                          const std::set<wxString>* aOnly )
 {
     constexpr std::chrono::milliseconds interval( 150 );
 
-    AsyncLoad();
+    if( aOnly )
+        AsyncLoad( *aOnly );
+    else
+        AsyncLoad();
 
     while( !aAbort.load() )
     {
@@ -1619,6 +1625,50 @@ bool LIBRARY_MANAGER_ADAPTER::RunPreload( PROGRESS_REPORTER& aReporter, std::ato
 
 void LIBRARY_MANAGER_ADAPTER::BlockUntilLoaded()
 {
+    // Libraries left for later (DeferFullLoad) are wanted now: let the load in flight finish,
+    // then load the rest, reporting it as a job (in --embedded, the host's ET_PROGRESS).
+    if( !m_abort.load() && m_fullLoadDeferred.exchange( false ) )
+    {
+        {
+            std::unique_lock<std::mutex> asyncLock( m_loadMutex );
+
+            for( const std::future<void>& future : m_futures )
+                future.wait();
+        }
+
+        AsyncLoad();
+
+        // Waited for on the UI thread, so the host hears the progress from here (ET_PROGRESS);
+        // a background job's updates would only reach it after the wait
+        if( wxIsMainThread() && BACKPLANE_EMBED::Get().Enabled() )
+        {
+            wxString title;
+
+            switch( Type() )
+            {
+            case LIBRARY_TABLE_TYPE::FOOTPRINT:    title = _( "Loading Footprint Libraries" ); break;
+            case LIBRARY_TABLE_TYPE::SYMBOL:       title = _( "Loading Symbol Libraries" ); break;
+            case LIBRARY_TABLE_TYPE::DESIGN_BLOCK: title = _( "Loading Design Block Libraries" ); break;
+            default:                               title = _( "Loading Libraries" ); break;
+            }
+
+            BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+            uint64_t         job = embed.ProgressBegin( nullptr, title, false );
+
+            while( std::optional<float> progress = AsyncLoadProgress() )
+            {
+                embed.ProgressUpdate( job, *progress );
+
+                if( *progress >= 1.0f )
+                    break;
+
+                std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+            }
+
+            embed.ProgressEnd( job );
+        }
+    }
+
     wxLogTrace( traceLibraries, "BlockUntilLoaded: entry, acquiring m_loadMutex" );
     std::unique_lock<std::mutex> asyncLock( m_loadMutex );
 
@@ -2287,4 +2337,67 @@ LIB_DATA& LIBRARY_MANAGER_ADAPTER::queuedRowEntry( const LOAD_WORK& aWork )
         entry.global_owner = this;
 
     return entry;
+}
+
+
+std::set<wxString> UsedLibraryNicknames( LIBRARY_TABLE_TYPE aType, const wxString& aProjectFullName )
+{
+    std::set<wxString> nicknames;
+    wxFileName         project( aProjectFullName );
+    std::vector<wxString> files;
+    const char*        head = nullptr;
+
+    if( aType == LIBRARY_TABLE_TYPE::FOOTPRINT )
+    {
+        head = "(footprint";
+        project.SetExt( FILEEXT::KiCadPcbFileExtension );
+        files.push_back( project.GetFullPath() );
+    }
+    else if( aType == LIBRARY_TABLE_TYPE::SYMBOL )
+    {
+        head = "(lib_id";
+
+        // Every sheet of the project, wherever it sits under the project folder
+        wxArrayString found;
+        wxDir::GetAllFiles( project.GetPath(), &found,
+                            wxString( "*." ) + wxString( FILEEXT::KiCadSchematicFileExtension ),
+                            wxDIR_FILES | wxDIR_DIRS );
+
+        for( const wxString& file : found )
+            files.push_back( file );
+    }
+    else
+    {
+        return nicknames;
+    }
+
+    const std::string needle( head );
+
+    for( const wxString& file : files )
+    {
+        std::ifstream in( file.fn_str() );
+        std::string   line;
+
+        while( std::getline( in, line ) )
+        {
+            for( size_t at = line.find( needle ); at != std::string::npos; at = line.find( needle, at + 1 ) )
+            {
+                size_t start = at + needle.size();
+
+                while( start < line.size() && ( line[start] == ' ' || line[start] == '\t' ) )
+                    start++;
+
+                if( start < line.size() && line[start] == '"' )
+                    start++;
+
+                size_t colon = line.find( ':', start );
+                size_t stop = line.find_first_of( "\" )\t ", start );
+
+                if( colon != std::string::npos && ( stop == std::string::npos || colon < stop ) && colon > start )
+                    nicknames.insert( wxString::FromUTF8( line.substr( start, colon - start ) ) );
+            }
+        }
+    }
+
+    return nicknames;
 }

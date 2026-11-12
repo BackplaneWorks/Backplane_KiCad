@@ -19,6 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <pgm_base.h>
 #include <eda_pattern_match.h>
 #include <background_jobs_monitor.h>
@@ -1371,8 +1372,19 @@ void IFACE::PreloadLibraries( KIWAY* aKiway )
 
             FOOTPRINT_LIBRARY_ADAPTER* adapter = PROJECT_PCB::FootprintLibAdapter( &aKiway->Prj() );
 
+            // Embedded (one KiCad per open project), only the libraries the project's documents
+            // use load now; the rest when something first needs them all (DeferFullLoad)
+            std::optional<std::set<wxString>> only;
+
+            if( BACKPLANE_EMBED::Get().Enabled() && !wxGetEnv( wxS( "BACKPLANE_KICAD_FULL_LIBRARY_PRELOAD" ), nullptr ) )
+                only = UsedLibraryNicknames( LIBRARY_TABLE_TYPE::FOOTPRINT, aKiway->Prj().GetProjectFullName() );
+
+
             reporter->Report( _( "Loading Footprint Libraries" ) );
-            bool aborted = !adapter->RunPreload( *reporter, m_libraryPreloadAbort );
+            bool aborted = !adapter->RunPreload( *reporter, m_libraryPreloadAbort, only ? &*only : nullptr );
+
+            if( only && !aborted )
+                adapter->DeferFullLoad();
 
             // If aborted, skip operations that use the adapter since the project may have changed
             // and the adapter's project reference could be stale. This prevents use-after-free
