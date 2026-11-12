@@ -2562,7 +2562,7 @@ void PCB_EDIT_FRAME::RefreshAgentZones( bool aRefresh )
 
     for( const COEDIT::ACTIVITY& a : COEDIT::Activities() )
     {
-        if( a.state == "idle" )
+        if( a.state == "idle" || !COEDIT::IsAgentActor( a.actor ) )
             continue;
 
         anyAgent = true;
@@ -2596,12 +2596,22 @@ void PCB_EDIT_FRAME::RefreshAgentZones( bool aRefresh )
         zones.push_back( { box, label, a.state == "paused" } );
     }
 
-    if( !COEDIT::AgentChanges( 1 ).empty() )
-        anyAgent = true;
+    if( !anyAgent && !m_agentsPaneShown )
+    {
+        for( const COEDIT::CHANGE& c : COEDIT::AgentChanges( 64 ) )
+        {
+            if( COEDIT::IsAgentActor( c.actor ) )
+            {
+                anyAgent = true;
+                break;
+            }
+        }
+    }
 
     ShowAgentZones( zones, aRefresh );
 
-    // The panel shows itself the first time an agent is at work; after that it is the person's.
+    // The panel shows itself the first time an agent (agent:*) is at work, never for Backplane's own
+    // housekeeping; after that it is the person's.
     if( anyAgent && !m_agentsPaneShown && m_agentsPanel )
     {
         m_agentsPaneShown = true;

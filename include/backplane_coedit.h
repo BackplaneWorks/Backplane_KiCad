@@ -50,6 +50,10 @@ KICOMMON_API const std::string& CurrentActor();
 
 inline bool AgentActing() { return !CurrentActor().empty(); }
 
+/// An AI agent (Backplane's "agent:<thread>"), not the person and not Backplane's own housekeeping
+/// (other client names): only agents open the Agents pane and draw working areas.
+inline bool IsAgentActor( const std::string& aActor ) { return aActor.rfind( "agent:", 0 ) == 0; }
+
 /// Sets the current actor for its lifetime (nests).
 class KICOMMON_API ACTOR_SCOPE
 {
