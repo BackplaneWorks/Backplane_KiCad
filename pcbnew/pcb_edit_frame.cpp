@@ -20,6 +20,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <json_common.h>
+#include <backplane_embed.h>
+#include <backplane/plan_undo_item.h>
+#include <backplane/plan_tool.h>
+#include <backplane/agents_panel.h>
+#include <backplane/agent_edit_flash.h>
+#include <backplane_coedit.h>
 #include <algorithm>
 #include <type_traits>
 #include <unordered_map>
@@ -391,6 +398,15 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
                       .FloatingSize( FromDIP( wxSize( 800, 600 ) ) )
                       .FloatingPosition( FromDIP( wxPoint( 50, 200 ) ) )
                       .Show( true ) );
+
+    // Co-editing: what the agents are doing, with Pause / Steer and their changes' Undo.
+    m_agentsPanel = new AGENTS_PANEL( this, this );
+    m_auimgr.AddPane( m_agentsPanel, EDA_PANE().Name( wxS( "AgentsPanel" ) )
+                      .Right().Layer( 3 ).Position( 3 )
+                      .Caption( _( "Agents" ) ).PaneBorder( false )
+                      .MinSize( FromDIP( wxSize( 260, 120 ) ) )
+                      .BestSize( FromDIP( wxSize( 320, 260 ) ) )
+                      .CloseButton( true ).Hide() );
 
     m_auimgr.AddPane( m_propertiesPanel, EDA_PANE().Name( PropertiesPaneName() )
                       .Left().Layer( 5 )
@@ -1154,6 +1170,7 @@ void PCB_EDIT_FRAME::setupTools()
     m_toolManager->RegisterTool( new MATCH_PROPERTIES_TOOL );
     m_toolManager->RegisterTool( new GRAPHIC_EDIT_TOOL );
     m_toolManager->RegisterTool( new EMBED_TOOL );
+    m_toolManager->RegisterTool( new PLAN_TOOL );
     m_toolManager->RegisterTool( new DRC_RULE_EDITOR_TOOL );
     m_toolManager->RegisterTool( new DIFF_PHASE_SKEW_TOOL );
     m_toolManager->InitTools();
@@ -1189,7 +1206,7 @@ void PCB_EDIT_FRAME::setupUIConditions()
                 if( routerTool && routerTool->RoutingInProgress() )
                     return true;
 
-                return GetUndoCommandCount() > 0;
+                return HasUndoFor( COEDIT::CurrentActor() );
             };
 
     auto groupWithDesignBlockLink =
@@ -2435,6 +2452,247 @@ void PCB_EDIT_FRAME::CommitBoardStructure( const BOARD_STRUCTURE& aStructure,
 }
 
 
+namespace
+{
+std::string sideFileSignature( const wxString& aPath )
+{
+    wxFileName fn( aPath );
+
+    if( aPath.IsEmpty() || !fn.FileExists() )
+        return "absent";
+
+    return fn.GetModificationTime().FormatISOCombined().ToStdString() + "/"
+           + std::to_string( (long long) fn.GetSize().GetValue() );
+}
+} // namespace
+
+
+void PCB_EDIT_FRAME::EmbedSyncSideFiles()
+{
+    if( !GetBoard() || Prj().IsNullProject() || !CanAcceptApiCommands() )
+        return;
+
+    // The project file: net classes, board setup constraints, severities.
+    wxString    projectPath = Prj().GetProjectFullName();
+    std::string projectSig = sideFileSignature( projectPath );
+
+    if( projectSig != m_projectSignature )
+    {
+        bool first = m_projectSignature.empty();
+        m_projectSignature = projectSig;
+
+        if( !first && Prj().GetProjectFile().MergeFromDisk() )
+            ProjectSettingsMerged( "project settings" );
+    }
+
+    // The custom rules: the live DRC engine reads them only when told.
+    std::string rulesSig = sideFileSignature( GetBoard()->GetDesignRulesPath() );
+
+    if( rulesSig != m_rulesSignature )
+    {
+        bool first = m_rulesSignature.empty();
+        m_rulesSignature = rulesSig;
+
+        if( !first )
+        {
+            ReloadCustomRules();
+
+            COEDIT::CHANGE change;
+            change.doc = "rules";
+            change.actor = "file";
+            change.description = "custom rules changed on disk; reloaded";
+            COEDIT::RecordChange( change );
+        }
+    }
+}
+
+
+void PCB_EDIT_FRAME::ReloadCustomRules()
+{
+    try
+    {
+        GetBoard()->GetDesignSettings().m_DRCEngine->InitEngine( GetBoard()->GetDesignRulesPath() );
+        m_rulesSignature = sideFileSignature( GetBoard()->GetDesignRulesPath() );
+    }
+    catch( PARSE_ERROR& pe )
+    {
+        m_infoBar->RemoveAllButtons();
+        m_infoBar->AddCloseButton();
+        m_infoBar->ShowMessage( wxString::Format( _( "The custom rules have an error: %s" ),
+                                                  pe.What() ),
+                                wxICON_WARNING, WX_INFOBAR::MESSAGE_TYPE::GENERIC );
+    }
+}
+
+
+void PCB_EDIT_FRAME::ProjectSettingsMerged( const std::string& aWhat )
+{
+    m_projectSignature = sideFileSignature( Prj().GetProjectFullName() );
+
+    GetBoard()->SynchronizeTuningProfileProperties();
+    GetBoard()->SynchronizeNetsAndNetClasses( true );
+    GetBoard()->SynchronizeComponentClasses( std::unordered_set<wxString>() );
+    Prj().IncrementNetclassesTicker();
+    Prj().IncrementTextVarsTicker();
+    Kiway().CommonSettingsChanged( TEXTVARS_CHANGED );
+    ReloadCustomRules();
+
+    if( m_appearancePanel )
+        m_appearancePanel->OnBoardNetSettingsChanged( *GetBoard() );
+
+    GetCanvas()->GetView()->UpdateAllItems( KIGFX::REPAINT );
+    GetCanvas()->Refresh();
+
+    COEDIT::CHANGE change;
+    change.doc = "project";
+    change.actor = "file";
+    change.description = aWhat + " merged from disk";
+
+    for( const auto& [path, values] : Prj().GetProjectFile().LastMergeConflicts() )
+        change.modified.push_back( path );
+
+    COEDIT::RecordChange( change );
+}
+
+
+void PCB_EDIT_FRAME::RefreshAgentZones( bool aRefresh )
+{
+    std::vector<AGENT_EDIT_FLASH::ZONE> zones;
+    bool                                anyAgent = false;
+
+    for( const COEDIT::ACTIVITY& a : COEDIT::Activities() )
+    {
+        if( a.state == "idle" || !COEDIT::IsAgentActor( a.actor ) )
+            continue;
+
+        anyAgent = true;
+        BOX2I box;
+        int   n = 0;
+
+        for( const std::string& id : COEDIT::RecentItems( a.actor, 10 * 60 * 1000 ) )
+        {
+            BOARD_ITEM* item = GetBoard()->ResolveItem( KIID( id ), true );
+
+            if( !item || item->Type() == PCB_NETINFO_T || item->Type() == PCB_T )
+                continue;
+
+            if( n++ == 0 )
+                box = item->GetBoundingBox();
+            else
+                box.Merge( item->GetBoundingBox() );
+        }
+
+        if( n == 0 )
+            continue;
+
+        wxString label = AGENT_EDIT_FLASH::ActorLabel( a.actor );
+
+        if( !a.task.empty() )
+            label << wxString::FromUTF8( " \xC2\xB7 " ) << wxString::FromUTF8( a.task );
+
+        if( a.state == "paused" )
+            label << _( " (paused)" );
+
+        zones.push_back( { box, label, a.state == "paused" } );
+    }
+
+    if( !anyAgent && !m_agentsPaneShown )
+    {
+        for( const COEDIT::CHANGE& c : COEDIT::AgentChanges( 64 ) )
+        {
+            if( COEDIT::IsAgentActor( c.actor ) )
+            {
+                anyAgent = true;
+                break;
+            }
+        }
+    }
+
+    ShowAgentZones( zones, aRefresh );
+
+    // The panel shows itself the first time an agent (agent:*) is at work, never for Backplane's own
+    // housekeeping; after that it is the person's.
+    if( anyAgent && !m_agentsPaneShown && m_agentsPanel )
+    {
+        m_agentsPaneShown = true;
+        m_auimgr.GetPane( m_agentsPanel ).Show( true );
+        m_auimgr.Update();
+    }
+}
+
+
+void PCB_EDIT_FRAME::ShowAgentItems( const std::vector<std::string>& aIds )
+{
+    std::vector<EDA_ITEM*> items;
+
+    for( const std::string& id : aIds )
+    {
+        if( BOARD_ITEM* item = GetBoard()->ResolveItem( KIID( id ), true ) )
+        {
+            if( item->Type() != PCB_NETINFO_T && item->Type() != PCB_T )
+                items.push_back( item );
+        }
+    }
+
+    if( items.empty() )
+        return;
+
+    m_toolManager->RunAction( ACTIONS::selectionClear );
+    m_toolManager->RunAction<EDA_ITEMS*>( ACTIONS::selectItems, &items );
+    m_toolManager->RunAction( ACTIONS::zoomFitSelection );
+}
+
+
+void PCB_EDIT_FRAME::CommitPlan( const BOARD_PLAN& aPlan, const wxString& aDescription,
+                                 const std::string& aOp, const std::vector<std::string>& aItems )
+{
+    BOARD_PLAN next = aPlan;
+    next.history = GetBoard()->GetPlan().history;
+    next.revision = GetBoard()->GetPlan().revision;
+
+    // Compare without the bookkeeping.
+    BOARD_PLAN current = GetBoard()->GetPlan();
+
+    if( current.ToJson() == next.ToJson() )
+        return;
+
+    next.Note( COEDIT::CurrentActor(), aOp, aItems );
+
+    PICKED_ITEMS_LIST command;
+    auto*             snapshot = new PLAN_UNDO_ITEM( GetBoard()->GetPlan() );
+    ITEM_PICKER       wrapper( nullptr, snapshot, UNDO_REDO::BOARD_PLAN );
+    wrapper.SetFlags( UR_TRANSIENT );
+    command.PushItem( wrapper );
+    command.SetDescription( aDescription );
+    SaveCopyInUndoList( command, UNDO_REDO::BOARD_PLAN );
+
+    GetBoard()->GetPlan() = std::move( next );
+    OnModify();
+    PlanChanged( aOp, aItems );
+}
+
+
+void PCB_EDIT_FRAME::PlanChanged( const std::string& aOp, const std::vector<std::string>& aItems )
+{
+    if( PCB_DRAW_PANEL_GAL* canvas = GetCanvas() )
+        canvas->RefreshPlan();
+
+    if( BACKPLANE_EMBED::Get().Enabled() )
+    {
+        nlohmann::json j = { { "board", GetBoard()->GetFileName().ToStdString( wxConvUTF8 ) },
+                             { "revision", GetBoard()->GetPlan().revision },
+                             { "actor", COEDIT::CurrentActor() },
+                             { "op", aOp },
+                             { "items", aItems } };
+        BACKPLANE_EMBED::Get().PushEvent( EMBED_EVENT_TYPE::PLAN_CHANGED, EMBED_FRAME_INFO(),
+                                          j.dump() );
+    }
+
+    m_toolManager->PostEvent( TOOL_EVENT( TC_MESSAGE, TA_MODEL_CHANGE, "pcbnew.Plan.changed",
+                                          AS_GLOBAL ) );
+}
+
+
 void PCB_EDIT_FRAME::OnModify()
 {
     PCB_BASE_FRAME::OnModify();
@@ -2989,6 +3247,57 @@ bool PCB_EDIT_FRAME::interactiveOperationInProgress() const
     }
 
     return false;
+}
+
+
+bool PCB_EDIT_FRAME::CopperOperationInProgress() const
+{
+    TOOL_MANAGER* mgr = GetToolManager();
+
+    if( !mgr )
+        return false;
+
+    if( ROUTER_TOOL* routerTool = mgr->GetTool<ROUTER_TOOL>();
+        routerTool && routerTool->RoutingInProgress() )
+    {
+        return true;
+    }
+
+    if( ZONE_FILLER_TOOL* zoneFillerTool = mgr->GetTool<ZONE_FILLER_TOOL>();
+        zoneFillerTool && zoneFillerTool->IsBusy() )
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
+std::vector<KIID> PCB_EDIT_FRAME::SelectedItemIds() const
+{
+    std::vector<KIID> ids;
+    TOOL_MANAGER*     mgr = GetToolManager();
+
+    if( !mgr )
+        return ids;
+
+    PCB_SELECTION_TOOL* selTool = mgr->GetTool<PCB_SELECTION_TOOL>();
+
+    if( !selTool )
+        return ids;
+
+    for( EDA_ITEM* item : selTool->GetSelection() )
+    {
+        ids.push_back( item->m_Uuid );
+
+        if( BOARD_ITEM* boardItem = dynamic_cast<BOARD_ITEM*>( item ) )
+        {
+            if( FOOTPRINT* parent = boardItem->GetParentFootprint() )
+                ids.push_back( parent->m_Uuid );
+        }
+    }
+
+    return ids;
 }
 
 

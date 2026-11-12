@@ -19,6 +19,15 @@
  */
 
 #include <api/api_handler_editor.h>
+#include <api/proto_merge.h>
+#include <backplane_coedit.h>
+#include <commit.h>
+#include <json_common.h>
+#include <wx/timer.h>
+#include <set>
+#include <wx/button.h>
+#include <widgets/wx_infobar.h>
+#include <undo_redo_container.h>
 
 #include <api/api_enums.h>
 #include <api/api_utils.h>
@@ -35,6 +44,24 @@ API_HANDLER_EDITOR::API_HANDLER_EDITOR( EDA_BASE_FRAME* aFrame ) :
         m_frame( aFrame )
 {
     registerHandler<BeginCommit, BeginCommitResponse>( &API_HANDLER_EDITOR::handleBeginCommit );
+    registerHandler<kiapi::backplane::coedit::GetChanges,
+                    kiapi::backplane::coedit::GetChangesResponse>(
+            &API_HANDLER_EDITOR::handleGetChanges );
+    registerHandler<kiapi::backplane::coedit::GetNotices,
+                    kiapi::backplane::coedit::GetNoticesResponse>(
+            &API_HANDLER_EDITOR::handleGetNotices );
+    registerHandler<kiapi::backplane::coedit::SetAgentActivity,
+                    kiapi::backplane::coedit::SetAgentActivityResponse>(
+            &API_HANDLER_EDITOR::handleSetAgentActivity );
+    registerHandler<kiapi::backplane::coedit::ResolveCollision,
+                    kiapi::backplane::coedit::ResolveCollisionResponse>(
+            &API_HANDLER_EDITOR::handleResolveCollision );
+    registerHandler<kiapi::backplane::coedit::UndoAgentChange,
+                    kiapi::backplane::coedit::UndoAgentChangeResponse>(
+            &API_HANDLER_EDITOR::handleUndoAgentChange );
+    registerHandler<kiapi::backplane::coedit::GetHolds,
+                    kiapi::backplane::coedit::GetHoldsResponse>(
+            &API_HANDLER_EDITOR::handleGetHolds );
     registerHandler<EndCommit, EndCommitResponse>( &API_HANDLER_EDITOR::handleEndCommit );
     registerHandler<CreateItems, CreateItemsResponse>( &API_HANDLER_EDITOR::handleCreateItems );
     registerHandler<UpdateItems, UpdateItemsResponse>( &API_HANDLER_EDITOR::handleUpdateItems );
@@ -59,7 +86,7 @@ HANDLER_RESULT<BeginCommitResponse> API_HANDLER_EDITOR::handleBeginCommit(
             return tl::unexpected( valid.error() );
     }
 
-    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+    if( std::optional<ApiResponseStatus> busy = checkForExclusive( currentHolds() ) )
         return tl::unexpected( *busy );
 
     if( m_commits.count( aCtx.ClientName ) )
@@ -97,7 +124,9 @@ HANDLER_RESULT<EndCommitResponse> API_HANDLER_EDITOR::handleEndCommit(
             return tl::unexpected( valid.error() );
     }
 
-    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+    COEDIT::HOLDS holds = currentHolds();
+
+    if( std::optional<ApiResponseStatus> busy = checkForExclusive( holds ) )
         return tl::unexpected( *busy );
 
     if( !m_commits.count( aCtx.ClientName ) )
@@ -137,6 +166,61 @@ HANDLER_RESULT<EndCommitResponse> API_HANDLER_EDITOR::handleEndCommit(
             e.set_error_message( fmt::format( "the id {} does not match the commit in progress",
                                               aCtx.Request.id().value() ) );
             return tl::unexpected( e );
+        }
+
+        // A removal staged before the person picked the item up (or started a tool) waits.
+        // An update that replaces the object (a footprint: REMOVE old + ADD new, same KIID) is
+        // an update: it waits only if the person holds the item, and then as a rebased update.
+        if( holds.Active() )
+        {
+            std::vector<std::pair<EDA_ITEM*, int>> staged = commit->StagedItems();
+            std::map<KIID, std::vector<EDA_ITEM*>>  added;
+            std::set<EDA_ITEM*>                     removalsDone;
+
+            for( const auto& [item, type] : staged )
+            {
+                if( item && ( type & CHT_TYPE ) == CHT_ADD )
+                    added[item->m_Uuid].push_back( item );
+            }
+
+            for( const auto& [item, type] : staged )
+            {
+                if( !item || ( type & CHT_TYPE ) != CHT_REMOVE || removalsDone.count( item ) )
+                    continue;
+
+                removalsDone.insert( item );
+                auto replacement = added.find( item->m_Uuid );
+
+                if( replacement != added.end() && !replacement->second.empty() )
+                {
+                    if( !isHeld( holds, item ) && !holds.deferDeletes )
+                        continue;
+
+                    // The newest replacement is the agent's version; every one is unstaged.
+                    DEFERRED_OP op;
+                    op.client = aCtx.ClientName;
+                    op.header.mutable_document()->CopyFrom( aCtx.Request.header().document() );
+                    op.id = item->m_Uuid;
+                    replacement->second.back()->Serialize( op.agent );
+                    heldBase( item )->Serialize( op.base );
+                    commit->UnstageRemoval( item, nullptr );
+
+                    for( EDA_ITEM* added_item : replacement->second )
+                        commit->Unstage( added_item, nullptr );   // never committed: freed
+
+                    replacement->second.clear();
+                    deferOp( std::move( op ) );
+                }
+                else if( holds.deferDeletes || isHeld( holds, item ) )
+                {
+                    DEFERRED_OP op;
+                    op.client = aCtx.ClientName;
+                    op.remove = true;
+                    op.id = item->m_Uuid;
+                    commit->UnstageRemoval( item, nullptr );
+                    deferOp( std::move( op ) );
+                }
+            }
         }
 
         pushCurrentCommit( aCtx.ClientName, wxString( aCtx.Request.message().c_str(), wxConvUTF8 ) );
@@ -217,7 +301,8 @@ HANDLER_RESULT<std::optional<KIID>> API_HANDLER_EDITOR::validateItemHeaderDocume
 
 std::optional<ApiResponseStatus> API_HANDLER_EDITOR::checkForBusy()
 {
-    if( !m_frame )
+    // Co-editing: reads are always answered, whatever the person is doing.
+    if( !m_frame || COEDIT::READ_SCOPE::Active() )
         return std::nullopt;
 
     if( !m_frame->CanAcceptApiCommands() )
@@ -235,7 +320,8 @@ std::optional<ApiResponseStatus> API_HANDLER_EDITOR::checkForBusy()
 HANDLER_RESULT<CreateItemsResponse> API_HANDLER_EDITOR::handleCreateItems(
         const HANDLER_CONTEXT<CreateItems>& aCtx )
 {
-    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+    // New items cannot conflict with what the person is editing.
+    if( std::optional<ApiResponseStatus> busy = checkForExclusive( currentHolds() ) )
         return tl::unexpected( *busy );
 
     CreateItemsResponse response;
@@ -269,14 +355,78 @@ HANDLER_RESULT<CreateItemsResponse> API_HANDLER_EDITOR::handleCreateItems(
 HANDLER_RESULT<UpdateItemsResponse> API_HANDLER_EDITOR::handleUpdateItems(
         const HANDLER_CONTEXT<UpdateItems>& aCtx )
 {
-    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+    COEDIT::HOLDS holds = currentHolds();
+
+    if( std::optional<ApiResponseStatus> busy = checkForExclusive( holds ) )
         return tl::unexpected( *busy );
 
     UpdateItemsResponse response;
 
+    // Co-editing: an update of an item the person is editing right now waits for their edit to
+    // end and is then rebased onto it.
+    google::protobuf::RepeatedPtrField<google::protobuf::Any> now;
+    std::vector<DEFERRED_OP>                                  later;
+
+    if( holds.Active() && validateItemHeaderDocument( aCtx.Request.header() ) )
+    {
+        for( const google::protobuf::Any& item : aCtx.Request.items() )
+        {
+            EDA_ITEM* live = nullptr;
+
+            if( std::optional<std::string> id = PROTO_MERGE::ItemId( item ) )
+                live = resolveLiveItem( KIID( *id ) );
+
+            if( live && ( isHeld( holds, live )
+                          || ( holds.deferDeletes && updateReplacesObject( live ) ) ) )
+            {
+                DEFERRED_OP op;
+                op.client = aCtx.ClientName;
+                op.header.CopyFrom( aCtx.Request.header() );
+                op.id = live->m_Uuid;
+                op.agent.CopyFrom( item );
+                heldBase( live )->Serialize( op.base );
+                later.push_back( std::move( op ) );
+            }
+            else
+            {
+                *now.Add() = item;
+            }
+        }
+    }
+    else
+    {
+        now = aCtx.Request.items();
+    }
+
+    // Co-editing: an update made from a read older than the person's last change of the item
+    // merges from what the agent saw; a real collision waits for the person.
+    if( m_frame && validateItemHeaderDocument( aCtx.Request.header() ) )
+    {
+        for( google::protobuf::Any& item : now )
+            item = rebaseStale( aCtx.ClientName, aCtx.Request.header(), item );
+    }
+
+    if( now.empty() && !later.empty() )
+    {
+        for( DEFERRED_OP& op : later )
+        {
+            ItemUpdateResult itemResult;
+            itemResult.mutable_status()->set_code( ItemStatusCode::ISC_DEFERRED );
+            itemResult.mutable_status()->set_error_message(
+                    "the person is editing this item; your update is applied when they finish, "
+                    "rebased onto their edit" );
+            itemResult.mutable_item()->CopyFrom( op.agent );
+            response.mutable_updated_items()->Add( std::move( itemResult ) );
+            deferOp( std::move( op ) );
+        }
+
+        response.set_status( ItemRequestStatus::IRS_OK );
+        return response;
+    }
+
     HANDLER_RESULT<ItemRequestStatus> result = handleCreateUpdateItemsInternal( false,
             aCtx.ClientName,
-            aCtx.Request.header(), aCtx.Request.items(),
+            aCtx.Request.header(), now,
             [&]( const ItemStatus& aStatus, const google::protobuf::Any& aItem )
             {
                 ItemUpdateResult itemResult;
@@ -287,6 +437,18 @@ HANDLER_RESULT<UpdateItemsResponse> API_HANDLER_EDITOR::handleUpdateItems(
 
     if( !result.has_value() )
         return tl::unexpected( result.error() );
+
+    for( DEFERRED_OP& op : later )
+    {
+        ItemUpdateResult itemResult;
+        itemResult.mutable_status()->set_code( ItemStatusCode::ISC_DEFERRED );
+        itemResult.mutable_status()->set_error_message(
+                "the person is editing this item; your update is applied when they finish, "
+                "rebased onto their edit" );
+        itemResult.mutable_item()->CopyFrom( op.agent );
+        response.mutable_updated_items()->Add( std::move( itemResult ) );
+        deferOp( std::move( op ) );
+    }
 
     response.set_status( *result );
     return response;
@@ -304,7 +466,9 @@ HANDLER_RESULT<DeleteItemsResponse> API_HANDLER_EDITOR::handleDeleteItems(
         return tl::unexpected( e );
     }
 
-    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+    COEDIT::HOLDS holds = currentHolds();
+
+    if( std::optional<ApiResponseStatus> busy = checkForExclusive( holds ) )
         return tl::unexpected( *busy );
 
     std::map<KIID, ItemDeletionStatus> itemsToDelete;
@@ -326,7 +490,36 @@ HANDLER_RESULT<DeleteItemsResponse> API_HANDLER_EDITOR::handleDeleteItems(
         return tl::unexpected( e );
     }
 
-    deleteItemsInternal( itemsToDelete, aCtx.ClientName );
+    // Co-editing: deletes of held items, and every delete while an interactive tool runs
+    // (tools keep pointers to neighbouring items), wait for the hold to end.
+    std::vector<KIID> deferred;
+
+    if( holds.Active() )
+    {
+        for( auto it = itemsToDelete.begin(); it != itemsToDelete.end(); )
+        {
+            EDA_ITEM* live = resolveLiveItem( it->first );
+
+            if( live && ( holds.deferDeletes || isHeld( holds, live ) ) )
+            {
+                DEFERRED_OP op;
+                op.client = aCtx.ClientName;
+                op.remove = true;
+                op.header.CopyFrom( aCtx.Request.header() );
+                op.id = it->first;
+                deferOp( std::move( op ) );
+                deferred.push_back( it->first );
+                it = itemsToDelete.erase( it );
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
+
+    if( !itemsToDelete.empty() )
+        deleteItemsInternal( itemsToDelete, aCtx.ClientName );
 
     DeleteItemsResponse response;
 
@@ -335,6 +528,13 @@ HANDLER_RESULT<DeleteItemsResponse> API_HANDLER_EDITOR::handleDeleteItems(
         ItemDeletionResult* result = response.add_deleted_items();
         result->mutable_id()->set_value( id.AsStdString() );
         result->set_status( status );
+    }
+
+    for( const KIID& id : deferred )
+    {
+        ItemDeletionResult* result = response.add_deleted_items();
+        result->mutable_id()->set_value( id.AsStdString() );
+        result->set_status( ItemDeletionStatus::IDS_DEFERRED );
     }
 
     response.set_status( kiapi::common::types::ItemRequestStatus::IRS_OK );
@@ -621,5 +821,680 @@ HANDLER_RESULT<types::PageSettings> API_HANDLER_EDITOR::handleSetPageSettings(
                                                     : types::PageOrientation::PO_LANDSCAPE );
     response.set_drawing_sheet( getDrawingSheetFileName().ToUTF8() );
 
+    return response;
+}
+
+
+namespace
+{
+class DEFER_TIMER : public wxTimer
+{
+public:
+    explicit DEFER_TIMER( API_HANDLER_EDITOR* aHandler ) : m_handler( aHandler ) {}
+    void Notify() override { m_handler->ProcessDeferred(); }
+
+private:
+    API_HANDLER_EDITOR* m_handler;
+};
+} // namespace
+
+
+API_HANDLER_EDITOR::~API_HANDLER_EDITOR()
+{
+    if( m_deferTimer )
+        m_deferTimer->Stop();
+}
+
+
+std::optional<ApiResponseStatus> API_HANDLER_EDITOR::checkForExclusive( const COEDIT::HOLDS& aHolds )
+{
+    if( !aHolds.exclusive )
+        return std::nullopt;
+
+    ApiResponseStatus e;
+    e.set_status( ApiStatusCode::AS_BUSY );
+
+    if( aHolds.reason.IsEmpty() )
+        e.set_error_message( "KiCad is busy and cannot respond to API requests right now" );
+    else
+        e.set_error_message( fmt::format( "the person is in '{}', which rewrites the document; "
+                                          "writes wait until it ends",
+                                          aHolds.reason.ToStdString( wxConvUTF8 ) ) );
+
+    return e;
+}
+
+
+COEDIT::HOLDS API_HANDLER_EDITOR::currentHolds()
+{
+    COEDIT::HOLDS holds;
+
+    if( m_frame && !m_frame->CanAcceptApiCommands() )
+        holds.exclusive = true;
+
+    return holds;
+}
+
+
+bool API_HANDLER_EDITOR::isHeld( const COEDIT::HOLDS& aHolds, EDA_ITEM* aItem ) const
+{
+    if( aHolds.exclusive )
+        return true;
+
+    for( EDA_ITEM* item = aItem; item; item = item->GetParent() )
+    {
+        if( aHolds.items.count( item->m_Uuid ) )
+            return true;
+    }
+
+    return false;
+}
+
+
+const EDA_ITEM* API_HANDLER_EDITOR::heldBase( EDA_ITEM* aItem ) const
+{
+    for( COMMIT* commit : COEDIT::LiveCommits() )
+    {
+        if( !commit->GetActor().empty() || commit->Empty() )
+            continue;
+
+        for( const auto& [item, copy] : commit->StagedOriginals() )
+        {
+            if( item == aItem && copy )
+                return copy;
+        }
+    }
+
+    return aItem;
+}
+
+
+void API_HANDLER_EDITOR::deferOp( DEFERRED_OP aOp )
+{
+    COEDIT::NOTICE notice;
+    notice.kind = "deferred";
+    notice.actor = aOp.client;
+    notice.doc = coeditDocKind();
+    notice.json = nlohmann::json( { { "op", aOp.remove ? "delete" : "update" },
+                                    { "item", aOp.id.AsStdString() } } ).dump();
+    COEDIT::PostNotice( notice );
+
+    m_deferred.push_back( std::move( aOp ) );
+
+    if( !m_deferTimer )
+        m_deferTimer = std::make_unique<DEFER_TIMER>( this );
+
+    if( !m_deferTimer->IsRunning() )
+        m_deferTimer->Start( 100 );
+}
+
+
+void API_HANDLER_EDITOR::ProcessDeferred()
+{
+    if( m_deferred.empty() )
+    {
+        if( m_deferTimer )
+            m_deferTimer->Stop();
+
+        return;
+    }
+
+    // Never from inside a nested API request or a modal loop that refuses writes.
+    if( COEDIT::AgentActing() )
+        return;
+
+    COEDIT::HOLDS holds = currentHolds();
+
+    if( holds.exclusive )
+        return;
+
+    std::map<std::string, std::vector<DEFERRED_OP>> ready;
+    std::vector<DEFERRED_OP>                        keep;
+    std::vector<COEDIT::NOTICE>                     notices;
+
+    for( DEFERRED_OP& op : m_deferred )
+    {
+        EDA_ITEM* live = resolveLiveItem( op.id );
+
+        if( !live )
+        {
+            COEDIT::NOTICE notice;
+            notice.kind = "dropped";
+            notice.actor = op.client;
+            notice.doc = coeditDocKind();
+            notice.json = nlohmann::json( { { "op", op.remove ? "delete" : "update" },
+                                            { "item", op.id.AsStdString() },
+                                            { "reason", "the person deleted the item" } } ).dump();
+            notices.push_back( notice );
+            continue;
+        }
+
+        bool still = op.remove ? ( holds.deferDeletes || isHeld( holds, live ) )
+                               : isHeld( holds, live );
+
+        // An open API commit (this agent's or another's) has staged this item: applying now
+        // would replace it under that commit, whose push would then add a second copy.  Wait
+        // for the commit to end.
+        for( const auto& [client, entry] : m_commits )
+        {
+            for( const auto& [item, type] : entry.second->StagedItems() )
+            {
+                if( item && item->m_Uuid == op.id )
+                    still = true;
+            }
+        }
+
+        if( still )
+            keep.push_back( std::move( op ) );
+        else
+            ready[op.client].push_back( std::move( op ) );
+    }
+
+    m_deferred = std::move( keep );
+
+    for( auto& [client, ops] : ready )
+    {
+        COEDIT::ACTOR_SCOPE  actor( client );
+        COEDIT::REBASE_SCOPE rebasing;
+        std::string          commitClient = client + "#rebased";
+
+        m_activeClients.insert( commitClient );
+
+        google::protobuf::RepeatedPtrField<google::protobuf::Any> items;
+        std::map<KIID, ItemDeletionStatus>                        deletes;
+        const types::ItemHeader*                                  header = nullptr;
+        nlohmann::json                                            report = nlohmann::json::array();
+
+        for( DEFERRED_OP& op : ops )
+        {
+            if( op.remove )
+            {
+                deletes[op.id] = ItemDeletionStatus::IDS_NONEXISTENT;
+                report.push_back( { { "op", "delete" }, { "item", op.id.AsStdString() },
+                                    { "outcome", "applied" } } );
+                continue;
+            }
+
+            EDA_ITEM*             live = resolveLiveItem( op.id );
+            google::protobuf::Any person;
+            live->Serialize( person );
+
+            nlohmann::json entry = { { "op", "update" }, { "item", op.id.AsStdString() } };
+
+            if( std::optional<PROTO_MERGE::RESULT> merged =
+                        PROTO_MERGE::ThreeWay( op.base, person, op.agent ) )
+            {
+                *items.Add() = merged->merged;
+                entry["outcome"] = merged->keptFromPerson.empty() ? "rebased" : "collision";
+                entry["from_agent"] = merged->fromAgent;
+                entry["kept_from_person"] = merged->keptFromPerson;
+
+                if( !merged->keptFromPerson.empty() )
+                {
+                    COLLISION c;
+                    c.client = client;
+                    c.header.CopyFrom( op.header );
+                    c.id = op.id;
+                    c.what = describeItem( live );
+                    c.fields = merged->keptFromPerson;
+                    c.base.CopyFrom( op.base );
+                    c.agent.CopyFrom( op.agent );
+                    c.personAt = wxGetUTCTimeMillis().GetValue();
+                    raiseCollision( std::move( c ) );
+                }
+            }
+            else
+            {
+                *items.Add() = op.agent;
+                entry["outcome"] = "applied";
+            }
+
+            header = &op.header;
+            report.push_back( entry );
+        }
+
+        if( header && !items.empty() )
+        {
+            HANDLER_RESULT<ItemRequestStatus> result = handleCreateUpdateItemsInternal(
+                    false, commitClient, *header, items,
+                    [&]( ItemStatus aStatus, google::protobuf::Any aItem )
+                    {
+                        if( aStatus.code() != ItemStatusCode::ISC_OK )
+                        {
+                            report.push_back( { { "op", "update" },
+                                                { "item", PROTO_MERGE::ItemId( aItem ).value_or( "" ) },
+                                                { "outcome", "failed" },
+                                                { "error", aStatus.error_message() } } );
+                        }
+                    } );
+
+            if( !result )
+            {
+                report.push_back( { { "op", "update" }, { "outcome", "failed" },
+                                    { "error", result.error().error_message() } } );
+            }
+        }
+
+        if( !deletes.empty() )
+            deleteItemsInternal( deletes, commitClient );
+
+        pushCurrentCommit( commitClient, _( "Agent edit, applied after yours" ) );
+        m_activeClients.erase( commitClient );
+
+        COEDIT::NOTICE notice;
+        notice.kind = "rebased";
+        notice.actor = client;
+        notice.doc = coeditDocKind();
+        notice.json = report.dump();
+        notices.push_back( notice );
+    }
+
+    for( const COEDIT::NOTICE& notice : notices )
+        COEDIT::PostNotice( notice );
+
+    if( m_deferred.empty() && m_deferTimer )
+        m_deferTimer->Stop();
+}
+
+
+HANDLER_RESULT<kiapi::backplane::coedit::GetChangesResponse> API_HANDLER_EDITOR::handleGetChanges(
+        const HANDLER_CONTEXT<kiapi::backplane::coedit::GetChanges>& aCtx )
+{
+    kiapi::backplane::coedit::GetChangesResponse response;
+    bool                                         lost = false;
+
+    for( const COEDIT::CHANGE& c : COEDIT::ChangesSince( aCtx.Request.since(), aCtx.Request.doc(),
+                                                         lost ) )
+    {
+        kiapi::backplane::coedit::Change* out = response.add_changes();
+        out->set_seq( c.seq );
+        out->set_doc( c.doc );
+        out->set_actor( c.actor );
+        out->set_description( c.description );
+
+        for( const std::string& id : c.created )
+            out->add_created( id );
+
+        for( const std::string& id : c.modified )
+            out->add_modified( id );
+
+        for( const std::string& id : c.deleted )
+            out->add_deleted( id );
+
+        out->set_rebased( c.rebased );
+        out->set_undo( c.undo );
+    }
+
+    response.set_last( COEDIT::LastSeq() );
+    response.set_lost( lost );
+    return response;
+}
+
+
+HANDLER_RESULT<kiapi::backplane::coedit::GetNoticesResponse> API_HANDLER_EDITOR::handleGetNotices(
+        const HANDLER_CONTEXT<kiapi::backplane::coedit::GetNotices>& aCtx )
+{
+    kiapi::backplane::coedit::GetNoticesResponse response;
+    std::string actor = aCtx.Request.actor().empty() ? aCtx.ClientName : aCtx.Request.actor();
+
+    for( const COEDIT::NOTICE& n : COEDIT::NoticesFor( actor, aCtx.Request.clear() ) )
+    {
+        kiapi::backplane::coedit::Notice* out = response.add_notices();
+        out->set_kind( n.kind );
+        out->set_actor( n.actor );
+        out->set_doc( n.doc );
+        out->set_json( n.json );
+    }
+
+    return response;
+}
+
+
+HANDLER_RESULT<kiapi::backplane::coedit::GetHoldsResponse> API_HANDLER_EDITOR::handleGetHolds(
+        const HANDLER_CONTEXT<kiapi::backplane::coedit::GetHolds>& aCtx )
+{
+    if( aCtx.Request.document().type() != thisDocumentType() )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    HANDLER_RESULT<bool> valid = validateDocument( aCtx.Request.document() );
+
+    if( !valid )
+        return tl::unexpected( valid.error() );
+
+    COEDIT::HOLDS holds = currentHolds();
+    kiapi::backplane::coedit::GetHoldsResponse response;
+    response.set_exclusive( holds.exclusive );
+    response.set_reason( holds.reason.ToStdString( wxConvUTF8 ) );
+    response.set_defer_deletes( holds.deferDeletes );
+    response.set_all_copper( holds.allCopper );
+
+    for( const KIID& id : holds.items )
+        response.add_items( id.AsStdString() );
+
+    response.set_deferred( (uint32_t) m_deferred.size() );
+    response.set_collisions( (uint32_t) m_collisions.size() );
+
+    if( !m_collisions.empty() )
+        response.set_collision( collisionText( m_collisions.front() ).ToStdString( wxConvUTF8 ) );
+
+    return response;
+}
+
+
+const EDA_ITEM* API_HANDLER_EDITOR::personBaseSince( EDA_ITEM* aLive, uint64_t aSince ) const
+{
+    if( !m_frame )
+        return nullptr;
+
+    for( const PICKED_ITEMS_LIST* list : m_frame->GetUndoListForCoedit().m_CommandsList )
+    {
+        if( list->IsAgent() || list->GetSeq() <= aSince )
+            continue;
+
+        for( unsigned ii = 0; ii < list->GetCount(); ++ii )
+        {
+            const EDA_ITEM* picked = list->GetPickedItem( ii );
+
+            // By KIID: an update may have replaced the object since (a footprint is).
+            if( picked && picked->m_Uuid == aLive->m_Uuid
+                && list->GetPickedItemStatus( ii ) == UNDO_REDO::CHANGED
+                && list->GetPickedItemLink( ii ) )
+            {
+                return list->GetPickedItemLink( ii );
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+
+wxString API_HANDLER_EDITOR::describeItem( EDA_ITEM* aItem ) const
+{
+    return aItem ? aItem->GetFriendlyName() : wxString();
+}
+
+
+google::protobuf::Any API_HANDLER_EDITOR::rebaseStale( const std::string& aClient,
+                                                       const types::ItemHeader& aHeader,
+                                                       const google::protobuf::Any& aItem )
+{
+    std::optional<std::string> id = PROTO_MERGE::ItemId( aItem );
+
+    if( !id )
+        return aItem;
+
+    uint64_t                      since = COEDIT::LastRead( aClient );
+    std::optional<COEDIT::CHANGE> personal = COEDIT::PersonChangedAfter( *id, since );
+
+    if( !personal )
+        return aItem;
+
+    EDA_ITEM* live = resolveLiveItem( KIID( *id ) );
+    const EDA_ITEM* baseItem = live ? personBaseSince( live, since ) : nullptr;
+
+    if( !baseItem )
+        return aItem;
+
+    google::protobuf::Any base, person;
+    baseItem->Serialize( base );
+    live->Serialize( person );
+
+    std::optional<PROTO_MERGE::RESULT> merged = PROTO_MERGE::ThreeWay( base, person, aItem );
+
+    if( !merged )
+        return aItem;
+
+    COEDIT::NOTICE notice;
+    notice.kind = merged->keptFromPerson.empty() ? "rebased" : "collision";
+    notice.actor = aClient;
+    notice.doc = coeditDocKind();
+    notice.json = nlohmann::json( { { "item", *id },
+                                    { "reason", "the person changed it after you last read it" },
+                                    { "from_agent", merged->fromAgent },
+                                    { "kept_from_person", merged->keptFromPerson } } ).dump();
+    COEDIT::PostNotice( notice );
+
+    if( !merged->keptFromPerson.empty() )
+    {
+        COLLISION c;
+        c.client = aClient;
+        c.header.CopyFrom( aHeader );
+        c.id = live->m_Uuid;
+        c.what = describeItem( live );
+        c.fields = merged->keptFromPerson;
+        c.base = base;
+        c.agent = aItem;
+        c.personAt = personal->at;
+        raiseCollision( std::move( c ) );
+    }
+
+    return merged->merged;
+}
+
+
+namespace
+{
+wxString verbFor( const std::vector<std::string>& aFields )
+{
+    for( const std::string& f : aFields )
+    {
+        if( f == "position" )
+            return _( "move" );
+
+        if( f == "orientation" )
+            return _( "rotate" );
+
+        if( f == "layer" )
+            return _( "move to another layer" );
+    }
+
+    wxString list;
+
+    for( const std::string& f : aFields )
+        list << ( list.IsEmpty() ? wxString() : wxString( wxS( ", " ) ) ) << wxString::FromUTF8( f );
+
+    return wxString::Format( _( "change %s of" ), list );
+}
+
+wxString agoText( int64_t aAtMs )
+{
+    int64_t secs = ( wxGetUTCTimeMillis().GetValue() - aAtMs ) / 1000;
+
+    if( secs < 60 )
+        return _( "just now" );
+
+    if( secs < 3600 )
+        return wxString::Format( _( "%d min ago" ), (int) ( secs / 60 ) );
+
+    return wxString::Format( _( "%d h ago" ), (int) ( secs / 3600 ) );
+}
+} // namespace
+
+
+wxString API_HANDLER_EDITOR::collisionText( const COLLISION& c ) const
+{
+    wxString agent = wxString::FromUTF8( c.client );
+    agent.Replace( wxS( "agent:" ), _( "Agent " ) );
+
+    return wxString::Format( _( "%s wants to %s %s; you changed it %s." ), agent,
+                             verbFor( c.fields ), c.what, agoText( c.personAt ) );
+}
+
+
+HANDLER_RESULT<kiapi::backplane::coedit::ResolveCollisionResponse>
+API_HANDLER_EDITOR::handleResolveCollision(
+        const HANDLER_CONTEXT<kiapi::backplane::coedit::ResolveCollision>& aCtx )
+{
+    if( aCtx.Request.document().type() != thisDocumentType() )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    // The person's answer: never an agent's.
+    if( aCtx.ClientName.rfind( "agent:", 0 ) == 0 )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+        e.set_error_message( "a collision is the person's to resolve" );
+        return tl::unexpected( e );
+    }
+
+    {
+        COEDIT::ACTOR_SCOPE person( "" );
+        ResolveCollision( (int) aCtx.Request.choice() );
+    }
+
+    kiapi::backplane::coedit::ResolveCollisionResponse response;
+    response.set_remaining( (uint32_t) m_collisions.size() );
+    return response;
+}
+
+
+void API_HANDLER_EDITOR::raiseCollision( COLLISION aCollision )
+{
+    // One per item: a newer request from the same agent replaces the waiting one.
+    std::erase_if( m_collisions, [&]( const COLLISION& c )
+                   { return c.id == aCollision.id && c.client == aCollision.client; } );
+
+    m_collisions.push_back( std::move( aCollision ) );
+
+    if( m_collisions.size() == 1 )
+        showCollision();
+}
+
+
+void API_HANDLER_EDITOR::showCollision()
+{
+    if( !m_frame || !m_frame->GetInfoBar() )
+        return;
+
+    WX_INFOBAR* bar = m_frame->GetInfoBar();
+
+    if( m_collisions.empty() )
+    {
+        bar->Dismiss();
+        return;
+    }
+
+    wxString msg = collisionText( m_collisions.front() );
+
+    if( m_collisions.size() > 1 )
+        msg << wxString::Format( _( "  (1 of %zu)" ), m_collisions.size() );
+
+    bar->RemoveAllButtons();
+
+    auto add = [&]( const wxString& aLabel, int aChoice )
+    {
+        wxButton* button = new wxButton( bar, wxID_ANY, aLabel );
+        button->Bind( wxEVT_BUTTON, [this, aChoice]( wxCommandEvent& ) { ResolveCollision( aChoice ); } );
+        bar->AddButton( button );
+    };
+
+    add( _( "Keep yours" ), 0 );
+    add( _( "Take agent's" ), 1 );
+    add( _( "See both" ), 2 );
+    bar->ShowMessage( msg, wxICON_QUESTION );
+}
+
+
+void API_HANDLER_EDITOR::ResolveCollision( int aChoice )
+{
+    if( m_collisions.empty() )
+        return;
+
+    COLLISION& c = m_collisions.front();
+    wxString   label = wxString::Format( _( "Agent's %s" ), c.what );
+
+    if( aChoice == 2 )
+    {
+        showAgentGhost( c.agent, label, true );
+        return;   // the bar stays for the decision
+    }
+
+    showAgentGhost( c.agent, label, false );
+
+    nlohmann::json report = { { "item", c.id.AsStdString() }, { "fields", c.fields } };
+
+    if( aChoice == 1 )
+    {
+        if( EDA_ITEM* live = resolveLiveItem( c.id ) )
+        {
+            google::protobuf::Any person;
+            live->Serialize( person );
+
+            if( std::optional<PROTO_MERGE::RESULT> merged =
+                        PROTO_MERGE::ThreeWay( c.base, person, c.agent, true ) )
+            {
+                COEDIT::ACTOR_SCOPE actor( c.client );
+                std::string         commitClient = c.client + "#resolved";
+                google::protobuf::RepeatedPtrField<google::protobuf::Any> items;
+                *items.Add() = merged->merged;
+
+                m_activeClients.insert( commitClient );
+                handleCreateUpdateItemsInternal( false, commitClient, c.header, items,
+                                                 []( ItemStatus, google::protobuf::Any ) {} );
+                pushCurrentCommit( commitClient,
+                                   wxString::Format( _( "Agent's change to %s (you chose it)" ), c.what ) );
+                m_activeClients.erase( commitClient );
+            }
+        }
+
+        report["outcome"] = "took_agents";
+    }
+    else
+    {
+        report["outcome"] = "kept_persons";
+    }
+
+    COEDIT::NOTICE notice;
+    notice.kind = "collision_resolved";
+    notice.actor = c.client;
+    notice.doc = coeditDocKind();
+    notice.json = report.dump();
+    COEDIT::PostNotice( notice );
+
+    m_collisions.pop_front();
+    showCollision();
+}
+
+
+HANDLER_RESULT<kiapi::backplane::coedit::SetAgentActivityResponse>
+API_HANDLER_EDITOR::handleSetAgentActivity(
+        const HANDLER_CONTEXT<kiapi::backplane::coedit::SetAgentActivity>& aCtx )
+{
+    COEDIT::ACTIVITY a;
+    a.actor = aCtx.Request.actor().empty() ? aCtx.ClientName : aCtx.Request.actor();
+    a.task = aCtx.Request.task();
+    a.state = aCtx.Request.state().empty() ? "working" : aCtx.Request.state();
+    COEDIT::SetActivity( a );
+    return kiapi::backplane::coedit::SetAgentActivityResponse();
+}
+
+
+HANDLER_RESULT<kiapi::backplane::coedit::UndoAgentChangeResponse>
+API_HANDLER_EDITOR::handleUndoAgentChange(
+        const HANDLER_CONTEXT<kiapi::backplane::coedit::UndoAgentChange>& aCtx )
+{
+    if( aCtx.Request.document().type() != thisDocumentType() )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+        return tl::unexpected( *busy );
+
+    kiapi::backplane::coedit::UndoAgentChangeResponse response;
+    std::string                                       error;
+    response.set_undone( undoChangeBySeq( aCtx.Request.seq(), error ) );
+    response.set_error( error );
     return response;
 }

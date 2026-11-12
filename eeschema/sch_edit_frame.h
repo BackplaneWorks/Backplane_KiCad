@@ -524,6 +524,12 @@ public:
 
     bool CanAcceptApiCommands() override;
 
+    /// Co-editing holds (docs/backplane/coedit.md).
+    bool InteractiveOperationInProgress() const { return interactiveOperationInProgress(); }
+
+    /// KIIDs of the selected items (and the symbols of selected pins and fields).
+    std::vector<KIID> SelectedItemIds() const;
+
     /**
      * Check if any of the screens has unsaved changes and asks the user whether to save or
      * drop them.
@@ -758,6 +764,16 @@ public:
      *
      * @param aList a PICKED_ITEMS_LIST pointer to the list of items to undo/redo
      */
+    /**
+     * Co-editing (docs/backplane/coedit.md): undo (or redo) the current actor's newest change,
+     * taking back newer changes of other actors that touch the same items first.
+     * @return false when the actor has nothing to undo or redo.
+     */
+    bool UndoRedoForActor( bool aUndo );
+
+    /// After a change is pushed: per-actor redo clearing and the change log.
+    void coeditPushed( PICKED_ITEMS_LIST& aList );
+
     void PutDataInPreviousState( PICKED_ITEMS_LIST* aList );
 
     /**

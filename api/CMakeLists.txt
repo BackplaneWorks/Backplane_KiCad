@@ -23,6 +23,8 @@ set( KIAPI_PROTO_SRCS
     backplane/capabilities.proto
     backplane/lifecycle.proto
     backplane/embed.proto
+    backplane/coedit.proto
+    backplane/plan.proto
     backplane/assembly.proto
     common/tasks.proto
 

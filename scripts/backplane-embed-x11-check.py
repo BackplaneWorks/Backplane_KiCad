@@ -230,6 +230,8 @@ def main():
                                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))
         time.sleep(1.5)
 
+        second_host = []   # the second stand-in host's container, once it exists
+
         watcher = WmWatcher(name)
         watcher.start()
         host = Host(name)
@@ -455,6 +457,7 @@ xf.XFixesChangeSaveSet(d, int(sys.stdin.readline()), 0, 1, 1)
 x.XSync(d, 0); print('ok', flush=True); time.sleep(600)
 """], env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
             second = int(child.stdout.readline())
+            second_host.append(second)
             child.stdin.write(f"{holder}\n")
             child.stdin.flush()
             child.stdout.readline()
@@ -508,8 +511,9 @@ x.XSync(d, 0); print('ok', flush=True); time.sleep(600)
                   f"Close fail_if_modified refuses ({refused.status.error_message})")
             closed = api.request(embed.Close(mode=embed.CM_SAVE, kind=embed.FK_PCB), embed.CloseResponse)
             saved = hashlib.sha256(board_file.read_bytes()).hexdigest()
-            check(len(closed.modified) == 1 and saved != original
-                  and embed.FK_PCB not in frame_windows(),
+            # The frame is destroyed a moment after the reply (KiCad closes it from its event loop)
+            gone = wait_for(lambda: embed.FK_PCB not in frame_windows(), 10, 0.1)
+            check(len(closed.modified) == 1 and saved != original and gone,
                   "Close save on the PCB saves and closes it without a prompt")
             show(embed.FK_PCB, "10-pcb-reopened")
             modify_board()
@@ -526,8 +530,12 @@ x.XSync(d, 0); print('ok', flush=True); time.sleep(600)
         time.sleep(0.1)
         frames_managed = [hex(w) for w in watcher.seen if w in kicad_windows or w == holder]
         check(not frames_managed, f"no KiCad frame was ever managed by the WM ({frames_managed})")
+        # The second stand-in host's windows are its own (same X client: same resource base);
+        # its name can be unreadable when the watcher first sees it or after it was killed
+        second_base = (second_host[0] & ~0x1FFFFF) if second_host else None
         strays = [(hex(w), n) for w, (t, n) in watcher.seen.items()
-                  if w != top and t != top and n != "EmbedHost2"]
+                  if w != top and t != top and n != "EmbedHost2"
+                  and (second_base is None or (w & ~0x1FFFFF) != second_base)]
         check(not strays, f"every other managed window was transient for the host ({strays})")
     except BaseException:
         # Leave evidence of a hang: the stacks of a KiCad that stopped answering.

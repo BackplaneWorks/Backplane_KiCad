@@ -21,6 +21,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_coedit.h>
+#include <backplane/agent_edit_flash.h>
+#include <backplane/plan_undo_item.h>
+#include <json_common.h>
 #include <functional>
 using namespace std::placeholders;
 #include <component_classes/component_class_manager.h>
@@ -135,6 +139,7 @@ void PCB_BASE_EDIT_FRAME::saveCopyInUndoList( PICKED_ITEMS_LIST* commandToUndo,
         case UNDO_REDO::DELETED:
         case UNDO_REDO::PAGESETTINGS:
         case UNDO_REDO::BOARD_STRUCTURE:
+        case UNDO_REDO::BOARD_PLAN:
             break;
 
         default:
@@ -145,11 +150,32 @@ void PCB_BASE_EDIT_FRAME::saveCopyInUndoList( PICKED_ITEMS_LIST* commandToUndo,
 
     if( commandToUndo->GetCount() )
     {
+        // Co-editing (docs/backplane/coedit.md): an agent's change keeps the person's redo
+        // list unless it touches the same items.
+        bool clearRedo = true;
+
+        if( commandToUndo->IsAgent() )
+        {
+            clearRedo = false;
+
+            for( PICKED_ITEMS_LIST* redo : m_redoList.m_CommandsList )
+            {
+                if( redo->Overlaps( *commandToUndo ) )
+                {
+                    clearRedo = true;
+                    break;
+                }
+            }
+        }
+
         /* Save the copy in undo list */
         PushCommandToUndoList( commandToUndo );
 
         /* Clear redo list, because after a new command one cannot redo a command */
-        ClearUndoORRedoList( REDO_LIST );
+        if( clearRedo )
+            ClearUndoORRedoList( REDO_LIST );
+
+        coeditRecord( *commandToUndo, false );
     }
     else
     {
@@ -183,7 +209,9 @@ void PCB_BASE_EDIT_FRAME::SaveCopyInUndoList( const PICKED_ITEMS_LIST& aItemsLis
 void PCB_BASE_EDIT_FRAME::AppendCopyToUndoList( const PICKED_ITEMS_LIST& aItemsList,
                                                 UNDO_REDO aCommandType )
 {
-    PICKED_ITEMS_LIST* commandToUndo = PopCommandFromUndoList();
+    // Append to the newest change of the same actor, never across actors.
+    PICKED_ITEMS_LIST* commandToUndo =
+            m_undoList.Extract( m_undoList.FindNewest( COEDIT::CurrentActor() ) );
 
     if( !commandToUndo )
     {
@@ -236,25 +264,169 @@ static bool undoListContainsDrillMap( const PICKED_ITEMS_LIST* aList )
 }
 
 
-void PCB_BASE_EDIT_FRAME::RestoreCopyFromUndoList( wxCommandEvent& aEvent )
+void PCB_BASE_EDIT_FRAME::coeditRecord( PICKED_ITEMS_LIST& aList, bool aUndo )
 {
-    if( UndoRedoBlocked() )
+    // Debug (BACKPLANE_COEDIT_CHECK=1): after every pushed change, two footprints must never
+    // share a KIID.  Logs the change that made one.
+    static const bool check = wxGetEnv( wxS( "BACKPLANE_COEDIT_CHECK" ), nullptr );
+
+    if( check && GetBoard() )
+    {
+        std::map<KIID, int> seen;
+
+        for( FOOTPRINT* fp : GetBoard()->Footprints() )
+        {
+            if( ++seen[fp->m_Uuid] == 2 )
+            {
+                fprintf( stderr, "COEDIT_CHECK duplicate %s %s after '%s' by '%s' (undo=%d, %u items:",
+                         fp->GetReference().ToStdString().c_str(), fp->m_Uuid.AsStdString().c_str(),
+                         aList.GetDescription().ToStdString().c_str(), aList.GetActor().c_str(),
+                         (int) aUndo, aList.GetCount() );
+
+                for( unsigned ii = 0; ii < aList.GetCount(); ++ii )
+                {
+                    EDA_ITEM* it = aList.GetPickedItem( ii );
+                    fprintf( stderr, " %s:%d", it ? it->m_Uuid.AsStdString().substr( 0, 8 ).c_str() : "-",
+                             (int) aList.GetPickedItemStatus( ii ) );
+                }
+
+                fprintf( stderr, ")\n" );
+            }
+        }
+    }
+
+    COEDIT::CHANGE change = COEDIT::ChangeFromUndoList(
+            aList, IsType( FRAME_PCB_EDITOR ) ? "pcb" : "footprint" );
+    change.undo = aUndo;
+    uint64_t seq = COEDIT::RecordChange( std::move( change ) );
+
+    if( !aUndo )
+        aList.SetSeq( seq );
+
+    if( aList.IsAgent() && !aUndo )
+        flashAgentEdit( aList );
+}
+
+
+void PCB_BASE_EDIT_FRAME::flashAgentEdit( const PICKED_ITEMS_LIST& aList )
+{
+    EDA_DRAW_PANEL_GAL* canvas = GetCanvas();
+
+    if( !canvas || !canvas->GetView() || !IsShownOnScreen() )
         return;
 
-    if( GetUndoCommandCount() <= 0 )
+    std::vector<BOX2I> boxes;
+
+    for( unsigned ii = 0; ii < aList.GetCount(); ++ii )
+    {
+        BOARD_ITEM* item = dynamic_cast<BOARD_ITEM*>( aList.GetPickedItem( ii ) );
+
+        if( !item || item->Type() == PCB_NETINFO_T || item->Type() == PCB_T )
+            continue;
+
+        BOX2I box = item->GetBoundingBox();
+
+        if( box.GetWidth() > 0 || box.GetHeight() > 0 )
+            boxes.push_back( box );
+    }
+
+    if( boxes.empty() )
         return;
+
+    if( !m_agentFlash )
+    {
+        m_agentFlash = std::make_unique<AGENT_EDIT_FLASH>( canvas->GetView(),
+                                                           [this]() { GetCanvas()->Refresh(); } );
+    }
+
+    wxString label = AGENT_EDIT_FLASH::ActorLabel( aList.GetActor() );
+
+    if( !aList.GetDescription().IsEmpty() )
+        label += wxString::FromUTF8( " \xC2\xB7 " ) + aList.GetDescription();
+
+    m_agentFlash->Flash( boxes, label );
+
+    // The working-area frames move with this edit: update them now, so they are drawn in the
+    // same redraw as the edit itself rather than in a second one.
+    refreshAgentZonesNow();
+}
+
+
+void PCB_BASE_EDIT_FRAME::ShowAgentZones( const std::vector<AGENT_EDIT_FLASH_ZONE>& aZones,
+                                          bool aRefresh )
+{
+    EDA_DRAW_PANEL_GAL* canvas = GetCanvas();
+
+    if( !canvas || !canvas->GetView() )
+        return;
+
+    if( !m_agentFlash )
+    {
+        if( aZones.empty() )
+            return;
+
+        m_agentFlash = std::make_unique<AGENT_EDIT_FLASH>( canvas->GetView(),
+                                                           [this]() { GetCanvas()->Refresh(); } );
+    }
+
+    m_agentFlash->SetZones( aZones, aRefresh );
+}
+
+
+void PCB_BASE_EDIT_FRAME::ShowAgentGhost( bool aShow, const BOX2I& aMine, const BOX2I& aAgents,
+                                          const wxString& aLabel )
+{
+    EDA_DRAW_PANEL_GAL* canvas = GetCanvas();
+
+    if( !canvas || !canvas->GetView() )
+        return;
+
+    if( !m_agentFlash )
+    {
+        m_agentFlash = std::make_unique<AGENT_EDIT_FLASH>( canvas->GetView(),
+                                                           [this]() { GetCanvas()->Refresh(); } );
+    }
+
+    m_agentFlash->SetGhost( aShow, aMine, aAgents, aLabel );
+
+    if( aShow )
+    {
+        BOX2I both = aMine;
+        both.Merge( aAgents );
+        both.Inflate( std::max( both.GetWidth(), both.GetHeight() ) + 2000000 );
+        canvas->GetView()->SetViewport( BOX2D( both.GetOrigin(), both.GetSize() ) );
+        canvas->Refresh();
+    }
+}
+
+
+void PCB_BASE_EDIT_FRAME::applyUndoRedo( std::vector<PICKED_ITEMS_LIST*>& aLists, bool aUndo )
+{
+    bool shapesChanged = false;
+    bool drillMapChanged = false;
 
     // Inform tools that undo command was issued
-    m_toolManager->ProcessEvent( { TC_MESSAGE, TA_UNDO_REDO_PRE, AS_GLOBAL } );
+    m_toolManager->ProcessEvent( aUndo ? TOOL_EVENT( TC_MESSAGE, TA_UNDO_REDO_PRE, AS_GLOBAL )
+                                       : EVENTS::UndoRedoPreEvent );
 
-    // Get the old list
-    PICKED_ITEMS_LIST* list = PopCommandFromUndoList();
+    for( PICKED_ITEMS_LIST* list : aLists )
+    {
+        bool listShapes = undoListContainsShapesOrFootprints( list );
+        shapesChanged |= listShapes;
+        drillMapChanged |= undoListContainsDrillMap( list );
 
-    bool shapesChanged = undoListContainsShapesOrFootprints( list );
-    bool drillMapChanged = undoListContainsDrillMap( list );
+        PutDataInPreviousState( list, listShapes );
 
-    // Undo the command
-    PutDataInPreviousState( list, shapesChanged );
+        coeditRecord( *list, true );
+
+        // Put the old list in the other stack
+        list->ReversePickersListOrder();
+
+        if( aUndo )
+            PushCommandToRedoList( list );
+        else
+            PushCommandToUndoList( list );
+    }
 
     if( drillMapChanged )
     {
@@ -262,13 +434,10 @@ void PCB_BASE_EDIT_FRAME::RestoreCopyFromUndoList( wxCommandEvent& aEvent )
             editFrame->RefreshDrillSymbols( KIGFX::LAYERS | KIGFX::GEOMETRY | KIGFX::REPAINT );
     }
 
-    // Put the old list in RedoList
-    list->ReversePickersListOrder();
-    PushCommandToRedoList( list );
-
     OnModify();
 
-    m_toolManager->ProcessEvent( { TC_MESSAGE, TA_UNDO_REDO_POST, AS_GLOBAL } );
+    m_toolManager->ProcessEvent( aUndo ? TOOL_EVENT( TC_MESSAGE, TA_UNDO_REDO_POST, AS_GLOBAL )
+                                       : EVENTS::UndoRedoPostEvent );
     m_toolManager->PostEvent( EVENTS::SelectedItemsModified );
 
     if( shapesChanged )
@@ -282,49 +451,102 @@ void PCB_BASE_EDIT_FRAME::RestoreCopyFromUndoList( wxCommandEvent& aEvent )
 }
 
 
+std::vector<PICKED_ITEMS_LIST*> PCB_BASE_EDIT_FRAME::takeForUndoRedo( UNDO_REDO_CONTAINER& aStack,
+                                                                      const std::string& aActor )
+{
+    return takeAt( aStack, aStack.FindNewest( aActor ), aActor );
+}
+
+
+std::vector<PICKED_ITEMS_LIST*> PCB_BASE_EDIT_FRAME::takeAt( UNDO_REDO_CONTAINER& aStack, int aIndex,
+                                                             const std::string& aBy )
+{
+    // Co-editing (docs/backplane/coedit.md): this change, plus every newer change of another
+    // actor that touches the same items (taken back first, newest first), so the rest of the
+    // stack stays valid.  The person wins: an agent's change to the same items goes to the redo
+    // list with a notice.
+    std::vector<PICKED_ITEMS_LIST*> lists;
+
+    if( aIndex < 0 )
+        return lists;
+
+    std::vector<int> deps = aStack.DependentsAfter( aIndex );
+
+    for( auto it = deps.rbegin(); it != deps.rend(); ++it )
+        lists.push_back( aStack.Extract( *it ) );
+
+    PICKED_ITEMS_LIST* mine = aStack.Extract( aIndex );
+    lists.push_back( mine );
+
+    for( PICKED_ITEMS_LIST* other : lists )
+    {
+        if( other == mine || !other->IsAgent() )
+            continue;
+
+        COEDIT::NOTICE notice;
+        notice.kind = "undo_took_back";
+        notice.actor = other->GetActor();
+        notice.doc = IsType( FRAME_PCB_EDITOR ) ? "pcb" : "footprint";
+        notice.json = nlohmann::json(
+                { { "seq", other->GetSeq() },
+                  { "description", other->GetDescription().ToStdString( wxConvUTF8 ) },
+                  { "because", mine->GetDescription().ToStdString( wxConvUTF8 ) },
+                  { "by", aBy.empty() ? "person" : aBy } } ).dump();
+        COEDIT::PostNotice( notice );
+    }
+
+    return lists;
+}
+
+
+bool PCB_BASE_EDIT_FRAME::UndoChangeBySeq( uint64_t aSeq, std::string& aError )
+{
+    if( UndoRedoBlocked() )
+    {
+        aError = "an edit is in progress";
+        return false;
+    }
+
+    for( int ii = 0; ii < (int) m_undoList.m_CommandsList.size(); ++ii )
+    {
+        if( m_undoList.m_CommandsList[ii]->GetSeq() == aSeq )
+        {
+            std::vector<PICKED_ITEMS_LIST*> lists = takeAt( m_undoList, ii, COEDIT::CurrentActor() );
+            applyUndoRedo( lists, true );
+            return true;
+        }
+    }
+
+    aError = "that change is no longer in the undo history";
+    return false;
+}
+
+
+void PCB_BASE_EDIT_FRAME::RestoreCopyFromUndoList( wxCommandEvent& aEvent )
+{
+    if( UndoRedoBlocked() )
+        return;
+
+    std::vector<PICKED_ITEMS_LIST*> lists = takeForUndoRedo( m_undoList, COEDIT::CurrentActor() );
+
+    if( lists.empty() )
+        return;
+
+    applyUndoRedo( lists, true );
+}
+
+
 void PCB_BASE_EDIT_FRAME::RestoreCopyFromRedoList( wxCommandEvent& aEvent )
 {
     if( UndoRedoBlocked() )
         return;
 
-    if( GetRedoCommandCount() == 0 )
+    std::vector<PICKED_ITEMS_LIST*> lists = takeForUndoRedo( m_redoList, COEDIT::CurrentActor() );
+
+    if( lists.empty() )
         return;
 
-    // Inform tools that redo command was issued
-    m_toolManager->ProcessEvent( EVENTS::UndoRedoPreEvent );
-
-    // Get the old list
-    PICKED_ITEMS_LIST* list = PopCommandFromRedoList();
-
-    bool shapesChanged = undoListContainsShapesOrFootprints( list );
-    bool drillMapChanged = undoListContainsDrillMap( list );
-
-    // Redo the command
-    PutDataInPreviousState( list, shapesChanged );
-
-    if( drillMapChanged )
-    {
-        if( PCB_EDIT_FRAME* editFrame = dynamic_cast<PCB_EDIT_FRAME*>( this ) )
-            editFrame->RefreshDrillSymbols( KIGFX::LAYERS | KIGFX::GEOMETRY | KIGFX::REPAINT );
-    }
-
-    // Put the old list in UndoList
-    list->ReversePickersListOrder();
-    PushCommandToUndoList( list );
-
-    OnModify();
-
-    m_toolManager->ProcessEvent( EVENTS::UndoRedoPostEvent );
-    m_toolManager->PostEvent( EVENTS::SelectedItemsModified );
-
-    if( shapesChanged )
-    {
-        m_pcb->UpdateBoardOutline();
-        GetCanvas()->GetView()->Update( m_pcb->BoardOutline() );
-        RefreshDrillMapOutlines( *m_pcb, GetCanvas()->GetView() );
-    }
-
-    GetCanvas()->Refresh();
+    applyUndoRedo( lists, false );
 }
 
 
@@ -637,6 +859,14 @@ void PCB_BASE_EDIT_FRAME::PutDataInPreviousState( PICKED_ITEMS_LIST* aList, bool
         case UNDO_REDO::BOARD_STRUCTURE:
             std::swap( GetBoard()->GetBoardStructure(),
                        static_cast<BOARD_STRUCTURE_UNDO_ITEM*>( eda_item )->structure );
+            break;
+
+        case UNDO_REDO::BOARD_PLAN:
+            std::swap( GetBoard()->GetPlan(), static_cast<PLAN_UNDO_ITEM*>( eda_item )->plan );
+
+            if( PCB_EDIT_FRAME* editFrame = dynamic_cast<PCB_EDIT_FRAME*>( this ) )
+                editFrame->PlanChanged( "undo", {} );
+
             break;
 
         case UNDO_REDO::PAGESETTINGS:

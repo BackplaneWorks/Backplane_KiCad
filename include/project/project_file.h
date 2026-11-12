@@ -110,6 +110,12 @@ public:
 
     bool SaveToFile( const wxString& aDirectory = "", bool aForce = false ) override;
 
+protected:
+    /// Agents and the person edit the project file at once: merge, never overwrite.
+    bool mergesWithDisk() const override { return true; }
+
+public:
+
     /**
      * Serialize to the bytes SaveToFile would write, without touching the file.
      * @return the document, or an empty string on error

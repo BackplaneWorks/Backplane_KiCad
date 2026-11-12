@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <wx/filename.h>
 #include <optional>
 #include <ranges>
 #include <set>
@@ -170,7 +171,17 @@ tl::expected<bool, ApiResponseStatus> API_HANDLER_COMMON::validateProject( const
         return tl::unexpected( e );
     }
 
-    if( aProject.path().compare( prj.GetProjectPath().ToUTF8() ) != 0 )
+    // Compare directories, not strings: the project path ends with a separator, while the
+    // specifier GetOpenDocuments hands out (and clients copy) does not.
+    auto sameDir = []( const wxString& aA, const wxString& aB )
+    {
+        wxFileName a = wxFileName::DirName( aA ), b = wxFileName::DirName( aB );
+        a.Normalize( wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE );
+        b.Normalize( wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE );
+        return a.SameAs( b );
+    };
+
+    if( !sameDir( wxString::FromUTF8( aProject.path() ), prj.GetProjectPath() ) )
     {
         ApiResponseStatus e;
         e.set_status( ApiStatusCode::AS_BAD_REQUEST );

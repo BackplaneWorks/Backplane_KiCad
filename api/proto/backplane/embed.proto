@@ -170,6 +170,16 @@ enum EventType
   ET_COMMENT           = 19; // the person sent a note about the selection with "Comment to
                              // Backplane..." (or CommentSelection did); Event.comment holds it,
                              // Event.selection its ItemNames, detail = the note (bp.10)
+  ET_DOCUMENT_EDITED   = 20; // a change was pushed (person or agent; docs/backplane/coedit.md);
+                             // detail = JSON {seq, doc, actor, description, created, modified,
+                             // deleted, rebased, undo}; actor "" is the person (bp.11)
+  ET_AGENT_NOTICE      = 21; // a notice for an agent about its operation (deferred, rebased,
+                             // dropped, undo_took_back); detail = JSON {kind, actor, doc,
+                             // details} (bp.11)
+  ET_PLAN_CHANGED      = 22; // the routing plan changed (docs/backplane/floorplanner.md);
+                             // detail = JSON {board, revision, actor, ops} (bp.11)
+  ET_AGENT_CONTROL     = 23; // the person paused, resumed or steered an agent from KiCad;
+                             // detail = JSON {actor, action: "pause"|"resume"|"steer", text} (bp.11)
 }
 
 message Event
