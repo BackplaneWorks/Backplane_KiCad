@@ -305,9 +305,14 @@ bool JSON_SETTINGS::LoadFromFile( const wxString& aDirectory )
         }
     }
 
-    // Co-editing: what the file held, as the base of later merges.
+    // Co-editing: what the file holds, as the base of later merges (the file as written, not the
+    // migrated copy, so our own file never reads as another writer's change).
     if( mergesWithDisk() && success )
-        m_diskBase = std::make_unique<nlohmann::json>( *static_cast<nlohmann::json*>( m_internals.get() ) );
+    {
+        std::optional<nlohmann::json> disk = readDiskJson( path.GetFullPath() );
+        m_diskBase = std::make_unique<nlohmann::json>(
+                disk ? *disk : *static_cast<nlohmann::json*>( m_internals.get() ) );
+    }
 
     // Now that we have new data in the JSON structure, load the params again
     Load();
@@ -610,8 +615,14 @@ bool JSON_SETTINGS::SaveToFile( const wxString& aDirectory, bool aForce )
         m_modified = false;
         m_fileSynced = true;
 
+        // The base is what we just wrote, as it reads back: our own save is never a change by
+        // another writer (a merge and a settings refresh after every save).
         if( mergesWithDisk() )
-            m_diskBase = std::make_unique<nlohmann::json>( *static_cast<nlohmann::json*>( m_internals.get() ) );
+        {
+            std::optional<nlohmann::json> disk = readDiskJson( path.GetFullPath() );
+            m_diskBase = std::make_unique<nlohmann::json>(
+                    disk ? *disk : *static_cast<nlohmann::json*>( m_internals.get() ) );
+        }
     }
 
     m_lastSaveFailed = !success;
@@ -1133,9 +1144,15 @@ void JSON_SETTINGS::mergeDisk( const nlohmann::json& aDisk )
                                                              { "theirs", c.theirs } } ).dump() );
     }
 
+    bool changed = merged != ours;
     ours = merged;
     m_diskBase = std::make_unique<nlohmann::json>( aDisk );
-    m_lastSyncMerged = true;
+
+    // Nothing of ours changed (the file differed only where we agree): no reload of the settings.
+    m_lastSyncMerged = changed;
+
+    if( !changed )
+        return;
 
     // Bring the merged values into the parameters, and the nested settings (board setup, net
     // classes) from their part of the document.

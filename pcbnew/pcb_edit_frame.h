@@ -425,6 +425,9 @@ public:
     /// Co-editing: merge the project file and pick up the custom rules others changed.
     void EmbedSyncSideFiles() override;
 
+    /// After KiCad itself wrote the project file or the custom rules: their new signatures are ours.
+    void NoteOwnSideFileWrites();
+
     /// After project settings merged in from disk (save or live): bring the board, its net
     /// classes and the DRC engine up to date and redraw.  aActor names who changed them.
     void ProjectSettingsMerged( const std::string& aWhat );

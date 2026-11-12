@@ -2507,6 +2507,19 @@ void PCB_EDIT_FRAME::EmbedSyncSideFiles()
 }
 
 
+void PCB_EDIT_FRAME::NoteOwnSideFileWrites()
+{
+    if( !GetBoard() || Prj().IsNullProject() )
+        return;
+
+    if( !m_projectSignature.empty() )
+        m_projectSignature = sideFileSignature( Prj().GetProjectFullName() );
+
+    if( !m_rulesSignature.empty() )
+        m_rulesSignature = sideFileSignature( GetBoard()->GetDesignRulesPath() );
+}
+
+
 void PCB_EDIT_FRAME::ReloadCustomRules()
 {
     try

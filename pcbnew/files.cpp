@@ -1123,6 +1123,9 @@ bool PCB_EDIT_FRAME::SavePcbFile( const wxString& aFileName, bool addToHistory,
 
         if( Prj().GetProjectFile().LastSyncMerged() )
             ProjectSettingsMerged( "project settings (on save)" );
+
+        // Our own write of the project file is not another writer's change for the side-file poll.
+        NoteOwnSideFileWrites();
     }
     else if( aChangeProject )
     {
