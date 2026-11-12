@@ -135,7 +135,7 @@ void merge( const Message& aBase, const Message& aPerson, const Message& aAgent,
     {
         const FieldDescriptor* f = desc->field( ii );
         std::vector<const FieldDescriptor*> group{ f };
-        std::string path = aPath.empty() ? f->name() : aPath + "." + f->name();
+        std::string path = aPath.empty() ? std::string( f->name() ) : aPath + "." + std::string( f->name() );
 
         // A oneof is one value: which member is set, and its contents.
         if( const OneofDescriptor* oneof = f->real_containing_oneof() )
@@ -149,7 +149,7 @@ void merge( const Message& aBase, const Message& aPerson, const Message& aAgent,
             for( int jj = 0; jj < oneof->field_count(); ++jj )
                 group.push_back( oneof->field( jj ) );
 
-            path = aPath.empty() ? oneof->name() : aPath + "." + oneof->name();
+            path = aPath.empty() ? std::string( oneof->name() ) : aPath + "." + std::string( oneof->name() );
         }
 
         bool agentChanged = !sameFields( aBase, aAgent, group );
