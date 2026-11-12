@@ -83,9 +83,20 @@ host top-level (WM-managed)
   parent. `ET_DIALOG_OPENED`/`ET_DIALOG_CLOSED` carry the title in `detail`.
 - AUI panes cannot float in embedded frames.
 
-On Windows the container is used directly (no holder): frames lose `WS_CAPTION`/
-`WS_THICKFRAME`, gain `WS_CHILD | WS_CLIPCHILDREN` and are `SetParent` to it; dialogs are owned
-by the top-level HWND.
+On Windows (bp.11) the window tree matches X11: KiCad creates a holder HWND (class
+`BackplaneKiCadEmbedHolder`) as a `WS_CHILD` of the container, sized to the container's client
+area (followed every 100 ms), and frames lose `WS_CAPTION`/`WS_THICKFRAME`, gain
+`WS_CHILD | WS_CLIPCHILDREN` and are `SetParent` to the holder. `AttachToParent` moves only the
+holder; `--parent-window 0` or `AttachToParent{0}` parks it as a hidden off-screen popup.
+KiCad notices the host moving the holder into another window (`ET_ATTACHED`), taking it out
+with `SetParent(holder, NULL)` or the container going away (`ET_DETACHED`, parked). Windows
+destroys child windows with their parent, so **the host must move the holder out
+(`AttachToParent{0}` or `SetParent(holder, NULL)`) before it destroys the container**; a host
+that crashes takes KiCad's frames with it. `shown` is the frame's own `WS_VISIBLE`, as X11's
+map state, so a host may keep the container hidden until a frame reports shown. Dialogs are
+owned by the top-level HWND. `--theme dark` enables wxMSW dark mode (wx 3.3+) before any frame
+exists; a live `SetTheme` reaches only windows opened later (`gtk_dark` in the reply is
+false when it could not apply).
 
 ## Focus and reserved keys
 
