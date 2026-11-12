@@ -45,6 +45,7 @@
 #include <future>
 #include <optional>
 #include <set>
+#include <unordered_map>
 
 /*
     Copper clearance test. Checks all copper items (pads, vias, tracks, drawings, zones) for their
@@ -113,6 +114,11 @@ private:
 private:
     int            m_drcEpsilon;
     DRC_ZONE_INDEX m_zoneIndex;
+
+    // Pad number -> net-tie group of each footprint, built once per run; read concurrently by
+    // the pad tests (FOOTPRINT::MapPadNumbersToNetTieGroups() rebuilds the map on every call,
+    // which per same-footprint pad pair is quadratic in the pad count).
+    std::unordered_map<const FOOTPRINT*, std::map<wxString, int>> m_netTieGroups;
 };
 
 
@@ -127,6 +133,17 @@ bool DRC_TEST_PROVIDER_COPPER_CLEARANCE::Run()
     }
 
     m_drcEpsilon = m_board->GetDesignSettings().GetDRCEpsilon();
+
+    m_netTieGroups.clear();
+
+    for( const FOOTPRINT* footprint : m_board->Footprints() )
+        m_netTieGroups.emplace( footprint, footprint->MapPadNumbersToNetTieGroups() );
+
+    struct NET_TIE_GROUPS_GUARD
+    {
+        ~NET_TIE_GROUPS_GUARD() { groups.clear(); }
+        std::unordered_map<const FOOTPRINT*, std::map<wxString, int>>& groups;
+    } netTieGroupsGuard{ m_netTieGroups };
 
     struct ZONE_INDEX_GUARD
     {
@@ -757,15 +774,31 @@ bool DRC_TEST_PROVIDER_COPPER_CLEARANCE::testPadAgainstItem( PAD* pad, const std
     // Disable some tests for net-tie objects in a footprint
     if( other->GetParent() == pad->GetParent() )
     {
-        FOOTPRINT*              fp = pad->GetParentFootprint();
-        std::map<wxString, int> padToNetTieGroupMap = fp->MapPadNumbersToNetTieGroups();
-        int                     padGroupIdx = padToNetTieGroupMap[ pad->GetNumber() ];
+        FOOTPRINT* fp = pad->GetParentFootprint();
+        auto       groupsIt = m_netTieGroups.find( fp );
+
+        std::optional<std::map<wxString, int>> uncached;
+
+        if( groupsIt == m_netTieGroups.end() )
+            uncached = fp->MapPadNumbersToNetTieGroups();
+
+        const std::map<wxString, int>& padToNetTieGroupMap = uncached ? *uncached : groupsIt->second;
+
+        // A pad number missing from the map reads as group 0, as operator[] on a copy did
+        auto groupOf =
+                [&]( const wxString& aNumber ) -> int
+                {
+                    auto it = padToNetTieGroupMap.find( aNumber );
+                    return it == padToNetTieGroupMap.end() ? 0 : it->second;
+                };
+
+        int padGroupIdx = groupOf( pad->GetNumber() );
 
         if( other->Type() == PCB_PAD_T )
         {
             PAD* otherPad = static_cast<PAD*>( other );
 
-            if( padGroupIdx >= 0 && padGroupIdx == padToNetTieGroupMap[ otherPad->GetNumber() ] )
+            if( padGroupIdx >= 0 && padGroupIdx == groupOf( otherPad->GetNumber() ) )
                 testClearance = testShorting = false;
 
             if( pad->SameLogicalPadAs( otherPad ) )
