@@ -19,16 +19,140 @@
 
 #include <algorithm>
 
+#include <wx/app.h>
 #include <wx/window.h>
 #include <windows.h>
 
-// Windows: frames become WS_CHILD windows of the host's container HWND (no separate holder;
-// the container is the holder).  Dialogs are owned by the host's top-level HWND.
-// Untested on hardware in bp.8: the X11 path is the verified one.
+// Windows: as on X11, the frames are WS_CHILD windows of a holder window KiCad owns, and the
+// holder is a child of the host's container HWND (or, parked, a hidden off-screen popup).
+// AttachToParent moves only the holder.  The holder follows its parent's client size and
+// notices the host moving it or its parent going away.  Dialogs are owned by the host's
+// top-level HWND.
 
 namespace
 {
 KIPLATFORM::EMBED::HOOKS s_hooks;
+HWND                     s_holder = nullptr;
+HWND                     s_parent = nullptr;   ///< the container the holder belongs in, or null
+
+constexpr UINT_PTR HOLDER_TIMER = 1;
+constexpr int      PARK_X = -32000;
+constexpr int      PARK_Y = -32000;
+
+
+void fitToParent( HWND aHolder, HWND aParent )
+{
+    RECT client;
+
+    if( !aParent || !GetClientRect( aParent, &client ) )
+        return;
+
+    RECT now;
+    GetWindowRect( aHolder, &now );
+    MapWindowPoints( HWND_DESKTOP, aParent, reinterpret_cast<POINT*>( &now ), 2 );
+
+    if( now.left != 0 || now.top != 0 || now.right - now.left != client.right
+        || now.bottom - now.top != client.bottom )
+    {
+        SetWindowPos( aHolder, nullptr, 0, 0, client.right, client.bottom,
+                      SWP_NOZORDER | SWP_NOACTIVATE );
+    }
+}
+
+
+void becomeChildOf( HWND aHolder, HWND aParent )
+{
+    LONG_PTR style = GetWindowLongPtrW( aHolder, GWL_STYLE );
+    style = ( style & ~WS_POPUP ) | WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+    SetWindowLongPtrW( aHolder, GWL_STYLE, style );
+    SetParent( aHolder, aParent );
+    SetWindowPos( aHolder, HWND_TOP, 0, 0, 0, 0,
+                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED );
+    fitToParent( aHolder, aParent );
+    ShowWindow( aHolder, SW_SHOWNA );
+}
+
+
+void park( HWND aHolder )
+{
+    // Hidden and off-screen, owned by nobody: the frames inside keep running, and a later
+    // AttachToParent moves them back in one SetParent
+    ShowWindow( aHolder, SW_HIDE );
+    SetParent( aHolder, nullptr );
+    LONG_PTR style = GetWindowLongPtrW( aHolder, GWL_STYLE );
+    style = ( style & ~WS_CHILD ) | WS_POPUP | WS_CLIPCHILDREN;
+    SetWindowLongPtrW( aHolder, GWL_STYLE, style );
+    SetWindowPos( aHolder, nullptr, PARK_X, PARK_Y, 0, 0,
+                  SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED );
+}
+
+
+LRESULT CALLBACK holderProc( HWND aHwnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam )
+{
+    if( aMsg == WM_TIMER && aWParam == HOLDER_TIMER && aHwnd == s_holder )
+    {
+        HWND actual = GetParent( aHwnd );
+
+        if( s_parent && !IsWindow( s_parent ) )
+        {
+            // The host's container is gone: park, and tell the host when it comes back
+            s_parent = nullptr;
+            park( aHwnd );
+
+            if( s_hooks.detached )
+                s_hooks.detached();
+        }
+        else if( s_parent && actual && actual != s_parent )
+        {
+            // The host moved the holder into another of its windows itself
+            s_parent = actual;
+            fitToParent( aHwnd, actual );
+
+            if( s_hooks.reparented )
+                s_hooks.reparented( reinterpret_cast<uint64_t>( actual ) );
+        }
+        else if( s_parent && !actual )
+        {
+            // The host took it out (SetParent(holder, NULL)): treated as a detach
+            s_parent = nullptr;
+            park( aHwnd );
+
+            if( s_hooks.detached )
+                s_hooks.detached();
+        }
+        else if( s_parent )
+        {
+            fitToParent( aHwnd, s_parent );
+        }
+
+        return 0;
+    }
+
+    if( aMsg == WM_ERASEBKGND )
+        return 1;   // the frames cover it; no flash of the class brush
+
+    return DefWindowProcW( aHwnd, aMsg, aWParam, aLParam );
+}
+
+
+const wchar_t* holderClass()
+{
+    static const wchar_t* name = L"BackplaneKiCadEmbedHolder";
+    static bool           registered = false;
+
+    if( !registered )
+    {
+        WNDCLASSEXW wc = {};
+        wc.cbSize = sizeof( wc );
+        wc.lpfnWndProc = holderProc;
+        wc.hInstance = GetModuleHandleW( nullptr );
+        wc.lpszClassName = name;
+        wc.hCursor = LoadCursor( nullptr, IDC_ARROW );
+        registered = RegisterClassExW( &wc ) != 0 || GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
+    }
+
+    return name;
+}
 }
 
 
@@ -46,13 +170,46 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 
 uint64_t KIPLATFORM::EMBED::CreateHolder( uint64_t aParent )
 {
-    return aParent;
+    HWND parent = reinterpret_cast<HWND>( aParent );
+
+    if( parent && !IsWindow( parent ) )
+        return 0;
+
+    // Created parked (a hidden popup that never shows in the taskbar), then moved in
+    HWND holder = CreateWindowExW( WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, holderClass(), L"",
+                                   WS_POPUP | WS_CLIPCHILDREN, PARK_X, PARK_Y, 800, 600, nullptr,
+                                   nullptr, GetModuleHandleW( nullptr ), nullptr );
+
+    if( !holder )
+        return 0;
+
+    s_holder = holder;
+    s_parent = parent;
+
+    if( parent )
+        becomeChildOf( holder, parent );
+
+    SetTimer( holder, HOLDER_TIMER, 100, nullptr );
+    return reinterpret_cast<uint64_t>( holder );
 }
 
 
-bool KIPLATFORM::EMBED::AttachHolder( uint64_t, uint64_t aParent )
+bool KIPLATFORM::EMBED::AttachHolder( uint64_t aHolder, uint64_t aParent )
 {
-    return aParent == 0 || IsWindow( reinterpret_cast<HWND>( aParent ) );
+    HWND holder = reinterpret_cast<HWND>( aHolder );
+    HWND parent = reinterpret_cast<HWND>( aParent );
+
+    if( !holder || !IsWindow( holder ) || ( parent && !IsWindow( parent ) ) )
+        return false;
+
+    s_parent = parent;
+
+    if( parent )
+        becomeChildOf( holder, parent );
+    else
+        park( holder );
+
+    return true;
 }
 
 
@@ -127,7 +284,18 @@ void KIPLATFORM::EMBED::SetFrameGeometry( wxWindow* aFrame, int aX, int aY, int 
 
 bool KIPLATFORM::EMBED::SetPreferDark( int aMode )
 {
-    return aMode == 2;
+    // wxMSW's dark mode (3.3+) applies to windows created after it is enabled, so --theme dark
+    // (before any frame exists) gives dark chrome throughout; a live change after startup
+    // reaches only windows opened later (dialogs, new frames).  It cannot be turned off again.
+#if wxCHECK_VERSION( 3, 3, 0 )
+    if( aMode == 2 )
+        return wxTheApp && wxTheApp->MSWEnableDarkMode( wxApp::DarkMode_Always );
+
+    if( aMode == 0 )
+        return wxTheApp && wxTheApp->MSWEnableDarkMode( wxApp::DarkMode_Auto );
+#endif
+
+    return false;
 }
 
 
@@ -138,7 +306,11 @@ void KIPLATFORM::EMBED::InstallLoopTimer( std::function<void( double, double )> 
 
 bool KIPLATFORM::EMBED::IsMapped( wxWindow* aFrame )
 {
-    return aFrame && IsWindowVisible( static_cast<HWND>( aFrame->GetHWND() ) );
+    // The frame's own visibility, as X11's map_state: IsWindowVisible() is false whenever an
+    // ancestor (the host's container) is hidden, and a host may keep it hidden until a frame
+    // reports shown
+    HWND hwnd = aFrame ? static_cast<HWND>( aFrame->GetHWND() ) : nullptr;
+    return hwnd && ( GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_VISIBLE ) != 0;
 }
 
 
