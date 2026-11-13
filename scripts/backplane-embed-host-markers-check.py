@@ -39,7 +39,7 @@ def canvas_centre(disp, root, frame_window):
                 g = child.get_geometry()
             except Exception:
                 continue
-            if attrs.map_state == 2 and depth > 0:
+            if attrs.map_state == 2:
                 area = g.width * g.height
                 if best is None or area > best[0]:
                     o = root.translate_coords(child, 0, 0)
