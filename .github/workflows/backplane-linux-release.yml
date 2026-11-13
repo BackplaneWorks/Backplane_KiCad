@@ -319,6 +319,10 @@ jobs:
           export KICAD10_FOOTPRINT_DIR="${KICAD10_FOOTPRINT_DIR-$root/share/kicad/footprints}"
           export KICAD10_3DMODEL_DIR="${KICAD10_3DMODEL_DIR-$root/share/kicad/3dmodels}"
           export KICAD10_TEMPLATE_DIR="${KICAD10_TEMPLATE_DIR-$root/share/kicad/template}"
+          # The library preload runs on many threads; glibc gives each its own arena, which kept
+          # ~650 MB more for Hubble-sized tables (4.26 -> 3.6 GB at 8, preload +0.3 s).  The
+          # caller's own setting wins.
+          export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX-8}"
           config_root="${KICAD_CONFIG_HOME-${XDG_CONFIG_HOME-$HOME/.config}/kicad}/@SETTINGS_VERSION@"
           mkdir -p "$config_root"
           for table in sym-lib-table fp-lib-table design-block-lib-table; do
