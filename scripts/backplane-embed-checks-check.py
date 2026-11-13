@@ -117,13 +117,26 @@ def main():
         check(Counter(m.type for m in markers(embed.FK_PCB)) or not task.violations,
               "the in-editor DRC task leaves markers too")
 
-        # Busy while running; unhandled for a kind with no checks
+        # Two at once: the run holds the UI thread, so the second either finds it running
+        # (AS_BUSY) or is served after it ends and runs on its own; never two at the same time
         events()
         first = api.request_raw(embed.RunChecks(kind=embed.FK_PCB, parity=True))
         second = api.request_raw(embed.RunChecks(kind=embed.FK_PCB))
-        check(first.status.status == api.envelope.AS_OK and second.status.status == api.envelope.AS_BUSY,
-              f"a second RunChecks while one runs is AS_BUSY ({second.status.error_message})")
-        wait_for(lambda: any(e.type == embed.ET_CHECKS_DONE for e in events()), 300, 0.2)
+        done = []
+        expect = 2 if second.status.status == api.envelope.AS_OK else 1
+        wait_for(lambda: done.extend(e for e in events() if e.type == embed.ET_CHECKS_DONE) or len(done) >= expect,
+                 300, 0.2)
+        ids = []
+        for r in (first, second):
+            if r.status.status == api.envelope.AS_OK:
+                reply = embed.RunChecksResponse()
+                r.message.Unpack(reply)
+                ids.append(reply.progress_id)
+        check(first.status.status == api.envelope.AS_OK
+              and ( second.status.status == api.envelope.AS_BUSY
+                    or sorted(e.checks.progress_id for e in done) == sorted(ids) ),
+              f"a second RunChecks is refused while one runs, or runs after it with its own result "
+              f"(status {second.status.status}, done for {[e.checks.progress_id for e in done]})")
         other = api.request_raw(embed.RunChecks(kind=embed.FK_PCB_3D))
         check(other.status.status != api.envelope.AS_OK, "RunChecks for FK_PCB_3D is refused")
 
