@@ -73,6 +73,7 @@
 #include <advanced_config.h>
 #include <connectivity/conn_facade.h>
 #include <sim/simulator_frame.h>
+#include <tool/host_markers_tool.h>
 #include <tool/action_manager.h>
 #include <tool/action_toolbar.h>
 #include <tool/common_control.h>
@@ -738,6 +739,7 @@ void SCH_EDIT_FRAME::setupTools()
     // Register tools
     m_toolManager->RegisterTool( new COMMON_CONTROL );
     m_toolManager->RegisterTool( new COMMON_TOOLS );
+    m_toolManager->RegisterTool( new HOST_MARKERS_TOOL );
     m_toolManager->RegisterTool( new ZOOM_TOOL );
     m_toolManager->RegisterTool( new SCH_SELECTION_TOOL );
     m_toolManager->RegisterTool( new PICKER_TOOL );

@@ -86,6 +86,7 @@ enum class EMBED_EVENT_TYPE : int
     PLAN_CHANGED = 22,
     AGENT_CONTROL = 23,
     PROGRESS = 24,
+    MARKER_CLICKED = 26,
     CHECKS_DONE = 27
 };
 
@@ -235,6 +236,10 @@ struct EMBED_EVENT
     std::shared_ptr<const EMBED_COMMENT> comment;   ///< COMMENT only
     std::shared_ptr<const EMBED_PROGRESS> progress; ///< PROGRESS only
     std::shared_ptr<const EMBED_CHECKS>   checks;   ///< CHECKS_DONE only
+    std::string      markerSet;       ///< MARKER_CLICKED on a host marker: its set and id
+    std::string      markerId;
+    std::string      drcMarker;       ///< MARKER_CLICKED on a DRC/ERC marker: a serialized
+                                      ///< kiapi.backplane.embed.Marker
 };
 
 
@@ -361,6 +366,11 @@ public:
 
     /// A RunChecks ended: ET_CHECKS_DONE for aFrame's frame.
     void ChecksDone( wxWindow* aFrame, const EMBED_CHECKS& aChecks );
+
+    /// The person clicked a marker in aFrame's canvas: a host marker (aSet, aId) or a DRC/ERC
+    /// marker (aDrcMarker, a serialized kiapi.backplane.embed.Marker).  ET_MARKER_CLICKED.
+    void MarkerClicked( wxWindow* aFrame, const std::string& aSet, const std::string& aId,
+                        const std::string& aDrcMarker );
 
     /// The host asked to stop it (CancelProgress).
     bool ProgressCancelled( uint64_t aId ) const;

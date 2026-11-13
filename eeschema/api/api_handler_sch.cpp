@@ -54,6 +54,9 @@
 #include <string_utils.h>
 #include <sch_edit_frame.h>
 #include <sch_marker.h>
+#include <preview_items/host_markers_item.h>
+#include <tool/host_markers_tool.h>
+#include <view/view_controls.h>
 #include <rc_item.h>
 #include <set>
 #include <io/kicad/kicad_io_utils.h>
@@ -217,11 +220,32 @@ API_HANDLER_SCH::API_HANDLER_SCH( SCH_EDIT_FRAME* aFrame ) :
 }
 
 
+API_HANDLER_SCH::~API_HANDLER_SCH()
+{
+    *m_alive = false;
+}
+
+
 API_HANDLER_SCH::API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext,
                                   SCH_EDIT_FRAME* aFrame ) :
         API_HANDLER_EDITOR( aFrame ),
         m_context( std::move( aContext ) )
 {
+    // Embedded: a click on a host or ERC marker tells the host (ET_MARKER_CLICKED)
+    if( aFrame && aFrame->GetCanvas() && BACKPLANE_EMBED::Get().Enabled() )
+    {
+        std::weak_ptr<bool> alive = m_alive;
+
+        aFrame->GetCanvas()->Bind( wxEVT_LEFT_UP,
+                                   [this, alive]( wxMouseEvent& aEvent )
+                                   {
+                                       aEvent.Skip();
+
+                                       if( std::shared_ptr<bool> on = alive.lock(); on && *on )
+                                           onCanvasClick();
+                                   } );
+    }
+
     using namespace kiapi::schematic::jobs;
     using namespace kiapi::schematic::types;
     using namespace kiapi::schematic::commands;
@@ -280,6 +304,8 @@ API_HANDLER_SCH::API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext,
             &API_HANDLER_SCH::handleRunChecks );
     registerHandler<kiapi::backplane::embed::GetMarkers, kiapi::backplane::embed::GetMarkersResponse>(
             &API_HANDLER_SCH::handleGetMarkers, true );
+    registerHandler<kiapi::backplane::embed::SetHostMarkers, kiapi::backplane::embed::SetHostMarkersResponse>(
+            &API_HANDLER_SCH::handleSetHostMarkers );
     registerHandler<kiapi::backplane::embed::CommentSelection,
                     kiapi::backplane::embed::CommentSelectionResponse>(
             &API_HANDLER_SCH::handleCommentSelection );
@@ -3105,6 +3131,187 @@ API_HANDLER_SCH::handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embe
 }
 
 
+namespace
+{
+/// kiapi.backplane.embed.Marker for one ERC marker on aPath's sheet.
+void fillEmbedSchMarker( kiapi::backplane::embed::Marker* aOut, SCH_MARKER* aMarker,
+                         const SCH_SHEET_PATH& aPath )
+{
+    std::shared_ptr<RC_ITEM> rcItem = aMarker->GetRCItem();
+
+    aOut->set_type( rcItem->GetSettingsKey().ToStdString( wxConvUTF8 ) );
+
+    SEVERITY severity = aMarker->GetSeverity();
+    aOut->set_excluded( aMarker->IsExcluded() );
+    aOut->set_severity( aMarker->IsExcluded() || severity == RPT_SEVERITY_EXCLUSION ? "exclusion"
+                        : severity == RPT_SEVERITY_ERROR                          ? "error"
+                                                                                  : "warning" );
+    aOut->set_message( rcItem->GetErrorMessage( false ).ToStdString( wxConvUTF8 ) );
+
+    // Nanometres, as everywhere in the embed API (schematic units are 100 nm)
+    aOut->mutable_at_nm()->set_x_nm( static_cast<int64_t>( aMarker->GetPosition().x ) * 100 );
+    aOut->mutable_at_nm()->set_y_nm( static_cast<int64_t>( aMarker->GetPosition().y ) * 100 );
+
+    for( const KIID& id : rcItem->GetIDs() )
+    {
+        if( id != niluuid )
+            aOut->add_items()->set_value( id.AsStdString() );
+    }
+
+    aOut->set_sheet_path( aPath.Path().AsString().ToStdString( wxConvUTF8 ) );
+    aOut->mutable_id()->set_value( aMarker->m_Uuid.AsStdString() );
+}
+} // namespace
+
+
+HOST_MARKERS_ITEM* API_HANDLER_SCH::hostMarkers( bool aCreate ) const
+{
+    SCH_EDIT_FRAME*    editor = frame();
+    HOST_MARKERS_TOOL* tool = editor ? editor->GetToolManager()->GetTool<HOST_MARKERS_TOOL>() : nullptr;
+
+    if( !tool )
+        return nullptr;
+
+    if( !aCreate )
+        return tool->Existing();
+
+    HOST_MARKERS_ITEM& item = tool->Markers();
+
+    // Only the sheet shown: markers on other sheets wait until it is
+    item.SetSheetProvider( [editor]() { return editor->GetCurrentSheet().Path(); } );
+    return &item;
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::SetHostMarkersResponse>
+API_HANDLER_SCH::handleSetHostMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed::SetHostMarkers>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    if( aCtx.Request.kind() != embed::FK_SCH )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "SetHostMarkers" ) )
+        return tl::unexpected( *headless );
+
+    HOST_MARKERS_ITEM* hostItem = hostMarkers( true );
+
+    if( !hostItem )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_INTERNAL_ERROR );
+        e.set_error_message( "the schematic editor has no host-markers tool" );
+        return tl::unexpected( e );
+    }
+
+    SCH_SHEET_LIST           sheets = frame()->Schematic().Hierarchy();
+    std::vector<HOST_MARKER> markers;
+
+    for( const embed::HostMarker& in : aCtx.Request.markers() )
+    {
+        HOST_MARKER marker;
+        marker.set = aCtx.Request.set();
+        marker.id = in.id();
+        marker.title = in.title();
+        marker.detail = in.detail();
+        marker.severity = static_cast<int>( in.severity() );
+        marker.sheetPath = in.sheet_path();
+
+        if( !in.sheet_path().empty() )
+            marker.sheet = KIID_PATH( wxString::FromUTF8( in.sheet_path() ) );
+
+        BOX2I itemsBox;
+        bool  any = false;
+
+        for( const kiapi::common::types::KIID& id : in.items() )
+        {
+            KIID kiid( id.value() );
+            marker.items.push_back( kiid );
+
+            for( const SCH_SHEET_PATH& path : sheets )
+            {
+                for( SCH_ITEM* item : path.LastScreen()->Items() )
+                {
+                    if( item->m_Uuid != kiid )
+                        continue;
+
+                    if( any )
+                        itemsBox.Merge( item->GetBoundingBox() );
+                    else
+                        itemsBox = item->GetBoundingBox();
+
+                    // The item's sheet, when the host did not say
+                    if( marker.sheet.empty() )
+                    {
+                        marker.sheet = path.Path();
+                        marker.sheetPath = path.Path().AsString().ToStdString( wxConvUTF8 );
+                    }
+
+                    any = true;
+                }
+            }
+        }
+
+        if( in.has_at_nm() )
+            marker.pos = VECTOR2I( KiROUND( in.at_nm().x_nm() / 100.0 ), KiROUND( in.at_nm().y_nm() / 100.0 ) );
+        else if( any )
+            marker.pos = itemsBox.Centre();
+        else
+            continue;   // nowhere to draw it
+
+        markers.push_back( std::move( marker ) );
+    }
+
+    embed::SetHostMarkersResponse response;
+    response.set_count( hostItem->SetMarkers( aCtx.Request.set(), std::move( markers ) ) );
+
+    frame()->GetToolManager()->GetTool<HOST_MARKERS_TOOL>()->Changed();
+    frame()->GetCanvas()->Refresh();
+    return response;
+}
+
+
+void API_HANDLER_SCH::onCanvasClick()
+{
+    SCH_EDIT_FRAME* editor = frame();
+
+    if( !editor || !editor->GetCanvas() )
+        return;
+
+    KIGFX::VIEW* view = editor->GetCanvas()->GetView();
+    VECTOR2I     at( editor->GetCanvas()->GetViewControls()->GetMousePosition( true ) );
+    int          radius = KiROUND( view->ToWorld( 10.0 ) );
+
+    if( HOST_MARKERS_ITEM* hostItem = hostMarkers( false ) )
+    {
+        if( const HOST_MARKER* hit = hostItem->HitTest( at, radius ) )
+        {
+            BACKPLANE_EMBED::Get().MarkerClicked( editor, hit->set, hit->id, std::string() );
+            return;
+        }
+    }
+
+    const SCH_SHEET_PATH& path = editor->GetCurrentSheet();
+
+    for( SCH_ITEM* item : path.LastScreen()->Items().OfType( SCH_MARKER_T ) )
+    {
+        SCH_MARKER* marker = static_cast<SCH_MARKER*>( item );
+
+        if( marker->GetRCItem() && view->IsVisible( marker ) && marker->HitTest( at, radius ) )
+        {
+            kiapi::backplane::embed::Marker out;
+            fillEmbedSchMarker( &out, marker, path );
+            BACKPLANE_EMBED::Get().MarkerClicked( editor, std::string(), std::string(), out.SerializeAsString() );
+            return;
+        }
+    }
+}
+
+
 HANDLER_RESULT<kiapi::backplane::embed::GetMarkersResponse>
 API_HANDLER_SCH::handleGetMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed::GetMarkers>& aCtx )
 {
@@ -3127,34 +3334,32 @@ API_HANDLER_SCH::handleGetMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed
     {
         for( SCH_ITEM* item : path.LastScreen()->Items().OfType( SCH_MARKER_T ) )
         {
-            SCH_MARKER*              marker = static_cast<SCH_MARKER*>( item );
-            std::shared_ptr<RC_ITEM> rcItem = marker->GetRCItem();
+            SCH_MARKER* marker = static_cast<SCH_MARKER*>( item );
 
-            if( !rcItem || !seen.insert( marker->m_Uuid ).second )
+            if( !marker->GetRCItem() || !seen.insert( marker->m_Uuid ).second )
                 continue;
 
+            fillEmbedSchMarker( response.add_markers(), marker, path );
+        }
+    }
+
+    if( HOST_MARKERS_ITEM* hostItem = aCtx.Request.include_host() ? hostMarkers( false ) : nullptr )
+    {
+        for( const HOST_MARKER* host : hostItem->All() )
+        {
             embed::Marker* out = response.add_markers();
-            out->set_type( rcItem->GetSettingsKey().ToStdString( wxConvUTF8 ) );
+            out->set_type( "host" );
+            out->set_severity( host->severity == 2 ? "error" : host->severity == 1 ? "warning" : "info" );
+            out->set_message( host->title );
+            out->mutable_at_nm()->set_x_nm( static_cast<int64_t>( host->pos.x ) * 100 );
+            out->mutable_at_nm()->set_y_nm( static_cast<int64_t>( host->pos.y ) * 100 );
 
-            SEVERITY severity = marker->GetSeverity();
-            out->set_excluded( marker->IsExcluded() );
-            out->set_severity( marker->IsExcluded() || severity == RPT_SEVERITY_EXCLUSION ? "exclusion"
-                               : severity == RPT_SEVERITY_ERROR                         ? "error"
-                                                                                        : "warning" );
-            out->set_message( rcItem->GetErrorMessage( false ).ToStdString( wxConvUTF8 ) );
+            for( const KIID& id : host->items )
+                out->add_items()->set_value( id.AsStdString() );
 
-            // Nanometres, as everywhere in the embed API (schematic units are 100 nm)
-            out->mutable_at_nm()->set_x_nm( static_cast<int64_t>( marker->GetPosition().x ) * 100 );
-            out->mutable_at_nm()->set_y_nm( static_cast<int64_t>( marker->GetPosition().y ) * 100 );
-
-            for( const KIID& id : rcItem->GetIDs() )
-            {
-                if( id != niluuid )
-                    out->add_items()->set_value( id.AsStdString() );
-            }
-
-            out->set_sheet_path( path.Path().AsString().ToStdString( wxConvUTF8 ) );
-            out->mutable_id()->set_value( marker->m_Uuid.AsStdString() );
+            out->set_sheet_path( host->sheetPath );
+            out->mutable_host()->set_set( host->set );
+            out->mutable_host()->set_id( host->id );
         }
     }
 

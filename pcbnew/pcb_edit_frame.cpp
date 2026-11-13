@@ -102,6 +102,7 @@
 #include <settings/common_settings.h>
 #include <settings/settings_manager.h>
 #include <local_history.h>
+#include <tool/host_markers_tool.h>
 #include <tool/tool_manager.h>
 #include <tool/tool_dispatcher.h>
 #include <tool/action_toolbar.h>
@@ -1143,6 +1144,7 @@ void PCB_EDIT_FRAME::setupTools()
     // Register tools
     m_toolManager->RegisterTool( new COMMON_CONTROL );
     m_toolManager->RegisterTool( new COMMON_TOOLS );
+    m_toolManager->RegisterTool( new HOST_MARKERS_TOOL );
     m_toolManager->RegisterTool( new PCB_SELECTION_TOOL );
     m_toolManager->RegisterTool( new ZOOM_TOOL );
     m_toolManager->RegisterTool( new PCB_PICKER_TOOL );

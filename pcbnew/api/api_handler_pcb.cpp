@@ -63,6 +63,9 @@
 #include <pcb_track.h>
 #include <pcbnew_id.h>
 #include <pcb_marker.h>
+#include <preview_items/host_markers_item.h>
+#include <tool/host_markers_tool.h>
+#include <view/view_controls.h>
 #include <pcb_3d_body.h>
 #include <pcb_point.h>
 #include <kiway.h>
@@ -134,9 +137,42 @@ API_HANDLER_PCB::API_HANDLER_PCB( PCB_EDIT_FRAME* aFrame ) :
 }
 
 
+API_HANDLER_PCB::~API_HANDLER_PCB()
+{
+    *m_alive = false;
+}
+
+
+HOST_MARKERS_ITEM* API_HANDLER_PCB::hostMarkers( bool aCreate ) const
+{
+    PCB_EDIT_FRAME*    editor = frame();
+    HOST_MARKERS_TOOL* tool = editor ? editor->GetToolManager()->GetTool<HOST_MARKERS_TOOL>() : nullptr;
+
+    if( !tool )
+        return nullptr;
+
+    return aCreate ? &tool->Markers() : tool->Existing();
+}
+
+
 API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDIT_FRAME* aFrame ) :
         API_HANDLER_BOARD( std::move( aContext ), aFrame )
 {
+    // Embedded: a click on a host or DRC marker tells the host (ET_MARKER_CLICKED)
+    if( aFrame && aFrame->GetCanvas() && BACKPLANE_EMBED::Get().Enabled() )
+    {
+        std::weak_ptr<bool> alive = m_alive;
+
+        aFrame->GetCanvas()->Bind( wxEVT_LEFT_UP,
+                                   [this, alive]( wxMouseEvent& aEvent )
+                                   {
+                                       aEvent.Skip();
+
+                                       if( std::shared_ptr<bool> on = alive.lock(); on && *on )
+                                           onCanvasClick();
+                                   } );
+    }
+
     registerHandler<kiapi::backplane::GetBoardStructure, kiapi::backplane::BoardStructureResponse>(
             &API_HANDLER_PCB::handleGetBoardStructure );
     registerHandler<kiapi::backplane::SetBoardStructure, kiapi::backplane::BoardStructureResponse>(
@@ -298,6 +334,8 @@ API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDI
             &API_HANDLER_PCB::handleRunChecks );
     registerHandler<kiapi::backplane::embed::GetMarkers, kiapi::backplane::embed::GetMarkersResponse>(
             &API_HANDLER_PCB::handleGetMarkers, true );
+    registerHandler<kiapi::backplane::embed::SetHostMarkers, kiapi::backplane::embed::SetHostMarkersResponse>(
+            &API_HANDLER_PCB::handleSetHostMarkers );
     registerHandler<kiapi::backplane::embed::CommentSelection,
                     kiapi::backplane::embed::CommentSelectionResponse>(
             &API_HANDLER_PCB::handleCommentSelection );
@@ -3437,6 +3475,152 @@ API_HANDLER_PCB::handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embe
 }
 
 
+void API_HANDLER_PCB::FillEmbedMarker( kiapi::backplane::embed::Marker* aOut, PCB_MARKER* aMarker,
+                                       BOARD* aBoard )
+{
+    std::shared_ptr<RC_ITEM> rcItem = aMarker->GetRCItem();
+
+    if( !rcItem )
+        return;
+
+    aOut->set_type( rcItem->GetSettingsKey().ToStdString( wxConvUTF8 ) );
+
+    SEVERITY severity = aMarker->GetSeverity();
+    aOut->set_excluded( aMarker->IsExcluded() );
+    aOut->set_severity( aMarker->IsExcluded() || severity == RPT_SEVERITY_EXCLUSION ? "exclusion"
+                        : severity == RPT_SEVERITY_ERROR                          ? "error"
+                                                                                  : "warning" );
+    aOut->set_message( rcItem->GetErrorMessage( false ).ToStdString( wxConvUTF8 ) );
+    aOut->mutable_at_nm()->set_x_nm( aMarker->GetPosition().x );
+    aOut->mutable_at_nm()->set_y_nm( aMarker->GetPosition().y );
+
+    for( const KIID& id : rcItem->GetIDs() )
+    {
+        if( id != niluuid )
+            aOut->add_items()->set_value( id.AsStdString() );
+    }
+
+    aOut->mutable_id()->set_value( aMarker->m_Uuid.AsStdString() );
+
+    if( DRC_ITEM* drcItem = dynamic_cast<DRC_ITEM*>( rcItem.get() ) )
+    {
+        if( DRC_RULE* rule = drcItem->GetViolatingRule(); rule && !rule->IsImplicit() )
+            aOut->set_rule( rule->m_Name.ToStdString( wxConvUTF8 ) );
+    }
+
+    if( aMarker->GetLayer() != UNDEFINED_LAYER )
+        aOut->set_layer( aBoard->GetLayerName( aMarker->GetLayer() ).ToStdString( wxConvUTF8 ) );
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::SetHostMarkersResponse>
+API_HANDLER_PCB::handleSetHostMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed::SetHostMarkers>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    if( aCtx.Request.kind() != embed::FK_PCB )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "SetHostMarkers" ) )
+        return tl::unexpected( *headless );
+
+    HOST_MARKERS_ITEM* hostItem = hostMarkers( true );
+
+    if( !hostItem )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_INTERNAL_ERROR );
+        e.set_error_message( "the PCB editor has no host-markers tool" );
+        return tl::unexpected( e );
+    }
+
+    std::vector<HOST_MARKER> markers;
+
+    for( const embed::HostMarker& in : aCtx.Request.markers() )
+    {
+        HOST_MARKER marker;
+        marker.set = aCtx.Request.set();
+        marker.id = in.id();
+        marker.title = in.title();
+        marker.detail = in.detail();
+        marker.severity = static_cast<int>( in.severity() );
+        marker.layer = in.layer();
+
+        BOX2I itemsBox;
+        bool  any = false;
+
+        for( const kiapi::common::types::KIID& id : in.items() )
+        {
+            marker.items.emplace_back( id.value() );
+
+            if( BOARD_ITEM* item = board()->ResolveItem( KIID( id.value() ), true );
+                item && item != DELETED_BOARD_ITEM::GetInstance() )
+            {
+                if( any )
+                    itemsBox.Merge( item->GetBoundingBox() );
+                else
+                    itemsBox = item->GetBoundingBox();
+
+                any = true;
+            }
+        }
+
+        if( in.has_at_nm() )
+            marker.pos = VECTOR2I( in.at_nm().x_nm(), in.at_nm().y_nm() );
+        else if( any )
+            marker.pos = itemsBox.Centre();
+        else
+            continue;   // nowhere to draw it
+
+        markers.push_back( std::move( marker ) );
+    }
+
+    embed::SetHostMarkersResponse response;
+    response.set_count( hostItem->SetMarkers( aCtx.Request.set(), std::move( markers ) ) );
+
+    frame()->GetToolManager()->GetTool<HOST_MARKERS_TOOL>()->Changed();
+    frame()->GetCanvas()->Refresh();
+    return response;
+}
+
+
+void API_HANDLER_PCB::onCanvasClick()
+{
+    PCB_EDIT_FRAME* editor = frame();
+
+    if( !editor || !editor->GetCanvas() || !board() )
+        return;
+
+    KIGFX::VIEW* view = editor->GetCanvas()->GetView();
+    VECTOR2I     at( editor->GetCanvas()->GetViewControls()->GetMousePosition( true ) );
+    int          radius = KiROUND( view->ToWorld( 10.0 ) );
+
+    if( HOST_MARKERS_ITEM* hostItem = hostMarkers( false ) )
+    {
+        if( const HOST_MARKER* hit = hostItem->HitTest( at, radius ) )
+        {
+            BACKPLANE_EMBED::Get().MarkerClicked( editor, hit->set, hit->id, std::string() );
+            return;
+        }
+    }
+
+    for( PCB_MARKER* marker : board()->Markers() )
+    {
+        if( view->IsVisible( marker ) && marker->HitTest( at, radius ) )
+        {
+            kiapi::backplane::embed::Marker out;
+            FillEmbedMarker( &out, marker, board() );
+            BACKPLANE_EMBED::Get().MarkerClicked( editor, std::string(), std::string(), out.SerializeAsString() );
+            return;
+        }
+    }
+}
+
+
 HANDLER_RESULT<kiapi::backplane::embed::GetMarkersResponse>
 API_HANDLER_PCB::handleGetMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed::GetMarkers>& aCtx )
 {
@@ -3456,39 +3640,28 @@ API_HANDLER_PCB::handleGetMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed
 
     for( PCB_MARKER* marker : board()->Markers() )
     {
-        std::shared_ptr<RC_ITEM> rcItem = marker->GetRCItem();
+        if( marker->GetRCItem() )
+            FillEmbedMarker( response.add_markers(), marker, board() );
+    }
 
-        if( !rcItem )
-            continue;
-
-        embed::Marker* out = response.add_markers();
-        out->set_type( rcItem->GetSettingsKey().ToStdString( wxConvUTF8 ) );
-
-        SEVERITY severity = marker->GetSeverity();
-        out->set_excluded( marker->IsExcluded() );
-        out->set_severity( marker->IsExcluded() || severity == RPT_SEVERITY_EXCLUSION ? "exclusion"
-                           : severity == RPT_SEVERITY_ERROR                         ? "error"
-                                                                                    : "warning" );
-        out->set_message( rcItem->GetErrorMessage( false ).ToStdString( wxConvUTF8 ) );
-        out->mutable_at_nm()->set_x_nm( marker->GetPosition().x );
-        out->mutable_at_nm()->set_y_nm( marker->GetPosition().y );
-
-        for( const KIID& id : rcItem->GetIDs() )
+    if( HOST_MARKERS_ITEM* hostItem = aCtx.Request.include_host() ? hostMarkers( false ) : nullptr )
+    {
+        for( const HOST_MARKER* host : hostItem->All() )
         {
-            if( id != niluuid )
+            embed::Marker* out = response.add_markers();
+            out->set_type( "host" );
+            out->set_severity( host->severity == 2 ? "error" : host->severity == 1 ? "warning" : "info" );
+            out->set_message( host->title );
+            out->mutable_at_nm()->set_x_nm( host->pos.x );
+            out->mutable_at_nm()->set_y_nm( host->pos.y );
+
+            for( const KIID& id : host->items )
                 out->add_items()->set_value( id.AsStdString() );
+
+            out->mutable_host()->set_set( host->set );
+            out->mutable_host()->set_id( host->id );
+            out->set_layer( host->layer );
         }
-
-        out->mutable_id()->set_value( marker->m_Uuid.AsStdString() );
-
-        if( DRC_ITEM* drcItem = dynamic_cast<DRC_ITEM*>( rcItem.get() ) )
-        {
-            if( DRC_RULE* rule = drcItem->GetViolatingRule(); rule && !rule->IsImplicit() )
-                out->set_rule( rule->m_Name.ToStdString( wxConvUTF8 ) );
-        }
-
-        if( marker->GetLayer() != UNDEFINED_LAYER )
-            out->set_layer( board()->GetLayerName( marker->GetLayer() ).ToStdString( wxConvUTF8 ) );
     }
 
     return response;

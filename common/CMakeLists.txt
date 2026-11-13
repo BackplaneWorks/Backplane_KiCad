@@ -830,6 +830,7 @@ set( COMMON_PREVIEW_ITEMS_SRCS
     preview_items/preview_utils.cpp
     preview_items/ruler_item.cpp
     preview_items/selection_area.cpp
+    preview_items/host_markers_item.cpp
     preview_items/simple_overlay_item.cpp
     preview_items/snap_indicator.cpp
     preview_items/two_point_assistant.cpp
@@ -1053,6 +1054,7 @@ set( COMMON_SRCS
     tool/tool_event.cpp
     tool/tools_holder.cpp
     tool/tool_interactive.cpp
+    tool/host_markers_tool.cpp
     tool/tool_manager.cpp
     tool/tool_menu.cpp
     tool/zoom_menu.cpp

@@ -371,6 +371,16 @@ that no progress window is ever mapped.
   come back in `ids_not_found`), `zoom_box_nm` (zoom to fit, overrides `zoom`), `at_nm` (centre
   there at the current scale) and, for FK_SCH, `sheet_path` (show that sheet first). A host's
   checks panel selects a marker's items with `ids` and the marker's place with `zoom_box_nm`.
+- `SetHostMarkers{kind, set, markers}` replaces one named set of the host's review markers in the
+  PCB or schematic editor (an empty list clears it; sets are independent). A `HostMarker` has the
+  host's id, a title, a severity (info, warning, error), a place (`at_nm`, else the centre of its
+  `items`), and for FK_SCH a sheet (`sheet_path`, else its items' sheet; drawn only while that
+  sheet is shown). They are host state: drawn in the editor's overlay as rings in the host's
+  colours (magenta error, amber warning, sky info; not KiCad's DRC arrows), a fixed size on screen,
+  never written to the board or schematic, not in DRC/ERC results, not undoable.
+  `GetMarkers{include_host}` lists them (type `host`, `host.set`, `host.id`).
+- `ET_MARKER_CLICKED = 26`: a click on a host marker (`Event.marker` = set and id) or on one of
+  KiCad's DRC/ERC markers (`Event.drc_marker`, as GetMarkers lists it), so the host selects its row.
 
 ## Known limitations (as of bp.9)
 

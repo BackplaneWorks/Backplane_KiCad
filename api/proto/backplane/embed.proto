@@ -186,6 +186,9 @@ enum EventType
   ET_PROGRESS          = 24; // a long job (load, zone fill, DRC, library load, plot) started,
                              // progressed or ended; Event.progress (bp.12).  In --embedded no
                              // progress window is shown; the host draws it
+  ET_MARKER_CLICKED    = 26; // the person clicked a marker in the canvas: a host marker
+                             // (Event.marker) or one of KiCad's DRC/ERC markers (Event.marker
+                             // empty, Event.drc_marker set), so the host selects its row (bp.13)
   ET_CHECKS_DONE       = 27; // a RunChecks finished (or was cancelled); Event.checks (bp.13).
                              // The markers stay in the editor, as after the DRC/ERC dialog
 }
@@ -199,8 +202,9 @@ message Event
   ItemNames selection = 5;  // ET_SELECTION_CHANGED and ET_COMMENT
   Comment   comment   = 6;  // ET_COMMENT only
   Progress  progress  = 7;  // ET_PROGRESS only
-  // 8 is reserved for MarkerRef marker (ET_MARKER_CLICKED, host markers)
-  Checks    checks    = 9;  // ET_CHECKS_DONE only (bp.13)
+  MarkerRef marker     = 8;  // ET_MARKER_CLICKED on a host marker (bp.13)
+  Checks    checks     = 9;  // ET_CHECKS_DONE only (bp.13)
+  Marker    drc_marker = 10; // ET_MARKER_CLICKED on a DRC/ERC marker (bp.13)
 }
 
 // Long poll.  Returns the events with seq > since, waiting up to wait_ms (at most 60000)
@@ -378,6 +382,43 @@ message MarkerRef
 {
   string set = 1;
   string id  = 2;
+}
+
+// ---- Host review markers (bp.13): host state, never written to .kicad_pcb / .kicad_sch, not in
+// DRC/ERC results, not undoable.
+
+enum MarkerSeverity
+{
+  MS_INFO    = 0;
+  MS_WARNING = 1;
+  MS_ERROR   = 2;
+}
+
+message HostMarker
+{
+  string                               id         = 1;  // the host's id, unique in its set
+  string                               title      = 2;  // the one-liner
+  MarkerSeverity                       severity   = 3;
+  kiapi.common.types.Vector2           at_nm      = 4;  // where (if no items, else their centre
+                                                        // when unset)
+  repeated kiapi.common.types.KIID     items      = 5;  // what it is about
+  string                               sheet_path = 6;  // FK_SCH: the sheet it is on (KIID path)
+  string                               detail     = 7;  // longer text
+  string                               layer      = 8;  // FK_PCB, optional: the layer name
+}
+
+// Replace the markers of one named set (an empty list clears it).  Drawn in the editor's
+// overlay as rings in the host's colours (not KiCad's DRC arrows), a fixed size on screen.
+message SetHostMarkers
+{
+  FrameKind           kind    = 1;  // FK_PCB or FK_SCH; other kinds AS_UNHANDLED
+  string              set     = 2;  // e.g. "review", "agent:router"
+  repeated HostMarker markers = 3;
+}
+
+message SetHostMarkersResponse
+{
+  int32 count = 1;   // markers now in the set
 }
 
 // The DRC/ERC markers in the editor now (after RunChecks, the DRC/ERC dialog, or loaded with

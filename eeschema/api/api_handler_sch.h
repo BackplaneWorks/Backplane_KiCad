@@ -46,11 +46,16 @@ class SCH_ITEM;
 class SCH_SHEET;
 
 
+class HOST_MARKERS_ITEM;
+class SCH_MARKER;
+class SCH_SHEET_PATH;
+
 class API_HANDLER_SCH : public API_HANDLER_EDITOR
 {
 public:
     API_HANDLER_SCH( SCH_EDIT_FRAME* aFrame );
     API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext, SCH_EDIT_FRAME* aFrame = nullptr );
+    ~API_HANDLER_SCH() override;
 
 protected:
     std::optional<ApiResponseStatus> checkForHeadless( const std::string& aCommandName ) const;
@@ -202,6 +207,17 @@ private:
 
     HANDLER_RESULT<kiapi::backplane::embed::GetMarkersResponse>
     handleGetMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed::GetMarkers>& aCtx );
+
+    HANDLER_RESULT<kiapi::backplane::embed::SetHostMarkersResponse>
+    handleSetHostMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed::SetHostMarkers>& aCtx );
+
+    /// A click in the canvas (embedded): on a host or ERC marker, ET_MARKER_CLICKED.
+    void onCanvasClick();
+
+    /// The host's markers (HOST_MARKERS_TOOL keeps them in the view), or null
+    HOST_MARKERS_ITEM* hostMarkers( bool aCreate ) const;
+
+    std::shared_ptr<bool> m_alive = std::make_shared<bool>( true );
 
     HANDLER_RESULT<kiapi::backplane::embed::CommentSelectionResponse>
     handleCommentSelection( const HANDLER_CONTEXT<kiapi::backplane::embed::CommentSelection>& aCtx );
