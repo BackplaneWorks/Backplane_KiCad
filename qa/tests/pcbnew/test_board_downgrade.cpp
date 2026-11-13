@@ -4513,9 +4513,10 @@ BOOST_AUTO_TEST_CASE( ReleaseVocabularyKeepsEveryRuleTheReleaseCouldRead )
             const wxString name = wxString::FromUTF8( vocabulary->m_functions[i] );
 
             if( std::any_of( std::begin( DRC_RULE_SEMANTIC_BREAKS ), std::end( DRC_RULE_SEMANTIC_BREAKS ),
-                             [&]( const char* aBreak )
+                             [&]( const DRC_RULE_SEMANTIC_BREAK& aBreak )
                              {
-                                 return name == aBreak;
+                                 return name == aBreak.m_function
+                                        && std::string_view( vocabulary->m_targetId ) == aBreak.m_targetId;
                              } ) )
                 continue;
 

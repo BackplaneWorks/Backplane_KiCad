@@ -172,7 +172,7 @@ void dumpBoard( BOARD* aBoard, const std::string& aName )
     if( const char* dir = std::getenv( "SKETCH_ROUTER_DUMP_DIR" ) )
     {
         PCB_IO_KICAD_SEXPR io;
-        io.SaveBoard( wxString( dir ) + wxT( "/" ) + wxString( aName ) + wxT( ".kicad_pcb" ), aBoard );
+        io.SaveBoard( wxString( dir ) + wxT( "/" ) + wxString( aName ) + wxT( ".kicad_pcb" ), *aBoard );
     }
 }
 
@@ -1208,7 +1208,7 @@ BOOST_AUTO_TEST_CASE( BenchmarkBoard )
     if( const char* out = std::getenv( "SKETCH_ROUTER_OUT" ) )
     {
         PCB_IO_KICAD_SEXPR io;
-        io.SaveBoard( out, board.get() );
+        io.SaveBoard( out, *board );
     }
 }
 
