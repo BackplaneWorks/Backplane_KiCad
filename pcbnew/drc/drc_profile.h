@@ -23,6 +23,7 @@
 // cores = cpu / wall) and resident memory around a scope.  Enabled only when the
 // KICAD_DRC_PROFILE environment variable is set; prints one line to stderr per scope.
 
+#include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -113,4 +114,69 @@ private:
     std::chrono::steady_clock::time_point m_start;
     double                                m_cpuStart = 0.0;
     long                                  m_rssStart = 0;
+};
+
+
+/// Per-item statistics for work spread over threads: count, summed time, longest item.
+class DRC_PROFILE_ITEM_STATS
+{
+public:
+    explicit DRC_PROFILE_ITEM_STATS( std::string aName ) :
+            m_name( std::move( aName ) ),
+            m_enabled( std::getenv( "KICAD_DRC_PROFILE" ) != nullptr )
+    {}
+
+    bool Enabled() const { return m_enabled; }
+
+    void Add( double aMs )
+    {
+        m_count.fetch_add( 1, std::memory_order_relaxed );
+        m_sumUs.fetch_add( (long long) ( aMs * 1000.0 ), std::memory_order_relaxed );
+
+        long long us = (long long) ( aMs * 1000.0 );
+        long long prev = m_maxUs.load( std::memory_order_relaxed );
+
+        while( us > prev && !m_maxUs.compare_exchange_weak( prev, us, std::memory_order_relaxed ) )
+        {
+        }
+    }
+
+    void Report() const
+    {
+        if( !m_enabled )
+            return;
+
+        std::fprintf( stderr, "DRCPROF\t%s\tcount=%lld\tsum_ms=%.1f\tmax_ms=%.1f\n", m_name.c_str(),
+                      (long long) m_count.load(), m_sumUs.load() / 1000.0, m_maxUs.load() / 1000.0 );
+    }
+
+private:
+    std::string            m_name;
+    bool                   m_enabled;
+    std::atomic<long long> m_count{ 0 };
+    std::atomic<long long> m_sumUs{ 0 };
+    std::atomic<long long> m_maxUs{ 0 };
+};
+
+
+class DRC_PROFILE_ITEM_TIMER
+{
+public:
+    explicit DRC_PROFILE_ITEM_TIMER( DRC_PROFILE_ITEM_STATS& aStats ) :
+            m_stats( aStats )
+    {
+        if( m_stats.Enabled() )
+            m_start = std::chrono::steady_clock::now();
+    }
+
+    ~DRC_PROFILE_ITEM_TIMER()
+    {
+        if( m_stats.Enabled() )
+            m_stats.Add( std::chrono::duration<double, std::milli>( std::chrono::steady_clock::now()
+                                                                    - m_start ).count() );
+    }
+
+private:
+    DRC_PROFILE_ITEM_STATS&               m_stats;
+    std::chrono::steady_clock::time_point m_start;
 };
