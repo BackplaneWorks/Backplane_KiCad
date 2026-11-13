@@ -20,6 +20,7 @@
 #pragma once
 
 #include <atomic>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -212,6 +213,14 @@ public:
      */
     int GetErrorLimit( int error_code );
 
+    /**
+     * Report up to @a aLimit violations of @a aErrorCode in each run instead of the default
+     * limit, or the default again if @a aLimit is negative.  For tests that need every
+     * violation of a code, for instance to check which ones the limit keeps; set before
+     * RunTests().
+     */
+    void SetErrorLimitOverride( int aErrorCode, int aLimit );
+
     DRC_CONSTRAINT EvalRules( DRC_CONSTRAINT_T aConstraintType, const BOARD_ITEM* a,
                               const BOARD_ITEM* b, PCB_LAYER_ID aLayer,
                               REPORTER* aReporter = nullptr );
@@ -398,6 +407,9 @@ protected:
     // Remaining violations each error code may report.  Atomic so providers running in
     // parallel can poll IsErrorLimitExceeded() without contending on a lock.
     std::unique_ptr<std::atomic<int>[]>         m_errorLimits;
+
+    // Per-code limits replacing the defaults in RunTests(), see SetErrorLimitOverride()
+    std::map<int, int>                          m_errorLimitOverrides;
 
     // Violations reported by the running provider, per error code, while m_bufferViolations.
     bool                                          m_bufferViolations = false;
