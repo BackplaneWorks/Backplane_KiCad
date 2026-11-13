@@ -34,6 +34,30 @@
 
 class wxWindow;
 
+/**
+ * Backplane: while one of these is alive on this thread (an API task's run), KiCad's message
+ * boxes do not show: DisplayError, DisplayErrorMessage and DisplayInfoMessage record their text
+ * (Messages()), IsOK answers no.  A box in a task would hold the API for every client until
+ * someone answers it, and in an embedded pane no one may see it.
+ */
+class KICOMMON_API NO_MODALS_SCOPE
+{
+public:
+    NO_MODALS_SCOPE();
+    ~NO_MODALS_SCOPE();
+
+    static bool Active();
+
+    /// The text of every box that was not shown in this scope, in order.
+    const wxArrayString& Messages() const { return m_messages; }
+
+    static void Record( const wxString& aText );
+
+private:
+    NO_MODALS_SCOPE* m_outer;
+    wxArrayString    m_messages;
+};
+
 
 // On Windows, to have the best dark mode experience we need to sub in the generic dialogs
 // as wx can't retheme the native dialogs

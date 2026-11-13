@@ -202,8 +202,34 @@ int OKOrCancelDialog( wxWindow* aParent, const wxString& aWarning, const wxStrin
 
 
 // DisplayError should be deprecated, use DisplayErrorMessage instead
+namespace
+{
+thread_local NO_MODALS_SCOPE* g_noModals = nullptr;
+}
+
+
+NO_MODALS_SCOPE::NO_MODALS_SCOPE() : m_outer( g_noModals ) { g_noModals = this; }
+NO_MODALS_SCOPE::~NO_MODALS_SCOPE() { g_noModals = m_outer; }
+bool NO_MODALS_SCOPE::Active() { return g_noModals != nullptr; }
+
+
+void NO_MODALS_SCOPE::Record( const wxString& aText )
+{
+    if( g_noModals )
+        g_noModals->m_messages.Add( aText );
+
+    wxLogTrace( traceConfirm, wxS( "not shown (API task): %s" ), aText );
+}
+
+
 void DisplayError( wxWindow* aParent, const wxString& aText )
 {
+    if( NO_MODALS_SCOPE::Active() )
+    {
+        NO_MODALS_SCOPE::Record( aText );
+        return;
+    }
+
     if( !wxTheApp || !wxTheApp->IsMainLoopRunning() )
     {
         wxLogError( "%s", aText );
@@ -229,6 +255,12 @@ void DisplayError( wxWindow* aParent, const wxString& aText )
 
 void DisplayErrorMessage( wxWindow* aParent, const wxString& aText, const wxString& aExtraInfo )
 {
+    if( NO_MODALS_SCOPE::Active() )
+    {
+        NO_MODALS_SCOPE::Record( aText + ( aExtraInfo.IsEmpty() ? wxString() : wxS( " " ) + aExtraInfo ) );
+        return;
+    }
+
     if( !wxTheApp || !wxTheApp->IsMainLoopRunning() )
     {
         wxLogError( "%s %s", aText, aExtraInfo );
@@ -257,6 +289,12 @@ void DisplayErrorMessage( wxWindow* aParent, const wxString& aText, const wxStri
 
 void DisplayInfoMessage( wxWindow* aParent, const wxString& aMessage, const wxString& aExtraInfo )
 {
+    if( NO_MODALS_SCOPE::Active() )
+    {
+        NO_MODALS_SCOPE::Record( aMessage + ( aExtraInfo.IsEmpty() ? wxString() : wxS( " " ) + aExtraInfo ) );
+        return;
+    }
+
     if( !wxTheApp || !wxTheApp->GetTopWindow() )
     {
         wxLogTrace( traceConfirm, wxS( "%s %s" ), aMessage, aExtraInfo );
@@ -286,6 +324,12 @@ void DisplayInfoMessage( wxWindow* aParent, const wxString& aMessage, const wxSt
 
 bool IsOK( wxWindow* aParent, const wxString& aMessage )
 {
+    if( NO_MODALS_SCOPE::Active() )
+    {
+        NO_MODALS_SCOPE::Record( aMessage );
+        return false;   // no one is there to say yes
+    }
+
     // wxMessageDialog no longer responds correctly to the <ESC> key (on at least OSX and MSW)
     // so we're now using wxRichMessageDialog.
     //

@@ -18,6 +18,7 @@
  */
 
 #include <api/api_task_scheduler.h>
+#include <confirm.h>
 
 #include <wx/log.h>
 
@@ -207,6 +208,9 @@ void API_TASK_SCHEDULER::runTask( const std::string& aToken )
     bool        failed = false;
     std::string failureMessage;
 
+    // No message box inside a task: it would hold the API for every client until answered
+    NO_MODALS_SCOPE noModals;
+
     try
     {
         entry->task->Run();
@@ -227,6 +231,18 @@ void API_TASK_SCHEDULER::runTask( const std::string& aToken )
 
         wxLogTrace( traceApi, wxString::Format( wxS( "TaskScheduler: task %s failed" ),
                                                 wxString::FromUTF8( entry->token ) ) );
+    }
+
+    // What a box would have said is logged; it is the failure text when the task failed with
+    // none of its own
+    if( !noModals.Messages().IsEmpty() )
+    {
+        wxString said = wxJoin( noModals.Messages(), '\n', '\0' );
+        wxLogTrace( traceApi, wxString::Format( wxS( "TaskScheduler: task %s: not shown: %s" ),
+                                                wxString::FromUTF8( entry->token ), said ) );
+
+        if( failed && failureMessage.empty() )
+            failureMessage = said.ToStdString( wxConvUTF8 );
     }
 
     {

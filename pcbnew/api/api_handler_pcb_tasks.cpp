@@ -18,6 +18,7 @@
  */
 
 #include <api/api_handler_pcb.h>
+#include <confirm.h>
 #include <api/backplane/embed.pb.h>
 #include <backplane_embed.h>
 #include <connectivity/connectivity_data.h>
@@ -496,11 +497,17 @@ private:
 
         if( PCB_EDIT_FRAME* frame = m_handler->frame() )
         {
+            NO_MODALS_SCOPE quiet;   // its error boxes become this task's error, never a modal
+
             if( !frame->FetchNetlistFromSchematic( *m_netlist,
                                                    _( "Schematic parity tests require a fully annotated schematic." ) ) )
             {
                 m_state = TS_FAILED;
                 m_errorMessage = "could not fetch schematic netlist for parity tests";
+
+                if( !quiet.Messages().IsEmpty() )
+                    m_errorMessage += ": " + wxJoin( quiet.Messages(), ' ', '\0' ).ToStdString( wxConvUTF8 );
+
                 return false;
             }
 
