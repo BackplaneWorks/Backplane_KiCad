@@ -699,6 +699,10 @@ bool BACKPLANE_EMBED::ShowEmbedded( wxFrame* aFrame, bool aShow )
         aFrame->SendSizeEvent();
     }
 
+    // Side panels for this width, before the first paint at it
+    if( FRAME_ENTRY* e = entry( aFrame ); aShow && e && e->ops.autoPanels )
+        e->ops.autoPanels();
+
     return true;
 }
 
@@ -1084,6 +1088,9 @@ void BACKPLANE_EMBED::onPoll( wxTimerEvent& )
             PushEvent( shown ? EMBED_EVENT_TYPE::FRAME_SHOWN : EMBED_EVENT_TYPE::FRAME_HIDDEN,
                        info( e ) );
         }
+
+        if( shown && e.ops.autoPanels )
+            e.ops.autoPanels();
 
         if( title != e.title )
         {

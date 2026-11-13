@@ -149,6 +149,7 @@ struct EMBED_FRAME_OPS
     /// GerbView: replace what it shows with aFiles; aErrors gets one (path, reason) per failure
     std::function<void( const std::vector<wxString>& aFiles, std::vector<wxString>& aLoaded,
                         std::vector<std::pair<wxString, wxString>>& aErrors )> openFiles;
+    std::function<void()>                      autoPanels;       ///< side panels for the width (EmbedAutoPanels)
 };
 
 struct EMBED_FRAME_INFO

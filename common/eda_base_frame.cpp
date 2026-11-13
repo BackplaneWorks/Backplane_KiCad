@@ -83,6 +83,8 @@
 #include <kiplatform/io.h>
 #include <kiplatform/ui.h>
 #include <backplane_embed.h>
+#include <algorithm>
+#include <tuple>
 
 #include <nlohmann/json.hpp>
 
@@ -388,6 +390,7 @@ EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
                     {
                         EmbedOpenFiles( aFiles, aLoaded, aErrors );
                     };
+    ops.autoPanels = [this]() { EmbedAutoPanels(); };
 
     // A reload frees what a modal dialog or a running interactive tool is holding: wait.
     ops.busy = [this]() { return !IsEnabled() || !ToolStackIsEmpty(); };
@@ -2299,4 +2302,193 @@ void EDA_BASE_FRAME::OnLanguageSelectionEvent( wxCommandEvent& event )
 
     // tell all the KIWAY_PLAYERs about the language change.
     Kiway().SetLanguage( id );
+}
+
+
+namespace
+{
+/// How much a side panel is worth keeping when the pane is narrow: the lowest go first.
+int embedPanePriority( const wxString& aName )
+{
+    static const std::map<wxString, int> priorities = {
+        { wxS( "AgentsPanel" ), 0 },        { wxS( "Search" ), 1 },
+        { wxS( "NetInspector" ), 1 },       { wxS( "NetNavigator" ), 1 },
+        { wxS( "Constraints" ), 1 },        { wxS( "GitCommitPane" ), 2 },
+        { wxS( "DesignBlocks" ), 2 },       { wxS( "RemoteSymbol" ), 2 },
+        { wxS( "SchematicHierarchy" ), 3 }, { wxS( "PropertiesManager" ), 4 },
+        { wxS( "SelectionFilter" ), 5 },    { wxS( "LayersManager" ), 6 },
+    };
+
+    auto it = priorities.find( aName );
+    return it == priorities.end() ? 1 : it->second;
+}
+
+
+bool isSidePane( const wxAuiPaneInfo& aPane )
+{
+    return !aPane.IsToolbar() && aPane.IsDocked() && aPane.name != wxS( "DrawFrame" )
+           && ( aPane.dock_direction == wxAUI_DOCK_LEFT || aPane.dock_direction == wxAUI_DOCK_RIGHT );
+}
+} // namespace
+
+
+void EDA_BASE_FRAME::EmbedAutoPanels()
+{
+    if( !BACKPLANE_EMBED::Get().IsEmbedded( this ) || !m_auimgr.GetManagedWindow() )
+        return;
+
+    wxAuiPaneInfo& canvasPane = m_auimgr.GetPane( wxS( "DrawFrame" ) );
+
+    if( !canvasPane.IsOk() || !canvasPane.window )
+        return;
+
+    wxAuiPaneInfoArray& panes = m_auimgr.GetAllPanes();
+
+    // A column of panels (same side, layer and row) frees its width only when all of it goes
+    struct COLUMN
+    {
+        std::vector<wxAuiPaneInfo*> panes;     ///< those auto may hide or show
+        bool                        pinned = false;   ///< a shown pane auto leaves alone
+        int                         width = 0;
+        int                         priority = -1;
+        bool                        shown = false;
+        bool                        autoHidden = false;
+    };
+
+    std::map<std::tuple<int, int, int>, COLUMN> columns;
+
+    for( size_t ii = 0; ii < panes.GetCount(); ++ii )
+    {
+        wxAuiPaneInfo& pane = panes.Item( ii );
+
+        if( !isSidePane( pane ) )
+            continue;
+
+        EMBED_PANE_STATE& st = m_embedPanes[pane.name];
+
+        if( !st.seen )
+        {
+            st.seen = true;
+            st.expectedShown = pane.IsShown();
+        }
+        else if( pane.IsShown() != st.expectedShown )
+        {
+            // Opened or closed by the person (or KiCad for them): theirs from now on
+            st.manual = true;
+            st.autoHidden = false;
+            st.expectedShown = pane.IsShown();
+        }
+
+        if( pane.IsShown() && pane.window && pane.window->GetSize().x > 0 )
+            st.width = pane.window->GetSize().x;
+
+        COLUMN& column = columns[{ pane.dock_direction, pane.dock_layer, pane.dock_row }];
+
+        if( st.manual || ( !pane.IsShown() && !st.autoHidden ) )
+        {
+            column.pinned |= pane.IsShown();
+            continue;
+        }
+
+        column.panes.push_back( &pane );
+        column.width = std::max( column.width, st.width );
+        column.priority = std::max( column.priority, embedPanePriority( pane.name ) );
+        column.shown |= pane.IsShown();
+        column.autoHidden |= st.autoHidden;
+    }
+
+    const int total = GetClientSize().x;
+
+    if( total < 200 )
+        return;
+
+    const int need = total * 6 / 10;
+    int       canvas = canvasPane.window->GetSize().x;
+    bool      changed = false;
+
+    std::vector<COLUMN*> ordered;
+
+    for( auto& [key, column] : columns )
+    {
+        if( !column.panes.empty() && !column.pinned )
+            ordered.push_back( &column );
+    }
+
+    auto setShown = [&]( COLUMN& aColumn, bool aShow )
+                    {
+                        for( wxAuiPaneInfo* pane : aColumn.panes )
+                        {
+                            EMBED_PANE_STATE& st = m_embedPanes[pane->name];
+
+                            if( !aShow && !pane->IsShown() )
+                                continue;
+
+                            if( aShow && !st.autoHidden )
+                                continue;
+
+                            pane->Show( aShow );
+                            st.expectedShown = aShow;
+                            st.autoHidden = !aShow;
+                        }
+
+                        changed = true;
+                    };
+
+    if( canvas < need )
+    {
+        // Least needed first
+        std::sort( ordered.begin(), ordered.end(),
+                   []( const COLUMN* a, const COLUMN* b ) { return a->priority < b->priority; } );
+
+        for( COLUMN* column : ordered )
+        {
+            if( canvas >= need )
+                break;
+
+            if( !column->shown )
+                continue;
+
+            setShown( *column, false );
+            canvas += column->width;
+        }
+    }
+    else
+    {
+        // Back as the pane widens: most needed first, while the canvas keeps its share
+        std::sort( ordered.begin(), ordered.end(),
+                   []( const COLUMN* a, const COLUMN* b ) { return a->priority > b->priority; } );
+
+        for( COLUMN* column : ordered )
+        {
+            if( column->shown || !column->autoHidden )
+                continue;
+
+            if( canvas - column->width < need )
+                break;
+
+            setShown( *column, true );
+            canvas -= column->width;
+        }
+    }
+
+    if( changed )
+        m_auimgr.Update();
+}
+
+
+void EDA_BASE_FRAME::EmbedPaneChangedByKiCad( const wxString& aName )
+{
+    wxAuiPaneInfo& pane = m_auimgr.GetPane( aName );
+
+    if( !pane.IsOk() )
+        return;
+
+    EMBED_PANE_STATE& st = m_embedPanes[aName];
+    st.seen = true;
+    st.expectedShown = pane.IsShown();
+
+    // Shown by KiCad: auto may take it away again in a narrow pane (it counts as auto-hidden
+    // then, so it comes back as the pane widens)
+    if( pane.IsShown() )
+        st.autoHidden = true;
 }

@@ -401,6 +401,15 @@ that no progress window is ever mapped.
 - `ET_MARKER_CLICKED = 26`: a click on a host marker (`Event.marker` = set and id) or on one of
   KiCad's DRC/ERC markers (`Event.drc_marker`, as GetMarkers lists it), so the host selects its row.
 
+## bp.13: side panels in a narrow pane
+
+In `--embedded`, the editors' side-panel columns (Agents, search, net inspector, design blocks,
+hierarchy, properties, selection filter, appearance) hide while the frame is too narrow for the
+canvas to keep 60% of its width, least needed first (Agents first, Appearance last), and come back,
+most needed first, as it widens. A panel the person opens or closes themselves is theirs from then
+on for the session: auto leaves it alone. Checked by the embed poll and on every ShowFrame; nothing
+is saved (no AUI layout is saved in `--embedded`).
+
 ## Known limitations (as of bp.9)
 
 - `ListActions` (the palette feed).
