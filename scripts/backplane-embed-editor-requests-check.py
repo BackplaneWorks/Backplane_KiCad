@@ -10,6 +10,8 @@ only that.
   already exists tells the host: ET_SHOW_REQUESTED or ET_EDITOR_REQUESTED for the footprint
   editor, both when the host has hidden it and when it is still shown behind the board.
 - Open Footprint from the board still posts ET_EDITOR_REQUESTED with the footprint's lib_id.
+- RunAction reaches the editor that has the action: eeschema.InspectionTool.runERC opens the ERC
+  dialog, pcbnew.InspectionTool.runDRC the DRC one, and an unknown action is not answered OK.
 
 Runs on a private Xvfb + i3 with a python-xlib stand-in host.
 """
@@ -119,6 +121,34 @@ def main():
         check(len(got) == 1 and got[0].frame.kind == embed.FK_FOOTPRINT_EDITOR and got[0].frame.lib_id,
               f"Open Footprint posts one ET_EDITOR_REQUESTED with its lib_id "
               f"({[(e.frame.kind, e.frame.lib_id) for e in got]}, RV1 found: {list(sel.found.references)})")
+
+        # The schematic editor's own actions over RunAction: ERC opens its dialog (the board's
+        # handler used to answer for every action and did not know eeschema.*)
+        show(embed.FK_SCH)
+        time.sleep(2)
+        collect(1)
+        ran = api.request(editor.RunAction(action="eeschema.InspectionTool.runERC"), editor.RunActionResponse)
+        check(ran.status == editor.RAS_OK, f"RunAction eeschema.InspectionTool.runERC answers RAS_OK ({ran.status})")
+        opened = [e.detail for e in collect(8) if e.type == embed.ET_DIALOG_OPENED]
+        check(any("ERC" in d or "Electrical" in d for d in opened),
+              f"RunAction runERC opens the ERC dialog (ET_DIALOG_OPENED {opened})")
+        s.shot("erc-dialog")
+        s.xdotool("key", "Escape")
+        time.sleep(1)
+
+        # A board action still runs on the board, and an unknown one is refused
+        show(embed.FK_PCB)
+        time.sleep(1)
+        ran = api.request(editor.RunAction(action="pcbnew.InspectionTool.runDRC"), editor.RunActionResponse)
+        check(ran.status == editor.RAS_OK, f"RunAction pcbnew.InspectionTool.runDRC answers RAS_OK ({ran.status})")
+        opened = [e.detail for e in collect(8) if e.type == embed.ET_DIALOG_OPENED]
+        check(any("DRC" in d or "Design Rules" in d for d in opened),
+              f"RunAction runDRC opens the DRC dialog (ET_DIALOG_OPENED {opened})")
+        s.xdotool("key", "Escape")
+        time.sleep(1)
+        unknown = api.request_raw(editor.RunAction(action="nosuch.Tool.action"))
+        check(unknown.status.status != 1 or "RAS_INVALID" in str(unknown.message),
+              f"RunAction of an unknown action is not answered OK ({unknown.status.status})")
 
     print(f"{len(FAILURES)} failed" if FAILURES else "ALL PASSED", flush=True)
     return 1 if FAILURES else 0

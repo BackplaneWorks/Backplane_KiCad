@@ -838,6 +838,15 @@ std::vector<KICAD_T> API_HANDLER_BOARD::parseRequestedItemTypes(
 HANDLER_RESULT<RunActionResponse> API_HANDLER_BOARD::handleRunAction(
         const HANDLER_CONTEXT<RunAction>& aCtx )
 {
+    // An action this editor does not have (eeschema.*, another editor's) is not ours to refuse:
+    // the next handler (the schematic editor's) may know it
+    if( toolManager() && !toolManager()->GetActionManager()->FindAction( aCtx.Request.action() ) )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
     if( std::optional<ApiResponseStatus> headless = checkForHeadless( "RunAction" ) )
         return tl::unexpected( *headless );
 
