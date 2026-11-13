@@ -25,7 +25,7 @@
 #include <filesystem>
 
 #include <qa_utils/wx_utils/unit_test_utils.h>
-#include <qa_utils/file_utils.h>
+#include <pcbnew_utils/board_file_utils.h>
 
 #include <drc/drc_zone_triangulation.h>
 #include <geometry/shape_poly_set.h>
