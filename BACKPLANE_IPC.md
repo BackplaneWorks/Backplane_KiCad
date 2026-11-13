@@ -92,6 +92,16 @@ Editor readiness: after a `ShowFrame`, `ET_FRAME_DRAWN` (capability `embed-frame
 frame's canvas finished its first redraw on screen; wait on it, with a cap (the 3D viewer has no
 drawing canvas and never posts it), instead of a fixed delay.
 
+The other bp.13 embed features have one capability each in the embedded GUI's `GetCapabilities`
+(never in the headless manifest, which describes `kicad-cli api-server`):
+
+| Capability | What | How |
+|---|---|---|
+| `embed-editor-requested` | KiCad opened a symbol or footprint editor itself | `ET_EDITOR_REQUESTED`; `FrameInfo.lib_id` |
+| `embed-gerbview` | GerbView in KiCad's own process | `OpenGerbers{files, show, x, y, width, height}` opens and loads; `ShowFrame{kind: FK_GERBVIEW}` shows it again; `FrameInfo.files` lists what is loaded |
+| `embed-checks` | DRC and ERC in the open editor | `RunChecks`, `GetMarkers`, `SelectItems` by id or place, `ET_CHECKS_DONE` |
+| `embed-host-markers` | the host's own markers on the canvas | `SetHostMarkers`, `ET_MARKER_CLICKED` |
+
 Number ledger for `kiapi.backplane.embed` (fork-only, additive; take the next free number and add
 it here in the same change):
 

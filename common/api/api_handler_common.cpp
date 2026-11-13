@@ -130,6 +130,23 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
             {
                 reply.add_capabilities( "embed" );
                 reply.add_capabilities( "embed-frame-drawn" );   // ET_FRAME_DRAWN (bp.13)
+                // ET_EDITOR_REQUESTED, FrameInfo.lib_id (bp.13)
+                reply.add_capabilities( "embed-editor-requested" );
+            }
+            else if( command == "kiapi.backplane.embed.OpenGerbers" )
+            {
+                // FK_GERBVIEW in KiCad's process, FrameInfo.files (bp.13)
+                reply.add_capabilities( "embed-gerbview" );
+            }
+            else if( command == "kiapi.backplane.embed.RunChecks" )
+            {
+                // RunChecks, GetMarkers, SelectItems by id/place, ET_CHECKS_DONE (bp.13)
+                reply.add_capabilities( "embed-checks" );
+            }
+            else if( command == "kiapi.backplane.embed.SetHostMarkers" )
+            {
+                // SetHostMarkers, ET_MARKER_CLICKED (bp.13)
+                reply.add_capabilities( "embed-host-markers" );
             }
         }
     }
