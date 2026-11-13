@@ -3007,6 +3007,18 @@ int PCB_EDIT_FRAME::TestStandalone()
     if( Kiface().IsSingle() )
         return 0;
 
+    // Embedded, the parity check only needs the netlist: the schematic editor is opened and
+    // loaded without asking the host to show it, from its creation on (see below)
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+    bool             embedded = embed.Enabled();
+
+    struct QUIET
+    {
+        BACKPLANE_EMBED* m_embed;
+        explicit QUIET( BACKPLANE_EMBED* aEmbed ) : m_embed( aEmbed ) { if( m_embed ) m_embed->m_quietShowRequests++; }
+        ~QUIET() { if( m_embed ) m_embed->m_quietShowRequests--; }
+    } quiet( embedded ? &embed : nullptr );
+
     // Update PCB requires a netlist. Therefore the schematic editor must be running
     // If this is not the case, open the schematic editor
     KIWAY_PLAYER* frame = Kiway().Player( FRAME_SCH, true );
@@ -3032,6 +3044,19 @@ int PCB_EDIT_FRAME::TestStandalone()
                 DisplayErrorMessage( this, _( "The schematic for this board cannot be found." ) );
                 return -2;
             }
+        }
+
+        if( embedded )
+        {
+            // Embedded, the host keeps editors hidden until it shows them, and decides what is on
+            // screen: the parity check (DRC, Update PCB) only needs the netlist.  A hidden editor
+            // that already holds this schematic is used as it is (reloading would drop its unsaved
+            // edits); any other loads it quietly and stays hidden.
+            if( wxFileName( frame->GetCurrentFileName() ).SameAs( fn ) )
+                return 1;
+
+            frame->OpenProjectFiles( std::vector<wxString>( 1, fn.GetFullPath() ) );
+            return 1;
         }
 
         frame->OpenProjectFiles( std::vector<wxString>( 1, fn.GetFullPath() ) );

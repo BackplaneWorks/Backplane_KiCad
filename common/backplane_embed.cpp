@@ -571,14 +571,21 @@ std::optional<bool> BACKPLANE_EMBED::OnFrameShow( wxFrame* aFrame, FRAME_T aType
     }
 
 
-    if( aShow && !aFrame->IsShown() && m_showAllowed == 0 && ( m_reloading > 0 || m_quietShowRequests > 0 ) )
+    // On screen means shown and mapped: a prewarmed frame stays shown to the toolkit but is
+    // unmapped natively, so KiCad's Show() on it is still a request for the host
+    bool onScreen = aFrame->IsShown() && KIPLATFORM::EMBED::IsMapped( aFrame );
+
+    if( aShow && !onScreen && m_prewarming.count( aFrame ) )
+        return std::nullopt;   // the prewarm's own off-screen show
+
+    if( aShow && !onScreen && m_showAllowed == 0 && ( m_reloading > 0 || m_quietShowRequests > 0 ) )
         return false;   // a reload or a prewarm re-shows its frame; the host's choice stands
 
-    if( aShow && !aFrame->IsShown() && m_showAllowed == 0 )
+    if( aShow && !onScreen && m_showAllowed == 0 )
     {
         // KiCad asked for a hidden frame (Edit Symbol, the 3D viewer, the second Show() of the
         // library editors...).  The host decides whether and where it appears.
-        PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ) );
+        PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ), COEDIT::CurrentActor() );
         editorRequested( *e );
         return false;
     }
@@ -601,16 +608,17 @@ void BACKPLANE_EMBED::editorRequested( const FRAME_ENTRY& aEntry )
 
     pending->editorRequestPending = true;
     wxWeakRef<wxFrame> weak( aEntry.frame );
+    std::string        actor = COEDIT::CurrentActor();   // posted later, outside the request
 
     wxTheApp->CallAfter(
-            [this, weak]()
+            [this, weak, actor]()
             {
                 if( wxFrame* frame = weak.get() )
                 {
                     if( FRAME_ENTRY* e = entry( frame ) )
                     {
                         e->editorRequestPending = false;
-                        PushEvent( EMBED_EVENT_TYPE::EDITOR_REQUESTED, info( *e ) );
+                        PushEvent( EMBED_EVENT_TYPE::EDITOR_REQUESTED, info( *e ), actor );
                     }
                 }
             } );
@@ -639,12 +647,19 @@ bool BACKPLANE_EMBED::OnFrameRaise( wxFrame* aFrame, FRAME_T aType, bool aIsModa
         e = entry( aFrame );
     }
 
-    if( !aFrame->IsShown() && m_showAllowed == 0 && m_quietShowRequests == 0 && m_reloading == 0 )
+    // As in OnFrameShow: a prewarmed frame is shown to the toolkit but not on screen
+    bool onScreen = aFrame->IsShown() && KIPLATFORM::EMBED::IsMapped( aFrame );
+
+    if( m_prewarming.count( aFrame ) )
     {
-        PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ) );
+        // its own off-screen paint: nobody asked
+    }
+    else if( !onScreen && m_showAllowed == 0 && m_quietShowRequests == 0 && m_reloading == 0 )
+    {
+        PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ), COEDIT::CurrentActor() );
         editorRequested( *e );
     }
-    else if( aFrame->IsShown() && m_showAllowed == 0 && m_quietShowRequests == 0 && m_reloading == 0 )
+    else if( onScreen && m_showAllowed == 0 && m_quietShowRequests == 0 && m_reloading == 0 )
     {
         // Brought up again (Open Footprint on another footprint): the host shows its tab
         editorRequested( *e );
