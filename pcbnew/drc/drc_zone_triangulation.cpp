@@ -398,7 +398,7 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
 
 bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill,
                                        const std::vector<std::vector<TRIANGLE>>& aTriangles,
-                                       wxString* aWhy )
+                                       wxString* aWhy, bool aQuickTests )
 {
     RINGS rings( aFill );
 
@@ -430,7 +430,7 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill,
             {
                 turn = sign;
             }
-            else if( sign != turn )
+            else if( sign != turn && aQuickTests )
             {
                 if( aWhy )
                     *aWhy = wxString::Format( wxS( "triangle (%d, %d) (%d, %d) (%d, %d) is folded over "
@@ -456,7 +456,7 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill,
     }
 
     // Also not needed for the guarantee; a cheap first test that catches most failures
-    if( std::abs( triArea - rings.Area() ) > rings.Perimeter() * TOLERANCE_NM / 2.0 + 1e6 )
+    if( aQuickTests && std::abs( triArea - rings.Area() ) > rings.Perimeter() * TOLERANCE_NM / 2.0 + 1e6 )
     {
         if( aWhy )
             *aWhy = wxString::Format( wxS( "triangles cover %.6f mm2 of a %.6f mm2 fill" ),
