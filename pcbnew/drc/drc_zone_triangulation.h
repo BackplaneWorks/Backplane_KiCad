@@ -19,7 +19,11 @@
 
 #pragma once
 
+#include <array>
 #include <memory>
+#include <vector>
+
+#include <math/vector2d.h>
 
 #include <layer_ids.h>
 #include <wx/string.h>
@@ -31,27 +35,51 @@ class ZONE;
  * DRC measures zone clearances against a fill's triangles (the zone R-trees index them).  A
  * triangulation that does not cover the fill exactly makes DRC see copper where there is none
  * (false errors) or, worse, miss copper that is there (missed shorts).  The DRC cache validates
- * each zone fill's triangulation once per run; DRC_RTREE then indexes a zone that failed by its
- * outline instead of its triangles, which is exact (closed outlines collide as filled areas).
+ * each zone fill's triangulation once per run; DRC_RTREE then indexes a zone that failed by a
+ * re-triangulation that validates or, failing that, by its outline, which is exact (closed
+ * outlines collide as filled areas).
  */
 namespace DRC_ZONE_TRIANGULATION
 {
+using TRIANGLE = std::array<VECTOR2I, 3>;
+
 /**
- * Check that the cached triangulation of @a aFill tiles it: all triangles of a polygon turn the
- * same way (none is folded over its neighbours), every triangle edge is either shared with
- * exactly one other triangle in the opposite direction or runs along the fill's outline with
- * every outline point it skips within 100 nm of it, and the triangles' area matches the fill's
- * (so no triangle covers area twice).
+ * Check that the cached triangulation of @a aFill tiles it.  Turn every triangle
+ * counter-clockwise, so it lies on the left of its three directed edges.  The check passes when:
+ *  - every edge either is matched by the same edge, the other way, of as many other triangles
+ *    (an inside edge), or is the only one of its kind and runs along an outline or hole of the
+ *    fill the way that ring goes with the fill on its left, with every ring point it skips
+ *    within 100 nm of it (a boundary edge); and
+ *  - the pieces of ring the boundary edges stand for go round every ring exactly once, end to
+ *    end (a ring no wider than 100 nm may be left out).
  *
- * Fill the triangles miss is bounded either by an edge that is neither shared nor on the
- * outline, which fails the check, or by a boundary edge and the outline, which are less than
- * 100 nm apart.  So a validated triangulation misses no copper wider than 100 nm, below DRC's
- * resolution.
+ * Why that is enough: the number of triangles covering a point p is the winding number about p
+ * of the triangles' boundaries added up.  Inside edges cancel, leaving the boundary edges.
+ * Each boundary edge differs from its piece of ring by a loop within 100 nm of the edge, and the
+ * pieces add up to the fill's own outlines and holes.  So, at any p more than 200 nm from the
+ * fill's outline, the triangles cover p exactly as often as the fill does: once inside the
+ * fill and never outside.  No copper wider than that is missed (no missed shorts) and none is
+ * added (no false errors); 200 nm is below anything DRC resolves.
+ *
+ * Two quicker tests run first and can only fail a triangulation, never pass one: the triangles
+ * of each polygon turn one way, and their area matches the fill's.
  *
  * @param aWhy if not null, receives the first failure found.
  * @return true if the triangulation can be trusted.
  */
 bool Validate( const SHAPE_POLY_SET& aFill, wxString* aWhy = nullptr );
+
+/// Validate( aFill ) with the triangles given, one list per triangulated polygon, instead of
+/// the fill's cached triangulation (for tests: a saved triangulation of a real fill).
+bool Validate( const SHAPE_POLY_SET& aFill, const std::vector<std::vector<TRIANGLE>>& aTriangles,
+               wxString* aWhy = nullptr );
+
+/// Write @a aFill's outlines and holes and its cached triangles to @a aPath, as text.  Check()
+/// does so for each fill that fails when KICAD_DRC_DUMP_TRIANGULATION names a directory.
+bool Dump( const SHAPE_POLY_SET& aFill, const wxString& aPath );
+
+/// Read back what Dump() wrote: the fill into @a aFill, its triangles into @a aTriangles.
+bool Load( const wxString& aPath, SHAPE_POLY_SET& aFill, std::vector<std::vector<TRIANGLE>>& aTriangles );
 
 /// Validate @a aZone's fill on @a aLayer and record the result for Trusted().  Thread-safe.
 void Check( const ZONE* aZone, PCB_LAYER_ID aLayer );
