@@ -1011,7 +1011,15 @@ int BOARD_EDITOR_CONTROL::ShowEeschema( const TOOL_EVENT& aEvent )
                     if( !frame->IsShownOnScreen() ) // the frame exists, (created by the dialog field editor)
                                                     // but no project loaded.
                     {
-                        frame->OpenProjectFiles( std::vector<wxString>( 1, schematic.GetFullPath() ) );
+                        // Embedded, a hidden editor that already holds the schematic (loaded for
+                        // a parity check, or kept hidden by the host) is shown as it is: a reload
+                        // would drop its unsaved edits
+                        if( !BACKPLANE_EMBED::Get().Enabled()
+                            || !wxFileName( frame->GetCurrentFileName() ).SameAs( schematic ) )
+                        {
+                            frame->OpenProjectFiles( std::vector<wxString>( 1, schematic.GetFullPath() ) );
+                        }
+
                         frame->Show( true );
                     }
 

@@ -87,13 +87,25 @@ def main():
               f"a second parity check reuses the hidden schematic (no reload, no request: "
               f"{[embed.EventType.Name(e.type) for e in got if e.frame.kind == embed.FK_SCH]})")
 
+        # Switch to Schematic Editor on the hidden, loaded editor: a request, and no reload
+        with IpcSession(args.kicad_cli, api_socket=s.socket, timeout=60000, client_name="person:check") as c:
+            c.request_raw(editor.RunAction(action="pcbnew.EditorControl.showEeschema"))
+        got = collect(4)
+        check(sch_requests(got) == [""] or (sch_requests(got) and all(d == "" for d in sch_requests(got))),
+              f"Switch to Schematic Editor on the hidden editor asks the host ({sch_requests(got)})")
+        check(not any(e.type in (embed.ET_DOCUMENT_RELOADED, embed.ET_PROGRESS) and e.frame.kind == embed.FK_SCH
+                      for e in got),
+              f"... without reloading the schematic "
+              f"({[embed.EventType.Name(e.type) for e in got if e.frame.kind == embed.FK_SCH]})")
+
         # The host's prewarm of the (now open) schematic editor: still hidden, no request
         api.request(embed.ShowFrame(kind=embed.FK_SCH, width=804, height=896, prewarm=True), embed.ShowFrameResponse)
         got = collect(8)
         check(not frames()[embed.FK_SCH].shown, "a prewarm keeps the schematic editor hidden")
         check(not sch_requests(got), f"a prewarm posts no ET_SHOW_REQUESTED ({sch_requests(got)})")
 
-        # Switch to Schematic Editor, by an agent and for the person
+        # Switch to Schematic Editor on the prewarmed editor (shown to the toolkit, unmapped), by
+        # an agent and for the person
         for client, expect in (("agent:check", "agent:check"), ("person:check", "")):
             with IpcSession(args.kicad_cli, api_socket=s.socket, timeout=60000, client_name=client) as c:
                 c.request_raw(editor.RunAction(action="pcbnew.EditorControl.showEeschema"))
