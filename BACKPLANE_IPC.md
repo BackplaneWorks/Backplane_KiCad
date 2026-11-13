@@ -88,6 +88,20 @@ dialog's title; reads still work.
 
 Gate features on capability or command names, not on version numbers.
 
+Number ledger for `kiapi.backplane.embed` (fork-only, additive; take the next free number and add
+it here in the same change):
+
+| `EventType` | Name | Since |
+|---|---|---|
+| 1-24 | frames, dialogs, documents, theme, comments, co-editing, plan, progress | bp.8-bp.12 |
+| 25 | `ET_EDITOR_REQUESTED` (reserved, bp.13: editor tabs) | bp.13 |
+| 26 | `ET_MARKER_CLICKED` (reserved, bp.13: host markers) | bp.13 |
+| 27 | `ET_CHECKS_DONE` (reserved, bp.13: RunChecks) | bp.13 |
+| 28 | `ET_FRAME_DRAWN` (reserved, bp.13: cold start) | bp.13 |
+
+Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `files`; `Event` 8
+`marker`, 9 `checks`, 10 `drc_marker` (all reserved until their branch lands).
+
 ## Files
 
 - Native files use upstream master's format (newer than KiCad 10.0.x). Custom properties and
