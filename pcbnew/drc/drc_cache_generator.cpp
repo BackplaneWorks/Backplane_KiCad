@@ -27,6 +27,7 @@
 #include <connectivity/connectivity_data.h>
 #include <drc/drc_engine.h>
 #include <drc/drc_rtree.h>
+#include <drc/drc_parallel.h>
 #include <drc/drc_cache_generator.h>
 #include <drc/drc_zone_triangulation.h>
 #include <mutex>
@@ -468,76 +469,128 @@ bool DRC_CACHE_GENERATOR::Run()
         footprint->BuildNetTieCache();
     }
 
-    std::vector<std::future<size_t>> returns;
-
-    returns.reserve( allZones.size() );
-
-    auto cache_zones =
-            [this, &done]( ZONE* aZone ) -> size_t
+    // Three passes over the zones: triangulate their fills, validate each copper fill
+    // triangulation (one task per zone layer, so a zone on many layers does not hold up the
+    // run), then build the copper zone R-trees, which index a fill that failed validation by a
+    // re-triangulation or its outline instead (DRC_ZONE_TRIANGULATION).
+    auto waitFor =
+            [&]( auto& aFutures, size_t aTotal )
             {
-                if( m_drcEngine->IsCancelled() )
-                    return 0;
-
-                aZone->CacheBoundingBox();
-                aZone->CacheTriangulation();
-
-                if( std::getenv( "KICAD_DRC_CHECK_TRIANGULATION" ) )
-                    checkZoneTriangulation( aZone );
-
-                if( !aZone->GetIsRuleArea() && aZone->IsOnCopperLayer() )
+                for( auto& ret : aFutures )
                 {
-                    aZone->GetLayerSet().RunOnLayers(
-                            [&]( PCB_LAYER_ID layer )
-                            {
-                                if( IsCopperLayer( layer ) )
-                                    DRC_ZONE_TRIANGULATION::Check( aZone, layer );
-                            } );
+                    status = ret.wait_for( std::chrono::milliseconds( 250 ) );
+
+                    while( status != std::future_status::ready )
+                    {
+                        reportProgress( done, aTotal );
+                        status = ret.wait_for( std::chrono::milliseconds( 250 ) );
+                    }
                 }
-
-                if( !aZone->GetIsRuleArea() && aZone->IsOnCopperLayer() )
-                {
-                   std::unique_ptr<DRC_RTREE> rtree = std::make_unique<DRC_RTREE>();
-
-                   aZone->GetLayerSet().RunOnLayers(
-                           [&]( PCB_LAYER_ID layer )
-                           {
-                               if( IsCopperLayer( layer ) )
-                                   rtree->Insert( aZone, layer, CLEARANCE_CONSTRAINT );
-                           } );
-
-                   rtree->Build();
-
-                   {
-                       std::unique_lock<std::shared_mutex> writeLock( m_board->m_CachesMutex );
-                       m_board->m_CopperZoneRTreeCache[ aZone ] = std::move( rtree );
-                   }
-
-                   done.fetch_add( 1 );
-                }
-
-                return 1;
             };
 
-    for( ZONE* zone : allZones )
     {
-        returns.emplace_back( tp.submit_task(
-                [cache_zones, zone]
-                {
-                    return cache_zones( zone );
-                } ) );
+        std::vector<std::future<void>> returns;
+        returns.reserve( allZones.size() );
+
+        for( ZONE* zone : allZones )
+        {
+            returns.emplace_back( tp.submit_task(
+                    [this, zone]
+                    {
+                        if( m_drcEngine->IsCancelled() )
+                            return;
+
+                        zone->CacheBoundingBox();
+                        zone->CacheTriangulation();
+
+                        if( std::getenv( "KICAD_DRC_CHECK_TRIANGULATION" ) )
+                            checkZoneTriangulation( zone );
+                    } ) );
+        }
+
+        done.store( 1 );
+        waitFor( returns, allZones.size() );
     }
 
-    done.store( 1 );
-
-    for( const std::future<size_t>& ret : returns )
     {
-        status = ret.wait_for( std::chrono::milliseconds( 250 ) );
+        std::vector<std::pair<ZONE*, PCB_LAYER_ID>> zoneLayers;
 
-        while( status != std::future_status::ready )
+        for( ZONE* zone : allZones )
         {
-            reportProgress( done, allZones.size() );
-            status = ret.wait_for( std::chrono::milliseconds( 250 ) );
+            if( zone->GetIsRuleArea() || !zone->IsOnCopperLayer() )
+                continue;
+
+            zone->GetLayerSet().RunOnLayers(
+                    [&]( PCB_LAYER_ID layer )
+                    {
+                        if( IsCopperLayer( layer ) )
+                            zoneLayers.emplace_back( zone, layer );
+                    } );
         }
+
+        // Largest fills first, so the longest validations start early
+        std::sort( zoneLayers.begin(), zoneLayers.end(),
+                   []( const auto& a, const auto& b )
+                   {
+                       int ca = a.first->GetFilledPolysList( a.second )->FullPointCount();
+                       int cb = b.first->GetFilledPolysList( b.second )->FullPointCount();
+
+                       if( ca != cb )
+                           return ca > cb;
+
+                       if( a.first->m_Uuid != b.first->m_Uuid )
+                           return a.first->m_Uuid < b.first->m_Uuid;
+
+                       return a.second < b.second;
+                   } );
+
+        auto futures = DrcParallelFor( zoneLayers.size(),
+                [&]( size_t ii )
+                {
+                    if( !m_drcEngine->IsCancelled() )
+                        DRC_ZONE_TRIANGULATION::Check( zoneLayers[ii].first, zoneLayers[ii].second );
+                },
+                1 );
+
+        waitFor( futures, allZones.size() );
+    }
+
+    {
+        std::vector<std::future<void>> returns;
+        returns.reserve( allZones.size() );
+
+        for( ZONE* zone : allZones )
+        {
+            if( zone->GetIsRuleArea() || !zone->IsOnCopperLayer() )
+                continue;
+
+            returns.emplace_back( tp.submit_task(
+                    [this, zone, &done]
+                    {
+                        if( m_drcEngine->IsCancelled() )
+                            return;
+
+                        std::unique_ptr<DRC_RTREE> rtree = std::make_unique<DRC_RTREE>();
+
+                        zone->GetLayerSet().RunOnLayers(
+                                [&]( PCB_LAYER_ID layer )
+                                {
+                                    if( IsCopperLayer( layer ) )
+                                        rtree->Insert( zone, layer, CLEARANCE_CONSTRAINT );
+                                } );
+
+                        rtree->Build();
+
+                        {
+                            std::unique_lock<std::shared_mutex> writeLock( m_board->m_CachesMutex );
+                            m_board->m_CopperZoneRTreeCache[ zone ] = std::move( rtree );
+                        }
+
+                        done.fetch_add( 1 );
+                    } ) );
+        }
+
+        waitFor( returns, allZones.size() );
     }
 
     m_board->m_ZoneIsolatedIslandsMap.clear();
