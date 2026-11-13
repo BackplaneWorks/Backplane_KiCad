@@ -240,10 +240,58 @@ void PLAN_TOOL::syncSelection()
 }
 
 
-std::string PLAN_TOOL::HitTest( const VECTOR2I& aPoint, int* aVertex ) const
+bool PLAN_TOOL::needSelection() const
+{
+    if( !m_selected.empty() )
+        return true;
+
+    // A key on nothing says so instead of doing nothing
+    if( PCB_EDIT_FRAME* f = editFrame() )
+        f->ShowInfoBarMsg( _( "Select a corridor or plane first: click it (a click on another layer's "
+                              "corridor switches to that layer)." ) );
+
+    return false;
+}
+
+
+std::string PLAN_TOOL::HitOtherLayer( const VECTOR2I& aPoint, std::string& aLayer ) const
+{
+    const BOARD_PLAN&     plan = board()->GetPlan();
+    std::string           active = activeLayerName();
+    std::vector<std::string> layers;
+
+    auto add = [&]( const std::string& aName )
+               {
+                   if( aName != active && std::find( layers.begin(), layers.end(), aName ) == layers.end() )
+                       layers.push_back( aName );
+               };
+
+    for( const PLAN_CORRIDOR& c : plan.corridors )
+        add( c.layer );
+
+    for( const PLAN_PLANE& p : plan.planes )
+        add( p.layer );
+
+    for( const std::string& layer : layers )
+    {
+        std::string hit = HitTest( aPoint, nullptr, &layer );
+
+        if( !hit.empty() && ( plan.FindCorridor( hit ) || plan.FindPlane( hit ) ) )
+        {
+            aLayer = layer;
+            return hit;
+        }
+    }
+
+    aLayer.clear();
+    return "";
+}
+
+
+std::string PLAN_TOOL::HitTest( const VECTOR2I& aPoint, int* aVertex, const std::string* aLayer ) const
 {
     const BOARD_PLAN& plan = board()->GetPlan();
-    std::string       layer = activeLayerName();
+    std::string       layer = aLayer ? *aLayer : activeLayerName();
     double            tol = getView()->ToWorld( 6.0 );
 
     if( aVertex )
@@ -554,6 +602,24 @@ int PLAN_TOOL::EditPlan( const TOOL_EVENT& aEvent )
 
             std::string hit = HitTest( pos );
 
+            // Nothing on the active layer: a corridor or plane of another plan layer there is
+            // what the person means; its layer becomes the active one (the keys then act on it)
+            if( hit.empty() )
+            {
+                std::string other;
+                hit = HitOtherLayer( pos, other );
+
+                if( !hit.empty() )
+                {
+                    PCB_LAYER_ID id = board()->GetLayerID( wxString::FromUTF8( other ) );
+
+                    if( id != UNDEFINED_LAYER )
+                        f->SetActiveLayer( id );
+                    else
+                        hit.clear();
+                }
+            }
+
             if( !evt->Modifier( MD_SHIFT ) )
                 m_selected.clear();
 
@@ -742,6 +808,9 @@ void PLAN_TOOL::dragItems( const VECTOR2I& aStart, const std::string& aHit, int 
 
 int PLAN_TOOL::Accept( const TOOL_EVENT& aEvent )
 {
+    if( !needSelection() )
+        return 0;
+
     std::vector<std::string> ids( m_selected.begin(), m_selected.end() );
 
     if( ids.empty() )
@@ -770,6 +839,9 @@ int PLAN_TOOL::Accept( const TOOL_EVENT& aEvent )
 
 int PLAN_TOOL::Reject( const TOOL_EVENT& aEvent )
 {
+    if( !needSelection() )
+        return 0;
+
     std::vector<std::string> ids( m_selected.begin(), m_selected.end() );
 
     if( ids.empty() )
@@ -795,6 +867,9 @@ int PLAN_TOOL::Reject( const TOOL_EVENT& aEvent )
 
 int PLAN_TOOL::ToggleLock( const TOOL_EVENT& aEvent )
 {
+    if( !needSelection() )
+        return 0;
+
     std::vector<std::string> ids( m_selected.begin(), m_selected.end() );
 
     if( ids.empty() )
@@ -860,6 +935,9 @@ static void reorder( BOARD_PLAN& aPlan, const std::set<std::string>& aIds, int a
 
 int PLAN_TOOL::RouteEarlier( const TOOL_EVENT& aEvent )
 {
+    if( !needSelection() )
+        return 0;
+
     std::vector<std::string> ids( m_selected.begin(), m_selected.end() );
 
     edit( _( "Route Earlier" ), "order", ids,
@@ -878,6 +956,9 @@ int PLAN_TOOL::RouteEarlier( const TOOL_EVENT& aEvent )
 
 int PLAN_TOOL::RouteLater( const TOOL_EVENT& aEvent )
 {
+    if( !needSelection() )
+        return 0;
+
     std::vector<std::string> ids( m_selected.begin(), m_selected.end() );
 
     edit( _( "Route Later" ), "order", ids,
@@ -909,6 +990,9 @@ static void scaleWidth( BOARD_PLAN& aPlan, const std::set<std::string>& aIds, do
 
 int PLAN_TOOL::Wider( const TOOL_EVENT& aEvent )
 {
+    if( !needSelection() )
+        return 0;
+
     std::vector<std::string> ids( m_selected.begin(), m_selected.end() );
 
     edit( _( "Widen Corridor" ), "width", ids,
@@ -927,6 +1011,9 @@ int PLAN_TOOL::Wider( const TOOL_EVENT& aEvent )
 
 int PLAN_TOOL::Narrower( const TOOL_EVENT& aEvent )
 {
+    if( !needSelection() )
+        return 0;
+
     std::vector<std::string> ids( m_selected.begin(), m_selected.end() );
 
     edit( _( "Narrow Corridor" ), "width", ids,

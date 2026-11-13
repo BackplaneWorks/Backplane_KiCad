@@ -78,15 +78,22 @@ public:
     /// the API wait until the drag ends.
     bool IsDragging() const { return m_dragging; }
 
-    /// The id of the plan item at aPoint on the active layer ("" if none); vertex hits set
-    /// aVertex to the path/outline index.
-    std::string HitTest( const VECTOR2I& aPoint, int* aVertex = nullptr ) const;
+    /// The id of the plan item at aPoint on the active layer, or on aLayer ("" if none); vertex
+    /// hits set aVertex to the path/outline index.
+    std::string HitTest( const VECTOR2I& aPoint, int* aVertex = nullptr,
+                         const std::string* aLayer = nullptr ) const;
+
+    /// A corridor or plane at aPoint on another plan layer than the active one: its id, and its
+    /// layer in aLayer ("" if none).
+    std::string HitOtherLayer( const VECTOR2I& aPoint, std::string& aLayer ) const;
 
 private:
     /// Plan view hides the board's own layers (the plan is the foreground; the overlay draws the
     /// outline and the parts as context), restoring what was visible on the way out.
     void hideBoardLayers( bool aHide );
     void fitBesideOverview();
+    /// Whether anything is selected; if not, the infobar says what to do.
+    bool needSelection() const;
     std::map<int, bool> m_savedVisibility;
 
     void setTransitions() override;
