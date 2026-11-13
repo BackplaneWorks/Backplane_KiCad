@@ -35,6 +35,8 @@
 #include <math/vector2d.h>
 #include "geometry/shape_null.h"
 #include "board.h"
+#include <zone.h>
+#include <drc/drc_zone_triangulation.h>
 
 #define ATOMIC_TABLES true
 
@@ -120,13 +122,39 @@ public:
 
         wxCHECK2_MSG( shape, return, wxT( "Item does not have a valid shape for this layer" ) );
 
-        if( shape->HasIndexableSubshapes() )
-            shape->GetIndexableSubshapes( subshapes );
-        else
-            subshapes.push_back( shape.get() );
+        // A zone fill is indexed by its triangles, unless DRC found its triangulation does not
+        // tile the fill; then by its closed outlines, which collide as filled areas
+        std::vector<std::shared_ptr<SHAPE>> outlines;
 
-        for( const SHAPE* subshape : subshapes )
+        if( aItem->Type() == PCB_ZONE_T && shape->Type() == SH_POLY_SET
+                && !DRC_ZONE_TRIANGULATION::Trusted( static_cast<ZONE*>( aItem ), aRefLayer ) )
         {
+            SHAPE_POLY_SET fractured = *static_cast<SHAPE_POLY_SET*>( shape.get() );
+
+            if( fractured.HasHoles() )
+                fractured.Fracture();
+
+            for( int ii = 0; ii < fractured.OutlineCount(); ++ii )
+            {
+                auto outline = std::make_shared<SHAPE_LINE_CHAIN>( fractured.COutline( ii ) );
+                outline->SetClosed( true );
+                outlines.push_back( outline );
+                subshapes.push_back( outline.get() );
+            }
+        }
+        else if( shape->HasIndexableSubshapes() )
+        {
+            shape->GetIndexableSubshapes( subshapes );
+        }
+        else
+        {
+            subshapes.push_back( shape.get() );
+        }
+
+        for( size_t ii = 0; ii < subshapes.size(); ++ii )
+        {
+            const SHAPE* subshape = subshapes[ii];
+
             if( dynamic_cast<const SHAPE_NULL*>( subshape ) )
                 continue;
 
@@ -136,7 +164,9 @@ public:
 
             const int        mmin[2] = { bbox.GetX(), bbox.GetY() };
             const int        mmax[2] = { bbox.GetRight(), bbox.GetBottom() };
-            ITEM_WITH_SHAPE* itemShape = new ITEM_WITH_SHAPE( parent, subshape, shape );
+            ITEM_WITH_SHAPE* itemShape = outlines.empty()
+                                                 ? new ITEM_WITH_SHAPE( parent, subshape, shape )
+                                                 : new ITEM_WITH_SHAPE( parent, outlines[ii], shape );
 
             m_owned.push_back( itemShape );
             m_builders[aTargetLayer].Add( mmin, mmax, itemShape );
