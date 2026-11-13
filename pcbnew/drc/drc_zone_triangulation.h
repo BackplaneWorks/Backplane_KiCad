@@ -50,13 +50,18 @@ using TRIANGLE = std::array<VECTOR2I, 3>;
  *    (an inside edge), or is the only one of its kind and runs along an outline or hole of the
  *    fill the way that ring goes with the fill on its left, with every ring point it skips
  *    within 100 nm of it (a boundary edge); and
- *  - the pieces of ring the boundary edges stand for go round every ring exactly once, end to
- *    end (a ring no wider than 100 nm may be left out).
+ *  - the pieces of ring the boundary edges stand for add up to the fill's outlines and holes:
+ *    each ring segment, taken the way with the fill on its left, is covered as many times as
+ *    it occurs, net.  A fractured fill's zero-width bridges, which run both ways, add up to
+ *    nothing and need no triangle edge.  Triangle vertices in the middle of a ring segment
+ *    (where the triangulator splits a large polygon) are made ring points first.  A ring no
+ *    wider than 100 nm may be left out.
  *
  * Why that is enough: the number of triangles covering a point p is the winding number about p
  * of the triangles' boundaries added up.  Inside edges cancel, leaving the boundary edges.
  * Each boundary edge differs from its piece of ring by a loop within 100 nm of the edge, and the
- * pieces add up to the fill's own outlines and holes.  So, at any p more than 200 nm from the
+ * pieces add up to the fill's own outlines and holes, whose winding number is 1 in the fill and
+ * 0 outside it.  So, at any p more than 200 nm from the
  * fill's outline, the triangles cover p exactly as often as the fill does: once inside the
  * fill and never outside.  No copper wider than that is missed (no missed shorts) and none is
  * added (no false errors); 200 nm is below anything DRC resolves.
