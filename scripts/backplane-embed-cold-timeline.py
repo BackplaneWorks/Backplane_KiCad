@@ -110,7 +110,7 @@ for run in range(runs):
                 j = json.loads(line)
             except ValueError:
                 continue
-            if j.get("kind") == "span" and (j["what"].startswith(("open:", "create:", "ctor:", "embed:open", "embed:show"))
+            if j.get("kind") == "span" and (j["what"].startswith(("open:", "create:", "ctor:", "set_board:", "embed:open", "embed:show"))
                                             or j["ms"] >= 50):
                 spans.append((round(j["t"] - t0 * 1000), round(j["ms"]), j["what"]))
             if j.get("kind") == "loop" and j["ms"] >= 100:
