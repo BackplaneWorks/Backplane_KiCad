@@ -20,6 +20,7 @@
 #include <drc/drc_zone_triangulation.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdio>
 #include <map>
@@ -312,8 +313,9 @@ bool vertexInsideTriangles( const std::vector<TRIANGLE>& aTriangles, const RINGS
 
 struct RESULT
 {
-    const SHAPE_POLY_SET* fill;
-    bool                  trusted;
+    const SHAPE_POLY_SET*           fill;
+    bool                            trusted;
+    std::shared_ptr<SHAPE_POLY_SET> replacement;  // a validated re-triangulation, if one was found
 };
 
 std::shared_mutex&                                             registryMutex()
@@ -346,7 +348,8 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
         return true;
 
     std::vector<TRIANGLE> triangles;
-    std::unordered_map<std::pair<VECTOR2I, VECTOR2I>, int, EDGE_HASH> edges;
+    // Directed triangle edges as (from x, from y, to x, to y), sorted below for pairing
+    std::vector<std::array<int, 4>> edges;
     double triArea = 0.0;
 
     for( unsigned ii = 0; ii < aFill.TriangulatedPolyCount(); ++ii )
@@ -387,9 +390,9 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
 
             triArea += std::abs( area2 ) / 2.0;
             triangles.push_back( t );
-            edges[{ t.a, t.b }]++;
-            edges[{ t.b, t.c }]++;
-            edges[{ t.c, t.a }]++;
+            edges.push_back( { t.a.x, t.a.y, t.b.x, t.b.y } );
+            edges.push_back( { t.b.x, t.b.y, t.c.x, t.c.y } );
+            edges.push_back( { t.c.x, t.c.y, t.a.x, t.a.y } );
         }
     }
 
@@ -405,15 +408,29 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
 
     // In a tiling, an edge inside the fill is shared by two triangles in opposite directions and
     // any other edge runs along the outline.  A gap or an overlap leaves an edge that is neither.
-    for( const auto& [edge, count] : edges )
+    std::sort( edges.begin(), edges.end() );
+
+    for( size_t ii = 0; ii < edges.size(); )
     {
-        auto reverse = edges.find( { edge.second, edge.first } );
-        int  reverseCount = reverse == edges.end() ? 0 : reverse->second;
+        size_t                    jj = ii;
+        const std::array<int, 4>& edge = edges[ii];
+
+        while( jj < edges.size() && edges[jj] == edge )
+            ++jj;
+
+        int                count = (int) ( jj - ii );
+        std::array<int, 4> reverseKey = { edge[2], edge[3], edge[0], edge[1] };
+        auto               range = std::equal_range( edges.begin(), edges.end(), reverseKey );
+        int                reverseCount = (int) ( range.second - range.first );
+        VECTOR2I           from( edge[0], edge[1] );
+        VECTOR2I           to( edge[2], edge[3] );
+
+        ii = jj;
 
         if( count == reverseCount )
             continue;
 
-        if( count == 1 && reverseCount == 0 && rings.OnBoundary( edge.first, edge.second ) )
+        if( count == 1 && reverseCount == 0 && rings.OnBoundary( from, to ) )
             continue;
 
         if( reverseCount > count )
@@ -423,7 +440,7 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
         {
             *aWhy = wxString::Format( wxS( "triangle edge (%d, %d)-(%d, %d) is neither shared nor on "
                                            "the outline" ),
-                                      edge.first.x, edge.first.y, edge.second.x, edge.second.y );
+                                      from.x, from.y, to.x, to.y );
         }
 
         return false;
@@ -446,9 +463,25 @@ void DRC_ZONE_TRIANGULATION::Check( const ZONE* aZone, PCB_LAYER_ID aLayer )
     wxString why;
     bool     trusted = fill->OutlineCount() == 0 || Validate( *fill, &why );
 
+    // The same copper, unioned (which drops zero-width bridges and redundant points) and
+    // triangulated afresh, usually triangulates correctly; that keeps the zone indexed by
+    // triangles instead of falling back to its outline
+    std::shared_ptr<SHAPE_POLY_SET> replacement;
+
+    if( !trusted )
+    {
+        replacement = std::make_shared<SHAPE_POLY_SET>( *fill );
+        replacement->ClearArcs();
+        replacement->Simplify();
+        replacement->CacheTriangulation( false );
+
+        if( !Validate( *replacement ) )
+            replacement.reset();
+    }
+
     {
         std::unique_lock lock( registryMutex() );
-        registry()[{ aZone, aLayer }] = { fill.get(), trusted };
+        registry()[{ aZone, aLayer }] = { fill.get(), trusted, replacement };
     }
 
     if( trusted )
@@ -467,9 +500,11 @@ void DRC_ZONE_TRIANGULATION::Check( const ZONE* aZone, PCB_LAYER_ID aLayer )
 
     wxString msg = wxString::Format( wxS( "DRC: the fill triangulation of zone %s (%s) on %s in %s "
                                           "failed validation (%s); its clearances are checked against "
-                                          "the fill outline instead." ),
+                                          "%s instead." ),
                                      aZone->m_Uuid.AsString(), aZone->GetNetname(), LayerName( aLayer ),
-                                     boardName, why );
+                                     boardName, why,
+                                     replacement ? wxS( "a re-triangulation of the fill" )
+                                                 : wxS( "the fill outline" ) );
 
     // Once per zone and board, on stderr (kicad-cli, the API server) and as a trace; not as a
     // log dialog, since this runs on DRC worker threads
@@ -489,4 +524,17 @@ bool DRC_ZONE_TRIANGULATION::Trusted( const ZONE* aZone, PCB_LAYER_ID aLayer )
         return true;
 
     return it->second.trusted;
+}
+
+
+std::shared_ptr<SHAPE_POLY_SET> DRC_ZONE_TRIANGULATION::Replacement( const ZONE* aZone, PCB_LAYER_ID aLayer )
+{
+    std::shared_ptr<SHAPE_POLY_SET> fill = aZone->GetFilledPolysList( aLayer );
+    std::shared_lock                lock( registryMutex() );
+    auto                            it = registry().find( { aZone, aLayer } );
+
+    if( it == registry().end() || it->second.fill != fill.get() )
+        return nullptr;
+
+    return it->second.replacement;
 }
