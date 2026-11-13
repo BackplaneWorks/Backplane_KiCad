@@ -1,0 +1,6 @@
+[
+  {"kind": "pcb", "type": "copper_outside_board", "project": "*",
+   "why": "master's DRC reports copper outside the board outline; stock 10.0 does not have this check. Same count on the native board and the export."},
+  {"kind": "pcb", "type": "hole_to_hole", "project": "*",
+   "why": "master reports each hole pair in both orders (A-B and B-A), 10.0 once; same pairs and distances."}
+]
