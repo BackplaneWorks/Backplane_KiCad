@@ -169,5 +169,11 @@ protected:
 
     wxTimer         m_disambiguateTimer; ///< Timer to show the disambiguate menu.
 
+    /// When the timer fires with the button already up, the release is still queued (the UI
+    /// thread was busy): the timer is re-armed in short steps until that click arrives, for
+    /// at most a couple of seconds.  Steady-clock milliseconds of the first and latest step.
+    long long       m_disambiguateDeferStartMs = 0;
+    long long       m_disambiguateDeferLastMs = 0;
+
     VECTOR2I        m_originalCursor;    ///< Location of original cursor when starting click.
 };
