@@ -69,6 +69,15 @@ namespace EMBED
     /// (Windows; elsewhere empty).  For a stall report.
     std::string MainThreadStack();
 
+    /// Focus, capture, foreground and active window, for a trace line (Windows; elsewhere
+    /// empty).  Any thread.
+    std::string InputState();
+
+    /// Write a minidump of the whole process (every thread's stack) beside the embed trace, for
+    /// a hang the trace alone cannot explain.  Returns its path, or why none was written
+    /// (Windows with BACKPLANE_KICAD_EMBED_TRACE set; elsewhere empty).  Any thread.
+    std::string WriteMiniDump( const std::string& aWhy );
+
     /// True if the running toolkit backend can embed (X11 or Windows; not Wayland or macOS).
     bool Supported();
 

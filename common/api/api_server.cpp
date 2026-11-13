@@ -342,6 +342,20 @@ void KICAD_API_SERVER::startWatchdog()
             {
                 int64_t reportedFor = 0;
                 int64_t lastReport = 0;
+                int64_t startedMs = steadyMs();
+                int64_t lastStartupReport = 0;
+                bool    dumped = false;
+
+                // One dump per process: the first stall is the one to read
+                auto dumpOnce = [&]( const std::string& aWhy ) -> std::string
+                {
+                    if( dumped )
+                        return {};
+
+                    dumped = true;
+                    std::string where = KIPLATFORM::EMBED::WriteMiniDump( aWhy );
+                    return where.empty() ? std::string() : "; minidump: " + where;
+                };
 
                 while( !m_watchdogStop.load() )
                 {
@@ -349,6 +363,24 @@ void KICAD_API_SERVER::startWatchdog()
 
                     int64_t since = m_pendingSinceMs.load();
                     int64_t now = steadyMs();
+
+                    // Startup that never gets ready: requests are answered AS_NOT_READY on this
+                    // server's thread, so none waits for the UI thread and the check below never
+                    // sees it.  The UI thread is still in startup: report where, at 5 s and then
+                    // every 10 s.
+                    if( !m_readyToReply.load() && now - startedMs >= 5000
+                        && ( !lastStartupReport || now - lastStartupReport >= 10000 ) )
+                    {
+                        lastStartupReport = now;
+                        BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+                        std::string      dump = dumpOnce( "startup not ready" );
+                        embed.StartupMark( fmt::format( "STALL: not ready to reply {:.1f} s after the socket "
+                                                        "opened, {} request(s) answered not-ready (last mark "
+                                                        "before: {}); UI thread stack: {}{}",
+                                                        ( now - startedMs ) / 1000.0, m_notReadyAnswers.load(),
+                                                        embed.LastStartupMark(),
+                                                        KIPLATFORM::EMBED::MainThreadStack(), dump ) );
+                    }
 
                     if( !since || now - since < 5000 )
                         continue;
@@ -361,11 +393,12 @@ void KICAD_API_SERVER::startWatchdog()
                     lastReport = now;
 
                     BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+                    std::string      dump = dumpOnce( "request not dispatched" );
                     embed.StartupMark( fmt::format( "STALL: {} request(s) waiting {:.1f} s for the UI thread "
-                                                    "(last mark before: {}); UI thread stack: {}",
+                                                    "(last mark before: {}); UI thread stack: {}{}",
                                                     m_pending.load(), ( now - since ) / 1000.0,
                                                     embed.LastStartupMark(),
-                                                    KIPLATFORM::EMBED::MainThreadStack() ) );
+                                                    KIPLATFORM::EMBED::MainThreadStack(), dump ) );
                 }
             } );
 }
@@ -394,6 +427,9 @@ void KICAD_API_SERVER::onApiRequest( std::string* aRequest )
         notHandled.mutable_status()->set_error_message( "KiCad is not ready to reply" );
         m_server->Reply( notHandled.SerializeAsString() );
         log( "Got incoming request but was not yet ready to reply." );
+
+        if( m_notReadyAnswers.fetch_add( 1 ) == 0 )
+            BACKPLANE_EMBED::Get().StartupMark( "first request answered not-ready" );
         return;
     }
 

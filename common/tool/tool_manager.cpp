@@ -27,6 +27,7 @@
 #include <map>
 #include <stack>
 #include <trace_helpers.h>
+#include <chrono>
 #include <fmt/format.h>
 #include <kiplatform/embed.h>
 #include <kiplatform/ui.h>
@@ -1025,7 +1026,17 @@ void TOOL_MANAGER::DispatchContextMenu( const TOOL_EVENT& aEvent )
                     mouse.x, mouse.y, client.x, client.y, back.x, back.y, origin.x, origin.y,
                     screenPos.x, screenPos.y, frame->GetPosition().x, frame->GetPosition().y ) );
 
+            std::string inputBefore = KIPLATFORM::EMBED::InputState();
+            auto        shownAt = std::chrono::steady_clock::now();
+
             frame->PopupMenu( menu.get(), client );
+
+            long long upMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                     std::chrono::steady_clock::now() - shownAt )
+                                     .count();
+            KIPLATFORM::EMBED::TraceLine( fmt::format(
+                    "context menu: PopupMenu returned after {} ms, selected {}; before: {}; after: {}",
+                    upMs, menu->GetSelected(), inputBefore, KIPLATFORM::EMBED::InputState() ) );
         }
 
         // Warp the cursor if a menu item was selected

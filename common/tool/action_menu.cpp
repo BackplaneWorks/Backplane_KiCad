@@ -21,6 +21,7 @@
  */
 
 #include "tool/action_menu.h"
+#include <kiplatform/embed.h>
 
 #include <wx/grid.h>
 #include <wx/listctrl.h>
@@ -414,6 +415,15 @@ void ACTION_MENU::OnMenuEvent( wxMenuEvent& aEvent )
     wxEventType    type    = aEvent.GetEventType();
     wxWindow*      focus   = wxWindow::FindFocus();
     TOOL_MANAGER*  toolMgr = getToolManager();
+
+    if( ( type == wxEVT_MENU_OPEN || type == wxEVT_MENU_CLOSE ) && !GetParent() && !IsAttached() )
+    {
+        // A popup's own open and close (embed trace only): whether a context menu ever showed,
+        // and what closed it
+        KIPLATFORM::EMBED::TraceLine( std::string( "context menu: " )
+                                      + ( type == wxEVT_MENU_OPEN ? "opened" : "closed" ) + "; "
+                                      + KIPLATFORM::EMBED::InputState() );
+    }
 
     if( type == wxEVT_MENU_OPEN )
     {

@@ -45,25 +45,32 @@ constexpr UINT_PTR HOLDER_TIMER = 1;
 
 /// BACKPLANE_KICAD_EMBED_TRACE: "1" (a log in %TEMP%) or a file path.  Each line also goes to
 /// OutputDebugString.  A GUI-subsystem KiCad often has no usable stderr, hence the file.
+std::wstring tracePath()
+{
+    const wchar_t* value = _wgetenv( L"BACKPLANE_KICAD_EMBED_TRACE" );
+
+    if( !value || !*value )
+        return {};
+
+    std::wstring path = value;
+
+    if( path == L"1" )
+    {
+        wchar_t dir[MAX_PATH] = {};
+        GetTempPathW( MAX_PATH, dir );
+        path = std::wstring( dir ) + L"backplane-kicad-embed-trace.log";
+    }
+
+    return path;
+}
+
+
 FILE* traceFile()
 {
     static FILE* file = []() -> FILE*
     {
-        const wchar_t* value = _wgetenv( L"BACKPLANE_KICAD_EMBED_TRACE" );
-
-        if( !value || !*value )
-            return nullptr;
-
-        std::wstring path = value;
-
-        if( path == L"1" )
-        {
-            wchar_t dir[MAX_PATH] = {};
-            GetTempPathW( MAX_PATH, dir );
-            path = std::wstring( dir ) + L"backplane-kicad-embed-trace.log";
-        }
-
-        return _wfopen( path.c_str(), L"a" );
+        std::wstring path = tracePath();
+        return path.empty() ? nullptr : _wfopen( path.c_str(), L"a" );
     }();
 
     return file;
@@ -399,6 +406,89 @@ std::string KIPLATFORM::EMBED::MainThreadStack()
 void KIPLATFORM::EMBED::TraceLine( const std::string& aLine )
 {
     trace( "%s", aLine.c_str() );
+}
+
+
+std::string KIPLATFORM::EMBED::InputState()
+{
+    if( !traceFile() )
+        return {};
+
+    // GetFocus and GetCapture answer for the calling thread's input state, which the frame's
+    // thread shares with the host's (a child window attaches them); GetGUIThreadInfo says it for
+    // the UI thread from any thread
+    GUITHREADINFO info = {};
+    info.cbSize = sizeof( info );
+    DWORD thread = s_mainThreadId ? s_mainThreadId : GetCurrentThreadId();
+
+    if( !GetGUIThreadInfo( thread, &info ) )
+        return "input state unknown (error " + std::to_string( GetLastError() ) + ")";
+
+    std::string flags;
+
+    if( info.flags & GUI_INMENUMODE )
+        flags += " in-menu-mode";
+
+    if( info.flags & GUI_POPUPMENUMODE )
+        flags += " popup-menu-mode";
+
+    if( info.flags & GUI_SYSTEMMENUMODE )
+        flags += " system-menu-mode";
+
+    return "focus " + describe( info.hwndFocus ) + ", capture " + describe( info.hwndCapture )
+           + ", active " + describe( info.hwndActive ) + ", menu owner " + describe( info.hwndMenuOwner )
+           + ", foreground " + describe( GetForegroundWindow() ) + ( flags.empty() ? "" : "," + flags );
+}
+
+
+std::string KIPLATFORM::EMBED::WriteMiniDump( const std::string& aWhy )
+{
+    std::wstring trace = tracePath();
+
+    if( trace.empty() )
+        return "no dump (BACKPLANE_KICAD_EMBED_TRACE unset)";
+
+    typedef BOOL( WINAPI * MINIDUMPWRITEDUMP )( HANDLE, DWORD, HANDLE, MINIDUMP_TYPE,
+                                                PMINIDUMP_EXCEPTION_INFORMATION,
+                                                PMINIDUMP_USER_STREAM_INFORMATION,
+                                                PMINIDUMP_CALLBACK_INFORMATION );
+
+    HMODULE dbghelp = LoadLibraryW( L"dbghelp.dll" );
+    auto    writeDump = dbghelp ? reinterpret_cast<MINIDUMPWRITEDUMP>(
+                                          GetProcAddress( dbghelp, "MiniDumpWriteDump" ) )
+                                : nullptr;
+
+    if( !writeDump )
+        return "no dump (dbghelp.dll has no MiniDumpWriteDump)";
+
+    size_t       slash = trace.find_last_of( L"\\/" );
+    std::wstring dir = slash == std::wstring::npos ? std::wstring() : trace.substr( 0, slash + 1 );
+    std::wstring path = dir + L"kicad-" + std::to_wstring( GetCurrentProcessId() ) + L"-"
+                        + std::to_wstring( GetTickCount() ) + L".dmp";
+
+    HANDLE file = CreateFileW( path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+                               FILE_ATTRIBUTE_NORMAL, nullptr );
+
+    if( file == INVALID_HANDLE_VALUE )
+        return "no dump (could not create it, error " + std::to_string( GetLastError() ) + ")";
+
+    MINIDUMP_TYPE type = static_cast<MINIDUMP_TYPE>( MiniDumpNormal | MiniDumpWithThreadInfo
+                                                     | MiniDumpWithUnloadedModules
+                                                     | MiniDumpWithHandleData );
+
+    // Written from this (the watchdog's) thread: the stalled UI thread is caught where it is
+    BOOL  ok = writeDump( GetCurrentProcess(), GetCurrentProcessId(), file, type, nullptr, nullptr,
+                          nullptr );
+    DWORD error = ok ? 0 : GetLastError();
+    CloseHandle( file );
+
+    std::string utf8( path.begin(), path.end() );   // the trace's own path, ASCII in practice
+
+    if( !ok )
+        return "no dump (MiniDumpWriteDump failed, error " + std::to_string( error ) + ")";
+
+    trace( "minidump for %s: %s", aWhy.c_str(), utf8.c_str() );
+    return utf8;
 }
 
 

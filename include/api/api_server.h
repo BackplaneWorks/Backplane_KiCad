@@ -189,6 +189,7 @@ private:
 
     std::atomic<int64_t>    m_pendingSinceMs{ 0 };   ///< oldest request not yet dispatched, 0 if none
     std::atomic<int>        m_pending{ 0 };
+    std::atomic<int>        m_notReadyAnswers{ 0 };  ///< requests answered AS_NOT_READY
     std::atomic<bool>       m_firstReceived{ false };
     std::atomic<bool>       m_firstDispatched{ false };
     std::atomic<bool>       m_watchdogStop{ false };

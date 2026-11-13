@@ -65,3 +65,15 @@ std::string KIPLATFORM::EMBED::MainThreadStack()
 {
     return {};
 }
+
+
+std::string KIPLATFORM::EMBED::InputState()
+{
+    return {};
+}
+
+
+std::string KIPLATFORM::EMBED::WriteMiniDump( const std::string& )
+{
+    return {};
+}
