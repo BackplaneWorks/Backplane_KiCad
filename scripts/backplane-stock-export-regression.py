@@ -232,6 +232,9 @@ def template_dir(cli):
     return None
 
 
+LIBS = None   # --libs: one set of KiCad libraries for both CLIs
+
+
 def private_env(home, cli):
     """A private HOME/XDG for one CLI, with its own global library tables: a first CLI-only run
     of stock has none and reports every library missing."""
@@ -242,6 +245,12 @@ def private_env(home, cli):
         path.mkdir(parents=True, exist_ok=True)
         env[variable] = str(path)
     env.pop("DISPLAY", None)
+    if LIBS:
+        # The same libraries for both, so library checks (footprint links, parity) compare the
+        # engines, not two installs
+        for var, sub in (("KICAD10_SYMBOL_DIR", "symbols"), ("KICAD10_FOOTPRINT_DIR", "footprints"),
+                         ("KICAD10_3DMODEL_DIR", "3dmodels")):
+            env[var] = str(LIBS / sub)
     template = template_dir(cli)
     if template:
         for version in ("10.0", "10.99"):
@@ -259,9 +268,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("kicad_cli", type=Path)
     parser.add_argument("--stock-cli", type=Path)
+    parser.add_argument("--libs", type=Path,
+                        help="a KiCad 10 share folder with symbols/ and footprints/, used by both CLIs "
+                             "(without it each uses whatever its install has, often nothing)")
     parser.add_argument("--project", action="append", type=Path)
     parser.add_argument("--keep", type=Path)
     args = parser.parse_args()
+    global LIBS
+    LIBS = args.libs.resolve() if args.libs else None
     if not args.stock_cli:
         print("SKIP export-to-stock gate: no --stock-cli")
         return 0
