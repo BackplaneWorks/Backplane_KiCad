@@ -17,6 +17,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <chrono>
+
+#include <wx/utils.h>
+
 #include <bitmaps.h>
 #include <widgets/ui_common.h>
 #include <collector.h>
@@ -231,6 +235,30 @@ void SELECTION_TOOL::UnbrightenItem( EDA_ITEM* aItem )
 
 void SELECTION_TOOL::onDisambiguationExpire( wxTimerEvent& aEvent )
 {
+    // The timer stands for a press held still.  When it fires with the left button already up,
+    // the release is still waiting in the queue: the UI thread was busy when the delay ran out
+    // (a frame or library loading, whose yields run timers but hold back input), or the
+    // release was delivered late.  It is a plain click, not a long press, so no menu: keep the
+    // timer running in short steps, so the queued click finds it running and selects as a
+    // click does.  If no release ever comes, give up after 2 s, still without a menu.
+    if( !wxGetMouseState().LeftIsDown() )
+    {
+        long long now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                std::chrono::steady_clock::now().time_since_epoch() )
+                                .count();
+
+        // A gap means a new press, not another step of the same wait
+        if( now - m_disambiguateDeferLastMs > 250 )
+            m_disambiguateDeferStartMs = now;
+
+        m_disambiguateDeferLastMs = now;
+
+        if( now - m_disambiguateDeferStartMs < 2000 )
+            m_disambiguateTimer.StartOnce( 50 );
+
+        return;
+    }
+
     // If there is a multiple selection then it's more likely that we're seeing a paused drag
     // than a long-click.
     if( selection().GetSize() >= 2 && !hasModifier() )
