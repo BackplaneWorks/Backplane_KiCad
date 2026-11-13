@@ -94,6 +94,12 @@ BOOST_AUTO_TEST_CASE( ComplexHierarchyGndFillFails )
     BOOST_CHECK( !DRC_ZONE_TRIANGULATION::Validate( fill, triangles, &why ) );
     BOOST_TEST_MESSAGE( "rejected: " << why.ToStdString() );
 
+    // And by the tests the guarantee rests on alone, without the quick turn and area tests
+    // (the first of which is what rejects it above)
+    wxString proofWhy;
+    BOOST_CHECK( !DRC_ZONE_TRIANGULATION::Validate( fill, triangles, &proofWhy, false ) );
+    BOOST_TEST_MESSAGE( "rejected without the quick tests: " << proofWhy.ToStdString() );
+
     // The deepest point of the copper the saved triangles miss (0.1 mm inside it) lies in the
     // fill but in none of them
     VECTOR2I probe( 101598447, 100841940 );
@@ -175,8 +181,9 @@ BOOST_AUTO_TEST_CASE( MissingIslandOffsetByCoveredHoleFails )
     BOOST_REQUIRE_CLOSE( fill.Area(), 98.0 * MM * MM + 2.0 * MM * MM, 1e-9 );
 
     wxString why;
-    BOOST_CHECK( !DRC_ZONE_TRIANGULATION::Validate( fill, { triangles }, &why ) );
+    BOOST_CHECK( !DRC_ZONE_TRIANGULATION::Validate( fill, { triangles }, &why, false ) );
     BOOST_TEST_MESSAGE( "rejected: " << why.ToStdString() );
+    BOOST_CHECK( !DRC_ZONE_TRIANGULATION::Validate( fill, { triangles } ) );
 }
 
 
@@ -194,7 +201,7 @@ BOOST_AUTO_TEST_CASE( MissingTriangleFails )
     // Its neighbours' edges facing it lose their partner, whichever triangle it is
     triangles.erase( triangles.begin() + triangles.size() / 2 );
 
-    BOOST_CHECK( !DRC_ZONE_TRIANGULATION::Validate( fill, { triangles } ) );
+    BOOST_CHECK( !DRC_ZONE_TRIANGULATION::Validate( fill, { triangles }, nullptr, false ) );
 }
 
 

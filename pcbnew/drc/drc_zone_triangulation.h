@@ -74,10 +74,14 @@ using TRIANGLE = std::array<VECTOR2I, 3>;
  */
 bool Validate( const SHAPE_POLY_SET& aFill, wxString* aWhy = nullptr );
 
-/// Validate( aFill ) with the triangles given, one list per triangulated polygon, instead of
-/// the fill's cached triangulation (for tests: a saved triangulation of a real fill).
+/**
+ * Validate( aFill ) with the triangles given, one list per triangulated polygon, instead of
+ * the fill's cached triangulation (for tests: a saved triangulation of a real fill).  With
+ * @a aQuickTests false, only the tests the guarantee rests on run (pairing, boundary edges,
+ * rings covered once), to show those alone reject a triangulation.
+ */
 bool Validate( const SHAPE_POLY_SET& aFill, const std::vector<std::vector<TRIANGLE>>& aTriangles,
-               wxString* aWhy = nullptr );
+               wxString* aWhy = nullptr, bool aQuickTests = true );
 
 /// Write @a aFill's outlines and holes and its cached triangles to @a aPath, as text.  Check()
 /// does so for each fill that fails when KICAD_DRC_DUMP_TRIANGULATION names a directory.
