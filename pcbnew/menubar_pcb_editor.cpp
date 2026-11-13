@@ -245,6 +245,7 @@ void PCB_EDIT_FRAME::doReCreateMenuBar()
     viewMenu->AppendSeparator();
     viewMenu->Add( ACTIONS::showFootprintBrowser );
     viewMenu->Add( ACTIONS::show3DViewer );
+    viewMenu->Add( PCB_ACTIONS::planToggleView, ACTION_MENU::CHECK );
 
     viewMenu->AppendSeparator();
     viewMenu->Add( ACTIONS::zoomInCenter );

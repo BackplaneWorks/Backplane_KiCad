@@ -26,6 +26,7 @@
 #include <backplane/plan_undo_item.h>
 #include <backplane/plan_tool.h>
 #include <backplane/agents_panel.h>
+#include <backplane/plan_view_item.h>
 #include <backplane/agent_edit_flash.h>
 #include <backplane_coedit.h>
 #include <algorithm>
@@ -1453,6 +1454,15 @@ void PCB_EDIT_FRAME::setupUIConditions()
     mgr->SetConditions( PCB_ACTIONS::flipBoard,            CHECK( boardFlippedCond ) );
     mgr->SetConditions( PCB_ACTIONS::showLayersManager,    CHECK( layerManagerCond ) );
     mgr->SetConditions( PCB_ACTIONS::showRatsnest,         CHECK( globalRatsnestCond ) );
+
+    auto planViewCond =
+            [this]( const SELECTION& )
+            {
+                PCB_DRAW_PANEL_GAL* canvas = GetCanvas();
+                return canvas && canvas->GetPlanView() && canvas->GetPlanView()->IsPlanView();
+            };
+
+    mgr->SetConditions( PCB_ACTIONS::planToggleView,       CHECK( planViewCond ) );
     mgr->SetConditions( PCB_ACTIONS::ratsnestLineMode,     CHECK( curvedRatsnestCond ) );
     mgr->SetConditions( PCB_ACTIONS::toggleNetHighlight,   CHECK( netHighlightCond )
                                                            .Enable( enableNetHighlightCond ) );

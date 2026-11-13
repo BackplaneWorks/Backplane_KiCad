@@ -178,6 +178,9 @@ std::optional<TOOLBAR_CONFIGURATION> PCB_EDIT_TOOLBAR_SETTINGS::DefaultToolbarCo
               .AppendAction( PCB_ACTIONS::ratsnestLineMode );
 
         config.AppendSeparator()
+              .AppendAction( PCB_ACTIONS::planToggleView );
+
+        config.AppendSeparator()
               .AppendAction( ACTIONS::highContrastMode )
               .AppendAction( PCB_ACTIONS::toggleNetHighlight );
 

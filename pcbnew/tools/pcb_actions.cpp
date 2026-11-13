@@ -514,9 +514,13 @@ TOOL_ACTION PCB_ACTIONS::editStructureBoundary( TOOL_ACTION_ARGS()
 TOOL_ACTION PCB_ACTIONS::planToggleView( TOOL_ACTION_ARGS()
         .Name( "pcbnew.Plan.togglePlanView" )
         .Scope( AS_GLOBAL )
-        .DefaultHotkey( MD_ALT + 'P' )
-        .FriendlyName( _( "Plan View" ) )
-        .Tooltip( _( "Show the board the way the routing plan reads, and steer the plan" ) ) );
+        // Not Alt+P: that is the Place menu's mnemonic, which wins when the canvas lacks the keyboard
+        .DefaultHotkey( MD_CTRL + MD_SHIFT + 'R' )
+        .LegacyHotkeyName( "Plan View" )
+        .FriendlyName( _( "Routing Plan View" ) )
+        .Tooltip( _( "Show the board the way the routing plan reads, and steer the plan" ) )
+        .Icon( BITMAPS::ps_router )
+        .ToolbarState( TOOLBAR_STATE::TOGGLE ) );
 
 TOOL_ACTION PCB_ACTIONS::planToggleShow( TOOL_ACTION_ARGS()
         .Name( "pcbnew.Plan.toggleShowPlan" )
