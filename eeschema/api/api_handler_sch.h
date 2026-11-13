@@ -117,6 +117,9 @@ protected:
     PROJECT& project() const { return context()->Prj(); }
 
 private:
+    HANDLER_RESULT<commands::RunActionResponse> handleRunAction(
+            const HANDLER_CONTEXT<commands::RunAction>& aCtx );
+
     HANDLER_RESULT<google::protobuf::Empty> handleSaveDocument(
             const HANDLER_CONTEXT<commands::SaveDocument>& aCtx );
     HANDLER_RESULT<google::protobuf::Empty> handleSaveDocumentAs(

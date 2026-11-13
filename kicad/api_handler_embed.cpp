@@ -396,12 +396,17 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
         case EMBED_FRAME_KIND::PCB: crossProbe( m_kiway, FRAME_PCB_EDITOR, item ); break;
         case EMBED_FRAME_KIND::SCH: crossProbe( m_kiway, FRAME_SCH, item ); break;
 
+        // The host asked for this editor and item: the editor's own Raise() as it loads the item
+        // is not KiCad asking for it, so no ET_EDITOR_REQUESTED echoes back (a host that shows
+        // the editor on every request would loop)
         case EMBED_FRAME_KIND::SYMBOL_EDITOR:
-            m_kiway.ExpressMail( FRAME_SCH_SYMBOL_EDITOR, MAIL_SCH_EDIT_LIBID, payload );
+            embed.WithShowAllowed(
+                    [&]() { m_kiway.ExpressMail( FRAME_SCH_SYMBOL_EDITOR, MAIL_SCH_EDIT_LIBID, payload ); } );
             break;
 
         case EMBED_FRAME_KIND::FOOTPRINT_EDITOR:
-            m_kiway.ExpressMail( FRAME_FOOTPRINT_EDITOR, MAIL_FP_EDIT_LIBID, payload );
+            embed.WithShowAllowed(
+                    [&]() { m_kiway.ExpressMail( FRAME_FOOTPRINT_EDITOR, MAIL_FP_EDIT_LIBID, payload ); } );
             break;
 
         default: break;

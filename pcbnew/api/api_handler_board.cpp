@@ -47,6 +47,7 @@
 #include <layer_ids.h>
 #include <project.h>
 #include <tool/common_tools.h>
+#include <tool/action_manager.h>
 #include <tool/tool_manager.h>
 #include <tools/pcb_actions.h>
 #include <tools/pcb_selection_tool.h>
@@ -838,6 +839,15 @@ std::vector<KICAD_T> API_HANDLER_BOARD::parseRequestedItemTypes(
 HANDLER_RESULT<RunActionResponse> API_HANDLER_BOARD::handleRunAction(
         const HANDLER_CONTEXT<RunAction>& aCtx )
 {
+    // An action this editor does not have (eeschema.*, another editor's) is not ours to refuse:
+    // the next handler (the schematic editor's) may know it
+    if( toolManager() && !toolManager()->GetActionManager()->FindAction( aCtx.Request.action() ) )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
     if( std::optional<ApiResponseStatus> headless = checkForHeadless( "RunAction" ) )
         return tl::unexpected( *headless );
 
@@ -860,7 +870,11 @@ HANDLER_RESULT<RunActionResponse> API_HANDLER_BOARD::handleRunAction(
 
     RunActionResponse response;
 
-    if( toolManager()->RunAction( aCtx.Request.action(), true ) )
+    // By name only: the action keeps its own parameter (showFootprintEditor's frame type and
+    // the like).  A second argument is that parameter now, not the old "run now" flag; `true`
+    // there made every parameterised action read a bool (FRAME_T 0, the schematic, for
+    // showFootprintEditor).
+    if( toolManager()->RunAction( aCtx.Request.action() ) )
         response.set_status( RunActionStatus::RAS_OK );
     else
         response.set_status( RunActionStatus::RAS_INVALID );

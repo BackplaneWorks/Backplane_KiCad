@@ -81,6 +81,7 @@
 #include <tool/actions.h>
 #include <view/view.h>
 #include <tool/common_tools.h>
+#include <tool/action_manager.h>
 #include <tool/tool_manager.h>
 #include <tools/sch_actions.h>
 #include <tools/sch_selection_tool.h>
@@ -254,6 +255,8 @@ API_HANDLER_SCH::API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext,
     using namespace kiapi::schematic::types;
     using namespace kiapi::schematic::commands;
 
+    registerHandler<kiapi::common::commands::RunAction, kiapi::common::commands::RunActionResponse>(
+            &API_HANDLER_SCH::handleRunAction );
     registerHandler<GetOpenDocuments, GetOpenDocumentsResponse>(
             &API_HANDLER_SCH::handleGetOpenDocuments );
     registerHandler<SaveDocument, google::protobuf::Empty>(
@@ -358,6 +361,34 @@ SCHEMATIC* API_HANDLER_SCH::schematic() const
 SCH_EDIT_FRAME* API_HANDLER_SCH::frame() const
 {
     return static_cast<SCH_EDIT_FRAME*>( m_frame );
+}
+
+
+HANDLER_RESULT<RunActionResponse> API_HANDLER_SCH::handleRunAction( const HANDLER_CONTEXT<RunAction>& aCtx )
+{
+    // The schematic editor's own actions (eeschema.InspectionTool.runERC and the like); one this
+    // editor does not have goes on to the next handler
+    TOOL_MANAGER* mgr = m_frame ? toolManager() : nullptr;
+
+    if( !mgr || !mgr->GetActionManager()->FindAction( aCtx.Request.action() ) )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+        return tl::unexpected( *busy );
+
+    RunActionResponse response;
+
+    // By name only, so the action keeps its own parameter
+    if( mgr->RunAction( aCtx.Request.action() ) )
+        response.set_status( RunActionStatus::RAS_OK );
+    else
+        response.set_status( RunActionStatus::RAS_INVALID );
+
+    return response;
 }
 
 
