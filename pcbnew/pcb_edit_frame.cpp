@@ -3088,7 +3088,11 @@ bool PCB_EDIT_FRAME::FetchNetlistFromSchematic( NETLIST& aNetlist, const wxStrin
     if( standalone < 0 )      // Problem with Eeschema or the schematic
         return false;
 
-    Raise();                // Show
+    // Embedded, what is on screen is the host's: a parity fetch (the host's RunChecks DRC while the
+    // person is on the schematic) raising a hidden board asked the host to show it, and a host that
+    // followed took the pane and the keyboard from the schematic (lane A: Ctrl+Y went to the board)
+    if( !BACKPLANE_EMBED::Get().Enabled() )
+        Raise();            // Show
 
     std::string payload( aAnnotateMessage );
 
@@ -3116,7 +3120,9 @@ bool PCB_EDIT_FRAME::FetchNetlistFromSchematic( NETLIST& aNetlist, const wxStrin
 
     if( payload == aAnnotateMessage )
     {
-        Raise();
+        if( !BACKPLANE_EMBED::Get().Enabled() )
+            Raise();
+
         DisplayErrorMessage( this, aAnnotateMessage );
         return false;
     }

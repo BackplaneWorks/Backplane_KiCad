@@ -5,6 +5,8 @@
 - RunChecks FK_PCB (with parity) and FK_SCH return a progress id at once; ET_PROGRESS with that id
   follows, then ET_CHECKS_DONE with counts that match GetMarkers; the markers stay in the editor
   (the same ids on a second GetMarkers) and the in-editor DRC/ERC tasks find the same types.
+- RunChecks FK_PCB with parity while the schematic is shown asks to show no frame (ET_SHOW_REQUESTED);
+  the board stays hidden.
 - A second RunChecks while one runs is refused (AS_BUSY); a kind with no checks is unhandled.
 - SelectItems ids selects a marker's items (ids_not_found for an unknown one); zoom_box_nm and
   at_nm move the view; FK_SCH sheet_path shows that sheet.
@@ -41,6 +43,7 @@ def main():
         tasks = api.module("common.tasks")
         w, h = s.host.size
         since = [0]
+        last_seen = []   # the events of the last run_checks
 
         def events():
             reply = api.request(embed.NextEvents(since=since[0]), embed.NextEventsResponse)
@@ -69,6 +72,7 @@ def main():
                 return any(e.type == embed.ET_CHECKS_DONE for e in seen)
 
             finished = wait_for(done, 300, 0.2)
+            last_seen[:] = seen
             progress = [e for e in seen if e.type == embed.ET_PROGRESS and e.progress.id == pid]
             checks = next((e.checks for e in seen if e.type == embed.ET_CHECKS_DONE), None)
             check(pid > 0 and finished and checks is not None,
@@ -198,6 +202,18 @@ def main():
 
         # ---- Schematic
         show(embed.FK_SCH)
+
+        # The board's DRC (with parity) while the schematic is on screen and the board hidden: the
+        # parity fetch must not ask to show the board (lane A: a host that followed it took the
+        # pane and the keyboard from the schematic, and Ctrl+Y went to the board)
+        run_checks(embed.FK_PCB, "DRC behind the schematic", parity=True)
+        time.sleep(1)   # anything the run posted after ET_CHECKS_DONE
+        hidden_seen = [e for e in last_seen + events() if e.type == embed.ET_SHOW_REQUESTED]
+        check(not hidden_seen, f"a DRC with parity behind the schematic asks to show no frame "
+                               f"({[e.frame.kind for e in hidden_seen]})")
+        on = {f.kind for f in api.request(embed.GetFrames(), embed.GetFramesResponse).frames if f.shown}
+        check(embed.FK_PCB not in on and embed.FK_SCH in on,
+              f"... the board stays hidden and the schematic shown ({sorted(on)})")
         erc = run_checks(embed.FK_SCH, "ERC")
         sch_found = markers(embed.FK_SCH)
         if erc is not None:
