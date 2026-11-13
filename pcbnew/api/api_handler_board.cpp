@@ -47,6 +47,7 @@
 #include <layer_ids.h>
 #include <project.h>
 #include <tool/common_tools.h>
+#include <tool/action_manager.h>
 #include <tool/tool_manager.h>
 #include <tools/pcb_actions.h>
 #include <tools/pcb_selection_tool.h>

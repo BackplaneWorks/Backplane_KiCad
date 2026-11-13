@@ -81,6 +81,7 @@
 #include <tool/actions.h>
 #include <view/view.h>
 #include <tool/common_tools.h>
+#include <tool/action_manager.h>
 #include <tool/tool_manager.h>
 #include <tools/sch_actions.h>
 #include <tools/sch_selection_tool.h>
