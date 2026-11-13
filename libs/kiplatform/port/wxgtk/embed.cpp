@@ -369,12 +369,32 @@ void closePopup( GdkEvent* aKeyEvent )
 }
 
 
+/// True while one of our popups holds the keyboard: GTK's current grab is a menu or sits in a
+/// popup window (a combo box's list), or the key is addressed to a popup window itself.  A
+/// menu's grab reports keys on the focused frame's window, so the grab is the test that counts.
+bool popupHasKeyboard( const GdkEventKey& aKey )
+{
+    if( GtkWidget* grab = gtk_grab_get_current() )
+    {
+        if( GTK_IS_MENU_SHELL( grab ) )
+            return true;
+
+        GtkWidget* top = gtk_widget_get_toplevel( grab );
+
+        if( GTK_IS_WINDOW( top ) && gtk_window_get_window_type( GTK_WINDOW( top ) ) == GTK_WINDOW_POPUP )
+            return true;
+    }
+
+    return aKey.window
+           && gdk_window_get_window_type( gdk_window_get_toplevel( aKey.window ) ) == GDK_WINDOW_TEMP;
+}
+
+
 /// Every event passes through here before GTK: a key on its way to one of our popups is offered
 /// to the popupKey hook first, since the popup's grab keeps it from any frame and filter.
 void eventHandler( GdkEvent* aEvent, gpointer )
 {
-    if( aEvent->type == GDK_KEY_PRESS && s_hooks.popupKey && aEvent->key.window
-        && gdk_window_get_window_type( gdk_window_get_toplevel( aEvent->key.window ) ) == GDK_WINDOW_TEMP )
+    if( aEvent->type == GDK_KEY_PRESS && s_hooks.popupKey && popupHasKeyboard( aEvent->key ) )
     {
         int code = 0;
         int modifiers = 0;
