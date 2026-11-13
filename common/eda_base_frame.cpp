@@ -2458,3 +2458,21 @@ void EDA_BASE_FRAME::EmbedAutoPanels()
     if( changed )
         m_auimgr.Update();
 }
+
+
+void EDA_BASE_FRAME::EmbedPaneChangedByKiCad( const wxString& aName )
+{
+    wxAuiPaneInfo& pane = m_auimgr.GetPane( aName );
+
+    if( !pane.IsOk() )
+        return;
+
+    EMBED_PANE_STATE& st = m_embedPanes[aName];
+    st.seen = true;
+    st.expectedShown = pane.IsShown();
+
+    // Shown by KiCad: auto may take it away again in a narrow pane (it counts as auto-hidden
+    // then, so it comes back as the pane widens)
+    if( pane.IsShown() )
+        st.autoHidden = true;
+}

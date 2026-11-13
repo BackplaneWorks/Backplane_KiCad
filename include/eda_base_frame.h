@@ -167,6 +167,9 @@ public:
      */
     void EmbedAutoPanels();
 
+    /// KiCad itself showed or hid the pane aName (not the person): auto still decides it.
+    void EmbedPaneChangedByKiCad( const wxString& aName );
+
     /// Show (non-empty aPath) or hide KiCad's "changed on disk" infobar for an embedding host.
     void ShowEmbedReloadConflict( const wxString& aPath );
 

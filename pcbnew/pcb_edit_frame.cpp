@@ -2636,7 +2636,12 @@ void PCB_EDIT_FRAME::RefreshAgentZones( bool aRefresh )
     {
         m_agentsPaneShown = true;
         m_auimgr.GetPane( m_agentsPanel ).Show( true );
+
+        // Embedded: KiCad's choice, not the person's; in a narrow pane auto hides it again (the
+        // host still hears the agent's notices: ET_DOCUMENT_EDITED, ET_AGENT_NOTICE)
+        EmbedPaneChangedByKiCad( m_auimgr.GetPane( m_agentsPanel ).name );
         m_auimgr.Update();
+        EmbedAutoPanels();
     }
 }
 
