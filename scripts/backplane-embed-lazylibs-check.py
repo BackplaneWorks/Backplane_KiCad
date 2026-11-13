@@ -12,9 +12,11 @@ scenario runs twice on a copy of pic_programmer, lazy then full, and the results
 - saving right after the load: the same bytes in both modes (and so the same stock export);
 - the footprint and symbol choosers opened at once: every library loaded afterwards, an unused
   library's footprint placeable;
+- right after start, "Update PCB from Schematic" (one symbol now names a footprint in a library
+  the board does not use) and "Update Footprints from Library", each applied from its dialog, then
+  saved: the same .kicad_pcb in both modes, byte for byte once each (uuid ...) is masked (the
+  items they create get fresh random KIIDs, which differ between any two runs, full or lazy);
 - ERC and DRC with schematic parity (in-editor tasks): the same findings, as sets.
-Updating the board from the schematic and from the libraries goes through the same wait
-(BlockUntilLoaded) the choosers do; the checks above cover that path.
 
     backplane-embed-lazylibs-check.py <kicad> <kicad-cli> --libs <share/kicad> --out DIR
 """
@@ -24,9 +26,11 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -36,33 +40,69 @@ DEMO = Path(__file__).resolve().parents[1] / "demos/pic_programmer"
 TABLES = ("sym-lib-table", "fp-lib-table", "design-block-lib-table")
 
 
-def close_dialog(session, title):
-    """Close a chooser by its Cancel button (bottom right), found from the window manager's list:
-    keys may go to the embedded frame, which keeps the keyboard.  Waits until it is gone, so later
-    requests are not refused under its modal loop."""
+def find_dialog(session, title):
+    """The dialog's box (x, y, width, height) on screen, or None: of xdotool's matches (it matches
+    _NET_WM_NAME too), the biggest viewable one."""
     disp = session.host.display
-    root = session.host.root
+    found = subprocess.run(["xdotool", "search", "--onlyvisible", "--name", title], env=session.env,
+                           text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.split()
+    best = None
+    for wid in found:
+        try:
+            window = disp.create_resource_object("window", int(wid))
+            g = window.get_geometry()
+            origin = session.host.root.translate_coords(window, 0, 0)
+        except Exception:
+            continue
+        if best is None or g.width * g.height > best[2] * best[3]:
+            best = (origin.x, origin.y, g.width, g.height)
+    return best
+
+
+def click_from_corner(session, box, dx, dy):
+    session.xdotool("mousemove", str(box[0] + box[2] - dx), str(box[1] + box[3] - dy), "click", "1")
+
+
+def close_dialog(session, title, dx=150):
+    """Close a dialog by its bottom-right button (Cancel / Close), found from the window manager's
+    list: keys may go to the embedded frame, which keeps the keyboard.  Waits until it is gone, so
+    later requests are not refused under its modal loop."""
     for _ in range(10):
-        # xdotool matches _NET_WM_NAME too; of its matches, the biggest viewable one is the dialog
-        found = subprocess.run(["xdotool", "search", "--onlyvisible", "--name", title], env=session.env,
-                               text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.split()
-        target, area = None, 0
-        for wid in found:
-            try:
-                window = disp.create_resource_object("window", int(wid))
-                g = window.get_geometry()
-            except Exception:
-                continue
-            if g.width * g.height > area:
-                target, area = window, g.width * g.height
-        if target is None:
+        box = find_dialog(session, title)
+        if box is None:
             return True
-        g = target.get_geometry()
-        origin = root.translate_coords(target, 0, 0)
-        print(f"  closing {title!r} {g.width}x{g.height} at {origin.x},{origin.y}", flush=True)
-        session.xdotool("mousemove", str(origin.x + g.width - 150), str(origin.y + g.height - 25), "click", "1")
+        print(f"  closing {title!r} {box[2]}x{box[3]} at {box[0]},{box[1]}", flush=True)
+        click_from_corner(session, box, dx, 25)
         time.sleep(1.0)
     return False
+
+
+def apply_dialog(session, api, editor, action, title, apply_dx, close_dx, shot):
+    """Open a modal dialog with RunAction, press its apply button, then Close.  RunAction answers
+    only once the dialog closes, so it goes on its own connection."""
+    import pynng
+
+    def fire():
+        with pynng.Req0(dial=f"ipc://{session.socket}", block_on_dial=True, recv_timeout=600000) as c:
+            req = api.envelope.ApiRequest()
+            req.header.kicad_token = api.token
+            req.message.Pack(editor.RunAction(action=action))
+            c.send(req.SerializeToString())
+            c.recv()
+
+    runner = threading.Thread(target=fire, daemon=True)
+    runner.start()
+    if not wait_for(lambda: find_dialog(session, title), 180, 0.5):
+        return False
+    time.sleep(3)
+    box = find_dialog(session, title)   # its dry run (Update PCB) and layout
+    print(f"  applying {title!r} {box[2]}x{box[3]} at {box[0]},{box[1]}", flush=True)
+    click_from_corner(session, box, apply_dx, 23)
+    time.sleep(8)
+    session.shot(shot)
+    closed = close_dialog(session, title, close_dx)
+    runner.join(60)
+    return closed and not runner.is_alive()
 
 
 def prepare(project_root, mode):
@@ -85,6 +125,12 @@ def prepare(project_root, mode):
     b = board.read_text()
     board.write_text(b.replace('(footprint "MountingHole:MountingHole_4.3mm_M4"',
                                '(footprint "NoSuchLibrary:MountingHole_4.3mm_M4"', 1))
+    # Update PCB from Schematic: one symbol now names a footprint from a library the board does not use
+    sheet = target / "pic_sockets.kicad_sch"
+    old = '\n\t\t(property "Footprint" "Capacitor_THT:C_Disc_D5.1mm_W3.2mm_P5.00mm"'
+    sch = sheet.read_text()
+    assert old in sch
+    sheet.write_text(sch.replace(old, '\n\t\t(property "Footprint" "Resistor_SMD:R_0603_1608Metric"', 1))
     return target
 
 
@@ -118,6 +164,7 @@ def run_mode(args, mode):
         with Session(args.kicad, out, project) as s, \
                 IpcSession(args.kicad_cli, api_socket=s.socket, timeout=300000) as api:
             Path.write_text = original
+            project = s.project_dir   # the session runs on its own copy: that is what KiCad saves
             embed = api.module("backplane.embed")
             editor = api.module("common.commands.editor_commands")
             base = api.module("common.types.base_types")
@@ -177,6 +224,24 @@ def run_mode(args, mode):
 
             result["override_only_at_start"] = place("Diode_THT", "OVERRIDE_ONLY")
             result["global_diode_at_start"] = place("Diode_THT", "D_DO-35_SOD27_P7.62mm_Horizontal")
+
+            # Update PCB from Schematic and Update Footprints from Library, right after start, applied
+            # from their dialogs, then saved
+            result["update_pcb_applied"] = apply_dialog(s, api, editor, "common.Control.updatePcbFromSchematic",
+                                                        "Update PCB from Schematic", 73, 177, f"{mode}-update-pcb")
+            result["update_fp_applied"] = apply_dialog(s, api, editor, "pcbnew.GlobalEdit.updateFootprints",
+                                                       "Update Footprints from Library", 60, 152,
+                                                       f"{mode}-update-footprints")
+            api.request_raw(projectcmd.SaveDocument(document=pcb_doc))
+            time.sleep(1)
+            board_file = project / "pic_programmer.kicad_pcb"
+            saved = board_file.read_text()
+            result["saved_after_updates_raw"] = hashlib.sha256(saved.encode()).hexdigest()
+            result["saved_after_updates"] = hashlib.sha256(
+                re.sub(r'\(uuid "[0-9a-fA-F-]+"\)', "(uuid U)", saved).encode()).hexdigest()
+            result["uuids_after_updates"] = len(re.findall(r'\(uuid "', saved))
+            shutil.copy(board_file, out / "after-updates.kicad_pcb")   # kept for a diff
+            result["r0603_on_board"] = board_file.read_text().count('(footprint "Resistor_SMD:R_0603_1608Metric"')
 
             # The choosers (and with them every full-load path): open, wait, close
             # The person's own way, as for the symbol chooser: click the canvas, then 'A'
@@ -286,6 +351,15 @@ def main():
     check(lazy["unused_library_placeable"] and full["unused_library_placeable"],
           "a footprint from a library the project does not use can be placed")
     check(lazy["saved"] == full["saved"], "saving right after the load writes the same bytes lazy and full")
+    check(all(r[k] for r in (lazy, full) for k in ("update_pcb_applied", "update_fp_applied")),
+          "Update PCB from Schematic and Update Footprints from Library applied and closed in both modes")
+    check(lazy["r0603_on_board"] >= 1 and lazy["r0603_on_board"] == full["r0603_on_board"],
+          f"the footprint from the unused library came in from the schematic ({lazy['r0603_on_board']} lazy, "
+          f"{full['r0603_on_board']} full)")
+    check(lazy["saved_after_updates"] == full["saved_after_updates"]
+          and lazy["uuids_after_updates"] == full["uuids_after_updates"],
+          f"after both updates the saved .kicad_pcb is identical lazy and full but for fresh KIIDs "
+          f"({lazy['saved_after_updates'][:16]}, {lazy['uuids_after_updates']} uuids)")
     check(lazy["drc"] == full["drc"], f"DRC with parity: the same findings ({len(lazy['drc'])})")
     check(lazy.get("erc") == full.get("erc"), f"ERC: the same findings ({len(lazy.get('erc') or [])})")
 

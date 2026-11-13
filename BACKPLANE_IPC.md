@@ -88,6 +88,13 @@ dialog's title; reads still work.
 
 Gate features on capability or command names, not on version numbers.
 
+Libraries in `kicad --embedded`: at start only the footprint and symbol libraries the project's
+saved files name are loaded; the rest load on first need (a chooser, browser or editor, an update
+from the libraries, ERC; reported as `ET_PROGRESS`), and a library asked for by name loads alone at
+once. Results are the same as with everything loaded; memory per open project is about 2 GB lower
+with the stock tables. `BACKPLANE_KICAD_FULL_LIBRARY_PRELOAD=1` in KiCad's environment restores the
+full preload at start (an escape hatch).
+
 ## Files
 
 - Native files use upstream master's format (newer than KiCad 10.0.x). Custom properties and
