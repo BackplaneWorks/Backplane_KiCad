@@ -578,7 +578,7 @@ std::optional<bool> BACKPLANE_EMBED::OnFrameShow( wxFrame* aFrame, FRAME_T aType
     {
         // KiCad asked for a hidden frame (Edit Symbol, the 3D viewer, the second Show() of the
         // library editors...).  The host decides whether and where it appears.
-        PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ) );
+        PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ), COEDIT::CurrentActor() );
         editorRequested( *e );
         return false;
     }
@@ -601,16 +601,17 @@ void BACKPLANE_EMBED::editorRequested( const FRAME_ENTRY& aEntry )
 
     pending->editorRequestPending = true;
     wxWeakRef<wxFrame> weak( aEntry.frame );
+    std::string        actor = COEDIT::CurrentActor();   // posted later, outside the request
 
     wxTheApp->CallAfter(
-            [this, weak]()
+            [this, weak, actor]()
             {
                 if( wxFrame* frame = weak.get() )
                 {
                     if( FRAME_ENTRY* e = entry( frame ) )
                     {
                         e->editorRequestPending = false;
-                        PushEvent( EMBED_EVENT_TYPE::EDITOR_REQUESTED, info( *e ) );
+                        PushEvent( EMBED_EVENT_TYPE::EDITOR_REQUESTED, info( *e ), actor );
                     }
                 }
             } );
@@ -641,7 +642,7 @@ bool BACKPLANE_EMBED::OnFrameRaise( wxFrame* aFrame, FRAME_T aType, bool aIsModa
 
     if( !aFrame->IsShown() && m_showAllowed == 0 && m_quietShowRequests == 0 && m_reloading == 0 )
     {
-        PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ) );
+        PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ), COEDIT::CurrentActor() );
         editorRequested( *e );
     }
     else if( aFrame->IsShown() && m_showAllowed == 0 && m_quietShowRequests == 0 && m_reloading == 0 )

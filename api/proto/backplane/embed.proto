@@ -157,7 +157,9 @@ enum EventType
   ET_FOCUS_IN         = 7;  // a frame took the keyboard (for example after a click)
   ET_FOCUS_OUT        = 8;
   ET_SHOW_REQUESTED   = 9;  // KiCad itself asked to show a hidden frame (Edit Symbol, 3D, ...);
-                            // the host decides, with ShowFrame
+                            // the host decides, with ShowFrame.  detail = the API client whose
+                            // request caused it (an agent's or the host's own RunAction, ...),
+                            // empty when the person or KiCad on its own asked (bp.13)
   ET_DIALOG_OPENED    = 10; // a dialog (or modal frame) was mapped; detail = its title
   ET_DIALOG_CLOSED    = 11;
   ET_DETACHED         = 12; // the parent window went away, or the host moved the holder to the
@@ -194,6 +196,8 @@ enum EventType
                              // Event.frame is that frame, lib_id filled, already loaded with the
                              // item; the host shows it as a tab (ShowFrame).  Posted with the
                              // ET_SHOW_REQUESTED a hidden frame also gets (bp.13)
+                             // detail = the API client whose request caused it, as for
+                             // ET_SHOW_REQUESTED; empty for the person
   ET_MARKER_CLICKED    = 26; // the person clicked a marker in the canvas: a host marker
                              // (Event.marker) or one of KiCad's DRC/ERC markers (Event.marker
                              // empty, Event.drc_marker set), so the host selects its row (bp.13)
