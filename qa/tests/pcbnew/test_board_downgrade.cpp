@@ -4692,7 +4692,10 @@ BOOST_AUTO_TEST_CASE( NewDrcConstraintsAndFunctionsAreFilteredWithoutLiteralFals
                                 : "(rule \"new\" (constraint assertion \"" + call + "\"))";
                 const auto result = FilterDrcRulesForTarget( wxT( "(version 1)" ) + rule, target );
                 BOOST_CHECK( result.m_error.IsEmpty() );
-                BOOST_CHECK_EQUAL( result.m_dropped.size(), 1 );
+
+                // intersectsArea is in 10.0 and, since 10.0.7, means the same there; 9.0 differs
+                const bool sameMeaning = call.Contains( wxT( "intersectsArea" ) ) && target.m_id == wxT( "10.0" );
+                BOOST_CHECK_EQUAL( result.m_dropped.size(), sameMeaning ? 0 : 1 );
             }
         }
 
@@ -4711,6 +4714,33 @@ BOOST_AUTO_TEST_CASE( NewDrcConstraintsAndFunctionsAreFilteredWithoutLiteralFals
         BOOST_CHECK( result.m_dropped.empty() );
         BOOST_CHECK( result.m_text.Contains( kept ) );
     }
+}
+
+
+BOOST_AUTO_TEST_CASE( HubbleFanoutRuleKeptForTenAndExplainedForNine )
+{
+    // The person's own board: a plain rule area and a rule on it
+    const wxString rules = wxT( "(version 1)\n"
+                                "(rule \"U1 fanout area\"\n"
+                                "  (condition \"A.intersectsArea('U1 fanout')\")\n"
+                                "  (constraint track_width (min 0.0762mm))\n"
+                                "  (constraint clearance (min 0.0762mm)))\n" );
+
+    const auto ten = FilterDrcRulesForTarget( rules, kicad10 );
+    BOOST_CHECK( ten.m_error.IsEmpty() );
+    BOOST_CHECK( ten.m_dropped.empty() );
+    BOOST_CHECK( ten.m_text.Contains( wxT( "(rule \"U1 fanout area\"" ) ) );
+
+    // Dropped for 9.0, with what 9.0 lacks and what its DRC will no longer check
+    const auto nine = FilterDrcRulesForTarget( rules, kicad9 );
+    BOOST_REQUIRE_EQUAL( nine.m_dropped.size(), 1 );
+    BOOST_CHECK_EQUAL( nine.m_dropped[0], wxString( "U1 fanout area" ) );
+    BOOST_REQUIRE_EQUAL( nine.m_droppedWhy.size(), 1 );
+    BOOST_CHECK( nine.m_droppedWhy[0].Contains( wxT( "intersectsarea()" ) ) );
+    BOOST_CHECK( nine.m_droppedWhy[0].Contains( wxT( "differently" ) ) );
+    BOOST_REQUIRE_EQUAL( nine.m_droppedChecks.size(), 1 );
+    BOOST_CHECK_EQUAL( nine.m_droppedChecks[0],
+                       wxString( "track_width, clearance where A.intersectsArea('U1 fanout')" ) );
 }
 
 

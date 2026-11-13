@@ -21,6 +21,7 @@
 
 #include <filesystem>
 #include <map>
+#include <set>
 #include <system_error>
 #include <utility>
 
@@ -31,6 +32,7 @@
 #include <wx/filefn.h>
 #include <wx/filename.h>
 #include <wx/log.h>
+#include <wx/regex.h>
 
 #include <downgrade_scan.h>
 #include <downgrade_target.h>
@@ -120,8 +122,148 @@ static bool quoteLegacyLibraryTableValue( const std::string& aValue, bool aPreTe
 }
 
 
+namespace
+{
+/**
+ * Which files under the project folder are this project's: its own board, the sheets of its
+ * hierarchy, its own project, local settings and rules.  Other boards and sheets (a build output,
+ * build/layout/try.kicad_pcb) and whole folders holding another project (a backup copy,
+ * backups/layout-2026-10-21/) are not: an export leaves them out and lists them.  Libraries,
+ * tables and other files stay as before.
+ */
+class PROJECT_FILE_SCOPE
+{
+public:
+    PROJECT_FILE_SCOPE( const wxString& aProjectDir, const wxString& aProjectName ) :
+            m_dir( normal( aProjectDir ) )
+    {
+        m_board = normal( wxFileName( aProjectDir, aProjectName, FILEEXT::KiCadPcbFileExtension ).GetFullPath() );
+        m_project = wxFileName( aProjectDir, aProjectName, FILEEXT::ProjectFileExtension ).GetFullPath();
+
+        for( const wxString& ext : { wxString( FILEEXT::ProjectFileExtension ),
+                                     wxString( FILEEXT::ProjectLocalSettingsFileExtension ),
+                                     wxString( FILEEXT::DesignRulesFileExtension ) } )
+        {
+            m_own.insert( normal( wxFileName( aProjectDir, aProjectName, ext ).GetFullPath() ) );
+        }
+
+        addSheets( wxFileName( aProjectDir, aProjectName, FILEEXT::KiCadSchematicFileExtension ).GetFullPath() );
+
+        wxArrayString projects;
+        wxDir::GetAllFiles( aProjectDir, &projects, wxString( wxS( "*." ) ) + wxString( FILEEXT::ProjectFileExtension ) );
+
+        for( const wxString& other : projects )
+        {
+            wxString dir = normal( wxFileName( other ).GetPath() );
+
+            if( dir != m_dir )
+                m_otherProjectDirs.push_back( dir + wxFileName::GetPathSeparator() );
+        }
+    }
+
+    /// Not this project's: left out of an export.
+    bool Stray( const wxString& aPath ) const
+    {
+        wxString path = normal( aPath );
+
+        for( const wxString& other : m_otherProjectDirs )
+        {
+            if( path.StartsWith( other ) )
+                return true;
+        }
+
+        wxString ext = wxFileName( aPath ).GetExt().Lower();
+
+        if( ext == FILEEXT::KiCadPcbFileExtension )
+            return path != m_board;
+
+        if( ext == FILEEXT::KiCadSchematicFileExtension )
+            return !m_sheets.count( path );
+
+        if( ext == FILEEXT::ProjectFileExtension || ext == FILEEXT::ProjectLocalSettingsFileExtension
+            || ext == FILEEXT::DesignRulesFileExtension )
+        {
+            return !m_own.count( path );
+        }
+
+        return false;
+    }
+
+private:
+    static wxString normal( const wxString& aPath )
+    {
+        wxFileName fn( aPath );
+        fn.Normalize( wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE | wxPATH_NORM_TILDE );
+        return fn.GetFullPath();
+    }
+
+    /// The sheet files a schematic names (KiCad 6 and later: (property "Sheetfile" "..."))
+    void addSheets( const wxString& aSheet )
+    {
+        wxString path = normal( aSheet );
+
+        if( m_sheets.count( path ) || !wxFileName::FileExists( path ) )
+            return;
+
+        m_sheets.insert( path );
+
+        wxFFile  in( path, wxT( "rb" ) );
+        wxString text;
+
+        if( !in.IsOpened() || !in.ReadAll( &text ) )
+            return;
+
+        wxRegEx sheetFile( wxS( "\\(property[ \t\r\n]+\"Sheet ?[Ff]ile\"[ \t\r\n]+\"([^\"]+)\"" ), wxRE_ADVANCED );
+        wxString rest = text;
+
+        while( sheetFile.Matches( rest ) )
+        {
+            size_t start = 0;
+            size_t len = 0;
+            sheetFile.GetMatch( &start, &len, 0 );
+            wxFileName child( sheetFile.GetMatch( rest, 1 ) );
+
+            if( !child.IsAbsolute() )
+                child.MakeAbsolute( wxFileName( path ).GetPath() );
+
+            addSheets( child.GetFullPath() );
+            rest = rest.Mid( start + len );
+        }
+    }
+
+    wxString              m_dir;
+    wxString              m_board;
+    wxString              m_project;
+    std::set<wxString>    m_own;
+    std::set<wxString>    m_sheets;
+    std::vector<wxString> m_otherProjectDirs;
+};
+} // namespace
+
+
+static void addStrayReport( const wxString& aProjectDir, const PROJECT_FILE_SCOPE& aScope,
+                            COMPATIBILITY_REPORT& aReport )
+{
+    wxArrayString files;
+    wxDir::GetAllFiles( aProjectDir, &files );
+
+    for( const wxString& file : files )
+    {
+        if( IsDowngradeWorkingArtifact( file ) || !IsDowngradeDesignFile( file ) || !aScope.Stray( file ) )
+            continue;
+
+        wxFileName relative( file );
+        relative.MakeRelativeTo( aProjectDir );
+        aReport.Add( DOWNGRADE_BUCKET::SKIP, relative.GetFullPath(),
+                     _( "Not this project's board, sheet or settings (a build output, backup or other "
+                        "project): left out of the export." ) );
+    }
+}
+
+
 static bool legacyLibraryTables( const wxString& aDir, const DOWNGRADE_TARGET& aTarget,
-                                 std::vector<std::pair<wxString, wxString>>& aTables, wxString& aError )
+                                 std::vector<std::pair<wxString, wxString>>& aTables, wxString& aError,
+                                 const PROJECT_FILE_SCOPE* aScope = nullptr )
 {
     wxArrayString files;
     wxDir::GetAllFiles( aDir, &files );
@@ -130,7 +272,7 @@ static bool legacyLibraryTables( const wxString& aDir, const DOWNGRADE_TARGET& a
     {
         wxFileName filename( path );
 
-        if( IsDowngradeWorkingArtifact( path )
+        if( IsDowngradeWorkingArtifact( path ) || ( aScope && aScope->Stray( path ) )
             || ( filename.GetFullName() != wxT( "sym-lib-table" ) && filename.GetFullName() != wxT( "fp-lib-table" ) ) )
         {
             continue;
@@ -306,14 +448,27 @@ static wxString firstTooNewFile( const wxString& aDir, const DOWNGRADE_TARGET& a
 }
 
 
-static void addBackplaneCompanionReport( const wxString& aProjectDir, COMPATIBILITY_REPORT& aReport )
+/// The design file a Backplane companion belongs to (x.kicad_pcb for x.kicad_pcb.backplane.json).
+static wxString companionBase( const wxString& aCompanion )
+{
+    wxString base = aCompanion;
+
+    if( !base.EndsWith( wxT( ".backplane.json" ), &base ) )
+        base.EndsWith( wxT( ".backplane-assembly.json" ), &base );
+
+    return base;
+}
+
+
+static void addBackplaneCompanionReport( const wxString& aProjectDir, COMPATIBILITY_REPORT& aReport,
+                                         const PROJECT_FILE_SCOPE* aScope = nullptr )
 {
     wxArrayString companions;
     wxDir::GetAllFiles( aProjectDir, &companions );
 
     for( const wxString& companion : companions )
     {
-        if( !IsBackplaneCompanionFile( companion ) )
+        if( !IsBackplaneCompanionFile( companion ) || ( aScope && aScope->Stray( companionBase( companion ) ) ) )
             continue;
 
         wxFileName relative( companion );
@@ -379,7 +534,10 @@ bool ClassifyProjectForDowngrade( KIWAY& aKiway, const wxString& aProjectDir, co
         return false;
     }
 
-    addBackplaneCompanionReport( aProjectDir, aReport );
+    // Boards, sheets and projects in the folder that are not this project's are left out, listed
+    const PROJECT_FILE_SCOPE scope( aProjectDir, aProjectName );
+    addStrayReport( aProjectDir, scope, aReport );
+    addBackplaneCompanionReport( aProjectDir, aReport, &scope );
 
     const DOWNGRADE_TARGET* target = FindDowngradeTarget( aTargetName );
     wxFileName              proFn( aProjectDir, aProjectName, FILEEXT::ProjectFileExtension );
@@ -455,7 +613,7 @@ bool ClassifyProjectForDowngrade( KIWAY& aKiway, const wxString& aProjectDir, co
         std::vector<std::pair<wxString, wxString>> tables;
         wxString                                   tableError;
 
-        if( !legacyLibraryTables( aProjectDir, *target, tables, tableError ) )
+        if( !legacyLibraryTables( aProjectDir, *target, tables, tableError, &scope ) )
             aReport.Add( DOWNGRADE_BUCKET::BLOCK, _( "Project library tables" ), tableError );
     }
 
@@ -471,13 +629,21 @@ bool ClassifyProjectForDowngrade( KIWAY& aKiway, const wxString& aProjectDir, co
             if( !filtered.m_error.IsEmpty() )
                 aReport.Add( DOWNGRADE_BUCKET::BLOCK, _( "Invalid custom DRC rules" ), filtered.m_error );
 
-            for( const wxString& name : filtered.m_dropped )
+            for( size_t ii = 0; ii < filtered.m_dropped.size(); ++ii )
             {
-                wxString shown = name.IsEmpty() ? _( "unnamed" ) : name;
+                const wxString& name = filtered.m_dropped[ii];
+                wxString        shown = name.IsEmpty() ? _( "unnamed" ) : name;
+                wxString        why = ii < filtered.m_droppedWhy.size() ? filtered.m_droppedWhy[ii] : wxString();
+                wxString        checks = ii < filtered.m_droppedChecks.size() ? filtered.m_droppedChecks[ii]
+                                                                               : wxString();
 
+                // Name the rule, say why, and what stock's DRC will no longer check
                 aReport.Add( DOWNGRADE_BUCKET::DROP, wxString::Format( _( "Custom DRC rule '%s'" ), shown ),
-                             _( "The target cannot evaluate it with the same meaning. The rule is kept as a "
-                                "comment." ),
+                             wxString::Format( _( "%s cannot evaluate it with the same meaning (it uses %s). "
+                                                  "Its DRC there will no longer check %s. The rule is kept as a "
+                                                  "comment." ),
+                                               target->m_name, why.IsEmpty() ? _( "a construct it lacks" ) : why,
+                                               checks.IsEmpty() ? _( "what the rule checks" ) : checks ),
                              1 );
             }
         }
@@ -502,7 +668,9 @@ bool ExportProjectForDowngrade( KIWAY& aKiway, const wxString& aProjectDir, cons
 
     std::vector<std::pair<wxString, wxString>> tables;
 
-    if( !legacyLibraryTables( aProjectDir, *target, tables, aError ) )
+    const PROJECT_FILE_SCOPE scope( aProjectDir, aProjectName );
+
+    if( !legacyLibraryTables( aProjectDir, *target, tables, aError, &scope ) )
         return false;
 
     std::error_code       ec;
@@ -579,7 +747,7 @@ bool ExportProjectForDowngrade( KIWAY& aKiway, const wxString& aProjectDir, cons
 
         for( const wxString& file : files )
         {
-            if( IsDowngradeWorkingArtifact( file ) || !IsDowngradeDesignFile( file ) )
+            if( IsDowngradeWorkingArtifact( file ) || !IsDowngradeDesignFile( file ) || scope.Stray( file ) )
                 continue;
 
             wxFileName rel( file );
@@ -697,7 +865,7 @@ bool ExportProjectForDowngrade( KIWAY& aKiway, const wxString& aProjectDir, cons
 
         for( const wxString& source : companions )
         {
-            if( !IsBackplaneCompanionFile( source ) )
+            if( !IsBackplaneCompanionFile( source ) || scope.Stray( companionBase( source ) ) )
                 continue;
 
             wxString destination = backplaneCompanionOutputPath( source, aProjectDir, aDestDir,

@@ -398,16 +398,65 @@ class TestDropApproximations(unittest.TestCase):
                 preview = json.loads(report_path.read_text())
                 rule_drops = [entry for entry in preview["entries"]
                               if entry["category"] == "drop" and entry["feature"].startswith("Custom DRC rule '")]
-                self.assertEqual(sum(entry["count"] for entry in rule_drops), 7)
+                # "Area outlines" (intersectsArea) means the same in 10.0 since 10.0.7; only 9.0 drops it
+                dropped = 7 if target == "9.0" else 6
+                self.assertEqual(sum(entry["count"] for entry in rule_drops), dropped)
                 self.require_success(self.cli("project", "downgrade", project, "--target", target,
                                               "--force", "--report-json", report_path, "--output", output))
                 self.assertEqual(json.loads(report_path.read_text()), preview)
                 converted = (output / rules.name).read_text()
                 self.assertIn('\n(rule "Keep literal"', converted)
                 self.assertIn('\n(rule "Keep coordinates"', converted)
-                self.assertEqual(converted.count("\n(rule "), 2)
-                self.assertEqual(converted.count("# (rule "), 7)
+                self.assertEqual(converted.count("\n(rule "), 2 + 7 - dropped)
+                self.assertEqual(converted.count("# (rule "), dropped)
                 self.assertEqual(rules.read_bytes(), original)
+
+    def test_stray_boards_and_backups_are_left_out_and_listed(self):
+        # Hubble_DK's shape: a rule on a named area, a build output board and a backup project
+        project = self.source / "body_styles.kicad_pro"
+        rules = self.source / "body_styles.kicad_dru"
+        rules.write_text("""(version 1)
+(rule "U1 fanout area"
+  (condition "A.intersectsArea('U1 fanout')")
+  (constraint track_width (min 0.0762mm))
+  (constraint clearance (min 0.0762mm)))
+""", encoding="utf-8")
+        build = self.source / "build" / "layout"
+        build.mkdir(parents=True)
+        shutil.copyfile(self.source / "body_styles.kicad_pcb", build / "try.kicad_pcb")
+        backup = self.source / "backups" / "layout-2026-10-21"
+        backup.mkdir(parents=True)
+        for name in ("body_styles.kicad_pro", "body_styles.kicad_sch", "body_styles.kicad_pcb"):
+            shutil.copyfile(self.source / name, backup / name)
+
+        report_path = self.root / "stray.json"
+        output = self.root / "stray-out"
+        # No --force: nothing here needs consent for 10.0
+        result = self.cli("project", "downgrade", project, "--target", "10.0", "--output", output,
+                          "--report-json", report_path)
+        self.require_success(result)
+        report = json.loads(report_path.read_text())
+        skipped = sorted(entry["feature"] for entry in report["entries"] if entry["category"] == "skip")
+        self.assertEqual(skipped, sorted([
+            os.path.join("backups", "layout-2026-10-21", "body_styles.kicad_pcb"),
+            os.path.join("backups", "layout-2026-10-21", "body_styles.kicad_pro"),
+            os.path.join("backups", "layout-2026-10-21", "body_styles.kicad_sch"),
+            os.path.join("build", "layout", "try.kicad_pcb"),
+        ]))
+        self.assertFalse(report["lossy"])
+        self.assertFalse((output / "build").exists())
+        self.assertFalse((output / "backups").exists())
+        self.assertIn('\n(rule "U1 fanout area"', (output / rules.name).read_text())
+
+        # For 9.0 the rule goes, named, with why and what 9.0's DRC no longer checks
+        result = self.cli("project", "downgrade", project, "--target", "9.0", "--dry-run",
+                          "--report-json", report_path)
+        self.require_success(result)
+        drops = [entry for entry in json.loads(report_path.read_text())["entries"]
+                 if entry["category"] == "drop" and entry["feature"] == "Custom DRC rule 'U1 fanout area'"]
+        self.assertEqual(len(drops), 1)
+        self.assertIn("intersectsarea()", drops[0]["detail"])
+        self.assertIn("track_width, clearance where A.intersectsArea('U1 fanout')", drops[0]["detail"])
 
     def test_post_target_drc_properties_require_consent_in_both_expressions(self):
         project = self.source / "body_styles.kicad_pro"
@@ -824,9 +873,12 @@ class TestDropApproximations(unittest.TestCase):
         return project
 
     def test_failed_export_keeps_a_destination_the_user_already_had(self):
-        # A stray board the export never converts makes the final backstop refuse, after the
-        # copy has already put files in the destination.
-        shutil.copyfile(GOLDEN / "current/geometry.kicad_pcb", self.source / "stray.kicad_pcb")
+        # A design file the export copies but cannot bring down (a symbol library stamped by a
+        # far newer KiCad) makes the final backstop refuse, after the copy has already put files
+        # in the destination.  (A stray board would not do: it is not this project's, so it is
+        # left out of the export now.)
+        (self.source / "stray.kicad_sym").write_text(
+            "(kicad_symbol_lib (version 29991231) (generator \"future\"))\n", encoding="utf-8")
         original = self.source_snapshot()
         project = self.source / "body_styles.kicad_pro"
 
