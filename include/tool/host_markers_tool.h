@@ -48,6 +48,9 @@ public:
     void Changed();
 
 private:
+    /// No events of its own: it only keeps the markers in the view
+    void setTransitions() override {}
+
     std::unique_ptr<HOST_MARKERS_ITEM> m_item;
 };
 
