@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <common.h>
 #include <numeric>
 #include <board.h>
@@ -437,7 +438,18 @@ bool DRC_TEST_PROVIDER_MATCHED_LENGTH::runInternal( bool aDelayReportMode )
             ent.fromItem = nullptr;
             ent.toItem = nullptr;
 
-            for( BOARD_CONNECTED_ITEM* item : netItems )
+            // netItems is ordered by address; the length optimisations (merging tracks, trimming
+            // traces inside pads) depend on the order they get the items in, so give them a
+            // fixed one.
+            std::vector<BOARD_CONNECTED_ITEM*> orderedItems( netItems.begin(), netItems.end() );
+
+            std::sort( orderedItems.begin(), orderedItems.end(),
+                       []( const BOARD_CONNECTED_ITEM* a, const BOARD_CONNECTED_ITEM* b )
+                       {
+                           return a->m_Uuid < b->m_Uuid;
+                       } );
+
+            for( BOARD_CONNECTED_ITEM* item : orderedItems )
             {
                 LENGTH_DELAY_CALCULATION_ITEM lengthItem = calc->GetLengthCalculationItem( item );
 
