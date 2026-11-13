@@ -37,7 +37,7 @@ cmake -S . -B $build -G Ninja `
     -DCMAKE_BUILD_TYPE=Release "-DCMAKE_INSTALL_PREFIX=$stage" `
     -DKICAD_BUILD_QA_TESTS=OFF -DKICAD_BUILD_I18N=OFF -DKICAD_INSTALL_DEMOS=OFF `
     -DKICAD_SCRIPTING_WXPYTHON=OFF -DKICAD_USE_OCC=ON -DKICAD_USE_API=ON `
-    -DKICAD_USE_SENTRY=OFF -DKICAD_USE_PCH=OFF -DKICAD_WIN32_INSTALL_PDBS=OFF `
+    -DKICAD_USE_SENTRY=OFF -DKICAD_USE_PCH=OFF -DKICAD_WIN32_INSTALL_PDBS=ON `
     "-DKICAD_VERSION_EXTRA=$versionExtra" "-DBACKPLANE_FORK_VERSION=$version" `
     "-DBACKPLANE_UPSTREAM_COMMIT=$upstream"
 $extra = Select-String -LiteralPath (Join-Path $build 'CMakeCache.txt') -Pattern '^KICAD_VERSION_EXTRA:STRING=(.*)$'
@@ -50,6 +50,17 @@ $env:PATH = (Join-Path $installed 'tools\protobuf') + ';' + $env:PATH
 python scripts/backplane-ipc-smoke.py --check-bindings
 cmake --build $build --parallel 4
 cmake --install $build
+# The PDBs (KICAD_WIN32_INSTALL_PDBS) go into their own symbols archive, never into the runtime,
+# so a stall stack from the release build can be resolved
+$symbols = Join-Path $source 'release\symbols'
+New-Item -ItemType Directory -Force $symbols | Out-Null
+$stageRoot = (Resolve-Path $stage).Path
+Get-ChildItem $stageRoot -Recurse -File -Filter '*.pdb' | ForEach-Object {
+    $destination = Join-Path $symbols $_.FullName.Substring($stageRoot.Length + 1)
+    New-Item -ItemType Directory -Force (Split-Path $destination) | Out-Null
+    Move-Item $_.FullName $destination
+}
+if (!(Get-ChildItem $symbols -Recurse -Filter 'kicad.pdb')) { Write-Warning 'WINDOWS_SYMBOLS_MISSING: kicad.pdb is not in the symbols archive' }
 $installed = Join-Path $build 'vcpkg_installed\x64-windows'
 $bin = Join-Path $stage 'bin'
 # vcpkg's app-local copies are in the build tree; the relocated runtime needs
@@ -103,10 +114,14 @@ $env:PATH = (Join-Path $installed 'tools\protobuf') + ';' + (Join-Path $runtime 
 $cli = Join-Path $runtime 'bin\kicad-cli.exe'
 & $cli api-server --describe
 python scripts/backplane-ipc-smoke.py $cli --expected-version $version
+if (Get-ChildItem $runtime -Recurse -Filter '*.pdb') { throw 'a PDB is in the runtime' }
 Compress-Archive -Path $runtime -DestinationPath (Join-Path $release "$archive.zip")
+Compress-Archive -Path (Join-Path $symbols '*') -DestinationPath (Join-Path $release "$archive-pdb.zip")
 git archive --format=tar.gz "--prefix=$archive-source/" "--output=$release/$archive-source.tar.gz" HEAD
-Get-ChildItem $release -File | Where-Object { $_.Name -ne 'SHA256SUMS' } | ForEach-Object {
+# LF only (Set-Content writes CRLF on Windows, which broke a lookup by name)
+$sums = Get-ChildItem $release -File | Where-Object { $_.Name -ne 'SHA256SUMS' } | ForEach-Object {
     $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
     "$hash  $($_.Name)"
-} | Set-Content (Join-Path $release 'SHA256SUMS') -Encoding utf8NoBOM
+}
+[IO.File]::WriteAllText((Join-Path $release 'SHA256SUMS'), (($sums -join "`n") + "`n"))
 Write-Output 'WINDOWS_KICAD_NATIVE_BUILD_RELOCATED_IPC_AND_EXPORT_PASS'
