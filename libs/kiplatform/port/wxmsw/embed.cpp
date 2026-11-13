@@ -531,9 +531,11 @@ void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked 
     {
         HWND before = GetFocus();
         HWND result = SetFocus( clicked );
-        trace( "TakeFocusForClick %s in %s: focus was %s, SetFocus -> %s (error %lu), capture %s",
+        // SetFocus answers the window that had the focus before; GetFocus after says where it went
+        trace( "TakeFocusForClick %s in %s: focus was %s, SetFocus returned %s (error %lu), focus now %s, "
+               "capture %s",
                describe( clicked ).c_str(), describe( frame ).c_str(), describe( before ).c_str(),
-               describe( result ).c_str(), result ? 0 : GetLastError(),
+               describe( result ).c_str(), result ? 0 : GetLastError(), describe( GetFocus() ).c_str(),
                describe( GetCapture() ).c_str() );
         return;
     }
@@ -555,9 +557,14 @@ bool KIPLATFORM::EMBED::ReleaseStrayCapture( wxWindow* aFrame )
     // their own); held, every later click goes to it instead of the canvas
     if( GetCapture() == frame && !buttonDown )
     {
-        ReleaseCapture();
-        trace( "released a stray capture held by the frame %s (capture now %s)",
-               describe( frame ).c_str(), describe( GetCapture() ).c_str() );
+        wxWindow* wxHolder = wxWindow::GetCapture();
+        BOOL      released = ReleaseCapture();
+        DWORD     error = released ? 0 : GetLastError();
+        trace( "released a stray capture held by the frame %s: ReleaseCapture %s (error %lu), capture now "
+               "%s; wx's capture was %s",
+               describe( frame ).c_str(), released ? "ok" : "failed", error,
+               describe( GetCapture() ).c_str(),
+               wxHolder ? describe( static_cast<HWND>( wxHolder->GetHWND() ) ).c_str() : "none" );
         return true;
     }
 
