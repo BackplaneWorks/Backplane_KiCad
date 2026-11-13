@@ -345,11 +345,13 @@ public:
     bool SetReservedKeys( const std::vector<std::string>& aChords, wxString* aError );
     std::vector<std::string> ReservedKeys() const;
 
-    /// The KEY_ATOM index that means "the comment key" (';'), whatever the host reserved.
-    static constexpr long COMMENT_KEY_INDEX = 6;
+    /// The KEY_ATOM index that means "the comment key" (';'): out of band (a host reserves far
+    /// fewer chords), so it never names one of the host's reserved chords, however many it sets.
+    /// The X11 message also carries keysym 0x3b; on Windows the index is WM_APP's wParam.
+    static constexpr long COMMENT_KEY_INDEX = 63;
 
     /// Embedded aFrame: hand the editor's comment key to the host as a KEY_ATOM message with
-    /// COMMENT_KEY_INDEX (capability comment-key-handoff), so the host opens its own comment
+    /// COMMENT_KEY_INDEX (capability comment-key-63), so the host opens its own comment
     /// window.  False, and nothing sent, when aFrame is not embedded.
     bool SendCommentKey( const wxFrame* aFrame );
 

@@ -6,8 +6,8 @@ in the PCB and schematic editors.
 - Alignment: the actions over IPC (RunAction) and the hotkeys themselves (xdotool Alt+V/Alt+H),
   coordinates read back from the items' boxes; the anchor is the first item selected; the
   schematic stays on its grid.
-- Comments (bp.13 comment-key-handoff): embedded, the context-menu item and ';' open no dialog
-  and hand the comment key to the host (_BACKPLANE_KEY index 6); ';' typed in a text field (the
+- Comments (bp.13 comment-key-63): embedded, the context-menu item and ';' open no dialog
+  and hand the comment key to the host (_BACKPLANE_KEY index 63); ';' typed in a text field (the
   search box) stays there; CommentSelection pushes ET_COMMENT with the references, nets, boxes and
   a non-blank PNG; an empty selection comments on the area in view.
 
@@ -213,7 +213,7 @@ def main():
             time.sleep(0.5)
 
         # ---------------- 2. Comment to Backplane ----------------
-        # bp.13 comment-key-handoff: embedded, the comment action hands the key to the host
+        # bp.13 comment-key-63: embedded, the comment action hands the key to the host
         key_atom = disp.intern_atom("_BACKPLANE_KEY")
 
         def comment_key(seconds=8.0):
@@ -251,8 +251,8 @@ def main():
             data = comment_key()
             time.sleep(1.0)
             frame_window = frames()[kind].window
-            check(data is not None and list(data[:5]) == [frame_window, 0x3b, 0, 6, 1],
-                  f"{label}: the menu item hands the comment key to the host (_BACKPLANE_KEY index 6: {data})")
+            check(data is not None and list(data[:5]) == [frame_window, 0x3b, 0, 63, 1],
+                  f"{label}: the menu item hands the comment key to the host (_BACKPLANE_KEY index 63: {data})")
             check(not (set(s.watcher.current()) - before_windows - {top})
                   and not any(e.type == embed.ET_COMMENT for e in events()),
                   f"{label}: embedded, it opens no dialog and posts no ET_COMMENT")
@@ -322,7 +322,7 @@ def main():
                 s.xdotool("key", "semicolon")
                 data = comment_key()
                 time.sleep(1.0)
-                check(data is not None and data[1] == 0x3b and data[3] == 6
+                check(data is not None and data[1] == 0x3b and data[3] == 63
                       and not (set(s.watcher.current()) - before_windows - {top})
                       and not any(e.type == embed.ET_COMMENT for e in events()),
                       f"{label}: ';' hands the comment key to the host, no dialog ({data})")

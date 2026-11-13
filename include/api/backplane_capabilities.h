@@ -40,7 +40,7 @@ inline constexpr std::array<const char*, 20> CAPABILITIES = {
     "coedit",          // docs/backplane/coedit.md: live co-editing, per-actor undo, deferral
     "rules-merge",     // project settings and custom rules merge, never overwrite
     "routing-plan",    // docs/backplane/floorplanner.md: kiapi.backplane.plan
-    "comment-key-handoff", // embedded: the comment action sends KEY_ATOM index 6; text fields keep ';'
+    "comment-key-63",  // embedded: the comment action sends KEY_ATOM index 63; text fields keep ';'
     "drc-zone-guard",  // DRC checks a zone against its outline when its fill triangulation is bad
     "rules-insert-position", // EditCustomRules.insert: new rules first, last or before a named rule
 };
