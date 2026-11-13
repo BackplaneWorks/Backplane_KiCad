@@ -6,9 +6,10 @@ in the PCB and schematic editors.
 - Alignment: the actions over IPC (RunAction) and the hotkeys themselves (xdotool Alt+V/Alt+H),
   coordinates read back from the items' boxes; the anchor is the first item selected; the
   schematic stays on its grid.
-- Comments: the context-menu item is there and opens a dialog transient for the host; OK pushes
-  ET_COMMENT with the references, nets, boxes and a non-blank PNG; CommentSelection does the
-  same without the dialog; an empty selection comments on the area in view.
+- Comments (bp.13 comment-key-handoff): embedded, the context-menu item and ';' open no dialog
+  and hand the comment key to the host (_BACKPLANE_KEY index 6); ';' typed in a text field (the
+  search box) stays there; CommentSelection pushes ET_COMMENT with the references, nets, boxes and
+  a non-blank PNG; an empty selection comments on the area in view.
 
 Runs on a private Xvfb + i3 with a python-xlib stand-in host; saves screenshots to --out.
 """
@@ -212,6 +213,19 @@ def main():
             time.sleep(0.5)
 
         # ---------------- 2. Comment to Backplane ----------------
+        # bp.13 comment-key-handoff: embedded, the comment action hands the key to the host
+        key_atom = disp.intern_atom("_BACKPLANE_KEY")
+
+        def comment_key(seconds=8.0):
+            deadline = time.monotonic() + seconds
+            while time.monotonic() < deadline:
+                host.pump(0.05)
+                for index, (_, atom, data) in enumerate(host.messages):
+                    if atom == key_atom:
+                        del host.messages[index]
+                        return data
+            return None
+
         # The pin is of a part not selected itself: the PCB editor keeps only a footprint when it
         # and its own pad are selected (the schematic keeps both)
         for kind, refs_c, pin, label in ((embed.FK_PCB, ["U1", "C1"], "R1.1", "pcb"),
@@ -222,6 +236,8 @@ def main():
                         embed.SelectItemsResponse)
             time.sleep(0.8)
             events()
+            host.pump()
+            host.messages.clear()
             before_windows = set(s.watcher.current())
             # Right-click on the canvas keeps the selection; Up from a fresh GTK menu is its last item
             cx, cy = canvas_centre(kind)
@@ -232,34 +248,24 @@ def main():
             time.sleep(0.5)
             s.shot(f"{label}-11-comment-menu-item")
             s.xdotool("key", "Return")
-            appeared = wait_for(lambda: set(s.watcher.current()) - before_windows - {top}, 10)
+            data = comment_key()
             time.sleep(1.0)
-            dialogs = set(s.watcher.current()) - before_windows - {top}
-            names = []
-            for d in dialogs:
-                try:
-                    names.append(disp.create_resource_object("window", d).get_wm_name() or "")
-                except Exception:
-                    names.append("")
-            transient_ok = bool(dialogs) and all(
-                (disp.create_resource_object("window", d).get_wm_transient_for() or type("n", (), {"id": 0})).id == top
-                for d in dialogs)
-            check(appeared and any("Comment to Backplane" in str(n) for n in names),
-                  f"{label}: the context menu's last item opens 'Comment to Backplane' ({names})")
-            check(transient_ok, f"{label}: the comment dialog is transient for the host")
-            check(any(e.type == embed.ET_DIALOG_OPENED for e in events()), f"{label}: ET_DIALOG_OPENED for it")
+            frame_window = frames()[kind].window
+            check(data is not None and list(data[:5]) == [frame_window, 0x3b, 0, 6, 1],
+                  f"{label}: the menu item hands the comment key to the host (_BACKPLANE_KEY index 6: {data})")
+            check(not (set(s.watcher.current()) - before_windows - {top})
+                  and not any(e.type == embed.ET_COMMENT for e in events()),
+                  f"{label}: embedded, it opens no dialog and posts no ET_COMMENT")
+            # The host then takes the comment itself (CommentSelection): its content
             note = f"Check the {label} decoupling near {refs_c[0]}"
-            s.xdotool("type", "--delay", "20", note)
-            time.sleep(0.5)
-            s.shot(f"{label}-12-comment-dialog")
-            s.xdotool("key", "ctrl+Return")
+            api.request(embed.CommentSelection(kind=kind, note=note), embed.CommentSelectionResponse)
             got = wait_event(embed.ET_COMMENT, 10)
-            check(bool(got), f"{label}: OK pushes ET_COMMENT")
+            check(bool(got), f"{label}: CommentSelection pushes ET_COMMENT")
             if not got:
                 continue
             e = got[-1]
             c = e.comment
-            check(e.frame.kind == kind and c.note == note and e.detail == note and not c.from_api,
+            check(e.frame.kind == kind and c.note == note and e.detail == note and c.from_api,
                   f"{label}: the event carries the frame and the note ({e.frame.kind}, {c.note!r})")
             check(sorted(c.names.references) == sorted(refs_c) and list(e.selection.references) == list(c.names.references),
                   f"{label}: references {list(c.names.references)}")
@@ -288,17 +294,6 @@ def main():
             check(c.screenshot_region.x_min <= c.bbox.x_min and c.screenshot_region.x_max >= c.bbox.x_max,
                   f"{label}: the PNG's region contains the selection")
 
-            # Cancel: nothing is sent
-            before_windows = set(s.watcher.current())
-            s.xdotool("mousemove", str(cx), str(cy), "click", "3")
-            time.sleep(1.2)
-            s.xdotool("key", "Up")
-            s.xdotool("key", "Return")
-            wait_for(lambda: set(s.watcher.current()) - before_windows - {top}, 10)
-            time.sleep(0.8)
-            s.xdotool("key", "Escape")
-            time.sleep(1.0)
-            check(not any(e.type == embed.ET_COMMENT for e in events()), f"{label}: Cancel sends nothing")
 
             # Over IPC
             reply = api.request(embed.CommentSelection(kind=kind, note="from the API"),
@@ -319,16 +314,33 @@ def main():
                       and not any(e.type == embed.ET_COMMENT for e in events()),
                       f"{label}: CommentSelection capture_only returns the comment and pushes nothing")
 
-                # The hotkey: ';' opens the same comment dialog as the menu item
+                # The hotkey: ';' hands the comment key to the host, as the menu item does
+                host.pump()
+                host.messages.clear()
                 before_windows = set(s.watcher.current())
                 s.xdotool("mousemove", str(cx), str(cy))
                 s.xdotool("key", "semicolon")
-                opened = wait_for(lambda: set(s.watcher.current()) - before_windows - {top}, 10)
-                time.sleep(0.5)
-                s.xdotool("key", "Escape")
+                data = comment_key()
                 time.sleep(1.0)
-                check(bool(opened) and not any(e.type == embed.ET_COMMENT for e in events()),
-                      f"{label}: ';' opens the comment dialog (Escape sends nothing)")
+                check(data is not None and data[1] == 0x3b and data[3] == 6
+                      and not (set(s.watcher.current()) - before_windows - {top})
+                      and not any(e.type == embed.ET_COMMENT for e in events()),
+                      f"{label}: ';' hands the comment key to the host, no dialog ({data})")
+
+                # In a text field ';' is a character: the search box (Ctrl+G) keeps it
+                s.xdotool("key", "ctrl+g")
+                time.sleep(1.5)
+                host.pump()
+                host.messages.clear()
+                s.xdotool("type", "--delay", "40", "R1;")
+                time.sleep(1.0)
+                s.shot(f"{label}-15-semicolon-in-search")
+                data = comment_key(2.0)
+                check(data is None and not any(e.type == embed.ET_COMMENT for e in events()),
+                      f"{label}: ';' typed in the search box stays there, nothing to the host ({data})")
+                s.xdotool("key", "Escape")
+                s.xdotool("mousemove", str(cx), str(cy), "click", "1")
+                time.sleep(0.5)
 
             # Nothing selected: the area in view
             select(kind, [], zoom=False)   # SelectItems with nothing clears the selection
