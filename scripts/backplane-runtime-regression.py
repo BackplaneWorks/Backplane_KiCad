@@ -185,6 +185,15 @@ def check_downgrade_companions(cli, source, root, env):
                                encoding="utf-8")
     assembly = project / "test_project.backplane-assembly.json"
     assembly.write_text('{"format":"backplane-assembly","version":1}\n', encoding="utf-8")
+    # A project folder holds more than KiCad's files: a Python venv (a directory link, a link to
+    # an interpreter that is not there) and Backplane's own folder must not stop the downgrade.
+    venv = project / ".venv"
+    (venv / "lib").mkdir(parents=True)
+    (venv / "pyvenv.cfg").write_text("home = /nowhere\n", encoding="utf-8")
+    (venv / "lib64").symlink_to("lib")
+    (venv / "python").symlink_to("/nowhere/python3")
+    (project / ".backplane" / "worktrees").mkdir(parents=True)
+    (project / ".backplane" / "worktrees" / "loop").symlink_to("..")
     out = root / "companions" / "test_project-kicad10"
     report = root / "companions" / "report.json"
     result = subprocess.run([str(cli), "project", "downgrade", "--target", "10.0", "--force",
@@ -196,9 +205,11 @@ def check_downgrade_companions(cli, source, root, env):
     for companion in (board_companion, assembly):
         copied = out / companion.name
         assert copied.read_bytes() == companion.read_bytes(), f"{copied} missing or changed"
+    assert not (out / ".venv").exists() and not (out / ".backplane").exists(), "tool folders copied"
     text = report.read_text(encoding="utf-8")
     assert board_companion.name in text and assembly.name in text, text
-    print("PASS project downgrade: Backplane companions copied and reported", flush=True)
+    print("PASS project downgrade: Backplane companions copied and reported; .venv and "
+          ".backplane folders (with links) skipped", flush=True)
 
 
 def main():
