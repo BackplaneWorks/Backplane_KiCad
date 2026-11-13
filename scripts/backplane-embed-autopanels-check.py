@@ -152,15 +152,17 @@ def main():
         s.shot("05-pcb-1400-agents")
         wide = with_agents
 
-        # The person closes Properties: it stays closed through narrow and wide
+        # The person toggles Properties (off by default in a fresh profile, so this opens it; on
+        # where it was saved shown, it closes): their choice survives narrowing and widening
         api.request_raw(editor.RunAction(action="common.Control.showProperties"))
         time.sleep(1.0)
-        closed = canvas_width(disp, frame.window)
+        toggled = canvas_width(disp, frame.window)
         show(embed.FK_PCB, 700)
         show(embed.FK_PCB, 1400)
         after = canvas_width(disp, frame.window)
-        check(closed > wide + 40 and abs(after - closed) <= 24,
-              f"Properties closed by the person stays closed ({wide} -> {closed} -> {after} px)")
+        check(abs(toggled - wide) > 8 and abs(after - toggled) <= 24,
+              f"Properties as the person left it stays so through narrow and wide ({wide} -> {toggled} -> {after} px)")
+        s.shot("05b-pcb-1400-properties")
 
         # The person opens Appearance in a narrow pane: it stays open
         show(embed.FK_PCB, 700)
