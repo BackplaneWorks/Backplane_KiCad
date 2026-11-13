@@ -132,6 +132,11 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 reply.add_capabilities( "embed-frame-drawn" );   // ET_FRAME_DRAWN (bp.13)
                 // ET_EDITOR_REQUESTED, FrameInfo.lib_id (bp.13)
                 reply.add_capabilities( "embed-editor-requested" );
+#ifdef __WXGTK__
+                // A host-reserved chord pressed while a KiCad popup holds the keyboard closes
+                // the popup and reaches the host (X11; bp.13)
+                reply.add_capabilities( "embed-popup-keys" );
+#endif
             }
             else if( command == "kiapi.backplane.embed.OpenGerbers" )
             {

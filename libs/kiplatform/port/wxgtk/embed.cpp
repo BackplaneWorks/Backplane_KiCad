@@ -18,11 +18,13 @@
 #include <kiplatform/embed.h>
 
 #include <algorithm>
+#include <cctype>
 #include <string>
 #include <vector>
 #include <cstdio>
 #include <cstdlib>
 
+#include <wx/defs.h>
 #include <wx/window.h>
 
 #include <gtk/gtk.h>
@@ -275,6 +277,142 @@ bool KIPLATFORM::EMBED::Supported()
 }
 
 
+#ifdef GDK_WINDOWING_X11
+namespace
+{
+/// The key as wx reports it in a key event: its unshifted key (the keymap's level 0, so
+/// Ctrl+Shift+Tab is Tab with Shift) as a wx key code, and the modifiers.  False for a key no
+/// chord can name.
+bool wxKeyFor( const GdkEventKey& aKey, int& aCode, int& aModifiers )
+{
+    aModifiers = 0;
+
+    if( aKey.state & GDK_CONTROL_MASK )
+        aModifiers |= wxMOD_CONTROL;
+
+    if( aKey.state & GDK_SHIFT_MASK )
+        aModifiers |= wxMOD_SHIFT;
+
+    if( aKey.state & GDK_MOD1_MASK )
+        aModifiers |= wxMOD_ALT;
+
+    if( aKey.state & ( GDK_SUPER_MASK | GDK_META_MASK ) )
+        aModifiers |= wxMOD_META;
+
+    guint keyval = aKey.keyval;
+    GdkKeymap* keymap = gdk_keymap_get_for_display( gdk_window_get_display( aKey.window ) );
+
+    if( keymap )
+    {
+        gdk_keymap_translate_keyboard_state( keymap, aKey.hardware_keycode, (GdkModifierType) 0,
+                                             aKey.group, &keyval, nullptr, nullptr, nullptr );
+    }
+
+    switch( keyval )
+    {
+    case GDK_KEY_Tab:
+    case GDK_KEY_ISO_Left_Tab: aCode = WXK_TAB;    return true;
+    case GDK_KEY_Escape:       aCode = WXK_ESCAPE; return true;
+    case GDK_KEY_Return:       aCode = WXK_RETURN; return true;
+    default: break;
+    }
+
+    if( keyval >= GDK_KEY_F1 && keyval <= GDK_KEY_F12 )
+    {
+        aCode = WXK_F1 + static_cast<int>( keyval - GDK_KEY_F1 );
+        return true;
+    }
+
+    gunichar character = gdk_keyval_to_unicode( keyval );
+
+    if( character > 0x20 && character < 0x80 )
+    {
+        aCode = std::toupper( static_cast<int>( character ) );
+        return true;
+    }
+
+    return false;
+}
+
+
+/// Close the popup that holds the keyboard: a menu (with its parents, so no submenu is left
+/// open) is cancelled; any other popup gets an Escape.
+void closePopup( GdkEvent* aKeyEvent )
+{
+    GtkWidget* grab = gtk_grab_get_current();
+
+    if( grab && GTK_IS_MENU_SHELL( grab ) )
+    {
+        GtkWidget* outer = grab;
+
+        while( GtkWidget* parent = gtk_menu_shell_get_parent_shell( GTK_MENU_SHELL( outer ) ) )
+            outer = parent;
+
+        gtk_menu_shell_cancel( GTK_MENU_SHELL( outer ) );
+        return;
+    }
+
+    GdkEvent* escape = gdk_event_copy( aKeyEvent );
+    escape->key.keyval = GDK_KEY_Escape;
+    escape->key.state = 0;
+
+    GdkKeymapKey* keys = nullptr;
+    gint          count = 0;
+    GdkKeymap*    keymap = gdk_keymap_get_for_display( gdk_window_get_display( escape->key.window ) );
+
+    if( keymap && gdk_keymap_get_entries_for_keyval( keymap, GDK_KEY_Escape, &keys, &count ) && count > 0 )
+        escape->key.hardware_keycode = keys[0].keycode;
+
+    g_free( keys );
+    gtk_main_do_event( escape );
+    gdk_event_free( escape );
+}
+
+
+/// True while one of our popups holds the keyboard: GTK's current grab is a menu or sits in a
+/// popup window (a combo box's list), or the key is addressed to a popup window itself.  A
+/// menu's grab reports keys on the focused frame's window, so the grab is the test that counts.
+bool popupHasKeyboard( const GdkEventKey& aKey )
+{
+    if( GtkWidget* grab = gtk_grab_get_current() )
+    {
+        if( GTK_IS_MENU_SHELL( grab ) )
+            return true;
+
+        GtkWidget* top = gtk_widget_get_toplevel( grab );
+
+        if( GTK_IS_WINDOW( top ) && gtk_window_get_window_type( GTK_WINDOW( top ) ) == GTK_WINDOW_POPUP )
+            return true;
+    }
+
+    return aKey.window
+           && gdk_window_get_window_type( gdk_window_get_toplevel( aKey.window ) ) == GDK_WINDOW_TEMP;
+}
+
+
+/// A key snooper: GTK calls it for every key press before the grab widget (a popup menu) gets
+/// it.  A key bound for one of our popups is offered to the popupKey hook first, since the
+/// popup's grab keeps it from any frame and filter.  (Not gdk_event_handler_set: wxGTK's yield
+/// resets that handler to gtk_main_do_event every time it runs.)
+gint keySnooper( GtkWidget*, GdkEventKey* aKey, gpointer )
+{
+    if( aKey->type != GDK_KEY_PRESS || !s_hooks.popupKey || !popupHasKeyboard( *aKey ) )
+        return FALSE;
+
+    int code = 0;
+    int modifiers = 0;
+
+    if( !wxKeyFor( *aKey, code, modifiers ) )
+        return FALSE;
+
+    GdkEvent* event = reinterpret_cast<GdkEvent*>( aKey );
+
+    return s_hooks.popupKey( code, modifiers, [event]() { closePopup( event ); } ) ? TRUE : FALSE;
+}
+} // namespace
+#endif
+
+
 void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 {
     s_hooks = aHooks;
@@ -285,6 +423,9 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 
     s_installed = true;
     gdk_window_add_filter( nullptr, holderFilter, nullptr );
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+    gtk_key_snooper_install( keySnooper, nullptr );
+    G_GNUC_END_IGNORE_DEPRECATIONS
 
     guint mapSignal = g_signal_lookup( "map", GTK_TYPE_WIDGET );
     guint unmapSignal = g_signal_lookup( "unmap", GTK_TYPE_WIDGET );
