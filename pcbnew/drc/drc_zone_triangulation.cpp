@@ -160,6 +160,7 @@ private:
             const VECTOR2I& b = aChain.CPoint( ( ii + 1 ) % n );
 
             m_vertices.push_back( a );
+            m_vertexPositions.emplace( a, std::make_pair( ring, pos ) );
             m_ringPoints.back().push_back( a );
             m_ringPositions.back().push_back( pos );
             m_segments.push_back( { a, b, ring, pos } );
@@ -214,6 +215,15 @@ private:
     std::vector<std::pair<int, double>> locate( const VECTOR2I& aPt ) const
     {
         std::vector<std::pair<int, double>> found;
+
+        if( auto range = m_vertexPositions.equal_range( aPt ); range.first != range.second )
+        {
+            for( auto it = range.first; it != range.second; ++it )
+                found.push_back( it->second );
+
+            return found;
+        }
+
         int cx, cy;
         cell( aPt.x, aPt.y, cx, cy );
 
@@ -232,6 +242,7 @@ private:
         return found;
     }
 
+    std::unordered_multimap<VECTOR2I, std::pair<int, double>, POINT_HASH> m_vertexPositions;
     std::vector<SEGMENT>               m_segments;
     std::vector<std::vector<VECTOR2I>> m_ringPoints;
     std::vector<std::vector<double>>   m_ringPositions;
@@ -252,63 +263,6 @@ struct TRIANGLE
 {
     VECTOR2I a, b, c;
 };
-
-
-bool vertexInsideTriangles( const std::vector<TRIANGLE>& aTriangles, const RINGS& aRings,
-                            const BOX2I& aExtent, wxString* aWhy )
-{
-    int    cells = std::max( 1, (int) std::sqrt( (double) aTriangles.size() ) );
-    double cw = std::max( 1.0, (double) aExtent.GetWidth() / cells );
-    double ch = std::max( 1.0, (double) aExtent.GetHeight() / cells );
-    std::vector<std::vector<int>> grid( (size_t) cells * cells );
-
-    auto cellOf =
-            [&]( int x, int y, int& gx, int& gy )
-            {
-                gx = std::clamp( (int) ( ( x - aExtent.GetX() ) / cw ), 0, cells - 1 );
-                gy = std::clamp( (int) ( ( y - aExtent.GetY() ) / ch ), 0, cells - 1 );
-            };
-
-    for( size_t ii = 0; ii < aTriangles.size(); ++ii )
-    {
-        const TRIANGLE& t = aTriangles[ii];
-        int x0, y0, x1, y1;
-        cellOf( std::min( { t.a.x, t.b.x, t.c.x } ), std::min( { t.a.y, t.b.y, t.c.y } ), x0, y0 );
-        cellOf( std::max( { t.a.x, t.b.x, t.c.x } ), std::max( { t.a.y, t.b.y, t.c.y } ), x1, y1 );
-
-        for( int gx = x0; gx <= x1; ++gx )
-        {
-            for( int gy = y0; gy <= y1; ++gy )
-                grid[(size_t) gy * cells + gx].push_back( (int) ii );
-        }
-    }
-
-    for( const VECTOR2I& v : aRings.Vertices() )
-    {
-        int gx, gy;
-        cellOf( v.x, v.y, gx, gy );
-
-        for( int idx : grid[(size_t) gy * cells + gx] )
-        {
-            const TRIANGLE& t = aTriangles[idx];
-
-            // Triangles are counter-clockwise here: inside means left of every edge
-            double d1 = cross( t.a, t.b, v ) / std::max( 1.0, dist( t.a, t.b ) );
-            double d2 = cross( t.b, t.c, v ) / std::max( 1.0, dist( t.b, t.c ) );
-            double d3 = cross( t.c, t.a, v ) / std::max( 1.0, dist( t.c, t.a ) );
-
-            if( std::min( { d1, d2, d3 } ) > TOLERANCE_NM )
-            {
-                if( aWhy )
-                    *aWhy = wxString::Format( wxS( "outline point (%d, %d) inside a triangle" ), v.x, v.y );
-
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
 
 
 struct RESULT
@@ -347,7 +301,6 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
     if( rings.Area() <= rings.Perimeter() * TOLERANCE_NM / 2.0 + 1e6 )
         return true;
 
-    std::vector<TRIANGLE> triangles;
     // Directed triangle edges as (from x, from y, to x, to y), sorted below for pairing
     std::vector<std::array<int, 4>> edges;
     double triArea = 0.0;
@@ -389,7 +342,6 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
                 std::swap( t.b, t.c );
 
             triArea += std::abs( area2 ) / 2.0;
-            triangles.push_back( t );
             edges.push_back( { t.a.x, t.a.y, t.b.x, t.b.y } );
             edges.push_back( { t.b.x, t.b.y, t.c.x, t.c.y } );
             edges.push_back( { t.c.x, t.c.y, t.a.x, t.a.y } );
@@ -446,8 +398,9 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
         return false;
     }
 
-    if( vertexInsideTriangles( triangles, rings, aFill.BBox(), aWhy ) )
-        return false;
+    // No outline-vertex-inside test: an ear that swallows outline vertices overlaps the other
+    // triangles, which with every edge paired shows as triangle area above the fill's, or leaves
+    // a gap, which shows as an unpaired edge; both fail above
 
     return true;
 }

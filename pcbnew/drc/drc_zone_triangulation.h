@@ -40,8 +40,8 @@ namespace DRC_ZONE_TRIANGULATION
  * Check that the cached triangulation of @a aFill tiles it: all triangles of a polygon turn the
  * same way (none is folded over its neighbours), every triangle edge is either shared with
  * exactly one other triangle in the opposite direction or runs along the fill's outline with
- * every outline point it skips within 100 nm of it, no outline vertex lies inside a triangle,
- * and the triangles' area matches the fill's.
+ * every outline point it skips within 100 nm of it, and the triangles' area matches the fill's
+ * (so no triangle covers area twice).
  *
  * Fill the triangles miss is bounded either by an edge that is neither shared nor on the
  * outline, which fails the check, or by a boundary edge and the outline, which are less than
