@@ -6,6 +6,11 @@ The test uses a fresh KiCad configuration, then verifies the first-launch
 library tables, symbol and footprint SVG exports, and a GLB containing the
 standard R_0603_1608Metric model.  It intentionally fails when the runtime
 does not contain the requested library payload.
+
+It then checks the bundled Backplane library: the first-launch footprint table
+names its libraries, a board placing them resolves through that table with the
+launcher's BACKPLANE_KICAD_LIBRARY, its passive STEP model reaches a GLB, and a
+path the person sets in kicad_common.json wins over the bundled one.
 """
 
 import argparse
@@ -97,6 +102,99 @@ def make_board(destination: Path) -> None:
     destination.write_text(board, encoding="utf-8")
 
 
+BACKPLANE_FOOTPRINTS = (
+    ("Backplane_Logo", "Backplane_Logo_Text_20mm_SilkS"),
+    ("Backplane_Passives_Nominal", "R_0603_1608Metric"),
+)
+
+
+def placed(library: Path, nickname: str, name: str, x: float) -> str:
+    """A library footprint as a board instance named nickname:name, placed at (x, 100)."""
+    text = (library / f"{nickname}.pretty" / f"{name}.kicad_mod").read_text(encoding="utf-8").strip()
+    text = text.replace(f'(footprint "{name}"', f'(footprint "{nickname}:{name}"', 1)
+    return text.replace('(layer "F.Cu")', f'(layer "F.Cu")\n\t(at {x} 100)', 1)
+
+
+def backplane_board(destination: Path, footprints: list[str]) -> None:
+    destination.write_text(
+        '(kicad_pcb (version 20240108) (generator "backplane-library-smoke")\n'
+        '  (general (thickness 1.6))\n'
+        '  (paper "A4")\n'
+        '  (layers (0 "F.Cu" signal) (31 "B.Cu" signal) (32 "B.Adhes" user "B.Adhesive") (33 "F.Adhes" user "F.Adhesive") '
+        '(34 "B.Paste" user) (35 "F.Paste" user) (36 "B.SilkS" user "B.Silkscreen") (37 "F.SilkS" user "F.Silkscreen") '
+        '(38 "B.Mask" user) (39 "F.Mask" user) (44 "Edge.Cuts" user) (46 "B.CrtYd" user "B.Courtyard") '
+        '(47 "F.CrtYd" user "F.Courtyard") (48 "B.Fab" user) (49 "F.Fab" user))\n'
+        '  (setup (pad_to_mask_clearance 0))\n'
+        '  (net 0 "")\n'
+        '  (gr_rect (start 60 80) (end 140 120) '
+        '(stroke (width 0.05) (type default)) (fill none) (layer "Edge.Cuts") '
+        '(uuid "00000000-0000-0000-0000-000000000002"))\n'
+        + "\n".join(footprints) + "\n)\n",
+        encoding="utf-8",
+    )
+
+
+def library_problems(cli: Path, board: Path, env: dict[str, str], cwd: Path) -> list[str]:
+    """DRC's footprint-library findings for a board: one per footprint the global tables cannot resolve."""
+    report = board.with_suffix(".drc.json")
+    run(cli, ["pcb", "drc", "--format", "json", "--severity-all", "--output", str(report), str(board)], env, cwd)
+    violations = json.loads(report.read_text(encoding="utf-8")).get("violations", [])
+    return [v["description"] for v in violations if v.get("type", "").startswith("lib_footprint")]
+
+
+def check_backplane_library(cli: Path, runtime: Path, config_dir: Path, env: dict[str, str], root: Path) -> None:
+    bundle = runtime / "share/kicad/backplane-library"
+    library = bundle / "libraries"
+    for nickname, name in BACKPLANE_FOOTPRINTS:
+        if not (library / f"{nickname}.pretty" / f"{name}.kicad_mod").is_file():
+            raise RuntimeError(f"bundled Backplane library is missing {nickname}:{name}")
+    find_exact(bundle / "3dmodels", "R_0603_1608Metric.step")
+    table = (config_dir / "fp-lib-table").read_text(encoding="utf-8")
+    for nickname, _ in BACKPLANE_FOOTPRINTS:
+        if f'(name "{nickname}")' not in table or "${BACKPLANE_KICAD_LIBRARY}/libraries/" not in table:
+            raise RuntimeError(f"first-launch fp-lib-table does not register {nickname}")
+
+    env = dict(env)
+    env.pop("BACKPLANE_KICAD_LIBRARY", None)
+    work = root / "backplane"
+    work.mkdir()
+    placed_footprints = [placed(library, n, f, 80 + 30 * i) for i, (n, f) in enumerate(BACKPLANE_FOOTPRINTS)]
+    board = work / "backplane.kicad_pcb"
+    backplane_board(board, placed_footprints)
+    problems = library_problems(cli, board, env, work)
+    if problems:
+        raise RuntimeError(f"bundled Backplane footprints do not resolve: {problems}")
+
+    # Negative control: a nickname no table has must be reported, or the check above proves nothing.
+    control = work / "control.kicad_pcb"
+    backplane_board(control, [placed_footprints[0].replace('"Backplane_Logo:', '"Backplane_Logo_Absent:', 1)])
+    if not library_problems(cli, control, env, work):
+        raise RuntimeError("DRC did not report a footprint from a library no table names")
+
+    glb = work / "backplane.glb"
+    run(cli, ["pcb", "export", "glb", "--output", str(glb), str(board)], env, work)
+    if not any(
+        "R_0603_1608Metric" in mesh.get("name", "") and mesh.get("primitives")
+        for mesh in glb_json(glb).get("meshes", [])
+    ):
+        raise RuntimeError("GLB lacks the Backplane passive's model: BACKPLANE_KICAD_LIBRARY did not resolve")
+
+    # The person's own path (Preferences > Configure Paths) wins over the bundle.
+    common = config_dir / "kicad_common.json"
+    saved = common.read_bytes() if common.exists() else None
+    settings = json.loads(saved) if saved else {}
+    settings.setdefault("environment", {})["vars"] = {"BACKPLANE_KICAD_LIBRARY": str(work / "absent")}
+    common.write_text(json.dumps(settings, indent=2), encoding="utf-8")
+    try:
+        if not library_problems(cli, board, env, work):
+            raise RuntimeError("the launcher overrode BACKPLANE_KICAD_LIBRARY set in kicad_common.json")
+    finally:
+        if saved is None:
+            common.unlink()
+        else:
+            common.write_bytes(saved)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("runtime", type=Path, help="bundled runtime root or bin/kicad-cli")
@@ -183,7 +281,8 @@ def main() -> None:
         ]
         if not model_meshes:
             raise RuntimeError("GLB does not contain the R_0603_1608Metric model mesh")
-    print("Backplane KiCad standard-library smoke passed")
+        check_backplane_library(cli, runtime, config_dir, env, root)
+    print("Backplane KiCad standard-library and Backplane-library smoke passed")
 
 
 if __name__ == "__main__":

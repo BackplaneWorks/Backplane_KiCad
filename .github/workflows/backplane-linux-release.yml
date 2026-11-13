@@ -136,6 +136,65 @@ jobs:
           # Keep one staged copy while the native build runs.
           rm -rf "$library_root"
 
+      - name: Fetch pinned Backplane KiCad library
+        shell: bash
+        env:
+          # BackplaneWorks/Backplane_KiCad_Library: Backplane's footprints (logos, mounting
+          # holes, passives, artwork) and the STEP models they use. Footprint tables name
+          # it through ${BACKPLANE_KICAD_LIBRARY}, which the launchers point at the bundle.
+          BACKPLANE_LIBRARY_REPOSITORY: https://github.com/BackplaneWorks/Backplane_KiCad_Library.git
+          BACKPLANE_LIBRARY_COMMIT: 314532f925fef0becc5a6eaf6be3b000f41cb0d0
+          BACKPLANE_LIBRARY_VERSION: 2026.11.13
+        run: |
+          set -euo pipefail
+          checkout="$RUNNER_TEMP/backplane-kicad-library"
+          stage="$RUNNER_TEMP/kicad-library-stage"
+          bundle="$stage/share/kicad/backplane-library"
+          rm -rf "$checkout" "$bundle"
+          git init -q "$checkout"
+          git -C "$checkout" fetch -q --depth 1 "$BACKPLANE_LIBRARY_REPOSITORY" "$BACKPLANE_LIBRARY_COMMIT"
+          git -C "$checkout" checkout -q --detach FETCH_HEAD
+          test "$(git -C "$checkout" rev-parse HEAD)" = "$BACKPLANE_LIBRARY_COMMIT"
+
+          # The library's own packager checks every footprint against its manifest
+          # and writes a reproducible archive with the notices the payload needs.
+          archive_dir="$RUNNER_TEMP/backplane-library-release"
+          /usr/bin/python3 -I "$checkout/scripts/package_runtime.py" --output "$archive_dir" \
+            --version "$BACKPLANE_LIBRARY_VERSION" --source-commit "$BACKPLANE_LIBRARY_COMMIT"
+          archive="$archive_dir/backplane-kicad-library-$BACKPLANE_LIBRARY_VERSION.tar.gz"
+          mkdir -p "$bundle"
+          tar -C "$bundle" --strip-components=1 -xzf "$archive"
+          (cd "$bundle" && sha256sum --quiet -c SHA256SUMS)
+          test -d "$bundle/libraries/Backplane_Logo.pretty"
+          test "$(find "$bundle/libraries" -type f -name '*.kicad_mod' | wc -l)" -gt 0
+          test "$(find "$bundle/3dmodels" -type f -name '*.step' | wc -l)" -gt 0
+
+          # Register every library the release names in the default global table
+          # a fresh install gets, after KiCad's own nested table.
+          /usr/bin/python3 -I - "$bundle/fp-lib-table.example" "$stage/share/kicad/fp-lib-table" <<'MERGE'
+          import re, sys
+          example, table = sys.argv[1:]
+          entries = re.findall(r'^\s*(\(lib \(name "([^"]+)"\).*\))\s*$', open(example).read(), re.M)
+          assert entries, "the library names no footprint libraries"
+          text = open(table).read()
+          have = set(re.findall(r'\(lib \(name "([^"]+)"\)', text))
+          lines = "".join(f"  {line}\n" for line, name in entries if name not in have)
+          end = text.rstrip().rfind(")")
+          open(table, "w").write(text[:end].rstrip("\n") + "\n" + lines + ")\n")
+          MERGE
+          grep -q '(name "Backplane_Logo")' "$stage/share/kicad/fp-lib-table"
+
+          destination="$stage/licenses/kicad-libraries/backplane-kicad-library"
+          mkdir -p "$destination"
+          printf 'repository=%s\nref=%s\ncommit=%s\n' "$BACKPLANE_LIBRARY_REPOSITORY" \
+            "$BACKPLANE_LIBRARY_VERSION" "$BACKPLANE_LIBRARY_COMMIT" > "$destination/BACKPLANE_SOURCE.txt"
+          cp "$bundle/LICENSES.md" "$bundle/README.md" "$destination/"
+          cp "$bundle/3dmodels/LICENSE.md" "$destination/3dmodels-LICENSE.md"
+          cp "$bundle/3dmodels/CREDITS.md" "$destination/3dmodels-CREDITS.md"
+          mkdir -p "$RUNNER_TEMP/kicad-library-source"
+          cp "$archive" "$RUNNER_TEMP/kicad-library-source/"
+          rm -rf "$checkout"
+
       - name: Install KiCad build dependencies
         run: |
           sudo apt-get update
@@ -237,6 +296,8 @@ jobs:
           test "$(find "release/${archive_root}/share/kicad/symbols" -type f -name '*.kicad_sym' | wc -l)" -gt 0
           test "$(find "release/${archive_root}/share/kicad/footprints" -type f | wc -l)" -gt 0
           test "$(find "release/${archive_root}/share/kicad/3dmodels" -type f | wc -l)" -gt 0
+          test -d "release/${archive_root}/share/kicad/backplane-library/libraries/Backplane_Logo.pretty"
+          grep -q '(name "Backplane_Logo")' "release/${archive_root}/share/kicad/fp-lib-table"
           if grep -RIlq '^version https://git-lfs.github.com/spec/v1' "release/${archive_root}/share/kicad/3dmodels"; then
             echo 'unhydrated Git LFS pointer found in bundled 3D models' >&2
             exit 1
@@ -321,6 +382,12 @@ jobs:
           export KICAD10_TEMPLATE_DIR="${KICAD10_TEMPLATE_DIR-$root/share/kicad/template}"
           config_root="${KICAD_CONFIG_HOME-${XDG_CONFIG_HOME-$HOME/.config}/kicad}/@SETTINGS_VERSION@"
           mkdir -p "$config_root"
+          # Backplane's bundled footprint library, unless the environment or the
+          # person's own KiCad paths (Preferences > Configure Paths) name another.
+          if [ -z "${BACKPLANE_KICAD_LIBRARY+x}" ] && \
+            ! grep -qs '"BACKPLANE_KICAD_LIBRARY"' "$config_root/kicad_common.json"; then
+            export BACKPLANE_KICAD_LIBRARY="$root/share/kicad/backplane-library"
+          fi
           for table in sym-lib-table fp-lib-table design-block-lib-table; do
             if [ ! -e "$config_root/$table" ]; then
               temporary_table=$(mktemp "$config_root/.$table.XXXXXX")
