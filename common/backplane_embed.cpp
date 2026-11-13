@@ -212,6 +212,45 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
                 PushEvent( EMBED_EVENT_TYPE::ATTACHED, {}, std::to_string( aParent ) );
             };
 
+    hooks.popupKey =
+            [this]( int aKeyCode, int aModifiers, const std::function<void()>& aClosePopup ) -> bool
+            {
+                // A popup of an embedded frame (a menu, a combo box's list) holds the keyboard, so
+                // FilterEvent never sees the key: a host-reserved chord would be lost to the menu.
+                // Close the popup and hand the chord to the host.  Not over a modal dialog: a
+                // dialog keeps every key.
+                if( !m_enabled || ModalBlocker() )
+                    return false;
+
+                // The frame the popup belongs to: the focused one, else (a menu may take the
+                // frame's activation while it is up) any embedded frame on show
+                const FRAME_ENTRY* focused = nullptr;
+
+                for( const FRAME_ENTRY& e : m_frames )
+                {
+                    if( e.shown && ( !focused || ( e.focused && !focused->focused ) ) )
+                        focused = &e;
+                }
+
+                if( !focused )
+                    return false;
+
+                int modifiers = aModifiers & CHORD_MODIFIERS;
+
+                for( size_t ii = 0; ii < m_reserved.size(); ++ii )
+                {
+                    if( m_reserved[ii].keyCode != aKeyCode || m_reserved[ii].modifiers != modifiers )
+                        continue;
+
+                    aClosePopup();
+                    postReservedKey( focused->window, ii, aKeyCode, modifiers );
+                    TraceNote( "popup closed for reserved " + m_reserved[ii].text );
+                    return true;
+                }
+
+                return false;
+            };
+
     KIPLATFORM::EMBED::Install( hooks );
 
     m_holder = KIPLATFORM::EMBED::CreateHolder( aParent );
@@ -871,6 +910,14 @@ std::vector<std::string> BACKPLANE_EMBED::ReservedKeys() const
 }
 
 
+void BACKPLANE_EMBED::postReservedKey( uint64_t aWindow, size_t aIndex, int aKeyCode, int aModifiers )
+{
+    long data[5] = { static_cast<long>( aWindow ), keysymFor( aKeyCode ), xModifiersFor( aModifiers ),
+                     static_cast<long>( aIndex ), 1 };
+    KIPLATFORM::EMBED::SendHostMessage( m_parent, KEY_ATOM, KEY_WM_APP_OFFSET, data );
+}
+
+
 void BACKPLANE_EMBED::sendFocusMessage( wxFrame* aFrame )
 {
     const FRAME_ENTRY* e = entry( aFrame );
@@ -1002,9 +1049,7 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
         if( type == wxEVT_CHAR_HOOK )
         {
             const FRAME_ENTRY* e = entry( frame );
-            long data[5] = { static_cast<long>( e ? e->window : 0 ), keysymFor( code ),
-                             xModifiersFor( modifiers ), static_cast<long>( ii ), 1 };
-            KIPLATFORM::EMBED::SendHostMessage( m_parent, KEY_ATOM, KEY_WM_APP_OFFSET, data );
+            postReservedKey( e ? e->window : 0, ii, code, modifiers );
         }
 
         return wxEventFilter::Event_Processed;

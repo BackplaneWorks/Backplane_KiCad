@@ -595,6 +595,10 @@ private:
     void onFrameActivate( wxFrame* aFrame, bool aActive );
     bool isUnmanaged( uint64_t aWindow ) const;
     void sendFocusMessage( wxFrame* aFrame );
+
+    /// Hand reserved chord aIndex (pressed as aKeyCode with aModifiers) to the host from aWindow:
+    /// _BACKPLANE_KEY on X11, WM_APP+0x102 on Windows.
+    void postReservedKey( uint64_t aWindow, size_t aIndex, int aKeyCode, int aModifiers );
     void eventServerThread();
 
     std::string m_apiSocket;

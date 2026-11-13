@@ -101,6 +101,7 @@ The other bp.13 embed features have one capability each in the embedded GUI's `G
 | `embed-gerbview` | GerbView in KiCad's own process | `OpenGerbers{files, show, x, y, width, height}` opens and loads; `ShowFrame{kind: FK_GERBVIEW}` shows it again; `FrameInfo.files` lists what is loaded |
 | `embed-checks` | DRC and ERC in the open editor | `RunChecks`, `GetMarkers`, `SelectItems` by id or place, `ET_CHECKS_DONE` |
 | `embed-host-markers` | the host's own markers on the canvas | `SetHostMarkers`, `ET_MARKER_CLICKED` |
+| `embed-popup-keys` | reserved chords get through KiCad's popups (Linux/X11) | while a KiCad popup (a menu such as Clarify Selection, a combo box's list) holds the keyboard, a chord from `SetReservedKeys` closes it and reaches the host as `_BACKPLANE_KEY`, as it does from a frame; other keys stay with the popup |
 
 Number ledger for `kiapi.backplane.embed` (fork-only, additive; take the next free number and add
 it here in the same change):

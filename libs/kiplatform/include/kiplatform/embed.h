@@ -55,6 +55,13 @@ namespace EMBED
 
         /// The host moved the holder into another of its windows, which is the parent now.
         std::function<void( uint64_t aParent )> reparented;
+
+        /// A key pressed while one of KiCad's popups (a menu, a combo box's list) holds the
+        /// keyboard, as a wx key code and wx modifiers, before the popup sees it.  Return true
+        /// to take it: the popup does not get it.  aClosePopup closes the popup (call it before
+        /// handing the key elsewhere, or the popup keeps the keyboard).  X11 only.
+        std::function<bool( int aKeyCode, int aModifiers, const std::function<void()>& aClosePopup )>
+                popupKey;
     };
 
     /// True if the running toolkit backend can embed (X11 or Windows; not Wayland or macOS).

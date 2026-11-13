@@ -18,11 +18,13 @@
 #include <kiplatform/embed.h>
 
 #include <algorithm>
+#include <cctype>
 #include <string>
 #include <vector>
 #include <cstdio>
 #include <cstdlib>
 
+#include <wx/defs.h>
 #include <wx/window.h>
 
 #include <gtk/gtk.h>
@@ -275,6 +277,121 @@ bool KIPLATFORM::EMBED::Supported()
 }
 
 
+#ifdef GDK_WINDOWING_X11
+namespace
+{
+/// The key as wx reports it in a key event: its unshifted key (the keymap's level 0, so
+/// Ctrl+Shift+Tab is Tab with Shift) as a wx key code, and the modifiers.  False for a key no
+/// chord can name.
+bool wxKeyFor( const GdkEventKey& aKey, int& aCode, int& aModifiers )
+{
+    aModifiers = 0;
+
+    if( aKey.state & GDK_CONTROL_MASK )
+        aModifiers |= wxMOD_CONTROL;
+
+    if( aKey.state & GDK_SHIFT_MASK )
+        aModifiers |= wxMOD_SHIFT;
+
+    if( aKey.state & GDK_MOD1_MASK )
+        aModifiers |= wxMOD_ALT;
+
+    if( aKey.state & ( GDK_SUPER_MASK | GDK_META_MASK ) )
+        aModifiers |= wxMOD_META;
+
+    guint keyval = aKey.keyval;
+    GdkKeymap* keymap = gdk_keymap_get_for_display( gdk_window_get_display( aKey.window ) );
+
+    if( keymap )
+    {
+        gdk_keymap_translate_keyboard_state( keymap, aKey.hardware_keycode, (GdkModifierType) 0,
+                                             aKey.group, &keyval, nullptr, nullptr, nullptr );
+    }
+
+    switch( keyval )
+    {
+    case GDK_KEY_Tab:
+    case GDK_KEY_ISO_Left_Tab: aCode = WXK_TAB;    return true;
+    case GDK_KEY_Escape:       aCode = WXK_ESCAPE; return true;
+    case GDK_KEY_Return:       aCode = WXK_RETURN; return true;
+    default: break;
+    }
+
+    if( keyval >= GDK_KEY_F1 && keyval <= GDK_KEY_F12 )
+    {
+        aCode = WXK_F1 + static_cast<int>( keyval - GDK_KEY_F1 );
+        return true;
+    }
+
+    gunichar character = gdk_keyval_to_unicode( keyval );
+
+    if( character > 0x20 && character < 0x80 )
+    {
+        aCode = std::toupper( static_cast<int>( character ) );
+        return true;
+    }
+
+    return false;
+}
+
+
+/// Close the popup that holds the keyboard: a menu (with its parents, so no submenu is left
+/// open) is cancelled; any other popup gets an Escape.
+void closePopup( GdkEvent* aKeyEvent )
+{
+    GtkWidget* grab = gtk_grab_get_current();
+
+    if( grab && GTK_IS_MENU_SHELL( grab ) )
+    {
+        GtkWidget* outer = grab;
+
+        while( GtkWidget* parent = gtk_menu_shell_get_parent_shell( GTK_MENU_SHELL( outer ) ) )
+            outer = parent;
+
+        gtk_menu_shell_cancel( GTK_MENU_SHELL( outer ) );
+        return;
+    }
+
+    GdkEvent* escape = gdk_event_copy( aKeyEvent );
+    escape->key.keyval = GDK_KEY_Escape;
+    escape->key.state = 0;
+
+    GdkKeymapKey* keys = nullptr;
+    gint          count = 0;
+    GdkKeymap*    keymap = gdk_keymap_get_for_display( gdk_window_get_display( escape->key.window ) );
+
+    if( keymap && gdk_keymap_get_entries_for_keyval( keymap, GDK_KEY_Escape, &keys, &count ) && count > 0 )
+        escape->key.hardware_keycode = keys[0].keycode;
+
+    g_free( keys );
+    gtk_main_do_event( escape );
+    gdk_event_free( escape );
+}
+
+
+/// Every event passes through here before GTK: a key on its way to one of our popups is offered
+/// to the popupKey hook first, since the popup's grab keeps it from any frame and filter.
+void eventHandler( GdkEvent* aEvent, gpointer )
+{
+    if( aEvent->type == GDK_KEY_PRESS && s_hooks.popupKey && aEvent->key.window
+        && gdk_window_get_window_type( gdk_window_get_toplevel( aEvent->key.window ) ) == GDK_WINDOW_TEMP )
+    {
+        int code = 0;
+        int modifiers = 0;
+
+        if( wxKeyFor( aEvent->key, code, modifiers )
+            && s_hooks.popupKey( code, modifiers, [aEvent]() { closePopup( aEvent ); } ) )
+        {
+            return;
+        }
+    }
+
+    gtk_main_do_event( aEvent );
+}
+} // namespace
+#endif
+
+
 void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 {
     s_hooks = aHooks;
@@ -285,6 +402,7 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 
     s_installed = true;
     gdk_window_add_filter( nullptr, holderFilter, nullptr );
+    gdk_event_handler_set( eventHandler, nullptr, nullptr );
 
     guint mapSignal = g_signal_lookup( "map", GTK_TYPE_WIDGET );
     guint unmapSignal = g_signal_lookup( "unmap", GTK_TYPE_WIDGET );
