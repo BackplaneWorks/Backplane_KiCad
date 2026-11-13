@@ -873,9 +873,12 @@ class TestDropApproximations(unittest.TestCase):
         return project
 
     def test_failed_export_keeps_a_destination_the_user_already_had(self):
-        # A stray board the export never converts makes the final backstop refuse, after the
-        # copy has already put files in the destination.
-        shutil.copyfile(GOLDEN / "current/geometry.kicad_pcb", self.source / "stray.kicad_pcb")
+        # A design file the export copies but cannot bring down (a symbol library stamped by a
+        # far newer KiCad) makes the final backstop refuse, after the copy has already put files
+        # in the destination.  (A stray board would not do: it is not this project's, so it is
+        # left out of the export now.)
+        (self.source / "stray.kicad_sym").write_text(
+            "(kicad_symbol_lib (version 29991231) (generator \"future\"))\n", encoding="utf-8")
         original = self.source_snapshot()
         project = self.source / "body_styles.kicad_pro"
 
