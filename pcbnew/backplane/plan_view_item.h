@@ -26,12 +26,14 @@
 
 #include <backplane/board_plan.h>
 #include <eda_item.h>
+#include <math/box2.h>
 #include <geometry/shape_poly_set.h>
 #include <gal/color4d.h>
 #include <layer_ids.h>
 
 #include <set>
 #include <string>
+#include <vector>
 
 class BOARD;
 class BOARD_PLAN;
@@ -53,6 +55,21 @@ public:
     /// The plan view: the board drawn the way the plan reads.
     void SetPlanView( bool aOn ) { m_planView = aOn; }
     bool IsPlanView() const { return m_planView; }
+
+    /// The plan layer whose overview panel is at aPos, or "".
+    std::string OverviewLayerAt( const VECTOR2I& aPos ) const
+    {
+        if( !m_planView )
+            return "";
+
+        for( const auto& [layer, box] : m_overviewHits )
+        {
+            if( box.Contains( VECTOR2D( aPos ) ) )
+                return layer;
+        }
+
+        return "";
+    }
 
     /// Show the plan overlay at all (the "Routing plan" appearance row).
     void SetShown( bool aShown ) { m_shown = aShown; }
@@ -93,6 +110,7 @@ public:
 private:
     void drawPlanBackdrop( KIGFX::GAL* aGal, KIGFX::VIEW* aView ) const;
     void drawOverview( KIGFX::GAL* aGal, KIGFX::VIEW* aView, const std::string& aActive ) const;
+    mutable std::vector<std::pair<std::string, BOX2D>> m_overviewHits;   ///< mini panels, last drawn
     void drawPlanes( KIGFX::GAL* aGal, KIGFX::VIEW* aView, const std::string& aLayer ) const;
     void drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView, const std::string& aLayer,
                         bool aFaint ) const;

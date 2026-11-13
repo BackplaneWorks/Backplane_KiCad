@@ -473,7 +473,7 @@ void PLAN_VIEW_ITEM::drawOverview( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
 
     // A grid in a 180 px column: as many columns as it takes for every layer to fit the height
     // with each panel as large as possible.
-    const double colW = 180 * px;
+    const double colW = 96 * px;
     const double labelH = 16 * px;
     const double gap = 10 * px;
     double       aspect = (double) board.GetHeight() / board.GetWidth();
@@ -504,6 +504,7 @@ void PLAN_VIEW_ITEM::drawOverview( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
     VECTOR2D origin( vp.GetEnd().x - colW - 14 * px, vp.GetOrigin().y + 12 * px );
     VECTOR2D first = origin;
     int      index = 0;
+    m_overviewHits.clear();
 
     // Its own column: an opaque strip, so it never reads as part of the board.
     aGal->AdvanceDepth();
@@ -545,6 +546,7 @@ void PLAN_VIEW_ITEM::drawOverview( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         ++index;
 
         VECTOR2D at = origin + VECTOR2D( 0, labelH );
+        m_overviewHits.emplace_back( l.layer, BOX2D( origin, VECTOR2D( panelW, panelH + labelH ) ) );
         auto     map = [&]( const VECTOR2I& p )
         {
             return at + VECTOR2D( ( p.x - board.GetLeft() ) * scale, ( p.y - board.GetTop() ) * scale );
@@ -674,6 +676,8 @@ void PLAN_VIEW_ITEM::drawPlanBackdrop( KIGFX::GAL* aGal, KIGFX::VIEW* aView ) co
         }
     }
 
+    std::vector<std::pair<wxString, BOX2I>> refs;
+
     for( const FOOTPRINT* fp : m_board->Footprints() )
     {
         const SHAPE_POLY_SET& court = fp->GetCourtyard( fp->IsFlipped() ? B_CrtYd : F_CrtYd );
@@ -723,12 +727,37 @@ void PLAN_VIEW_ITEM::drawPlanBackdrop( KIGFX::GAL* aGal, KIGFX::VIEW* aView ) co
             aGal->DrawRectangle( box.GetOrigin(), box.GetEnd() );
         }
 
-        // The reference, sized to the part, readable at any zoom.
+        refs.push_back( { fp->GetReference(), box } );
+    }
+
+    // References: big parts first; one only where it fits inside its box at a readable size and
+    // clears every label already placed. Passives stay plain boxes until zoomed in.
+    std::stable_sort( refs.begin(), refs.end(), []( const auto& a, const auto& b )
+                      { return (double) a.second.GetWidth() * a.second.GetHeight()
+                               > (double) b.second.GetWidth() * b.second.GetHeight(); } );
+
+    std::vector<BOX2D> placed;
+
+    for( const auto& [ref, box] : refs )
+    {
         double size = std::clamp( std::min( box.GetWidth(), box.GetHeight() ) * 0.28,
                                   aView->ToWorld( 7.0 ), aView->ToWorld( 15.0 ) );
+        double w = size * 0.75 * ref.Length();
 
-        if( std::min( box.GetWidth(), box.GetHeight() ) > aView->ToWorld( 9.0 ) )
-            text( aGal, fp->GetReference(), box.Centre(), size, PART_TEXT );
+        if( w > box.GetWidth() * 1.05 || size > box.GetHeight() * 0.9 )
+            continue;
+
+        BOX2D r( VECTOR2D( box.Centre() ) - VECTOR2D( w / 2, size * 0.6 ), VECTOR2D( w, size * 1.2 ) );
+        bool  clash = false;
+
+        for( const BOX2D& o : placed )
+            clash |= o.Intersects( r );
+
+        if( clash )
+            continue;
+
+        placed.push_back( r );
+        text( aGal, ref, box.Centre(), size, PART_TEXT );
     }
 }
 
@@ -1208,8 +1237,11 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
 
         wxString label = routing && c->total > 0
                                  ? wxString::Format( wxS( "%d/%d" ), c->routed, c->total )
-                                 : nets > 0 ? wxString::Format( wxS( "%d" ), nets )
+                                 : nets > 0 ? wxString::Format( nets == 1 ? _( "%d net" ) : _( "%d nets" ), nets )
                                             : wxString();
+
+        if( c->order > 0 && !routed && !verified )
+            label << wxString::FromUTF8( " \xC2\xB7 " ) << Ordinal( c->order );
 
         int marks = ( approved || routing || routed ? 1 : 0 ) + ( verified ? 2 : 0 )
                     + ( c->edited ? 1 : 0 ) + ( c->locked ? 1 : 0 );
@@ -1286,7 +1318,7 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
             }
         }
 
-        if( c->order > 0 && c->path.size() >= 2 && !routed && !verified )
+        if( false )   // the routing order is in the pill now
         {
             VECTOR2D start = c->path.front();
             VECTOR2D dir = VECTOR2D( c->path[1] - c->path[0] );
@@ -1415,8 +1447,17 @@ void PLAN_VIEW_ITEM::drawHeader( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
     double chipW = big * 0.78 * chip.Length() + 14 * px;
 
     aGal->AdvanceDepth();
+    aGal->AdvanceDepth();
     aGal->SetIsFill( true );
     aGal->SetIsStroke( false );
+
+    if( m_planView )
+    {
+        // A solid band: the header never sits on the board.
+        aGal->SetFillColor( COLOR4D( 0.05, 0.06, 0.06, 1.0 ) );
+        aGal->DrawRectangle( vp.GetOrigin(), VECTOR2D( vp.GetEnd().x, vp.GetOrigin().y + 92 * px ) );
+    }
+
     aGal->SetFillColor( COLOR4D( 0.0, 0.0, 0.0, m_planView ? 0.0 : 0.55 ) );
     double boxW = std::max( chipW, small * 0.62 * stack.Length() + 24 * px );
     aGal->DrawRectangle( at - VECTOR2D( 8 * px, 14 * px ),

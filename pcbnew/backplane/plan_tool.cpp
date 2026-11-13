@@ -428,8 +428,8 @@ void PLAN_TOOL::fitBesideOverview()
     if( board.GetWidth() <= 0 || board.GetHeight() <= 0 || screen.x < 400 || screen.y < 300 )
         return;
 
-    double usableW = screen.x - 204.0 - 40.0;
-    double usableH = screen.y - 120.0 - 30.0;
+    double usableW = screen.x - 120.0 - 30.0;
+    double usableH = screen.y - 92.0 - 24.0;
     double scaleW = usableW / board.GetWidth();
     double scaleH = usableH / board.GetHeight();
     double worldPerPx = 1.0 / std::min( scaleW, scaleH );
@@ -439,8 +439,8 @@ void PLAN_TOOL::fitBesideOverview()
     // Centre the board in the usable area: shift the view centre right by half the column and
     // up by half the header, in world units.
     VECTOR2D centre = board.Centre();
-    centre.x += view->ToWorld( 102.0 );
-    centre.y -= view->ToWorld( 55.0 );
+    centre.x += view->ToWorld( 60.0 );
+    centre.y -= view->ToWorld( 46.0 );
     view->SetCenter( centre );
 }
 
@@ -536,6 +536,22 @@ int PLAN_TOOL::EditPlan( const TOOL_EVENT& aEvent )
         }
         else if( evt->IsClick( BUT_LEFT ) )
         {
+            // A click on a mini panel of the overview switches to that layer.
+            if( PLAN_VIEW_ITEM* item = planItem() )
+            {
+                std::string layer = item->OverviewLayerAt( pos );
+
+                if( !layer.empty() )
+                {
+                    PCB_LAYER_ID id = board()->GetLayerID( wxString::FromUTF8( layer ) );
+
+                    if( id != UNDEFINED_LAYER )
+                        f->SetActiveLayer( id );
+
+                    continue;
+                }
+            }
+
             std::string hit = HitTest( pos );
 
             if( !evt->Modifier( MD_SHIFT ) )
