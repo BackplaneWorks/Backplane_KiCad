@@ -179,12 +179,11 @@ void dumpBoard( BOARD* aBoard, const std::string& aName )
 
 void reportViolations( BOARD* aBoard, const std::vector<DRC_ITEM>& aViolations )
 {
-    UNITS_PROVIDER            unitsProvider( pcbIUScale, EDA_UNITS::MM );
-    std::map<KIID, EDA_ITEM*> itemMap;
-    aBoard->FillItemMap( itemMap );
+    UNITS_PROVIDER         unitsProvider( pcbIUScale, EDA_UNITS::MM );
+    BOARD_RC_ITEM_RESOLVER resolver( *aBoard );
 
     for( const DRC_ITEM& item : aViolations )
-        BOOST_TEST_MESSAGE( item.ShowReport( &unitsProvider, RPT_SEVERITY_ERROR, itemMap ) );
+        BOOST_TEST_MESSAGE( item.ShowReport( &unitsProvider, RPT_SEVERITY_ERROR, resolver ) );
 }
 
 
