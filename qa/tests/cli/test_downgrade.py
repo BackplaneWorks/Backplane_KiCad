@@ -873,9 +873,13 @@ class TestDropApproximations(unittest.TestCase):
         return project
 
     def test_failed_export_keeps_a_destination_the_user_already_had(self):
-        # A stray board the export never converts makes the final backstop refuse, after the
-        # copy has already put files in the destination.
-        shutil.copyfile(GOLDEN / "current/geometry.kicad_pcb", self.source / "stray.kicad_pcb")
+        # A design file the export copies but cannot convert makes the final backstop refuse,
+        # after the copy has already put files in the destination.  A .kicad_mod holding no
+        # footprint is skipped by the footprint converter, so it keeps its far-future stamp.
+        # (A stray board is left out of the export now; a real footprint or symbol library,
+        # however new its stamp, is converted.)
+        (self.source / "stray.kicad_mod").write_text(
+            "(kicad_wks (version 29991231) (generator \"future\"))\n", encoding="utf-8")
         original = self.source_snapshot()
         project = self.source / "body_styles.kicad_pro"
 
@@ -884,6 +888,7 @@ class TestDropApproximations(unittest.TestCase):
         result = self.cli("project", "downgrade", project, "--target", "9.0", "--force",
                           "--output", existing)
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("stray.kicad_mod", result.stdout + result.stderr)
         self.assertTrue(existing.is_dir(), "removed a folder the export did not create")
         self.assertEqual(sorted(p.name for p in existing.iterdir()), [],
                          "left its own output behind in the user's folder")
