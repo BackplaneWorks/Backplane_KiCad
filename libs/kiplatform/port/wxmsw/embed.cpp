@@ -443,9 +443,9 @@ std::string KIPLATFORM::EMBED::InputState()
 
 std::string KIPLATFORM::EMBED::WriteMiniDump( const std::string& aWhy )
 {
-    std::wstring trace = tracePath();
+    std::wstring tracefile = tracePath();
 
-    if( trace.empty() )
+    if( tracefile.empty() )
         return "no dump (BACKPLANE_KICAD_EMBED_TRACE unset)";
 
     typedef BOOL( WINAPI * MINIDUMPWRITEDUMP )( HANDLE, DWORD, HANDLE, MINIDUMP_TYPE,
@@ -461,8 +461,8 @@ std::string KIPLATFORM::EMBED::WriteMiniDump( const std::string& aWhy )
     if( !writeDump )
         return "no dump (dbghelp.dll has no MiniDumpWriteDump)";
 
-    size_t       slash = trace.find_last_of( L"\\/" );
-    std::wstring dir = slash == std::wstring::npos ? std::wstring() : trace.substr( 0, slash + 1 );
+    size_t       slash = tracefile.find_last_of( L"\\/" );
+    std::wstring dir = slash == std::wstring::npos ? std::wstring() : tracefile.substr( 0, slash + 1 );
     std::wstring path = dir + L"kicad-" + std::to_wstring( GetCurrentProcessId() ) + L"-"
                         + std::to_wstring( GetTickCount() ) + L".dmp";
 
@@ -482,7 +482,7 @@ std::string KIPLATFORM::EMBED::WriteMiniDump( const std::string& aWhy )
     DWORD error = ok ? 0 : GetLastError();
     CloseHandle( file );
 
-    std::string utf8( path.begin(), path.end() );   // the trace's own path, ASCII in practice
+    std::string utf8 = wxString( path ).ToStdString( wxConvUTF8 );
 
     if( !ok )
         return "no dump (MiniDumpWriteDump failed, error " + std::to_string( error ) + ")";
