@@ -276,7 +276,12 @@ std::string PLAN_TOOL::HitOtherLayer( const VECTOR2I& aPoint, std::string& aLaye
     {
         std::string hit = HitTest( aPoint, nullptr, &layer );
 
-        if( !hit.empty() && ( plan.FindCorridor( hit ) || plan.FindPlane( hit ) ) )
+        bool shape = std::any_of( plan.corridors.begin(), plan.corridors.end(),
+                                  [&]( const PLAN_CORRIDOR& c ) { return c.id == hit; } )
+                     || std::any_of( plan.planes.begin(), plan.planes.end(),
+                                     [&]( const PLAN_PLANE& p ) { return p.id == hit; } );
+
+        if( !hit.empty() && shape )
         {
             aLayer = layer;
             return hit;
