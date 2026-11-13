@@ -88,6 +88,7 @@ enum class EMBED_EVENT_TYPE : int
     AGENT_CONTROL = 23,
     PROGRESS = 24,
     EDITOR_REQUESTED = 25,
+    CHECKS_DONE = 27,
     FRAME_DRAWN = 28
 };
 
@@ -219,6 +220,21 @@ struct EMBED_PROGRESS
 };
 
 
+/// RunChecks' outcome (ET_CHECKS_DONE); kind as EMBED_FRAME_KIND.
+struct EMBED_CHECKS
+{
+    EMBED_FRAME_KIND kind = EMBED_FRAME_KIND::UNKNOWN;
+    int              errors = 0;
+    int              warnings = 0;
+    int              exclusions = 0;
+    int              unconnected = 0;
+    bool             cancelled = false;
+    uint64_t         progressId = 0;
+    bool             documentModified = false;
+    std::string      error;
+};
+
+
 struct EMBED_EVENT
 {
     uint64_t         seq = 0;
@@ -228,6 +244,7 @@ struct EMBED_EVENT
     EMBED_ITEM_NAMES selection;
     std::shared_ptr<const EMBED_COMMENT> comment;   ///< COMMENT only
     std::shared_ptr<const EMBED_PROGRESS> progress; ///< PROGRESS only
+    std::shared_ptr<const EMBED_CHECKS>   checks;   ///< CHECKS_DONE only
 };
 
 
@@ -347,6 +364,19 @@ public:
                          const wxString& aTitle = wxEmptyString );
 
     void ProgressEnd( uint64_t aId );
+
+    /// An id for a job that begins later (RunChecks answers with it before its run starts).
+    uint64_t ProgressReserveId();
+
+    /// While alive, the next ProgressBegin on this (main) thread takes aId instead of a new one.
+    struct KICOMMON_API PROGRESS_ID_SCOPE
+    {
+        explicit PROGRESS_ID_SCOPE( uint64_t aId );
+        ~PROGRESS_ID_SCOPE();
+    };
+
+    /// A RunChecks ended: ET_CHECKS_DONE for aFrame's frame.
+    void ChecksDone( wxWindow* aFrame, const EMBED_CHECKS& aChecks );
 
     /// The host asked to stop it (CancelProgress).
     bool ProgressCancelled( uint64_t aId ) const;
@@ -624,6 +654,7 @@ private:
     std::map<uint64_t, PROGRESS_JOB>     m_progress;
     std::set<uint64_t>                   m_cancelRequests;
     uint64_t                             m_nextProgressId = 1;
+    uint64_t                             m_adoptProgressId = 0;   ///< PROGRESS_ID_SCOPE
     std::atomic<int64_t>                 m_lastPollMs{ 0 };   ///< when the host last asked NextEvents
 
     mutable std::mutex       m_eventMutex;

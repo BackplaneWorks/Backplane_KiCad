@@ -68,6 +68,7 @@
 #include <pcb_point.h>
 #include <kiway.h>
 #include <drc/drc_item.h>
+#include <drc/drc_rule.h>
 #include <jobs/job_export_pcb_3d.h>
 #include <jobs/job_export_pcb_dxf.h>
 #include <jobs/job_export_pcb_drill.h>
@@ -294,6 +295,10 @@ API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDI
     registerHandler<SyncSelection, SyncSelectionResponse>( &API_HANDLER_PCB::handleSyncSelection );
     registerHandler<kiapi::backplane::embed::SelectItems, kiapi::backplane::embed::SelectItemsResponse>(
             &API_HANDLER_PCB::handleSelectItems );
+    registerHandler<kiapi::backplane::embed::RunChecks, kiapi::backplane::embed::RunChecksResponse>(
+            &API_HANDLER_PCB::handleRunChecks );
+    registerHandler<kiapi::backplane::embed::GetMarkers, kiapi::backplane::embed::GetMarkersResponse>(
+            &API_HANDLER_PCB::handleGetMarkers, true );
     registerHandler<kiapi::backplane::embed::CommentSelection,
                     kiapi::backplane::embed::CommentSelectionResponse>(
             &API_HANDLER_PCB::handleCommentSelection );
@@ -3379,6 +3384,22 @@ API_HANDLER_PCB::handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embe
         }
     }
 
+    // bp.13: exact items by KIID (tracks, vias, zones, markers, ...)
+    for( const kiapi::common::types::KIID& id : aCtx.Request.ids() )
+    {
+        BOARD_ITEM* item = board()->ResolveItem( KIID( id.value() ), true );
+
+        if( item && item != DELETED_BOARD_ITEM::GetInstance() )
+        {
+            items.push_back( item );
+            grow( item->GetBoundingBox() );
+        }
+        else
+        {
+            response.add_ids_not_found()->set_value( id.value() );
+        }
+    }
+
     {
         // The host's selection is not reported back to it; KiCad's own cross-probe to the
         // schematic still runs.
@@ -3393,13 +3414,84 @@ API_HANDLER_PCB::handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embe
         frame()->HandleRemoteNetHighlight( nets );
     }
 
-    if( aCtx.Request.zoom() && ( bbox.GetWidth() > 0 || bbox.GetHeight() > 0 ) )
+    KIGFX::VIEW* view = frame()->GetCanvas()->GetView();
+
+    if( aCtx.Request.has_zoom_box_nm() && aCtx.Request.zoom_box_nm().has_size()
+        && aCtx.Request.zoom_box_nm().size().x_nm() > 0 && aCtx.Request.zoom_box_nm().size().y_nm() > 0 )
+    {
+        const kiapi::common::types::Box2& box = aCtx.Request.zoom_box_nm();
+        view->SetViewport( BOX2D( VECTOR2D( box.position().x_nm(), box.position().y_nm() ),
+                                  VECTOR2D( box.size().x_nm(), box.size().y_nm() ) ) );
+    }
+    else if( aCtx.Request.zoom() && ( bbox.GetWidth() > 0 || bbox.GetHeight() > 0 ) )
     {
         bbox.Inflate( std::max( bbox.GetWidth(), bbox.GetHeight() ) / 5 + pcbIUScale.mmToIU( 1 ) );
-        frame()->GetCanvas()->GetView()->SetViewport( BOX2D( bbox.GetOrigin(), bbox.GetSize() ) );
+        view->SetViewport( BOX2D( bbox.GetOrigin(), bbox.GetSize() ) );
+    }
+    else if( aCtx.Request.has_at_nm() )
+    {
+        view->SetCenter( VECTOR2D( aCtx.Request.at_nm().x_nm(), aCtx.Request.at_nm().y_nm() ) );
     }
 
     frame()->GetCanvas()->Refresh();
+    return response;
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::GetMarkersResponse>
+API_HANDLER_PCB::handleGetMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed::GetMarkers>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    if( aCtx.Request.kind() != embed::FK_PCB )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "GetMarkers" ) )
+        return tl::unexpected( *headless );
+
+    embed::GetMarkersResponse response;
+
+    for( PCB_MARKER* marker : board()->Markers() )
+    {
+        std::shared_ptr<RC_ITEM> rcItem = marker->GetRCItem();
+
+        if( !rcItem )
+            continue;
+
+        embed::Marker* out = response.add_markers();
+        out->set_type( rcItem->GetSettingsKey().ToStdString( wxConvUTF8 ) );
+
+        SEVERITY severity = marker->GetSeverity();
+        out->set_excluded( marker->IsExcluded() );
+        out->set_severity( marker->IsExcluded() || severity == RPT_SEVERITY_EXCLUSION ? "exclusion"
+                           : severity == RPT_SEVERITY_ERROR                         ? "error"
+                                                                                    : "warning" );
+        out->set_message( rcItem->GetErrorMessage( false ).ToStdString( wxConvUTF8 ) );
+        out->mutable_at_nm()->set_x_nm( marker->GetPosition().x );
+        out->mutable_at_nm()->set_y_nm( marker->GetPosition().y );
+
+        for( const KIID& id : rcItem->GetIDs() )
+        {
+            if( id != niluuid )
+                out->add_items()->set_value( id.AsStdString() );
+        }
+
+        out->mutable_id()->set_value( marker->m_Uuid.AsStdString() );
+
+        if( DRC_ITEM* drcItem = dynamic_cast<DRC_ITEM*>( rcItem.get() ) )
+        {
+            if( DRC_RULE* rule = drcItem->GetViolatingRule(); rule && !rule->IsImplicit() )
+                out->set_rule( rule->m_Name.ToStdString( wxConvUTF8 ) );
+        }
+
+        if( marker->GetLayer() != UNDEFINED_LAYER )
+            out->set_layer( board()->GetLayerName( marker->GetLayer() ).ToStdString( wxConvUTF8 ) );
+    }
+
     return response;
 }
 

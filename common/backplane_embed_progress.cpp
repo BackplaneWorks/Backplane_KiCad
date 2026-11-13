@@ -62,12 +62,73 @@ uint64_t BACKPLANE_EMBED::ProgressBegin( wxWindow* aOwner, const wxString& aTitl
 
     {
         std::lock_guard<std::mutex> lock( m_progressMutex );
-        job.state.id = m_nextProgressId++;
+
+        if( m_adoptProgressId )
+        {
+            job.state.id = m_adoptProgressId;
+            m_adoptProgressId = 0;
+        }
+        else
+        {
+            job.state.id = m_nextProgressId++;
+        }
+
         m_progress[job.state.id] = job;
     }
 
     pushProgress( job );
     return job.state.id;
+}
+
+
+uint64_t BACKPLANE_EMBED::ProgressReserveId()
+{
+    std::lock_guard<std::mutex> lock( m_progressMutex );
+    return m_nextProgressId++;
+}
+
+
+BACKPLANE_EMBED::PROGRESS_ID_SCOPE::PROGRESS_ID_SCOPE( uint64_t aId )
+{
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+    std::lock_guard<std::mutex> lock( embed.m_progressMutex );
+    embed.m_adoptProgressId = aId;
+}
+
+
+BACKPLANE_EMBED::PROGRESS_ID_SCOPE::~PROGRESS_ID_SCOPE()
+{
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+    std::lock_guard<std::mutex> lock( embed.m_progressMutex );
+    embed.m_adoptProgressId = 0;
+}
+
+
+void BACKPLANE_EMBED::ChecksDone( wxWindow* aFrame, const EMBED_CHECKS& aChecks )
+{
+    EMBED_FRAME_INFO frameInfo;
+
+    if( wxFrame* frame = aFrame ? wxDynamicCast( wxGetTopLevelParent( aFrame ), wxFrame ) : nullptr;
+        frame && IsEmbedded( frame ) )
+    {
+        frameInfo = Info( frame );
+    }
+
+    {
+        std::lock_guard<std::mutex> lock( m_eventMutex );
+
+        EMBED_EVENT event;
+        event.seq = m_nextSeq++;
+        event.type = EMBED_EVENT_TYPE::CHECKS_DONE;
+        event.frame = frameInfo;
+        event.checks = std::make_shared<EMBED_CHECKS>( aChecks );
+        m_events.push_back( event );
+
+        while( m_events.size() > MAX_EVENTS )
+            m_events.pop_front();
+    }
+
+    m_eventCv.notify_all();
 }
 
 

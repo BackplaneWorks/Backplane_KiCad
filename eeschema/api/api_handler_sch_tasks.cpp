@@ -18,6 +18,9 @@
  */
 
 #include <api/api_handler_sch.h>
+#include <api/backplane/embed.pb.h>
+#include <backplane_embed.h>
+#include <optional>
 #include <api/api_task_scheduler.h>
 #include <api/api_task_gui_reporter.h>
 
@@ -62,13 +65,26 @@ using kiapi::schematic::tasks::StartErcTask;
 class API_HANDLER_SCH::ERC_TASK : public API_TASK
 {
 public:
-    ERC_TASK( API_HANDLER_SCH* aHandler, SCHEMATIC* aSchematic ) :
+    /// aEmbedProgressId: an embedding host's RunChecks (kiapi.backplane.embed), which answered
+    /// with this progress id and hears ET_CHECKS_DONE when the run ends; 0 otherwise.
+    ERC_TASK( API_HANDLER_SCH* aHandler, SCHEMATIC* aSchematic, uint64_t aEmbedProgressId = 0,
+              bool aEmbedRun = false ) :
             m_handler( aHandler ),
-            m_schematic( aSchematic )
+            m_schematic( aSchematic ),
+            m_embedProgressId( aEmbedProgressId ),
+            m_embedRun( aEmbedRun )
     {
     }
 
     void Run() override
+    {
+        runErc();
+
+        if( m_embedRun )
+            reportChecks();
+    }
+
+    void runErc()
     {
         SCH_EDIT_FRAME* frame = m_handler->frame();
 
@@ -105,12 +121,21 @@ public:
         std::unique_ptr<API_TASK_GUI_PROGRESS_REPORTER> reporter;
 
         if( frame )
-            reporter = std::make_unique<API_TASK_GUI_PROGRESS_REPORTER>( frame, _( "Running ERC" ), 1, 0 );
+        {
+            std::optional<BACKPLANE_EMBED::PROGRESS_ID_SCOPE> adopt;
+
+            if( m_embedProgressId )
+                adopt.emplace( m_embedProgressId );
+
+            reporter = std::make_unique<API_TASK_GUI_PROGRESS_REPORTER>( frame, _( "Running ERC" ), 1,
+                                                                        m_embedRun ? PR_CAN_ABORT : 0 );
+        }
 
         ercTester.RunTests( drawingSheet.get(), frame,
                             kiway ? kiway->KiFACE( KIWAY::FACE_CVPCB ) : nullptr,
                             &m_schematic->Project(), reporter.get() );
 
+        m_cancelled = reporter && reporter->IsCancelled();
         reporter.reset();
 
         if( frame )
@@ -134,6 +159,41 @@ public:
     }
 
 private:
+    void reportChecks()
+    {
+        EMBED_CHECKS checks;
+        checks.kind = EMBED_FRAME_KIND::SCH;
+        checks.progressId = m_embedProgressId;
+        checks.cancelled = m_cancelled;
+
+        if( m_state == TS_FAILED )
+            checks.error = m_errorMessage;
+
+        SCH_SCREENS screens( m_schematic->Root() );
+
+        for( SCH_SCREEN* screen = screens.GetFirst(); screen; screen = screens.GetNext() )
+        {
+            for( SCH_ITEM* item : screen->Items().OfType( SCH_MARKER_T ) )
+            {
+                SCH_MARKER* marker = static_cast<SCH_MARKER*>( item );
+
+                if( marker->IsExcluded() || marker->GetSeverity() == RPT_SEVERITY_EXCLUSION )
+                    checks.exclusions++;
+                else if( marker->GetSeverity() == RPT_SEVERITY_ERROR )
+                    checks.errors++;
+                else if( marker->GetSeverity() == RPT_SEVERITY_WARNING )
+                    checks.warnings++;
+            }
+        }
+
+        SCH_EDIT_FRAME* frame = m_handler->frame();
+
+        if( frame )
+            checks.documentModified = frame->IsContentModified();
+
+        BACKPLANE_EMBED::Get().ChecksDone( frame, checks );
+    }
+
     void buildResult()
     {
         m_result.Clear();
@@ -186,12 +246,70 @@ private:
 
     API_HANDLER_SCH* m_handler;
     SCHEMATIC*       m_schematic;
+    uint64_t         m_embedProgressId;
+    bool             m_embedRun;
+    bool             m_cancelled = false;
 
     TaskState   m_state = TS_UNKNOWN;
     std::string m_errorMessage;
 
     ErcTaskResult      m_result;
 };
+
+
+HANDLER_RESULT<kiapi::backplane::embed::RunChecksResponse>
+API_HANDLER_SCH::handleRunChecks( const HANDLER_CONTEXT<kiapi::backplane::embed::RunChecks>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    // Routed by frame kind: the board editor's handler serves FK_PCB (DRC).
+    if( aCtx.Request.kind() != embed::FK_SCH )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "RunChecks" ) )
+        return tl::unexpected( *headless );
+
+    auto busy = []( const std::string& aWhy ) -> HANDLER_RESULT<embed::RunChecksResponse>
+                {
+                    ApiResponseStatus e;
+                    e.set_status( ApiStatusCode::AS_BUSY );
+                    e.set_error_message( aWhy );
+                    return tl::unexpected( e );
+                };
+
+    if( std::optional<wxString> dialog = BACKPLANE_EMBED::ModalBlocker() )
+        return busy( fmt::format( "KiCad is showing the dialog '{}'", dialog->ToStdString( wxConvUTF8 ) ) );
+
+    if( !frame()->ToolStackIsEmpty() )
+        return busy( "a tool is active in the schematic editor" );
+
+    if( std::optional<ApiResponseStatus> other = checkForBusy() )
+        return tl::unexpected( *other );
+
+    SCHEMATIC* schematic = context()->GetSchematic();
+
+    if( !schematic )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+        e.set_error_message( "no schematic is open" );
+        return tl::unexpected( e );
+    }
+
+    uint64_t progressId = BACKPLANE_EMBED::Get().ProgressReserveId();
+    auto     task = std::make_shared<API_HANDLER_SCH::ERC_TASK>( this, schematic, progressId, true );
+
+    if( !API_TASK_SCHEDULER::Instance().StartTask( task, wxS( "ERC" ) ) )
+        return busy( "another task is already running" );
+
+    embed::RunChecksResponse response;
+    response.set_progress_id( progressId );
+    return response;
+}
 
 
 HANDLER_RESULT<StartTaskResponse> API_HANDLER_SCH::handleStartErcTask( const HANDLER_CONTEXT<StartErcTask>& aCtx )

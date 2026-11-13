@@ -371,6 +371,26 @@ that no progress window is ever mapped.
   that handles `ET_EDITOR_REQUESTED` shows the editor as a tab with `ShowFrame` and ignores the
   `ET_SHOW_REQUESTED` for these two kinds.
 
+## bp.13: checks in the editor, markers, selection by id and place
+
+- `RunChecks{kind, refill_zones, parity}` runs DRC (FK_PCB) or ERC (FK_SCH) on the open document,
+  saved or not, in the editor (no second copy of the board, so no second set of libraries), as the
+  DRC/ERC dialog does: old markers go (exclusions are kept), new ones stay in the editor. It
+  answers at once with `progress_id`; `ET_PROGRESS` with that id follows (cancellable with
+  `CancelProgress`), then `ET_CHECKS_DONE = 27` with `Event.checks` (errors, warnings, exclusions,
+  unconnected, cancelled, document_modified, error). Zones are checked as filled unless
+  `refill_zones`, as kicad-cli does. `AS_BUSY` under a modal dialog, while a tool other than
+  selection is active, or while a check or another task runs; other kinds are unhandled.
+- `GetMarkers{kind}` lists the DRC/ERC markers in the editor now (after RunChecks, the dialog, or
+  as loaded): type (the settings key, e.g. `clearance`), severity (`error`, `warning`,
+  `exclusion`), message, position in nm, the items' KIIDs, the marker's own KIID, the custom rule's
+  name when one fired, the layer (FK_PCB) or the sheet's KIID path (FK_SCH). `include_host` is
+  for the host's own markers (SetHostMarkers, a later branch).
+- `SelectItems` takes `ids` (exact items by KIID, with the references, pins and nets; unknown ones
+  come back in `ids_not_found`), `zoom_box_nm` (zoom to fit, overrides `zoom`), `at_nm` (centre
+  there at the current scale) and, for FK_SCH, `sheet_path` (show that sheet first). A host's
+  checks panel selects a marker's items with `ids` and the marker's place with `zoom_box_nm`.
+
 ## Known limitations (as of bp.9)
 
 - `ListActions` (the palette feed).

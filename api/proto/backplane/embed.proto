@@ -29,6 +29,8 @@ syntax = "proto3";
 
 package kiapi.backplane.embed;
 
+import "common/types/base_types.proto";
+
 enum FrameKind
 {
   FK_UNKNOWN          = 0;
@@ -192,7 +194,9 @@ enum EventType
                              // Event.frame is that frame, lib_id filled, already loaded with the
                              // item; the host shows it as a tab (ShowFrame).  Posted with the
                              // ET_SHOW_REQUESTED a hidden frame also gets (bp.13)
-  // 26-27 are taken by the bp.13 drafts (ET_MARKER_CLICKED, ET_CHECKS_DONE)
+  // 26 is taken by the bp.13 draft ET_MARKER_CLICKED
+  ET_CHECKS_DONE       = 27; // a RunChecks finished (or was cancelled); Event.checks (bp.13).
+                             // The markers stay in the editor, as after the DRC/ERC dialog
   ET_FRAME_DRAWN       = 28; // after a ShowFrame, the frame's canvas finished its first redraw
                              // on screen: mapped, laid out at its size and painted.  Once per
                              // ShowFrame of a hidden frame; not for a prewarm.  detail = JSON
@@ -209,6 +213,8 @@ message Event
   ItemNames selection = 5;  // ET_SELECTION_CHANGED and ET_COMMENT
   Comment   comment   = 6;  // ET_COMMENT only
   Progress  progress  = 7;  // ET_PROGRESS only
+  // 8 is reserved for MarkerRef marker (ET_MARKER_CLICKED, host markers)
+  Checks    checks    = 9;  // ET_CHECKS_DONE only (bp.13)
 }
 
 // Long poll.  Returns the events with seq > since, waiting up to wait_ms (at most 60000)
@@ -332,6 +338,14 @@ message SelectItems
   repeated string nets       = 3;
   repeated string pins       = 4;  // "U3.4"
   bool            zoom       = 5;  // zoom to fit what was found
+  // bp.13
+  repeated kiapi.common.types.KIID ids        = 6;  // exact items (tracks, vias, zones, wires,
+                                                    // markers, ...), selected with the others
+  kiapi.common.types.Vector2       at_nm      = 7;  // a place: centre the view there, at the
+                                                    // current scale unless zoom_box_nm is set
+  string                           sheet_path = 8;  // FK_SCH: go to this sheet first (KIID path,
+                                                    // "/" root, as Marker.sheet_path)
+  kiapi.common.types.Box2          zoom_box_nm = 9; // zoom to fit this box (overrides `zoom`)
 }
 
 message SelectItemsResponse
@@ -339,6 +353,73 @@ message SelectItemsResponse
   ItemNames found     = 1;
   ItemNames not_found = 2;
   FrameKind kind      = 3;
+  repeated kiapi.common.types.KIID ids_not_found = 4;  // bp.13
+}
+
+// Run DRC (FK_PCB) or ERC (FK_SCH) on the open document, saved or not, in the editor (no second
+// copy of the board), as the DRC/ERC dialog does: the old markers go (exclusions are kept), the
+// new ones stay in the editor.  Returns at once; ET_PROGRESS (id = progress_id, cancellable with
+// CancelProgress) follows, then ET_CHECKS_DONE.  AS_BUSY while a modal dialog or a tool other
+// than selection is active, or a check is already running.  (bp.13)
+message RunChecks
+{
+  FrameKind kind         = 1;  // FK_PCB (DRC) or FK_SCH (ERC)
+  bool      refill_zones = 2;  // FK_PCB: refill zones first (default: the current fills, as
+                               // kicad-cli does)
+  bool      parity       = 3;  // FK_PCB: also schematic parity
+}
+
+message RunChecksResponse
+{
+  uint64 progress_id = 1;
+}
+
+message Checks
+{
+  FrameKind kind        = 1;
+  int32     errors      = 2;
+  int32     warnings    = 3;
+  int32     exclusions  = 4;
+  int32     unconnected = 5;   // FK_PCB: unrouted connections
+  bool      cancelled   = 6;
+  uint64    progress_id = 7;   // the RunChecks that started it
+  bool      document_modified = 8;  // the results are for unsaved state
+  string    error       = 9;   // it could not run (e.g. the custom rules do not compile)
+}
+
+// For the host's ref (host markers, ET_MARKER_CLICKED): the set and the host's id.
+message MarkerRef
+{
+  string set = 1;
+  string id  = 2;
+}
+
+// The DRC/ERC markers in the editor now (after RunChecks, the DRC/ERC dialog, or loaded with
+// the document).  (bp.13)
+message GetMarkers
+{
+  FrameKind kind         = 1;  // FK_PCB or FK_SCH
+  bool      include_host = 2;  // also the host's own markers (SetHostMarkers), when supported
+}
+
+message Marker
+{
+  string                           type       = 1;  // the DRC/ERC error key, e.g. "clearance"
+  string                           severity   = 2;  // "error" | "warning" | "exclusion"
+  bool                             excluded   = 3;
+  string                           message    = 4;
+  kiapi.common.types.Vector2       at_nm      = 5;
+  repeated kiapi.common.types.KIID items      = 6;
+  string                           sheet_path = 7;  // FK_SCH: the sheet's KIID path ("/" root)
+  MarkerRef                        host       = 8;  // set for host markers (include_host)
+  kiapi.common.types.KIID          id         = 9;  // the marker's own KIID
+  string                           rule       = 10; // the custom rule's name, if one fired
+  string                           layer      = 11; // FK_PCB: the layer name
+}
+
+message GetMarkersResponse
+{
+  repeated Marker markers = 1;
 }
 
 enum ReloadMode

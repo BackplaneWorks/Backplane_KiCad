@@ -326,6 +326,12 @@ private:
     HANDLER_RESULT<kiapi::backplane::embed::SelectItemsResponse> handleSelectItems(
             const HANDLER_CONTEXT<kiapi::backplane::embed::SelectItems>& aCtx );
 
+    HANDLER_RESULT<kiapi::backplane::embed::RunChecksResponse> handleRunChecks(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::RunChecks>& aCtx );
+
+    HANDLER_RESULT<kiapi::backplane::embed::GetMarkersResponse> handleGetMarkers(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::GetMarkers>& aCtx );
+
     HANDLER_RESULT<kiapi::backplane::embed::CommentSelectionResponse> handleCommentSelection(
             const HANDLER_CONTEXT<kiapi::backplane::embed::CommentSelection>& aCtx );
 
