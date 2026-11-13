@@ -23,6 +23,10 @@
 #include <array>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
+#include <fstream>
+#include <sstream>
+#include <tuple>
 #include <map>
 #include <mutex>
 #include <set>
@@ -78,10 +82,10 @@ public:
     {
         for( int ii = 0; ii < aFill.OutlineCount(); ++ii )
         {
-            add( aFill.COutline( ii ) );
+            add( aFill.COutline( ii ), false );
 
             for( int jj = 0; jj < aFill.HoleCount( ii ); ++jj )
-                add( aFill.CHole( ii, jj ) );
+                add( aFill.CHole( ii, jj ), true );
         }
 
         m_extent = aFill.BBox();
@@ -107,16 +111,27 @@ public:
 
     double Area() const { return m_area; }
     double Perimeter() const { return m_perimeter; }
-    const std::vector<VECTOR2I>& Vertices() const { return m_vertices; }
+    int    RingCount() const { return (int) m_ringLength.size(); }
 
-    /// Whether the edge from @a aA to @a aB runs along one ring: both ends on it, and every ring
-    /// point between them (one way round) within the tolerance of the edge.  So the strip between
-    /// a boundary edge and the outline is never wider than the tolerance.
-    bool OnBoundary( const VECTOR2I& aA, const VECTOR2I& aB ) const
+    /// A piece of one ring, from ring position @a from forwards to @a to (wrapping round).
+    struct ARC
+    {
+        int    ring;
+        double from, to;
+    };
+
+    /**
+     * Whether the triangle edge from @a aA to @a aB, with its triangle on its left, runs along
+     * one ring the way the ring goes with the fill on its left: both ends on the ring, and every
+     * ring point between them that way within the tolerance of the edge.  If so, @a aArc gets
+     * the piece of ring the edge stands for (the shortest, where an end lies on the ring twice).
+     */
+    bool OnBoundary( const VECTOR2I& aA, const VECTOR2I& aB, ARC& aArc ) const
     {
         std::vector<std::pair<int, double>> pa = locate( aA );
         std::vector<std::pair<int, double>> pb = locate( aB );
         SEG                                 edge( aA, aB );
+        double                              best = -1.0;
 
         for( const auto& [ringA, sa] : pa )
         {
@@ -125,15 +140,86 @@ public:
                 if( ringA != ringB )
                     continue;
 
-                for( bool forward : { true, false } )
+                // Walking forwards along a ring with the fill on its left goes from aA to aB
+                double from = m_fillOnLeft[ringA] ? sa : sb;
+                double to = m_fillOnLeft[ringA] ? sb : sa;
+                double len = m_ringLength[ringA];
+                double span = std::fmod( to - from + len, len );
+
+                if( ( best < 0.0 || span < best ) && skippedWithin( ringA, from, to, edge ) )
                 {
-                    if( skippedWithin( ringA, forward ? sa : sb, forward ? sb : sa, edge ) )
-                        return true;
+                    best = span;
+                    aArc = { ringA, from, to };
                 }
             }
         }
 
-        return false;
+        return best >= 0.0;
+    }
+
+    /**
+     * Whether @a aArcs cover every ring exactly once, end to end.  A ring no wider than the
+     * tolerance may be left out: the triangulator drops it, and it is below DRC's resolution.
+     * @param aWhy receives the first ring that is not covered so, if any.
+     */
+    bool Tiled( std::vector<ARC>& aArcs, wxString* aWhy ) const
+    {
+        std::sort( aArcs.begin(), aArcs.end(),
+                   []( const ARC& a, const ARC& b )
+                   {
+                       return std::tie( a.ring, a.from ) < std::tie( b.ring, b.from );
+                   } );
+
+        size_t next = 0;
+
+        for( int ring = 0; ring < RingCount(); ++ring )
+        {
+            size_t first = next;
+
+            while( next < aArcs.size() && aArcs[next].ring == ring )
+                ++next;
+
+            double len = m_ringLength[ring];
+            bool   ok = true;
+
+            if( first == next )
+            {
+                ok = m_ringExtent[ring] <= TOLERANCE_NM;
+            }
+            else
+            {
+                double covered = 0.0;
+
+                for( size_t ii = first; ii < next; ++ii )
+                {
+                    const ARC& arc = aArcs[ii];
+                    const ARC& following = aArcs[ii + 1 < next ? ii + 1 : first];
+                    double     gap = std::fmod( following.from - arc.to + 2.0 * len, len );
+
+                    covered += std::fmod( arc.to - arc.from + len, len );
+
+                    if( std::min( gap, len - gap ) > 0.5 )
+                        ok = false;
+                }
+
+                if( std::abs( covered - len ) > 0.5 * ( next - first ) + 0.5 )
+                    ok = false;
+            }
+
+            if( !ok )
+            {
+                if( aWhy )
+                {
+                    *aWhy = wxString::Format( wxS( "the triangles' boundary edges do not run once round "
+                                                   "the ring through (%d, %d)" ),
+                                              m_ringPoints[ring][0].x, m_ringPoints[ring][0].y );
+                }
+
+                return false;
+            }
+        }
+
+        return true;
     }
 
 private:
@@ -144,12 +230,13 @@ private:
         double   start;     // ring position of a
     };
 
-    void add( const SHAPE_LINE_CHAIN& aChain )
+    void add( const SHAPE_LINE_CHAIN& aChain, bool aHole )
     {
         int    n = aChain.PointCount();
         int    ring = (int) m_ringLength.size();
         double pos = 0.0;
         double area = 0.0;
+        BOX2I  extent = aChain.BBox();
 
         m_ringPoints.emplace_back();
         m_ringPositions.emplace_back();
@@ -159,7 +246,6 @@ private:
             const VECTOR2I& a = aChain.CPoint( ii );
             const VECTOR2I& b = aChain.CPoint( ( ii + 1 ) % n );
 
-            m_vertices.push_back( a );
             m_vertexPositions.emplace( a, std::make_pair( ring, pos ) );
             m_ringPoints.back().push_back( a );
             m_ringPositions.back().push_back( pos );
@@ -169,11 +255,13 @@ private:
         }
 
         m_ringLength.push_back( std::max( pos, 1.0 ) );
+        m_ringExtent.push_back( std::hypot( (double) extent.GetWidth(), (double) extent.GetHeight() ) );
         m_perimeter += pos;
-        // Outlines are counter-clockwise and holes clockwise (or the reverse): the signed sum
-        // gives the filled area either way
-        m_signedArea += area / 2.0;
-        m_area = std::abs( m_signedArea );
+
+        // A positive shoelace sum turns the same way as a triangle with a positive cross
+        // product, so its inside is on the left; the fill is outside a hole
+        m_fillOnLeft.push_back( aHole ? area < 0.0 : area > 0.0 );
+        m_area += ( aHole ? -1.0 : 1.0 ) * std::abs( area ) / 2.0;
     }
 
     /// Whether the ring points strictly after position @a aFrom and before @a aTo (walking
@@ -247,21 +335,15 @@ private:
     std::vector<std::vector<VECTOR2I>> m_ringPoints;
     std::vector<std::vector<double>>   m_ringPositions;
     std::vector<double>                m_ringLength;
-    std::vector<VECTOR2I>         m_vertices;
+    std::vector<double>                m_ringExtent;
+    std::vector<bool>                  m_fillOnLeft;
     std::vector<std::vector<int>> m_grid;
     BOX2I                         m_extent;
     int                           m_cells = 1;
     double                        m_cw = 1.0;
     double                        m_ch = 1.0;
     double                        m_perimeter = 0.0;
-    double                        m_signedArea = 0.0;
     double                        m_area = 0.0;
-};
-
-
-struct TRIANGLE
-{
-    VECTOR2I a, b, c;
 };
 
 
@@ -295,6 +377,29 @@ std::set<std::pair<wxString, wxString>>& logged()
 
 bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aWhy )
 {
+    std::vector<std::vector<TRIANGLE>> triangles( aFill.TriangulatedPolyCount() );
+
+    for( unsigned ii = 0; ii < aFill.TriangulatedPolyCount(); ++ii )
+    {
+        const SHAPE_POLY_SET::TRIANGULATED_POLYGON* tp = aFill.TriangulatedPolygon( ii );
+
+        triangles[ii].resize( tp->GetTriangleCount() );
+
+        for( size_t jj = 0; jj < tp->GetTriangleCount(); ++jj )
+        {
+            TRIANGLE& t = triangles[ii][jj];
+            tp->GetTriangle( (int) jj, t[0], t[1], t[2] );
+        }
+    }
+
+    return Validate( aFill, triangles, aWhy );
+}
+
+
+bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill,
+                                       const std::vector<std::vector<TRIANGLE>>& aTriangles,
+                                       wxString* aWhy )
+{
     RINGS rings( aFill );
 
     // A fill thinner than the triangulator resolves (a degenerate sliver) has nothing to cover
@@ -305,22 +410,20 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
     std::vector<std::array<int, 4>> edges;
     double triArea = 0.0;
 
-    for( unsigned ii = 0; ii < aFill.TriangulatedPolyCount(); ++ii )
+    for( const std::vector<TRIANGLE>& polygon : aTriangles )
     {
-        const SHAPE_POLY_SET::TRIANGULATED_POLYGON* tp = aFill.TriangulatedPolygon( ii );
-        int                                         turn = 0;
+        int turn = 0;
 
-        for( size_t jj = 0; jj < tp->GetTriangleCount(); ++jj )
+        for( TRIANGLE t : polygon )
         {
-            TRIANGLE t;
-            tp->GetTriangle( (int) jj, t.a, t.b, t.c );
+            double area2 = cross( t[0], t[1], t[2] );
 
-            double area2 = cross( t.a, t.b, t.c );
-
+            // A zero-area triangle covers nothing and its edges add up to nothing
             if( area2 == 0.0 )
                 continue;
 
-            // A triangle turning the other way from its neighbours is folded over them
+            // Not needed for the guarantee (below), but a triangulator that turns one triangle
+            // of a polygon the other way from the rest has gone wrong
             int sign = area2 > 0.0 ? 1 : -1;
 
             if( turn == 0 )
@@ -332,23 +435,27 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
                 if( aWhy )
                     *aWhy = wxString::Format( wxS( "triangle (%d, %d) (%d, %d) (%d, %d) is folded over "
                                                    "its neighbours" ),
-                                              t.a.x, t.a.y, t.b.x, t.b.y, t.c.x, t.c.y );
+                                              t[0].x, t[0].y, t[1].x, t[1].y, t[2].x, t[2].y );
 
                 return false;
             }
 
-            // Counter-clockwise from here on, for the edge pairing and inside tests
+            // Counter-clockwise from here on: each triangle is on the left of its edges
             if( area2 < 0.0 )
-                std::swap( t.b, t.c );
+                std::swap( t[1], t[2] );
 
             triArea += std::abs( area2 ) / 2.0;
-            edges.push_back( { t.a.x, t.a.y, t.b.x, t.b.y } );
-            edges.push_back( { t.b.x, t.b.y, t.c.x, t.c.y } );
-            edges.push_back( { t.c.x, t.c.y, t.a.x, t.a.y } );
+
+            for( int kk = 0; kk < 3; ++kk )
+            {
+                const VECTOR2I& from = t[kk];
+                const VECTOR2I& to = t[( kk + 1 ) % 3];
+                edges.push_back( { from.x, from.y, to.x, to.y } );
+            }
         }
     }
 
-    // The triangles must cover the fill's area, give or take what the simplification drops
+    // Also not needed for the guarantee; a cheap first test that catches most failures
     if( std::abs( triArea - rings.Area() ) > rings.Perimeter() * TOLERANCE_NM / 2.0 + 1e6 )
     {
         if( aWhy )
@@ -358,9 +465,12 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
         return false;
     }
 
-    // In a tiling, an edge inside the fill is shared by two triangles in opposite directions and
-    // any other edge runs along the outline.  A gap or an overlap leaves an edge that is neither.
+    // Edges a triangle shares, in the opposite direction, with another cancel out; every other
+    // edge must run along the outline (RINGS::OnBoundary) and stands for the piece of outline
+    // it runs along
     std::sort( edges.begin(), edges.end() );
+
+    std::vector<RINGS::ARC> arcs;
 
     for( size_t ii = 0; ii < edges.size(); )
     {
@@ -376,14 +486,18 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
         int                reverseCount = (int) ( range.second - range.first );
         VECTOR2I           from( edge[0], edge[1] );
         VECTOR2I           to( edge[2], edge[3] );
+        RINGS::ARC         arc;
 
         ii = jj;
 
         if( count == reverseCount )
             continue;
 
-        if( count == 1 && reverseCount == 0 && rings.OnBoundary( from, to ) )
+        if( count == 1 && reverseCount == 0 && rings.OnBoundary( from, to, arc ) )
+        {
+            arcs.push_back( arc );
             continue;
+        }
 
         if( reverseCount > count )
             continue;   // reported from the other direction
@@ -391,18 +505,15 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill, wxString* aW
         if( aWhy )
         {
             *aWhy = wxString::Format( wxS( "triangle edge (%d, %d)-(%d, %d) is neither shared nor on "
-                                           "the outline" ),
+                                           "the outline the right way round" ),
                                       from.x, from.y, to.x, to.y );
         }
 
         return false;
     }
 
-    // No outline-vertex-inside test: an ear that swallows outline vertices overlaps the other
-    // triangles, which with every edge paired shows as triangle area above the fill's, or leaves
-    // a gap, which shows as an unpaired edge; both fail above
-
-    return true;
+    // ... and those pieces must go once round every ring
+    return rings.Tiled( arcs, aWhy );
 }
 
 
@@ -439,6 +550,13 @@ void DRC_ZONE_TRIANGULATION::Check( const ZONE* aZone, PCB_LAYER_ID aLayer )
 
     if( trusted )
         return;
+
+    if( const char* dir = std::getenv( "KICAD_DRC_DUMP_TRIANGULATION" ) )
+    {
+        wxString path = wxString::Format( wxS( "%s/%s-%s.tri" ), wxString::FromUTF8( dir ),
+                                          aZone->m_Uuid.AsString(), LayerName( aLayer ) );
+        Dump( *fill, path );
+    }
 
     const BOARD* board = aZone->GetBoard();
     wxString     boardName = board ? board->GetFileName() : wxString();
@@ -490,4 +608,112 @@ std::shared_ptr<SHAPE_POLY_SET> DRC_ZONE_TRIANGULATION::Replacement( const ZONE*
         return nullptr;
 
     return it->second.replacement;
+}
+
+
+bool DRC_ZONE_TRIANGULATION::Dump( const SHAPE_POLY_SET& aFill, const wxString& aPath )
+{
+    std::ofstream out( aPath.fn_str() );
+
+    if( !out )
+        return false;
+
+    out << "# zone fill triangulation: rings (outline, then its holes), then triangles\n";
+
+    auto ring =
+            [&]( const char* aKind, const SHAPE_LINE_CHAIN& aChain )
+            {
+                out << "ring " << aKind << " " << aChain.PointCount() << "\n";
+
+                for( int ii = 0; ii < aChain.PointCount(); ++ii )
+                    out << aChain.CPoint( ii ).x << " " << aChain.CPoint( ii ).y << "\n";
+            };
+
+    for( int ii = 0; ii < aFill.OutlineCount(); ++ii )
+    {
+        ring( "outline", aFill.COutline( ii ) );
+
+        for( int jj = 0; jj < aFill.HoleCount( ii ); ++jj )
+            ring( "hole", aFill.CHole( ii, jj ) );
+    }
+
+    for( unsigned ii = 0; ii < aFill.TriangulatedPolyCount(); ++ii )
+    {
+        const SHAPE_POLY_SET::TRIANGULATED_POLYGON* tp = aFill.TriangulatedPolygon( ii );
+
+        out << "polygon " << tp->GetTriangleCount() << "\n";
+
+        for( size_t jj = 0; jj < tp->GetTriangleCount(); ++jj )
+        {
+            VECTOR2I a, b, c;
+            tp->GetTriangle( (int) jj, a, b, c );
+            out << a.x << " " << a.y << " " << b.x << " " << b.y << " " << c.x << " " << c.y << "\n";
+        }
+    }
+
+    return (bool) out;
+}
+
+
+bool DRC_ZONE_TRIANGULATION::Load( const wxString& aPath, SHAPE_POLY_SET& aFill,
+                                   std::vector<std::vector<TRIANGLE>>& aTriangles )
+{
+    std::ifstream in( aPath.fn_str() );
+    std::string   line;
+
+    if( !in )
+        return false;
+
+    aFill.RemoveAllContours();
+    aTriangles.clear();
+
+    while( std::getline( in, line ) )
+    {
+        std::istringstream words( line );
+        std::string        kind;
+        words >> kind;
+
+        if( kind == "ring" )
+        {
+            std::string sub;
+            int         count = 0;
+            words >> sub >> count;
+
+            SHAPE_LINE_CHAIN chain;
+
+            for( int ii = 0; ii < count && std::getline( in, line ); ++ii )
+            {
+                std::istringstream xy( line );
+                int                x, y;
+                xy >> x >> y;
+                chain.Append( x, y );
+            }
+
+            chain.SetClosed( true );
+
+            if( sub == "outline" )
+                aFill.AddOutline( chain );
+            else if( aFill.OutlineCount() > 0 )
+                aFill.AddHole( chain );
+            else
+                return false;
+        }
+        else if( kind == "polygon" )
+        {
+            size_t count = 0;
+            words >> count;
+
+            std::vector<TRIANGLE>& polygon = aTriangles.emplace_back();
+
+            for( size_t ii = 0; ii < count && std::getline( in, line ); ++ii )
+            {
+                std::istringstream v( line );
+                TRIANGLE           t;
+                v >> t[0].x >> t[0].y >> t[1].x >> t[1].y >> t[2].x >> t[2].y;
+                polygon.push_back( t );
+            }
+        }
+    }
+
+    return aFill.OutlineCount() > 0;
 }

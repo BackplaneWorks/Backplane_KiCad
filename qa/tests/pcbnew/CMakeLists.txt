@@ -208,6 +208,7 @@ set( QA_PCBNEW_SRCS
     drc/test_footprint_courtyard_index.cpp
     drc/test_drc_regressions.cpp
     drc/test_drc_issue23469.cpp
+    drc/test_drc_zone_triangulation.cpp
     drc/test_drc_issue24525.cpp
     drc/test_drc_arc_arc_edge_clearance.cpp
     drc/test_drc_solder_mask_expansion.cpp
