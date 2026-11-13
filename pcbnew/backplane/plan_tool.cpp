@@ -552,6 +552,13 @@ int PLAN_TOOL::EditPlan( const TOOL_EVENT& aEvent )
     }
 
     planItem()->SetHovered( "" );
+
+    // Plan view and its editing are one mode: when the tool ends (Escape with nothing selected,
+    // another tool chosen), plan view ends with it (as TogglePlanView turns it off), so no plan
+    // is left drawn over a canvas whose clicks and keys go to the selection tool
+    if( PLAN_VIEW_ITEM* item = planItem(); item && item->IsPlanView() )
+        item->SetPlanView( false );
+
     f->GetCanvas()->RefreshPlan();
     f->PopTool( aEvent );
     return 0;
