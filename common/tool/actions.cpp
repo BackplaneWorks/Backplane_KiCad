@@ -1342,6 +1342,7 @@ TOOL_ACTION ACTIONS::showProperties( TOOL_ACTION_ARGS()
 TOOL_ACTION ACTIONS::commentToBackplane( TOOL_ACTION_ARGS()
         .Name( "common.Control.commentToBackplane" )
         .Scope( AS_GLOBAL )
+        .DefaultHotkey( ';' )   // free in the PCB and schematic editors, not a host-reserved key
         .FriendlyName( _( "Comment to Backplane..." ) )
         .Tooltip( _( "Send a note about the selection, with a picture of it, to Backplane" ) )
         .Icon( BITMAPS::text ) );

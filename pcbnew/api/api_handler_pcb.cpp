@@ -25,6 +25,7 @@
 #include <backplane_merge.h>
 #include <backplane_embed.h>
 #include <backplane_embed_proto.h>
+#include <backplane_comment.h>
 #include <backplane_comment_pcb.h>
 #include <magic_enum.hpp>
 #include <memory>
@@ -3422,10 +3423,20 @@ API_HANDLER_PCB::handleCommentSelection(
 
     BOX2I         box;
     EMBED_COMMENT comment = BackplaneBuildPcbComment( frame(), box );
-    comment.note = aCtx.Request.note();
     comment.fromApi = true;
 
     embed::CommentSelectionResponse response;
+
+    if( aCtx.Request.capture_only() )
+    {
+        // The host takes the note itself: the selection and its picture only, nothing pushed
+        BackplaneCommentScreenshot( frame(), box, pcbIUScale.IU_PER_MM, comment );
+        response.set_seq( 0 );
+        FillEmbedComment( response.mutable_comment(), comment );
+        return response;
+    }
+
+    comment.note = aCtx.Request.note();
     response.set_seq( BackplaneSendPcbComment( frame(), comment, box ) );
     FillEmbedComment( response.mutable_comment(), comment );
     return response;

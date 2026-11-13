@@ -308,6 +308,28 @@ def main():
                   and sorted(reply.comment.names.references) == sorted(refs_c),
                   f"{label}: CommentSelection pushes the same event (seq {reply.seq})")
 
+            # bp.13: capture only (the host takes the note): the comment comes back, nothing pushed
+            if "capture_only" in embed.CommentSelection.DESCRIPTOR.fields_by_name:
+                events()
+                reply = api.request(embed.CommentSelection(kind=kind, note="ignored", capture_only=True),
+                                    embed.CommentSelectionResponse)
+                time.sleep(1.0)
+                check(reply.seq == 0 and sorted(reply.comment.names.references) == sorted(refs_c)
+                      and bool(reply.comment.screenshot) and not reply.comment.note
+                      and not any(e.type == embed.ET_COMMENT for e in events()),
+                      f"{label}: CommentSelection capture_only returns the comment and pushes nothing")
+
+                # The hotkey: ';' opens the same comment dialog as the menu item
+                before_windows = set(s.watcher.current())
+                s.xdotool("mousemove", str(cx), str(cy))
+                s.xdotool("key", "semicolon")
+                opened = wait_for(lambda: set(s.watcher.current()) - before_windows - {top}, 10)
+                time.sleep(0.5)
+                s.xdotool("key", "Escape")
+                time.sleep(1.0)
+                check(bool(opened) and not any(e.type == embed.ET_COMMENT for e in events()),
+                      f"{label}: ';' opens the comment dialog (Escape sends nothing)")
+
             # Nothing selected: the area in view
             select(kind, [], zoom=False)   # SelectItems with nothing clears the selection
             time.sleep(0.5)

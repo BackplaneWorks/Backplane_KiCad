@@ -446,6 +446,8 @@ message CommentSelection
 {
   FrameKind kind = 1;  // FK_PCB or FK_SCH
   string    note = 2;
+  bool      capture_only = 3;  // bp.13: return the Comment (names, items, bbox, screenshot) only:
+                               // no ET_COMMENT, no dialog, `note` ignored; the reply's seq is 0
 }
 
 message CommentSelectionResponse
