@@ -12,7 +12,7 @@ nng_source=${BACKPLANE_NNG_SOURCE:?set BACKPLANE_NNG_SOURCE to its matching nng 
 [ ! -e "$prefix/include/nng/nng.h" ] || { echo "Homebrew nng would shadow nng 1.x; brew uninstall nng" >&2; exit 2; }
 export PKG_CONFIG_PATH="$nng/lib/pkgconfig:$prefix/lib/pkgconfig:$prefix/opt/curl/lib/pkgconfig"
 version=$(tr -d '\r\n' < BACKPLANE_VERSION)
-[[ "$version" =~ ^10\.99\.0-(bp\.[0-9]+)$ ]] || { echo 'Invalid Backplane release version' >&2; exit 2; }
+[[ "$version" =~ ^10\.99\.0-(bp\.[0-9]+(\.[0-9]+)?)$ ]] || { echo 'Invalid Backplane release version' >&2; exit 2; }
 version_extra=${BASH_REMATCH[1]}
 if [ "${GITHUB_REF_TYPE:-}" = tag ] && [ "$GITHUB_REF_NAME" != "backplane-kicad-v$version" ]; then
   echo 'Release tag does not match BACKPLANE_VERSION' >&2

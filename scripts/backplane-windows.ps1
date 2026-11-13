@@ -24,7 +24,7 @@ git -C $env:VCPKG_ROOT checkout --detach FETCH_HEAD
 if ((git -C $env:VCPKG_ROOT rev-parse HEAD) -ne $vcpkgCommit) { throw 'vcpkg pin mismatch' }
 & (Join-Path $env:VCPKG_ROOT 'bootstrap-vcpkg.bat') -disableMetrics
 $version = (Get-Content (Join-Path $source 'BACKPLANE_VERSION') -Raw).Trim()
-if ($version -notmatch '^10\.99\.0-(bp\.[0-9]+)$') { throw 'Invalid Backplane release version' }
+if ($version -notmatch '^10\.99\.0-(bp\.[0-9]+(\.[0-9]+)?)$') { throw 'Invalid Backplane release version' }
 $versionExtra = $Matches[1]
 if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "backplane-kicad-v$version") {
     throw 'Release tag does not match BACKPLANE_VERSION'
