@@ -406,9 +406,9 @@ BOOST_AUTO_TEST_CASE( LibCachePinMapsCountedForDrop )
 }
 
 
-// The 10.0 group format stores its own lock, so a locked group survives a 10.0 export while
-// other locked items are still unlocked and reported.
-BOOST_AUTO_TEST_CASE( GroupLockKeptForKicad10 )
+// Stock 10.0 writes (locked yes) on a group but its parser rejects it, so a 10.0 export unlocks
+// the group with every other locked item and reports both (878380fd24).
+BOOST_AUTO_TEST_CASE( GroupLockDroppedForKicad10 )
 {
     SCH_SCREEN screen;
 
@@ -425,12 +425,12 @@ BOOST_AUTO_TEST_CASE( GroupLockKeptForKicad10 )
     group->SetLocked( true );
     screen.Append( group );
 
-    BOOST_CHECK_EQUAL( ClassifyScreenForDowngrade( &screen, kicad10 ).Count( DOWNGRADE_BUCKET::LOWER ), 1 );
+    BOOST_CHECK_EQUAL( ClassifyScreenForDowngrade( &screen, kicad10 ).Count( DOWNGRADE_BUCKET::LOWER ), 2 );
 
     DowngradeScreenInPlace( &screen, kicad10 );
 
     BOOST_CHECK( !shape->IsLocked() );
-    BOOST_CHECK( group->IsLocked() );
+    BOOST_CHECK( !group->IsLocked() );
 }
 
 
