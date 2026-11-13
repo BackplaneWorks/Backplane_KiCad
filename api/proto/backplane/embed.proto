@@ -38,6 +38,7 @@ enum FrameKind
   FK_FOOTPRINT_EDITOR = 4;  // FOOTPRINT_EDIT_FRAME
   FK_PCB_3D           = 5;  // EDA_3D_VIEWER_FRAME of the PCB editor
   FK_OTHER            = 6;  // any other embedded, non-modal frame (viewers, calculator, ...)
+  FK_GERBVIEW         = 7;  // GERBVIEW_FRAME, in KiCad's own process (bp.13, desktop only)
 }
 
 message FrameInfo
@@ -54,6 +55,8 @@ message FrameInfo
   string    frame_name = 10; // KiCad's internal frame name, for diagnostics
   bool      realized   = 11; // shown to the toolkit (by ShowFrame or a prewarm): the host may
                              // XMapWindow/XUnmapWindow `window` itself; HideFrame clears it
+  string          lib_id = 12;   // FK_FOOTPRINT_EDITOR / FK_SYMBOL_EDITOR: "Lib:Name" on screen (bp.13)
+  repeated string files  = 13;   // FK_GERBVIEW: the Gerber / drill / job files loaded, absolute (bp.13)
 }
 
 // Parent (or re-parent) every embedded frame under a host window.
@@ -184,6 +187,11 @@ enum EventType
   ET_PROGRESS          = 24; // a long job (load, zone fill, DRC, library load, plot) started,
                              // progressed or ended; Event.progress (bp.12).  In --embedded no
                              // progress window is shown; the host draws it
+  ET_EDITOR_REQUESTED  = 25; // KiCad itself opened or brought up a footprint or symbol editor
+                             // ("Open Footprint", "Edit Symbol" from the board or schematic):
+                             // Event.frame is that frame, lib_id filled, already loaded with the
+                             // item; the host shows it as a tab (ShowFrame).  Posted with the
+                             // ET_SHOW_REQUESTED a hidden frame also gets (bp.13)
 }
 
 message Event
@@ -480,4 +488,21 @@ message CancelProgress
 message CancelProgressResponse
 {
   bool cancelling = 1;
+}
+
+
+// Open GerbView (FK_GERBVIEW) on a set of fabrication outputs, replacing what it showed (bp.13).
+message OpenGerbers
+{
+  repeated string files = 1;   // .gbr/.gtl/...; .drl/.xln; a .gbrjob loads its listed layers
+  bool            show  = 2;   // also show the frame (else it opens hidden, like a prewarm)
+  int32 x = 3; int32 y = 4; int32 width = 5; int32 height = 6;   // as ShowFrame
+}
+
+message OpenGerbersResponse
+{
+  FrameInfo       frame  = 1;
+  repeated string loaded = 2;
+  repeated string failed = 3;   // with the reason in `errors` at the same index
+  repeated string errors = 4;
 }

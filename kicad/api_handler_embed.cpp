@@ -25,6 +25,8 @@
 #include <backplane_embed_proto.h>
 #include <kiplatform/embed.h>
 #include <kiway.h>
+#include <kiway_holder.h>
+#include <kiway_player.h>
 #include <mail_type.h>
 
 #include <api/common/commands/cross_probe_commands.pb.h>
@@ -49,6 +51,10 @@ void fillFrame( FrameInfo* aOut, const EMBED_FRAME_INFO& aIn )
     aOut->set_focused( aIn.focused );
     aOut->set_realized( aIn.realized );
     aOut->set_frame_name( aIn.frameName.ToStdString( wxConvUTF8 ) );
+    aOut->set_lib_id( aIn.libId.ToStdString( wxConvUTF8 ) );
+
+    for( const wxString& file : aIn.files )
+        aOut->add_files( file.ToStdString( wxConvUTF8 ) );
 }
 
 
@@ -100,6 +106,7 @@ API_HANDLER_EMBED::API_HANDLER_EMBED( KIWAY& aKiway ) :
     registerHandler<AttachToParent, AttachToParentResponse>(
             &API_HANDLER_EMBED::handleAttachToParent, true );
     registerHandler<ShowFrame, ShowFrameResponse>( &API_HANDLER_EMBED::handleShowFrame );
+    registerHandler<OpenGerbers, OpenGerbersResponse>( &API_HANDLER_EMBED::handleOpenGerbers );
     registerHandler<HideFrame, HideFrameResponse>( &API_HANDLER_EMBED::handleHideFrame, true );
     registerHandler<GetFrames, GetFramesResponse>( &API_HANDLER_EMBED::handleGetFrames, true );
     registerHandler<NextEvents, NextEventsResponse>( &API_HANDLER_EMBED::handleNextEvents, true );
@@ -175,6 +182,15 @@ bool openFrame( EMBED_FRAME_KIND aKind, bool aShow )
         if( const EMBED_FRAME_OPS* pcbOps = pcb ? embed.Ops( pcb ) : nullptr; pcbOps && pcbOps->runAction )
             run( [&]() { pcbOps->runAction( "common.Control.show3DViewer" ); } );
     }
+    else if( aKind == EMBED_FRAME_KIND::GERBVIEW )
+    {
+        // In KiCad's own process (the project manager starts a separate GerbView otherwise)
+        if( KIWAY_HOLDER* holder = dynamic_cast<KIWAY_HOLDER*>( embed.Manager() ) )
+        {
+            if( KIWAY_PLAYER* player = holder->Kiway().Player( FRAME_GERBER, true ) )
+                run( [&]() { player->Show( true ); } );
+        }
+    }
     else if( const char* action = managerActionFor( aKind ) )
     {
         run( [&]() { managerOps.runAction( action ); } );
@@ -195,6 +211,77 @@ void fillAllFrames( google::protobuf::RepeatedPtrField<FrameInfo>* aOut )
 } // namespace
 
 
+HANDLER_RESULT<OpenGerbersResponse> API_HANDLER_EMBED::handleOpenGerbers(
+        const HANDLER_CONTEXT<OpenGerbers>& aCtx )
+{
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    if( std::optional<wxString> dialog = BACKPLANE_EMBED::ModalBlocker() )
+    {
+        return tl::unexpected( failure( ApiStatusCode::AS_BUSY,
+                                        fmt::format( "KiCad is showing the dialog '{}'",
+                                                     dialog->ToStdString( wxConvUTF8 ) ) ) );
+    }
+
+    wxFrame* frame = embed.FindFrame( EMBED_FRAME_KIND::GERBVIEW );
+
+    if( !frame )
+    {
+        if( !embed.ManagerOps().runAction )
+            return tl::unexpected( failure( ApiStatusCode::AS_NOT_READY, "the project manager is not ready" ) );
+
+        openFrame( EMBED_FRAME_KIND::GERBVIEW, false );
+        frame = embed.FindFrame( EMBED_FRAME_KIND::GERBVIEW );
+
+        if( !frame )
+        {
+            return tl::unexpected( failure( ApiStatusCode::AS_INTERNAL_ERROR,
+                                            "KiCad did not open GerbView (see its log)" ) );
+        }
+    }
+
+    int w = aCtx.Request.width() > 0 ? aCtx.Request.width() : 1280;
+    int h = aCtx.Request.height() > 0 ? aCtx.Request.height() : 800;
+
+    if( aCtx.Request.show() )
+    {
+        if( aCtx.Request.width() > 0 && aCtx.Request.height() > 0 )
+            KIPLATFORM::EMBED::SetFrameGeometry( frame, aCtx.Request.x(), aCtx.Request.y(), w, h );
+
+        embed.ShowEmbedded( frame, true );
+    }
+    else if( !frame->IsShown() )
+    {
+        // Its canvas must exist before files load into it: laid out off-screen, as a prewarm
+        embed.Prewarm( frame, w, h );
+    }
+
+    std::vector<wxString>                      files;
+    std::vector<wxString>                      loaded;
+    std::vector<std::pair<wxString, wxString>> errors;
+
+    for( const std::string& file : aCtx.Request.files() )
+        files.push_back( wxString::FromUTF8( file ) );
+
+    if( const EMBED_FRAME_OPS* ops = embed.Ops( frame ); ops && ops->openFiles )
+        ops->openFiles( files, loaded, errors );
+
+    OpenGerbersResponse response;
+
+    for( const wxString& file : loaded )
+        response.add_loaded( file.ToStdString( wxConvUTF8 ) );
+
+    for( const auto& [file, why] : errors )
+    {
+        response.add_failed( file.ToStdString( wxConvUTF8 ) );
+        response.add_errors( why.ToStdString( wxConvUTF8 ) );
+    }
+
+    fillFrame( response.mutable_frame(), embed.Info( frame ) );
+    return response;
+}
+
+
 HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
         const HANDLER_CONTEXT<ShowFrame>& aCtx )
 {
@@ -205,7 +292,7 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
     {
         return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST,
                                         "ShowFrame needs one of FK_PCB, FK_SCH, FK_SYMBOL_EDITOR, "
-                                        "FK_FOOTPRINT_EDITOR or FK_PCB_3D" ) );
+                                        "FK_FOOTPRINT_EDITOR, FK_PCB_3D or FK_GERBVIEW" ) );
     }
 
     wxFrame* frame = embed.FindFrame( kind );

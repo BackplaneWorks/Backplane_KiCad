@@ -299,6 +299,12 @@ public:
     /// Return the LIB_ID of the part being edited.
     LIB_ID GetLoadedFPID() const;
 
+    wxString EmbedLibId() const override
+    {
+        LIB_ID id = GetLoadedFPID();
+        return id.IsValid() ? wxString( id.Format() ) : wxString();
+    }
+
     /// Return the LIB_ID of the part selected in the footprint tree, or the loaded part if
     /// there is no selection in the tree.
     LIB_ID GetTargetFPID() const;

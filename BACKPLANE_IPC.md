@@ -94,7 +94,7 @@ it here in the same change):
 | `EventType` | Name | Since |
 |---|---|---|
 | 1-24 | frames, dialogs, documents, theme, comments, co-editing, plan, progress | bp.8-bp.12 |
-| 25 | `ET_EDITOR_REQUESTED` (reserved, bp.13: editor tabs) | bp.13 |
+| 25 | `ET_EDITOR_REQUESTED` (editor tabs) | bp.13 |
 | 26 | `ET_MARKER_CLICKED` (reserved, bp.13: host markers) | bp.13 |
 | 27 | `ET_CHECKS_DONE` (reserved, bp.13: RunChecks) | bp.13 |
 | 28 | `ET_FRAME_DRAWN` (reserved, bp.13: cold start) | bp.13 |

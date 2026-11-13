@@ -230,7 +230,11 @@ bool GERBVIEW_FRAME::LoadGerberJobFile( const wxString& aFullFileName )
 
     SortLayersByX2Attributes();
 
-    if( reporter.HasMessage() )
+    if( reporter.HasMessage() && m_embedQuietLoad )
+    {
+        m_embedLoadMessages.push_back( reporter.GetMessages() );
+    }
+    else if( reporter.HasMessage() )
     {
         wxSafeYield();  // Allows slice of time to redraw the screen
                         // to refresh widgets, before displaying messages

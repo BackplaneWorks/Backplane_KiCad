@@ -352,6 +352,22 @@ Real questions (save/discard, errors, file pickers) stay dialogs, transient for 
 centred on it. The features check asserts load, zone fill and library load jobs end `done` and
 that no progress window is ever mapped.
 
+## bp.13: GerbView and editor tabs
+
+- `FK_GERBVIEW = 7`: GerbView runs in KiCad's own process when embedded (the project manager
+  otherwise starts a separate one), shown with `ShowFrame` like the editors.
+- `OpenGerbers{files, show, x, y, width, height}` replaces what GerbView shows with these Gerber,
+  drill, job (`.gbrjob`, its listed layers) or zip files, opening GerbView hidden (laid out
+  off-screen, as a prewarm) unless `show`. Each file loads on its own: `loaded`, and `failed` with
+  the reason in `errors` at the same index (no dialog appears). `FrameInfo.files` lists the files
+  loaded.
+- `FrameInfo.lib_id` names the footprint or symbol on screen in the library editors.
+- `ET_EDITOR_REQUESTED = 25`: KiCad itself opened or brought up the footprint or symbol editor
+  ("Open Footprint in Footprint Editor", "Edit Symbol"); `Event.frame` is that frame with its
+  `lib_id`, already loaded. A hidden frame also gets `ET_SHOW_REQUESTED` (older hosts); a host
+  that handles `ET_EDITOR_REQUESTED` shows the editor as a tab with `ShowFrame` and ignores the
+  `ET_SHOW_REQUESTED` for these two kinds.
+
 ## Known limitations (as of bp.9)
 
 - `ListActions` (the palette feed).
