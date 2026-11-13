@@ -4692,7 +4692,10 @@ BOOST_AUTO_TEST_CASE( NewDrcConstraintsAndFunctionsAreFilteredWithoutLiteralFals
                                 : "(rule \"new\" (constraint assertion \"" + call + "\"))";
                 const auto result = FilterDrcRulesForTarget( wxT( "(version 1)" ) + rule, target );
                 BOOST_CHECK( result.m_error.IsEmpty() );
-                BOOST_CHECK_EQUAL( result.m_dropped.size(), 1 );
+
+                // intersectsArea is in 10.0 and, since 10.0.7, means the same there; 9.0 differs
+                const bool sameMeaning = call.Contains( wxT( "intersectsArea" ) ) && target.m_id == wxT( "10.0" );
+                BOOST_CHECK_EQUAL( result.m_dropped.size(), sameMeaning ? 0 : 1 );
             }
         }
 

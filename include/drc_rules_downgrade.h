@@ -50,10 +50,18 @@ inline const DRC_RULE_VOCABULARY* FindDrcRuleVocabulary( const DOWNGRADE_TARGET&
 }
 
 
-/// A function a release parses but answers differently, which the vocabulary cannot say.
-inline constexpr const char* DRC_RULE_SEMANTIC_BREAKS[] = {
-    // Releases before 10.0.7 test a zone item's fill rather than its outline.
-    "intersectsarea",
+/// A function a target parses but answers differently, which the vocabulary cannot say.  A target
+/// is the current release of its line (an export to "10.0" is for the latest 10.0.x, which the
+/// stock-export gate checks), so a break fixed in a later patch of that line does not count.
+struct DRC_RULE_SEMANTIC_BREAK
+{
+    const char* m_function;  ///< folded function name
+    const char* m_targetId;  ///< the target that answers differently
+};
+
+inline constexpr DRC_RULE_SEMANTIC_BREAK DRC_RULE_SEMANTIC_BREAKS[] = {
+    // 9.0 tests a zone item's fill rather than its outline (fixed in 10.0.7).
+    { "intersectsarea", "9.0" },
 };
 
 
@@ -395,9 +403,9 @@ inline bool DrcRuleUnsupportedByTarget( const std::vector<DRC_RULE_TOKEN>& aToke
 
         if( next < folded.size() && folded[next] == '(' )
         {
-            for( const char* broken : DRC_RULE_SEMANTIC_BREAKS )
+            for( const DRC_RULE_SEMANTIC_BREAK& broken : DRC_RULE_SEMANTIC_BREAKS )
             {
-                if( word == broken )
+                if( word == broken.m_function && std::string_view( aVocabulary.m_targetId ) == broken.m_targetId )
                     return true;
             }
 
