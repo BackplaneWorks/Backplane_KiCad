@@ -272,20 +272,37 @@ std::string PLAN_TOOL::HitOtherLayer( const VECTOR2I& aPoint, std::string& aLaye
     for( const PLAN_PLANE& p : plan.planes )
         add( p.layer );
 
+    // A corridor of any other layer before a plane of any other layer: a thin corridor on top
+    // of a large plane is what a click on it means
+    std::string planeHit, planeLayer;
+
     for( const std::string& layer : layers )
     {
         std::string hit = HitTest( aPoint, nullptr, &layer );
 
-        bool shape = std::any_of( plan.corridors.begin(), plan.corridors.end(),
-                                  [&]( const PLAN_CORRIDOR& c ) { return c.id == hit; } )
-                     || std::any_of( plan.planes.begin(), plan.planes.end(),
-                                     [&]( const PLAN_PLANE& p ) { return p.id == hit; } );
+        if( hit.empty() )
+            continue;
 
-        if( !hit.empty() && shape )
+        if( std::any_of( plan.corridors.begin(), plan.corridors.end(),
+                         [&]( const PLAN_CORRIDOR& c ) { return c.id == hit; } ) )
         {
             aLayer = layer;
             return hit;
         }
+
+        if( planeHit.empty()
+            && std::any_of( plan.planes.begin(), plan.planes.end(),
+                            [&]( const PLAN_PLANE& p ) { return p.id == hit; } ) )
+        {
+            planeHit = hit;
+            planeLayer = layer;
+        }
+    }
+
+    if( !planeHit.empty() )
+    {
+        aLayer = planeLayer;
+        return planeHit;
     }
 
     aLayer.clear();

@@ -64,6 +64,7 @@
 #include <pcb_track.h>
 #include <pcbnew_id.h>
 #include <pcb_marker.h>
+#include <backplane/plan_view_item.h>
 #include <preview_items/host_markers_item.h>
 #include <tool/host_markers_tool.h>
 #include <view/view_controls.h>
@@ -3647,6 +3648,11 @@ void API_HANDLER_PCB::onCanvasClick()
     PCB_EDIT_FRAME* editor = frame();
 
     if( !editor || !editor->GetCanvas() || !board() )
+        return;
+
+    // In plan view a click belongs to the plan (its items, the overview): no marker under it is
+    // clicked as well
+    if( PLAN_VIEW_ITEM* plan = editor->GetCanvas()->GetPlanView(); plan && plan->IsPlanView() )
         return;
 
     KIGFX::VIEW* view = editor->GetCanvas()->GetView();
