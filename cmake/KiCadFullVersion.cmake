@@ -38,9 +38,10 @@ set( KICAD_VERSION_FULL "${KICAD_VERSION}" )
 
 # Backplane: a release build has no git describe (CI clones without tags), so KiCad's fallback is
 # "10.99.0-unknown"; there the fork's own version ("10.99.0-bp.13", the manifest's) is the full version,
-# which About, kicad-cli version and GetVersion show.  A developer build inside git keeps git's string.
+# which About, kicad-cli version and GetVersion show.  So does a build-box copy that names its commit
+# (BACKPLANE_SOURCE_COMMIT: git there describes the copy's base).  A developer build keeps git's string.
 if( BACKPLANE_FORK_VERSION AND NOT BACKPLANE_FORK_VERSION STREQUAL "10.99.0-bp.0"
-    AND KICAD_VERSION MATCHES "-unknown$" )
+    AND ( KICAD_VERSION MATCHES "-unknown$" OR BACKPLANE_SOURCE_COMMIT MATCHES "^[0-9a-f]+$" ) )
     set( KICAD_VERSION_FULL "${BACKPLANE_FORK_VERSION}" )
 elseif( KICAD_VERSION_EXTRA )
     # Optional user version information defined at configuration.
