@@ -162,12 +162,20 @@ def main():
                                '(uri "${KIPRJMOD}/nonexistent.pretty")(options "")(descr ""))\n)\n' )
         ( parity / "fp-lib-table" ).write_text( table )
 
-        for board in ( video / "video.kicad_pcb", pcb ):
+        # issue16182: track ends meeting where a connection is missing; which one the report
+        # names once depended on allocation (and so on the thread count)
+        ratsnest = work / "issue16182"
+        ratsnest.mkdir()
+        for suffix in ( "kicad_pcb", "kicad_pro", "kicad_dru" ):
+            shutil.copy( ROOT / "qa" / "data" / "pcbnew" / f"issue16182.{suffix}", ratsnest )
+
+        for board in ( video / "video.kicad_pcb", pcb, ratsnest / "issue16182.kicad_pcb" ):
             one = run_drc( cli, board, 1, work )
             eight = run_drc( cli, board, 8, work )
             check( json.dumps( one ) == json.dumps( eight ),
                    f"{board.parent.name}: report identical at 1 and 8 threads" )
 
+        eight = run_drc( cli, pcb, 8, work )
         issues = [ v["description"] for v in eight["violations"] if v["type"] == "lib_footprint_issues" ]
         check( any( "'NoSuchLib'" in d for d in issues ),
                "parity: footprint naming a library missing from the tables is reported" )
