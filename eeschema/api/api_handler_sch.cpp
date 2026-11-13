@@ -20,6 +20,7 @@
 
 #include <backplane_embed.h>
 #include <backplane_embed_proto.h>
+#include <backplane_comment.h>
 #include <backplane_comment_sch.h>
 #include <connection_graph.h>
 #include <sch_connection.h>
@@ -2862,10 +2863,20 @@ API_HANDLER_SCH::handleCommentSelection(
 
     BOX2I         box;
     EMBED_COMMENT comment = BackplaneBuildSchComment( frame(), box );
-    comment.note = aCtx.Request.note();
     comment.fromApi = true;
 
     embed::CommentSelectionResponse response;
+
+    if( aCtx.Request.capture_only() )
+    {
+        // The host takes the note itself: the selection and its picture only, nothing pushed
+        BackplaneCommentScreenshot( frame(), box, schIUScale.IU_PER_MM, comment );
+        response.set_seq( 0 );
+        FillEmbedComment( response.mutable_comment(), comment );
+        return response;
+    }
+
+    comment.note = aCtx.Request.note();
     response.set_seq( BackplaneSendSchComment( frame(), comment, box ) );
     FillEmbedComment( response.mutable_comment(), comment );
     return response;

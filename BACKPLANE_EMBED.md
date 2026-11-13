@@ -292,7 +292,8 @@ Alt+V/Alt+H.
 The context menu of the PCB editor and the schematic editor ends with **Comment to Backplane...**
 when a Backplane host is present, that is, in `--embedded` processes or when `--api-socket` was
 given. It is on every right-click: footprints, symbols, pads, pins, tracks, wires, a box
-selection, or nothing (then the comment is about the area in view).
+selection, or nothing (then the comment is about the area in view). Its default hotkey is `;`
+(bp.13; free in both editors and not a host-reserved key), rebindable in Preferences > Hotkeys.
 
 It opens a small dialog (transient for the host's top-level like every dialog) that says what is
 selected and takes a note. Send (or Ctrl+Enter) pushes `ET_COMMENT = 19`. Cancel, or an empty
@@ -325,7 +326,9 @@ sheet/board origin, X right, Y down.
 
 `CommentSelection {kind, note}` → `{seq, comment}` does the same without the dialog, on the
 current selection of `kind`'s frame (FK_PCB or FK_SCH). It is routed by kind like `SelectItems`
-(AS_UNHANDLED for any other kind) and answers AS_BUSY while a modal dialog is up.
+(AS_UNHANDLED for any other kind) and answers AS_BUSY while a modal dialog is up. With
+`capture_only: true` (bp.13) it returns the comment (names, items, bbox, screenshot) with seq 0
+and pushes no ET_COMMENT; `note` is ignored, so the host can take the note itself.
 
 Without `--embedded`, `--api-socket` alone also starts the `<api-socket>.events` socket, so a
 host can long-poll `NextEvents` for ET_COMMENT there. Such frames are not registered with the
