@@ -346,9 +346,11 @@ def private_env(home, cli):
         # The same libraries for both, so library checks (footprint links, parity) compare the
         # engines, not two installs
         for var, sub in (("KICAD10_SYMBOL_DIR", "symbols"), ("KICAD10_FOOTPRINT_DIR", "footprints"),
-                         ("KICAD10_3DMODEL_DIR", "3dmodels")):
+                         ("KICAD10_3DMODEL_DIR", "3dmodels"), ("KICAD10_TEMPLATE_DIR", "template")):
             env[var] = str(LIBS / sub)
-    template = template_dir(cli)
+    # With --libs, that folder's own global tables (a release's share/kicad has them), so both
+    # find the same libraries; else this KiCad's template tables
+    template = LIBS if LIBS and (LIBS / "fp-lib-table").is_file() else template_dir(cli)
     if template:
         for version in ("10.0", "10.99"):
             config = home / "config/kicad" / version
