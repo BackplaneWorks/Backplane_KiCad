@@ -95,6 +95,21 @@ def rot(x, y, deg):
     return x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a)
 
 
+def placement(fp):
+    """A footprint's position and rotation: (at x y [r]) in stock files, (transform (translate x y)
+    (rotate r) ...) in boards the Backplane fork saved."""
+    at = child(fp, "at")
+    if at:
+        return float(at[1]), float(at[2]), float(at[3]) if len(at) > 3 else 0.0
+    tr = child(fp, "transform")
+    if tr:
+        t = child(tr, "translate")
+        r = child(tr, "rotate")
+        return (float(t[1]) if t else 0.0, float(t[2]) if t else 0.0,
+                float(r[1]) if r and len(r) > 1 else 0.0)
+    return 0.0, 0.0, 0.0
+
+
 def load(board_path):
     tree = parse(tokenize(board_path.read_text()))[0]
     layers = []
@@ -103,9 +118,7 @@ def load(board_path):
             layers.append(l[1])
     footprints = []
     for fp in children(tree, "footprint"):
-        at = child(fp, "at")
-        fx, fy = float(at[1]), float(at[2])
-        frot = float(at[3]) if len(at) > 3 else 0.0
+        fx, fy, frot = placement(fp)
         side = child(fp, "layer")[1]
         ref = "?"
         for prop in children(fp, "property"):
@@ -130,8 +143,8 @@ def load(board_path):
 
 PALETTE = ["#e8a33d", "#d9534f", "#3b7ddd", "#2bb3a3", "#9aa3a3", "#9b6bd3", "#6dbf4b",
            "#e36fa7", "#5a8fd0", "#c9b458"]
-PLANE_PALETTE = ["#c0583a", "#4a6fa5", "#8b9a46", "#b5838d", "#6d597a", "#e09f3e", "#5c8a8a",
-                 "#9c6644", "#7f8fa6", "#a3b18a"]
+PLANE_PALETTE = ["#d4543a", "#3f66b5", "#2fa58f", "#e8b33a", "#d6457a", "#6a9e3a", "#8a5cc2", "#e07b28",
+                 "#4fa3d9", "#b0b84a"]
 
 
 def is_power(net):
@@ -250,7 +263,7 @@ def plan_for(layers, footprints):
             path = [[ax, ay], [ax, my], [bx, by]]
         path = [[round(x, 3), round(y, 3)] for x, y in path]
         layer = signal_layers[i % len(signal_layers)]
-        width = round(min(4.0, max(0.8, 0.22 * len(nets))), 2)
+        width = math.ceil(min(4.0, max(0.8, 0.26 * len(nets))) * 20) / 20   # n x (track + gap), with room
         vias = []
         if layer.startswith("In"):
             # escape vias in a short row beside the start

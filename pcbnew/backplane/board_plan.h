@@ -309,7 +309,8 @@ struct PLAN_PROGRESS
 
 
 /// "Stripline between GND2 (50 µm core) and GND3 (30 µm)" and the like, from the stack-up.
-std::string DescribePlanLayer( const BOARD& aBoard, const std::string& aLayer );
+std::string DescribePlanLayer( const BOARD& aBoard, const std::string& aLayer,
+                               const BOARD_PLAN* aPlan = nullptr );
 
 /// "L6 · SIG1": the copper index (1-based, top = 1) and the user name.
 std::string PlanLayerChip( const BOARD& aBoard, const std::string& aLayer );

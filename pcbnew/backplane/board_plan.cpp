@@ -945,8 +945,23 @@ std::string PlanLayerChip( const BOARD& aBoard, const std::string& aLayer )
 }
 
 
-std::string DescribePlanLayer( const BOARD& aBoard, const std::string& aLayer )
+std::string DescribePlanLayer( const BOARD& aBoard, const std::string& aLayer, const BOARD_PLAN* aPlan )
 {
+    // The plan's own role for a layer ("power") counts as much as the board's layer type.
+    auto planRole = [&]( const std::string& aName ) -> std::string
+    {
+        if( aPlan )
+        {
+            for( const PLAN_LAYER& l : aPlan->layers )
+            {
+                if( l.layer == aName )
+                    return l.role;
+            }
+        }
+
+        return "";
+    };
+
     PCB_LAYER_ID id = aBoard.GetLayerID( wxString::FromUTF8( aLayer ) );
 
     if( id == UNDEFINED_LAYER || !IsCopperLayer( id ) )
@@ -1014,7 +1029,7 @@ std::string DescribePlanLayer( const BOARD& aBoard, const std::string& aLayer )
 
     LAYER_T type = aBoard.GetLayerType( id );
 
-    if( type == LT_POWER )
+    if( type == LT_POWER || planRole( aLayer ) == "power" )
     {
         // A plane faces its nearest neighbour across the thinner dielectric.
         const std::optional<SIDE>& n =
@@ -1024,7 +1039,7 @@ std::string DescribePlanLayer( const BOARD& aBoard, const std::string& aLayer )
         if( !n )
             return "Plane layer";
 
-        return fmt::format( "Faces {} across {}", n->name, um( n->thickness ) );
+        return fmt::format( "Power plane, faces {} across {}", n->name, um( n->thickness ) );
     }
 
     if( above && below && above->plane && below->plane )

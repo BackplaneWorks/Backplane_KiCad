@@ -26,6 +26,7 @@
 
 #include <backplane/board_plan.h>
 #include <eda_item.h>
+#include <geometry/shape_poly_set.h>
 #include <gal/color4d.h>
 #include <layer_ids.h>
 
@@ -84,10 +85,14 @@ public:
     /// The group colour of a corridor (its group's, or a stable colour from its id).
     static KIGFX::COLOR4D CorridorColor( const BOARD_PLAN& aPlan, const PLAN_CORRIDOR& aCorridor );
     static KIGFX::COLOR4D PlaneColor( const PLAN_PLANE& aPlane );
+    wxString        ProblemText( const PLAN_PROGRESS::ITEM& aItem ) const;
+    VECTOR2D        labelSpot( const SHAPE_POLY_SET& aPoly, double aW, double aH ) const;
+    static wxString Ordinal( int aN );
     static KIGFX::COLOR4D ParseColor( const std::string& aHex, const KIGFX::COLOR4D& aDefault );
 
 private:
     void drawPlanBackdrop( KIGFX::GAL* aGal, KIGFX::VIEW* aView ) const;
+    void drawOverview( KIGFX::GAL* aGal, KIGFX::VIEW* aView, const std::string& aActive ) const;
     void drawPlanes( KIGFX::GAL* aGal, KIGFX::VIEW* aView, const std::string& aLayer ) const;
     void drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView, const std::string& aLayer,
                         bool aFaint ) const;

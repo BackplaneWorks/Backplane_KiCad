@@ -27,6 +27,7 @@
 #include <tools/pcb_tool_base.h>
 
 #include <functional>
+#include <map>
 #include <set>
 #include <string>
 
@@ -82,6 +83,12 @@ public:
     std::string HitTest( const VECTOR2I& aPoint, int* aVertex = nullptr ) const;
 
 private:
+    /// Plan view hides the board's own layers (the plan is the foreground; the overlay draws the
+    /// outline and the parts as context), restoring what was visible on the way out.
+    void hideBoardLayers( bool aHide );
+    void fitBesideOverview();
+    std::map<int, bool> m_savedVisibility;
+
     void setTransitions() override;
 
     PCB_EDIT_FRAME* editFrame() const;

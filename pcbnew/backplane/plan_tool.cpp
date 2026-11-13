@@ -403,6 +403,10 @@ int PLAN_TOOL::TogglePlanView( const TOOL_EVENT& aEvent )
     bool on = !item->IsPlanView();
     item->SetPlanView( on );
     item->SetShown( true );
+    hideBoardLayers( on );
+
+    if( on )
+        fitBesideOverview();
     editFrame()->GetCanvas()->RefreshPlan();
 
     if( on )
@@ -411,6 +415,65 @@ int PLAN_TOOL::TogglePlanView( const TOOL_EVENT& aEvent )
         m_toolMgr->PostAction( ACTIONS::selectionTool );
 
     return 0;
+}
+
+
+void PLAN_TOOL::fitBesideOverview()
+{
+    // The board fills the canvas left of the overview column (about 190 px) and below the header.
+    KIGFX::VIEW* view = editFrame()->GetCanvas()->GetView();
+    BOX2I        board = this->board()->GetBoardEdgesBoundingBox();
+    VECTOR2D     screen = view->GetScreenPixelSize();
+
+    if( board.GetWidth() <= 0 || board.GetHeight() <= 0 || screen.x < 400 || screen.y < 300 )
+        return;
+
+    double usableW = screen.x - 204.0 - 40.0;
+    double usableH = screen.y - 120.0 - 30.0;
+    double scaleW = usableW / board.GetWidth();
+    double scaleH = usableH / board.GetHeight();
+    double worldPerPx = 1.0 / std::min( scaleW, scaleH );
+
+    view->SetScale( view->GetScale() * view->ToWorld( 1.0 ) / worldPerPx );
+
+    // Centre the board in the usable area: shift the view centre right by half the column and
+    // up by half the header, in world units.
+    VECTOR2D centre = board.Centre();
+    centre.x += view->ToWorld( 102.0 );
+    centre.y -= view->ToWorld( 55.0 );
+    view->SetCenter( centre );
+}
+
+
+void PLAN_TOOL::hideBoardLayers( bool aHide )
+{
+    KIGFX::VIEW* view = editFrame()->GetCanvas()->GetView();
+
+    if( aHide )
+    {
+        m_savedVisibility.clear();
+
+        for( int layer = 0; layer < GAL_LAYER_ID_END; ++layer )
+        {
+            if( layer == LAYER_SELECT_OVERLAY || layer == LAYER_GP_OVERLAY || layer == LAYER_CURSOR
+                || ( layer >= LAYER_UI_START && layer < LAYER_UI_END ) )
+            {
+                continue;
+            }
+
+            m_savedVisibility[layer] = view->IsLayerVisible( layer );
+            view->SetLayerVisible( layer, false );
+        }
+    }
+    else
+    {
+        for( const auto& [layer, visible] : m_savedVisibility )
+            view->SetLayerVisible( layer, visible );
+
+        m_savedVisibility.clear();
+    }
+
+    view->MarkDirty();
 }
 
 

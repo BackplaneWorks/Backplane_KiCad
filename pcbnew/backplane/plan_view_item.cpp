@@ -27,6 +27,7 @@
 #include <view/view.h>
 
 #include <algorithm>
+#include <climits>
 #include <cmath>
 #include <map>
 
@@ -35,10 +36,12 @@ using KIGFX::COLOR4D;
 
 namespace
 {
-constexpr int PLAN_GAL_LAYER = LAYER_GP_OVERLAY;
+// On top of every board layer (the general-purpose overlay sits below them in pcbnew's order, so
+// pads, silk and the ratsnest drew over the plan and its labels).
+constexpr int PLAN_GAL_LAYER = LAYER_SELECT_OVERLAY;
 
 // The plan view's palette: a near-black board, light outlines, grey parts.
-const COLOR4D BACKDROP( 0.075, 0.090, 0.090, 0.94 );
+const COLOR4D BACKDROP( 0.075, 0.090, 0.090, 1.0 );   // plan view: the board recedes entirely
 const COLOR4D OUTLINE( 0.86, 0.88, 0.88, 0.95 );
 const COLOR4D PART_FILL( 0.20, 0.23, 0.23, 0.55 );
 const COLOR4D PART_EDGE( 0.52, 0.56, 0.56, 0.85 );
@@ -106,6 +109,7 @@ void text( KIGFX::GAL* aGal, const wxString& aText, const VECTOR2D& aAt, double 
            GR_TEXT_H_ALIGN_T aH = GR_TEXT_H_ALIGN_CENTER,
            GR_TEXT_V_ALIGN_T aV = GR_TEXT_V_ALIGN_CENTER )
 {
+    aGal->AdvanceDepth();
     aGal->SetIsFill( false );
     aGal->SetIsStroke( true );
     aGal->SetStrokeColor( aColor );
@@ -125,6 +129,7 @@ void pill( KIGFX::GAL* aGal, const VECTOR2D& aCenter, double aW, double aH, cons
     // A rounded pill: a thick segment.
     double r = aH / 2;
     double half = std::max( 0.0, aW / 2 - r );
+    aGal->AdvanceDepth();
     aGal->SetIsFill( true );
     aGal->SetIsStroke( false );
     aGal->SetFillColor( aEdge );
@@ -217,6 +222,7 @@ std::vector<VECTOR2I> prefix( const std::vector<VECTOR2I>& aPath, double aFracti
 void iconCheck( KIGFX::GAL* aGal, const VECTOR2D& aAt, double aSize, const COLOR4D& aColor )
 {
     aGal->SetIsStroke( true );
+    aGal->AdvanceDepth();
     aGal->SetIsFill( false );
     aGal->SetStrokeColor( aColor );
     aGal->SetLineWidth( aSize * 0.18 );
@@ -226,10 +232,12 @@ void iconCheck( KIGFX::GAL* aGal, const VECTOR2D& aAt, double aSize, const COLOR
 
 void iconLock( KIGFX::GAL* aGal, const VECTOR2D& aAt, double aSize, const COLOR4D& aColor )
 {
+    aGal->AdvanceDepth();
     aGal->SetIsFill( true );
     aGal->SetIsStroke( false );
     aGal->SetFillColor( aColor );
     aGal->DrawRectangle( aAt + VECTOR2D( -0.35, -0.05 ) * aSize, aAt + VECTOR2D( 0.35, 0.45 ) * aSize );
+    aGal->AdvanceDepth();
     aGal->SetIsFill( false );
     aGal->SetIsStroke( true );
     aGal->SetStrokeColor( aColor );
@@ -242,6 +250,7 @@ void iconLock( KIGFX::GAL* aGal, const VECTOR2D& aAt, double aSize, const COLOR4
 void iconPencil( KIGFX::GAL* aGal, const VECTOR2D& aAt, double aSize, const COLOR4D& aColor )
 {
     aGal->SetIsStroke( true );
+    aGal->AdvanceDepth();
     aGal->SetIsFill( false );
     aGal->SetStrokeColor( aColor );
     aGal->SetLineWidth( aSize * 0.2 );
@@ -255,10 +264,12 @@ void iconWarn( KIGFX::GAL* aGal, const VECTOR2D& aAt, double aSize, const COLOR4
     std::deque<VECTOR2D> tri = { aAt + VECTOR2D( 0, -0.45 ) * aSize,
                                  aAt + VECTOR2D( 0.5, 0.4 ) * aSize,
                                  aAt + VECTOR2D( -0.5, 0.4 ) * aSize };
+    aGal->AdvanceDepth();
     aGal->SetIsFill( true );
     aGal->SetIsStroke( false );
     aGal->SetFillColor( aColor );
     aGal->DrawPolygon( tri );
+    aGal->AdvanceDepth();
     aGal->SetIsFill( false );
     aGal->SetIsStroke( true );
     aGal->SetStrokeColor( COLOR4D( 0.1, 0.1, 0.1, 1 ) );
@@ -295,6 +306,83 @@ COLOR4D PLAN_VIEW_ITEM::ParseColor( const std::string& aHex, const COLOR4D& aDef
     catch( ... )
     {
         return aDefault;
+    }
+}
+
+
+VECTOR2D PLAN_VIEW_ITEM::labelSpot( const SHAPE_POLY_SET& aPoly, double aW, double aH ) const
+{
+    // The bbox centre if it is inside and clear of part boxes, else the clearest of a grid of
+    // candidates inside the region.
+    BOX2I box = aPoly.BBox();
+    auto  clear = [&]( const VECTOR2D& c )
+    {
+        BOX2I r( VECTOR2I( c.x - aW / 2, c.y - aH / 2 ), VECTOR2I( aW, aH ) );
+        int   hits = 0;
+
+        for( const FOOTPRINT* fp : m_board->Footprints() )
+            hits += fp->GetBoundingBox( false ).Intersects( r );
+
+        return hits;
+    };
+
+    VECTOR2D best = box.Centre();
+    int      bestHits = aPoly.Contains( box.Centre() ) ? clear( best ) : INT_MAX;
+
+    for( int iy = 1; iy < 6 && bestHits > 0; ++iy )
+    {
+        for( int ix = 1; ix < 6; ++ix )
+        {
+            VECTOR2D c( box.GetLeft() + box.GetWidth() * ix / 6.0, box.GetTop() + box.GetHeight() * iy / 6.0 );
+
+            if( !aPoly.Contains( VECTOR2I( c ) ) )
+                continue;
+
+            int h = clear( c );
+
+            if( h < bestHits )
+            {
+                best = c;
+                bestHits = h;
+            }
+        }
+    }
+
+    return best;
+}
+
+
+wxString PLAN_VIEW_ITEM::ProblemText( const PLAN_PROGRESS::ITEM& aItem ) const
+{
+    if( !aItem.problems.empty() && aItem.problems.front() >= 0
+        && aItem.problems.front() < (int) m_audit.warnings.size() )
+    {
+        wxString t = wxString::FromUTF8( m_audit.warnings[aItem.problems.front()].text );
+
+        if( aItem.ProblemCount() > 1 )
+            t << wxString::Format( _( " (+%d more)" ), aItem.ProblemCount() - 1 );
+
+        return t;
+    }
+
+    if( aItem.drc > 0 )
+        return wxString::Format( _( "%d DRC errors on its nets" ), aItem.drc );
+
+    if( aItem.unrouted > 0 )
+        return wxString::Format( _( "%d nets still unrouted" ), aItem.unrouted );
+
+    return wxEmptyString;
+}
+
+
+wxString PLAN_VIEW_ITEM::Ordinal( int aN )
+{
+    switch( aN )
+    {
+    case 1: return _( "1st" );
+    case 2: return _( "2nd" );
+    case 3: return _( "3rd" );
+    default: return wxString::Format( _( "%dth" ), aN );
     }
 }
 
@@ -358,15 +446,200 @@ void PLAN_VIEW_ITEM::ViewDraw( int aLayer, KIGFX::VIEW* aView ) const
 
     drawPlanes( gal, aView, layer );
 
-    // Other layers' corridors, faint, under the active layer's.
-    if( m_planView )
-        drawCorridors( gal, aView, layer, true );
-
     drawCorridors( gal, aView, layer, false );
     drawNotesAndAudit( gal, aView, layer );
 
     if( m_planView || !plan.Empty() )
         drawHeader( gal, aView, layer );
+
+    if( m_planView && plan.layers.size() > 1 )
+        drawOverview( gal, aView, layer );
+}
+
+
+void PLAN_VIEW_ITEM::drawOverview( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
+                                   const std::string& aActive ) const
+{
+    // Every plan layer at once: a column of small panels at the right edge, the active one framed,
+    // so the person sees that (and how) the other layers are planned.
+    const BOARD_PLAN& plan = m_board->GetPlan();
+    BOX2I             board = m_board->GetBoardEdgesBoundingBox();
+
+    if( board.GetWidth() <= 0 || board.GetHeight() <= 0 )
+        return;
+
+    BOX2D  vp = aView->GetViewport();
+    double px = aView->ToWorld( 1.0 );
+
+    // A grid in a 180 px column: as many columns as it takes for every layer to fit the height
+    // with each panel as large as possible.
+    const double colW = 180 * px;
+    const double labelH = 16 * px;
+    const double gap = 10 * px;
+    double       aspect = (double) board.GetHeight() / board.GetWidth();
+    double       maxH = vp.GetHeight() - 24 * px;
+    int          n = (int) plan.layers.size();
+    int          cols = 1;
+    double       panelW = colW;
+
+    for( ; cols <= 4; ++cols )
+    {
+        panelW = ( colW - ( cols - 1 ) * gap ) / cols;
+        int rows = ( n + cols - 1 ) / cols;
+
+        if( rows * ( panelW * aspect + labelH + gap ) <= maxH )
+            break;
+    }
+
+    cols = std::min( cols, 4 );
+    int rows = ( n + cols - 1 ) / cols;
+
+    if( rows * ( panelW * aspect + labelH + gap ) > maxH )
+        panelW = ( maxH / rows - labelH - gap ) / aspect;
+
+    double scale = panelW / board.GetWidth();
+    double panelH = board.GetHeight() * scale;
+    bool   narrow = panelW < 120 * px;
+
+    VECTOR2D origin( vp.GetEnd().x - colW - 14 * px, vp.GetOrigin().y + 12 * px );
+    VECTOR2D first = origin;
+    int      index = 0;
+
+    // Its own column: an opaque strip, so it never reads as part of the board.
+    aGal->AdvanceDepth();
+    aGal->SetIsFill( true );
+    aGal->SetIsStroke( false );
+    aGal->SetFillColor( COLOR4D( 0.05, 0.06, 0.06, 1.0 ) );
+    aGal->DrawRectangle( VECTOR2D( origin.x - 10 * px, vp.GetOrigin().y ), vp.GetEnd() );
+
+    // Top of the stack first.
+    std::vector<const PLAN_LAYER*> layers;
+
+    for( const PLAN_LAYER& l : plan.layers )
+        layers.push_back( &l );
+
+    auto stackIndex = [&]( const std::string& aName )
+    {
+        PCB_LAYER_ID id = m_board->GetLayerID( wxString::FromUTF8( aName ) );
+        int          i = 0;
+
+        for( PCB_LAYER_ID layer : m_board->GetEnabledLayers().CuStack() )
+        {
+            if( layer == id )
+                return i;
+
+            ++i;
+        }
+
+        return i;
+    };
+
+    std::stable_sort( layers.begin(), layers.end(), [&]( const PLAN_LAYER* a, const PLAN_LAYER* b )
+                      { return stackIndex( a->layer ) < stackIndex( b->layer ); } );
+
+    for( const PLAN_LAYER* lp : layers )
+    {
+        const PLAN_LAYER& l = *lp;
+        origin = first + VECTOR2D( ( index % cols ) * ( panelW + gap ),
+                                   ( index / cols ) * ( panelH + labelH + gap ) );
+        ++index;
+
+        VECTOR2D at = origin + VECTOR2D( 0, labelH );
+        auto     map = [&]( const VECTOR2I& p )
+        {
+            return at + VECTOR2D( ( p.x - board.GetLeft() ) * scale, ( p.y - board.GetTop() ) * scale );
+        };
+
+        bool active = l.layer == aActive;
+
+        aGal->AdvanceDepth();
+        aGal->SetIsFill( true );
+        aGal->SetIsStroke( true );
+        aGal->SetFillColor( BACKDROP );
+        aGal->SetStrokeColor( active ? SELECT : PART_EDGE.WithAlpha( 0.6 ) );
+        aGal->SetLineWidth( ( active ? 1.6 : 1.0 ) * px );
+        aGal->DrawRectangle( at - VECTOR2D( 4 * px, 4 * px ), at + VECTOR2D( panelW + 4 * px, panelH + 4 * px ) );
+
+        wxString chipText = wxString::FromUTF8( PlanLayerChip( *m_board, l.layer ) );
+
+        if( narrow )   // "L3 PWR": the stack position and the role
+            chipText = chipText.BeforeFirst( ' ' ) + ( l.role == "power" ? wxS( " PWR" ) : wxS( " SIG" ) );
+        else
+            chipText += wxString::FromUTF8( l.role == "power" ? " \xC2\xB7 PWR" : " \xC2\xB7 SIG" );
+        text( aGal, chipText, origin + VECTOR2D( 0, 6 * px ), ( narrow ? 9 : 10 ) * px, active ? HEADER_TEXT : HEADER_DIM,
+              active, GR_TEXT_H_ALIGN_LEFT );
+
+        for( const PLAN_PLANE& p : plan.planes )
+        {
+            if( p.layer != l.layer || p.outline.empty() || p.outline.front().size() < 3 )
+                continue;
+
+            SHAPE_POLY_SET   poly;
+            SHAPE_LINE_CHAIN chain;
+
+            for( const VECTOR2I& pt : p.outline.front() )
+                chain.Append( VECTOR2I( map( pt ) ) );
+
+            chain.SetClosed( true );
+            poly.AddOutline( chain );
+
+            // Inside the panel only.
+            SHAPE_POLY_SET   frame;
+            SHAPE_LINE_CHAIN fr;
+            fr.Append( VECTOR2I( at ) );
+            fr.Append( VECTOR2I( at + VECTOR2D( panelW, 0 ) ) );
+            fr.Append( VECTOR2I( at + VECTOR2D( panelW, panelH ) ) );
+            fr.Append( VECTOR2I( at + VECTOR2D( 0, panelH ) ) );
+            fr.SetClosed( true );
+            frame.AddOutline( fr );
+            poly.BooleanIntersection( frame );
+
+            if( poly.IsEmpty() )
+                continue;
+
+            poly.CacheTriangulation();
+            aGal->AdvanceDepth();
+            aGal->SetIsFill( true );
+            aGal->SetIsStroke( false );
+            aGal->SetFillColor( PlaneColor( p ).WithAlpha( 0.85 ) );
+            aGal->DrawPolygon( poly );
+        }
+
+        for( const PLAN_CORRIDOR& c : plan.corridors )
+        {
+            if( c.layer != l.layer || c.path.size() < 2 )
+                continue;
+
+            aGal->AdvanceDepth();
+            aGal->SetIsFill( false );
+            aGal->SetIsStroke( true );
+            aGal->SetStrokeColor( CorridorColor( plan, c ).WithAlpha( 0.95 ) );
+            aGal->SetLineWidth( std::max( 3.0 * px, c.width * scale ) );
+
+            for( size_t ii = 1; ii < c.path.size(); ++ii )
+                aGal->DrawLine( map( c.path[ii - 1] ), map( c.path[ii] ) );
+        }
+
+        SHAPE_POLY_SET outline;
+
+        if( m_board->GetBoardPolygonOutlines( outline, true ) )
+        {
+            aGal->AdvanceDepth();
+            aGal->SetIsFill( false );
+            aGal->SetIsStroke( true );
+            aGal->SetStrokeColor( OUTLINE.WithAlpha( 0.8 ) );
+            aGal->SetLineWidth( 1.0 * px );
+
+            for( int ii = 0; ii < outline.OutlineCount(); ++ii )
+            {
+                const SHAPE_LINE_CHAIN& o = outline.COutline( ii );
+
+                for( int k = 0; k < o.PointCount(); ++k )
+                    aGal->DrawLine( map( o.CPoint( k ) ), map( o.CPoint( ( k + 1 ) % o.PointCount() ) ) );
+            }
+        }
+
+    }
 }
 
 
@@ -386,6 +659,7 @@ void PLAN_VIEW_ITEM::drawPlanBackdrop( KIGFX::GAL* aGal, KIGFX::VIEW* aView ) co
 
     if( m_board->GetBoardPolygonOutlines( outline, true ) )
     {
+        aGal->AdvanceDepth();
         aGal->SetIsFill( false );
         aGal->SetIsStroke( true );
         aGal->SetStrokeColor( OUTLINE );
@@ -418,6 +692,7 @@ void PLAN_VIEW_ITEM::drawPlanBackdrop( KIGFX::GAL* aGal, KIGFX::VIEW* aView ) co
             done = (double) it->second.routed / it->second.pins;
         }
 
+        aGal->AdvanceDepth();
         aGal->SetIsFill( true );
         aGal->SetIsStroke( false );
         aGal->SetFillColor( PART_FILL.WithAlpha( 0.35 ) );
@@ -432,6 +707,7 @@ void PLAN_VIEW_ITEM::drawPlanBackdrop( KIGFX::GAL* aGal, KIGFX::VIEW* aView ) co
                                  VECTOR2D( box.GetRight(), box.GetBottom() ) );
         }
 
+        aGal->AdvanceDepth();
         aGal->SetIsFill( false );
         aGal->SetIsStroke( true );
         aGal->SetStrokeColor( PART_EDGE );
@@ -471,12 +747,21 @@ void PLAN_VIEW_ITEM::drawPlanes( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
             planes.push_back( &p );
     }
 
+    // Higher priority first: each region keeps what no higher-priority region took, so regions
+    // never blend; where two claim the same copper the overlap is a conflict, drawn as red hatch.
     std::stable_sort( planes.begin(), planes.end(),
                       []( const PLAN_PLANE* a, const PLAN_PLANE* b )
-                      { return a->priority < b->priority; } );
+                      { return a->priority > b->priority; } );
+
+    SHAPE_POLY_SET taken;
+    SHAPE_POLY_SET overlaps;
+    std::vector<std::pair<const PLAN_PLANE*, SHAPE_POLY_SET>> shown;
 
     for( const PLAN_PLANE* p : planes )
     {
+        if( p->outline.empty() || p->outline.front().size() < 3 )
+            continue;
+
         SHAPE_POLY_SET poly;
         SHAPE_LINE_CHAIN outer;
 
@@ -497,11 +782,36 @@ void PLAN_VIEW_ITEM::drawPlanes( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
             poly.AddHole( hole );
         }
 
+        SHAPE_POLY_SET visible = poly;
+
+        if( !taken.IsEmpty() )
+        {
+            SHAPE_POLY_SET both = poly;
+            both.BooleanIntersection( taken );
+
+            if( !both.IsEmpty() )
+                overlaps.BooleanAdd( both );
+
+            visible.BooleanSubtract( taken );
+        }
+
+        taken.BooleanAdd( poly );
+        shown.emplace_back( p, visible );
+    }
+
+    // Draw lowest priority first (labels of higher ones on top).
+    std::reverse( shown.begin(), shown.end() );
+
+    for( auto& [p, poly] : shown )
+    {
+        if( poly.IsEmpty() )
+            continue;
+
         poly.CacheTriangulation();
 
         COLOR4D color = PlaneColor( *p );
         bool    selected = m_selected.count( p->id ) > 0;
-        double  fillAlpha = m_planView ? 0.78 : 0.42;
+        double  fillAlpha = m_planView ? 0.92 : 0.42;
 
         if( p->status == PLAN_STATUS::REJECTED )
             color = COLOR4D( 0.45, 0.47, 0.47, 1.0 );
@@ -522,6 +832,7 @@ void PLAN_VIEW_ITEM::drawPlanes( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         aGal->SetFillColor( color.WithAlpha( fillAlpha ) );
         aGal->DrawPolygon( poly );
 
+        aGal->AdvanceDepth();
         aGal->SetIsFill( false );
         aGal->SetIsStroke( true );
         aGal->SetStrokeColor( selected ? SELECT
@@ -533,6 +844,7 @@ void PLAN_VIEW_ITEM::drawPlanes( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
 
         if( selected || p->id == m_hovered )
         {
+            aGal->AdvanceDepth();
             aGal->SetIsFill( true );
             aGal->SetFillColor( SELECT );
 
@@ -544,10 +856,12 @@ void PLAN_VIEW_ITEM::drawPlanes( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
 
         if( std::min( box.GetWidth(), box.GetHeight() ) > aView->ToWorld( 40.0 ) )
         {
-            double   size = aView->ToWorld( 11.0 );
+            double   size = aView->ToWorld( 12.0 );
             wxString label = wxString::FromUTF8( p->net );
-            VECTOR2D at = box.Centre();
-            text( aGal, label, at, size, COLOR4D( 1, 1, 1, 0.85 ), true );
+            VECTOR2D at = labelSpot( poly, size * 0.7 * label.Length() + size, size * 1.5 );
+            pill( aGal, at, size * 0.7 * label.Length() + size, size * 1.5,
+                  BACKDROP.WithAlpha( 0.85 ), color.Brightened( 0.35 ), 1.0 * px );
+            text( aGal, label, at, size, COLOR4D( 1, 1, 1, 0.95 ), true );
 
             VECTOR2D mark = at + VECTOR2D( size * 0.35 * label.Length() + size, 0 );
 
@@ -584,6 +898,49 @@ void PLAN_VIEW_ITEM::drawPlanes( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         }
     }
 
+    if( !overlaps.IsEmpty() )
+    {
+        // Red hatch: 45° stripes 6 px apart, clipped to the overlap.
+        BOX2I    ob = overlaps.BBox();
+        double   step = aView->ToWorld( 6.0 );
+        double   half = aView->ToWorld( 1.2 );
+        SHAPE_POLY_SET stripes;
+
+        for( double k = ob.GetLeft() - ob.GetHeight(); k < ob.GetRight(); k += step )
+        {
+            SHAPE_LINE_CHAIN st;
+            st.Append( VECTOR2I( k - half, ob.GetBottom() ) );
+            st.Append( VECTOR2I( k + half, ob.GetBottom() ) );
+            st.Append( VECTOR2I( k + half + ob.GetHeight(), ob.GetTop() ) );
+            st.Append( VECTOR2I( k - half + ob.GetHeight(), ob.GetTop() ) );
+            st.SetClosed( true );
+            stripes.AddOutline( st );
+        }
+
+        stripes.BooleanIntersection( overlaps );
+        aGal->AdvanceDepth();
+        aGal->SetIsFill( true );
+        aGal->SetIsStroke( false );
+        aGal->SetFillColor( PROBLEM.WithAlpha( 0.25 ) );
+        overlaps.CacheTriangulation();
+        aGal->DrawPolygon( overlaps );
+
+        if( !stripes.IsEmpty() )
+        {
+            stripes.CacheTriangulation();
+            aGal->AdvanceDepth();
+            aGal->SetFillColor( PROBLEM.WithAlpha( 0.9 ) );
+            aGal->DrawPolygon( stripes );
+        }
+
+        aGal->AdvanceDepth();
+        aGal->SetIsFill( false );
+        aGal->SetIsStroke( true );
+        aGal->SetStrokeColor( PROBLEM );
+        aGal->SetLineWidth( 1.5 * px );
+        outline( aGal, overlaps, false, px );
+    }
+
     // Split lines: dashed.
     for( const PLAN_SPLIT& s : plan.splits )
     {
@@ -591,6 +948,7 @@ void PLAN_VIEW_ITEM::drawPlanes( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
             continue;
 
         aGal->SetIsStroke( true );
+        aGal->AdvanceDepth();
         aGal->SetIsFill( false );
         aGal->SetStrokeColor( COLOR4D( 1, 1, 1, 0.9 ) );
         aGal->SetLineWidth( 1.5 * px );
@@ -668,6 +1026,7 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         if( !aFaint && group && c->path.size() >= 2 )
         {
             aGal->SetIsStroke( true );
+            aGal->AdvanceDepth();
             aGal->SetIsFill( false );
             aGal->SetStrokeColor( color.WithAlpha( 0.55 ) );
             aGal->SetLineWidth( 0.8 * px );
@@ -691,7 +1050,10 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
             }
         }
 
-        SHAPE_POLY_SET poly = band( c->path, c->width, maxError );
+        // At least 12 px on screen, so a bundle reads as a band and can be grabbed; its true
+        // width (n x (track + gap)) is what routing uses and what the hover shows.
+        int            shown = std::max( c->width, (int) aView->ToWorld( 12.0 ) );
+        SHAPE_POLY_SET poly = band( c->path, shown, maxError );
 
         if( poly.OutlineCount() == 0 )
             continue;
@@ -724,6 +1086,7 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
 
         if( fillA > 0 )
         {
+            aGal->AdvanceDepth();
             aGal->SetIsFill( true );
             aGal->SetIsStroke( false );
             aGal->SetFillColor( color.WithAlpha( fillA ) );
@@ -734,11 +1097,12 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         if( routing && !aFaint && c->total > 0 )
         {
             SHAPE_POLY_SET done = band( prefix( c->path, (double) c->routed / c->total ),
-                                        c->width, maxError );
+                                        shown, maxError );
 
             if( done.OutlineCount() )
             {
                 done.CacheTriangulation();
+                aGal->AdvanceDepth();
                 aGal->SetIsFill( true );
                 aGal->SetFillColor( color.Brightened( 0.15 ).WithAlpha( 0.92 ) );
                 aGal->DrawPolygon( done );
@@ -752,6 +1116,7 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         double  edgeW = ( selected ? 2.5 : problems > 0 || verified ? 2.0
                           : routed ? 1.0 : c->locked ? 2.0 : 1.3 ) * px;
 
+        aGal->AdvanceDepth();
         aGal->SetIsFill( false );
         aGal->SetIsStroke( true );
         aGal->SetStrokeColor( edgeColor );
@@ -764,6 +1129,7 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         // The centreline, so a wide band still reads as a path (not once copper is there).
         if( !routed && !verified )
         {
+            aGal->AdvanceDepth();
             aGal->SetIsFill( false );
             aGal->SetIsStroke( true );
             aGal->SetStrokeColor( color.WithAlpha( 0.9 ) );
@@ -772,6 +1138,26 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
             for( size_t ii = 1; ii < c->path.size(); ++ii )
                 aGal->DrawLine( c->path[ii - 1], c->path[ii] );
         }
+
+        // Vias and escapes belong to the corridor: a leader to its nearest end.
+        auto nearestEnd = [&]( const VECTOR2I& aAt ) -> VECTOR2I
+        {
+            return ( aAt - c->path.front() ).EuclideanNorm() <= ( aAt - c->path.back() ).EuclideanNorm()
+                           ? c->path.front()
+                           : c->path.back();
+        };
+
+        aGal->AdvanceDepth();
+        aGal->SetIsFill( false );
+        aGal->SetIsStroke( true );
+        aGal->SetStrokeColor( color.WithAlpha( 0.7 ) );
+        aGal->SetLineWidth( 1.0 * px );
+
+        for( const VECTOR2I& v : c->vias )
+            aGal->DrawLine( v, nearestEnd( v ) );
+
+        for( const PLAN_ESCAPE& e : c->escapes )
+            aGal->DrawLine( e.at, nearestEnd( e.at ) );
 
         // Vias: small diamonds.
         double d = 4.0 * px;
@@ -783,9 +1169,11 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
             std::deque<VECTOR2D> diamond = { VECTOR2D( v.x, v.y - d ), VECTOR2D( v.x + d, v.y ),
                                              VECTOR2D( v.x, v.y + d ), VECTOR2D( v.x - d, v.y ),
                                              VECTOR2D( v.x, v.y - d ) };
+            aGal->AdvanceDepth();
             aGal->SetIsFill( true );
             aGal->SetFillColor( BACKDROP.WithAlpha( 0.9 ) );
             aGal->DrawPolygon( diamond );
+            aGal->AdvanceDepth();
             aGal->SetIsFill( false );
             aGal->DrawPolyline( diamond );
         }
@@ -799,6 +1187,7 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
 
         if( selected )
         {
+            aGal->AdvanceDepth();
             aGal->SetIsFill( true );
             aGal->SetIsStroke( true );
             aGal->SetFillColor( color );
@@ -880,6 +1269,21 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
                       VECTOR2D( at.x + icon * 0.6, mid.y ), size, PROBLEM, true,
                       GR_TEXT_H_ALIGN_LEFT );
             }
+
+            // A glyph says what it means: the first problem in words beside the pill.
+            if( problems > 0 && prog )
+            {
+                wxString why = ProblemText( *prog );
+
+                if( why.Length() > 48 )
+                    why = why.Left( 47 ) + wxString::FromUTF8( "\xE2\x80\xA6" );
+                VECTOR2D whyAt( mid.x + w / 2 + gap, mid.y );
+                double   whyW = size * 0.62 * why.Length() + size * 0.8;
+                pill( aGal, whyAt + VECTOR2D( whyW / 2, 0 ), whyW, size * 1.3,
+                      BACKDROP.WithAlpha( 0.92 ), PROBLEM.WithAlpha( 0.6 ), 1.0 * px );
+                text( aGal, why, whyAt + VECTOR2D( size * 0.4, 0 ), size * 0.85, PROBLEM, false,
+                      GR_TEXT_H_ALIGN_LEFT );
+            }
         }
 
         if( c->order > 0 && c->path.size() >= 2 && !routed && !verified )
@@ -892,6 +1296,7 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
                 start += dir / len * std::min( len / 2, aView->ToWorld( 16.0 ) );
 
             double small = aView->ToWorld( 9.0 );
+            aGal->AdvanceDepth();
             aGal->SetIsFill( true );
             aGal->SetIsStroke( true );
             aGal->SetFillColor( color.WithAlpha( 0.95 ) );
@@ -900,6 +1305,11 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
             aGal->DrawCircle( start, small * 0.85 );
             text( aGal, wxString::Format( wxS( "%d" ), c->order ), start, small,
                   BACKDROP.WithAlpha( 1.0 ), true );
+
+            // ...and in words: the routing order.
+            text( aGal, Ordinal( c->order ) + _( " to route" ),
+                  start + VECTOR2D( small * 1.1, 0 ), small * 0.85, color.Brightened( 0.3 ), false,
+                  GR_TEXT_H_ALIGN_LEFT );
         }
 
         if( selected || hovered )
@@ -925,6 +1335,7 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         if( poly.OutlineCount() )
         {
             poly.CacheTriangulation();
+            aGal->AdvanceDepth();
             aGal->SetIsFill( true );
             aGal->SetIsStroke( true );
             aGal->SetFillColor( COLOR4D( 1, 1, 1, 0.18 ) );
@@ -952,6 +1363,7 @@ void PLAN_VIEW_ITEM::drawNotesAndAudit( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         double   w = size * 0.62 * label.Length() + size;
         VECTOR2D at( n.at );
 
+        aGal->AdvanceDepth();
         aGal->SetIsFill( true );
         aGal->SetIsStroke( true );
         aGal->SetFillColor( NOTE_FILL );
@@ -967,6 +1379,7 @@ void PLAN_VIEW_ITEM::drawNotesAndAudit( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         if( w.layer != aLayer || w.at == VECTOR2I() )
             continue;
 
+        aGal->AdvanceDepth();
         aGal->SetIsFill( true );
         aGal->SetIsStroke( true );
         aGal->SetFillColor( WARN.WithAlpha( 0.9 ) );
@@ -988,13 +1401,20 @@ void PLAN_VIEW_ITEM::drawHeader( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
     // Screen-space: 16 px in from the top left, whatever the zoom.
     VECTOR2D at = vp.GetOrigin() + VECTOR2D( 16 * px, 22 * px );
 
-    wxString chip = wxString::FromUTF8( PlanLayerChip( *m_board, aLayer ) );
-    wxString stack = wxString::FromUTF8( DescribePlanLayer( *m_board, aLayer ) );
+    bool     power = false;
+
+    for( const PLAN_LAYER& l : plan.layers )
+        power |= l.layer == aLayer && l.role == "power";
+
+    wxString chip = wxString::FromUTF8( PlanLayerChip( *m_board, aLayer ) )
+                    + wxString::FromUTF8( power ? " \xC2\xB7 PWR" : " \xC2\xB7 SIG" );
+    wxString stack = wxString::FromUTF8( DescribePlanLayer( *m_board, aLayer, &plan ) );
 
     double big = 14 * px;
     double small = 11 * px;
-    double chipW = big * 0.66 * chip.Length() + 20 * px;
+    double chipW = big * 0.78 * chip.Length() + 14 * px;
 
+    aGal->AdvanceDepth();
     aGal->SetIsFill( true );
     aGal->SetIsStroke( false );
     aGal->SetFillColor( COLOR4D( 0.0, 0.0, 0.0, m_planView ? 0.0 : 0.55 ) );
@@ -1027,14 +1447,44 @@ void PLAN_VIEW_ITEM::drawHeader( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         double   barH = 5 * px;
         VECTOR2D bar = at + VECTOR2D( 0, ( stack.IsEmpty() ? 16 : 38 ) * px );
         aGal->SetIsStroke( false );
+        aGal->AdvanceDepth();
         aGal->SetIsFill( true );
         aGal->SetFillColor( COLOR4D( 1, 1, 1, 0.15 ) );
         aGal->DrawRectangle( bar, bar + VECTOR2D( barW, barH ) );
         aGal->SetFillColor( lp.done == lp.groups ? VERIFIED : COLOR4D( 0.95, 0.75, 0.30, 1.0 ) );
         aGal->DrawRectangle( bar, bar + VECTOR2D( barW * lp.done / lp.groups, barH ) );
-        text( aGal, wxString::Format( _( "%d/%d groups" ), lp.done, lp.groups ),
+        text( aGal, wxString::Format( lp.groups == 1 ? _( "%d of %d corridor routed" )
+                                                     : _( "%d of %d corridors routed" ), lp.done, lp.groups ),
               bar + VECTOR2D( barW + 8 * px, barH / 2 ), small, HEADER_DIM, false,
               GR_TEXT_H_ALIGN_LEFT );
+    }
+
+    // Every problem on this layer, in words.
+    std::vector<wxString> problemLines;
+
+    for( const PLAN_AUDIT::WARNING& w : m_audit.warnings )
+    {
+        if( w.layer == aLayer || w.layer.empty() )
+            problemLines.push_back( wxString::FromUTF8( w.text ) );
+    }
+
+    if( !problemLines.empty() )
+    {
+        VECTOR2D line = at + VECTOR2D( 0, ( stack.IsEmpty() ? 34 : 58 ) * px );
+        text( aGal, wxString::Format( problemLines.size() == 1 ? _( "%zu problem:" ) : _( "%zu problems:" ),
+                                      problemLines.size() ),
+              line, small, PROBLEM, true, GR_TEXT_H_ALIGN_LEFT );
+
+        for( size_t i = 0; i < std::min<size_t>( problemLines.size(), 4 ); ++i )
+        {
+            wxString t = problemLines[i];
+
+            if( t.Length() > 64 )
+                t = t.Left( 63 ) + wxString::FromUTF8( "\xE2\x80\xA6" );
+
+            text( aGal, t, line + VECTOR2D( 0, ( i + 1 ) * 16 * px ), small, PROBLEM, false,
+                  GR_TEXT_H_ALIGN_LEFT );
+        }
     }
 
     if( items > 0 )
