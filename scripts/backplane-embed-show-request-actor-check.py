@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """bp.13 check for `kicad --embedded`: a show request says who caused it.
 
-- ShowFrame{FK_SCH, prewarm} opens the schematic editor hidden and posts no ET_SHOW_REQUESTED.
+- RunChecks{FK_PCB, parity} with no schematic editor loads the schematic hidden and posts no
+  ET_SHOW_REQUESTED; a second run reuses that editor without reloading it.
+- ShowFrame{FK_SCH, prewarm} keeps the schematic editor hidden and posts no ET_SHOW_REQUESTED.
 - "Switch to Schematic Editor" run over RunAction by an agent (client agent:check) posts
   ET_SHOW_REQUESTED for FK_SCH with detail "agent:check": the host can tell it caused it.
 - The same action run for the person (client person:check) posts it with an empty detail, as a
@@ -59,11 +61,36 @@ def main():
         time.sleep(2)
         collect(1)
 
-        # The host's prewarm: hidden, no request
-        api.request(embed.ShowFrame(kind=embed.FK_SCH, width=804, height=896, prewarm=True), embed.ShowFrameResponse)
-        got = collect(15)
+        # DRC with schematic parity and no schematic editor yet: it loads the schematic hidden and
+        # asks for nothing (lane B's flip: four show requests and the schematic shown)
+        check(embed.FK_SCH not in frames(), "no schematic editor before the DRC")
+        rc = api.request(embed.RunChecks(kind=embed.FK_PCB, parity=True), embed.RunChecksResponse)
+        got = collect(1)
+        deadline = time.monotonic() + 120
+        while time.monotonic() < deadline and not any(e.type == embed.ET_CHECKS_DONE for e in got):
+            got += collect(1)
+        done = [e for e in got if e.type == embed.ET_CHECKS_DONE]
+        check(bool(done), f"RunChecks FK_PCB parity finishes (ET_CHECKS_DONE, progress {rc.progress_id})")
         check(embed.FK_SCH in frames() and not frames()[embed.FK_SCH].shown,
-              "a prewarm opens the schematic editor hidden")
+              f"the parity check loaded the schematic editor hidden ({[(f.kind, f.shown) for f in frames().values()]})")
+        check(not sch_requests(got), f"the parity check posts no ET_SHOW_REQUESTED ({sch_requests(got)})")
+        check(frames()[embed.FK_PCB].shown, "the board stays on screen")
+
+        # Again, with the hidden schematic editor already loaded: used as it is
+        rc = api.request(embed.RunChecks(kind=embed.FK_PCB, parity=True), embed.RunChecksResponse)
+        got = collect(1)
+        deadline = time.monotonic() + 120
+        while time.monotonic() < deadline and not any(e.type == embed.ET_CHECKS_DONE for e in got):
+            got += collect(1)
+        check(any(e.type == embed.ET_CHECKS_DONE for e in got) and not sch_requests(got)
+              and not any(e.type == embed.ET_DOCUMENT_RELOADED and e.frame.kind == embed.FK_SCH for e in got),
+              f"a second parity check reuses the hidden schematic (no reload, no request: "
+              f"{[embed.EventType.Name(e.type) for e in got if e.frame.kind == embed.FK_SCH]})")
+
+        # The host's prewarm of the (now open) schematic editor: still hidden, no request
+        api.request(embed.ShowFrame(kind=embed.FK_SCH, width=804, height=896, prewarm=True), embed.ShowFrameResponse)
+        got = collect(8)
+        check(not frames()[embed.FK_SCH].shown, "a prewarm keeps the schematic editor hidden")
         check(not sch_requests(got), f"a prewarm posts no ET_SHOW_REQUESTED ({sch_requests(got)})")
 
         # Switch to Schematic Editor, by an agent and for the person

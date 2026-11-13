@@ -3034,6 +3034,23 @@ int PCB_EDIT_FRAME::TestStandalone()
             }
         }
 
+        BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+        if( embed.Enabled() )
+        {
+            // Embedded, the host keeps editors hidden until it shows them, and decides what is on
+            // screen: the parity check (DRC, Update PCB) only needs the netlist.  A hidden editor
+            // that already holds this schematic is used as it is (reloading would drop its unsaved
+            // edits); any other loads it quietly and stays hidden.
+            if( wxFileName( frame->GetCurrentFileName() ).SameAs( fn ) )
+                return 1;
+
+            embed.m_quietShowRequests++;
+            frame->OpenProjectFiles( std::vector<wxString>( 1, fn.GetFullPath() ) );
+            embed.m_quietShowRequests--;
+            return 1;
+        }
+
         frame->OpenProjectFiles( std::vector<wxString>( 1, fn.GetFullPath() ) );
 
         // we show the schematic editor frame, because do not show is seen as
