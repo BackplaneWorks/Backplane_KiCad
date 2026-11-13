@@ -26,6 +26,7 @@
 #include <wx/app.h>
 #include <wx/window.h>
 #include <windows.h>
+#include <dbghelp.h>
 
 // Windows: as on X11, the frames are WS_CHILD windows of a holder window KiCad owns, and the
 // holder is a child of the host's container HWND (or, parked, a hidden off-screen popup).
@@ -286,6 +287,121 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 }
 
 
+namespace
+{
+DWORD s_mainThreadId = 0;
+}
+
+
+void KIPLATFORM::EMBED::NoteMainThread()
+{
+    s_mainThreadId = GetCurrentThreadId();
+}
+
+
+std::string KIPLATFORM::EMBED::MainThreadStack()
+{
+    if( !s_mainThreadId || s_mainThreadId == GetCurrentThreadId() )
+        return {};
+
+    // dbghelp at run time: nothing to link, and nothing loaded unless a stall is reported
+    HMODULE dbghelp = LoadLibraryW( L"dbghelp.dll" );
+
+    if( !dbghelp )
+        return "(no dbghelp.dll)";
+
+    using STACKWALK = BOOL( WINAPI* )( DWORD, HANDLE, HANDLE, LPSTACKFRAME64, PVOID,
+                                       PREAD_PROCESS_MEMORY_ROUTINE64, PFUNCTION_TABLE_ACCESS_ROUTINE64,
+                                       PGET_MODULE_BASE_ROUTINE64, PTRANSLATE_ADDRESS_ROUTINE64 );
+    using SYMINIT = BOOL( WINAPI* )( HANDLE, PCSTR, BOOL );
+
+    auto stackWalk = reinterpret_cast<STACKWALK>( GetProcAddress( dbghelp, "StackWalk64" ) );
+    auto symInit = reinterpret_cast<SYMINIT>( GetProcAddress( dbghelp, "SymInitialize" ) );
+    auto tableAccess = reinterpret_cast<PFUNCTION_TABLE_ACCESS_ROUTINE64>(
+            GetProcAddress( dbghelp, "SymFunctionTableAccess64" ) );
+    auto moduleBase = reinterpret_cast<PGET_MODULE_BASE_ROUTINE64>(
+            GetProcAddress( dbghelp, "SymGetModuleBase64" ) );
+
+    if( !stackWalk || !symInit || !tableAccess || !moduleBase )
+        return "(dbghelp has no StackWalk64)";
+
+    HANDLE process = GetCurrentProcess();
+    symInit( process, nullptr, TRUE );
+
+    HANDLE thread = OpenThread( THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION,
+                                FALSE, s_mainThreadId );
+
+    if( !thread )
+        return "(cannot open the UI thread)";
+
+    std::string out;
+
+    if( SuspendThread( thread ) != (DWORD) -1 )
+    {
+        CONTEXT context = {};
+        context.ContextFlags = CONTEXT_FULL;
+
+        if( GetThreadContext( thread, &context ) )
+        {
+            STACKFRAME64 frame = {};
+            DWORD        machine;
+#if defined( _M_ARM64 )
+            machine = IMAGE_FILE_MACHINE_ARM64;
+            frame.AddrPC.Offset = context.Pc;
+            frame.AddrFrame.Offset = context.Fp;
+            frame.AddrStack.Offset = context.Sp;
+#else
+            machine = IMAGE_FILE_MACHINE_AMD64;
+            frame.AddrPC.Offset = context.Rip;
+            frame.AddrFrame.Offset = context.Rbp;
+            frame.AddrStack.Offset = context.Rsp;
+#endif
+            frame.AddrPC.Mode = frame.AddrFrame.Mode = frame.AddrStack.Mode = AddrModeFlat;
+
+            for( int depth = 0; depth < 48; ++depth )
+            {
+                if( !stackWalk( machine, process, thread, &frame, &context, nullptr, tableAccess,
+                                moduleBase, nullptr )
+                    || !frame.AddrPC.Offset )
+                {
+                    break;
+                }
+
+                HMODULE module = nullptr;
+                char    name[MAX_PATH] = "?";
+
+                if( GetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS
+                                                | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                        reinterpret_cast<LPCSTR>( frame.AddrPC.Offset ), &module )
+                    && module )
+                {
+                    GetModuleFileNameA( module, name, sizeof( name ) );
+                }
+
+                const char* base = strrchr( name, '\\' );
+                char        entry[MAX_PATH + 32];
+                snprintf( entry, sizeof( entry ), "%s%s+0x%llx", out.empty() ? "" : " | ",
+                          base ? base + 1 : name,
+                          (unsigned long long) ( frame.AddrPC.Offset
+                                                 - reinterpret_cast<DWORD64>( module ) ) );
+                out += entry;
+            }
+        }
+
+        ResumeThread( thread );
+    }
+
+    CloseHandle( thread );
+    return out.empty() ? "(no frames)" : out;
+}
+
+
+void KIPLATFORM::EMBED::TraceLine( const std::string& aLine )
+{
+    trace( "%s", aLine.c_str() );
+}
+
+
 uint64_t KIPLATFORM::EMBED::CreateHolder( uint64_t aParent )
 {
     HWND parent = reinterpret_cast<HWND>( aParent );
@@ -398,6 +514,54 @@ void KIPLATFORM::EMBED::TakeFocus( wxWindow* aFrame )
            describe( frame ).c_str(), describe( before ).c_str(), describe( result ).c_str(),
            result ? 0 : GetLastError(), describe( GetFocus() ).c_str(),
            describe( GetForegroundWindow() ).c_str() );
+}
+
+
+void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked )
+{
+    if( !aFrame )
+        return;
+
+    HWND frame = static_cast<HWND>( aFrame->GetHWND() );
+    HWND clicked = aClicked ? static_cast<HWND>( aClicked->GetHWND() ) : nullptr;
+
+    // The window clicked (the canvas), when it is inside the frame and takes the keyboard;
+    // never the frame itself while its child is handling the click
+    if( clicked && clicked != frame && IsChild( frame, clicked ) && aClicked->AcceptsFocus() )
+    {
+        HWND before = GetFocus();
+        HWND result = SetFocus( clicked );
+        trace( "TakeFocusForClick %s in %s: focus was %s, SetFocus -> %s (error %lu), capture %s",
+               describe( clicked ).c_str(), describe( frame ).c_str(), describe( before ).c_str(),
+               describe( result ).c_str(), result ? 0 : GetLastError(),
+               describe( GetCapture() ).c_str() );
+        return;
+    }
+
+    TakeFocus( aFrame );
+}
+
+
+bool KIPLATFORM::EMBED::ReleaseStrayCapture( wxWindow* aFrame )
+{
+    if( !aFrame )
+        return false;
+
+    HWND frame = static_cast<HWND>( aFrame->GetHWND() );
+    bool buttonDown = ( GetKeyState( VK_LBUTTON ) & 0x8000 ) || ( GetKeyState( VK_RBUTTON ) & 0x8000 )
+                      || ( GetKeyState( VK_MBUTTON ) & 0x8000 );
+
+    // The frame itself never needs the capture between clicks (its canvas and sashes take
+    // their own); held, every later click goes to it instead of the canvas
+    if( GetCapture() == frame && !buttonDown )
+    {
+        ReleaseCapture();
+        trace( "released a stray capture held by the frame %s (capture now %s)",
+               describe( frame ).c_str(), describe( GetCapture() ).c_str() );
+        return true;
+    }
+
+    return false;
 }
 
 

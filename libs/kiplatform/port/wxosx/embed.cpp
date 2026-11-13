@@ -22,6 +22,11 @@
 
 bool KIPLATFORM::EMBED::Supported() { return false; }
 void KIPLATFORM::EMBED::Install( const HOOKS& ) {}
+void KIPLATFORM::EMBED::TraceLine( const std::string& )
+{
+}
+
+
 uint64_t KIPLATFORM::EMBED::CreateHolder( uint64_t ) { return 0; }
 bool KIPLATFORM::EMBED::AttachHolder( uint64_t, uint64_t ) { return false; }
 uint64_t KIPLATFORM::EMBED::PrepareFrame( wxWindow*, uint64_t ) { return 0; }
@@ -37,3 +42,26 @@ void KIPLATFORM::EMBED::EnsureMapped( wxWindow* ) {}
 void KIPLATFORM::EMBED::UnmapNative( wxWindow* aFrame ) { if( aFrame ) aFrame->Show( false ); }
 bool KIPLATFORM::EMBED::NativeModalTitle( wxString& ) { return false; }
 void KIPLATFORM::EMBED::MakeTransientFor( wxWindow*, uint64_t ) {}
+
+
+void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* )
+{
+    TakeFocus( aFrame );
+}
+
+
+bool KIPLATFORM::EMBED::ReleaseStrayCapture( wxWindow* )
+{
+    return false;
+}
+
+
+void KIPLATFORM::EMBED::NoteMainThread()
+{
+}
+
+
+std::string KIPLATFORM::EMBED::MainThreadStack()
+{
+    return {};
+}

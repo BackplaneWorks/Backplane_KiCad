@@ -26,6 +26,7 @@
 #include <cctype>
 #include <chrono>
 #include <cstdio>
+#include <fmt/format.h>
 
 #include <wx/app.h>
 #include <wx/dialog.h>
@@ -211,6 +212,7 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
                 PushEvent( EMBED_EVENT_TYPE::ATTACHED, {}, std::to_string( aParent ) );
             };
 
+    KIPLATFORM::EMBED::NoteMainThread();
     KIPLATFORM::EMBED::Install( hooks );
 
     m_holder = KIPLATFORM::EMBED::CreateHolder( aParent );
@@ -229,6 +231,7 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
     m_parent = aParent;
     m_toplevel = aToplevel;
     m_pollTimer.Start( 250 );
+    StartupMark( fmt::format( "embedded; holder created {}", aParent ? "in the host's window" : "parked" ) );
 
     // Co-editing (docs/backplane/coedit.md): the host hears every change and every notice.
     COEDIT::SetChangeListener(
@@ -618,6 +621,12 @@ bool BACKPLANE_EMBED::ShowEmbedded( wxFrame* aFrame, bool aShow )
     TRACE_SCOPE trace( std::string( aShow ? "embed:show@" : "embed:hide@" )
                        + aFrame->GetName().ToStdString( wxConvUTF8 ) );
 
+    if( static bool firstShow = true; aShow && firstShow )
+    {
+        firstShow = false;
+        StartupMark( "first frame shown: " + aFrame->GetName().ToStdString( wxConvUTF8 ) );
+    }
+
     if( aShow )
         EndPrewarm( aFrame );
 
@@ -906,9 +915,19 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
         // click itself still goes to KiCad.
         if( !KIPLATFORM::EMBED::HasFocus( frame ) )
         {
-            KIPLATFORM::EMBED::TakeFocus( frame );
+            KIPLATFORM::EMBED::TakeFocusForClick( frame, window );
             sendFocusMessage( frame );
         }
+
+        // Once KiCad has handled the click, nothing may leave the frame holding the mouse
+        // (Windows: the next right click then never reaches the canvas)
+        wxWeakRef<wxFrame> weak( frame );
+        wxTheApp->CallAfter(
+                [weak]()
+                {
+                    if( wxFrame* f = weak.get() )
+                        KIPLATFORM::EMBED::ReleaseStrayCapture( f );
+                } );
 
         return -1;
     }
@@ -1015,6 +1034,10 @@ void BACKPLANE_EMBED::onPoll( wxTimerEvent& )
             continue;
 
         bool     shown = e.frame->IsShown() && KIPLATFORM::EMBED::IsMapped( e.frame );
+
+        // A capture the frame itself kept after a click (Windows) is let go within a poll
+        if( shown )
+            KIPLATFORM::EMBED::ReleaseStrayCapture( e.frame );
 
         if( shown != e.shown )
         {
@@ -1760,6 +1783,47 @@ std::string jsonEscape( const std::string& aText )
     return out;
 }
 } // namespace
+
+
+namespace
+{
+/// The process's start, as near as a static initializer of kicommon gets
+const std::chrono::steady_clock::time_point s_processStart = std::chrono::steady_clock::now();
+}
+
+
+void BACKPLANE_EMBED::StartupMark( const std::string& aWhat )
+{
+    double ms = std::chrono::duration<double, std::milli>( std::chrono::steady_clock::now()
+                                                           - s_processStart ).count();
+    std::string line = fmt::format( "startup +{:.0f} ms: {}", ms, aWhat );
+
+    {
+        std::lock_guard<std::mutex> lock( m_markMutex );
+        m_lastMark = line;
+    }
+
+    if( m_enabled || !m_apiSocket.empty() )
+    {
+        fprintf( stderr, "kicad embed %s\n", line.c_str() );
+        fflush( stderr );
+    }
+
+    KIPLATFORM::EMBED::TraceLine( line );
+
+    if( m_traceFile )
+    {
+        fprintf( m_traceFile, "{\"kind\":\"mark\",\"t\":%.3f,\"what\":\"%s\"}\n", nowUs() / 1000.0,
+                 jsonEscape( aWhat ).c_str() );
+    }
+}
+
+
+std::string BACKPLANE_EMBED::LastStartupMark() const
+{
+    std::lock_guard<std::mutex> lock( m_markMutex );
+    return m_lastMark;
+}
 
 
 bool BACKPLANE_EMBED::TraceStart( const wxString& aPath, double aThresholdMs )

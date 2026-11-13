@@ -295,6 +295,11 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 }
 
 
+void KIPLATFORM::EMBED::TraceLine( const std::string& )
+{
+}
+
+
 uint64_t KIPLATFORM::EMBED::CreateHolder( uint64_t aParent )
 {
 #ifdef GDK_WINDOWING_X11
@@ -848,4 +853,27 @@ void KIPLATFORM::EMBED::MakeTransientFor( wxWindow* aDialog, uint64_t aToplevel 
     if( GTK_IS_WINDOW( widget ) )
         centreOn( GTK_WINDOW( widget ), (Window) aToplevel );
 #endif
+}
+
+
+void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* )
+{
+    TakeFocus( aFrame );
+}
+
+
+bool KIPLATFORM::EMBED::ReleaseStrayCapture( wxWindow* )
+{
+    return false;
+}
+
+
+void KIPLATFORM::EMBED::NoteMainThread()
+{
+}
+
+
+std::string KIPLATFORM::EMBED::MainThreadStack()
+{
+    return {};
 }

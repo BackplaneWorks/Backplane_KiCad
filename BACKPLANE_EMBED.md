@@ -352,6 +352,19 @@ Real questions (save/discard, errors, file pickers) stay dialogs, transient for 
 centred on it. The features check asserts load, zone fill and library load jobs end `done` and
 that no progress window is ever mapped.
 
+## bp.13: cold-start marks and the stall watchdog
+
+In `--embedded` KiCad writes each step of its start to stderr as `kicad embed startup +N ms:
+...` (also to the Windows embed trace, `BACKPLANE_KICAD_EMBED_TRACE`, and the frame trace):
+embedded and holder created, API socket bound, API ready to reply, first API request received,
+first API request dispatched on the UI thread, first frame shown. A request left waiting more
+than 5 s for the UI thread is reported as `STALL: ...` with the last step reached and, on
+Windows, the UI thread's call stack (module+offset per frame), again every 10 s while it lasts.
+
+On Windows a click gives the keyboard to the window clicked (the canvas), not to the frame, and
+a mouse capture the frame itself keeps with no button down is released (traced); held, it took
+every later click from the canvas, so a right click opened no menu.
+
 ## Known limitations (as of bp.9)
 
 - `ListActions` (the palette feed).

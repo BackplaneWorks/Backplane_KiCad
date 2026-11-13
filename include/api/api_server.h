@@ -22,6 +22,7 @@
 #define KICAD_API_SERVER_H
 
 #include <atomic>
+#include <thread>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -86,10 +87,7 @@ public:
 
     void DeregisterHandler( API_HANDLER* aHandler );
 
-    void SetReadyToReply( bool aReady = true )
-    {
-        m_readyToReply.store( aReady, std::memory_order_release );
-    }
+    void SetReadyToReply( bool aReady = true );
 
     /**
      * Listen at aSocketPath instead of the standard path.  A strict path (from the command line)
@@ -183,6 +181,18 @@ private:
     std::string m_token;
 
     std::atomic<bool> m_readyToReply;
+
+    /// Cold-start diagnosis (--embedded): startup marks and a watchdog that reports a request
+    /// left waiting for the UI thread (BACKPLANE_EMBED::StartupMark)
+    void startWatchdog();
+    void stopWatchdog();
+
+    std::atomic<int64_t>    m_pendingSinceMs{ 0 };   ///< oldest request not yet dispatched, 0 if none
+    std::atomic<int>        m_pending{ 0 };
+    std::atomic<bool>       m_firstReceived{ false };
+    std::atomic<bool>       m_firstDispatched{ false };
+    std::atomic<bool>       m_watchdogStop{ false };
+    std::unique_ptr<std::thread> m_watchdog;
 
     std::atomic<std::uint64_t> m_handledRequestCount{ 0 };
 

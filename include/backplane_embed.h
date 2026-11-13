@@ -236,6 +236,17 @@ class KICOMMON_API BACKPLANE_EMBED : public wxEvtHandler
 public:
     static BACKPLANE_EMBED& Get();
 
+    /**
+     * A step of a cold start (KiCad started, holder created, API socket bound, ready to reply,
+     * first request received and dispatched, first frame shown), timed from the process start.
+     * Written to stderr in --embedded (the host logs it), to the Windows embed trace
+     * (BACKPLANE_KICAD_EMBED_TRACE) and to the frame trace.  Any thread.
+     */
+    void StartupMark( const std::string& aWhat );
+
+    /// The last StartupMark, for a stall report.  Any thread.
+    std::string LastStartupMark() const;
+
     /// Turn embedding on (from the command line).  aParent/aToplevel may be 0 (attach later).
     bool Enable( uint64_t aParent, uint64_t aToplevel );
 
@@ -515,6 +526,9 @@ private:
     int         m_commentCounter = 0;
 
     bool     m_enabled = false;
+
+    mutable std::mutex m_markMutex;
+    std::string        m_lastMark;
     uint64_t m_parent = 0;
     uint64_t m_toplevel = 0;
     uint64_t m_holder = 0;
