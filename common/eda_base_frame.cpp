@@ -22,6 +22,7 @@
 
 #include "dialogs/panel_maintenance.h"
 #include "kicad_manager_frame.h"
+#include <backplane_coedit.h>
 #include <eda_base_frame.h>
 #include <nlohmann/json.hpp>
 
@@ -368,6 +369,7 @@ EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
     ops.modified = [this]() { return IsContentModified(); };
     ops.settingsChanged = [this]() { CommonSettingsChanged( 0 ); };
     ops.watchedFiles = [this]() { return EmbedWatchedFiles(); };
+    ops.syncSideFiles = [this]() { EmbedSyncSideFiles(); };
     ops.reload = [this]() { return EmbedReload(); };
     ops.showConflict = [this]( const wxString& aPath ) { ShowEmbedReloadConflict( aPath ); };
 
@@ -1546,6 +1548,13 @@ void EDA_BASE_FRAME::RestoreAuiLayout()
     if( !ADVANCED_CFG::GetCfg().m_EnableUseAuiPerspective )
         return;
 
+    // An embedded frame lives in the host's pane, not the person's standalone window: a saved
+    // layout's dock sizes do not fit it, and on Windows (wx 3.3's aui_state) a dock whose panes
+    // are hidden after the restore kept its saved width, an empty band beside the canvas.  The
+    // panes' visibility still follows the settings, applied by each frame after this.
+    if( BACKPLANE_EMBED::Get().Enabled() )
+        return;
+
     bool restored = false;
 
 #if wxCHECK_VERSION( 3, 3, 0 )
@@ -2093,20 +2102,22 @@ void EDA_BASE_FRAME::PushCommandToRedoList( PICKED_ITEMS_LIST* aNewitem )
 
 PICKED_ITEMS_LIST* EDA_BASE_FRAME::PopCommandFromUndoList( )
 {
-    return m_undoList.PopCommand();
+    // Co-editing (docs/backplane/coedit.md): tools that pop to merge or roll back their own
+    // change get their actor's newest change, never another actor's.
+    return m_undoList.Extract( m_undoList.FindNewest( COEDIT::CurrentActor() ) );
 }
 
 
 PICKED_ITEMS_LIST* EDA_BASE_FRAME::PopCommandFromRedoList( )
 {
-    return m_redoList.PopCommand();
+    return m_redoList.Extract( m_redoList.FindNewest( COEDIT::CurrentActor() ) );
 }
 
 
 wxString EDA_BASE_FRAME::GetUndoActionDescription() const
 {
-    if( GetUndoCommandCount() > 0 )
-        return m_undoList.m_CommandsList.back()->GetDescription();
+    if( int idx = m_undoList.FindNewest( COEDIT::CurrentActor() ); idx >= 0 )
+        return m_undoList.m_CommandsList[idx]->GetDescription();
 
     return wxEmptyString;
 }
@@ -2114,8 +2125,8 @@ wxString EDA_BASE_FRAME::GetUndoActionDescription() const
 
 wxString EDA_BASE_FRAME::GetRedoActionDescription() const
 {
-    if( GetRedoCommandCount() > 0 )
-        return m_redoList.m_CommandsList.back()->GetDescription();
+    if( int idx = m_redoList.FindNewest( COEDIT::CurrentActor() ); idx >= 0 )
+        return m_redoList.m_CommandsList[idx]->GetDescription();
 
     return wxEmptyString;
 }

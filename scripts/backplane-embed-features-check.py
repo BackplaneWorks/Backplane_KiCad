@@ -42,9 +42,12 @@ def main():
         api.request(embed.SetChrome(), embed.SetChromeResponse)
         events_since = [0]
 
+        all_events = []   # every event seen, for the progress checks at the end
+
         def events():
             reply = api.request(embed.NextEvents(since=events_since[0]), embed.NextEventsResponse)
             events_since[0] = reply.next
+            all_events.extend(reply.events)
             return list(reply.events)
 
         def frames():
@@ -166,6 +169,26 @@ def main():
               and list(result.found.nets) == ["VCC"], f"SelectItems on the hidden schematic ({result})")
         check(selection_count(base.DOCTYPE_PCB) >= 1, "schematic → board cross-probe with the schematic hidden")
         _, sch_selected = show(embed.FK_SCH, "09-sch-select-u2", 3)
+
+        # The host placing the frame again (ShowFrame geometry, same and new size, as on a
+        # window move or a tab switch) keeps the selection and the view: the selected symbol
+        # stays under the same screen point
+        sch_count = selection_count(base.DOCTYPE_SCHEMATIC)
+        w0, h0 = host.size
+        for gw, gh in ((w0, h0), (w0 - 120, h0 - 80), (w0, h0)):
+            api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=gw, height=gh),
+                        embed.ShowFrameResponse)
+            time.sleep(1.2)
+            host.pump(0.1)
+        replaced = s.shot("09b-sch-after-geometry")
+        win = frames()[embed.FK_SCH].window
+        geom = disp.create_resource_object("window", win).get_geometry()
+        check(selection_count(base.DOCTYPE_SCHEMATIC) == sch_count and sch_count >= 1,
+              f"ShowFrame geometry keeps the schematic selection ({sch_count} items)")
+        check((geom.x, geom.y, geom.width, geom.height) == (0, 0, w0, h0),
+              f"ShowFrame geometry puts the frame exactly there ({geom.x},{geom.y} {geom.width}x{geom.height})")
+        check(mean_difference(sch_selected, replaced, canvas) < 0.05,
+              "and the view is where it was (the canvas looks the same)")
         missing = api.request_raw(embed.SelectItems(kind=embed.FK_FOOTPRINT_EDITOR, references=["U1"]))
         check(missing.status.status == api.envelope.AS_UNHANDLED, "a frame kind without a handler is AS_UNHANDLED")
 
@@ -457,6 +480,62 @@ x.XSync(d, 0); print('ok', flush=True); time.sleep(600)
         check(bool(detached) and count == before_death and parent_of(disp, pcb) == holder and viewable(disp, pcb),
               f"survives the host's death and re-attaches to a new window (detached={bool(detached)}, "
               f"frames={count}, parent ok={parent_of(disp, pcb) == holder}, viewable={viewable(disp, pcb)})")
+
+        # ---------------- Progress (bp.12): no progress window, ET_PROGRESS instead ----------------
+        has_progress = hasattr(embed, "ET_PROGRESS")
+        if has_progress:
+            show(embed.FK_PCB, wait=1)
+            events()
+            before_fill = set(s.watcher.current())
+            editor = api.module("common.commands.editor_commands")
+            # RefillZones names the board, so it reaches the PCB editor whichever frame is active
+            # (a RunAction goes to the first board-like handler, which may be the footprint editor)
+            board_commands = api.module("board.board_commands")
+            fill = api.request_raw(board_commands.RefillZones(board=document(base.DOCTYPE_PCB)))
+            print(f"  RefillZones: status {fill.status.status} {fill.status.error_message}", flush=True)
+            wait_for(lambda: any(e.type == embed.ET_PROGRESS and e.progress.done and "Zone" in e.progress.title
+                                 for e in events()), 30, 0.2)
+            events()
+            jobs = {}
+            for e in all_events:
+                if e.type == embed.ET_PROGRESS:
+                    jobs.setdefault(e.progress.id, []).append(e.progress)
+
+            def finished(word):
+                return [js for js in jobs.values()
+                        if word.lower() in js[0].title.lower() and js[-1].done]
+
+            print("  progress jobs: " + "; ".join(
+                f"{js[0].title!r} x{len(js)} done={js[-1].done}" for js in jobs.values()), flush=True)
+            check(bool(finished("Load PCB")), "loading the board reports ET_PROGRESS ending done")
+            check(bool(finished("Load Schematic")), "loading the schematic reports ET_PROGRESS ending done")
+            check(bool(finished("Zone")), "a zone fill reports ET_PROGRESS ending done")
+            check(bool(finished("Librar")), "a library load reports ET_PROGRESS ending done")
+            running = list(api.request(embed.GetFrames(), embed.GetFramesResponse).progress)
+            done_ids = {i for i, js in jobs.items() if js[-1].done}
+            check(not any(p.id in done_ids for p in running)
+                  and all(js[-1].done or i in {p.id for p in running} for i, js in jobs.items()),
+                  "GetFrames lists exactly the jobs not ended (running: "
+                  + ", ".join(f"{p.title!r} {p.fraction:.2f}" for p in running) + ")")
+            check(all(0.0 <= p.fraction <= 1.0 or p.fraction == -1.0 for js in jobs.values() for p in js),
+                  "fractions are 0..1 or -1")
+            check(not set(s.watcher.current()) - before_fill
+                  and not any(e.type == embed.ET_DIALOG_OPENED for e in all_events
+                              if "zone" in e.detail.lower() or "load" in e.detail.lower()),
+                  "no progress window was mapped (no new top-level, no dialog event)")
+            bad = api.request_raw(embed.CancelProgress(id=999999))
+            check(bad.status.status == api.envelope.AS_BAD_REQUEST, "CancelProgress for an unknown job is refused")
+            import pynng
+            with pynng.Req0(dial=frames0.events_socket, block_on_dial=True, send_timeout=5000,
+                            recv_timeout=5000) as side:
+                request = api.envelope.ApiRequest()
+                request.header.kicad_token = api.token
+                request.message.Pack(embed.CancelProgress(id=999999))
+                side.send(request.SerializeToString())
+                reply = api.envelope.ApiResponse()
+                reply.ParseFromString(side.recv())
+            check(reply.status.status == api.envelope.AS_BAD_REQUEST,
+                  "the events socket answers CancelProgress too")
 
         # (The second host's own unnamed top-level is expected.)
         strays = [(hex(wid), n) for wid, (t, n) in s.watcher.seen.items() if wid != top and t != top and n]

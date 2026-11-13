@@ -16,6 +16,8 @@
  */
 
 #include <backplane_embed.h>
+#include <backplane_coedit.h>
+#include <json_common.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -227,6 +229,41 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
     m_parent = aParent;
     m_toplevel = aToplevel;
     m_pollTimer.Start( 250 );
+
+    // Co-editing (docs/backplane/coedit.md): the host hears every change and every notice.
+    COEDIT::SetChangeListener(
+            [this]( const COEDIT::CHANGE& aChange )
+            {
+                nlohmann::json j = { { "seq", aChange.seq },
+                                     { "doc", aChange.doc },
+                                     { "actor", aChange.actor },
+                                     { "description", aChange.description },
+                                     { "created", aChange.created },
+                                     { "modified", aChange.modified },
+                                     { "deleted", aChange.deleted },
+                                     { "rebased", aChange.rebased },
+                                     { "undo", aChange.undo } };
+                PushEvent( EMBED_EVENT_TYPE::DOCUMENT_EDITED, EMBED_FRAME_INFO(), j.dump() );
+            } );
+
+    COEDIT::SetNoticeListener(
+            [this]( const COEDIT::NOTICE& aNotice )
+            {
+                nlohmann::json j = { { "kind", aNotice.kind },
+                                     { "actor", aNotice.actor },
+                                     { "doc", aNotice.doc },
+                                     { "details", nlohmann::json::parse( aNotice.json, nullptr,
+                                                                         false ) } };
+                PushEvent( EMBED_EVENT_TYPE::AGENT_NOTICE, EMBED_FRAME_INFO(), j.dump() );
+            } );
+
+    COEDIT::SetControlListener(
+            [this]( const std::string& aActor, const std::string& aAction, const std::string& aText )
+            {
+                nlohmann::json j = { { "actor", aActor }, { "action", aAction }, { "text", aText } };
+                PushEvent( EMBED_EVENT_TYPE::AGENT_CONTROL, EMBED_FRAME_INFO(), j.dump() );
+            } );
+
     return true;
 }
 
@@ -589,6 +626,16 @@ bool BACKPLANE_EMBED::ShowEmbedded( wxFrame* aFrame, bool aShow )
     // The host may have unmapped it itself (a local tab switch); wx still thinks it shown
     if( aShow )
         KIPLATFORM::EMBED::EnsureMapped( aFrame );
+
+    // A frame first laid out at another size (its default, or the parked holder's) and resized
+    // natively while hidden can keep that layout: on Windows the canvas stayed a narrow column
+    // with a toolbar mid-pane.  Lay it out again whenever it is shown at a new size; an
+    // unchanged size (every later tab switch) costs nothing.
+    if( FRAME_ENTRY* e = entry( aFrame ); aShow && e && aFrame->GetSize() != e->shownSize )
+    {
+        e->shownSize = aFrame->GetSize();
+        aFrame->SendSizeEvent();
+    }
 
     return true;
 }
@@ -1021,6 +1068,10 @@ void BACKPLANE_EMBED::PushEvent( EMBED_EVENT_TYPE aType, const EMBED_FRAME_INFO&
 uint64_t BACKPLANE_EMBED::NextEvents( uint64_t aSince, int aWaitMs, size_t aMax,
                                       std::vector<EMBED_EVENT>& aEvents, bool& aLost )
 {
+    m_lastPollMs.store( std::chrono::duration_cast<std::chrono::milliseconds>(
+                                std::chrono::steady_clock::now().time_since_epoch() )
+                                .count() );
+
     std::unique_lock<std::mutex> lock( m_eventMutex );
 
     auto ready = [&]()
@@ -1136,18 +1187,37 @@ void BACKPLANE_EMBED::eventServerThread()
         ApiResponse response;
         response.mutable_header()->set_kicad_token( s_eventToken );
 
-        kiapi::backplane::embed::NextEvents poll;
+        kiapi::backplane::embed::NextEvents     poll;
+        kiapi::backplane::embed::CancelProgress cancel;
 
         if( !parsed )
         {
             response.mutable_status()->set_status( ApiStatusCode::AS_BAD_REQUEST );
             response.mutable_status()->set_error_message( "request could not be parsed" );
         }
+        else if( request.message().UnpackTo( &cancel ) )
+        {
+            // Also here: a job started by an API request (a ShowFrame that loads a board) keeps
+            // the main socket waiting for that request's reply, so a cancel can only come here.
+            if( RequestCancel( cancel.id() ) )
+            {
+                kiapi::backplane::embed::CancelProgressResponse reply;
+                reply.set_cancelling( true );
+                response.mutable_status()->set_status( ApiStatusCode::AS_OK );
+                response.mutable_message()->PackFrom( reply );
+            }
+            else
+            {
+                response.mutable_status()->set_status( ApiStatusCode::AS_BAD_REQUEST );
+                response.mutable_status()->set_error_message(
+                        "no running cancellable job with that id" );
+            }
+        }
         else if( !request.message().UnpackTo( &poll ) )
         {
             response.mutable_status()->set_status( ApiStatusCode::AS_UNHANDLED );
             response.mutable_status()->set_error_message(
-                    "this socket serves only kiapi.backplane.embed.NextEvents" );
+                    "this socket serves only kiapi.backplane.embed.NextEvents and CancelProgress" );
         }
         else
         {
@@ -1220,6 +1290,25 @@ void BACKPLANE_EMBED::SetTheme( EMBED_THEME aTheme, bool aRefresh )
 
     if( m_managerOps.settingsChanged )
         m_managerOps.settingsChanged();
+
+    // Repaint what is on screen now, after the frames have taken the new colours (some of that
+    // is deferred to the event loop).  GTK restyles and repaints mapped windows itself; on Windows
+    // a frame the host keeps shown by its own map got no paint until its next show.
+    if( wxTheApp )
+    {
+        wxTheApp->CallAfter(
+                [this]()
+                {
+                    for( wxFrame* frame : Frames() )
+                    {
+                        if( frame->IsShown() && KIPLATFORM::EMBED::IsMapped( frame ) )
+                        {
+                            frame->Refresh();
+                            frame->Update();
+                        }
+                    }
+                } );
+    }
 
     PushEvent( EMBED_EVENT_TYPE::THEME_CHANGED, {},
                aTheme == EMBED_THEME::DARK_MODE ? "dark" : aTheme == EMBED_THEME::LIGHT_MODE ? "light" : "kicad" );
@@ -1419,6 +1508,17 @@ void BACKPLANE_EMBED::pollFiles()
 
     // Copy: a reload can open or close frames.
     std::vector<wxFrame*> frames = Frames();
+
+    // Project settings and custom rules written by another process merge into the open editor
+    // (not under a dialog, which may be editing them; its own save merges).
+    if( !ModalBlocker() )
+    {
+        for( wxFrame* frame : frames )
+        {
+            if( const FRAME_ENTRY* e = entry( frame ); e && e->ops.syncSideFiles )
+                e->ops.syncSideFiles();
+        }
+    }
 
     for( wxFrame* frame : frames )
     {

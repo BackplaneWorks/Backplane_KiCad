@@ -3653,3 +3653,64 @@ HANDLER_RESULT<PlaceFromLibraryResponse> API_HANDLER_SCH::handlePlaceSymbolFromL
 
     return response;
 }
+
+
+EDA_ITEM* API_HANDLER_SCH::resolveLiveItem( const KIID& aId )
+{
+    if( !schematic() )
+        return nullptr;
+
+    return schematic()->Hierarchy().ResolveItem( aId, nullptr, true );
+}
+
+
+COEDIT::HOLDS API_HANDLER_SCH::currentHolds()
+{
+    COEDIT::HOLDS   holds;
+    SCH_EDIT_FRAME* editFrame = frame();
+
+    if( !editFrame )
+        return holds;   // headless: nobody to hold anything
+
+    bool holdSelection = false;
+
+    if( std::optional<COEDIT::MODAL> modal = COEDIT::OpenModal() )
+    {
+        if( modal->structural )
+        {
+            holds.exclusive = true;
+            holds.reason = modal->title;
+            return holds;
+        }
+
+        holds.reason = modal->title;
+        holds.deferDeletes = true;
+        holdSelection = true;
+    }
+
+    if( editFrame->InteractiveOperationInProgress() )
+    {
+        holds.deferDeletes = true;
+        holdSelection = true;
+    }
+
+    if( holdSelection )
+    {
+        for( const KIID& id : editFrame->SelectedItemIds() )
+            holds.items.insert( id );
+    }
+
+    for( COMMIT* commit : COEDIT::LiveCommits() )
+    {
+        if( !commit->GetActor().empty() || commit->Empty() )
+            continue;
+
+        for( const auto& [item, type] : commit->StagedItems() )
+        {
+            if( item )
+                holds.items.insert( item->m_Uuid );
+        }
+    }
+
+    return holds;
+}

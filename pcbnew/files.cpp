@@ -1117,7 +1117,15 @@ bool PCB_EDIT_FRAME::SavePcbFile( const wxString& aFileName, bool addToHistory,
 
     if( projectFile.FileExists() )
     {
+        // Merges what other writers changed meanwhile (docs/backplane/coedit.md); bring the
+        // board up to date with the merged settings.
         GetSettingsManager()->SaveProject();
+
+        if( Prj().GetProjectFile().LastSyncMerged() )
+            ProjectSettingsMerged( "project settings (on save)" );
+
+        // Our own write of the project file is not another writer's change for the side-file poll.
+        NoteOwnSideFileWrites();
     }
     else if( aChangeProject )
     {

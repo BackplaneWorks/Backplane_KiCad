@@ -1,0 +1,158 @@
+/*
+ * This program source code file is part of KiCad, a free EDA CAD application.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*
+ * Live co-editing (fork-only, docs/backplane/coedit.md): the person and API clients (agents)
+ * edit the same open document.  Each API client is an actor (its header client_name); its
+ * changes are their own undo groups, the person's Ctrl+Z only undoes the person's own.
+ * Updates and deletes of items the person is editing right now are deferred (ISC_DEFERRED,
+ * IDS_DEFERRED) and applied, rebased, when the person's edit ends; the outcome is a notice.
+ */
+
+syntax = "proto3";
+
+package kiapi.backplane.coedit;
+
+import "common/types/base_types.proto";
+import "board/board_rules.proto";
+
+// One pushed change (an undo group) by the person or an agent.
+message Change
+{
+  uint64          seq         = 1;
+  string          doc         = 2;  // "pcb", "sch", "footprint", "symbol"
+  string          actor       = 3;  // empty = the person
+  string          description = 4;
+  repeated string created     = 5;  // KIIDs
+  repeated string modified    = 6;
+  repeated string deleted     = 7;
+  bool            rebased     = 8;  // a deferred agent operation, applied after the person's edit
+  bool            undo        = 9;  // an undo or redo
+}
+
+// Changes after `since` (0 = all kept, the newest 4096), optionally of one document kind.
+message GetChanges
+{
+  uint64 since = 1;
+  string doc   = 2;
+}
+
+message GetChangesResponse
+{
+  repeated Change changes = 1;
+  uint64          last    = 2;  // pass as `since` next time
+  bool            lost    = 3;  // changes after `since` scrolled out of the log
+}
+
+// A notice for an agent about its own operations.
+message Notice
+{
+  string kind  = 1;  // "deferred", "rebased", "dropped", "undo_took_back"
+  string actor = 2;
+  string doc   = 3;
+  string json  = 4;  // details (items, outcome, fields kept from the person...)
+}
+
+// Notices for `actor` (empty = the caller's own client name); `clear` removes them.
+message GetNotices
+{
+  string actor = 1;
+  bool   clear = 2;
+}
+
+message GetNoticesResponse
+{
+  repeated Notice notices = 1;
+}
+
+// What the person holds in a document right now.
+message GetHolds
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+}
+
+message GetHoldsResponse
+{
+  bool            exclusive     = 1;  // a structural operation: every write waits
+  string          reason        = 2;  // the dialog or operation
+  bool            defer_deletes = 3;  // an interactive tool or a dialog is open
+  bool            all_copper    = 4;  // the router holds every copper item
+  repeated string items         = 5;  // KIIDs held
+  uint32          deferred      = 6;  // agent operations queued behind the holds
+  uint32          collisions    = 7;  // collisions waiting for the person
+  string          collision     = 8;  // the oldest one, as the editor shows it
+}
+
+// Answer the oldest collision as the person (the host's own prompt, or tests): keep the person's
+// value, take the agent's, or show both (the prompt stays).
+enum CollisionChoice
+{
+  CC_KEEP_MINE   = 0;
+  CC_TAKE_AGENTS = 1;
+  CC_SEE_BOTH    = 2;
+}
+
+message ResolveCollision
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+  CollisionChoice                      choice   = 2;
+}
+
+message ResolveCollisionResponse
+{
+  uint32 remaining = 1;
+}
+
+// Edit custom design rules by name: upsert these rules, remove those names.  Every other rule,
+// its comments and the file header stay as they are, whoever wrote them; the open editor's DRC
+// engine (router, live DRC) uses the result at once.  Returns
+// kiapi.board.commands.CustomRulesResponse.  SetCustomDesignRules also merges per rule now (from
+// the rules this client last read with GetCustomDesignRules), but this is the precise way.
+message EditCustomRules
+{
+  kiapi.common.types.DocumentSpecifier board  = 1;
+  repeated kiapi.board.CustomRule      upsert = 2;
+  repeated string                      remove = 3;
+}
+
+// The host says what an agent is doing (Backplane: the thread's task, at each turn start, step and
+// end).  KiCad shows it with the area the agent's recent changes cover; the person can pause,
+// resume or steer it from the editor (embed event ET_AGENT_CONTROL).
+message SetAgentActivity
+{
+  string actor = 1;  // "agent:<thread>"; empty = the caller's client name
+  string task  = 2;
+  string state = 3;  // "working", "paused", "idle"
+}
+
+message SetAgentActivityResponse
+{
+}
+
+// Undo one agent change by its change-log seq (and any newer change touching the same items,
+// newest first, each reported in a notice).  The person's Agents panel does the same.
+message UndoAgentChange
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+  uint64 seq = 2;
+}
+
+message UndoAgentChangeResponse
+{
+  bool   undone = 1;
+  string error  = 2;
+}

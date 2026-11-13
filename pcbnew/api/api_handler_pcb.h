@@ -27,6 +27,7 @@
 #include <api/backplane/structure.pb.h>
 #include <api/backplane/assembly.pb.h>
 #include <api/backplane/sketch_route.pb.h>
+#include <api/backplane/plan.pb.h>
 #include <api/board/board_jobs.pb.h>
 #include <api/board/board_tasks.pb.h>
 #include <api/common/tasks.pb.h>
@@ -52,6 +53,9 @@ void ApplyFabExportContent( const kiapi::board::jobs::FabExportContent& aContent
 void ApplyOdbJobRequest( const kiapi::board::jobs::RunBoardJobExportODB& aRequest,
                          JOB_EXPORT_PCB_ODB& aJob );
 
+
+class BOARD_PLAN;
+class DRC_RULE;
 
 class API_HANDLER_PCB : public API_HANDLER_BOARD
 {
@@ -151,6 +155,42 @@ private:
 
     HANDLER_RESULT<kiapi::backplane::SketchRouteResponse> handleSketchRoute(
             const HANDLER_CONTEXT<kiapi::backplane::SketchRoute>& aCtx );
+
+    // Routing plan (docs/backplane/floorplanner.md), api_pcb_plan.cpp
+    HANDLER_RESULT<kiapi::backplane::plan::PlanResponse> handleGetPlan(
+            const HANDLER_CONTEXT<kiapi::backplane::plan::GetPlan>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::plan::ProposePlanResponse> handleProposePlan(
+            const HANDLER_CONTEXT<kiapi::backplane::plan::ProposePlan>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::plan::UpdatePlanResponse> handleUpdatePlan(
+            const HANDLER_CONTEXT<kiapi::backplane::plan::UpdatePlan>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::plan::PlanResponse> handleApprovePlan(
+            const HANDLER_CONTEXT<kiapi::backplane::plan::ApprovePlan>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::plan::RoutePlanResponse> handleRoutePlan(
+            const HANDLER_CONTEXT<kiapi::backplane::plan::RoutePlan>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::plan::PlanResponse> handleStopPlanRouting(
+            const HANDLER_CONTEXT<kiapi::backplane::plan::StopPlanRouting>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::plan::VerifyPlanResponse> handleVerifyPlan(
+            const HANDLER_CONTEXT<kiapi::backplane::plan::VerifyPlan>& aCtx );
+
+    // Custom rules, merged per rule (docs/backplane/coedit.md)
+    HANDLER_RESULT<CustomRulesResponse> handleEditCustomRules(
+            const HANDLER_CONTEXT<kiapi::backplane::coedit::EditCustomRules>& aCtx );
+    std::string readRulesFile();
+    std::map<std::string, std::string> canonicalRules( const std::string& aText );
+    CustomRulesResponse rulesToProto( const wxString& aContent,
+                                                const std::vector<std::shared_ptr<DRC_RULE>>& aRules );
+    HANDLER_RESULT<CustomRulesResponse> writeMergedRules( const std::string& aClient,
+            const std::string& aBase, const std::string& aOurs, const std::string& aDisk,
+            const std::string& aWhat );
+    std::map<std::string, std::string> m_rulesBase;   ///< per client: the rules it last read
+
+    bool planBusy( std::string& aReason );
+    void commitPlan( const BOARD_PLAN& aPlan, const std::string& aClient,
+                     const wxString& aDescription, const std::string& aOp,
+                     const std::vector<std::string>& aItems );
+
+    std::string                                     m_planRouting;
+    std::map<std::string, std::set<std::string>>    m_planTried;
 
     HANDLER_RESULT<kiapi::backplane::AssemblyResponse> handleListAssemblyComponents(
             const HANDLER_CONTEXT<kiapi::backplane::ListAssemblyComponents>& aCtx );
@@ -314,6 +354,17 @@ protected:
     void setDrawingSheetFileName( const wxString& aFileName ) override;
 
     void onModified() override;
+
+    COEDIT::HOLDS currentHolds() override;
+
+    bool isHeld( const COEDIT::HOLDS& aHolds, EDA_ITEM* aItem ) const override;
+
+    std::string coeditDocKind() const override { return "pcb"; }
+
+    void showAgentGhost( const google::protobuf::Any& aAgent, const wxString& aLabel,
+                         bool aShow ) override;
+
+    bool undoChangeBySeq( uint64_t aSeq, std::string& aError ) override;
 
     void onItemsCommitted() override;
 

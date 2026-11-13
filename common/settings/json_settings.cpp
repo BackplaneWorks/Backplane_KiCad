@@ -28,6 +28,8 @@
 #include <locale_io.h>
 #include <gal/color4d.h>
 #include <settings/json_settings.h>
+#include <backplane_merge.h>
+#include <backplane_coedit.h>
 #include <settings/json_settings_internals.h>
 #include <settings/nested_settings.h>
 #include <settings/parameters.h>
@@ -303,6 +305,15 @@ bool JSON_SETTINGS::LoadFromFile( const wxString& aDirectory )
         }
     }
 
+    // Co-editing: what the file holds, as the base of later merges (the file as written, not the
+    // migrated copy, so our own file never reads as another writer's change).
+    if( mergesWithDisk() && success )
+    {
+        std::optional<nlohmann::json> disk = readDiskJson( path.GetFullPath() );
+        m_diskBase = std::make_unique<nlohmann::json>(
+                disk ? *disk : *static_cast<nlohmann::json*>( m_internals.get() ) );
+    }
+
     // Now that we have new data in the JSON structure, load the params again
     Load();
 
@@ -504,6 +515,20 @@ bool JSON_SETTINGS::SaveToFile( const wxString& aDirectory, bool aForce )
 
     bool modified = flushToStore();
 
+    m_lastSyncMerged = false;
+
+    // Co-editing: another writer changed the file since we read it.  Merge instead of
+    // overwriting their changes with our stale copy.
+    if( mergesWithDisk() && m_diskBase && path.FileExists() )
+    {
+        if( std::optional<nlohmann::json> disk = readDiskJson( path.GetFullPath() );
+            disk && *disk != *m_diskBase )
+        {
+            mergeDisk( *disk );
+            modified = true;
+        }
+    }
+
     if( !modified && !aForce && path.FileExists() )
     {
         wxLogTrace( traceSettings, wxT( "%s contents not modified, skipping save" ), GetFullFilename() );
@@ -589,6 +614,15 @@ bool JSON_SETTINGS::SaveToFile( const wxString& aDirectory, bool aForce )
     {
         m_modified = false;
         m_fileSynced = true;
+
+        // The base is what we just wrote, as it reads back: our own save is never a change by
+        // another writer (a merge and a settings refresh after every save).
+        if( mergesWithDisk() )
+        {
+            std::optional<nlohmann::json> disk = readDiskJson( path.GetFullPath() );
+            m_diskBase = std::make_unique<nlohmann::json>(
+                    disk ? *disk : *static_cast<nlohmann::json*>( m_internals.get() ) );
+        }
     }
 
     m_lastSaveFailed = !success;
@@ -1073,3 +1107,104 @@ KICOMMON_API std::string JSON_SETTINGS::fetchOrDefault( const nlohmann::json& aJ
 
 template
 KICOMMON_API bool JSON_SETTINGS::fetchOrDefault( const nlohmann::json& aJson, const std::string& aKey, bool aDefault );
+
+
+std::optional<nlohmann::json> JSON_SETTINGS::readDiskJson( const wxString& aPath ) const
+{
+    try
+    {
+        std::ifstream in( aPath.fn_str(), std::ios::in | std::ios::binary );
+
+        if( !in )
+            return std::nullopt;
+
+        return nlohmann::json::parse( in, nullptr, true, true );
+    }
+    catch( ... )
+    {
+        return std::nullopt;
+    }
+}
+
+
+void JSON_SETTINGS::mergeDisk( const nlohmann::json& aDisk )
+{
+    nlohmann::json& ours = *static_cast<nlohmann::json*>( m_internals.get() );
+
+    std::vector<BACKPLANE_MERGE::CONFLICT> conflicts;
+    nlohmann::json merged = BACKPLANE_MERGE::MergeJson( *m_diskBase, ours, aDisk, conflicts );
+
+    m_lastMergeConflicts.clear();
+
+    for( const BACKPLANE_MERGE::CONFLICT& c : conflicts )
+    {
+        m_lastMergeConflicts.emplace_back( c.path,
+                                           nlohmann::json( { { "base", c.base },
+                                                             { "ours", c.ours },
+                                                             { "theirs", c.theirs } } ).dump() );
+    }
+
+    bool changed = merged != ours;
+    ours = merged;
+    m_diskBase = std::make_unique<nlohmann::json>( aDisk );
+
+    // Nothing of ours changed (the file differed only where we agree): no reload of the settings.
+    m_lastSyncMerged = changed;
+
+    if( !changed )
+        return;
+
+    // Bring the merged values into the parameters, and the nested settings (board setup, net
+    // classes) from their part of the document.
+    Load();
+
+    for( NESTED_SETTINGS* settings : m_nested_settings )
+        settings->LoadFromFile();
+
+    if( !conflicts.empty() )
+    {
+        COEDIT::NOTICE notice;
+        notice.kind = "settings_conflict";
+        notice.doc = "project";
+        nlohmann::json list = nlohmann::json::array();
+
+        for( const BACKPLANE_MERGE::CONFLICT& c : conflicts )
+            list.push_back( { { "path", c.path }, { "kept", c.ours }, { "file", c.theirs } } );
+
+        notice.json = list.dump();
+        COEDIT::PostNotice( notice );
+    }
+}
+
+
+bool JSON_SETTINGS::MergeFromDisk( const wxString& aDirectory )
+{
+    m_lastSyncMerged = false;
+
+    if( !mergesWithDisk() || !m_diskBase || m_filename.IsEmpty() )
+        return false;
+
+    wxFileName path;
+
+    if( aDirectory.empty() )
+    {
+        path.Assign( m_filename );
+        path.SetExt( getFileExt() );
+    }
+    else
+    {
+        path.Assign( aDirectory, m_filename, getFileExt() );
+    }
+
+    std::optional<nlohmann::json> disk = readDiskJson( path.GetFullPath() );
+
+    if( !disk || *disk == *m_diskBase )
+        return false;
+
+    flushToStore();
+    mergeDisk( *disk );
+
+    // Unsaved when the merge kept something the file does not have.
+    m_modified = *static_cast<nlohmann::json*>( m_internals.get() ) != *disk;
+    return true;
+}

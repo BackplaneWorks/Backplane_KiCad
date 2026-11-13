@@ -1,0 +1,143 @@
+/*
+ * This program source code file is part of KiCad, a free EDA CAD application.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*
+ * The routing plan (fork-only, docs/backplane/floorplanner.md).  The plan itself is JSON (the
+ * same document as the <board>.kicad_plan file), so agents read and write it directly.  Served
+ * by the GUI and by the headless server.
+ */
+
+syntax = "proto3";
+
+package kiapi.backplane.plan;
+
+import "common/types/base_types.proto";
+
+// The whole plan.  With `derived`, the reply's JSON also has "derived": the stack-up text of
+// each layer, the audit (crossings, congestion, split crossings, missing nets, bus length and
+// skew estimates) and the live progress (per item state, routed/total, problems; per layer
+// groups done; per part pins routed).
+message GetPlan
+{
+  kiapi.common.types.DocumentSpecifier board = 1;
+  bool derived = 2;
+}
+
+message PlanResponse
+{
+  string json     = 1;
+  uint64 revision = 2;
+}
+
+enum ProposeMode
+{
+  PM_MERGE            = 0;  // upsert items by id; other items stay
+  PM_REPLACE_PROPOSED = 1;  // drop every unlocked, still-proposed, agent-authored item first
+}
+
+// An agent's proposal: a plan JSON (any subset of layers, groups, corridors, planes, splits,
+// notes).  Locked items and items the person edited are never replaced; their ids come back in
+// `refused` with a reason.
+message ProposePlan
+{
+  kiapi.common.types.DocumentSpecifier board = 1;
+  string      json = 2;
+  ProposeMode mode = 3;
+}
+
+message ProposePlanResponse
+{
+  uint64          revision = 1;
+  repeated string applied  = 2;
+  repeated string refused  = 3;
+  string          reasons  = 4;  // JSON {id: reason}
+}
+
+// Item operations, JSON array:
+//   {"op":"set","id":ID,"fields":{...}}          fields of a corridor, plane, group, split or note
+//   {"op":"add","kind":"corridor|plane|group|split|note|constraint","item":{...}}
+//   {"op":"delete","id":ID}
+//   {"op":"status","id":ID,"status":"routing|routed|failed|proposed"}   (not approved/verified)
+//   {"op":"progress","id":ID,"routed":N,"total":M}
+// `base` is the revision the ops were made against: an op on an item the person changed after
+// it is refused (the person's edit wins), as is any op on a locked item.
+message UpdatePlan
+{
+  kiapi.common.types.DocumentSpecifier board = 1;
+  uint64 base = 2;
+  string ops  = 3;
+}
+
+message UpdatePlanResponse
+{
+  uint64          revision = 1;
+  repeated string applied  = 2;
+  repeated string refused  = 3;
+  string          reasons  = 4;  // JSON {id: reason}
+}
+
+// Approve (or reject) a layer, or items.  The person's decision: refused for API clients
+// named agent:*.  The host (Backplane) sends it when the person approves in its own UI.
+message ApprovePlan
+{
+  kiapi.common.types.DocumentSpecifier board = 1;
+  string          layer   = 2;
+  repeated string ids     = 3;
+  bool            approve = 4;
+}
+
+// Route one step of the approved plan: up to `max_nets` nets of the next approved corridor
+// (in routing order).  Call again until `done`.  Items move approved -> routing -> routed (or
+// failed); the overlay fills as connections land.  The person's "Back to planning" (or
+// StopPlanRouting) ends it: the next call answers `stopped`.
+message RoutePlan
+{
+  kiapi.common.types.DocumentSpecifier board = 1;
+  repeated string ids           = 2;  // limit to these corridors / planes (empty = all approved)
+  int32           max_nets      = 3;  // per step; 0 = 4
+  uint32          time_limit_ms = 4;  // per step; 0 = the router's default
+}
+
+message RoutePlanResponse
+{
+  bool            done      = 1;
+  bool            stopped   = 2;
+  string          corridor  = 3;  // the corridor this step worked on
+  int32           routed    = 4;  // its connections routed so far
+  int32           total     = 5;
+  int32           failed    = 6;
+  repeated string created   = 7;  // KIIDs of the copper and zones made
+  string          report    = 8;  // JSON: per item {state, routed, total}
+}
+
+message StopPlanRouting
+{
+  kiapi.common.types.DocumentSpecifier board = 1;
+}
+
+// Check routed groups: DRC markers on their nets, unrouted connections, length range and
+// skew against the group's targets.  Groups that pass become verified.
+message VerifyPlan
+{
+  kiapi.common.types.DocumentSpecifier board = 1;
+}
+
+message VerifyPlanResponse
+{
+  repeated string verified = 1;
+  string          report   = 2;  // JSON {group: {ok, drc, unrouted, min_length, max_length, skew}}
+}

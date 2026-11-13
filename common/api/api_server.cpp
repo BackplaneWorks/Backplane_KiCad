@@ -33,6 +33,8 @@
 #include <api/api_task_scheduler.h>
 #include <api/api_utils.h> // traceApi
 #include <api/api_server.h>
+#include <set>
+#include <backplane_coedit.h>
 #include <kiid.h>
 #include <kinng.h>
 #include <paths.h>
@@ -41,6 +43,7 @@
 #include <string_utils.h>
 
 #include <api/common/envelope.pb.h>
+#include <api/backplane/embed.pb.h>
 
 #ifdef __UNIX__
 #include <sys/file.h>
@@ -315,6 +318,47 @@ void KICAD_API_SERVER::onApiRequest( std::string* aRequest )
         return;
     }
 
+    // CancelProgress is answered here, on the server's thread: the job it stops is what keeps
+    // the UI thread busy (BACKPLANE_EMBED::RequestCancel is thread-safe).
+    if( aRequest->find( "CancelProgress" ) != std::string::npos )
+    {
+        ApiRequest  request;
+        std::string type;
+
+        if( request.ParseFromString( *aRequest )
+            && google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &type )
+            && type == "kiapi.backplane.embed.CancelProgress" )
+        {
+            ApiResponse response;
+            response.mutable_header()->set_kicad_token( m_token );
+            kiapi::backplane::embed::CancelProgress cancel;
+
+            if( !request.header().kicad_token().empty() && request.header().kicad_token() != m_token )
+            {
+                response.mutable_status()->set_status( ApiStatusCode::AS_TOKEN_MISMATCH );
+                response.mutable_status()->set_error_message(
+                        "the provided kicad_token did not match this KiCad instance's token" );
+            }
+            else if( request.message().UnpackTo( &cancel )
+                     && BACKPLANE_EMBED::Get().RequestCancel( cancel.id() ) )
+            {
+                kiapi::backplane::embed::CancelProgressResponse reply;
+                reply.set_cancelling( true );
+                response.mutable_status()->set_status( ApiStatusCode::AS_OK );
+                response.mutable_message()->PackFrom( reply );
+            }
+            else
+            {
+                response.mutable_status()->set_status( ApiStatusCode::AS_BAD_REQUEST );
+                response.mutable_status()->set_error_message(
+                        "no running cancellable job with that id" );
+            }
+
+            m_server->Reply( response.SerializeAsString() );
+            return;
+        }
+    }
+
     KICAD_API_REQUEST_EVENT* evt = new KICAD_API_REQUEST_EVENT( API_REQUEST_EVENT );
 
     // We don't actually need write access to this string, but client data is non-const
@@ -427,14 +471,35 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
         if( google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &requestType )
             && !isReadOnlyRequest( requestType ) )
         {
-            if( std::optional<wxString> dialog = BACKPLANE_EMBED::ModalBlocker() )
+            // Co-editing (docs/backplane/coedit.md): an ordinary modal only holds what it
+            // edits (the editors' handlers defer those items); only a structural dialog, one
+            // that rewrites the document wholesale, refuses every write.
+            std::optional<COEDIT::MODAL> modal = COEDIT::OpenModal();
+            std::optional<wxString>      dialog;
+
+            // Under an ordinary dialog only the hold-aware item operations go through (they defer
+            // what the dialog may be editing); tool actions and other changes still wait.
+            static const std::set<std::string> holdAware = {
+                "kiapi.common.commands.CreateItems",
+                "kiapi.common.commands.UpdateItems",
+                "kiapi.common.commands.DeleteItems",
+                "kiapi.common.commands.BeginCommit",
+                "kiapi.common.commands.EndCommit",
+                "kiapi.backplane.coedit.SetAgentActivity",
+                "kiapi.backplane.coedit.EditCustomRules",
+            };
+
+            if( modal && ( modal->structural || !holdAware.count( requestType ) ) )
+                dialog = modal->title;
+
+            if( dialog )
             {
                 ApiResponse error;
                 error.mutable_header()->set_kicad_token( m_token );
                 error.mutable_status()->set_status( ApiStatusCode::AS_BUSY );
                 error.mutable_status()->set_error_message( fmt::format(
-                        "KiCad is showing the dialog '{}'; only reads are served until it is "
-                        "closed",
+                        "KiCad is showing the dialog '{}'; only reads and item edits are served "
+                        "until it is closed",
                         dialog->ToStdString( wxConvUTF8 ) ) );
                 m_server->Reply( error.SerializeAsString() );
 
@@ -461,6 +526,19 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
                 result = tl::unexpected( status );
             };
 
+    // Every change made while handling this request is the client's (its undo group, its
+    // change-log entry, its attribution).
+    std::string actor = request.header().client_name();
+
+    if( actor.empty() )
+        actor = "api";
+
+    COEDIT::ACTOR_SCOPE actorScope( actor );
+
+    std::string handledType;
+    google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &handledType );
+    COEDIT::READ_SCOPE  readScope( !handledType.empty() && isReadOnlyRequest( handledType ) );
+
     try
     {
         for( API_HANDLER* handler : m_handlers )
@@ -485,6 +563,18 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
 
     if( notifyNetSettings )
         NotifyNetSettingsChanged();
+
+    // Co-editing: what this client has seen (an update it sends later is judged against it).
+    if( result.has_value() )
+    {
+        std::string requestType;
+
+        if( google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &requestType )
+            && requestType.find( ".Get" ) != std::string::npos )
+        {
+            COEDIT::NoteRead( actor );
+        }
+    }
 
     // Note: at the point we call Reply(), we no longer own requestString.
 

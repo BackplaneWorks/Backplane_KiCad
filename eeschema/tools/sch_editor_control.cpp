@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_coedit.h>
 #include <backplane_embed.h>
 #include <backplane_comment.h>
 #include <backplane_comment_sch.h>
@@ -1848,22 +1849,14 @@ int SCH_EDITOR_CONTROL::Undo( const TOOL_EVENT& aEvent )
 {
     wxCHECK( m_frame, 0 );
 
-    if( m_frame->GetUndoCommandCount() <= 0 )
+    if( !m_frame->HasUndoFor( COEDIT::CurrentActor() ) )
         return 0;
 
     // Inform tools that undo command was issued
     m_toolMgr->ProcessEvent( { TC_MESSAGE, TA_UNDO_REDO_PRE, AS_GLOBAL } );
 
-    // Get the old list
-    PICKED_ITEMS_LIST* undo_list = m_frame->PopCommandFromUndoList();
-
-    wxCHECK( undo_list, 0 );
-
-    m_frame->PutDataInPreviousState( undo_list );
-
-    // Now push the old command to the RedoList
-    undo_list->ReversePickersListOrder();
-    m_frame->PushCommandToRedoList( undo_list );
+    if( !m_frame->UndoRedoForActor( true ) )
+        return 0;
 
     m_toolMgr->GetTool<SCH_SELECTION_TOOL>()->RebuildSelection();
 
@@ -1878,23 +1871,14 @@ int SCH_EDITOR_CONTROL::Redo( const TOOL_EVENT& aEvent )
 {
     wxCHECK( m_frame, 0 );
 
-    if( m_frame->GetRedoCommandCount() == 0 )
+    if( !m_frame->HasRedoFor( COEDIT::CurrentActor() ) )
         return 0;
 
     // Inform tools that undo command was issued
     m_toolMgr->ProcessEvent( { TC_MESSAGE, TA_UNDO_REDO_PRE, AS_GLOBAL } );
 
-    /* Get the old list */
-    PICKED_ITEMS_LIST* list = m_frame->PopCommandFromRedoList();
-
-    wxCHECK( list, 0 );
-
-    /* Redo the command: */
-    m_frame->PutDataInPreviousState( list );
-
-    /* Put the old list in UndoList */
-    list->ReversePickersListOrder();
-    m_frame->PushCommandToUndoList( list );
+    if( !m_frame->UndoRedoForActor( false ) )
+        return 0;
 
     m_toolMgr->GetTool<SCH_SELECTION_TOOL>()->RebuildSelection();
 

@@ -83,9 +83,20 @@ host top-level (WM-managed)
   parent. `ET_DIALOG_OPENED`/`ET_DIALOG_CLOSED` carry the title in `detail`.
 - AUI panes cannot float in embedded frames.
 
-On Windows the container is used directly (no holder): frames lose `WS_CAPTION`/
-`WS_THICKFRAME`, gain `WS_CHILD | WS_CLIPCHILDREN` and are `SetParent` to it; dialogs are owned
-by the top-level HWND.
+On Windows (bp.11) the window tree matches X11: KiCad creates a holder HWND (class
+`BackplaneKiCadEmbedHolder`) as a `WS_CHILD` of the container, sized to the container's client
+area (followed every 100 ms), and frames lose `WS_CAPTION`/`WS_THICKFRAME`, gain
+`WS_CHILD | WS_CLIPCHILDREN` and are `SetParent` to the holder. `AttachToParent` moves only the
+holder; `--parent-window 0` or `AttachToParent{0}` parks it as a hidden off-screen popup.
+KiCad notices the host moving the holder into another window (`ET_ATTACHED`), taking it out
+with `SetParent(holder, NULL)` or the container going away (`ET_DETACHED`, parked). Windows
+destroys child windows with their parent, so **the host must move the holder out
+(`AttachToParent{0}` or `SetParent(holder, NULL)`) before it destroys the container**; a host
+that crashes takes KiCad's frames with it. `shown` is the frame's own `WS_VISIBLE`, as X11's
+map state, so a host may keep the container hidden until a frame reports shown. Dialogs are
+owned by the top-level HWND. `--theme dark` enables wxMSW dark mode (wx 3.3+) before any frame
+exists; a live `SetTheme` reaches only windows opened later (`gtk_dark` in the reply is
+false when it could not apply).
 
 ## Focus and reserved keys
 
@@ -323,6 +334,23 @@ is not fatal without `--embedded`.
 
 `scripts/backplane-embed-align-comment-check.py <kicad> <kicad-cli> --out <dir>` tests all of
 this in both editors.
+
+## bp.12: progress without windows
+
+In `--embedded` KiCad shows no progress window: `WX_PROGRESS_REPORTER` and
+`APP_PROGRESS_DIALOG` (board and schematic loads, zone fills, imports, plots, …) are created
+and never mapped, and background jobs (library loads) are reported too. Each job is an
+`ET_PROGRESS` event with `Event.progress` = `Progress{id, title, detail, fraction (0..1 or -1),
+done, cancellable, cancelled}` and `Event.frame` = the frame it runs in (FK_UNKNOWN when none).
+The first event is sent at once, updates at most every 100 ms (none in a job's first 150 ms),
+and `done` always, also after a cancel or failure. `GetFramesResponse.progress` lists the jobs
+running now. `CancelProgress{id}` asks a cancellable job to stop; it is answered at once on
+either socket, including `events_socket`, which is the one to use while a job started by an API
+request (a `ShowFrame` that loads a board) holds the main socket. When no host has polled
+`NextEvents` for 5 s, the job's title and percentage show in its frame's status bar instead.
+Real questions (save/discard, errors, file pickers) stay dialogs, transient for the host and
+centred on it. The features check asserts load, zone fill and library load jobs end `done` and
+that no progress window is ever mapped.
 
 ## Known limitations (as of bp.9)
 

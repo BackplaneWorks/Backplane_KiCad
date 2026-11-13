@@ -21,6 +21,7 @@
 
 #include "pcb_draw_panel_gal.h"
 
+#include <backplane/plan_view_item.h>
 #include <settings/color_settings.h>
 #include <pcb_view.h>
 #include <view/wx_view_controls.h>
@@ -278,8 +279,15 @@ PCB_DRAW_PANEL_GAL::~PCB_DRAW_PANEL_GAL()
 
 void PCB_DRAW_PANEL_GAL::DisplayBoard( BOARD* aBoard, PROGRESS_REPORTER* aReporter )
 {
+    if( m_planView )
+    {
+        m_planViewMode = m_planView->IsPlanView();
+        m_planShown = m_planView->IsShown();
+    }
+
     m_view->Clear();
     m_structureView.reset();
+    m_planView.reset();
 
     aBoard->CacheTriangulation( aReporter );
 
@@ -321,6 +329,11 @@ void PCB_DRAW_PANEL_GAL::DisplayBoard( BOARD* aBoard, PROGRESS_REPORTER* aReport
     for( int category = 0; category < 7; ++category )
         m_structureView->SetVisible( category, m_structureVisible[category] );
     m_view->Add( m_structureView.get() );
+
+    m_planView = std::make_unique<PLAN_VIEW_ITEM>( aBoard );
+    m_planView->SetPlanView( m_planViewMode );
+    m_planView->SetShown( m_planShown );
+    m_view->Add( m_planView.get() );
 
     // Ratsnest
     if( !aBoard->IsFootprintHolder() )
@@ -385,6 +398,17 @@ void PCB_DRAW_PANEL_GAL::SetActiveConstructionLayer( CONSTRUCTION_LAYER aLayer )
     if( aLayer != CONSTRUCTION_LAYER::NONE )
         SetStructureVisible( ConstructionLayerCategory( aLayer ), true );
     RefreshStructure();
+}
+
+
+void PCB_DRAW_PANEL_GAL::RefreshPlan()
+{
+    if( m_planView )
+    {
+        m_view->Update( m_planView.get(), KIGFX::GEOMETRY | KIGFX::REPAINT );
+        m_view->MarkTargetDirty( KIGFX::TARGET_OVERLAY );
+        Refresh( false );
+    }
 }
 
 
@@ -581,6 +605,13 @@ void PCB_DRAW_PANEL_GAL::applyHighContrastLayer( PCB_LAYER_ID aLayer, bool aOnly
 
 void PCB_DRAW_PANEL_GAL::SetTopLayer( PCB_LAYER_ID aLayer )
 {
+    // The plan overlay follows the active copper layer.
+    if( m_planView && IsCopperLayer( aLayer ) && m_planView->GetActiveLayer() != aLayer )
+    {
+        m_planView->SetActiveLayer( aLayer );
+        m_view->Update( m_planView.get(), KIGFX::GEOMETRY | KIGFX::REPAINT );
+    }
+
     m_view->ClearTopLayers();
     setDefaultLayerOrder();
     m_view->SetTopLayer( aLayer );

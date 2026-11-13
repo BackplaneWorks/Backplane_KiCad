@@ -17,6 +17,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_merge.h>
+#include <fstream>
 #include <bitmaps.h>
 #include <common.h>
 #include <kiplatform/io.h>
@@ -1127,6 +1129,21 @@ bool PANEL_SETUP_RULES::TransferDataFromWindow()
     wxString    content = m_textEditor->GetText();
     std::string utf8 = std::string( content.mb_str( wxConvUTF8 ) );
     wxString    writeError;
+
+    // Co-editing (docs/backplane/coedit.md): the agent may have changed rules since this panel
+    // read the file.  Merge per rule from what the panel started with; never overwrite theirs.
+    if( wxFileName::FileExists( rulesFilepath ) )
+    {
+        std::ifstream in( rulesFilepath.fn_str(), std::ios::in | std::ios::binary );
+        std::string   disk( ( std::istreambuf_iterator<char>( in ) ), std::istreambuf_iterator<char>() );
+        std::string   base = std::string( m_originalText.mb_str( wxConvUTF8 ) );
+
+        if( disk != base )
+        {
+            std::vector<BACKPLANE_MERGE::CONFLICT> conflicts;
+            utf8 = BACKPLANE_MERGE::MergeRules( base, utf8, disk, conflicts );
+        }
+    }
 
     if( !KIPLATFORM::IO::AtomicWriteFile( rulesFilepath, utf8.data(), utf8.size(), &writeError ) )
     {

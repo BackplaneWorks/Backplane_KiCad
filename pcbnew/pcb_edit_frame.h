@@ -293,6 +293,17 @@ public:
     void CommitBoardStructure( const BOARD_STRUCTURE& aStructure, const wxString& aDescription );
 
     /**
+     * Routing plan (docs/backplane/floorplanner.md): replace the plan as one undoable change
+     * of the current actor (the person, or the API client).  Bumps the revision and records
+     * aOp in the plan's history.  Does nothing when the plan is unchanged.
+     */
+    void CommitPlan( const BOARD_PLAN& aPlan, const wxString& aDescription, const std::string& aOp,
+                     const std::vector<std::string>& aItems );
+
+    /// After the plan changed by any path: redraw, tell the host and the plan panel.
+    void PlanChanged( const std::string& aOp, const std::vector<std::string>& aItems );
+
+    /**
      * Keep the selection and view in step with generated tables rebuilt outside a commit.
      */
     void OnBoardItemsChanged( BOARD& aBoard, std::vector<BOARD_ITEM*>& aItems ) override;
@@ -410,6 +421,32 @@ public:
 
     /// Embedded mode: the board file, and a reload keeping zoom/pan, active layer and selection.
     std::vector<wxString> EmbedWatchedFiles() const override;
+
+    /// Co-editing: merge the project file and pick up the custom rules others changed.
+    void EmbedSyncSideFiles() override;
+
+    /// After KiCad itself wrote the project file or the custom rules: their new signatures are ours.
+    void NoteOwnSideFileWrites();
+
+    /// After project settings merged in from disk (save or live): bring the board, its net
+    /// classes and the DRC engine up to date and redraw.  aActor names who changed them.
+    void ProjectSettingsMerged( const std::string& aWhat );
+
+    /// Re-read the custom rules into the live DRC engine (router, live DRC) after the file
+    /// changed.
+    void ReloadCustomRules();
+
+    /// Co-editing visibility: redraw the working agents' areas (from their recent changes), and
+    /// show the Agents panel once an agent is active.
+    void RefreshAgentZones( bool aRefresh = true );
+
+protected:
+    void refreshAgentZonesNow() override { RefreshAgentZones( false ); }
+
+public:
+
+    /// Select and zoom to the items of an agent change (from the Agents panel).
+    void ShowAgentItems( const std::vector<std::string>& aIds );
     bool                  EmbedReload() override;
 
     /**
@@ -679,6 +716,16 @@ public:
 
     bool CanAcceptApiCommands() override;
 
+    /// Co-editing holds (docs/backplane/coedit.md): a tool other than selection is modifying
+    /// the board now.
+    bool InteractiveOperationInProgress() const { return interactiveOperationInProgress(); }
+
+    /// The router (or the zone filler) is running and holds pointers to every copper item.
+    bool CopperOperationInProgress() const;
+
+    /// KIIDs of the selected items (top level: a footprint, not its pads).
+    std::vector<KIID> SelectedItemIds() const;
+
     wxString GetCurrentFileName() const override;
 
     SELECTION& GetCurrentSelection() override;
@@ -913,6 +960,15 @@ private:
     KIID_PATH         m_lastSchematicSheetPath;
 
     std::unique_ptr<API_HANDLER_PCB>    m_apiHandler;
+    std::string                         m_projectSignature;
+    class AGENTS_PANEL*                 m_agentsPanel = nullptr;
+    bool                                m_agentsPaneShown = false;
+    std::string                         m_rulesSignature;
+
+public:
+    API_HANDLER_PCB* ApiHandler() const { return m_apiHandler.get(); }
+
+private:
     std::unique_ptr<API_HANDLER_COMMON> m_apiHandlerCommon;
     std::unique_ptr<API_HANDLER_LIBRARIES> m_apiLibrariesHandler;
 };
