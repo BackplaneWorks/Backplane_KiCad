@@ -83,6 +83,7 @@ static const char* bucketName( DOWNGRADE_BUCKET aBucket )
     case DOWNGRADE_BUCKET::LOWER: return "lower";
     case DOWNGRADE_BUCKET::DROP: return "drop";
     case DOWNGRADE_BUCKET::BLOCK: return "block";
+    case DOWNGRADE_BUCKET::SKIP: return "skip";
     }
 
     return "unknown";

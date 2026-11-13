@@ -31,7 +31,8 @@ enum class DOWNGRADE_BUCKET
     KEEP,  ///< Exists in the target, written unchanged
     LOWER, ///< Approximated down to a simpler equivalent
     DROP,  ///< No equivalent, left out
-    BLOCK  ///< Cannot be represented at all, export to this target is not possible
+    BLOCK, ///< Cannot be represented at all, export to this target is not possible
+    SKIP   ///< Not this project's (a stray board or sheet, a backup copy): left out, listed
 };
 
 
@@ -136,6 +137,7 @@ public:
         addSection( DOWNGRADE_BUCKET::LOWER, _( "Approximate" ) );
         addSection( DOWNGRADE_BUCKET::DROP, _( "Drop" ) );
         addSection( DOWNGRADE_BUCKET::BLOCK, _( "Cannot export" ) );
+        addSection( DOWNGRADE_BUCKET::SKIP, _( "Not exported (not this project's)" ) );
 
         return text;
     }
@@ -152,6 +154,7 @@ public:
             case DOWNGRADE_BUCKET::LOWER: label = _( "approximate" ); break;
             case DOWNGRADE_BUCKET::DROP: label = _( "drop" ); break;
             case DOWNGRADE_BUCKET::BLOCK: label = _( "block" ); break;
+            case DOWNGRADE_BUCKET::SKIP: label = _( "skip" ); break;
             }
 
             aReporter->Report( wxString::Format( wxT( "  [%s] %s (%d): %s\n" ),
