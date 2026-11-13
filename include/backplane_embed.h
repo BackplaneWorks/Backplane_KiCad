@@ -493,6 +493,7 @@ private:
         bool             shown = false;
         bool             focused = false;
         wxSize           shownSize;   ///< its size at the last ShowEmbedded; a change relayouts
+        bool             editorRequestPending = false;   ///< an ET_EDITOR_REQUESTED is on its way
     };
 
     FRAME_ENTRY*       entry( const wxFrame* aFrame );

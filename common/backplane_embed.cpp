@@ -369,7 +369,9 @@ EMBED_FRAME_INFO BACKPLANE_EMBED::info( const FRAME_ENTRY& aEntry ) const
     result.minHeight = aEntry.minHeight;
     result.frameName = aEntry.frame->GetName();
     result.title = aEntry.frame->GetTitle();
-    result.shown = aEntry.frame->IsShown() && KIPLATFORM::EMBED::IsMapped( aEntry.frame );
+    // A frame being prewarmed off-screen is shown to the toolkit, not to anyone
+    result.shown = aEntry.frame->IsShown() && KIPLATFORM::EMBED::IsMapped( aEntry.frame )
+                   && !m_prewarming.count( aEntry.frame );
     result.focused = result.shown && KIPLATFORM::EMBED::HasFocus( aEntry.frame );
     result.realized = aEntry.frame->IsShown() && !m_prewarming.count( aEntry.frame );
 
@@ -548,7 +550,14 @@ void BACKPLANE_EMBED::editorRequested( const FRAME_ENTRY& aEntry )
     if( aEntry.kind != EMBED_FRAME_KIND::FOOTPRINT_EDITOR && aEntry.kind != EMBED_FRAME_KIND::SYMBOL_EDITOR )
         return;
 
-    // The item is loaded once the call that raised or showed the frame returns
+    // One per request (KiCad may show and raise for the same one); the item is loaded once the
+    // call that raised or showed the frame returns
+    FRAME_ENTRY* pending = entry( aEntry.frame );
+
+    if( !pending || pending->editorRequestPending )
+        return;
+
+    pending->editorRequestPending = true;
     wxWeakRef<wxFrame> weak( aEntry.frame );
 
     wxTheApp->CallAfter(
@@ -556,8 +565,11 @@ void BACKPLANE_EMBED::editorRequested( const FRAME_ENTRY& aEntry )
             {
                 if( wxFrame* frame = weak.get() )
                 {
-                    if( const FRAME_ENTRY* e = entry( frame ) )
+                    if( FRAME_ENTRY* e = entry( frame ) )
+                    {
+                        e->editorRequestPending = false;
                         PushEvent( EMBED_EVENT_TYPE::EDITOR_REQUESTED, info( *e ) );
+                    }
                 }
             } );
 }
