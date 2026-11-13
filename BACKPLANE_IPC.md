@@ -130,6 +130,12 @@ Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `f
 - Native files are no longer readable by stock KiCad 10.0.x; use the export above.
 - The SWIG `pcbnew` Python module no longer exists upstream; use IPC or `kicad-cli`.
 
+## Known issues
+
+- The design-block pane's preview (PCB and schematic editors) loads its colour theme once, when it
+  is created: after `SetTheme` (or the person changing theme) it keeps the old background and
+  item colours until the editor is reopened.  The editors' own canvases follow the change.
+
 ## Tests
 
 `scripts/backplane-*-regression.py <kicad-cli>` run headless against an isolated server and never
