@@ -125,8 +125,18 @@ public:
         // A zone fill is indexed by its triangles, unless DRC found its triangulation does not
         // tile the fill; then by its closed outlines, which collide as filled areas
         std::vector<std::shared_ptr<SHAPE>> outlines;
+        std::shared_ptr<SHAPE_POLY_SET>     replacement;
 
         if( aItem->Type() == PCB_ZONE_T && shape->Type() == SH_POLY_SET
+                && !DRC_ZONE_TRIANGULATION::Trusted( static_cast<ZONE*>( aItem ), aRefLayer )
+                && ( replacement = DRC_ZONE_TRIANGULATION::Replacement( static_cast<ZONE*>( aItem ),
+                                                                        aRefLayer ) ) )
+        {
+            // The same copper, triangulated so that it validates
+            shape = replacement;
+            shape->GetIndexableSubshapes( subshapes );
+        }
+        else if( aItem->Type() == PCB_ZONE_T && shape->Type() == SH_POLY_SET
                 && !DRC_ZONE_TRIANGULATION::Trusted( static_cast<ZONE*>( aItem ), aRefLayer ) )
         {
             SHAPE_POLY_SET fractured = *static_cast<SHAPE_POLY_SET*>( shape.get() );

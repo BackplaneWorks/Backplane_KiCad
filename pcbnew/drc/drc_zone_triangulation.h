@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <layer_ids.h>
 #include <wx/string.h>
 
@@ -56,4 +58,10 @@ void Check( const ZONE* aZone, PCB_LAYER_ID aLayer );
 
 /// Whether DRC may use @a aZone's fill triangles on @a aLayer (true unless Check() failed it).
 bool Trusted( const ZONE* aZone, PCB_LAYER_ID aLayer );
+
+/**
+ * For a fill that failed validation, the same copper re-triangulated (after a union) whose
+ * triangulation validates, or null if there is none and DRC must use the fill's outline.
+ */
+std::shared_ptr<SHAPE_POLY_SET> Replacement( const ZONE* aZone, PCB_LAYER_ID aLayer );
 } // namespace DRC_ZONE_TRIANGULATION
