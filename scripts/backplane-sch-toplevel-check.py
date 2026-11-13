@@ -321,9 +321,15 @@ def embedded_undo(kicad, kicad_cli, out, source):
         edit(person, "BP-REDO", "BOM: value")
         person_undo()
         check(value() == original, f"undo: Ctrl+Z takes Backplane's edit back again ({value()!r})")
+        # As a person does (lane A's sequence): a click on an empty canvas spot, then Ctrl+Y
+        cw, ch = s.host.size
+        s.xdotool("mousemove", str(int(cw * 0.26)), str(int(ch * 0.86)))
+        time.sleep(0.3)
+        s.xdotool("click", "1")
+        time.sleep(0.5)
         s.xdotool("key", "ctrl+y")
         time.sleep(1.0)
-        check(value() == "BP-REDO", f"undo: Ctrl+Y redoes it ({value()!r})")
+        check(value() == "BP-REDO", f"undo: Ctrl+Y redoes it after a click on the canvas ({value()!r})")
         edit(person, original, "BOM: value back")
         check(value() == original,
               f"undo: Backplane's next edit of the same item after undo and redo applies ({value()!r})")
