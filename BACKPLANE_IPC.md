@@ -65,6 +65,13 @@ with pynng.Req0(dial="ipc:///run/user/1000/backplane/kicad/<hash>/api.sock") as 
 - `PlaceSymbolFromLibrary` also loads its requested symbol library on demand, so it succeeds
   immediately in headless mode without waiting for `LoadAllLibraries`.
 - ERC and DRC are not IPC commands: use `kicad-cli sch erc` and `kicad-cli pcb drc`.
+- From bp.13, `kicad-cli pcb drc` lists violations in a canonical order (each provider's
+  violations sorted by error code, position, layer, item ids, message and rule), the same at every
+  thread count. Its byte order therefore differs from bp.12 and earlier, whose order changed from
+  run to run; compare reports by content, not by position. Where a code reaches its error limit,
+  the report keeps the first N in that order. See `BACKPLANE_DRC.md`.
+- From bp.13, headless runs (`kicad-cli`, the API server) use at most 8 pool threads unless the
+  `MaximumThreads` advanced setting says otherwise.
 
 Full command list and what master lacks: `bp-coord/kicad-fork/IPC-MAP.md` (coordination repo),
 or read `api/proto/` directly.
