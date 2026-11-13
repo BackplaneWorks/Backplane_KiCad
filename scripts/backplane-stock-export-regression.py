@@ -142,6 +142,88 @@ def known_engine_difference(project, kind, key, counts=None, fork_report=None, s
     return False
 
 
+HUBBLE_RULES = """(version 1)
+(rule "U1 fanout area"
+  (condition "A.intersectsArea('U1 fanout')")
+  (constraint track_width (min 0.0762mm))
+  (constraint clearance (min 0.0762mm)))
+(rule "U1 fanout width check"
+  (condition "A.intersectsArea('U1 fanout')")
+  (constraint track_width (min 1.0mm)))
+"""
+
+HUBBLE_STRAYS = ["backups/layout-2026-10-21/hubble_shape.kicad_pcb",
+                 "backups/layout-2026-10-21/hubble_shape.kicad_pro",
+                 "backups/layout-2026-10-21/hubble_shape.kicad_sch",
+                 "build/layout/try.kicad_pcb"]
+
+
+def make_hubble_fixture(root):
+    """The person's Hubble_DK in miniature (from pic_programmer): a plain rule area named
+    'U1 fanout' around U1, custom rules on it with A.intersectsArea(), a build output board
+    (build/layout/try.kicad_pcb) and a backup copy of the project (backups/<date>/)."""
+    target = root / "hubble_shape"
+    shutil.copytree(DEMOS / "pic_programmer", target)
+    for suffix in (".kicad_pro", ".kicad_pcb", ".kicad_sch", ".kicad_prl"):
+        if (target / ("pic_programmer" + suffix)).is_file():
+            (target / ("pic_programmer" + suffix)).rename(target / ("hubble_shape" + suffix))
+    board = target / "hubble_shape.kicad_pcb"
+    text = board.read_text()
+    ref = text.index('(property "Reference" "U1"')
+    footprint = text.rindex("(footprint ", 0, ref)
+    at = re.search(r"\(at ([-\d.]+) ([-\d.]+)", text[footprint:ref])
+    x, y = float(at.group(1)), float(at.group(2))
+    x1, y1, x2, y2 = x - 15, y - 15, x + 15, y + 15
+    zone = f"""
+\t(zone
+\t\t(net 0)
+\t\t(net_name "")
+\t\t(layers "F.Cu" "B.Cu")
+\t\t(uuid "6f3a1b2c-0d4e-4f56-8a9b-0c1d2e3f4a5b")
+\t\t(name "U1 fanout")
+\t\t(hatch edge 0.5)
+\t\t(connect_pads
+\t\t\t(clearance 0)
+\t\t)
+\t\t(min_thickness 0.25)
+\t\t(filled_areas_thickness no)
+\t\t(keepout
+\t\t\t(tracks allowed)
+\t\t\t(vias allowed)
+\t\t\t(pads allowed)
+\t\t\t(copperpour allowed)
+\t\t\t(footprints allowed)
+\t\t)
+\t\t(placement
+\t\t\t(enabled no)
+\t\t\t(sheetname "")
+\t\t)
+\t\t(fill
+\t\t\t(thermal_gap 0.5)
+\t\t\t(thermal_bridge_width 0.5)
+\t\t)
+\t\t(polygon
+\t\t\t(pts
+\t\t\t\t(xy {x1} {y1}) (xy {x2} {y1}) (xy {x2} {y2}) (xy {x1} {y2})
+\t\t\t)
+\t\t)
+\t)
+"""
+    end = text.rstrip().rindex(")")
+    board.write_text(text[:end] + zone + ")\n")
+    (target / "hubble_shape.kicad_dru").write_text(HUBBLE_RULES)
+    pro = target / "hubble_shape.kicad_pro"
+    pro.write_text(pro.read_text().replace("pic_programmer", "hubble_shape"))
+    build = target / "build" / "layout"
+    build.mkdir(parents=True)
+    shutil.copyfile(board, build / "try.kicad_pcb")
+    backup = target / "backups" / "layout-2026-10-21"
+    backup.mkdir(parents=True)
+    for suffix in (".kicad_pro", ".kicad_sch", ".kicad_pcb"):
+        shutil.copyfile(target / ("hubble_shape" + suffix), backup / ("hubble_shape" + suffix))
+    return target
+
+
 def gate_project(fork, stock, source, work, fork_env, stock_env):
     name = source.name
     project_dir = work / name
@@ -167,6 +249,16 @@ def gate_project(fork, stock, source, work, fork_env, stock_env):
                               "--report-json", reports / "downgrade-plain.json", pro], fork_env)
     check(code == 0, f"{name}: the fork exports a KiCad 10 copy without --force "
                      f"{[l for l in output.splitlines() if l.strip()][-3:] if code else ''}")
+    if name == "hubble_shape" and code == 0:
+        report = json.loads((reports / "downgrade-plain.json").read_text())
+        skipped = sorted(e["feature"].replace("\\", "/") for e in report["entries"] if e["category"] == "skip")
+        check(skipped == sorted(HUBBLE_STRAYS), f"{name}: the stray boards and the backup are left out and listed "
+                                                f"{skipped}")
+        check(not (export / "build").exists() and not (export / "backups").exists(),
+              f"{name}: nothing of build/ or backups/ is in the export")
+        rules = (export / "hubble_shape.kicad_dru").read_text()
+        check('\n(rule "U1 fanout area"' in rules and '\n(rule "U1 fanout width check"' in rules,
+              f"{name}: both rules on the rule area are kept for 10.0")
     if code != 0:
         shutil.rmtree(export, ignore_errors=True)
         code, output = run(fork, ["project", "downgrade", "--target", "10.0", "--force", "-o", export,
@@ -188,6 +280,11 @@ def gate_project(fork, stock, source, work, fork_env, stock_env):
         check(not noise, f"{name}: stock loads the exported {kind} cleanly {noise[:5]}")
         # The export must not change what the fork itself finds; a remaining fork/stock difference
         # is the engines', and must be a known, reviewed one
+        if name == "hubble_shape" and kind == "pcb":
+            width = ("active", "track_width", "error")
+            check(fork_export[width] > 0 and fork_export[width] == stock_found[width],
+                  f"{name}: the rule area's track_width rule finds the same in stock 10.0 "
+                  f"(fork {fork_export[width]}, stock {stock_found[width]})")
         diff_export = (fork_export - fork_native) + (fork_native - fork_export)
         check(not diff_export, f"{name}: exporting leaves the fork's {kind} findings unchanged {dict(diff_export)}")
         engine = {}
@@ -281,9 +378,11 @@ def main():
         return 0
     version = subprocess.check_output([str(args.stock_cli), "--version"], text=True).strip()
     print(f"stock kicad-cli {version}", flush=True)
-    projects = args.project or [DEMOS / name for name in DEFAULT_PROJECTS]
     with tempfile.TemporaryDirectory(prefix="backplane-stock-export-") as temp:
         work = Path(temp)
+        fixtures = work / "fixtures"
+        fixtures.mkdir()
+        projects = args.project or ([DEMOS / name for name in DEFAULT_PROJECTS] + [make_hubble_fixture(fixtures)])
         fork_env = private_env(work / "fork-home", args.kicad_cli)
         stock_env = private_env(work / "stock-home", args.stock_cli)
         for project in projects:
