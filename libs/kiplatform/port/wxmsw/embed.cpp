@@ -195,6 +195,10 @@ LRESULT CALLBACK holderProc( HWND aHwnd, UINT aMsg, WPARAM aWParam, LPARAM aLPar
     {
         // The parent token rejects a request queued before reparent/park. Resolve the
         // registered frame/canvas only on this UI thread; never trust a foreign wx pointer.
+        // On Windows the embedded frame itself is often the foreground window after a cold
+        // show (not a WS_CHILD of the host, so IsChild( host, frame ) is false): that state,
+        // with focus on a toolbar Edit, is exactly what the request is for. Another
+        // application's window, or no foreground window at all, still rejects it.
         HWND frame = reinterpret_cast<HWND>( aWParam );
         HWND parent = reinterpret_cast<HWND>( aLParam );
         HWND host = s_hooks.hostToplevel
@@ -208,7 +212,8 @@ LRESULT CALLBACK holderProc( HWND aHwnd, UINT aMsg, WPARAM aWParam, LPARAM aLPar
                      && IsWindowVisible( aHwnd ) && frame && IsWindow( frame )
                      && IsChild( aHwnd, frame ) && IsWindowVisible( frame )
                      && IsWindowEnabled( frame ) && host && IsWindow( host )
-                     && ( foreground == host || IsChild( host, foreground ) );
+                     && ( foreground == host || IsChild( host, foreground )
+                          || foreground == frame || IsChild( frame, foreground ) );
 
         if( !GetGUIThreadInfo( GetCurrentThreadId(), &info ) || info.hwndCapture
             || ( info.flags & ( GUI_INMENUMODE | GUI_POPUPMENUMODE | GUI_SYSTEMMENUMODE ) ) )
