@@ -42,7 +42,7 @@ def canvas_width(disp, frame_window):
                 g = child.get_geometry()
             except Exception:
                 continue
-            if attrs.map_state == 2 and depth > 0 and g.width * g.height > best[0]:
+            if attrs.map_state == 2 and g.width * g.height > best[0]:
                 best[0], best[1] = g.width * g.height, g.width
             walk(child, depth + 1)
 
