@@ -69,7 +69,7 @@ public:
     void SetSheetProvider( std::function<KIID_PATH()> aCurrentSheet ) { m_currentSheet = std::move( aCurrentSheet ); }
 
     /// The marker under aWorld within aRadius (internal units), nearest first.
-    const HOST_MARKER* HitTest( const VECTOR2I& aWorld, int aRadius ) const;
+    const HOST_MARKER* HitMarker( const VECTOR2I& aWorld, int aRadius ) const;
 
     bool Empty() const;
 

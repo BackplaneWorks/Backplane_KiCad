@@ -3288,7 +3288,7 @@ void API_HANDLER_SCH::onCanvasClick()
 
     if( HOST_MARKERS_ITEM* hostItem = hostMarkers( false ) )
     {
-        if( const HOST_MARKER* hit = hostItem->HitTest( at, radius ) )
+        if( const HOST_MARKER* hit = hostItem->HitMarker( at, radius ) )
         {
             BACKPLANE_EMBED::Get().MarkerClicked( editor, hit->set, hit->id, std::string() );
             return;

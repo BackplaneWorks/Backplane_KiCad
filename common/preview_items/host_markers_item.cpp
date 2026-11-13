@@ -65,7 +65,7 @@ bool HOST_MARKERS_ITEM::Empty() const
 }
 
 
-const HOST_MARKER* HOST_MARKERS_ITEM::HitTest( const VECTOR2I& aWorld, int aRadius ) const
+const HOST_MARKER* HOST_MARKERS_ITEM::HitMarker( const VECTOR2I& aWorld, int aRadius ) const
 {
     const HOST_MARKER* best = nullptr;
     double             bestDist = std::numeric_limits<double>::max();
