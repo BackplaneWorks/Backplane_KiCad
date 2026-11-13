@@ -951,6 +951,8 @@ void DRC_ENGINE::RunTests( EDA_UNITS aUnits, bool aReportAllTrackErrors, bool aT
     {
         if( m_designSettings->Ignore( ii ) )
             m_errorLimits[ ii ] = 0;
+        else if( auto it = m_errorLimitOverrides.find( ii ); it != m_errorLimitOverrides.end() )
+            m_errorLimits[ ii ] = it->second;
         else if( ii == DRCE_CLEARANCE || ii == DRCE_UNCONNECTED_ITEMS )
             m_errorLimits[ ii ] = EXTENDED_ERROR_LIMIT;
         else
@@ -2367,6 +2369,17 @@ bool DRC_ENGINE::IsErrorLimitExceeded( int error_code )
 {
     assert( error_code >= 0 && error_code <= DRCE_LAST );
     return m_errorLimits[ error_code ].load( std::memory_order_relaxed ) <= 0;
+}
+
+
+void DRC_ENGINE::SetErrorLimitOverride( int aErrorCode, int aLimit )
+{
+    wxCHECK( aErrorCode >= DRCE_FIRST && aErrorCode <= DRCE_LAST, /* void */ );
+
+    if( aLimit < 0 )
+        m_errorLimitOverrides.erase( aErrorCode );
+    else
+        m_errorLimitOverrides[ aErrorCode ] = aLimit;
 }
 
 

@@ -25,9 +25,11 @@
 #include <pcb_marker.h>
 #include <drc/drc_item.h>
 #include <settings/settings_manager.h>
+#include <thread_pool.h>
 
 #include <algorithm>
 #include <array>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -99,14 +101,24 @@ BOOST_FIXTURE_TEST_CASE( DRCSolderMaskBridgeDeterminismTest, DRC_SOLDER_MASK_BRI
 {
     // Dense autorouted board from issue 24951 has more solder_mask_bridge violations than the DRC
     // error-limit cap.  The count is stable at the cap, but which violations were kept depended on
-    // worker arrival order, so the report entries wobbled run-to-run.  Require the full set of
-    // reported violations (position + participating items) to be identical every run.
+    // worker arrival order, so the report entries wobbled run-to-run.  Two things must hold:
+    //  - the reported violations (position + participating items), in the order they are
+    //    reported, are the same on every run and at every thread count, at the cap too;
+    //  - the cap keeps the right ones: the first N of all bridges in the provider's order
+    //    (PENDING_BRIDGE::operator<).  The engine reports them in its own canonical order, so
+    //    this is checked as a set, against a run with the limit lifted.
     KI_TEST::LoadBoard( m_settingsManager, wxT( "issue24951/issue24951" ), m_board );
 
     BOARD_DESIGN_SETTINGS& bds = m_board->GetDesignSettings();
 
-    std::vector<wxString>                            sig;
-    std::vector<std::pair<int, std::array<KIID, 3>>> emissionKeys;
+    // Mirror of the provider's order: layer, then the UUIDs of the participating items (only
+    // the populated ones sorted, so the unused third slot of a two-item violation stays
+    // trailing, exactly as the provider leaves it), then the position.  A change to
+    // PENDING_BRIDGE::operator< must be made here too.
+    using KEY = std::tuple<int, std::array<KIID, 3>, int, int>;
+
+    std::vector<wxString> sig;
+    std::vector<KEY>      keys;
 
     bds.m_DRCEngine->SetViolationHandler(
             [&]( const std::shared_ptr<DRC_ITEM>& aItem, const VECTOR2I& aPos, int aLayer,
@@ -120,15 +132,12 @@ BOOST_FIXTURE_TEST_CASE( DRCSolderMaskBridgeDeterminismTest, DRC_SOLDER_MASK_BRI
                                                  aItem->GetAuxItemID().AsString(),
                                                  aItem->GetAuxItem2ID().AsString() ) );
 
-                // Mirror of the provider's reporting order: layer, then the UUIDs of the
-                // participating items.  Only the populated ids are sorted, so the unused third slot
-                // of a two-item violation stays trailing exactly as the provider leaves it.
                 std::array<KIID, 3> ids = { aItem->GetMainItemID(), aItem->GetAuxItemID(),
                                             aItem->GetAuxItem2ID() };
 
                 std::sort( ids.begin(), ids.end() - ( ids[2] == niluuid ? 1 : 0 ) );
 
-                emissionKeys.push_back( { aLayer, ids } );
+                keys.emplace_back( aLayer, ids, aPos.x, aPos.y );
             } );
 
     auto runDrc =
@@ -136,12 +145,23 @@ BOOST_FIXTURE_TEST_CASE( DRCSolderMaskBridgeDeterminismTest, DRC_SOLDER_MASK_BRI
             {
                 KI_TEST::FillZones( m_board.get() );
                 sig.clear();
-                emissionKeys.clear();
+                keys.clear();
                 bds.m_DRCEngine->RunTests( EDA_UNITS::MM, true, false );
                 return sig;
             };
 
+    thread_pool& pool = GetKiCadThreadPool();
+
+    struct RESTORE_POOL
+    {
+        thread_pool& pool;
+        size_t       count;
+        ~RESTORE_POOL() { pool.reset( count ); }
+    } restore{ pool, pool.get_thread_count() };
+
+    pool.reset( 1 );
     std::vector<wxString> ref = runDrc();
+    std::vector<KEY>      refKeys = keys;
 
     BOOST_TEST_MESSAGE( wxString::Format( "solder_mask_bridge violations: %zu", ref.size() ) );
 
@@ -149,19 +169,43 @@ BOOST_FIXTURE_TEST_CASE( DRCSolderMaskBridgeDeterminismTest, DRC_SOLDER_MASK_BRI
     BOOST_REQUIRE( bds.m_DRCEngine->IsErrorLimitExceeded( DRCE_SOLDERMASK_BRIDGE ) );
     BOOST_REQUIRE_GT( ref.size(), 100u );
 
-    // The cap keeps a prefix of the provider's total order, so the kept violations must come out
-    // in that order.  A broken heap would still report a stable set, just not the right one.
-    // Mirrors PENDING_BRIDGE::operator<, so a change to that ordering must be made here too.
-    BOOST_CHECK_MESSAGE( std::is_sorted( emissionKeys.begin(), emissionKeys.end() ),
-                         "solder_mask_bridge violations not reported in sorted order" );
-
-    for( int run = 0; run < 8; ++run )
+    // Same violations in the same order: 4 runs each at 1 and at 8 threads
+    for( size_t threads : { 1, 8 } )
     {
-        std::vector<wxString> cur = runDrc();
+        pool.reset( threads );
 
-        BOOST_CHECK_MESSAGE( cur == ref,
-                             wxString::Format( "solder_mask_bridge report differs on run %d "
-                                               "(%zu vs %zu violations)",
-                                               run, cur.size(), ref.size() ) );
+        for( int run = 0; run < 4; ++run )
+        {
+            std::vector<wxString> cur = runDrc();
+
+            BOOST_CHECK_MESSAGE( cur == ref,
+                                 wxString::Format( "solder_mask_bridge report differs (in content "
+                                                   "or order) at %zu threads, run %d (%zu vs %zu "
+                                                   "violations)",
+                                                   threads, run, cur.size(), ref.size() ) );
+        }
     }
+
+    // The cap keeps the first N in the provider's order.  A broken heap would still report a
+    // stable set, just not the right one, so compare with all of the board's bridges.
+    // (the provider reserves room for its whole limit, so not much more than the board needs)
+    bds.m_DRCEngine->SetErrorLimitOverride( DRCE_SOLDERMASK_BRIDGE, 100000 );
+    runDrc();
+    bool allReported = !bds.m_DRCEngine->IsErrorLimitExceeded( DRCE_SOLDERMASK_BRIDGE );
+    bds.m_DRCEngine->SetErrorLimitOverride( DRCE_SOLDERMASK_BRIDGE, -1 );
+
+    std::vector<KEY> all = keys;
+
+    BOOST_TEST_MESSAGE( wxString::Format( "solder_mask_bridge violations without the cap: %zu",
+                                          all.size() ) );
+    BOOST_REQUIRE( allReported );
+    BOOST_REQUIRE_GT( all.size(), ref.size() );
+
+    std::sort( all.begin(), all.end() );
+    all.resize( ref.size() );
+    std::sort( refKeys.begin(), refKeys.end() );
+
+    BOOST_CHECK_MESSAGE( refKeys == all,
+                         "the capped report does not keep the first solder_mask_bridge violations "
+                         "in the provider's order" );
 }
