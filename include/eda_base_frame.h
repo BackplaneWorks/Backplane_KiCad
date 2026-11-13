@@ -158,6 +158,10 @@ public:
     /// has decided that unsaved changes may go.  False if this frame cannot reload.
     virtual bool EmbedReload() { return false; }
 
+    /// The frame's drawing canvas (a click on it gives it the keyboard when embedded).  Default:
+    /// none; EDA_DRAW_FRAME returns its GAL canvas.
+    virtual wxWindow* EmbedCanvas() const { return nullptr; }
+
     /// Library editors: the "Lib:Name" on screen, for an embedding host's tab.  Default: none.
     virtual wxString EmbedLibId() const { return wxEmptyString; }
 

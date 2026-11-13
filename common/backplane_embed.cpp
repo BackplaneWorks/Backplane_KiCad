@@ -1052,6 +1052,24 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
             sendFocusMessage( frame );
         }
 
+        // And to the canvas clicked, inside the frame: KiCad's hotkeys are served by the canvas's
+        // tool dispatcher.  With the keyboard left on the frame only menu accelerators act, and an
+        // accelerator whose item was last updated insensitive (Redo after the undo that enabled
+        // it) does nothing.
+        const FRAME_ENTRY* fe = entry( frame );
+        wxWindow*          canvas = fe && fe->ops.canvas ? fe->ops.canvas() : nullptr;
+
+        for( wxWindow* w = window; canvas && w && w != frame; w = w->GetParent() )
+        {
+            if( w == canvas )
+            {
+                if( wxWindow::FindFocus() != canvas )
+                    canvas->SetFocus();
+
+                break;
+            }
+        }
+
         return -1;
     }
 

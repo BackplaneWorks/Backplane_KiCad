@@ -1686,3 +1686,9 @@ void EDA_DRAW_FRAME::OnApiPluginInvoke( wxCommandEvent& aEvent )
 
     mgr.InvokeAction( *identifier, reporter );
 }
+
+
+wxWindow* EDA_DRAW_FRAME::EmbedCanvas() const
+{
+    return GetCanvas();
+}

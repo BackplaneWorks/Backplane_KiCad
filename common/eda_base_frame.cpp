@@ -391,6 +391,7 @@ EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
                         EmbedOpenFiles( aFiles, aLoaded, aErrors );
                     };
     ops.autoPanels = [this]() { EmbedAutoPanels(); };
+    ops.canvas = [this]() { return EmbedCanvas(); };
 
     // A reload frees what a modal dialog or a running interactive tool is holding: wait.
     ops.busy = [this]() { return !IsEnabled() || !ToolStackIsEmpty(); };

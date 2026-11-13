@@ -483,6 +483,8 @@ public:
      * @return Pointer to GAL-based canvas.
      */
     virtual EDA_DRAW_PANEL_GAL* GetCanvas() const { return m_canvas; }
+
+    wxWindow* EmbedCanvas() const override;
     void SetCanvas( EDA_DRAW_PANEL_GAL* aPanel ) { m_canvas = aPanel; }
 
     wxWindow* GetToolCanvas() const override { return GetCanvas(); }
