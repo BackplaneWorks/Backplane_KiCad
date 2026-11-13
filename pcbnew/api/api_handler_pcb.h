@@ -56,12 +56,19 @@ void ApplyOdbJobRequest( const kiapi::board::jobs::RunBoardJobExportODB& aReques
 
 class BOARD_PLAN;
 class DRC_RULE;
+class HOST_MARKERS_ITEM;
+class PCB_MARKER;
 
 class API_HANDLER_PCB : public API_HANDLER_BOARD
 {
 public:
     API_HANDLER_PCB( PCB_EDIT_FRAME* aFrame );
     API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDIT_FRAME* aFrame = nullptr );
+    ~API_HANDLER_PCB() override;
+
+    /// kiapi.backplane.embed.Marker for one of the board's DRC markers.
+    static void FillEmbedMarker( kiapi::backplane::embed::Marker* aOut, PCB_MARKER* aMarker,
+                                 BOARD* aBoard );
 
 private:
     HANDLER_RESULT<kiapi::backplane::BoardStructureResponse> handleGetBoardStructure(
@@ -331,6 +338,17 @@ private:
 
     HANDLER_RESULT<kiapi::backplane::embed::GetMarkersResponse> handleGetMarkers(
             const HANDLER_CONTEXT<kiapi::backplane::embed::GetMarkers>& aCtx );
+
+    HANDLER_RESULT<kiapi::backplane::embed::SetHostMarkersResponse> handleSetHostMarkers(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::SetHostMarkers>& aCtx );
+
+    /// A click in the canvas (embedded): on a host or DRC marker, ET_MARKER_CLICKED.
+    void onCanvasClick();
+
+    /// The host's markers (HOST_MARKERS_TOOL keeps them in the view), or null
+    HOST_MARKERS_ITEM* hostMarkers( bool aCreate ) const;
+
+    std::shared_ptr<bool> m_alive = std::make_shared<bool>( true );
 
     HANDLER_RESULT<kiapi::backplane::embed::CommentSelectionResponse> handleCommentSelection(
             const HANDLER_CONTEXT<kiapi::backplane::embed::CommentSelection>& aCtx );

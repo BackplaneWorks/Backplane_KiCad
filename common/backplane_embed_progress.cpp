@@ -132,6 +132,37 @@ void BACKPLANE_EMBED::ChecksDone( wxWindow* aFrame, const EMBED_CHECKS& aChecks 
 }
 
 
+void BACKPLANE_EMBED::MarkerClicked( wxWindow* aFrame, const std::string& aSet, const std::string& aId,
+                                     const std::string& aDrcMarker )
+{
+    EMBED_FRAME_INFO frameInfo;
+
+    if( wxFrame* frame = aFrame ? wxDynamicCast( wxGetTopLevelParent( aFrame ), wxFrame ) : nullptr;
+        frame && IsEmbedded( frame ) )
+    {
+        frameInfo = Info( frame );
+    }
+
+    {
+        std::lock_guard<std::mutex> lock( m_eventMutex );
+
+        EMBED_EVENT event;
+        event.seq = m_nextSeq++;
+        event.type = EMBED_EVENT_TYPE::MARKER_CLICKED;
+        event.frame = frameInfo;
+        event.markerSet = aSet;
+        event.markerId = aId;
+        event.drcMarker = aDrcMarker;
+        m_events.push_back( event );
+
+        while( m_events.size() > MAX_EVENTS )
+            m_events.pop_front();
+    }
+
+    m_eventCv.notify_all();
+}
+
+
 void BACKPLANE_EMBED::ProgressUpdate( uint64_t aId, double aFraction, const wxString& aDetail,
                                       const wxString& aTitle )
 {

@@ -134,6 +134,15 @@ void FillEmbedEvent( kiapi::backplane::embed::Event* aOut, const EMBED_EVENT& aI
         checks->set_document_modified( aIn.checks->documentModified );
         checks->set_error( aIn.checks->error );
     }
+
+    if( !aIn.markerId.empty() )
+    {
+        aOut->mutable_marker()->set_set( aIn.markerSet );
+        aOut->mutable_marker()->set_id( aIn.markerId );
+    }
+
+    if( !aIn.drcMarker.empty() )
+        aOut->mutable_drc_marker()->ParseFromString( aIn.drcMarker );
 }
 
 

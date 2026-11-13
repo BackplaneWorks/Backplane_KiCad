@@ -99,12 +99,12 @@ it here in the same change):
 |---|---|---|
 | 1-24 | frames, dialogs, documents, theme, comments, co-editing, plan, progress | bp.8-bp.12 |
 | 25 | `ET_EDITOR_REQUESTED` (editor tabs) | bp.13 |
-| 26 | `ET_MARKER_CLICKED` (reserved, bp.13: host markers) | bp.13 |
+| 26 | `ET_MARKER_CLICKED` (host and DRC/ERC marker clicks) | bp.13 |
 | 27 | `ET_CHECKS_DONE` (RunChecks) | bp.13 |
 | 28 | `ET_FRAME_DRAWN` (cold start) | bp.13 |
 
 Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `files`; `Event` 8
-`marker`, 9 `checks`, 10 `drc_marker` (all reserved until their branch lands).
+`marker`, 9 `checks`, 10 `drc_marker` (all landed in bp.13).
 
 ## Files
 
