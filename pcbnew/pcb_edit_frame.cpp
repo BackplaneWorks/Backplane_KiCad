@@ -244,19 +244,8 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     m_showBorderAndTitleBlock = true;   // true to display sheet references
     m_SelTrackWidthBox = nullptr;
     // Embedding-host traces (BACKPLANE_KICAD_FRAMETRACE): the constructor's parts
-    std::chrono::steady_clock::time_point lapStart = std::chrono::steady_clock::now();
-    auto lap = [&]( const char* aWhat )
-    {
-        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-
-        if( BACKPLANE_EMBED::Get().Tracing() )
-        {
-            BACKPLANE_EMBED::Get().TraceSpan( std::string( "ctor:pcb:" ) + aWhat,
-                                              std::chrono::duration<double, std::milli>( now - lapStart ).count() );
-        }
-
-        lapStart = now;
-    };
+    BACKPLANE_EMBED::TRACE_LAPS laps( "ctor:pcb:" );
+    auto lap = [&]( const char* aWhat ) { laps.Lap( aWhat ); };
 
     m_SelViaSizeBox = nullptr;
     m_SelViaStackBox = nullptr;
@@ -2273,6 +2262,7 @@ void PCB_EDIT_FRAME::SetActiveLayer( PCB_LAYER_ID aLayer, bool aForceRedraw )
 
 void PCB_EDIT_FRAME::OnBoardLoaded()
 {
+    BACKPLANE_EMBED::TRACE_LAPS laps( "open:pcb:board_loaded:" );
     wxFileName fn( GetBoard()->GetFileName() );
 
     ENUM_MAP<PCB_LAYER_ID>& layerEnum = ENUM_MAP<PCB_LAYER_ID>::Instance();
@@ -2289,6 +2279,7 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
         layerEnum.Map( layer, GetBoard()->GetLayerName( layer ) );
     }
 
+    laps.Lap( "layer_enum" );
     DRC_TOOL* drcTool = m_toolManager->GetTool<DRC_TOOL>();
 
     try
@@ -2301,7 +2292,9 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
         // we'll stay quiet for now.  Feel free to revisit this decision....
     }
 
+    laps.Lap( "drc_engine" );
     GetBoard()->InitializeClearanceCache();
+    laps.Lap( "clearance_cache" );
 
     // Migrate obsolete WRL 3D model references to current STEP models.  Only
     // runs in the GUI: CLI and scripting load paths must not mutate board
@@ -2341,6 +2334,7 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
         }
     }
 
+    laps.Lap( "migrate_3d" );
     UpdateTitle();
 
     // Display a warning that the file is read only
@@ -2353,13 +2347,17 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
     }
 
     ReCreateLayerBox();
+    laps.Lap( "title_layer_box" );
 
     // Sync layer and item visibility
     GetCanvas()->SyncLayersVisibility( m_pcb );
+    laps.Lap( "sync_visibility" );
 
     SetElementVisibility( LAYER_RATSNEST, GetPcbNewSettings()->m_Display.m_ShowGlobalRatsnest );
 
+    laps.Lap( "ratsnest_visibility" );
     m_appearancePanel->OnBoardChanged();
+    laps.Lap( "appearance_board_changed" );
 
     // Apply saved display state to the appearance panel after it has been set up
     PROJECT_LOCAL_SETTINGS& localSettings = Prj().GetLocalSettings();
@@ -2371,6 +2369,7 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
     else
         SetActiveLayer( GetActiveLayer(), true );   // Make sure to repaint even if not switching
 
+    laps.Lap( "preset_active_layer" );
     PROJECT_FILE& projectFile = Prj().GetProjectFile();
 
     m_layerPairSettings->SetLayerPairs( projectFile.m_LayerPairInfos );
@@ -2378,13 +2377,17 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
 
     // Updates any auto dimensions and the auxiliary toolbar tracks/via sizes
     unitsChangeRefresh();
+    laps.Lap( "layer_pairs_units" );
 
     // Sync the net inspector now we have connectivity calculated
     if( m_netInspectorPanel )
         m_netInspectorPanel->OnBoardChanged();
 
+    laps.Lap( "net_inspector" );
+
     // Display the loaded board:
     Zoom_Automatique( false );
+    laps.Lap( "zoom" );
 
     // The DRC engine above makes clearances computable, so only the items that draw a
     // clearance outline are stale; marking every item re-tessellates the whole board
@@ -2405,12 +2408,14 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
         }
     }
 
+    laps.Lap( "pad_updates" );
     Refresh();
 
     SetMsgPanel( GetBoard() );
     SetStatusText( wxEmptyString );
 
     KIPLATFORM::APP::SetShutdownBlockReason( this, _( "PCB file changes are unsaved" ) );
+    laps.Lap( "rest" );
 }
 
 

@@ -19,6 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <backplane/agent_edit_flash.h>
 #include <kiface_base.h>
 #include <kiplatform/ui.h>
@@ -203,6 +204,7 @@ void PCB_BASE_EDIT_FRAME::ActivateGalCanvas()
 
 void PCB_BASE_EDIT_FRAME::SetBoard( BOARD* aBoard, PROGRESS_REPORTER* aReporter )
 {
+    BACKPLANE_EMBED::TRACE_LAPS laps( "set_board:" );
     bool is_new_board = ( aBoard != m_pcb );
 
     if( is_new_board )
@@ -217,7 +219,9 @@ void PCB_BASE_EDIT_FRAME::SetBoard( BOARD* aBoard, PROGRESS_REPORTER* aReporter 
         GetCanvas()->GetView()->InitPreview();
     }
 
+    laps.Lap( "reset_tools_clear_view" );
     PCB_BASE_FRAME::SetBoard( aBoard, aReporter );
+    laps.Lap( "delete_old_board_changed_event" );
 
     GetCanvas()->GetGAL()->SetGridOrigin( VECTOR2D( aBoard->GetDesignSettings().GetGridOrigin() ) );
 
@@ -230,7 +234,9 @@ void PCB_BASE_EDIT_FRAME::SetBoard( BOARD* aBoard, PROGRESS_REPORTER* aReporter 
     // update the tool manager with the new board and its view.
     if( m_toolManager )
     {
+        laps.Lap( "drc_engine" );
         GetCanvas()->DisplayBoard( aBoard, aReporter );
+        laps.Lap( "display_board" );
 
         GetCanvas()->UpdateColors();
         m_toolManager->SetEnvironment( aBoard, GetCanvas()->GetView(),
@@ -238,6 +244,8 @@ void PCB_BASE_EDIT_FRAME::SetBoard( BOARD* aBoard, PROGRESS_REPORTER* aReporter 
 
         if( is_new_board )
             m_toolManager->ResetTools( TOOL_BASE::MODEL_RELOAD );
+
+        laps.Lap( "colors_reset_tools" );
     }
 }
 

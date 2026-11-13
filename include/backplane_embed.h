@@ -470,6 +470,29 @@ public:
         bool        m_on;
     };
 
+    /// Consecutive parts of one piece of work: Lap( "x" ) logs "<prefix>x" for the time since
+    /// the last lap (or the start).  Costs a clock read when not tracing.
+    struct TRACE_LAPS
+    {
+        explicit TRACE_LAPS( std::string aPrefix ) :
+                m_prefix( std::move( aPrefix ) ),
+                m_last( std::chrono::steady_clock::now() )
+        {}
+
+        void Lap( const char* aWhat )
+        {
+            std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+
+            if( Get().Tracing() )
+                Get().TraceSpan( m_prefix + aWhat, std::chrono::duration<double, std::milli>( now - m_last ).count() );
+
+            m_last = now;
+        }
+
+        std::string                           m_prefix;
+        std::chrono::steady_clock::time_point m_last;
+    };
+
     ~BACKPLANE_EMBED();
 
 private:

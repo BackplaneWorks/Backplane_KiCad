@@ -95,6 +95,21 @@ once. Results are the same as with everything loaded; memory per open project is
 with the stock tables. `BACKPLANE_KICAD_FULL_LIBRARY_PRELOAD=1` in KiCad's environment restores the
 full preload at start (an escape hatch).
 
+Editor readiness: after a `ShowFrame`, `ET_FRAME_DRAWN` (capability `embed-frame-drawn`) says the
+frame's canvas finished its first redraw on screen; wait on it, with a cap (the 3D viewer has no
+drawing canvas and never posts it), instead of a fixed delay.
+
+Number ledger for `kiapi.backplane.embed` (fork-only, additive; take the next free number and add
+it here in the same change):
+
+| `EventType` | Name | Since |
+|---|---|---|
+| 1-24 | frames, dialogs, documents, theme, comments, co-editing, plan, progress | bp.8-bp.12 |
+| 25 | `ET_EDITOR_REQUESTED` (draft) | bp.13 |
+| 26 | `ET_MARKER_CLICKED` (draft) | bp.13 |
+| 27 | `ET_CHECKS_DONE` (draft) | bp.13 |
+| 28 | `ET_FRAME_DRAWN` | bp.13 |
+
 ## Files
 
 - Native files use upstream master's format (newer than KiCad 10.0.x). Custom properties and
