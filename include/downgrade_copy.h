@@ -69,6 +69,27 @@ inline bool IsDowngradeLibraryWorkingArtifact( const wxString& aPath )
            || file.GetFullName().Contains( wxT( ".downgrade_backup." ) );
 }
 
+/// A folder inside the library (or project) folder that is not KiCad's: hidden folders (.venv,
+/// .backplane, .vscode), node_modules, __pycache__, and any folder marked as a cache
+/// (CACHEDIR.TAG) or Python environment (pyvenv.cfg).  The project downgrade walks the whole
+/// project folder, so these are skipped, links and all, rather than refusing the project.
+/// Named by the entry's own name, so a project that itself sits in a hidden folder is fine.
+inline bool IsDowngradeLibraryForeignFolder( const std::filesystem::directory_entry& aEntry )
+{
+    std::error_code ec;
+    std::string     name = aEntry.path().filename().string();
+
+    if( !aEntry.is_directory( ec ) && !aEntry.is_symlink( ec ) )
+        return false;
+
+    if( ( !name.empty() && name[0] == '.' ) || name == "node_modules" || name == "__pycache__" )
+        return aEntry.is_directory( ec ) || aEntry.is_symlink( ec );
+
+    return aEntry.is_directory( ec ) && !aEntry.is_symlink( ec )
+           && ( std::filesystem::exists( aEntry.path() / "CACHEDIR.TAG", ec )
+                || std::filesystem::exists( aEntry.path() / "pyvenv.cfg", ec ) );
+}
+
 inline bool ValidateDowngradeLibrarySource( const wxString& aSource, wxString& aError )
 {
     std::error_code error;
@@ -88,7 +109,7 @@ inline bool ValidateDowngradeLibrarySource( const wxString& aSource, wxString& a
         const auto& entry = *iterator;
         wxString    path = DowngradeWxPath( entry.path() );
 
-        if( IsDowngradeLibraryWorkingArtifact( path ) )
+        if( IsDowngradeLibraryWorkingArtifact( path ) || IsDowngradeLibraryForeignFolder( entry ) )
         {
             iterator.disable_recursion_pending();
         }
@@ -238,7 +259,8 @@ inline bool CopyDowngradeLibraryDirectory( const wxString& aSource, const wxStri
     {
         const auto& entry = *iterator;
 
-        if( IsDowngradeLibraryWorkingArtifact( DowngradeWxPath( entry.path() ) ) )
+        if( IsDowngradeLibraryWorkingArtifact( DowngradeWxPath( entry.path() ) )
+            || IsDowngradeLibraryForeignFolder( entry ) )
         {
             iterator.disable_recursion_pending();
         }
