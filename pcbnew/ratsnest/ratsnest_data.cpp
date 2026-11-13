@@ -36,15 +36,33 @@ using namespace std::placeholders;
 
 #include <algorithm>
 #include <cassert>
-#include <limits>
 #include <list>
 #include <span>
+#include <limits>
 #include <tuple>
+#include <unordered_map>
 
 #include <core/filter_kruskal.h>
 #include <core/union_find.h>
 
 #include <delaunator.hpp>
+
+bool CN_PTR_CMP::operator()( const std::shared_ptr<CN_ANCHOR>& aItem,
+                             const std::shared_ptr<CN_ANCHOR>& bItem ) const
+{
+    if( aItem->Pos().x != bItem->Pos().x )
+        return aItem->Pos().x < bItem->Pos().x;
+
+    if( aItem->Pos().y != bItem->Pos().y )
+        return aItem->Pos().y < bItem->Pos().y;
+
+    // Anchors of one item at one position keep their order in the item, which is fixed
+    int aIndex = aItem->Item() ? aItem->Item()->ListIndex() : -1;
+    int bIndex = bItem->Item() ? bItem->Item()->ListIndex() : -1;
+
+    return aIndex < bIndex;
+}
+
 
 void RN_NET::kruskalMST( std::vector<CN_EDGE>& aEdges )
 {
@@ -178,6 +196,27 @@ public:
                     mstEdges.emplace_back( src, dst, src->Dist( *dst ) );
                 };
 
+        std::unordered_map<const CN_CLUSTER*, int> clusterKeys;
+
+        auto clusterKey =
+                [&]( const std::shared_ptr<CN_ANCHOR>& aAnchor ) -> int
+                {
+                    const CN_CLUSTER* cluster = aAnchor->GetCluster().get();
+                    auto [it, inserted] = clusterKeys.try_emplace( cluster, -1 );
+
+                    if( inserted && cluster )
+                    {
+                        int first = std::numeric_limits<int>::max();
+
+                        for( CN_ITEM* item : *const_cast<CN_CLUSTER*>( cluster ) )
+                            first = std::min( first, item->ListIndex() );
+
+                        it->second = first;
+                    }
+
+                    return it->second;
+                };
+
         std::shared_ptr<CN_ANCHOR> prev = nullptr;
 
         for( const std::shared_ptr<CN_ANCHOR>& n : m_allNodes )
@@ -250,10 +289,13 @@ public:
             if( chain.size() < 2 )
                 continue;
 
-            std::sort( chain.begin(), chain.end(),
-                    [] ( const std::shared_ptr<CN_ANCHOR>& a, const std::shared_ptr<CN_ANCHOR>& b )
+            // Group the anchors by cluster, the clusters in a fixed order (their first item in
+            // the connectivity list) rather than by address, which changes from run to run;
+            // within a cluster the chain keeps m_allNodes' order, which is fixed too
+            std::stable_sort( chain.begin(), chain.end(),
+                    [&]( const std::shared_ptr<CN_ANCHOR>& a, const std::shared_ptr<CN_ANCHOR>& b )
                     {
-                        return a->GetCluster().get() < b->GetCluster().get();
+                        return clusterKey( a ) < clusterKey( b );
                     } );
 
             for( unsigned int j = 1; j < chain.size(); j++ )
