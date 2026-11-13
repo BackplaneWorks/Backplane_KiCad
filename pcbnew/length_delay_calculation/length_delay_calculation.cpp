@@ -702,12 +702,14 @@ void LENGTH_DELAY_CALCULATION::optimiseVias(
             }
         }
 
+        // GetConnectedPads() is ordered by address; take the pad with the lowest id so the
+        // via's span (and the measured length) does not depend on heap layout
         const PAD* coincidentPad = nullptr;
 
         for( PAD* pad : m_board->GetConnectivity()->GetConnectedPads( pcbVia ) )
         {
-            coincidentPad = pad;
-            break;
+            if( !coincidentPad || pad->m_Uuid < coincidentPad->m_Uuid )
+                coincidentPad = pad;
         }
 
         LSET spanLayers;
