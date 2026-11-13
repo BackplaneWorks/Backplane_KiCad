@@ -345,6 +345,14 @@ public:
     bool SetReservedKeys( const std::vector<std::string>& aChords, wxString* aError );
     std::vector<std::string> ReservedKeys() const;
 
+    /// The KEY_ATOM index that means "the comment key" (';'), whatever the host reserved.
+    static constexpr long COMMENT_KEY_INDEX = 6;
+
+    /// Embedded aFrame: hand the editor's comment key to the host as a KEY_ATOM message with
+    /// COMMENT_KEY_INDEX (capability comment-key-handoff), so the host opens its own comment
+    /// window.  False, and nothing sent, when aFrame is not embedded.
+    bool SendCommentKey( const wxFrame* aFrame );
+
     /// Called from wxApp::FilterEvent.  Returns -1 to continue, or wxApp's processed value.
     int FilterEvent( wxEvent& aEvent );
 

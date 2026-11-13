@@ -2245,6 +2245,11 @@ void BOARD_EDITOR_CONTROL::doCrossProbePcbToSch( const TOOL_EVENT& aEvent, bool 
 
 int BOARD_EDITOR_CONTROL::CommentToBackplane( const TOOL_EVENT& aEvent )
 {
+    // Embedded, the comment key is the host's: it opens its own window and takes the selection
+    // with CommentSelection{capture_only}.  A focused text field never gets here (it types ';').
+    if( BACKPLANE_EMBED::Get().SendCommentKey( m_frame ) )
+        return 0;
+
     if( !BACKPLANE_EMBED::Get().CommentsAvailable() )
         return 0;
 

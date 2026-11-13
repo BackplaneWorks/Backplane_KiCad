@@ -22,7 +22,7 @@
 namespace BACKPLANE
 {
 
-inline constexpr std::array<const char*, 17> CAPABILITIES = {
+inline constexpr std::array<const char*, 18> CAPABILITIES = {
     "api-server",
     "headless-pcb",
     "headless-sch",
@@ -40,6 +40,7 @@ inline constexpr std::array<const char*, 17> CAPABILITIES = {
     "coedit",          // docs/backplane/coedit.md: live co-editing, per-actor undo, deferral
     "rules-merge",     // project settings and custom rules merge, never overwrite
     "routing-plan",    // docs/backplane/floorplanner.md: kiapi.backplane.plan
+    "comment-key-handoff", // embedded: the comment action sends KEY_ATOM index 6; text fields keep ';'
 };
 
 } // namespace BACKPLANE

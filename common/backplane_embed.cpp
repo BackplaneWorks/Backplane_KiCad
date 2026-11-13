@@ -860,6 +860,18 @@ bool BACKPLANE_EMBED::SetReservedKeys( const std::vector<std::string>& aChords, 
 }
 
 
+bool BACKPLANE_EMBED::SendCommentKey( const wxFrame* aFrame )
+{
+    if( !aFrame || !m_parent || !IsEmbedded( aFrame ) )
+        return false;
+
+    const FRAME_ENTRY* e = entry( aFrame );
+    long data[5] = { static_cast<long>( e ? e->window : 0 ), keysymFor( ';' ), 0, COMMENT_KEY_INDEX, 1 };
+    KIPLATFORM::EMBED::SendHostMessage( m_parent, KEY_ATOM, KEY_WM_APP_OFFSET, data );
+    return true;
+}
+
+
 std::vector<std::string> BACKPLANE_EMBED::ReservedKeys() const
 {
     std::vector<std::string> result;

@@ -107,6 +107,14 @@ false when it could not apply).
 - **Reserved chords** are forwarded instead of handled, in embedded frames only (dialogs keep
   every key). Default `Ctrl+K`, `Ctrl+J`, `Ctrl+Tab`, `Ctrl+Shift+Tab`, `` Ctrl+` ``; change with
   `SetReservedKeys` (chord syntax in the proto).
+- **The comment key** (bp.13, capability `comment-key-handoff`): in an embedded PCB or schematic
+  editor, the "Comment to Backplane" action (`;` by default, rebindable in Preferences > Hotkeys)
+  opens no dialog and posts no `ET_COMMENT`. It sends the container the reserved-chord
+  `_BACKPLANE_KEY` message with index 6 (`COMMENT_KEY_INDEX`): `{frame window, keysym 0x3b,
+  modifiers 0, 6, 1}`. The host opens its own comment window and takes the selection with
+  `CommentSelection{capture_only}`. Being an action, it follows KiCad's hotkey rules: a focused
+  text field, search box, grid cell or property editor types `;`. A host that sees this capability
+  should not reserve a bare `;`. That swallowed `;` in every text field.
 
 ClientMessages go to the **container** (`--parent-window`, the current `AttachToParent.window`),
 format 32, sent with an empty event mask, so they reach the X connection that created the
