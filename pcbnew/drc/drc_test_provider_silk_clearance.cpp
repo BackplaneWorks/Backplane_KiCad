@@ -76,6 +76,11 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
     // associated exclusions), so we only use that when soldermask min width is > 0.
     bool checkIndividualMaskItems = m_board->GetDesignSettings().m_SolderMaskMinWidth <= 0;
 
+    REPORT_AUX( wxString::Format( wxT( "Silk to mask: %s (solder mask min width %d nm)" ),
+                                  checkIndividualMaskItems ? wxT( "individual mask items" )
+                                                           : wxT( "whole-board mask" ),
+                                  m_board->GetDesignSettings().m_SolderMaskMinWidth ) );
+
     if( m_drcEngine->IsErrorLimitExceeded( DRCE_SILK_CLEARANCE )
             && m_drcEngine->IsErrorLimitExceeded( DRCE_SILK_MASK_CLEARANCE) )
     {
@@ -318,7 +323,12 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
 
                 if( aLayers.second == F_Mask || aLayers.second == B_Mask )
                 {
-                    if( checkIndividualMaskItems )
+                    // Silk over a mask opening is tested even without a silk clearance, but never
+                    // against a rule that waives it (severity ignore): the person's waiver wins,
+                    // as it does in the whole-board mask test (solder mask min width > 0)
+                    bool waived = !constraint.IsNull() && constraint.GetSeverity() == RPT_SEVERITY_IGNORE;
+
+                    if( checkIndividualMaskItems && !waived )
                         minClearance = std::max( minClearance, 0 );
 
                     errorCode = DRCE_SILK_MASK_CLEARANCE;
