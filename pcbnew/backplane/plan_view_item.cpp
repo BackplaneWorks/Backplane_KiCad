@@ -1245,7 +1245,7 @@ void PLAN_VIEW_ITEM::drawCorridors( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
 
         int marks = ( approved || routing || routed ? 1 : 0 ) + ( verified ? 2 : 0 )
                     + ( c->edited ? 1 : 0 ) + ( c->locked ? 1 : 0 );
-        double textW = size * 0.68 * label.Length();
+        double textW = size * 0.8 * label.Length();   // the bitmap font's advance
         double marksW = marks * icon;
         double warnW = problems > 0 ? icon + size * 0.68 * wxString::Format( wxS( "%d" ), problems ).Length() : 0;
         double gap = size * 0.3;
@@ -1528,9 +1528,26 @@ void PLAN_VIEW_ITEM::drawHeader( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         }
     }
 
+    // How far the person's audit is on this layer, counted: "1 of 3 approved".
+    int approvedItems = 0;
+
+    for( const PLAN_CORRIDOR& c : plan.corridors )
+        approvedItems += c.layer == aLayer && c.status != PLAN_STATUS::PROPOSED && c.status != PLAN_STATUS::REJECTED;
+
+    for( const PLAN_PLANE& p : plan.planes )
+        approvedItems += p.layer == aLayer && p.status != PLAN_STATUS::PROPOSED && p.status != PLAN_STATUS::REJECTED;
+
+    if( items > 0 && status == PLAN_STATUS::PROPOSED && approvedItems > 0 )
+    {
+        status = approvedItems == items ? PLAN_STATUS::APPROVED : PLAN_STATUS::PROPOSED;
+    }
+
     if( items > 0 )
     {
         wxString tag = wxString::FromUTF8( PlanStatusName( status ) );
+
+        if( approvedItems > 0 && approvedItems < items )
+            tag = wxString::Format( _( "%d of %d approved" ), approvedItems, items );
         COLOR4D  tagColor = status == PLAN_STATUS::APPROVED ? COLOR4D( 0.35, 0.80, 0.45, 1.0 )
                             : status == PLAN_STATUS::REJECTED ? WARN
                                                               : COLOR4D( 0.95, 0.75, 0.30, 1.0 );
