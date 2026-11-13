@@ -314,6 +314,19 @@ def embedded_undo(kicad, kicad_cli, out, source):
         check(bool(r and r.undone) and value() == original,
               f"undo: UndoAgentChange takes the hub-transport edit back ({value()!r})")
         hub.__exit__(None, None, None)
+
+        # The person's edit through Backplane, their Ctrl+Z and Ctrl+Y, then a second edit of the
+        # same item through Backplane: it applies (it used to be "rebased" onto the person's own
+        # first edit and dropped as unchanged, answered ok)
+        edit(person, "BP-REDO", "BOM: value")
+        person_undo()
+        check(value() == original, f"undo: Ctrl+Z takes Backplane's edit back again ({value()!r})")
+        s.xdotool("key", "ctrl+y")
+        time.sleep(1.0)
+        check(value() == "BP-REDO", f"undo: Ctrl+Y redoes it ({value()!r})")
+        edit(person, original, "BOM: value back")
+        check(value() == original,
+              f"undo: Backplane's next edit of the same item after undo and redo applies ({value()!r})")
         for client in (person, agent):
             client.__exit__(None, None, None)
 

@@ -994,7 +994,7 @@ void API_HANDLER_EDITOR::ProcessDeferred()
 
     for( auto& [client, ops] : ready )
     {
-        COEDIT::ACTOR_SCOPE  actor( client );
+        COEDIT::ACTOR_SCOPE  actor( COEDIT::ActorForClient( client ) );
         COEDIT::REBASE_SCOPE rebasing;
         std::string          commitClient = client + "#rebased";
 
@@ -1228,7 +1228,14 @@ google::protobuf::Any API_HANDLER_EDITOR::rebaseStale( const std::string& aClien
     if( !id )
         return aItem;
 
-    uint64_t                      since = COEDIT::LastRead( aClient );
+    // The person's own writes (Backplane's UI acting for them) are never stale against the person's
+    // changes: rebased onto themselves they would be dropped as "unchanged from the base"
+    std::string actor = COEDIT::ActorForClient( aClient );
+
+    if( actor.empty() )
+        return aItem;
+
+    uint64_t                      since = COEDIT::LastRead( actor );
     std::optional<COEDIT::CHANGE> personal = COEDIT::PersonChangedAfter( *id, since );
 
     if( !personal )
@@ -1432,7 +1439,7 @@ void API_HANDLER_EDITOR::ResolveCollision( int aChoice )
             if( std::optional<PROTO_MERGE::RESULT> merged =
                         PROTO_MERGE::ThreeWay( c.base, person, c.agent, true ) )
             {
-                COEDIT::ACTOR_SCOPE actor( c.client );
+                COEDIT::ACTOR_SCOPE actor( COEDIT::ActorForClient( c.client ) );
                 std::string         commitClient = c.client + "#resolved";
                 google::protobuf::RepeatedPtrField<google::protobuf::Any> items;
                 *items.Add() = merged->merged;

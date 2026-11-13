@@ -173,6 +173,18 @@ std::map<std::string, uint64_t>& reads()
 } // namespace
 
 
+std::string ActorForClient( const std::string& aClient )
+{
+    if( aClient.empty() )
+        return "api";
+
+    if( aClient.rfind( "person:", 0 ) == 0 )
+        return std::string();
+
+    return aClient;
+}
+
+
 void NoteRead( const std::string& aClient )
 {
     reads()[aClient] = log().next - 1;

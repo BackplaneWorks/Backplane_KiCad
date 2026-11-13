@@ -116,6 +116,10 @@ KICOMMON_API std::vector<CHANGE> ChangesSince( uint64_t aSince, const std::strin
 
 KICOMMON_API uint64_t LastSeq();
 
+/// The co-editing actor a request's client name stands for: "person:<anything>" is the person
+/// (""), Backplane's own UI acting for them; no name is "api"; any other name is its own actor.
+KICOMMON_API std::string ActorForClient( const std::string& aClient );
+
 /// A client read the document (any Get* request): what it knows is as of this seq.
 KICOMMON_API void     NoteRead( const std::string& aClient );
 

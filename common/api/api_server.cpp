@@ -528,16 +528,10 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
 
     // Every change made while handling this request is the client's (its undo group, its
     // change-log entry, its attribution).
-    std::string actor = request.header().client_name();
-
-    if( actor.empty() )
-        actor = "api";
-
     // A client named "person:<anything>" acts for the person (Backplane's own UI: a BOM edit, a
     // panel's button): the person's change, in their undo.  Every other name is an actor of its own
     // ("agent:<thread>" for agents), with its own undo, as before.
-    if( actor.rfind( "person:", 0 ) == 0 )
-        actor.clear();
+    std::string actor = COEDIT::ActorForClient( request.header().client_name() );
 
     COEDIT::ACTOR_SCOPE actorScope( actor );
 
