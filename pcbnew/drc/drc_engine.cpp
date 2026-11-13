@@ -2446,18 +2446,11 @@ struct DRC_ENGINE::PENDING_VIOLATION
         if( !path || !aOther.path )
             return !path && aOther.path;
 
-        // VECTOR2I's operator< compares lengths, which is not a total order on points
-        auto pointLess =
-                []( const VECTOR2I& a, const VECTOR2I& b )
-                {
-                    return a.x != b.x ? a.x < b.x : a.y < b.y;
-                };
-
         if( path->PathStart() != aOther.path->PathStart() )
-            return pointLess( path->PathStart(), aOther.path->PathStart() );
+            return path->PathStart() < aOther.path->PathStart();
 
         if( path->PathEnd() != aOther.path->PathEnd() )
-            return pointLess( path->PathEnd(), aOther.path->PathEnd() );
+            return path->PathEnd() < aOther.path->PathEnd();
 
         return path->GetPath().size() < aOther.path->GetPath().size();
     }
