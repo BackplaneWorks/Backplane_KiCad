@@ -381,6 +381,13 @@ EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
     ops.syncSideFiles = [this]() { EmbedSyncSideFiles(); };
     ops.reload = [this]() { return EmbedReload(); };
     ops.showConflict = [this]( const wxString& aPath ) { ShowEmbedReloadConflict( aPath ); };
+    ops.libId = [this]() { return EmbedLibId(); };
+    ops.files = [this]() { return EmbedFiles(); };
+    ops.openFiles = [this]( const std::vector<wxString>& aFiles, std::vector<wxString>& aLoaded,
+                            std::vector<std::pair<wxString, wxString>>& aErrors )
+                    {
+                        EmbedOpenFiles( aFiles, aLoaded, aErrors );
+                    };
 
     // A reload frees what a modal dialog or a running interactive tool is holding: wait.
     ops.busy = [this]() { return !IsEnabled() || !ToolStackIsEmpty(); };

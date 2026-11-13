@@ -394,6 +394,11 @@ public:
     /**
      * Accessors to GERBER_FILE_IMAGE_LIST and GERBER_FILE_IMAGE data
      */
+    std::vector<wxString> EmbedFiles() const override;
+
+    void EmbedOpenFiles( const std::vector<wxString>& aFiles, std::vector<wxString>& aLoaded,
+                         std::vector<std::pair<wxString, wxString>>& aErrors ) override;
+
     GERBER_FILE_IMAGE_LIST* GetImagesList() const
     {
         return m_gerberLayout->GetImagesList();
@@ -534,6 +539,10 @@ private:
 #else
     std::unique_ptr<NL_GERBVIEW_PLUGIN> m_spaceMouse;
 #endif
+
+    // OpenGerbers (an embedding host): load without message dialogs, keeping the messages
+    bool                  m_embedQuietLoad = false;
+    std::vector<wxString> m_embedLoadMessages;
 };
 
 #endif /* WX_GERBER_STRUCT_H */

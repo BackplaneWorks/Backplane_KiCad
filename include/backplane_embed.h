@@ -55,7 +55,8 @@ enum class EMBED_FRAME_KIND : int
     SYMBOL_EDITOR = 3,
     FOOTPRINT_EDITOR = 4,
     PCB_3D = 5,
-    OTHER = 6
+    OTHER = 6,
+    GERBVIEW = 7
 };
 
 /// Values match kiapi.backplane.embed.EventType.
@@ -86,6 +87,7 @@ enum class EMBED_EVENT_TYPE : int
     PLAN_CHANGED = 22,
     AGENT_CONTROL = 23,
     PROGRESS = 24,
+    EDITOR_REQUESTED = 25,
     FRAME_DRAWN = 28
 };
 
@@ -140,6 +142,11 @@ struct EMBED_FRAME_OPS
     std::function<void( const wxString& )>     showConflict;     ///< infobar; empty hides it
     std::function<bool()>                      busy;             ///< a dialog or tool is active
     std::function<void()>                      syncSideFiles;    ///< merge external project/rules changes
+    std::function<wxString()>                  libId;            ///< library editors: "Lib:Name" on screen
+    std::function<std::vector<wxString>()>     files;            ///< GerbView: the files loaded
+    /// GerbView: replace what it shows with aFiles; aErrors gets one (path, reason) per failure
+    std::function<void( const std::vector<wxString>& aFiles, std::vector<wxString>& aLoaded,
+                        std::vector<std::pair<wxString, wxString>>& aErrors )> openFiles;
 };
 
 struct EMBED_FRAME_INFO
@@ -155,6 +162,8 @@ struct EMBED_FRAME_INFO
     uint64_t         window = 0;
     int              minWidth = 0;
     int              minHeight = 0;
+    wxString         libId;            ///< FK_FOOTPRINT_EDITOR / FK_SYMBOL_EDITOR
+    std::vector<wxString> files;       ///< FK_GERBVIEW
 };
 
 /// A box in millimetres, the document's own frame (Y down), kiapi.backplane.embed.BoxMm.
@@ -516,11 +525,15 @@ private:
         wxSize           shownSize;   ///< its size at the last ShowEmbedded; a change relayouts
         bool             awaitDrawn = false;  ///< shown by ShowEmbedded, not yet drawn
         std::chrono::steady_clock::time_point shownAt;
+        bool             editorRequestPending = false;   ///< an ET_EDITOR_REQUESTED is on its way
     };
 
     FRAME_ENTRY*       entry( const wxFrame* aFrame );
     const FRAME_ENTRY* entry( const wxFrame* aFrame ) const;
     EMBED_FRAME_INFO   info( const FRAME_ENTRY& aEntry ) const;
+
+    /// ET_EDITOR_REQUESTED for a footprint or symbol editor KiCad itself opened or raised.
+    void editorRequested( const FRAME_ENTRY& aEntry );
 
     bool registerFrame( wxFrame* aFrame, FRAME_T aType, const EMBED_FRAME_OPS& aOps );
 

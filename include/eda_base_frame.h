@@ -158,6 +158,20 @@ public:
     /// has decided that unsaved changes may go.  False if this frame cannot reload.
     virtual bool EmbedReload() { return false; }
 
+    /// Library editors: the "Lib:Name" on screen, for an embedding host's tab.  Default: none.
+    virtual wxString EmbedLibId() const { return wxEmptyString; }
+
+    /// GerbView: the files loaded.  Default: none.
+    virtual std::vector<wxString> EmbedFiles() const { return {}; }
+
+    /// GerbView: replace what it shows with aFiles (OpenGerbers).  Default: every file fails.
+    virtual void EmbedOpenFiles( const std::vector<wxString>& aFiles, std::vector<wxString>& aLoaded,
+                                 std::vector<std::pair<wxString, wxString>>& aErrors )
+    {
+        for( const wxString& file : aFiles )
+            aErrors.emplace_back( file, wxS( "this frame does not open files" ) );
+    }
+
     /// Show (non-empty aPath) or hide KiCad's "changed on disk" infobar for an embedding host.
     void ShowEmbedReloadConflict( const wxString& aPath );
 

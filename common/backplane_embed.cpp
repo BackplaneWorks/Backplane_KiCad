@@ -297,6 +297,7 @@ EMBED_FRAME_KIND BACKPLANE_EMBED::KindOf( FRAME_T aType )
     case FRAME_SCH_SYMBOL_EDITOR: return EMBED_FRAME_KIND::SYMBOL_EDITOR;
     case FRAME_FOOTPRINT_EDITOR: return EMBED_FRAME_KIND::FOOTPRINT_EDITOR;
     case FRAME_PCB_DISPLAY3D:    return EMBED_FRAME_KIND::PCB_3D;
+    case FRAME_GERBER:           return EMBED_FRAME_KIND::GERBVIEW;
     default:                     return EMBED_FRAME_KIND::OTHER;
     }
 }
@@ -369,7 +370,9 @@ EMBED_FRAME_INFO BACKPLANE_EMBED::info( const FRAME_ENTRY& aEntry ) const
     result.minHeight = aEntry.minHeight;
     result.frameName = aEntry.frame->GetName();
     result.title = aEntry.frame->GetTitle();
-    result.shown = aEntry.frame->IsShown() && KIPLATFORM::EMBED::IsMapped( aEntry.frame );
+    // A frame being prewarmed off-screen is shown to the toolkit, not to anyone
+    result.shown = aEntry.frame->IsShown() && KIPLATFORM::EMBED::IsMapped( aEntry.frame )
+                   && !m_prewarming.count( aEntry.frame );
     result.focused = result.shown && KIPLATFORM::EMBED::HasFocus( aEntry.frame );
     result.realized = aEntry.frame->IsShown() && !m_prewarming.count( aEntry.frame );
 
@@ -378,6 +381,12 @@ EMBED_FRAME_INFO BACKPLANE_EMBED::info( const FRAME_ENTRY& aEntry ) const
 
     if( aEntry.ops.modified )
         result.modified = aEntry.ops.modified();
+
+    if( aEntry.ops.libId )
+        result.libId = aEntry.ops.libId();
+
+    if( aEntry.ops.files )
+        result.files = aEntry.ops.files();
 
     return result;
 }
@@ -529,10 +538,41 @@ std::optional<bool> BACKPLANE_EMBED::OnFrameShow( wxFrame* aFrame, FRAME_T aType
         // KiCad asked for a hidden frame (Edit Symbol, the 3D viewer, the second Show() of the
         // library editors...).  The host decides whether and where it appears.
         PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ) );
+        editorRequested( *e );
         return false;
     }
 
     return std::nullopt;
+}
+
+
+void BACKPLANE_EMBED::editorRequested( const FRAME_ENTRY& aEntry )
+{
+    if( aEntry.kind != EMBED_FRAME_KIND::FOOTPRINT_EDITOR && aEntry.kind != EMBED_FRAME_KIND::SYMBOL_EDITOR )
+        return;
+
+    // One per request (KiCad may show and raise for the same one); the item is loaded once the
+    // call that raised or showed the frame returns
+    FRAME_ENTRY* pending = entry( aEntry.frame );
+
+    if( !pending || pending->editorRequestPending )
+        return;
+
+    pending->editorRequestPending = true;
+    wxWeakRef<wxFrame> weak( aEntry.frame );
+
+    wxTheApp->CallAfter(
+            [this, weak]()
+            {
+                if( wxFrame* frame = weak.get() )
+                {
+                    if( FRAME_ENTRY* e = entry( frame ) )
+                    {
+                        e->editorRequestPending = false;
+                        PushEvent( EMBED_EVENT_TYPE::EDITOR_REQUESTED, info( *e ) );
+                    }
+                }
+            } );
 }
 
 
@@ -559,7 +599,15 @@ bool BACKPLANE_EMBED::OnFrameRaise( wxFrame* aFrame, FRAME_T aType, bool aIsModa
     }
 
     if( !aFrame->IsShown() && m_showAllowed == 0 && m_quietShowRequests == 0 && m_reloading == 0 )
+    {
         PushEvent( EMBED_EVENT_TYPE::SHOW_REQUESTED, info( *e ) );
+        editorRequested( *e );
+    }
+    else if( aFrame->IsShown() && m_showAllowed == 0 && m_quietShowRequests == 0 && m_reloading == 0 )
+    {
+        // Brought up again (Open Footprint on another footprint): the host shows its tab
+        editorRequested( *e );
+    }
 
     return true;
 }

@@ -444,7 +444,12 @@ bool GERBVIEW_FRAME::LoadListOfGerberAndDrillFiles( const wxString&      aPath,
             progress->AdvanceProgress();
     }
 
-    if( !success )
+    if( !success && m_embedQuietLoad )
+    {
+        // OpenGerbers (an embedding host): the reasons go back in the reply, no dialog
+        m_embedLoadMessages.push_back( reporter.GetMessages() );
+    }
+    else if( !success )
     {
         wxSafeYield();  // Allows slice of time to redraw the screen
                         // to refresh widgets, before displaying messages
@@ -750,7 +755,11 @@ bool GERBVIEW_FRAME::LoadZipArchiveFile( const wxString& aFullFileName, const wx
     m_LayersManager->UpdateLayerIcons();
     syncLayerBox();
 
-    if( reporter.HasMessage() )
+    if( reporter.HasMessage() && m_embedQuietLoad )
+    {
+        m_embedLoadMessages.push_back( reporter.GetMessages() );
+    }
+    else if( reporter.HasMessage() )
     {
         wxSafeYield();  // Allows slice of time to redraw the screen
                         // to refresh widgets, before displaying messages
@@ -795,4 +804,76 @@ void GERBVIEW_FRAME::DoWithAcceptedFiles()
     // Open files in editor
     if( !gerbFn.IsEmpty() )
         m_toolManager->RunAction<wxString*>( *m_acceptedExts.at( FILEEXT::GerberFileExtension ), &gerbFn );
+}
+
+
+std::vector<wxString> GERBVIEW_FRAME::EmbedFiles() const
+{
+    std::vector<wxString>   files;
+    GERBER_FILE_IMAGE_LIST* images = GetImagesList();
+
+    for( unsigned ii = 0; images && ii < images->ImagesMaxCount(); ++ii )
+    {
+        if( GERBER_FILE_IMAGE* image = images->GetGbrImage( ii ) )
+            files.push_back( image->m_FileName );
+    }
+
+    return files;
+}
+
+
+void GERBVIEW_FRAME::EmbedOpenFiles( const std::vector<wxString>& aFiles, std::vector<wxString>& aLoaded,
+                                     std::vector<std::pair<wxString, wxString>>& aErrors )
+{
+    Clear_DrawLayers( false );
+
+    m_embedQuietLoad = true;
+    m_embedLoadMessages.clear();
+
+    for( const wxString& file : aFiles )
+    {
+        wxFileName fn( file );
+
+        if( !fn.FileExists() )
+        {
+            aErrors.emplace_back( file, wxS( "no such file" ) );
+            continue;
+        }
+
+        size_t   before = m_embedLoadMessages.size();
+        wxString ext = fn.GetExt().Lower();
+        bool     ok;
+
+        if( ext == FILEEXT::GerberJobFileExtension )
+        {
+            ok = LoadGerberJobFile( fn.GetFullPath() );
+        }
+        else if( ext == FILEEXT::ArchiveFileExtension )
+        {
+            ok = LoadZipArchiveFile( fn.GetFullPath() );
+        }
+        else
+        {
+            // One file at a time, so each one's outcome is its own; the type is autodetected
+            wxArrayString    names;
+            std::vector<int> types{ 2 };
+            names.Add( fn.GetFullPath() );
+            ok = LoadListOfGerberAndDrillFiles( fn.GetPath(), names, &types );
+        }
+
+        wxString why;
+
+        for( size_t ii = before; ii < m_embedLoadMessages.size(); ++ii )
+            why += ( why.IsEmpty() ? wxString() : wxString( wxS( "; " ) ) ) + m_embedLoadMessages[ii];
+
+        if( ok )
+            aLoaded.push_back( file );
+        else
+            aErrors.emplace_back( file, why.IsEmpty() ? wxString( wxS( "could not be read" ) ) : why );
+    }
+
+    m_embedQuietLoad = false;
+    m_embedLoadMessages.clear();
+
+    Zoom_Automatique( true );
 }

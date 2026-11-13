@@ -2614,3 +2614,19 @@ bool FOOTPRINT_EDIT_FRAME::EmbedReload()
     CallAfter( restore );
     return true;
 }
+
+
+wxString FOOTPRINT_EDIT_FRAME::EmbedLibId() const
+{
+    // A footprint opened from the board has no loaded library id of its own; its own FPID
+    // names where it came from
+    LIB_ID id = GetLoadedFPID();
+
+    if( !id.IsValid() && GetBoard() )
+    {
+        if( FOOTPRINT* footprint = GetBoard()->GetFirstFootprint() )
+            id = footprint->GetFPID();
+    }
+
+    return id.IsValid() ? wxString( id.Format() ) : wxString();
+}

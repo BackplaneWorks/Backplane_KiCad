@@ -42,6 +42,10 @@ void FillEmbedFrame( kiapi::backplane::embed::FrameInfo* aOut, const EMBED_FRAME
     aOut->set_shown( aIn.shown );
     aOut->set_focused( aIn.focused );
     aOut->set_frame_name( aIn.frameName.ToStdString( wxConvUTF8 ) );
+    aOut->set_lib_id( aIn.libId.ToStdString( wxConvUTF8 ) );
+
+    for( const wxString& file : aIn.files )
+        aOut->add_files( file.ToStdString( wxConvUTF8 ) );
 }
 
 

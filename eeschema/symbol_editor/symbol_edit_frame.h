@@ -163,6 +163,11 @@ public:
      */
     LIB_SYMBOL* GetCurSymbol() const { return m_symbol; }
 
+    wxString EmbedLibId() const override
+    {
+        return m_symbol ? wxString( m_symbol->GetLibId().Format() ) : wxString();
+    }
+
     /**
      * Take ownership of aSymbol and notes that it is the one currently being edited.
      */

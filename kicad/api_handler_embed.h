@@ -36,6 +36,9 @@ private:
     HANDLER_RESULT<kiapi::backplane::embed::AttachToParentResponse> handleAttachToParent(
             const HANDLER_CONTEXT<kiapi::backplane::embed::AttachToParent>& aCtx );
 
+    HANDLER_RESULT<kiapi::backplane::embed::OpenGerbersResponse> handleOpenGerbers(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::OpenGerbers>& aCtx );
+
     HANDLER_RESULT<kiapi::backplane::embed::ShowFrameResponse> handleShowFrame(
             const HANDLER_CONTEXT<kiapi::backplane::embed::ShowFrame>& aCtx );
 
