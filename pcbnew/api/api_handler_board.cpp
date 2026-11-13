@@ -846,7 +846,11 @@ HANDLER_RESULT<RunActionResponse> API_HANDLER_BOARD::handleRunAction(
 
     RunActionResponse response;
 
-    if( toolManager()->RunAction( aCtx.Request.action(), true ) )
+    // By name only: the action keeps its own parameter (showFootprintEditor's frame type and
+    // the like).  A second argument is that parameter now, not the old "run now" flag; `true`
+    // there made every parameterised action read a bool (FRAME_T 0, the schematic, for
+    // showFootprintEditor).
+    if( toolManager()->RunAction( aCtx.Request.action() ) )
         response.set_status( RunActionStatus::RAS_OK );
     else
         response.set_status( RunActionStatus::RAS_INVALID );
