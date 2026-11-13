@@ -32,7 +32,6 @@
 #include <set>
 #include <shared_mutex>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include <board.h>
@@ -79,7 +78,9 @@ double dist( const VECTOR2I& aA, const VECTOR2I& aB )
 class RINGS
 {
 public:
-    RINGS( const SHAPE_POLY_SET& aFill, const std::vector<std::vector<DRC_ZONE_TRIANGULATION::TRIANGLE>>& aTriangles )
+    /// @a aEnds are the ends of the triangle edges that may run along the outline; those in
+    /// the middle of a ring segment become ring points.
+    RINGS( const SHAPE_POLY_SET& aFill, const std::vector<VECTOR2I>& aEnds )
     {
         std::vector<std::vector<VECTOR2I>> rings;
         std::vector<bool>                  holes;
@@ -104,10 +105,24 @@ public:
                 take( aFill.CHole( ii, jj ), true );
         }
 
-        insertSplits( rings, aTriangles );
-
         for( size_t ii = 0; ii < rings.size(); ++ii )
             add( rings[ii], holes[ii] );
+
+        std::vector<VECTOR2I> extra;
+
+        for( const VECTOR2I& pt : aEnds )
+        {
+            if( !m_vertexIndex.count( pt ) )
+                extra.push_back( pt );
+        }
+
+        if( !extra.empty() && insertSplits( rings, extra ) )
+        {
+            *this = RINGS();
+
+            for( size_t ii = 0; ii < rings.size(); ++ii )
+                add( rings[ii], holes[ii] );
+        }
     }
 
     double Area() const { return m_area; }
@@ -230,6 +245,8 @@ public:
     }
 
 private:
+    RINGS() = default;
+
     static bool fail( const VECTOR2I& aAt, wxString* aWhy )
     {
         if( aWhy )
@@ -242,36 +259,26 @@ private:
         return false;
     }
 
-    /// Make each triangle vertex that lies on a ring segment but is not a ring point (the
-    /// triangulator splits large polygons, adding points along their outline) a ring point, so
-    /// that every boundary edge runs between ring points.
-    static void insertSplits( std::vector<std::vector<VECTOR2I>>& aRings,
-                              const std::vector<std::vector<DRC_ZONE_TRIANGULATION::TRIANGLE>>& aTriangles )
+    /// Make each of @a aExtra (points that are not ring points) that lies on a ring segment a
+    /// ring point: the triangulator splits large polygons, adding points along their outline,
+    /// and every boundary edge must run between ring points.  Returns whether any was.
+    static bool insertSplits( std::vector<std::vector<VECTOR2I>>& aRings,
+                              std::vector<VECTOR2I>&               aExtra )
     {
-        std::unordered_set<VECTOR2I, POINT_HASH> ringPoints;
-        std::unordered_set<VECTOR2I, POINT_HASH> extra;
-        size_t                                   segments = 0;
+        size_t segments = 0;
 
         for( const std::vector<VECTOR2I>& pts : aRings )
-        {
-            ringPoints.insert( pts.begin(), pts.end() );
             segments += pts.size();
-        }
 
-        for( const auto& polygon : aTriangles )
-        {
-            for( const auto& t : polygon )
-            {
-                for( const VECTOR2I& pt : t )
-                {
-                    if( !ringPoints.count( pt ) )
-                        extra.insert( pt );
-                }
-            }
-        }
+        std::sort( aExtra.begin(), aExtra.end(),
+                   []( const VECTOR2I& a, const VECTOR2I& b )
+                   {
+                       return std::tie( a.x, a.y ) < std::tie( b.x, b.y );
+                   } );
+        aExtra.erase( std::unique( aExtra.begin(), aExtra.end() ), aExtra.end() );
 
-        if( extra.empty() || segments == 0 )
-            return;
+        if( aExtra.empty() || segments == 0 )
+            return false;
 
         // A grid of the ring segments, to find those an extra point lies on
         BOX2I extent;
@@ -319,7 +326,7 @@ private:
         // Points to insert in each segment, with their distance from its start
         std::map<std::pair<int, int>, std::vector<std::pair<double, VECTOR2I>>> inserts;
 
-        for( const VECTOR2I& pt : extra )
+        for( const VECTOR2I& pt : aExtra )
         {
             int cx, cy;
             cell( pt.x, pt.y, cx, cy );
@@ -355,6 +362,8 @@ private:
             // Segments are visited from the last, so earlier indices stay valid
             pts.insert( pts.begin() + where.second + 1, add.begin(), add.end() );
         }
+
+        return !inserts.empty();
     }
 
     void add( const std::vector<VECTOR2I>& aPoints, bool aHole )
@@ -473,12 +482,6 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill,
                                        const std::vector<std::vector<TRIANGLE>>& aTriangles,
                                        wxString* aWhy, bool aQuickTests )
 {
-    RINGS rings( aFill, aTriangles );
-
-    // A fill thinner than the triangulator resolves (a degenerate sliver) has nothing to cover
-    if( rings.Area() <= rings.Perimeter() * TOLERANCE_NM / 2.0 + 1e6 )
-        return true;
-
     // Directed triangle edges as (from x, from y, to x, to y), sorted below for pairing
     std::vector<std::array<int, 4>> edges;
     double triArea = 0.0;
@@ -528,22 +531,18 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill,
         }
     }
 
-    // Also not needed for the guarantee; a cheap first test that catches most failures
-    if( aQuickTests && std::abs( triArea - rings.Area() ) > rings.Perimeter() * TOLERANCE_NM / 2.0 + 1e6 )
-    {
-        if( aWhy )
-            *aWhy = wxString::Format( wxS( "triangles cover %.6f mm2 of a %.6f mm2 fill" ),
-                                      triArea / 1e12, rings.Area() / 1e12 );
-
-        return false;
-    }
-
-    // Edges a triangle shares, in the opposite direction, with another cancel out; every other
-    // edge must run along the outline (RINGS::OnBoundary) and stands for the piece of outline
-    // it runs along
+    // Edges a triangle shares, in the opposite direction, with another cancel out; the rest
+    // are boundary edges or failures
     std::sort( edges.begin(), edges.end() );
 
-    std::vector<RINGS::ARC> arcs;
+    struct UNPAIRED
+    {
+        VECTOR2I from, to;
+        int      count, reverseCount;
+    };
+
+    std::vector<UNPAIRED> unpaired;
+    std::vector<VECTOR2I> ends;
 
     for( size_t ii = 0; ii < edges.size(); )
     {
@@ -557,29 +556,60 @@ bool DRC_ZONE_TRIANGULATION::Validate( const SHAPE_POLY_SET& aFill,
         std::array<int, 4> reverseKey = { edge[2], edge[3], edge[0], edge[1] };
         auto               range = std::equal_range( edges.begin(), edges.end(), reverseKey );
         int                reverseCount = (int) ( range.second - range.first );
-        VECTOR2I           from( edge[0], edge[1] );
-        VECTOR2I           to( edge[2], edge[3] );
-        RINGS::ARC         arc;
 
         ii = jj;
 
         if( count == reverseCount )
             continue;
 
-        if( count == 1 && reverseCount == 0 && rings.OnBoundary( from, to, arc ) )
+        unpaired.push_back( { VECTOR2I( edge[0], edge[1] ), VECTOR2I( edge[2], edge[3] ), count,
+                              reverseCount } );
+
+        if( count == 1 && reverseCount == 0 )
+        {
+            ends.push_back( unpaired.back().from );
+            ends.push_back( unpaired.back().to );
+        }
+    }
+
+    RINGS rings( aFill, ends );
+
+    // A fill thinner than the triangulator resolves (a degenerate sliver) has nothing to cover
+    if( rings.Area() <= rings.Perimeter() * TOLERANCE_NM / 2.0 + 1e6 )
+        return true;
+
+    // Also not needed for the guarantee; a cheap first test that catches most failures
+    if( aQuickTests && std::abs( triArea - rings.Area() ) > rings.Perimeter() * TOLERANCE_NM / 2.0 + 1e6 )
+    {
+        if( aWhy )
+            *aWhy = wxString::Format( wxS( "triangles cover %.6f mm2 of a %.6f mm2 fill" ),
+                                      triArea / 1e12, rings.Area() / 1e12 );
+
+        return false;
+    }
+
+    // Every unpaired edge must run along the outline (RINGS::OnBoundary) and stands for the
+    // piece of outline it runs along
+    std::vector<RINGS::ARC> arcs;
+
+    for( const UNPAIRED& edge : unpaired )
+    {
+        RINGS::ARC arc;
+
+        if( edge.count == 1 && edge.reverseCount == 0 && rings.OnBoundary( edge.from, edge.to, arc ) )
         {
             arcs.push_back( arc );
             continue;
         }
 
-        if( reverseCount > count )
+        if( edge.reverseCount > edge.count )
             continue;   // reported from the other direction
 
         if( aWhy )
         {
             *aWhy = wxString::Format( wxS( "triangle edge (%d, %d)-(%d, %d) is neither shared nor on "
                                            "the outline the right way round" ),
-                                      from.x, from.y, to.x, to.y );
+                                      edge.from.x, edge.from.y, edge.to.x, edge.to.y );
         }
 
         return false;
