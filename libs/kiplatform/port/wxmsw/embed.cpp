@@ -19,9 +19,11 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
 #include <cstdlib>
 #include <cstdarg>
 #include <string>
+#include <vector>
 
 #include <wx/app.h>
 #include <wx/window.h>
@@ -84,7 +86,7 @@ void trace( const char* aFormat, ... )
     if( !file )
         return;
 
-    char    line[512];
+    char    line[4096];   // a stall line carries a whole stack
     va_list args;
     va_start( args, aFormat );
     vsnprintf( line, sizeof( line ), aFormat, args );
@@ -403,6 +405,79 @@ std::string KIPLATFORM::EMBED::MainThreadStack()
 }
 
 
+namespace
+{
+/// The popup menus of this thread on screen, with the monitor and DPI context they were placed
+/// in (embed trace only, once per menu): where Windows put a context menu and why.
+void traceMenuPlacement( HWND aFrame )
+{
+    static HWND s_lastMenu = nullptr;
+
+    if( !traceFile() )
+        return;
+
+    std::vector<HWND> menus;
+
+    EnumThreadWindows(
+            GetCurrentThreadId(),
+            []( HWND aWindow, LPARAM aList ) -> BOOL
+            {
+                char cls[16] = {};
+                GetClassNameA( aWindow, cls, sizeof( cls ) );
+
+                if( strcmp( cls, "#32768" ) == 0 && IsWindowVisible( aWindow ) )
+                    reinterpret_cast<std::vector<HWND>*>( aList )->push_back( aWindow );
+
+                return TRUE;
+            },
+            reinterpret_cast<LPARAM>( &menus ) );
+
+    if( menus.empty() || menus.front() == s_lastMenu )
+        return;
+
+    s_lastMenu = menus.front();
+
+    POINT cursor = {};
+    GetCursorPos( &cursor );
+
+    MONITORINFO monitor = {};
+    monitor.cbSize = sizeof( monitor );
+    GetMonitorInfoW( MonitorFromPoint( cursor, MONITOR_DEFAULTTONEAREST ), &monitor );
+
+    // Per-monitor DPI functions are Windows 10 1607+: looked up, not linked
+    typedef UINT( WINAPI * GETDPIFORWINDOW )( HWND );
+    typedef HANDLE( WINAPI * GETTHREADDPICONTEXT )();
+    typedef int( WINAPI * GETAWARENESS )( HANDLE );
+    HMODULE user32 = GetModuleHandleW( L"user32.dll" );
+    auto    dpiFor = reinterpret_cast<GETDPIFORWINDOW>( GetProcAddress( user32, "GetDpiForWindow" ) );
+    auto    threadContext = reinterpret_cast<GETTHREADDPICONTEXT>(
+            GetProcAddress( user32, "GetThreadDpiAwarenessContext" ) );
+    auto    awareness = reinterpret_cast<GETAWARENESS>(
+            GetProcAddress( user32, "GetAwarenessFromDpiAwarenessContext" ) );
+    HWND    root = GetAncestor( aFrame, GA_ROOT );
+
+    std::string line;
+
+    for( HWND menu : menus )
+    {
+        RECT r = {};
+        GetWindowRect( menu, &r );
+        line += "menu " + describe( menu ) + " at (" + std::to_string( r.left ) + "," + std::to_string( r.top )
+                + "," + std::to_string( r.right - r.left ) + "," + std::to_string( r.bottom - r.top ) + "); ";
+    }
+
+    RECT m = monitor.rcMonitor;
+    RECT w = monitor.rcWork;
+    trace( "context menu placed: %scursor (%ld,%ld); monitor (%ld,%ld,%ld,%ld) work (%ld,%ld,%ld,%ld); "
+           "dpi frame %u root %s %u; thread awareness %d",
+           line.c_str(), cursor.x, cursor.y, m.left, m.top, m.right, m.bottom, w.left, w.top, w.right,
+           w.bottom, dpiFor ? dpiFor( aFrame ) : 0u, describe( root ).c_str(),
+           dpiFor && root ? dpiFor( root ) : 0u,
+           threadContext && awareness ? awareness( threadContext() ) : -1 );
+}
+} // namespace
+
+
 void KIPLATFORM::EMBED::TraceLine( const std::string& aLine )
 {
     trace( "%s", aLine.c_str() );
@@ -642,6 +717,18 @@ bool KIPLATFORM::EMBED::ReleaseStrayCapture( wxWindow* aFrame )
     HWND frame = static_cast<HWND>( aFrame->GetHWND() );
     bool buttonDown = ( GetKeyState( VK_LBUTTON ) & 0x8000 ) || ( GetKeyState( VK_RBUTTON ) & 0x8000 )
                       || ( GetKeyState( VK_MBUTTON ) & 0x8000 );
+
+    // While a menu is up its modal loop owns the capture (ReleaseCapture fails there): leave it,
+    // and say once where Windows put the menu, against what KiCad asked for
+    GUITHREADINFO gui = {};
+    gui.cbSize = sizeof( gui );
+
+    if( GetGUIThreadInfo( GetCurrentThreadId(), &gui )
+        && ( gui.flags & ( GUI_INMENUMODE | GUI_POPUPMENUMODE ) ) )
+    {
+        traceMenuPlacement( frame );
+        return false;
+    }
 
     // The frame itself never needs the capture between clicks (its canvas and sashes take
     // their own); held, every later click goes to it instead of the canvas
