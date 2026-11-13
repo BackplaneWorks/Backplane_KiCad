@@ -137,6 +137,43 @@ def main():
                     or sorted(e.checks.progress_id for e in done) == sorted(ids) ),
               f"a second RunChecks is refused while one runs, or runs after it with its own result "
               f"(status {second.status.status}, done for {[e.checks.progress_id for e in done]})")
+        # bp.13 batch 5: during a run, reads are answered (within a bound) and a change is refused
+        # with the task named; refill_zones makes the run long enough to land requests inside it
+        events()
+        api.request_raw(embed.RunChecks(kind=embed.FK_PCB, parity=True, refill_zones=True))
+        reads, refusal, inside, finished = [], None, False, False
+        t_end = time.monotonic() + 120
+        while time.monotonic() < t_end:
+            t0 = time.monotonic()
+            r = api.request_raw(editor.GetOpenDocuments(type=base.DOCTYPE_PCB))
+            g = api.request_raw(embed.GetFrames())
+            dt = time.monotonic() - t0
+            finished = finished or any(e.type == embed.ET_CHECKS_DONE for e in events())
+            if not finished:
+                inside = True
+                reads.append((r.status.status, g.status.status, dt))
+                if refusal is None:
+                    sel = editor.BeginCommit(header=base.ItemHeader(document=docs.documents[0]))
+                    refusal = api.request_raw(sel)
+            else:
+                break
+        check(inside and reads and all(a == api.envelope.AS_OK and b == api.envelope.AS_OK for a, b, _ in reads),
+              f"during RunChecks, GetOpenDocuments and GetFrames are answered ({len(reads)} pairs inside the run)")
+        if reads:
+            worst = max(dt for _, _, dt in reads)
+            check(worst < 2.0, f"... each pair within 2 s while the run goes on (worst {worst:.2f} s)")
+        check(refusal is not None and refusal.status.status == api.envelope.AS_BUSY
+              and "a task is running:" in refusal.status.error_message and "token" in refusal.status.error_message,
+              f"a change during the run is refused with the task named "
+              f"({refusal.status.error_message[:120] if refusal is not None else 'not sent'})")
+        if refusal is not None and refusal.status.status == api.envelope.AS_OK:
+            begin = editor.BeginCommitResponse()
+            refusal.message.Unpack(begin)
+            api.request_raw(editor.EndCommit(header=base.ItemHeader(document=docs.documents[0]), id=begin.id,
+                                             action=editor.CMA_DROP))
+        if not finished:
+            wait_for(lambda: any(e.type == embed.ET_CHECKS_DONE for e in events()), 300, 0.2)
+
         other = api.request_raw(embed.RunChecks(kind=embed.FK_PCB_3D))
         check(other.status.status != api.envelope.AS_OK, "RunChecks for FK_PCB_3D is refused")
 

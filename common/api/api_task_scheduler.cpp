@@ -146,6 +146,26 @@ std::shared_ptr<API_TASK> API_TASK_SCHEDULER::GetFinishedTask( const std::string
 }
 
 
+std::optional<API_TASK_SCHEDULER::RUNNING> API_TASK_SCHEDULER::RunningTask() const
+{
+    std::lock_guard<std::mutex> lock( m_mutex );
+
+    for( const auto& [token, entry] : m_tasks )
+    {
+        if( !entry->finished )
+        {
+            RUNNING r;
+            r.token = token;
+            r.description = entry->description;
+            r.seconds = std::chrono::duration<double>( std::chrono::steady_clock::now() - entry->started ).count();
+            return r;
+        }
+    }
+
+    return std::nullopt;
+}
+
+
 bool API_TASK_SCHEDULER::AnyTaskRunning() const
 {
     std::lock_guard<std::mutex> lock( m_mutex );

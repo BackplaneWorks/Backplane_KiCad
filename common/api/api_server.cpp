@@ -425,7 +425,10 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
 
     // Only allow-listed API requests can be handled while a task is running; anything else
     // is assumed to possible mess with state that the task might be depending on not changing.
-    if( request.has_message() && API_TASK_SCHEDULER::Instance().AnyTaskRunning() )
+    std::optional<API_TASK_SCHEDULER::RUNNING> runningTask =
+            request.has_message() ? API_TASK_SCHEDULER::Instance().RunningTask() : std::nullopt;
+
+    if( runningTask )
     {
         std::string requestType;
 
@@ -444,13 +447,18 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
                 }
             }
 
-            if( typeHandled && !allowedDuringTask )
+            // Reads are answered during a task (it runs on this thread and serves the API only in its
+            // progress yields, so a read sees a consistent document); only changes wait for it
+            if( typeHandled && !allowedDuringTask && !isReadOnlyRequest( requestType ) )
             {
                 ApiResponse error;
                 error.mutable_header()->set_kicad_token( m_token );
                 error.mutable_status()->set_status( ApiStatusCode::AS_BUSY );
-                error.mutable_status()->set_error_message(
-                        "a task is running; only task status and result queries are available until it completes" );
+                error.mutable_status()->set_error_message( fmt::format(
+                        "a task is running: {} (token {}, for {:.1f} s); changes wait until it "
+                        "completes (GetTaskStatus with the token); reads are answered",
+                        runningTask->description.ToStdString( wxConvUTF8 ), runningTask->token,
+                        runningTask->seconds ) );
                 m_server->Reply( error.SerializeAsString() );
 
                 if( ADVANCED_CFG::GetCfg().m_EnableAPILogging )

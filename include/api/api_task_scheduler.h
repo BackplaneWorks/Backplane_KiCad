@@ -20,6 +20,7 @@
 #ifndef KICAD_API_TASK_SCHEDULER_H
 #define KICAD_API_TASK_SCHEDULER_H
 
+#include <chrono>
 #include <deque>
 #include <map>
 #include <memory>
@@ -91,6 +92,16 @@ public:
     /// @return true if a task is currently running
     bool AnyTaskRunning() const;
 
+    /// The running task, if any: its token, its description and how long it has run.
+    struct RUNNING
+    {
+        std::string token;
+        wxString    description;
+        double      seconds = 0.0;
+    };
+
+    std::optional<RUNNING> RunningTask() const;
+
     /**
      * Run the current task to completion, synchronously.  The scheduler normally pumps
      * itself via QueueEvent; hosts without a running event loop (unit tests) use this.
@@ -103,6 +114,7 @@ private:
         std::string               token;
         wxString                  description;
         std::shared_ptr<API_TASK> task;
+        std::chrono::steady_clock::time_point started = std::chrono::steady_clock::now();
         bool                      finished = false;
         bool                      failed = false;
         std::string               failureMessage;
