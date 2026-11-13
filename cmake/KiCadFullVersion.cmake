@@ -27,6 +27,12 @@
 include( ${KICAD_CMAKE_MODULE_PATH}/CreateGitVersionHeader.cmake )
 create_git_version_header( ${SRC_PATH} )
 
+# Backplane: a build from a tree that is not the commit's own checkout (a patched copy on a build
+# box) names the commit it was built from; it wins over git's, which would be the copy's base.
+if( BACKPLANE_SOURCE_COMMIT MATCHES "^[0-9a-f]+$" )
+    set( KICAD_COMMIT_HASH "${BACKPLANE_SOURCE_COMMIT}" )
+endif()
+
 # $KICAD_VERSION is set in KiCadVersion.cmake or by git (if it is available).
 set( KICAD_VERSION_FULL "${KICAD_VERSION}" )
 

@@ -130,7 +130,7 @@ static int printBackplaneDescription()
 {
     nlohmann::json description = {
         { "manifestVersion", 2 },
-        { "sourceRepository", "https://github.com/i2cjak/Backplane_KiCad" },
+        { "sourceRepository", "https://github.com/BackplaneWorks/Backplane_KiCad" },
         { "sourceCommit", GetCommitHash().ToStdString() },
         { "upstreamCommit", BACKPLANE_UPSTREAM_COMMIT },
         { "version", BACKPLANE_FORK_VERSION },
