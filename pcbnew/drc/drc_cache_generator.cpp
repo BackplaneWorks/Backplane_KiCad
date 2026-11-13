@@ -28,6 +28,7 @@
 #include <drc/drc_engine.h>
 #include <drc/drc_rtree.h>
 #include <drc/drc_cache_generator.h>
+#include <drc/drc_zone_triangulation.h>
 #include <mutex>
 #include <algorithm>
 #include <cmath>
@@ -482,6 +483,16 @@ bool DRC_CACHE_GENERATOR::Run()
 
                 if( std::getenv( "KICAD_DRC_CHECK_TRIANGULATION" ) )
                     checkZoneTriangulation( aZone );
+
+                if( !aZone->GetIsRuleArea() && aZone->IsOnCopperLayer() )
+                {
+                    aZone->GetLayerSet().RunOnLayers(
+                            [&]( PCB_LAYER_ID layer )
+                            {
+                                if( IsCopperLayer( layer ) )
+                                    DRC_ZONE_TRIANGULATION::Check( aZone, layer );
+                            } );
+                }
 
                 if( !aZone->GetIsRuleArea() && aZone->IsOnCopperLayer() )
                 {
