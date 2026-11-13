@@ -226,9 +226,27 @@ LRESULT CALLBACK holderProc( HWND aHwnd, UINT aMsg, WPARAM aWParam, LPARAM aLPar
     {
         // A click inside activates the host's window as a click on its own child would.  Not
         // asked of the container: a host's container may be WS_EX_NOACTIVATE itself.
+        HWND foreground = GetForegroundWindow();
         trace( "WM_MOUSEACTIVATE hit %d msg 0x%x -> MA_ACTIVATE (fg %s, focus %s)",
                (int) (short) LOWORD( aLParam ), (unsigned) HIWORD( aLParam ),
-               describe( GetForegroundWindow() ).c_str(), describe( GetFocus() ).c_str() );
+               describe( foreground ).c_str(), describe( GetFocus() ).c_str() );
+
+        // With the host's window truly foreground, the click can leave no foreground window at
+        // all (Windows F3: focus in the shared queue, keys reach nothing).  While this thread
+        // handles the user's click it may activate; activate only the host's own top-level,
+        // before any key arrives, never another application's window.
+        HWND root = GetAncestor( s_parent, GA_ROOT );
+
+        if( root && IsWindow( root ) && foreground != root
+            && !( foreground && IsChild( root, foreground ) ) )
+        {
+            BOOL ok = SetForegroundWindow( root );
+            DWORD err = ok ? 0 : GetLastError();
+            trace( "click activates host root %s: %s (error %lu), fg now %s",
+                   describe( root ).c_str(), ok ? "ok" : "failed", (unsigned long) err,
+                   describe( GetForegroundWindow() ).c_str() );
+        }
+
         return MA_ACTIVATE;
     }
 
