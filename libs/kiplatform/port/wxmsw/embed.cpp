@@ -43,6 +43,8 @@ HWND                     s_holder = nullptr;
 HWND                     s_parent = nullptr;   ///< the container the holder belongs in, or null
 
 constexpr UINT_PTR HOLDER_TIMER = 1;
+constexpr UINT FOCUS_CANVAS_MESSAGE = WM_APP + 0x103;
+constexpr wchar_t FOCUS_CANVAS_PROPERTY[] = L"Backplane.AsyncFocus.1";
 
 
 /// BACKPLANE_KICAD_EMBED_TRACE: "1" (a log in %TEMP%) or a file path.  Each line also goes to
@@ -189,6 +191,37 @@ void park( HWND aHolder )
 
 LRESULT CALLBACK holderProc( HWND aHwnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam )
 {
+    if( aMsg == FOCUS_CANVAS_MESSAGE )
+    {
+        // The parent token rejects a request queued before reparent/park. Resolve the
+        // registered frame/canvas only on this UI thread; never trust a foreign wx pointer.
+        HWND frame = reinterpret_cast<HWND>( aWParam );
+        HWND parent = reinterpret_cast<HWND>( aLParam );
+        HWND host = s_hooks.hostToplevel
+                            ? reinterpret_cast<HWND>( s_hooks.hostToplevel() ) : nullptr;
+        HWND foreground = GetForegroundWindow();
+        GUITHREADINFO info = {};
+        info.cbSize = sizeof( info );
+
+        bool valid = aHwnd == s_holder && parent && parent == s_parent
+                     && IsWindow( parent ) && GetParent( aHwnd ) == parent
+                     && IsWindowVisible( aHwnd ) && frame && IsWindow( frame )
+                     && IsChild( aHwnd, frame ) && IsWindowVisible( frame )
+                     && IsWindowEnabled( frame ) && host && IsWindow( host )
+                     && ( foreground == host || IsChild( host, foreground ) );
+
+        if( !GetGUIThreadInfo( GetCurrentThreadId(), &info ) || info.hwndCapture
+            || ( info.flags & ( GUI_INMENUMODE | GUI_POPUPMENUMODE | GUI_SYSTEMMENUMODE ) ) )
+            valid = false;
+
+        bool focused = valid && s_hooks.focusCanvas
+                       && s_hooks.focusCanvas( reinterpret_cast<uint64_t>( frame ) );
+        trace( "async canvas focus %s parent %s: %s; %s", describe( frame ).c_str(),
+               describe( parent ).c_str(), focused ? "accepted" : "ignored",
+               KIPLATFORM::EMBED::InputState().c_str() );
+        return 0;
+    }
+
     if( aMsg == WM_MOUSEACTIVATE && s_parent )
     {
         // A click inside activates the host's window as a click on its own child would.  Not
@@ -584,6 +617,7 @@ uint64_t KIPLATFORM::EMBED::CreateHolder( uint64_t aParent )
 
     s_holder = holder;
     s_parent = parent;
+    SetPropW( holder, FOCUS_CANVAS_PROPERTY, reinterpret_cast<HANDLE>( 1 ) );
 
     if( parent )
         becomeChildOf( holder, parent );

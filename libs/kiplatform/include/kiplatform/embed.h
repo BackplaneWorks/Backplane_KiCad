@@ -56,6 +56,10 @@ namespace EMBED
 
         /// The host moved the holder into another of its windows, which is the parent now.
         std::function<void( uint64_t aParent )> reparented;
+
+        /// A validated asynchronous host request for the shown frame's canvas keyboard focus.
+        /// Called on the KiCad UI thread; false if the frame/canvas is unavailable or blocked.
+        std::function<bool( uint64_t aFrame )> focusCanvas;
     };
 
     /// A line for the platform's embed trace (Windows: BACKPLANE_KICAD_EMBED_TRACE's log and

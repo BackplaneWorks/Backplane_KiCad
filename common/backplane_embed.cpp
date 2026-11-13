@@ -211,6 +211,34 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
                 m_parent = aParent;
                 PushEvent( EMBED_EVENT_TYPE::ATTACHED, {}, std::to_string( aParent ) );
             };
+    hooks.focusCanvas =
+            [this]( uint64_t aWindow )
+            {
+                if( !m_enabled || ModalBlocker() )
+                    return false;
+
+                for( const FRAME_ENTRY& e : m_frames )
+                {
+                    if( e.window != aWindow || !e.frame || e.frame->IsBeingDeleted()
+                        || !e.frame->IsEnabled() || !KIPLATFORM::EMBED::IsMapped( e.frame ) )
+                        continue;
+
+                    wxWindow* canvas = e.ops.canvas ? e.ops.canvas() : nullptr;
+
+                    if( !canvas || canvas->IsBeingDeleted() || !canvas->IsShownOnScreen()
+                        || !canvas->IsEnabled() || !canvas->AcceptsFocus()
+                        || !e.frame->IsDescendant( canvas ) )
+                        return false;
+
+                    // Use the wx virtual method: EDA_DRAW_PANEL_GAL also resets m_lostFocus.
+                    // Focusing the frame instead lets wx's control container pick a toolbar.
+                    canvas->SetFocus();
+                    sendFocusMessage( e.frame );
+                    return true;
+                }
+
+                return false;
+            };
 
     KIPLATFORM::EMBED::NoteMainThread();
     KIPLATFORM::EMBED::Install( hooks );

@@ -376,3 +376,17 @@ every later click from the canvas, so a right click opened no menu.
   ~10 ms on the demo board).
 - KiCad's 3D viewer binds Ctrl+Tab / Shift+Tab to cycle its presets and viewports; with the
   default reserved keys Ctrl+Tab goes to the host instead.
+# Windows asynchronous canvas focus
+
+The holder advertises native property `Backplane.AsyncFocus.1` (value 1).
+After the person chooses Edit or an editor tab, the host may post `WM_APP+0x103`
+to that holder, with `wParam` the shown frame HWND and `lParam` its current host
+container HWND. This is an inbound request, distinct from the outbound focus/key
+notifications `WM_APP+0x101` and `WM_APP+0x102`.
+
+The holder rejects parked, reparented, hidden or unknown targets, foreign foreground
+windows, mouse capture, menus and modal dialogs. On KiCad's UI thread it resolves
+the registered frame's tool canvas and calls its wx `SetFocus()` method (which also
+resets the GAL's lost-focus state), then sends the usual host focus notification.
+Posting `WM_ACTIVATE` to a wx child does not implement this protocol. Older holders
+without the property do not accept the request.

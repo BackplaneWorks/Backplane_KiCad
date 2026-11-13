@@ -368,6 +368,7 @@ EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
     ops.document = [this]() { return GetCurrentFileName(); };
     ops.modified = [this]() { return IsContentModified(); };
     ops.settingsChanged = [this]() { CommonSettingsChanged( 0 ); };
+    ops.canvas = [this]() { return GetToolCanvas(); };
     ops.watchedFiles = [this]() { return EmbedWatchedFiles(); };
     ops.syncSideFiles = [this]() { EmbedSyncSideFiles(); };
     ops.reload = [this]() { return EmbedReload(); };

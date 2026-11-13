@@ -138,6 +138,7 @@ struct EMBED_FRAME_OPS
     std::function<bool()>                      reload;           ///< reload, keeping the view
     std::function<void( const wxString& )>     showConflict;     ///< infobar; empty hides it
     std::function<bool()>                      busy;             ///< a dialog or tool is active
+    std::function<wxWindow*()>                 canvas;           ///< the frame's tool canvas
     std::function<void()>                      syncSideFiles;    ///< merge external project/rules changes
 };
 
