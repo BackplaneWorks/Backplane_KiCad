@@ -11,7 +11,7 @@ only that.
   editor, both when the host has hidden it and when it is still shown behind the board.
 - Open Footprint from the board still posts ET_EDITOR_REQUESTED with the footprint's lib_id.
 - RunAction reaches the editor that has the action: eeschema.InspectionTool.runERC opens the ERC
-  dialog, pcbnew.InspectionTool.runDRC the DRC one, and an unknown action is not answered OK.
+  dialog, pcbnew.DRCTool.runDRC the DRC one, and an unknown action is not answered OK.
 
 Runs on a private Xvfb + i3 with a python-xlib stand-in host.
 """
@@ -139,8 +139,8 @@ def main():
         # A board action still runs on the board, and an unknown one is refused
         show(embed.FK_PCB)
         time.sleep(1)
-        ran = api.request(editor.RunAction(action="pcbnew.InspectionTool.runDRC"), editor.RunActionResponse)
-        check(ran.status == editor.RAS_OK, f"RunAction pcbnew.InspectionTool.runDRC answers RAS_OK ({ran.status})")
+        ran = api.request(editor.RunAction(action="pcbnew.DRCTool.runDRC"), editor.RunActionResponse)
+        check(ran.status == editor.RAS_OK, f"RunAction pcbnew.DRCTool.runDRC answers RAS_OK ({ran.status})")
         opened = [e.detail for e in collect(8) if e.type == embed.ET_DIALOG_OPENED]
         check(any("DRC" in d or "Design Rules" in d for d in opened),
               f"RunAction runDRC opens the DRC dialog (ET_DIALOG_OPENED {opened})")
