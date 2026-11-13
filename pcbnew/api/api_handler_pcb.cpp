@@ -71,6 +71,8 @@
 #include <pcb_point.h>
 #include <kiway.h>
 #include <drc/drc_item.h>
+#include <rc_json_schema.h>
+#include <units_provider.h>
 #include <drc/drc_rule.h>
 #include <jobs/job_export_pcb_3d.h>
 #include <jobs/job_export_pcb_dxf.h>
@@ -3511,6 +3513,30 @@ void API_HANDLER_PCB::FillEmbedMarker( kiapi::backplane::embed::Marker* aOut, PC
 
     if( aMarker->GetLayer() != UNDEFINED_LAYER )
         aOut->set_layer( aBoard->GetLayerName( aMarker->GetLayer() ).ToStdString( wxConvUTF8 ) );
+
+    aOut->set_group( aMarker->GetMarkerType() == MARKER_BASE::MARKER_RATSNEST ? "unconnected"
+                     : aMarker->GetMarkerType() == MARKER_BASE::MARKER_PARITY ? "parity"
+                                                                               : "violation" );
+    aOut->set_comment( aMarker->GetComment().ToStdString( wxConvUTF8 ) );
+
+    // The items as kicad-cli's JSON report describes them (its own code, millimetres as its default)
+    UNITS_PROVIDER         units( pcbIUScale, EDA_UNITS::MM );
+    BOARD_RC_ITEM_RESOLVER resolver( *aBoard );
+    RC_JSON::VIOLATION     violation;
+    rcItem->GetJsonViolation( violation, &units, severity, resolver );
+
+    for( const RC_JSON::AFFECTED_ITEM& item : violation.items )
+    {
+        kiapi::backplane::embed::MarkerItem* out = aOut->add_items_detail();
+        out->mutable_id()->set_value( item.uuid.ToStdString( wxConvUTF8 ) );
+        out->set_description( item.description.ToStdString( wxConvUTF8 ) );
+
+        if( EDA_ITEM* resolved = resolver.ResolveItemById( KIID( item.uuid ) ) )
+        {
+            out->mutable_at_nm()->set_x_nm( resolved->GetPosition().x );
+            out->mutable_at_nm()->set_y_nm( resolved->GetPosition().y );
+        }
+    }
 }
 
 

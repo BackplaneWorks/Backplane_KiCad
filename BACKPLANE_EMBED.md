@@ -386,6 +386,11 @@ that no progress window is ever mapped.
   `exclusion`), message, position in nm, the items' KIIDs, the marker's own KIID, the custom rule's
   name when one fired, the layer (FK_PCB) or the sheet's KIID path (FK_SCH). `include_host` is
   for the host's own markers (SetHostMarkers, a later branch).
+  Each marker also has `items_detail`: its items as `kicad-cli`'s JSON report gives them
+  (`items[]`, built by the same code: the same `description` text, e.g. "Pad 1 [/SHPHLD] of SW3 on
+  F.Cu"), with the item's `id`, `at_nm` and, for FK_SCH, the item's own `sheet_path`. `group` says
+  which list of the CLI report it is in: `violation`, `unconnected` (DRC's unconnected items) or
+  `parity` (schematic parity); all three are markers. `comment` is an exclusion's reason.
 - `SelectItems` takes `ids` (exact items by KIID, with the references, pins and nets; unknown ones
   come back in `ids_not_found`), `zoom_box_nm` (zoom to fit, overrides `zoom`), `at_nm` (centre
   there at the current scale) and, for FK_SCH, `sheet_path` (show that sheet first). A host's

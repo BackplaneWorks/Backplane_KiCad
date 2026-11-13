@@ -455,6 +455,21 @@ message Marker
   kiapi.common.types.KIID          id         = 9;  // the marker's own KIID
   string                           rule       = 10; // the custom rule's name, if one fired
   string                           layer      = 11; // FK_PCB: the layer name
+  // bp.13: each item as kicad-cli's JSON report gives it (items[]: the same description text,
+  // e.g. "Pad 1 [/SHPHLD] of SW3 on F.Cu"), so a row keyed from either run is the same row
+  repeated MarkerItem               items_detail = 12;
+  string                           group      = 13; // "violation" | "unconnected" | "parity":
+                                                    // the CLI report's list it is in
+  string                           comment    = 14; // an exclusion's reason, as the person wrote it
+}
+
+message MarkerItem
+{
+  kiapi.common.types.KIID    id          = 1;
+  string                     description = 2;  // the CLI report's items[].description
+  kiapi.common.types.Vector2 at_nm       = 3;  // the item's position (items[].pos), nm
+  string                     sheet_path  = 4;  // FK_SCH: this item's sheet (KIID path); the two
+                                               // items of one ERC violation can sit on different sheets
 }
 
 message GetMarkersResponse

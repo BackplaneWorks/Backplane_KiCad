@@ -59,6 +59,9 @@
 #include <tool/host_markers_tool.h>
 #include <view/view_controls.h>
 #include <rc_item.h>
+#include <rc_json_schema.h>
+#include <units_provider.h>
+#include <erc/erc_item.h>
 #include <set>
 #include <io/kicad/kicad_io_utils.h>
 #include <ki_error.h>
@@ -3146,7 +3149,7 @@ namespace
 {
 /// kiapi.backplane.embed.Marker for one ERC marker on aPath's sheet.
 void fillEmbedSchMarker( kiapi::backplane::embed::Marker* aOut, SCH_MARKER* aMarker,
-                         const SCH_SHEET_PATH& aPath )
+                         const SCH_SHEET_PATH& aPath, const SCH_SHEET_LIST& aSheets )
 {
     std::shared_ptr<RC_ITEM> rcItem = aMarker->GetRCItem();
 
@@ -3171,6 +3174,41 @@ void fillEmbedSchMarker( kiapi::backplane::embed::Marker* aOut, SCH_MARKER* aMar
 
     aOut->set_sheet_path( aPath.Path().AsString().ToStdString( wxConvUTF8 ) );
     aOut->mutable_id()->set_value( aMarker->m_Uuid.AsStdString() );
+    aOut->set_group( "violation" );
+    aOut->set_comment( aMarker->GetComment().ToStdString( wxConvUTF8 ) );
+
+    // The items as kicad-cli's JSON report describes them (its own code, millimetres as its
+    // default), each with its own sheet: a violation's two items can be on different sheets
+    UNITS_PROVIDER       units( schIUScale, EDA_UNITS::MM );
+    SCH_RC_ITEM_RESOLVER resolver( aSheets );
+    RC_JSON::VIOLATION   violation;
+    rcItem->GetJsonViolation( violation, &units, severity, resolver );
+
+    ERC_ITEM* ercItem = dynamic_cast<ERC_ITEM*>( rcItem.get() );
+    KIID      mainId = rcItem->GetMainItemID();
+
+    for( const RC_JSON::AFFECTED_ITEM& item : violation.items )
+    {
+        kiapi::backplane::embed::MarkerItem* out = aOut->add_items_detail();
+        KIID                                 id( item.uuid );
+        out->mutable_id()->set_value( item.uuid.ToStdString( wxConvUTF8 ) );
+        out->set_description( item.description.ToStdString( wxConvUTF8 ) );
+
+        if( EDA_ITEM* resolved = resolver.ResolveItemById( id ) )
+        {
+            out->mutable_at_nm()->set_x_nm( static_cast<int64_t>( resolved->GetPosition().x ) * 100 );
+            out->mutable_at_nm()->set_y_nm( static_cast<int64_t>( resolved->GetPosition().y ) * 100 );
+        }
+
+        const SCH_SHEET_PATH* sheet = &aPath;
+
+        if( ercItem && id == mainId && ercItem->MainItemHasSheetPath() )
+            sheet = &ercItem->GetMainItemSheetPath();
+        else if( ercItem && id != mainId && ercItem->AuxItemHasSheetPath() )
+            sheet = &ercItem->GetAuxItemSheetPath();
+
+        out->set_sheet_path( sheet->Path().AsString().ToStdString( wxConvUTF8 ) );
+    }
 }
 } // namespace
 
@@ -3315,7 +3353,7 @@ void API_HANDLER_SCH::onCanvasClick()
         if( marker->GetRCItem() && view->IsVisible( marker ) && marker->HitTest( at, radius ) )
         {
             kiapi::backplane::embed::Marker out;
-            fillEmbedSchMarker( &out, marker, path );
+            fillEmbedSchMarker( &out, marker, path, editor->Schematic().Hierarchy() );
             BACKPLANE_EMBED::Get().MarkerClicked( editor, std::string(), std::string(), out.SerializeAsString() );
             return;
         }
@@ -3341,7 +3379,9 @@ API_HANDLER_SCH::handleGetMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed
     embed::GetMarkersResponse response;
     std::set<KIID>            seen;   // a screen shared by sheet instances: once, on the first
 
-    for( const SCH_SHEET_PATH& path : frame()->Schematic().Hierarchy() )
+    const SCH_SHEET_LIST      sheets = frame()->Schematic().Hierarchy();
+
+    for( const SCH_SHEET_PATH& path : sheets )
     {
         for( SCH_ITEM* item : path.LastScreen()->Items().OfType( SCH_MARKER_T ) )
         {
@@ -3350,7 +3390,7 @@ API_HANDLER_SCH::handleGetMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed
             if( !marker->GetRCItem() || !seen.insert( marker->m_Uuid ).second )
                 continue;
 
-            fillEmbedSchMarker( response.add_markers(), marker, path );
+            fillEmbedSchMarker( response.add_markers(), marker, path, sheets );
         }
     }
 
