@@ -26,6 +26,7 @@
 #include <cctype>
 #include <chrono>
 #include <cstdio>
+#include <fmt/format.h>
 
 #include <wx/app.h>
 #include <wx/dialog.h>
@@ -585,6 +586,9 @@ void BACKPLANE_EMBED::OnFrameDestroyed( wxFrame* aFrame )
     closed.document = it->document;
     closed.frameName = aFrame->GetName();
 
+    if( it->awaitDrawn )
+        m_awaitingDrawn--;
+
     m_frames.erase( it );
     m_conflicts.erase( aFrame );
     m_prewarming.erase( aFrame );
@@ -626,6 +630,16 @@ bool BACKPLANE_EMBED::ShowEmbedded( wxFrame* aFrame, bool aShow )
     // The host may have unmapped it itself (a local tab switch); wx still thinks it shown
     if( aShow )
         KIPLATFORM::EMBED::EnsureMapped( aFrame );
+
+    // ET_FRAME_DRAWN follows its canvas's first redraw on screen (CanvasDrawn)
+    if( FRAME_ENTRY* e = entry( aFrame ) )
+    {
+        if( aShow != e->awaitDrawn )
+            m_awaitingDrawn += aShow ? 1 : -1;
+
+        e->awaitDrawn = aShow;
+        e->shownAt = std::chrono::steady_clock::now();
+    }
 
     // A frame first laid out at another size (its default, or the parked holder's) and resized
     // natively while hidden can keep that layout: on Windows the canvas stayed a narrow column
@@ -1917,6 +1931,29 @@ void BACKPLANE_EMBED::EndPrewarm( wxFrame* aFrame )
         wxSize size = aFrame->GetSize();
         KIPLATFORM::EMBED::SetFrameGeometry( aFrame, 0, 0, size.x, size.y );
     }
+}
+
+
+void BACKPLANE_EMBED::CanvasDrawn( wxWindow* aCanvas )
+{
+    if( m_awaitingDrawn <= 0 || !aCanvas )
+        return;
+
+    wxFrame*     frame = dynamic_cast<wxFrame*>( wxGetTopLevelParent( aCanvas ) );
+    FRAME_ENTRY* e = frame ? entry( frame ) : nullptr;
+
+    if( !e || !e->awaitDrawn || m_prewarming.count( frame ) || !KIPLATFORM::EMBED::IsMapped( frame ) )
+        return;
+
+    e->awaitDrawn = false;
+    m_awaitingDrawn--;
+
+    double ms = std::chrono::duration<double, std::milli>( std::chrono::steady_clock::now() - e->shownAt )
+                        .count();
+    wxSize size = aCanvas->GetClientSize();
+    TraceNote( "embed:drawn@" + frame->GetName().ToStdString( wxConvUTF8 ) );
+    PushEvent( EMBED_EVENT_TYPE::FRAME_DRAWN, info( *e ),
+               fmt::format( "{{\"ms\":{:.1f},\"canvas\":[{},{}]}}", ms, size.x, size.y ) );
 }
 
 

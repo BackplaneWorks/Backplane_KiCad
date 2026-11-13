@@ -177,6 +177,15 @@ void EDA_BASE_FRAME::commonInit( FRAME_T aFrameType )
 
     KIPLATFORM::UI::SetWMClass( this, Pgm().GetDesktopAppId() );
 
+#ifdef __WXGTK__
+    // Embedded: shown at once.  wxGTK otherwise defers a top-level window's first Show() until
+    // the window manager reports its frame extents, which no window manager does for a frame in
+    // the host's holder: the first frame of the process then stayed unmapped (the host hid and
+    // showed it again after wx's 1 s timeout).
+    if( BACKPLANE_EMBED::Get().Enabled() )
+        m_deferShow = false;
+#endif
+
     initExitKey();
 }
 

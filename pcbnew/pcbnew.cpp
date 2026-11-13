@@ -20,6 +20,7 @@
  */
 
 #include <backplane_embed.h>
+#include <optional>
 #include <pgm_base.h>
 #include <eda_pattern_match.h>
 #include <background_jobs_monitor.h>
@@ -338,7 +339,9 @@ static struct IFACE : public KIFACE_BASE, public UNITS_PROVIDER
         {
         case FRAME_PCB_EDITOR:
         {
+            std::optional<BACKPLANE_EMBED::TRACE_SCOPE> trace( std::in_place, "create:pcb_frame" );
             auto frame = new PCB_EDIT_FRAME( aKiway, aParent );
+            trace.reset();
 
             if( Kiface().IsSingle() )
             {
