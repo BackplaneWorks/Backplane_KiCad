@@ -355,8 +355,9 @@ public:
     /**
      * The title of the modal or quasi-modal dialog (or modal frame) that is open, if one is.
      * While one is open, API requests that change state are refused with AS_BUSY.
+     * aNestedLoops false: only dialogs count, not a nested event loop (a popup menu runs one).
      */
-    static std::optional<wxString> ModalBlocker();
+    static std::optional<wxString> ModalBlocker( bool aNestedLoops = true );
 
     // Progress of long jobs (bp.12): in --embedded the progress dialogs stay hidden and report
     // here instead; the host hears ET_PROGRESS.  Begin/Update/End are main-thread only;

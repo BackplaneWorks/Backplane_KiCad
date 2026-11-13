@@ -219,7 +219,9 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
                 // FilterEvent never sees the key: a host-reserved chord would be lost to the menu.
                 // Close the popup and hand the chord to the host.  Not over a modal dialog: a
                 // dialog keeps every key.
-                if( !m_enabled || ModalBlocker() )
+                // The popup itself runs a nested event loop (wxGTK's PopupMenu), so only real
+                // dialogs count here
+                if( !m_enabled || ModalBlocker( false ) )
                     return false;
 
                 // The frame the popup belongs to: the focused one, else (a menu may take the
@@ -1059,7 +1061,7 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
 }
 
 
-std::optional<wxString> BACKPLANE_EMBED::ModalBlocker()
+std::optional<wxString> BACKPLANE_EMBED::ModalBlocker( bool aNestedLoops )
 {
     if( !wxTheApp )
         return std::nullopt;
@@ -1085,6 +1087,9 @@ std::optional<wxString> BACKPLANE_EMBED::ModalBlocker()
 
     if( KIPLATFORM::EMBED::NativeModalTitle( nativeTitle ) )
         return nativeTitle;
+
+    if( !aNestedLoops )
+        return std::nullopt;
 
     // A modal frame (a chooser) runs its own event loop.
     wxEventLoopBase* active = wxEventLoopBase::GetActive();
