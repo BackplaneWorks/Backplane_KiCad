@@ -102,12 +102,42 @@ KNOWN = json.loads((HERE / "backplane-stock-engine-known.json").read_text()) \
     if (HERE / "backplane-stock-engine-known.json").is_file() else []
 
 
-def known_engine_difference(project, kind, key):
+def item_sets(report_path, violation_type):
+    """The items of each violation of one type in a JSON report, as frozensets of their
+    descriptions (stable across loads, unlike a regenerated teardrop's UUID)."""
+    found = Counter()
+
+    def visit(node):
+        if isinstance(node, dict):
+            if node.get("type") == violation_type and "items" in node:
+                found[frozenset(str(i.get("description")) for i in node["items"])] += 1
+            for value in node.values():
+                visit(value)
+        elif isinstance(node, list):
+            for value in node:
+                visit(value)
+
+    if Path(report_path).is_file():
+        visit(json.loads(Path(report_path).read_text()))
+    return found
+
+
+def known_engine_difference(project, kind, key, counts=None, fork_report=None, stock_report=None):
     """A reviewed difference between the fork's (master's) checker and stock's, the same on the
-    native file and the export: scripts/backplane-stock-engine-known.json."""
+    native file and the export: scripts/backplane-stock-engine-known.json.  An entry with "items"
+    covers exactly those violations (each the set of its items' descriptions) the fork reports
+    and stock does not, nothing more."""
     for entry in KNOWN:
-        if entry.get("kind") == kind and entry.get("type") == key[1] \
-                and entry.get("project", project) in (project, "*"):
+        if entry.get("kind") != kind or entry.get("type") != key[1] \
+                or entry.get("project", project) not in (project, "*"):
+            continue
+        if "items" not in entry:
+            return True
+        if counts is None or fork_report is None or stock_report is None:
+            continue
+        want = Counter(frozenset(pair) for pair in entry["items"])
+        extra = item_sets(fork_report, key[1]) - item_sets(stock_report, key[1])
+        if extra == want and counts[0] - counts[1] == sum(want.values()):
             return True
     return False
 
@@ -164,7 +194,9 @@ def gate_project(fork, stock, source, work, fork_env, stock_env):
         for key in set(fork_export) | set(stock_found):
             if fork_export[key] != stock_found[key]:
                 engine[key] = (fork_export[key], stock_found[key])
-        unknown = {k: v for k, v in engine.items() if not known_engine_difference(name, kind, k)}
+        unknown = {k: v for k, v in engine.items()
+                   if not known_engine_difference(name, kind, k, v, reports / f"fork-export-{kind}.json",
+                                                  reports / f"stock-{kind}.json")}
         for k, v in engine.items():
             if k not in unknown:
                 print(f"  known engine difference {name} {kind} {k[1]}: fork {v[0]}, stock {v[1]}")

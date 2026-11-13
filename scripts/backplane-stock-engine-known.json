@@ -1,5 +1,6 @@
 [
   {"kind": "pcb", "type": "copper_outside_board", "project": "*", "why": "master's DRC reports copper outside the board outline; stock 10.0 does not have this check. Same count on the native board and the export."},
   {"kind": "pcb", "type": "hole_to_hole", "project": "*", "why": "master reports each hole pair in both orders (A-B and B-A), 10.0 once; same pairs and distances."},
-  {"kind": "sch", "type": "wired_implicit_power", "project": "*", "why": "master's ERC (9f93bd95ba, Run ERC on published connectivity, 2026-09-15) warns when a wire joins an implicit power net; 10.0 has no such check. Same count on the native schematic and the export."}
+  {"kind": "sch", "type": "wired_implicit_power", "project": "*", "why": "master's ERC (9f93bd95ba, Run ERC on published connectivity, 2026-09-15) warns when a wire joins an implicit power net; 10.0 has no such check. Same count on the native schematic and the export."},
+  {"kind": "pcb", "type": "clearance", "project": "complex_hierarchy", "items": [["PTH pad 3 [/ampli_ht_horizontal/S_OUT+] of RV301", "Zone [GND] on bottom_copper, priority 0"], ["Teardrop [/ampli_ht_horizontal/S_OUT+] on bottom_copper", "Zone [GND] on bottom_copper, priority 0"]], "why": "upstream DRC false positive, post-10.0, fixture-checked: GND fill vs RV301 pad 3 and its teardrop (bottom_copper). Upstream master f4c75f2513 reports the same two; the copper measures 0.5085/0.5115 mm against 0.508 (lane P)."}
 ]
