@@ -85,7 +85,8 @@ enum class EMBED_EVENT_TYPE : int
     AGENT_NOTICE = 21,
     PLAN_CHANGED = 22,
     AGENT_CONTROL = 23,
-    PROGRESS = 24
+    PROGRESS = 24,
+    FRAME_DRAWN = 28
 };
 
 /// Values match kiapi.backplane.embed.ThemeMode.
@@ -238,6 +239,12 @@ public:
 
     /// Turn embedding on (from the command line).  aParent/aToplevel may be 0 (attach later).
     bool Enable( uint64_t aParent, uint64_t aToplevel );
+
+    /**
+     * A canvas finished a redraw.  The first one in a frame mapped by ShowEmbedded posts
+     * ET_FRAME_DRAWN: the frame is on screen, laid out at its size and painted.
+     */
+    void CanvasDrawn( wxWindow* aCanvas );
 
     bool Enabled() const { return m_enabled; }
 
@@ -463,6 +470,29 @@ public:
         bool        m_on;
     };
 
+    /// Consecutive parts of one piece of work: Lap( "x" ) logs "<prefix>x" for the time since
+    /// the last lap (or the start).  Costs a clock read when not tracing.
+    struct TRACE_LAPS
+    {
+        explicit TRACE_LAPS( std::string aPrefix ) :
+                m_prefix( std::move( aPrefix ) ),
+                m_last( std::chrono::steady_clock::now() )
+        {}
+
+        void Lap( const char* aWhat )
+        {
+            std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+
+            if( Get().Tracing() )
+                Get().TraceSpan( m_prefix + aWhat, std::chrono::duration<double, std::milli>( now - m_last ).count() );
+
+            m_last = now;
+        }
+
+        std::string                           m_prefix;
+        std::chrono::steady_clock::time_point m_last;
+    };
+
     ~BACKPLANE_EMBED();
 
 private:
@@ -484,6 +514,8 @@ private:
         bool             shown = false;
         bool             focused = false;
         wxSize           shownSize;   ///< its size at the last ShowEmbedded; a change relayouts
+        bool             awaitDrawn = false;  ///< shown by ShowEmbedded, not yet drawn
+        std::chrono::steady_clock::time_point shownAt;
     };
 
     FRAME_ENTRY*       entry( const wxFrame* aFrame );
@@ -590,6 +622,7 @@ private:
     std::string       m_eventUrl;
     std::thread       m_eventThread;
     std::atomic<bool> m_eventShutdown{ false };
+    int               m_awaitingDrawn = 0;   ///< frames shown but not yet drawn (UI thread)
 };
 
 #endif // BACKPLANE_EMBED_H_

@@ -22,6 +22,7 @@
 
 #include <json_common.h>
 #include <backplane_embed.h>
+#include <chrono>
 #include <backplane/plan_undo_item.h>
 #include <backplane/plan_tool.h>
 #include <backplane/agents_panel.h>
@@ -242,6 +243,10 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     m_maximizeByDefault = true;
     m_showBorderAndTitleBlock = true;   // true to display sheet references
     m_SelTrackWidthBox = nullptr;
+    // Embedding-host traces (BACKPLANE_KICAD_FRAMETRACE): the constructor's parts
+    BACKPLANE_EMBED::TRACE_LAPS laps( "ctor:pcb:" );
+    auto lap = [&]( const char* aWhat ) { laps.Lap( aWhat ); };
+
     m_SelViaSizeBox = nullptr;
     m_SelViaStackBox = nullptr;
     m_CurrentVariantCtrl = nullptr;
@@ -276,6 +281,8 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     SetCanvas( canvas );
     SetBoard( new BOARD() );
 
+    lap( "canvas" );
+
     wxIcon icon;
     wxIconBundle icon_bundle;
 
@@ -296,6 +303,8 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     // initialize parameters in m_LayersManager
     LoadSettings( config() );
 
+    lap( "icons_settings" );
+
     SetScreen( new PCB_SCREEN( GetPageSettings().GetSizeIU( pcbIUScale.IU_PER_MILS ) ) );
 
     // PCB drawings start in the upper left corner.
@@ -304,12 +313,16 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     setupTools();
     setupUIConditions();
 
+    lap( "tools" );
+
     m_toolbarSettings = GetToolbarSettings<PCB_EDIT_TOOLBAR_SETTINGS>( "pcbnew-toolbars" );
     configureToolbars();
     RecreateToolbars();
     PrepareLayerIndicator( true );
 
     ReCreateMenuBar();
+
+    lap( "toolbars_menus" );
 
     wxTheApp->Bind( EDA_EVT_PLUGIN_AVAILABILITY_CHANGED,
                     &PCB_EDIT_FRAME::onPluginAvailabilityChanged, this );
@@ -321,14 +334,24 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     m_propertiesPanel = new PCB_PROPERTIES_PANEL( this, this );
     m_propertiesPanel->SetSplitterProportion( aui_cfg.properties_splitter );
 
+    lap( "panel:properties" );
     m_selectionFilterPanel = new PANEL_SELECTION_FILTER( this );
 
+    lap( "panel:selection_filter" );
     m_appearancePanel = new APPEARANCE_CONTROLS( this, GetCanvas() );
+    lap( "panel:appearance" );
     m_searchPane = new PCB_SEARCH_PANE( this );
+    lap( "panel:search" );
     m_netInspectorPanel = new PCB_NET_INSPECTOR_PANEL( this, this );
+    lap( "panel:net_inspector" );
     m_designBlocksPane = new PCB_DESIGN_BLOCK_PANE( this, nullptr, m_designBlockHistoryList );
+    lap( "panel:design_blocks" );
     m_constraintsPanel = new PANEL_CONSTRAINTS( this );
+    lap( "panel:constraints" );
     m_gitCommitPane = new GIT_COMMIT_PANE( this );
+    lap( "panel:git_commit" );
+
+    lap( "panels" );
 
     m_auimgr.SetManagedWindow( this );
 
@@ -466,6 +489,8 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
                               .CloseButton( true )
                               .Hide() );
 
+    lap( "aui_panes" );
+
     RestoreAuiLayout();
 
     // The Agents pane opens itself when an agent works (RefreshAgentZones); a saved layout (wx 3.3's
@@ -550,6 +575,8 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
                 PrepareLayerIndicator();
             } );
 
+    lap( "aui_layout" );
+
     GetToolManager()->PostAction( ACTIONS::zoomFitScreen );
 
     Bind( wxEVT_IDLE,
@@ -569,6 +596,7 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
           } );
 
     setupUnits( config() );
+    lap( "idle_binds_units" );
 
     // Ensure the DRC engine is initialized so that constraints can be resolved even before a
     // board is loaded or saved
@@ -580,8 +608,11 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     {
     }
 
+    lap( "drc_engine" );
+
     // Sync action plugins in case they changed since the last time the frame opened
     GetToolManager()->RunAction( ACTIONS::pluginsReload );
+    lap( "plugins_reload" );
 
     m_apiHandler = std::make_unique<API_HANDLER_PCB>( this );
     Pgm().GetApiServer().RegisterHandler( m_apiHandler.get() );
@@ -594,8 +625,10 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
         Pgm().GetApiServer().RegisterHandler( m_apiLibrariesHandler.get() );
     }
 
+    lap( "api_handlers" );
     resolveCanvasType();
     ActivateGalCanvas();
+    lap( "activate_gal" );
 
     // Default shutdown reason until a file is loaded
     KIPLATFORM::APP::SetShutdownBlockReason( this, _( "New PCB file is unsaved" ) );
@@ -679,6 +712,7 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
 
     Bind( EDA_EVT_CLOSE_DIALOG_BOOK_REPORTER, &PCB_EDIT_FRAME::onCloseModelessBookReporterDialogs, this );
     Bind( EDA_EVT_CLOSE_DIALOG_FOOTPRINT_FIELDS_TABLE, &PCB_EDIT_FRAME::onCloseFootprintFieldsTableDialog, this );
+    lap( "rest" );
 }
 
 
@@ -2228,6 +2262,7 @@ void PCB_EDIT_FRAME::SetActiveLayer( PCB_LAYER_ID aLayer, bool aForceRedraw )
 
 void PCB_EDIT_FRAME::OnBoardLoaded()
 {
+    BACKPLANE_EMBED::TRACE_LAPS laps( "open:pcb:board_loaded:" );
     wxFileName fn( GetBoard()->GetFileName() );
 
     ENUM_MAP<PCB_LAYER_ID>& layerEnum = ENUM_MAP<PCB_LAYER_ID>::Instance();
@@ -2244,6 +2279,7 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
         layerEnum.Map( layer, GetBoard()->GetLayerName( layer ) );
     }
 
+    laps.Lap( "layer_enum" );
     DRC_TOOL* drcTool = m_toolManager->GetTool<DRC_TOOL>();
 
     try
@@ -2256,7 +2292,9 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
         // we'll stay quiet for now.  Feel free to revisit this decision....
     }
 
+    laps.Lap( "drc_engine" );
     GetBoard()->InitializeClearanceCache();
+    laps.Lap( "clearance_cache" );
 
     // Migrate obsolete WRL 3D model references to current STEP models.  Only
     // runs in the GUI: CLI and scripting load paths must not mutate board
@@ -2296,6 +2334,7 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
         }
     }
 
+    laps.Lap( "migrate_3d" );
     UpdateTitle();
 
     // Display a warning that the file is read only
@@ -2308,13 +2347,17 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
     }
 
     ReCreateLayerBox();
+    laps.Lap( "title_layer_box" );
 
     // Sync layer and item visibility
     GetCanvas()->SyncLayersVisibility( m_pcb );
+    laps.Lap( "sync_visibility" );
 
     SetElementVisibility( LAYER_RATSNEST, GetPcbNewSettings()->m_Display.m_ShowGlobalRatsnest );
 
+    laps.Lap( "ratsnest_visibility" );
     m_appearancePanel->OnBoardChanged();
+    laps.Lap( "appearance_board_changed" );
 
     // Apply saved display state to the appearance panel after it has been set up
     PROJECT_LOCAL_SETTINGS& localSettings = Prj().GetLocalSettings();
@@ -2326,6 +2369,7 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
     else
         SetActiveLayer( GetActiveLayer(), true );   // Make sure to repaint even if not switching
 
+    laps.Lap( "preset_active_layer" );
     PROJECT_FILE& projectFile = Prj().GetProjectFile();
 
     m_layerPairSettings->SetLayerPairs( projectFile.m_LayerPairInfos );
@@ -2333,13 +2377,17 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
 
     // Updates any auto dimensions and the auxiliary toolbar tracks/via sizes
     unitsChangeRefresh();
+    laps.Lap( "layer_pairs_units" );
 
     // Sync the net inspector now we have connectivity calculated
     if( m_netInspectorPanel )
         m_netInspectorPanel->OnBoardChanged();
 
+    laps.Lap( "net_inspector" );
+
     // Display the loaded board:
     Zoom_Automatique( false );
+    laps.Lap( "zoom" );
 
     // The DRC engine above makes clearances computable, so only the items that draw a
     // clearance outline are stale; marking every item re-tessellates the whole board
@@ -2360,12 +2408,14 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
         }
     }
 
+    laps.Lap( "pad_updates" );
     Refresh();
 
     SetMsgPanel( GetBoard() );
     SetStatusText( wxEmptyString );
 
     KIPLATFORM::APP::SetShutdownBlockReason( this, _( "PCB file changes are unsaved" ) );
+    laps.Lap( "rest" );
 }
 
 

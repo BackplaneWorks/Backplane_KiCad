@@ -88,6 +88,10 @@ dialog's title; reads still work.
 
 Gate features on capability or command names, not on version numbers.
 
+Editor readiness: after a `ShowFrame`, `ET_FRAME_DRAWN` (capability `embed-frame-drawn`) says the
+frame's canvas finished its first redraw on screen; wait on it, with a cap (the 3D viewer has no
+drawing canvas and never posts it), instead of a fixed delay.
+
 Number ledger for `kiapi.backplane.embed` (fork-only, additive; take the next free number and add
 it here in the same change):
 
@@ -97,7 +101,7 @@ it here in the same change):
 | 25 | `ET_EDITOR_REQUESTED` (reserved, bp.13: editor tabs) | bp.13 |
 | 26 | `ET_MARKER_CLICKED` (reserved, bp.13: host markers) | bp.13 |
 | 27 | `ET_CHECKS_DONE` (reserved, bp.13: RunChecks) | bp.13 |
-| 28 | `ET_FRAME_DRAWN` (reserved, bp.13: cold start) | bp.13 |
+| 28 | `ET_FRAME_DRAWN` (cold start) | bp.13 |
 
 Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `files`; `Event` 8
 `marker`, 9 `checks`, 10 `drc_marker` (all reserved until their branch lands).
@@ -125,6 +129,12 @@ Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `f
   master refuses them headless (see "Headless limits").
 - Native files are no longer readable by stock KiCad 10.0.x; use the export above.
 - The SWIG `pcbnew` Python module no longer exists upstream; use IPC or `kicad-cli`.
+
+## Known issues
+
+- The design-block pane's preview (PCB and schematic editors) loads its colour theme once, when it
+  is created: after `SetTheme` (or the person changing theme) it keeps the old background and
+  item colours until the editor is reopened.  The editors' own canvases follow the change.
 
 ## Tests
 
