@@ -390,23 +390,24 @@ bool popupHasKeyboard( const GdkEventKey& aKey )
 }
 
 
-/// Every event passes through here before GTK: a key on its way to one of our popups is offered
-/// to the popupKey hook first, since the popup's grab keeps it from any frame and filter.
-void eventHandler( GdkEvent* aEvent, gpointer )
+/// A key snooper: GTK calls it for every key press before the grab widget (a popup menu) gets
+/// it.  A key bound for one of our popups is offered to the popupKey hook first, since the
+/// popup's grab keeps it from any frame and filter.  (Not gdk_event_handler_set: wxGTK's yield
+/// resets that handler to gtk_main_do_event every time it runs.)
+gint keySnooper( GtkWidget*, GdkEventKey* aKey, gpointer )
 {
-    if( aEvent->type == GDK_KEY_PRESS && s_hooks.popupKey && popupHasKeyboard( aEvent->key ) )
-    {
-        int code = 0;
-        int modifiers = 0;
+    if( aKey->type != GDK_KEY_PRESS || !s_hooks.popupKey || !popupHasKeyboard( *aKey ) )
+        return FALSE;
 
-        if( wxKeyFor( aEvent->key, code, modifiers )
-            && s_hooks.popupKey( code, modifiers, [aEvent]() { closePopup( aEvent ); } ) )
-        {
-            return;
-        }
-    }
+    int code = 0;
+    int modifiers = 0;
 
-    gtk_main_do_event( aEvent );
+    if( !wxKeyFor( *aKey, code, modifiers ) )
+        return FALSE;
+
+    GdkEvent* event = reinterpret_cast<GdkEvent*>( aKey );
+
+    return s_hooks.popupKey( code, modifiers, [event]() { closePopup( event ); } ) ? TRUE : FALSE;
 }
 } // namespace
 #endif
@@ -422,7 +423,9 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 
     s_installed = true;
     gdk_window_add_filter( nullptr, holderFilter, nullptr );
-    gdk_event_handler_set( eventHandler, nullptr, nullptr );
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+    gtk_key_snooper_install( keySnooper, nullptr );
+    G_GNUC_END_IGNORE_DEPRECATIONS
 
     guint mapSignal = g_signal_lookup( "map", GTK_TYPE_WIDGET );
     guint unmapSignal = g_signal_lookup( "unmap", GTK_TYPE_WIDGET );
