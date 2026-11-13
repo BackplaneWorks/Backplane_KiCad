@@ -140,6 +140,13 @@ Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `f
 `marker`, 9 `checks`, 10 `drc_marker`, 11 `reserved_key` (bp.13); messages `ReservedKey`,
 `SetHostGeometry` (macOS, bp.13).
 
+Libraries in `kicad --embedded`: at start only the footprint and symbol libraries the project's
+saved files name are loaded; the rest load on first need (a chooser, browser or editor, an update
+from the libraries, ERC; reported as `ET_PROGRESS`), and a library asked for by name loads alone at
+once. Results are the same as with everything loaded; memory per open project is about 2 GB lower
+with the stock tables. `BACKPLANE_KICAD_FULL_LIBRARY_PRELOAD=1` in KiCad's environment restores the
+full preload at start (an escape hatch).
+
 ## Files
 
 - Native files use upstream master's format (newer than KiCad 10.0.x). Custom properties and
