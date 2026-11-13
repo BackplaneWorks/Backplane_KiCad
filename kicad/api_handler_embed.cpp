@@ -269,7 +269,11 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
                                             "the project manager is not ready" ) );
         }
 
-        openFrame( kind, true );
+        {
+            BACKPLANE_EMBED::TRACE_SCOPE trace( "embed:open_frame" );
+            openFrame( kind, true );
+        }
+
         frame = embed.FindFrame( kind );
 
         if( !frame )

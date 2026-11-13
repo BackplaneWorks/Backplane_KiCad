@@ -22,6 +22,7 @@
 
 #include <json_common.h>
 #include <backplane_embed.h>
+#include <chrono>
 #include <backplane/plan_undo_item.h>
 #include <backplane/plan_tool.h>
 #include <backplane/agents_panel.h>
@@ -242,6 +243,21 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     m_maximizeByDefault = true;
     m_showBorderAndTitleBlock = true;   // true to display sheet references
     m_SelTrackWidthBox = nullptr;
+    // Embedding-host traces (BACKPLANE_KICAD_FRAMETRACE): the constructor's parts
+    std::chrono::steady_clock::time_point lapStart = std::chrono::steady_clock::now();
+    auto lap = [&]( const char* aWhat )
+    {
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+
+        if( BACKPLANE_EMBED::Get().Tracing() )
+        {
+            BACKPLANE_EMBED::Get().TraceSpan( std::string( "ctor:pcb:" ) + aWhat,
+                                              std::chrono::duration<double, std::milli>( now - lapStart ).count() );
+        }
+
+        lapStart = now;
+    };
+
     m_SelViaSizeBox = nullptr;
     m_SelViaStackBox = nullptr;
     m_CurrentVariantCtrl = nullptr;
@@ -276,6 +292,8 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     SetCanvas( canvas );
     SetBoard( new BOARD() );
 
+    lap( "canvas" );
+
     wxIcon icon;
     wxIconBundle icon_bundle;
 
@@ -296,6 +314,8 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     // initialize parameters in m_LayersManager
     LoadSettings( config() );
 
+    lap( "icons_settings" );
+
     SetScreen( new PCB_SCREEN( GetPageSettings().GetSizeIU( pcbIUScale.IU_PER_MILS ) ) );
 
     // PCB drawings start in the upper left corner.
@@ -304,12 +324,16 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     setupTools();
     setupUIConditions();
 
+    lap( "tools" );
+
     m_toolbarSettings = GetToolbarSettings<PCB_EDIT_TOOLBAR_SETTINGS>( "pcbnew-toolbars" );
     configureToolbars();
     RecreateToolbars();
     PrepareLayerIndicator( true );
 
     ReCreateMenuBar();
+
+    lap( "toolbars_menus" );
 
     wxTheApp->Bind( EDA_EVT_PLUGIN_AVAILABILITY_CHANGED,
                     &PCB_EDIT_FRAME::onPluginAvailabilityChanged, this );
@@ -321,14 +345,24 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     m_propertiesPanel = new PCB_PROPERTIES_PANEL( this, this );
     m_propertiesPanel->SetSplitterProportion( aui_cfg.properties_splitter );
 
+    lap( "panel:properties" );
     m_selectionFilterPanel = new PANEL_SELECTION_FILTER( this );
 
+    lap( "panel:selection_filter" );
     m_appearancePanel = new APPEARANCE_CONTROLS( this, GetCanvas() );
+    lap( "panel:appearance" );
     m_searchPane = new PCB_SEARCH_PANE( this );
+    lap( "panel:search" );
     m_netInspectorPanel = new PCB_NET_INSPECTOR_PANEL( this, this );
+    lap( "panel:net_inspector" );
     m_designBlocksPane = new PCB_DESIGN_BLOCK_PANE( this, nullptr, m_designBlockHistoryList );
+    lap( "panel:design_blocks" );
     m_constraintsPanel = new PANEL_CONSTRAINTS( this );
+    lap( "panel:constraints" );
     m_gitCommitPane = new GIT_COMMIT_PANE( this );
+    lap( "panel:git_commit" );
+
+    lap( "panels" );
 
     m_auimgr.SetManagedWindow( this );
 
@@ -466,6 +500,8 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
                               .CloseButton( true )
                               .Hide() );
 
+    lap( "aui_panes" );
+
     RestoreAuiLayout();
 
     // The Agents pane opens itself when an agent works (RefreshAgentZones); a saved layout (wx 3.3's
@@ -550,6 +586,8 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
                 PrepareLayerIndicator();
             } );
 
+    lap( "aui_layout" );
+
     GetToolManager()->PostAction( ACTIONS::zoomFitScreen );
 
     Bind( wxEVT_IDLE,
@@ -569,6 +607,7 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
           } );
 
     setupUnits( config() );
+    lap( "idle_binds_units" );
 
     // Ensure the DRC engine is initialized so that constraints can be resolved even before a
     // board is loaded or saved
@@ -580,8 +619,11 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     {
     }
 
+    lap( "drc_engine" );
+
     // Sync action plugins in case they changed since the last time the frame opened
     GetToolManager()->RunAction( ACTIONS::pluginsReload );
+    lap( "plugins_reload" );
 
     m_apiHandler = std::make_unique<API_HANDLER_PCB>( this );
     Pgm().GetApiServer().RegisterHandler( m_apiHandler.get() );
@@ -594,8 +636,10 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
         Pgm().GetApiServer().RegisterHandler( m_apiLibrariesHandler.get() );
     }
 
+    lap( "api_handlers" );
     resolveCanvasType();
     ActivateGalCanvas();
+    lap( "activate_gal" );
 
     // Default shutdown reason until a file is loaded
     KIPLATFORM::APP::SetShutdownBlockReason( this, _( "New PCB file is unsaved" ) );
@@ -679,6 +723,7 @@ PCB_EDIT_FRAME::PCB_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
 
     Bind( EDA_EVT_CLOSE_DIALOG_BOOK_REPORTER, &PCB_EDIT_FRAME::onCloseModelessBookReporterDialogs, this );
     Bind( EDA_EVT_CLOSE_DIALOG_FOOTPRINT_FIELDS_TABLE, &PCB_EDIT_FRAME::onCloseFootprintFieldsTableDialog, this );
+    lap( "rest" );
 }
 
 

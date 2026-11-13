@@ -184,6 +184,12 @@ enum EventType
   ET_PROGRESS          = 24; // a long job (load, zone fill, DRC, library load, plot) started,
                              // progressed or ended; Event.progress (bp.12).  In --embedded no
                              // progress window is shown; the host draws it
+  // 25-27 are taken by the bp.13 drafts (ET_EDITOR_REQUESTED, ET_MARKER_CLICKED, ET_CHECKS_DONE)
+  ET_FRAME_DRAWN       = 28; // after a ShowFrame, the frame's canvas finished its first redraw
+                             // on screen: mapped, laid out at its size and painted.  Once per
+                             // ShowFrame of a hidden frame; not for a prewarm.  detail = JSON
+                             // {ms (since the ShowFrame), canvas: [width, height]} (bp.13).  A
+                             // frame with no drawing canvas never posts it: cap the wait
 }
 
 message Event

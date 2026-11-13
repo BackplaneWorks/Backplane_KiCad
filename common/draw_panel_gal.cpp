@@ -655,6 +655,20 @@ bool EDA_DRAW_PANEL_GAL::DoRePaint( bool aAllowSkip )
     BACKPLANE_EMBED::TRACE_SCOPE trace( "gal_redraw@" + GetParent()->GetName().ToStdString( wxConvUTF8 ),
                                         0.5 );
 
+    // A redraw that completed (every completing path stamps m_lastRepaintEnd) tells the
+    // embedding host its frame is drawn (ET_FRAME_DRAWN, once per show)
+    struct DRAWN_NOTE
+    {
+        EDA_DRAW_PANEL_GAL*                   panel;
+        std::chrono::steady_clock::time_point before;
+
+        ~DRAWN_NOTE()
+        {
+            if( panel->m_lastRepaintEnd != before )
+                BACKPLANE_EMBED::Get().CanvasDrawn( panel );
+        }
+    } drawnNote{ this, m_lastRepaintEnd };
+
     if( !m_refreshMutex.try_lock() )
     {
         wxLogTrace( traceRhi, wxS( "DrawPanel: DoRePaint SKIP (mutex locked)" ) );

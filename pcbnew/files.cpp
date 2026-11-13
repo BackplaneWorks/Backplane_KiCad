@@ -21,6 +21,7 @@
  */
 
 #include <backplane_embed.h>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -559,6 +560,8 @@ bool PCB_EDIT_FRAME::EmbedReload()
 
 bool PCB_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, int aCtl )
 {
+    // Embedding-host traces (BACKPLANE_KICAD_FRAMETRACE): the open's parts, for cold-start timelines
+    BACKPLANE_EMBED::TRACE_SCOPE traceOpen( "open:pcb" );
     // This is for python:
     if( aFileSet.size() != 1 )
     {
@@ -811,8 +814,10 @@ bool PCB_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
                                 } );
                     };
 
+            std::optional<BACKPLANE_EMBED::TRACE_SCOPE> traceParse( std::in_place, "open:pcb:parse" );
             std::unique_ptr<BOARD> loaded =
                     BOARD_LOADER::Load( fullFileName, pluginType, &Prj(), loaderOptions );
+            traceParse.reset();
 
             if( loaded && props.count( IMPORT_PROJ_PROPS::NET_NAME_MAP ) )
             {
@@ -893,7 +898,12 @@ bool PCB_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
         progressReporter.KeepRefreshing();
 
         PROF_TIMER postLoadTimer;
-        SetBoard( loadedBoard, false, &progressReporter );
+
+        {
+            BACKPLANE_EMBED::TRACE_SCOPE trace( "open:pcb:set_board" );
+            SetBoard( loadedBoard, false, &progressReporter );
+        }
+
         wxLogTrace( traceAllegroPerf, wxT( "Post-load SetBoard: %.3f ms" ),
                     postLoadTimer.msecs( true ) );
 
@@ -1014,13 +1024,22 @@ bool PCB_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
 
     // Rebuild list of nets (full ratsnest rebuild)
     PROF_TIMER connectivityTimer;
-    GetBoard()->BuildConnectivity( &progressReporter );
+
+    {
+        BACKPLANE_EMBED::TRACE_SCOPE trace( "open:pcb:connectivity" );
+        GetBoard()->BuildConnectivity( &progressReporter );
+    }
+
     wxLogTrace( traceAllegroPerf, wxT( "Post-load BuildConnectivity: %.3f ms" ),
                 connectivityTimer.msecs( true ) );
 
     // Load project settings after setting up board; some of them depend on the nets list
-    LoadProjectSettings();
-    LoadDrawingSheet();
+    {
+        BACKPLANE_EMBED::TRACE_SCOPE trace( "open:pcb:settings" );
+        LoadProjectSettings();
+        LoadDrawingSheet();
+    }
+
     wxLogTrace( traceAllegroPerf, wxT( "Post-load LoadProjectSettings+DrawingSheet: %.3f ms" ),
                 connectivityTimer.msecs( true ) );
 
@@ -1036,7 +1055,11 @@ bool PCB_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
                 connectivityTimer.msecs( true ) );
 
     // Syncs the UI (appearance panel, etc) with the loaded board and project
-    OnBoardLoaded();
+    {
+        BACKPLANE_EMBED::TRACE_SCOPE trace( "open:pcb:board_loaded" );
+        OnBoardLoaded();
+    }
+
     wxLogTrace( traceAllegroPerf, wxT( "Post-load OnBoardLoaded: %.3f ms" ),
                 connectivityTimer.msecs( true ) );
     wxLogTrace( traceAllegroPerf, wxT( "=== Post-load pipeline total: %.3f ms ===" ),

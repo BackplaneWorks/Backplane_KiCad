@@ -127,7 +127,10 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
 
             // Only the GUI started with --embedded registers the embed commands.
             if( command == "kiapi.backplane.embed.GetFrames" )
+            {
                 reply.add_capabilities( "embed" );
+                reply.add_capabilities( "embed-frame-drawn" );   // ET_FRAME_DRAWN (bp.13)
+            }
         }
     }
 
