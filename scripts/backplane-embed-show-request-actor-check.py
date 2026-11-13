@@ -56,6 +56,10 @@ def main():
         def frames():
             return {f.kind: f for f in api.request(embed.GetFrames(), embed.GetFramesResponse).frames}
 
+        capabilities = api.module("backplane.capabilities")
+        caps = api.request(capabilities.GetCapabilities(), capabilities.GetCapabilitiesResponse)
+        check("embed-request-actor" in caps.capabilities, "GetCapabilities lists embed-request-actor")
+
         r = api.request(embed.ShowFrame(kind=embed.FK_PCB, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
         wait_for(lambda: viewable(s.host.display, r.frame.window), 60)
         time.sleep(2)
