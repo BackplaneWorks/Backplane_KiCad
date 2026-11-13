@@ -76,6 +76,8 @@ struct DRC_RULES_FILTER_RESULT
 {
     wxString              m_text;    ///< The filtered rules file text
     std::vector<wxString> m_dropped; ///< Names of the rules the target cannot parse
+    std::vector<wxString> m_droppedWhy;    ///< For each, what the target lacks or reads differently
+    std::vector<wxString> m_droppedChecks; ///< For each, what the rule checks (constraints, condition)
     wxString              m_error;   ///< Invalid source syntax, do not write m_text
 };
 
@@ -222,8 +224,17 @@ inline bool SplitDrcRuleBlocks( const std::vector<DRC_RULE_TOKEN>& aTokens, std:
 
 /// True if the rule uses something the target's parser or evaluator cannot handle.
 inline bool DrcRuleUnsupportedByTarget( const std::vector<DRC_RULE_TOKEN>& aTokens, const DRC_RULE_BLOCK& aBlock,
-                                        const DRC_RULE_VOCABULARY& aVocabulary )
+                                        const DRC_RULE_VOCABULARY& aVocabulary, std::string* aReason = nullptr )
 {
+    // Why, in the person's words, for the report: what the target lacks or reads differently
+    auto unsupported = [&]( const std::string& aWhy )
+    {
+        if( aReason )
+            *aReason = aWhy;
+
+        return true;
+    };
+
     std::vector<std::string> nodes;
     std::vector<std::string> words;
     std::string              expressions;
@@ -280,7 +291,7 @@ inline bool DrcRuleUnsupportedByTarget( const std::vector<DRC_RULE_TOKEN>& aToke
         {
             // A node with no head is not grammar for any reader.
             if( headPending )
-                return true;
+                return unsupported( "a node with no name" );
 
             nodes.pop_back();
             continue;
@@ -290,7 +301,7 @@ inline bool DrcRuleUnsupportedByTarget( const std::vector<DRC_RULE_TOKEN>& aToke
         {
             // A text variable is syntax, and a target without it fails to read the rule at all.
             if( !aVocabulary.m_textVariables )
-                return true;
+                return unsupported( "a ${...} text variable, which it cannot read" );
 
             std::string folded = token.m_text;
 
@@ -299,7 +310,7 @@ inline bool DrcRuleUnsupportedByTarget( const std::vector<DRC_RULE_TOKEN>& aToke
 
             // Releases before 10.0.6 read a component class selector as a reference designator.
             if( folded.find( "${class:" ) != std::string::npos )
-                return true;
+                return unsupported( "a ${class:...} component class selector, which it reads as a reference" );
         }
 
         if( headPending )
@@ -307,7 +318,7 @@ inline bool DrcRuleUnsupportedByTarget( const std::vector<DRC_RULE_TOKEN>& aToke
             headPending = false;
 
             if( token.m_type != DSN_SYMBOL )
-                return true;
+                return unsupported( "a node with no name" );
 
             nodes.back() = token.m_text;
             words.push_back( token.m_text );
@@ -361,7 +372,7 @@ inline bool DrcRuleUnsupportedByTarget( const std::vector<DRC_RULE_TOKEN>& aToke
             continue;
 
         if( !DrcVocabularyHas( aVocabulary.m_tokens, aVocabulary.m_tokenCount, word ) )
-            return true;
+            return unsupported( "'" + word + "', which it does not know" );
     }
 
     auto isWord = []( char c )
@@ -406,20 +417,20 @@ inline bool DrcRuleUnsupportedByTarget( const std::vector<DRC_RULE_TOKEN>& aToke
             for( const DRC_RULE_SEMANTIC_BREAK& broken : DRC_RULE_SEMANTIC_BREAKS )
             {
                 if( word == broken.m_function && std::string_view( aVocabulary.m_targetId ) == broken.m_targetId )
-                    return true;
+                    return unsupported( word + "(), which it evaluates differently" );
             }
 
             if( !DrcVocabularyHas( aVocabulary.m_functions, aVocabulary.m_functionCount, word ) )
-                return true;
+                return unsupported( word + "(), which it does not have" );
         }
         else if( prev > 0 && folded[prev - 1] == '.' )
         {
             // Parent navigation is new, but the old standalone Parent string property is supported.
             if( word == "parent" && next < folded.size() && folded[next] == '.' )
-                return true;
+                return unsupported( "Parent.<property> navigation, which it does not have" );
 
             if( !DrcVocabularyHas( aVocabulary.m_properties, aVocabulary.m_propertyCount, word ) )
-                return true;
+                return unsupported( "the property '" + word + "', which it does not have" );
         }
 
         i = end;
@@ -450,13 +461,52 @@ inline bool DrcRuleUnsupportedByTarget( const std::vector<DRC_RULE_TOKEN>& aToke
         if( before > 0 && std::isdigit( static_cast<unsigned char>( numeric[before - 1] ) )
             && !DrcVocabularyHas( aVocabulary.m_units, aVocabulary.m_unitCount, numeric.substr( i, end - i ) ) )
         {
-            return true;
+            return unsupported( "the unit '" + numeric.substr( i, end - i ) + "', which it does not know" );
         }
 
         i = end;
     }
 
     return false;
+}
+
+
+/// What a rule checks, for the person: its constraint kinds and condition, e.g. "track_width,
+/// clearance where A.intersectsArea('U1 fanout')".
+inline std::string DescribeDrcRule( const std::vector<DRC_RULE_TOKEN>& aTokens, const DRC_RULE_BLOCK& aBlock )
+{
+    std::string kinds;
+    std::string condition;
+    std::string pendingHead;
+
+    for( size_t i = aBlock.m_first; i <= aBlock.m_last; i++ )
+    {
+        const DRC_RULE_TOKEN& token = aTokens[i];
+
+        if( token.m_type == DSN_LEFT )
+        {
+            pendingHead = "?";
+            continue;
+        }
+
+        if( pendingHead == "?" )
+        {
+            pendingHead = token.m_text;
+            continue;
+        }
+
+        if( pendingHead == "constraint" )
+            kinds += ( kinds.empty() ? "" : ", " ) + token.m_text;
+        else if( pendingHead == "condition" && condition.empty() )
+            condition = token.m_text;
+
+        pendingHead.clear();
+    }
+
+    if( kinds.empty() )
+        kinds = "no constraint";
+
+    return condition.empty() ? kinds : kinds + " where " + condition;
 }
 
 
@@ -537,7 +587,8 @@ inline DRC_RULES_FILTER_RESULT FilterDrcRulesForTarget( const wxString& aRulesTe
             headerWritten = true;
         }
 
-        bool unsupported = block.m_head != "rule" || DrcRuleUnsupportedByTarget( tokens, block, *vocabulary );
+        std::string why = block.m_head != "rule" ? std::string( "not a rule" ) : std::string();
+        bool unsupported = block.m_head != "rule" || DrcRuleUnsupportedByTarget( tokens, block, *vocabulary, &why );
 
         result.m_text += prefix;
 
@@ -549,6 +600,8 @@ inline DRC_RULES_FILTER_RESULT FilterDrcRulesForTarget( const wxString& aRulesTe
         if( unsupported )
         {
             result.m_dropped.push_back( block.m_name );
+            result.m_droppedWhy.push_back( wxString::FromUTF8( why.c_str() ) );
+            result.m_droppedChecks.push_back( wxString::FromUTF8( DescribeDrcRule( tokens, block ).c_str() ) );
             result.m_text += wxT( "# Not supported by " ) + aTarget.m_name + wxT( ":" ) + eol;
             result.m_text += wxString::FromUTF8( CommentOutDrcBlock( body ).c_str() );
         }
