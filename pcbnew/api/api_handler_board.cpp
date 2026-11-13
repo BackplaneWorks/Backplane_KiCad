@@ -841,6 +841,20 @@ HANDLER_RESULT<RunActionResponse> API_HANDLER_BOARD::handleRunAction(
     if( std::optional<ApiResponseStatus> headless = checkForHeadless( "RunAction" ) )
         return tl::unexpected( *headless );
 
+    // A routing plan's approval is the person's (as ApprovePlan): never an agent's, by action either
+    static const std::set<std::string> personOnly = { "pcbnew.Plan.accept", "pcbnew.Plan.reject",
+                                                      "pcbnew.Plan.approveLayer",
+                                                      "pcbnew.Plan.rejectLayer" };
+
+    if( aCtx.ClientName.rfind( "agent:", 0 ) == 0 && personOnly.count( aCtx.Request.action() ) )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+        e.set_error_message( "approval is the person's: ask them to approve it in KiCad or in "
+                             "Backplane" );
+        return tl::unexpected( e );
+    }
+
     if( std::optional<ApiResponseStatus> busy = checkForBusy() )
         return tl::unexpected( *busy );
 

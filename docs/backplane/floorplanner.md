@@ -168,7 +168,9 @@ group status and layer status are all `approved`, and planes whose status is `ap
 Approval is the person's: `ApprovePlan` is refused for agent actors (`AS_BAD_REQUEST`,
 "approval is the person's") unless the hub marks the request as the person's own action (the
 Backplane UI's Approve button). An approved item that an agent then updates goes back to
-`proposed`.
+`proposed`. The same holds for the approval actions through `RunAction` (`pcbnew.Plan.accept`,
+`reject`, `approveLayer`, `rejectLayer`): refused for agent actors. `ApprovePlan` works while
+plan view is on; `RunAction` answers `AS_BUSY` then, as for any action while a tool runs.
 
 ## Routing from the plan
 
