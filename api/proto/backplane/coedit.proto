@@ -122,11 +122,29 @@ message ResolveCollisionResponse
 // engine (router, live DRC) uses the result at once.  Returns
 // kiapi.board.commands.CustomRulesResponse.  SetCustomDesignRules also merges per rule now (from
 // the rules this client last read with GetCustomDesignRules), but this is the precise way.
+//
+// `insert` says where the rules this edit adds go (names the file does not have yet), in the order
+// given; a rule it replaces keeps its place.  KiCad lets a later rule win, so a section that the
+// person's own rules should override goes first.  To move an existing rule, remove and upsert it in
+// one request (its comments go with the removal).  Capability "rules-insert-position".
+enum RuleInsertPosition
+{
+  RIP_LAST   = 0;  // after every other rule (before trailing comments at the end of the file)
+  RIP_FIRST  = 1;  // right after (version N) and the file's header comments: a comment block
+                   // set off from the first rule by a blank line stays on top; one touching
+                   // the rule stays with it
+  RIP_BEFORE = 2;  // above the rule named insert_before and its comments
+}
+
 message EditCustomRules
 {
-  kiapi.common.types.DocumentSpecifier board  = 1;
-  repeated kiapi.board.CustomRule      upsert = 2;
-  repeated string                      remove = 3;
+  kiapi.common.types.DocumentSpecifier board         = 1;
+  repeated kiapi.board.CustomRule      upsert        = 2;
+  repeated string                      remove        = 3;
+  RuleInsertPosition                   insert        = 4;
+  string                               insert_before = 5;  // RIP_BEFORE: a rule in the file that
+                                                           // this request does not remove, else
+                                                           // CRS_INVALID
 }
 
 // The host says what an agent is doing (Backplane: the thread's task, at each turn start, step and

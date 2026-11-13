@@ -1537,12 +1537,39 @@ HANDLER_RESULT<CustomRulesResponse> API_HANDLER_PCB::handleEditCustomRules(
 
     std::vector<std::string> removes( aCtx.Request.remove().begin(), aCtx.Request.remove().end() );
     std::string disk = readRulesFile();
-    std::string ours = BACKPLANE_MERGE::EditRules( disk, upserts, removes );
+
+    using kiapi::backplane::coedit::RuleInsertPosition;
+    BACKPLANE_MERGE::RULE_INSERT insert = BACKPLANE_MERGE::RULE_INSERT::LAST;
+    const std::string&           before = aCtx.Request.insert_before();
+
+    if( aCtx.Request.insert() == RuleInsertPosition::RIP_FIRST )
+    {
+        insert = BACKPLANE_MERGE::RULE_INSERT::FIRST;
+    }
+    else if( aCtx.Request.insert() == RuleInsertPosition::RIP_BEFORE )
+    {
+        insert = BACKPLANE_MERGE::RULE_INSERT::BEFORE;
+        bool inFile = false;
+
+        for( const BACKPLANE_MERGE::RULES_PART& part : BACKPLANE_MERGE::SplitRules( disk ) )
+            inFile |= part.key == "rule " + before;
+
+        if( !inFile || std::count( removes.begin(), removes.end(), before ) )
+        {
+            CustomRulesResponse response;
+            response.set_status( CRS_INVALID );
+            response.set_error_text( "insert_before: no rule '" + before + "' in the rules file"
+                                     + ( inFile ? " after this request's removals" : "" ) );
+            return response;
+        }
+    }
+
+    std::string ours = BACKPLANE_MERGE::EditRules( disk, upserts, removes, insert, before );
 
     // What this client believes afterwards: what it read before plus these edits.
     std::string belief = BACKPLANE_MERGE::EditRules(
             m_rulesBase.count( aCtx.ClientName ) ? m_rulesBase[aCtx.ClientName] : disk, upserts,
-            removes );
+            removes, insert, before );
 
     HANDLER_RESULT<CustomRulesResponse> written = writeMergedRules( aCtx.ClientName, disk, ours, disk,
                                                                    "Edit custom rules" );

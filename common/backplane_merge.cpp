@@ -419,8 +419,43 @@ std::string MergeRules( const std::string& aBase, const std::string& aOurs,
 }
 
 
+namespace
+{
+// Split a part's leading comments at their last blank line: what is above it is the file's
+// header (it stays on top when rules go first), the rest belongs to the form.
+std::string takeHeader( RULES_PART& aPart )
+{
+    size_t pos = 0, lastBlank = std::string::npos;
+
+    while( pos < aPart.text.size() )
+    {
+        size_t e = aPart.text.find( '\n', pos );
+        e = e == std::string::npos ? aPart.text.size() : e + 1;
+        std::string line = aPart.text.substr( pos, e - pos );
+        size_t      first = line.find_first_not_of( " \t\r\n" );
+
+        if( first == std::string::npos )
+            lastBlank = e;
+        else if( line[first] != '#' )
+            break;
+
+        pos = e;
+    }
+
+    if( lastBlank == std::string::npos )
+        return "";
+
+    std::string header = aPart.text.substr( 0, lastBlank );
+    aPart.text.erase( 0, lastBlank );
+    header.erase( header.find_last_not_of( " \t\r\n" ) + 1 );
+    return header;
+}
+} // namespace
+
+
 std::string EditRules( const std::string& aText, const std::vector<std::string>& aUpsertRuleTexts,
-                       const std::vector<std::string>& aRemoveNames )
+                       const std::vector<std::string>& aRemoveNames, RULE_INSERT aInsert,
+                       const std::string& aInsertBefore )
 {
     std::vector<RULES_PART> parts = SplitRules( aText );
     std::set<std::string>   remove( aRemoveNames.begin(), aRemoveNames.end() );
@@ -430,6 +465,24 @@ std::string EditRules( const std::string& aText, const std::vector<std::string>&
 
     if( parts.empty() || parts.front().key != "version" )
         parts.insert( parts.begin(), { "version", "(version 2)\n" } );
+
+    // Where the next new rule goes: an index into parts, moved past each one inserted.
+    auto keyAt = [&]( const std::string& aKey )
+    {
+        return std::find_if( parts.begin(), parts.end(),
+                             [&]( const RULES_PART& p ) { return p.key == aKey; } );
+    };
+
+    size_t at = parts.size();
+
+    if( aInsert == RULE_INSERT::BEFORE && keyAt( "rule " + aInsertBefore ) != parts.end() )
+        at = keyAt( "rule " + aInsertBefore ) - parts.begin();
+    else if( aInsert == RULE_INSERT::FIRST )
+        at = 1;
+    else if( !parts.empty() && parts.back().key == "trailing" )
+        at = parts.size() - 1;
+
+    bool headerTaken = false;
 
     for( const std::string& text : aUpsertRuleTexts )
     {
@@ -446,7 +499,22 @@ std::string EditRules( const std::string& aText, const std::vector<std::string>&
             it->text = ( text.find( '#' ) == 0 ? "" : comments ) + text;
         }
         else
-            parts.push_back( { key, text } );
+        {
+            if( aInsert == RULE_INSERT::FIRST && !headerTaken && at == 1 && parts.size() > 1 )
+            {
+                std::string header = takeHeader( parts[1] );
+                std::string& version = parts[0].text;
+
+                if( !header.empty() )
+                {
+                    version.erase( version.find_last_not_of( " \t\r\n" ) + 1 );
+                    version += "\n\n" + header + "\n";
+                }
+            }
+
+            headerTaken = true;
+            parts.insert( parts.begin() + at++, { key, text } );
+        }
     }
 
     return join( parts );

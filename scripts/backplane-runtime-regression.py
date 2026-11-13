@@ -23,7 +23,7 @@ from backplane_ipc_test_support import IpcSession
 CAPABILITIES = {"api-server", "headless-pcb", "headless-sch", "export-v10", "parent-pid",
                 "capabilities", "sketch-route", "board-structure", "assembly", "idle-exit",
                 "shutdown", "api-descriptor", "symbol-from-libid", "footprint-partial-update",
-                "drc-zone-guard"}
+                "drc-zone-guard", "rules-insert-position"}
 
 
 def check_describe(cli, env):

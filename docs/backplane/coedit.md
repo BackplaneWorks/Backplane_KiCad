@@ -123,7 +123,9 @@ The documents beside the board are edited by both sides too, and used to lose ed
 - **The custom rules** (`.kicad_dru`). `SetCustomDesignRules` rewrote the whole file from the
   client's list, and Board Setup's rules page wrote its whole text. Both now merge per rule (by
   name) from what they read, keeping comments and everything else. `EditCustomRules` upserts and
-  removes rules by name. The open board's DRC engine (router, live DRC) was loaded once, at board
+  removes rules by name; its `insert` puts the rules it adds last (the default), first (after
+  `(version N)` and the file's header comments) or `insert_before` a named rule, since KiCad lets a
+  later rule win: a fab section the person's own rules override goes first. The open board's DRC engine (router, live DRC) was loaded once, at board
   load: it now reloads whenever the rules change (API, Board Setup, or the file on disk).
 
 ## Visibility: what the agents are doing

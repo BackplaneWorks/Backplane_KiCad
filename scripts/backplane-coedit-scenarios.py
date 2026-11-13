@@ -305,6 +305,25 @@ def scenario_rules(k):
     check("1.5mm" in text and "the person's HV rule" in text, "the person's rule and comment survive")
     check(re.search(r'Agent-gap[\s\S]*0\.3', text) is not None, "the agent's rule change is in the file")
 
+    # A new rule can go first (KiCad lets a later rule win: a fab section the person's rules
+    # override), or above a named rule; an unknown name is refused.
+    fab = m["rules"].CustomRule(name="Fab-track")
+    fc = fab.constraints.add()
+    fc.type = m["rules"].CRCT_TRACK_WIDTH
+    fc.numeric.min = 127_000
+    first = m["coedit"].EditCustomRules(board=k.doc, insert=m["coedit"].RIP_FIRST)
+    first.upsert.add().CopyFrom(fab)
+    agent.request_raw(first)
+    text = rules_file.read_text()
+    check(text.find("Fab-track") < text.find("the person's HV rule") and "1.5mm" in text,
+          "EditCustomRules insert=RIP_FIRST puts the new rule above the person's")
+    bad = m["coedit"].EditCustomRules(board=k.doc, insert=m["coedit"].RIP_BEFORE,
+                                      insert_before="No-such-rule")
+    bad.upsert.add().CopyFrom(fab)
+    r = agent.request(bad, m["bcmd"].CustomRulesResponse)
+    check(r.status == m["bcmd"].CRS_INVALID and "No-such-rule" in r.error_text,
+          "insert_before an unknown rule is refused")
+
     # SetCustomDesignRules from the stale read must not undo the person's edit either.
     stale = m["bcmd"].SetCustomDesignRules(board=k.doc)
     for rr in read.rules:

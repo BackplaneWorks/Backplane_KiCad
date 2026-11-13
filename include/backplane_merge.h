@@ -71,11 +71,21 @@ KICOMMON_API std::string MergeRules( const std::string& aBase, const std::string
                                      const std::string& aTheirs,
                                      std::vector<CONFLICT>& aConflicts );
 
-/// Insert or replace rules by name in a rules file, and remove rules by name, leaving every
-/// other rule, comment and the header as they are.
+/// Where EditRules puts the rules it adds (a replaced rule keeps its place).
+enum class RULE_INSERT
+{
+    LAST,     ///< after every rule, before trailing comments
+    FIRST,    ///< after (version N) and the header comments (set off by a blank line)
+    BEFORE    ///< above the named rule and its comments; LAST if there is no such rule
+};
+
+/// Insert or replace rules by name in a rules file, and remove rules by name (removals first),
+/// leaving every other rule, comment and the header as they are.  New rules keep their order.
 KICOMMON_API std::string EditRules( const std::string& aText,
                                     const std::vector<std::string>& aUpsertRuleTexts,
-                                    const std::vector<std::string>& aRemoveNames );
+                                    const std::vector<std::string>& aRemoveNames,
+                                    RULE_INSERT aInsert = RULE_INSERT::LAST,
+                                    const std::string& aInsertBefore = "" );
 
 /// The name of a "(rule <name> ...)" form, or "".
 KICOMMON_API std::string RuleName( const std::string& aForm );

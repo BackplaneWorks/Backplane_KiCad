@@ -22,7 +22,7 @@
 namespace BACKPLANE
 {
 
-inline constexpr std::array<const char*, 19> CAPABILITIES = {
+inline constexpr std::array<const char*, 20> CAPABILITIES = {
     "api-server",
     "headless-pcb",
     "headless-sch",
@@ -42,6 +42,7 @@ inline constexpr std::array<const char*, 19> CAPABILITIES = {
     "routing-plan",    // docs/backplane/floorplanner.md: kiapi.backplane.plan
     "comment-key-handoff", // embedded: the comment action sends KEY_ATOM index 6; text fields keep ';'
     "drc-zone-guard",  // DRC checks a zone against its outline when its fill triangulation is bad
+    "rules-insert-position", // EditCustomRules.insert: new rules first, last or before a named rule
 };
 
 } // namespace BACKPLANE
