@@ -1,0 +1,10 @@
+# Boards the DRC equality gate does not compare byte for byte, each with what it checks instead.
+# board<TAB>mode<TAB>reason
+#  noload: the file is not a board; the gate requires that every build fails to load it (no report),
+#          so a board that silently stops producing a report cannot pass as equal
+#  counts: the report names arbitrary members of tied findings; the gate requires the same
+#          number of findings of each type, at 1 and 8 threads and against the base build
+qa/data/pcbnew/plugins/fakeboard.kicad_pcb	noload	29-byte text "A fake Board file for testing", a fixture for plugin file-type detection; kicad-cli: "Failed to load board" in every build
+qa/data/cli/artwork_generation_regressions/ZoneFill-4.0.7.kicad_pcb	counts	KiCad 4.0.7 file: 218 footprint lines have no stored UUID and get random ones at each load; which silkscreen segment "Silkscreen clearance" names follows them, so it changes run to run. Same in stock 10.0.8 (3 runs: 158 findings, same counts by type, different segments named)
+demos/complex_hierarchy/complex_hierarchy.kicad_pcb	fixed:of RV301|Teardrop [/ampli_ht_horizontal/S_OUT+]	the guard removes two false clearance errors at RV301 pad 3 and its teardrop (triangles over-covering the GND fill); the gate requires the guard's report to equal the base's less exactly findings naming RV301, nothing added
+qa/data/pcbnew/issue16182.kicad_pcb	basenondet	the base build names one of two coincident tracks by memory address (fixed in ratsnest_data.cpp with the guard), so its own reports differ between runs; the gate requires the guard build's reports byte-identical at 1 and 8 threads and the same counts by type as the base

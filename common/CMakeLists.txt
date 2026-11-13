@@ -1286,6 +1286,7 @@ set( PCB_COMMON_SRCS
     ${CMAKE_SOURCE_DIR}/pcbnew/drc/drc_engine.cpp
     ${CMAKE_SOURCE_DIR}/pcbnew/drc/drc_exclusion.cpp
     ${CMAKE_SOURCE_DIR}/pcbnew/drc/drc_cache_generator.cpp
+    ${CMAKE_SOURCE_DIR}/pcbnew/drc/drc_zone_triangulation.cpp
     ${CMAKE_SOURCE_DIR}/pcbnew/drc/drc_item.cpp
     ${CMAKE_SOURCE_DIR}/pcbnew/drc/drc_rule.cpp
     ${CMAKE_SOURCE_DIR}/pcbnew/drc/drc_rule_condition.cpp

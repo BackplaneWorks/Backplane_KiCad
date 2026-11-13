@@ -226,17 +226,14 @@ bool segments_intersect( const VECTOR2I& p1, const VECTOR2I& q1, const VECTOR2I&
 
 bool compareShapes( const CREEP_SHAPE* a, const CREEP_SHAPE* b )
 {
-    if( !a )
-        return true;
-
-    if( !b )
-        return false;
+    if( !a || !b )
+        return !a && b;
 
     if( a->GetType() != b->GetType() )
         return a->GetType() < b->GetType();
 
     if( a->GetType() == CREEP_SHAPE::TYPE::UNDEFINED )
-        return true;
+        return false;
 
     if( a->GetPos() != b->GetPos() )
         return a->GetPos() < b->GetPos();
@@ -627,8 +624,8 @@ void CREEPAGE_GRAPH::TransformCreepShapesToNodes( const std::vector<std::unique_
 
 void CREEPAGE_GRAPH::RemoveDuplicatedShapes()
 {
-    std::sort( m_shapeCollection.begin(), m_shapeCollection.end(),
-               []( const auto& a, const auto& b ) { return compareShapes( a.get(), b.get() ); } );
+    std::stable_sort( m_shapeCollection.begin(), m_shapeCollection.end(),
+                      []( const auto& a, const auto& b ) { return compareShapes( a.get(), b.get() ); } );
     size_t kept = 0;
 
     for( size_t i = 0; i < m_shapeCollection.size(); ++i )
@@ -2380,7 +2377,7 @@ double CREEPAGE_GRAPH::Solve( std::shared_ptr<GRAPH_NODE>& aFrom, std::shared_pt
     auto cmp = []( const QUEUE_ITEM& aLeft, const QUEUE_ITEM& aRight )
     {
         if( aLeft.first == aRight.first )
-            return aLeft.second > aRight.second; // Compare addresses to avoid ties.
+            return aLeft.second->m_id > aRight.second->m_id; // Creation order breaks ties.
         return aLeft.first > aRight.first;
     };
     std::priority_queue<QUEUE_ITEM, std::vector<QUEUE_ITEM>, decltype( cmp )> pq( cmp );
@@ -2637,7 +2634,6 @@ void CREEPAGE_GRAPH::GeneratePaths( double aMaxWeight, PCB_LAYER_ID aLayer,
     };
 
     std::vector<std::shared_ptr<GRAPH_NODE>> nodes;
-    std::mutex                               nodes_lock;
     thread_pool&                             tp = GetKiCadThreadPool();
 
     std::vector<CREEPAGE_TRACK_ENTRY*> trackEntries;
@@ -2677,11 +2673,12 @@ void CREEPAGE_GRAPH::GeneratePaths( double aMaxWeight, PCB_LAYER_ID aLayer,
                 return gn && gn->m_parent && gn->m_connectDirectly && ( gn->m_type != GRAPH_NODE::TYPE::VIRTUAL );
             } );
 
+    // Creation order, not parent addresses: the order nodes are grouped and paired in decides
+    // the order connections are created in, and so how ties between equal paths resolve
     std::sort( nodes.begin(), nodes.end(),
             []( const std::shared_ptr<GRAPH_NODE>& gn1, const std::shared_ptr<GRAPH_NODE>& gn2 )
             {
-                return gn1->m_parent < gn2->m_parent
-                        || ( gn1->m_parent == gn2->m_parent && gn1->m_net < gn2->m_net );
+                return gn1->m_id < gn2->m_id;
             } );
 
     // Build parent -> net -> nodes mapping for efficient filtering
@@ -2716,6 +2713,7 @@ void CREEPAGE_GRAPH::GeneratePaths( double aMaxWeight, PCB_LAYER_ID aLayer,
     {
         const BOARD_ITEM* parent;
         BOX2I             bbox;
+        size_t            index;    // first-appearance order, used to orient pairs
     };
 
     std::vector<ParentEntry> parentEntries;
@@ -2727,6 +2725,7 @@ void CREEPAGE_GRAPH::GeneratePaths( double aMaxWeight, PCB_LAYER_ID aLayer,
             ParentEntry entry;
             entry.parent = parent;
             entry.bbox = parent_bboxes[parent];
+            entry.index = parentEntries.size();
             parentEntries.push_back( entry );
         }
     }
@@ -2761,8 +2760,8 @@ void CREEPAGE_GRAPH::GeneratePaths( double aMaxWeight, PCB_LAYER_ID aLayer,
         {
             const BOARD_ITEM* parent2 = entry2->parent;
 
-            // Only process if parent1 < parent2 to avoid duplicates
-            if( parent1 >= parent2 )
+            // Only process each pair of parents once, in a fixed orientation
+            if( entry1.index >= entry2->index )
                 return true;
 
             // Precise bbox distance check
@@ -2913,7 +2912,22 @@ void CREEPAGE_GRAPH::GeneratePaths( double aMaxWeight, PCB_LAYER_ID aLayer,
         }
     }
 
-    auto processWorkItems =
+    // The pairs were collected in parallel and from maps keyed by address; put them in a fixed
+    // order, since the order they are applied in decides node and connection creation order
+    std::sort( work_items.begin(), work_items.end(),
+               []( const auto& aA, const auto& aB )
+               {
+                   if( aA.first->m_id != aB.first->m_id )
+                       return aA.first->m_id < aB.first->m_id;
+
+                   return aA.second->m_id < aB.second->m_id;
+               } );
+
+    // Finding a pair's valid paths is the expensive part and runs in parallel; adding the nodes
+    // and connections they produce happens afterwards, in work item order.
+    std::vector<std::vector<PATH_CONNECTION>> validPaths( work_items.size() );
+
+    auto findValidPaths =
             [&]( size_t idx ) -> bool
             {
                 auto& [gn1, gn2] = work_items[idx];
@@ -2943,13 +2957,21 @@ void CREEPAGE_GRAPH::GeneratePaths( double aMaxWeight, PCB_LAYER_ID aLayer,
                     bool valid = pc.isValid( m_board, aLayer, m_boardEdge, IgnoreForTest, m_boardOutline,
                                      { false, true }, m_minGrooveWidth, &trackIndex );
 
-                    if( !valid )
-                    {
-                        continue;
-                    }
+                    if( valid )
+                        validPaths[idx].push_back( pc );
+                }
 
+                return true;
+            };
+
+    auto applyWorkItem =
+            [&]( size_t idx )
+            {
+                auto& [gn1, gn2] = work_items[idx];
+
+                for( const PATH_CONNECTION& pc : validPaths[idx] )
+                {
                     std::shared_ptr<GRAPH_NODE> connect1 = gn1, connect2 = gn2;
-                    std::lock_guard<std::mutex> lock( nodes_lock );
 
                     // Handle non-point node1
                     if( gn1->m_parent->GetType() != CREEP_SHAPE::TYPE::POINT_TYPE )
@@ -2982,7 +3004,8 @@ void CREEPAGE_GRAPH::GeneratePaths( double aMaxWeight, PCB_LAYER_ID aLayer,
                     AddConnection( connect1, connect2, pc );
                 }
 
-                return true;
+                validPaths[idx].clear();
+                validPaths[idx].shrink_to_fit();
             };
 
     // If the number of tasks is high enough, this indicates that the calling process
@@ -2990,11 +3013,11 @@ void CREEPAGE_GRAPH::GeneratePaths( double aMaxWeight, PCB_LAYER_ID aLayer,
     if( tp.get_tasks_total() >= tp.get_thread_count() - 4 )
     {
         for( size_t ii = 0; ii < work_items.size(); ii++ )
-            processWorkItems( ii );
+            findValidPaths( ii );
     }
     else
     {
-        auto ret = tp.submit_loop( 0, work_items.size(), processWorkItems );
+        auto ret = tp.submit_loop( 0, work_items.size(), findValidPaths );
 
         for( size_t ii = 0; ii < ret.size(); ii++ )
         {
@@ -3006,6 +3029,9 @@ void CREEPAGE_GRAPH::GeneratePaths( double aMaxWeight, PCB_LAYER_ID aLayer,
             while( r.wait_for( std::chrono::milliseconds( 100 ) ) != std::future_status::ready ){}
         }
     }
+
+    for( size_t ii = 0; ii < work_items.size(); ii++ )
+        applyWorkItem( ii );
 
     // Clean up track entries
     for( CREEPAGE_TRACK_ENTRY* entry : trackEntries )
@@ -3057,6 +3083,7 @@ std::shared_ptr<GRAPH_NODE> CREEPAGE_GRAPH::AddNode( GRAPH_NODE::TYPE aType, CRE
         return gn;
 
     gn = std::make_shared<GRAPH_NODE>( aType, parent, pos );
+    gn->m_id = m_nextNodeId++;
     m_nodes.push_back( gn );
     m_nodeset.insert( gn );
     return gn;
@@ -3067,6 +3094,7 @@ std::shared_ptr<GRAPH_NODE> CREEPAGE_GRAPH::AddNodeVirtual()
 {
     //Virtual nodes are always unique, do not try to find them
     std::shared_ptr<GRAPH_NODE> gn = std::make_shared<GRAPH_NODE>( GRAPH_NODE::TYPE::VIRTUAL, nullptr );
+    gn->m_id = m_nextNodeId++;
     m_nodes.push_back( gn );
     m_nodeset.insert( gn );
     return gn;
@@ -3083,6 +3111,7 @@ std::shared_ptr<GRAPH_CONNECTION> CREEPAGE_GRAPH::AddConnection( std::shared_ptr
     wxASSERT_MSG( ( aN1 != aN2 ), "Creepage: a connection connects a node to itself" );
 
     std::shared_ptr<GRAPH_CONNECTION> gc = std::make_shared<GRAPH_CONNECTION>( aN1, aN2, aPc );
+    gc->m_id = m_nextConnectionId++;
     m_connections.push_back( gc );
     aN1->m_node_conns.insert( gc );
     aN2->m_node_conns.insert( gc );

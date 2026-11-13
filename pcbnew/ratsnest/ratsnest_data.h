@@ -41,16 +41,16 @@ class BOARD_ITEM;
 class BOARD_CONNECTED_ITEM;
 class CN_CLUSTER;
 
+/**
+ * Orders anchors by position, then by their item's place in the connectivity list.  Anchors of
+ * different items at one position (track ends meeting on a pad, say) must not be left in
+ * insertion order: that comes from clusters walked in address order, so the anchor chosen to
+ * stand for the position, and the item a missing connection names, would change from run to run.
+ */
 struct CN_PTR_CMP
 {
     bool operator()( const std::shared_ptr<CN_ANCHOR>& aItem,
-                     const std::shared_ptr<CN_ANCHOR>& bItem ) const
-    {
-        if( aItem->Pos().x == bItem->Pos().x )
-            return aItem->Pos().y < bItem->Pos().y;
-        else
-            return aItem->Pos().x < bItem->Pos().x;
-    }
+                     const std::shared_ptr<CN_ANCHOR>& bItem ) const;
 };
 
 /**

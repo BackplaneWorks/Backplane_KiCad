@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <cstdio>
 #include <memory>
 
@@ -99,7 +100,17 @@ static PATH_STATUS uniquePathBetweenNodes( CN_ITEM* u, CN_ITEM* v, std::vector<C
             pathFound = true;
         }
 
-        for( CN_ITEM* ci : last->ConnectedItems() )
+        // Connections are stored in address order; walk them in list order so that which path
+        // is found first (and returned when there are several) is the same on every run
+        std::vector<CN_ITEM*> neighbours = last->ConnectedItems();
+
+        std::sort( neighbours.begin(), neighbours.end(),
+                   []( const CN_ITEM* a, const CN_ITEM* b )
+                   {
+                       return a->ListIndex() < b->ListIndex();
+                   } );
+
+        for( CN_ITEM* ci : neighbours )
         {
             bool vertexVisited = isVertexVisited( ci, path );
 

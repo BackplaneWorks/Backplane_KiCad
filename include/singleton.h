@@ -52,7 +52,11 @@ public:
      */
     void Shutdown();
 
-    void Init();
+    /**
+     * @param aDefaultMaxThreads the thread pool size when the MaximumThreads advanced setting is
+     *                           not set (0: one thread per hardware thread).
+     */
+    void Init( int aDefaultMaxThreads = 0 );
 
 public:
     BS::priority_thread_pool* m_ThreadPool;

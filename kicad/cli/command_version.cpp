@@ -19,6 +19,7 @@
  */
 
 #include "command_version.h"
+#include <api/backplane_capabilities.h>
 #include <cli/exit_codes.h>
 #include <wx/crt.h>
 #include <build_version.h>
@@ -65,6 +66,15 @@ int CLI::VERSION_COMMAND::doPerform( KIWAY& aKiway )
     {
         wxString msg_version = GetVersionInfoData( wxS( "kicad-cli" ) );
         wxPrintf( "%s\n", msg_version );
+
+        // Runtime capabilities, the same list `api-server --describe` reports, for callers that
+        // only have the command line
+        wxString capabilities;
+
+        for( const char* capability : BACKPLANE::CAPABILITIES )
+            capabilities << ( capabilities.IsEmpty() ? wxS( "" ) : wxS( " " ) ) << capability;
+
+        wxPrintf( "Backplane capabilities: %s\n", capabilities );
     }
     else
     {

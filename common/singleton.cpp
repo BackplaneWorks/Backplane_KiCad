@@ -17,6 +17,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+#include <thread>
 #include <singleton.h>
 #include <advanced_config.h>
 #include <bs_thread_pool.hpp>
@@ -60,9 +62,15 @@ void KICAD_SINGLETON::Shutdown()
 }
 
 
-void KICAD_SINGLETON::Init()
+void KICAD_SINGLETON::Init( int aDefaultMaxThreads )
 {
     int num_threads = std::max( 0, ADVANCED_CFG::GetCfg().m_MaximumThreads );
+
+    if( num_threads == 0 && aDefaultMaxThreads > 0 )
+    {
+        int hardware = static_cast<int>( std::thread::hardware_concurrency() );
+        num_threads = hardware > 0 ? std::min( aDefaultMaxThreads, hardware ) : aDefaultMaxThreads;
+    }
 
     m_ThreadPool = new BS::priority_thread_pool( num_threads,
                                                  []

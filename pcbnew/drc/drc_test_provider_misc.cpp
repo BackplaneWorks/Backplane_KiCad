@@ -33,6 +33,7 @@
 #include <drawing_sheet/ds_proxy_view_item.h>
 
 #include <thread_pool.h>
+#include <drc/drc_parallel.h>
 
 #include <atomic>
 #include <set>
@@ -402,8 +403,7 @@ void DRC_TEST_PROVIDER_MISC::testAssertions()
                 itemsDone.fetch_add( 1 );
             };
 
-    thread_pool& tp = GetKiCadThreadPool();
-    auto         itemFutures = tp.submit_loop( 0, itemCount, checkItem, itemCount );
+    auto         itemFutures = DrcParallelFor( itemCount, checkItem );
 
     while( itemsDone < itemCount )
     {

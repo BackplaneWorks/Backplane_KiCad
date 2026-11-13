@@ -59,6 +59,7 @@
 #include <geometry/poly_ystripes_index.h>
 #include <kidialog.h>
 #include <thread_pool.h>
+#include <drc/drc_profile.h>
 #include <math/util.h>      // for KiROUND
 #include "zone_filler.h"
 #include "project.h"
@@ -589,6 +590,7 @@ bool ZONE_FILLER::zoneKnockoutMayInteract( const ZONE* aZone, const ZONE* aKnock
  */
 bool ZONE_FILLER::Fill( const std::vector<ZONE*>& aZones, bool aCheck, wxWindow* aParent )
 {
+    DRC_PROFILE_PROBE fillProbe( "zone_filler.fill" );
     std::lock_guard<KISPINLOCK> lock( m_board->GetConnectivity()->GetLock() );
 
     // Keyed on knockout geometry only; valid for this fill's passes (pre-knockout fill is rebuilt
@@ -979,6 +981,8 @@ bool ZONE_FILLER::Fill( const std::vector<ZONE*>& aZones, bool aCheck, wxWindow*
                 return check_fill_dependency( aWaiter.first, aWaiter.second, aDependency.first );
             };
 
+    DRC_PROFILE_ITEM_STATS fillItemStats( "zone_filler.fill_items" );
+
     auto fill_lambda =
             [&]( std::pair<ZONE*, PCB_LAYER_ID> aFillItem ) -> int
             {
@@ -989,6 +993,7 @@ bool ZONE_FILLER::Fill( const std::vector<ZONE*>& aZones, bool aCheck, wxWindow*
                 ZONE*        zone = aFillItem.first;
 
                 SHAPE_POLY_SET fillPolys;
+                DRC_PROFILE_ITEM_TIMER itemTimer( fillItemStats );
 
                 if( !fillSingleZone( zone, layer, fillPolys ) )
                     return 0;
@@ -1192,7 +1197,12 @@ bool ZONE_FILLER::Fill( const std::vector<ZONE*>& aZones, bool aCheck, wxWindow*
                     std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
             };
 
-    run_fill_waves( toFill, fill_lambda, tesselate_lambda, fill_item_dependency, true );
+    {
+        DRC_PROFILE_PROBE wavesProbe( "zone_filler.fill_waves" );
+        run_fill_waves( toFill, fill_lambda, tesselate_lambda, fill_item_dependency, true );
+    }
+
+    fillItemStats.Report();
 
     // Now update the connectivity to check for isolated copper islands
     // (NB: FindIsolatedCopperIslands() is multi-threaded)
@@ -1215,7 +1225,12 @@ bool ZONE_FILLER::Fill( const std::vector<ZONE*>& aZones, bool aCheck, wxWindow*
     }
 
     connectivity->SetProgressReporter( m_progressReporter );
-    connectivity->FillIsolatedIslandsMap( isolatedIslandsMap );
+
+    {
+        DRC_PROFILE_PROBE islandsProbe( "zone_filler.islands_map" );
+        connectivity->FillIsolatedIslandsMap( isolatedIslandsMap );
+    }
+
     connectivity->SetProgressReporter( nullptr );
 
     if( m_progressReporter && m_progressReporter->IsCancelled() )

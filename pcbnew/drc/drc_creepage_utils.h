@@ -549,6 +549,14 @@ private:
     VECTOR2I  m_endPoint;
 };
 
+/// Orders a node's connections by creation id, so walking them does not follow heap addresses.
+struct GRAPH_CONNECTION_ID_LESS
+{
+    bool operator()( const std::shared_ptr<GRAPH_CONNECTION>& aA,
+                     const std::shared_ptr<GRAPH_CONNECTION>& aB ) const;
+};
+
+
 /** @class GRAPH_NODE
  *
  *  @brief a node in a @class CREEPAGE_GRAPH
@@ -580,8 +588,11 @@ public:
 
 public:
     CREEP_SHAPE*                                m_parent;
-    std::set<std::shared_ptr<GRAPH_CONNECTION>> m_node_conns;
+    std::set<std::shared_ptr<GRAPH_CONNECTION>, GRAPH_CONNECTION_ID_LESS> m_node_conns;
     VECTOR2I                                    m_pos;
+
+    /// Creation order in the graph; breaks ties deterministically (0 for lookup keys)
+    uint64_t m_id = 0;
 
     // Virtual nodes are connected with a 0 weight connection to equivalent net ( same net or netclass )
     bool m_virtual ;
@@ -614,7 +625,17 @@ public:
     std::shared_ptr<GRAPH_NODE> n2;
     PATH_CONNECTION             m_path;
     bool                        m_forceStraightLine;
+
+    /// Creation order in the graph
+    uint64_t m_id = 0;
 };
+
+
+inline bool GRAPH_CONNECTION_ID_LESS::operator()( const std::shared_ptr<GRAPH_CONNECTION>& aA,
+                                                  const std::shared_ptr<GRAPH_CONNECTION>& aB ) const
+{
+    return aA->m_id < aB->m_id;
+}
 
 
 /** @class BE_SHAPE_POINT
@@ -904,6 +925,8 @@ public:
     bool                                           m_hasOverlappingCutouts = false;
     std::vector<std::shared_ptr<GRAPH_NODE>>       m_nodes;
     std::vector<std::shared_ptr<GRAPH_CONNECTION>> m_connections;
+    uint64_t                                       m_nextNodeId = 1;
+    uint64_t                                       m_nextConnectionId = 1;
     std::vector<std::unique_ptr<CREEP_SHAPE>>      m_shapeCollection;
 
     // This is a duplicate of m_nodes, but it is used to quickly find a node rather than iterating through m_nodes

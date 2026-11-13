@@ -36,15 +36,33 @@ using namespace std::placeholders;
 
 #include <algorithm>
 #include <cassert>
-#include <limits>
 #include <list>
 #include <span>
+#include <limits>
 #include <tuple>
+#include <unordered_map>
 
 #include <core/filter_kruskal.h>
 #include <core/union_find.h>
 
 #include <delaunator.hpp>
+
+bool CN_PTR_CMP::operator()( const std::shared_ptr<CN_ANCHOR>& aItem,
+                             const std::shared_ptr<CN_ANCHOR>& bItem ) const
+{
+    if( aItem->Pos().x != bItem->Pos().x )
+        return aItem->Pos().x < bItem->Pos().x;
+
+    if( aItem->Pos().y != bItem->Pos().y )
+        return aItem->Pos().y < bItem->Pos().y;
+
+    // Anchors of one item at one position keep their order in the item, which is fixed
+    int aIndex = aItem->Item() ? aItem->Item()->ListIndex() : -1;
+    int bIndex = bItem->Item() ? bItem->Item()->ListIndex() : -1;
+
+    return aIndex < bIndex;
+}
+
 
 void RN_NET::kruskalMST( std::vector<CN_EDGE>& aEdges )
 {
@@ -178,6 +196,27 @@ public:
                     mstEdges.emplace_back( src, dst, src->Dist( *dst ) );
                 };
 
+        std::unordered_map<const CN_CLUSTER*, int> clusterKeys;
+
+        auto clusterKey =
+                [&]( const std::shared_ptr<CN_ANCHOR>& aAnchor ) -> int
+                {
+                    const CN_CLUSTER* cluster = aAnchor->GetCluster().get();
+                    auto [it, inserted] = clusterKeys.try_emplace( cluster, -1 );
+
+                    if( inserted && cluster )
+                    {
+                        int first = std::numeric_limits<int>::max();
+
+                        for( CN_ITEM* item : *const_cast<CN_CLUSTER*>( cluster ) )
+                            first = std::min( first, item->ListIndex() );
+
+                        it->second = first;
+                    }
+
+                    return it->second;
+                };
+
         std::shared_ptr<CN_ANCHOR> prev = nullptr;
 
         for( const std::shared_ptr<CN_ANCHOR>& n : m_allNodes )
@@ -250,10 +289,13 @@ public:
             if( chain.size() < 2 )
                 continue;
 
-            std::sort( chain.begin(), chain.end(),
-                    [] ( const std::shared_ptr<CN_ANCHOR>& a, const std::shared_ptr<CN_ANCHOR>& b )
+            // Group the anchors by cluster, the clusters in a fixed order (their first item in
+            // the connectivity list) rather than by address, which changes from run to run;
+            // within a cluster the chain keeps m_allNodes' order, which is fixed too
+            std::stable_sort( chain.begin(), chain.end(),
+                    [&]( const std::shared_ptr<CN_ANCHOR>& a, const std::shared_ptr<CN_ANCHOR>& b )
                     {
-                        return a->GetCluster().get() < b->GetCluster().get();
+                        return clusterKey( a ) < clusterKey( b );
                     } );
 
             for( unsigned int j = 1; j < chain.size(); j++ )
@@ -339,6 +381,23 @@ void RN_NET::compute()
 
 void RN_NET::OptimizeRNEdges()
 {
+    // An item's connections are kept sorted by address, which varies from run to run once
+    // items are allocated from several threads.  Visit them in list order instead so that ties
+    // between equally close zone points (and zone pairs) resolve the same way every time.
+    auto connectedInListOrder =
+            []( const CN_ITEM* aItem )
+            {
+                std::vector<CN_ITEM*> items = aItem->ConnectedItems();
+
+                std::sort( items.begin(), items.end(),
+                           []( const CN_ITEM* a, const CN_ITEM* b )
+                           {
+                               return a->ListIndex() < b->ListIndex();
+                           } );
+
+                return items;
+            };
+
     auto optimizeZoneAnchor =
             [&]( const VECTOR2I& aPos, const LSET& aLayerSet,
                  const std::shared_ptr<const CN_ANCHOR>& aAnchor,
@@ -348,7 +407,7 @@ void RN_NET::OptimizeRNEdges()
                 VECTOR2I    closest_pt;
                 CN_ITEM*    closest_item = nullptr;
 
-                for( CN_ITEM* item : aAnchor->Item()->ConnectedItems() )
+                for( CN_ITEM* item : connectedInListOrder( aAnchor->Item() ) )
                 {
                     // Don't consider shorted items
                     if( aAnchor->Item()->Net() != item->Net() )
@@ -403,8 +462,8 @@ void RN_NET::OptimizeRNEdges()
             size_t  idB;
         };
 
-        const std::vector<CN_ITEM*>& connectedItemsA = a->Item()->ConnectedItems();
-        const std::vector<CN_ITEM*>& connectedItemsB = b->Item()->ConnectedItems();
+        const std::vector<CN_ITEM*> connectedItemsA = connectedInListOrder( a->Item() );
+        const std::vector<CN_ITEM*> connectedItemsB = connectedInListOrder( b->Item() );
 
         std::vector<CENTER> centersA( connectedItemsA.size() );
         std::vector<CENTER> centersB( connectedItemsB.size() );
@@ -455,10 +514,17 @@ void RN_NET::OptimizeRNEdges()
             }
         }
 
+        // Total order, so equally distant pairs keep their (list) order
         std::sort( pairsToTest.begin(), pairsToTest.end(),
                    []( const DIST_PAIR& dp_a, const DIST_PAIR& dp_b )
                    {
-                       return dp_a.dist_sq < dp_b.dist_sq;
+                       if( dp_a.dist_sq != dp_b.dist_sq )
+                           return dp_a.dist_sq < dp_b.dist_sq;
+
+                       if( dp_a.idA != dp_b.idA )
+                           return dp_a.idA < dp_b.idA;
+
+                       return dp_a.idB < dp_b.idB;
                    } );
 
         const int c_polyPairsLimit = 3;
