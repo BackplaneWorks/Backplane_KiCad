@@ -481,8 +481,15 @@ jobs:
           failed=()
           for regression in $(grep -l -- '--stock-cli' scripts/backplane-*-regression.py); do
             echo "::group::${regression} --stock-cli"
+            # One set of KiCad 10 libraries for both CLIs (the runtime's own share/kicad: the pinned
+            # kicad-symbols/-footprints/-templates 10.0.x with their global tables), so library
+            # checks compare the engines, not two installs
+            libs=()
+            if grep -q -- '--libs' "$regression"; then
+              libs=(--libs "release/${archive_root}/share/kicad")
+            fi
             if ! "$RUNNER_TEMP/ipc-smoke-venv/bin/python" "$regression" \
-                "release/${archive_root}/bin/kicad-cli" --stock-cli "$stock/kicad-cli"; then
+                "release/${archive_root}/bin/kicad-cli" --stock-cli "$stock/kicad-cli" "${libs[@]}"; then
               failed+=("$regression")
             fi
             echo "::endgroup::"
