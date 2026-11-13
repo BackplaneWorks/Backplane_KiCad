@@ -116,6 +116,20 @@ void FillEmbedEvent( kiapi::backplane::embed::Event* aOut, const EMBED_EVENT& aI
 
     if( aIn.progress )
         FillEmbedProgress( aOut->mutable_progress(), *aIn.progress );
+
+    if( aIn.checks )
+    {
+        kiapi::backplane::embed::Checks* checks = aOut->mutable_checks();
+        checks->set_kind( static_cast<kiapi::backplane::embed::FrameKind>( aIn.checks->kind ) );
+        checks->set_errors( aIn.checks->errors );
+        checks->set_warnings( aIn.checks->warnings );
+        checks->set_exclusions( aIn.checks->exclusions );
+        checks->set_unconnected( aIn.checks->unconnected );
+        checks->set_cancelled( aIn.checks->cancelled );
+        checks->set_progress_id( aIn.checks->progressId );
+        checks->set_document_modified( aIn.checks->documentModified );
+        checks->set_error( aIn.checks->error );
+    }
 }
 
 

@@ -18,6 +18,10 @@
  */
 
 #include <api/api_handler_pcb.h>
+#include <api/backplane/embed.pb.h>
+#include <backplane_embed.h>
+#include <connectivity/connectivity_data.h>
+#include <optional>
 #include <api/api_task_scheduler.h>
 #include <api/api_task_gui_reporter.h>
 
@@ -174,20 +178,46 @@ private:
 };
 
 
+/// An embedding host's RunChecks (kiapi.backplane.embed): its progress id, refill, and an
+/// ET_CHECKS_DONE when the run ends however it ends.
+struct EMBED_CHECKS_RUN
+{
+    bool     on = false;
+    uint64_t progressId = 0;
+    bool     refillZones = false;
+};
+
+
 class API_HANDLER_PCB::DRC_TASK : public API_TASK
 {
 public:
     DRC_TASK( API_HANDLER_PCB* aHandler, bool aReportAllTrackErrors, bool aTestFootprints,
-              bool aRequireZonesFilled ) :
+              bool aRequireZonesFilled, const EMBED_CHECKS_RUN& aEmbed = {} ) :
             m_handler( aHandler ),
             m_board( aHandler->board() ),
             m_reportAllTrackErrors( aReportAllTrackErrors ),
             m_testFootprints( aTestFootprints ),
-            m_requireZonesFilled( aRequireZonesFilled )
+            m_requireZonesFilled( aRequireZonesFilled ),
+            m_embed( aEmbed )
     {
     }
 
     void Run() override
+    {
+        struct CHECKS_DONE_ON_EXIT
+        {
+            DRC_TASK* task;
+            ~CHECKS_DONE_ON_EXIT()
+            {
+                if( task->m_embed.on )
+                    task->reportChecks();
+            }
+        } checksDone{ this };
+
+        runDrc();
+    }
+
+    void runDrc()
     {
         if( m_requireZonesFilled && !checkZonesFilled() )
             return;
@@ -261,9 +291,24 @@ public:
 
         if( frame )
         {
+            // RunChecks answered with this job's id before it began
+            std::optional<BACKPLANE_EMBED::PROGRESS_ID_SCOPE> adopt;
+
+            if( m_embed.on && m_embed.progressId )
+                adopt.emplace( m_embed.progressId );
+
             reporter = std::make_unique<API_TASK_GUI_PROGRESS_REPORTER>( frame, _( "Running DRC" ), 1,
                                                                         PR_CAN_ABORT );
             drcEngine->SetProgressReporter( reporter.get() );
+        }
+
+        if( frame && m_embed.on && m_embed.refillZones )
+        {
+            if( ZONE_FILLER_TOOL* filler = mgr->GetTool<ZONE_FILLER_TOOL>() )
+            {
+                reporter->AdvancePhase( _( "Refilling all zones..." ) );
+                filler->FillAllZones( frame, reporter.get() );
+            }
         }
 
         std::unique_ptr<DS_PROXY_VIEW_ITEM> headlessDrawingSheet;
@@ -395,6 +440,37 @@ public:
     }
 
 private:
+    void reportChecks()
+    {
+        EMBED_CHECKS checks;
+        checks.kind = EMBED_FRAME_KIND::PCB;
+        checks.progressId = m_embed.progressId;
+        checks.cancelled = m_state == TS_CANCELLED;
+
+        if( m_state == TS_FAILED )
+            checks.error = m_errorMessage;
+
+        for( PCB_MARKER* marker : m_board->Markers() )
+        {
+            if( marker->IsExcluded() || marker->GetSeverity() == RPT_SEVERITY_EXCLUSION )
+                checks.exclusions++;
+            else if( marker->GetSeverity() == RPT_SEVERITY_ERROR )
+                checks.errors++;
+            else if( marker->GetSeverity() == RPT_SEVERITY_WARNING )
+                checks.warnings++;
+        }
+
+        if( std::shared_ptr<CONNECTIVITY_DATA> connectivity = m_board->GetConnectivity() )
+            checks.unconnected = static_cast<int>( connectivity->GetUnconnectedCount( true ) );
+
+        PCB_EDIT_FRAME* frame = m_handler->frame();
+
+        if( frame )
+            checks.documentModified = frame->IsContentModified();
+
+        BACKPLANE_EMBED::Get().ChecksDone( frame, checks );
+    }
+
     bool checkZonesFilled()
     {
         for( const ZONE* zone : m_board->Zones() )
@@ -535,6 +611,7 @@ private:
     bool             m_reportAllTrackErrors;
     bool             m_testFootprints;
     bool             m_requireZonesFilled;
+    EMBED_CHECKS_RUN m_embed;
 
     TaskState         m_state = TS_UNKNOWN;
     std::string       m_errorMessage;
@@ -576,6 +653,58 @@ API_HANDLER_PCB::handleStartRefillZonesTask( const HANDLER_CONTEXT<StartRefillZo
 
     StartTaskResponse response;
     response.mutable_token()->set_value( *token );
+    return response;
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::RunChecksResponse>
+API_HANDLER_PCB::handleRunChecks( const HANDLER_CONTEXT<kiapi::backplane::embed::RunChecks>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    // Routed by frame kind: the schematic editor's handler serves FK_SCH (ERC).
+    if( aCtx.Request.kind() != embed::FK_PCB )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "RunChecks" ) )
+        return tl::unexpected( *headless );
+
+    auto busy = []( const std::string& aWhy ) -> HANDLER_RESULT<embed::RunChecksResponse>
+                {
+                    ApiResponseStatus e;
+                    e.set_status( ApiStatusCode::AS_BUSY );
+                    e.set_error_message( aWhy );
+                    return tl::unexpected( e );
+                };
+
+    if( std::optional<wxString> dialog = BACKPLANE_EMBED::ModalBlocker() )
+        return busy( fmt::format( "KiCad is showing the dialog '{}'", dialog->ToStdString( wxConvUTF8 ) ) );
+
+    if( !frame()->ToolStackIsEmpty() )
+        return busy( "a tool is active in the PCB editor" );
+
+    if( std::optional<ApiResponseStatus> other = checkForBusy() )
+        return tl::unexpected( *other );
+
+    if( DRC_TOOL* drcTool = toolManager()->GetTool<DRC_TOOL>(); drcTool && drcTool->IsDRCRunning() )
+        return busy( "DRC is already running" );
+
+    EMBED_CHECKS_RUN run;
+    run.on = true;
+    run.progressId = BACKPLANE_EMBED::Get().ProgressReserveId();
+    run.refillZones = aCtx.Request.refill_zones();
+
+    auto task = std::make_shared<API_HANDLER_PCB::DRC_TASK>( this, false, aCtx.Request.parity(), false, run );
+
+    if( !API_TASK_SCHEDULER::Instance().StartTask( task, wxS( "DRC" ) ) )
+        return busy( "another task is already running" );
+
+    embed::RunChecksResponse response;
+    response.set_progress_id( run.progressId );
     return response;
 }
 

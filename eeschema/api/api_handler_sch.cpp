@@ -53,6 +53,9 @@
 #include <sch_commit.h>
 #include <string_utils.h>
 #include <sch_edit_frame.h>
+#include <sch_marker.h>
+#include <rc_item.h>
+#include <set>
 #include <io/kicad/kicad_io_utils.h>
 #include <ki_error.h>
 #include <pgm_base.h>
@@ -273,6 +276,10 @@ API_HANDLER_SCH::API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext,
     registerHandler<HighlightNets, HighlightNetsResponse>( &API_HANDLER_SCH::handleHighlightNets );
     registerHandler<kiapi::backplane::embed::SelectItems, kiapi::backplane::embed::SelectItemsResponse>(
             &API_HANDLER_SCH::handleSelectItems );
+    registerHandler<kiapi::backplane::embed::RunChecks, kiapi::backplane::embed::RunChecksResponse>(
+            &API_HANDLER_SCH::handleRunChecks );
+    registerHandler<kiapi::backplane::embed::GetMarkers, kiapi::backplane::embed::GetMarkersResponse>(
+            &API_HANDLER_SCH::handleGetMarkers, true );
     registerHandler<kiapi::backplane::embed::CommentSelection,
                     kiapi::backplane::embed::CommentSelectionResponse>(
             &API_HANDLER_SCH::handleCommentSelection );
@@ -3004,12 +3011,42 @@ API_HANDLER_SCH::handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embe
         }
     }
 
+    // bp.13: exact items by KIID (wires, labels, junctions, markers, ...)
+    for( const kiapi::common::types::KIID& id : aCtx.Request.ids() )
+    {
+        KIID kiid( id.value() );
+        bool found = false;
+
+        for( const SCH_SHEET_PATH& path : sheets )
+        {
+            for( SCH_ITEM* item : path.LastScreen()->Items() )
+            {
+                if( item->m_Uuid == kiid )
+                {
+                    hits.emplace_back( path, item );
+                    found = true;
+                }
+            }
+        }
+
+        if( !found )
+            response.add_ids_not_found()->set_value( id.value() );
+    }
+
     TOOL_MANAGER* mgr = frame()->GetToolManager();
 
-    // Show the sheet of the first hit.
-    if( !hits.empty() && hits.front().first.Path() != frame()->GetCurrentSheet().Path() )
+    // Show the sheet asked for, else the sheet of the first hit.
+    std::optional<SCH_SHEET_PATH> targetSheet;
+
+    if( !aCtx.Request.sheet_path().empty() )
+        targetSheet = sheets.GetSheetPathByKIIDPath( KIID_PATH( wxString::FromUTF8( aCtx.Request.sheet_path() ) ) );
+
+    if( !targetSheet && !hits.empty() )
+        targetSheet = hits.front().first;
+
+    if( targetSheet && targetSheet->Path() != frame()->GetCurrentSheet().Path() )
     {
-        SCH_SHEET_PATH target = hits.front().first;
+        SCH_SHEET_PATH target = *targetSheet;
         mgr->RunAction<SCH_SHEET_PATH*>( SCH_ACTIONS::changeSheet, &target );
     }
 
@@ -3043,13 +3080,84 @@ API_HANDLER_SCH::handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embe
         frame()->HandleRemoteNetHighlight( highlightNet );
     }
 
-    if( aCtx.Request.zoom() && !items.empty() )
+    KIGFX::VIEW* view = frame()->GetCanvas()->GetView();
+
+    if( aCtx.Request.has_zoom_box_nm() && aCtx.Request.zoom_box_nm().has_size()
+        && aCtx.Request.zoom_box_nm().size().x_nm() > 0 && aCtx.Request.zoom_box_nm().size().y_nm() > 0 )
+    {
+        // Schematic internal units are 100 nm
+        const kiapi::common::types::Box2& box = aCtx.Request.zoom_box_nm();
+        view->SetViewport( BOX2D( VECTOR2D( box.position().x_nm() / 100.0, box.position().y_nm() / 100.0 ),
+                                  VECTOR2D( box.size().x_nm() / 100.0, box.size().y_nm() / 100.0 ) ) );
+    }
+    else if( aCtx.Request.zoom() && !items.empty() )
     {
         bbox.Inflate( std::max( bbox.GetWidth(), bbox.GetHeight() ) / 5 + schIUScale.MilsToIU( 100 ) );
-        frame()->GetCanvas()->GetView()->SetViewport( BOX2D( bbox.GetOrigin(), bbox.GetSize() ) );
+        view->SetViewport( BOX2D( bbox.GetOrigin(), bbox.GetSize() ) );
+    }
+    else if( aCtx.Request.has_at_nm() )
+    {
+        view->SetCenter( VECTOR2D( aCtx.Request.at_nm().x_nm() / 100.0, aCtx.Request.at_nm().y_nm() / 100.0 ) );
     }
 
     frame()->GetCanvas()->Refresh();
+    return response;
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::GetMarkersResponse>
+API_HANDLER_SCH::handleGetMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed::GetMarkers>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    if( aCtx.Request.kind() != embed::FK_SCH )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "GetMarkers" ) )
+        return tl::unexpected( *headless );
+
+    embed::GetMarkersResponse response;
+    std::set<KIID>            seen;   // a screen shared by sheet instances: once, on the first
+
+    for( const SCH_SHEET_PATH& path : frame()->Schematic().Hierarchy() )
+    {
+        for( SCH_ITEM* item : path.LastScreen()->Items().OfType( SCH_MARKER_T ) )
+        {
+            SCH_MARKER*              marker = static_cast<SCH_MARKER*>( item );
+            std::shared_ptr<RC_ITEM> rcItem = marker->GetRCItem();
+
+            if( !rcItem || !seen.insert( marker->m_Uuid ).second )
+                continue;
+
+            embed::Marker* out = response.add_markers();
+            out->set_type( rcItem->GetSettingsKey().ToStdString( wxConvUTF8 ) );
+
+            SEVERITY severity = marker->GetSeverity();
+            out->set_excluded( marker->IsExcluded() );
+            out->set_severity( marker->IsExcluded() || severity == RPT_SEVERITY_EXCLUSION ? "exclusion"
+                               : severity == RPT_SEVERITY_ERROR                         ? "error"
+                                                                                        : "warning" );
+            out->set_message( rcItem->GetErrorMessage( false ).ToStdString( wxConvUTF8 ) );
+
+            // Nanometres, as everywhere in the embed API (schematic units are 100 nm)
+            out->mutable_at_nm()->set_x_nm( static_cast<int64_t>( marker->GetPosition().x ) * 100 );
+            out->mutable_at_nm()->set_y_nm( static_cast<int64_t>( marker->GetPosition().y ) * 100 );
+
+            for( const KIID& id : rcItem->GetIDs() )
+            {
+                if( id != niluuid )
+                    out->add_items()->set_value( id.AsStdString() );
+            }
+
+            out->set_sheet_path( path.Path().AsString().ToStdString( wxConvUTF8 ) );
+            out->mutable_id()->set_value( marker->m_Uuid.AsStdString() );
+        }
+    }
+
     return response;
 }
 
