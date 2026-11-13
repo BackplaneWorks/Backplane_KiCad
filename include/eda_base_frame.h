@@ -158,6 +158,15 @@ public:
     /// has decided that unsaved changes may go.  False if this frame cannot reload.
     virtual bool EmbedReload() { return false; }
 
+    /**
+     * Embedded: keep the canvas at least 60% of the frame's width.  Side-panel columns (Agents,
+     * search, net inspector, design blocks, properties, appearance, ...) hide, least needed
+     * first, while the frame is narrower than that allows, and come back as it widens.  A panel
+     * the person opened or closed themselves is theirs from then on (this session).  Called by
+     * the embed poll and when the host shows the frame.
+     */
+    void EmbedAutoPanels();
+
     /// Show (non-empty aPath) or hide KiCad's "changed on disk" infobar for an embedding host.
     void ShowEmbedReloadConflict( const wxString& aPath );
 
@@ -876,6 +885,17 @@ private:
     wxString                m_aboutTitle;        // Name of program displayed in About.
 
     wxAuiManager            m_auimgr;
+
+    struct EMBED_PANE_STATE
+    {
+        bool seen = false;
+        bool expectedShown = false;   ///< as last set or seen; a change by anyone else is the person's
+        bool manual = false;          ///< the person chose: auto leaves it alone
+        bool autoHidden = false;
+        int  width = 0;               ///< last shown width, pixels
+    };
+
+    std::map<wxString, EMBED_PANE_STATE> m_embedPanes;
     wxString                m_perspective;       // wxAuiManager perspective.
     std::unique_ptr<nlohmann::json> m_auiLayoutState;
     WX_INFOBAR*             m_infoBar;           // Infobar for the frame

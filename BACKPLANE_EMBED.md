@@ -352,6 +352,15 @@ Real questions (save/discard, errors, file pickers) stay dialogs, transient for 
 centred on it. The features check asserts load, zone fill and library load jobs end `done` and
 that no progress window is ever mapped.
 
+## bp.13: side panels in a narrow pane
+
+In `--embedded`, the editors' side-panel columns (Agents, search, net inspector, design blocks,
+hierarchy, properties, selection filter, appearance) hide while the frame is too narrow for the
+canvas to keep 60% of its width, least needed first (Agents first, Appearance last), and come back,
+most needed first, as it widens. A panel the person opens or closes themselves is theirs from then
+on for the session: auto leaves it alone. Checked by the embed poll and on every ShowFrame; nothing
+is saved (no AUI layout is saved in `--embedded`).
+
 ## Known limitations (as of bp.9)
 
 - `ListActions` (the palette feed).

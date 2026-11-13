@@ -139,6 +139,7 @@ struct EMBED_FRAME_OPS
     std::function<void( const wxString& )>     showConflict;     ///< infobar; empty hides it
     std::function<bool()>                      busy;             ///< a dialog or tool is active
     std::function<void()>                      syncSideFiles;    ///< merge external project/rules changes
+    std::function<void()>                      autoPanels;       ///< side panels for the width (EmbedAutoPanels)
 };
 
 struct EMBED_FRAME_INFO
