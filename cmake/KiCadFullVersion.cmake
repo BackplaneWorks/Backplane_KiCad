@@ -30,7 +30,13 @@ create_git_version_header( ${SRC_PATH} )
 # $KICAD_VERSION is set in KiCadVersion.cmake or by git (if it is available).
 set( KICAD_VERSION_FULL "${KICAD_VERSION}" )
 
-# Optional user version information defined at configuration.
-if( KICAD_VERSION_EXTRA )
+# Backplane: a release build has no git describe (CI clones without tags), so KiCad's fallback is
+# "10.99.0-unknown"; there the fork's own version ("10.99.0-bp.13", the manifest's) is the full version,
+# which About, kicad-cli version and GetVersion show.  A developer build inside git keeps git's string.
+if( BACKPLANE_FORK_VERSION AND NOT BACKPLANE_FORK_VERSION STREQUAL "10.99.0-bp.0"
+    AND KICAD_VERSION MATCHES "-unknown$" )
+    set( KICAD_VERSION_FULL "${BACKPLANE_FORK_VERSION}" )
+elseif( KICAD_VERSION_EXTRA )
+    # Optional user version information defined at configuration.
     set( KICAD_VERSION_FULL "${KICAD_VERSION_FULL}-${KICAD_VERSION_EXTRA}" )
 endif()

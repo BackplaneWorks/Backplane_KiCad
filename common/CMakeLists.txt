@@ -73,6 +73,7 @@ add_custom_target(
     version_header ALL
     COMMAND ${CMAKE_COMMAND}
         -DKICAD_VERSION_EXTRA=${KICAD_VERSION_EXTRA}
+        -DBACKPLANE_FORK_VERSION=${BACKPLANE_FORK_VERSION}
         -DOUTPUT_FILE=${CMAKE_BINARY_DIR}/kicad_build_version.h
         -DTEXT_OUTPUT_FILE=${CMAKE_BINARY_DIR}/kicad_build_version.txt
         -DSRC_PATH=${PROJECT_SOURCE_DIR}
