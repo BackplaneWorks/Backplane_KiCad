@@ -398,15 +398,17 @@ class TestDropApproximations(unittest.TestCase):
                 preview = json.loads(report_path.read_text())
                 rule_drops = [entry for entry in preview["entries"]
                               if entry["category"] == "drop" and entry["feature"].startswith("Custom DRC rule '")]
-                self.assertEqual(sum(entry["count"] for entry in rule_drops), 7)
+                # "Area outlines" (intersectsArea) means the same in 10.0 since 10.0.7; only 9.0 drops it
+                dropped = 7 if target == "9.0" else 6
+                self.assertEqual(sum(entry["count"] for entry in rule_drops), dropped)
                 self.require_success(self.cli("project", "downgrade", project, "--target", target,
                                               "--force", "--report-json", report_path, "--output", output))
                 self.assertEqual(json.loads(report_path.read_text()), preview)
                 converted = (output / rules.name).read_text()
                 self.assertIn('\n(rule "Keep literal"', converted)
                 self.assertIn('\n(rule "Keep coordinates"', converted)
-                self.assertEqual(converted.count("\n(rule "), 2)
-                self.assertEqual(converted.count("# (rule "), 7)
+                self.assertEqual(converted.count("\n(rule "), 2 + 7 - dropped)
+                self.assertEqual(converted.count("# (rule "), dropped)
                 self.assertEqual(rules.read_bytes(), original)
 
     def test_post_target_drc_properties_require_consent_in_both_expressions(self):
