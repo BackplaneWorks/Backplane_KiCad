@@ -217,6 +217,9 @@ jobs:
             python3 python3-venv rapidjson-dev shared-mime-info unixodbc-dev \
             zlib1g-dev libzint-dev glslang-tools spirv-tools
 
+      - name: Context actions belong to a tool of their prefix
+        run: python3 scripts/backplane-context-actions-test.py
+
       - name: Restore compiler cache
         id: compiler-cache
         uses: actions/cache/restore@v4
