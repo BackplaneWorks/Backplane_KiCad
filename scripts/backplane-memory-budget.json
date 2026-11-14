@@ -1,0 +1,17 @@
+{
+  "video": {
+    "gui": {
+      "3d": 2518,
+      "after_drc": 3149,
+      "after_drc_20s": 3168,
+      "board": 1585,
+      "footprint_editor": 2022,
+      "schematic": 1961,
+      "start": 283,
+      "symbol_editor": 2054
+    },
+    "headless": {
+      "board": 330
+    }
+  }
+}
