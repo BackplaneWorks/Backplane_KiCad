@@ -216,6 +216,28 @@ bool ERC_REPORT::WriteJsonReport( const wxString& aFullFileName )
             jsonSheet.violations.push_back( violation );
         }
 
+        // Exclusions stored for a sheet that is not in this schematic: kept in the project, reported
+        // on the root sheet as excluded rows with no items and the path they were stored under
+        if( sheet == sheetList[0] && ( m_reportedSeverities & RPT_SEVERITY_EXCLUSION ) )
+        {
+            for( const SCHEMATIC::UNRESOLVED_ERC_EXCLUSION& stale : m_sch->UnresolvedERCExclusions() )
+            {
+                std::shared_ptr<ERC_ITEM> item = ERC_ITEM::Create( stale.errorCode );
+
+                if( !item )
+                    continue;
+
+                RC_JSON::VIOLATION violation;
+                item->GetJsonViolation( violation, &unitsProvider, settings.GetSeverity( stale.errorCode ),
+                                        itemResolver );
+                violation.items.clear();
+                violation.excluded = true;
+                violation.comment = stale.comment;
+                violation.unresolved_sheet_path = stale.sheetPath;
+                jsonSheet.violations.push_back( violation );
+            }
+        }
+
         reportHead.sheets.push_back( jsonSheet );
     }
 

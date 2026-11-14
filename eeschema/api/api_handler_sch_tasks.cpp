@@ -186,6 +186,9 @@ private:
             }
         }
 
+        // Exclusions stored for a sheet not in this schematic are excluded rows too
+        checks.exclusions += static_cast<int>( m_schematic->GetUnresolvedERCExclusionCount() );
+
         SCH_EDIT_FRAME* frame = m_handler->frame();
 
         if( frame )

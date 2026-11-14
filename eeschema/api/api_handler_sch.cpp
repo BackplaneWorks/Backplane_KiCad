@@ -3458,6 +3458,29 @@ API_HANDLER_SCH::handleGetMarkers( const HANDLER_CONTEXT<kiapi::backplane::embed
         }
     }
 
+    // Exclusions stored for a sheet that is not in this schematic: the same rows as kicad-cli's
+    // report (on the root sheet, no items, the stored path), so either run keys them alike
+    for( const SCHEMATIC::UNRESOLVED_ERC_EXCLUSION& stale : frame()->Schematic().UnresolvedERCExclusions() )
+    {
+        std::shared_ptr<ERC_ITEM> item = ERC_ITEM::Create( stale.errorCode );
+
+        if( !item )
+            continue;
+
+        embed::Marker* out = response.add_markers();
+        out->set_type( item->GetSettingsKey().ToStdString( wxConvUTF8 ) );
+        out->set_severity( "exclusion" );
+        out->set_excluded( true );
+        out->set_message( item->GetErrorMessage( false ).ToStdString( wxConvUTF8 ) );
+        out->mutable_at_nm()->set_x_nm( static_cast<int64_t>( stale.position.x ) * 100 );
+        out->mutable_at_nm()->set_y_nm( static_cast<int64_t>( stale.position.y ) * 100 );
+        out->set_sheet_path( sheets.empty() ? std::string( "/" )
+                                            : sheets[0].Path().AsString().ToStdString( wxConvUTF8 ) );
+        out->set_group( "violation" );
+        out->set_comment( stale.comment.ToStdString( wxConvUTF8 ) );
+        out->set_unresolved_sheet_path( stale.sheetPath.ToStdString( wxConvUTF8 ) );
+    }
+
     if( HOST_MARKERS_ITEM* hostItem = aCtx.Request.include_host() ? hostMarkers( false ) : nullptr )
     {
         for( const HOST_MARKER* host : hostItem->All() )

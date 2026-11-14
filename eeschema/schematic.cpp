@@ -20,6 +20,7 @@
 #include <text_eval/text_eval_environment.h>
 #include <advanced_config.h>
 #include <api/api_enums.h>
+#include <api/api_utils.h>
 #include <algorithm>
 #include <common.h>
 #include <inspectable_impl.h>
@@ -2443,6 +2444,38 @@ void SCHEMATIC::RemoveListener( SCHEMATIC_LISTENER* aListener )
 void SCHEMATIC::RemoveAllListeners()
 {
     m_listeners.clear();
+}
+
+
+std::vector<SCHEMATIC::UNRESOLVED_ERC_EXCLUSION> SCHEMATIC::UnresolvedERCExclusions() const
+{
+    std::vector<UNRESOLVED_ERC_EXCLUSION> rows;
+
+    for( const ERC_EXCLUSION& exclusion : m_unresolvedErcExclusions )
+    {
+        const kiapi::schematic::ErcMarker& marker = exclusion.ToProto().marker();
+        UNRESOLVED_ERC_EXCLUSION           row;
+
+        row.errorCode = FromProtoEnum<ERCE_T, kiapi::schematic::ErcErrorType>( marker.error_type() );
+
+        if( marker.has_sheet_specific_path() )
+            row.sheetPath = kiapi::common::UnpackSheetPath( marker.sheet_specific_path() ).AsString();
+        else if( marker.has_main_item_sheet_path() )
+            row.sheetPath = kiapi::common::UnpackSheetPath( marker.main_item_sheet_path() ).AsString();
+
+        row.comment = exclusion.GetComment();
+        row.position = kiapi::common::UnpackVector2( marker.position(), schIUScale );
+        rows.push_back( row );
+    }
+
+    std::sort( rows.begin(), rows.end(),
+               []( const UNRESOLVED_ERC_EXCLUSION& a, const UNRESOLVED_ERC_EXCLUSION& b )
+               {
+                   return std::tie( a.sheetPath, a.errorCode, a.comment, a.position.x, a.position.y )
+                          < std::tie( b.sheetPath, b.errorCode, b.comment, b.position.x, b.position.y );
+               } );
+
+    return rows;
 }
 
 
