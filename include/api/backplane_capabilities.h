@@ -22,7 +22,7 @@
 namespace BACKPLANE
 {
 
-inline constexpr std::array<const char*, 18> CAPABILITIES = {
+inline constexpr std::array<const char*, 19> CAPABILITIES = {
     "api-server",
     "headless-pcb",
     "headless-sch",
@@ -41,6 +41,7 @@ inline constexpr std::array<const char*, 18> CAPABILITIES = {
     "rules-merge",     // project settings and custom rules merge, never overwrite
     "routing-plan",    // docs/backplane/floorplanner.md: kiapi.backplane.plan
     "drc-zone-guard",  // DRC checks a zone against its outline when its fill triangulation is bad
+    "plan-keys",       // in plan view the plan tool's keys (A, R, W, L...) are its own, never KiCad's defaults
 };
 
 } // namespace BACKPLANE

@@ -84,7 +84,7 @@ const std::vector<std::string> ITEM_KINDS = { "c-", "p-", "n-", "s-" };
 
 
 PLAN_TOOL::PLAN_TOOL() :
-        PCB_TOOL_BASE( "pcbnew.PlanTool" )
+        PCB_TOOL_BASE( "pcbnew.Plan" )   // = the actions' prefix, so their hotkeys are this tool's context actions
 {
 }
 
