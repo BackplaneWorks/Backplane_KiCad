@@ -23,9 +23,9 @@ namespace BACKPLANE
 {
 
 #ifdef _WIN32
-inline constexpr std::array<const char*, 22> CAPABILITIES = {
+inline constexpr std::array<const char*, 23> CAPABILITIES = {
 #else
-inline constexpr std::array<const char*, 21> CAPABILITIES = {
+inline constexpr std::array<const char*, 22> CAPABILITIES = {
 #endif
     "api-server",
     "headless-pcb",
@@ -48,6 +48,7 @@ inline constexpr std::array<const char*, 21> CAPABILITIES = {
     "drc-zone-guard",  // DRC checks a zone against its outline when its fill triangulation is bad
     "rules-insert-position", // EditCustomRules.insert: new rules first, last or before a named rule
     "plan-keys",       // in plan view the plan tool's keys (A, R, W, L...) are its own, never KiCad's defaults
+    "runaction-frame", // RunAction.frame names the editor; with none, shared actions go to the PCB editor
 #ifdef _WIN32
     // embedded: a prewarm never takes the keyboard or the activation (shown with SW_SHOWNA; a focus
     // it takes while built goes back).  Windows only: verified there; the host gates its

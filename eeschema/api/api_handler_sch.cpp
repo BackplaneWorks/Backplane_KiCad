@@ -366,11 +366,24 @@ SCH_EDIT_FRAME* API_HANDLER_SCH::frame() const
 
 HANDLER_RESULT<RunActionResponse> API_HANDLER_SCH::handleRunAction( const HANDLER_CONTEXT<RunAction>& aCtx )
 {
-    // The schematic editor's own actions (eeschema.InspectionTool.runERC and the like); one this
-    // editor does not have goes on to the next handler
-    TOOL_MANAGER* mgr = m_frame ? toolManager() : nullptr;
+    // Ours when the request names the schematic editor, or names no editor and is the
+    // schematic's own (eeschema.InspectionTool.runERC and the like).  A shared action (common.*:
+    // undo, redo, zoom) with no editor named is the PCB editor's while one is open (as before the
+    // schematic had a handler), else ours.  One this editor does not have goes on to the next.
+    using namespace kiapi::common::types;
+    TOOL_MANAGER*      mgr = m_frame ? toolManager() : nullptr;
+    const std::string& action = aCtx.Request.action();
+    FrameType          target = aCtx.Request.frame();
+    bool               mine = target == FT_SCHEMATIC_EDITOR;
 
-    if( !mgr || !mgr->GetActionManager()->FindAction( aCtx.Request.action() ) )
+    if( target == FT_UNKNOWN && m_frame )
+    {
+        mine = action.rfind( "eeschema.", 0 ) == 0
+               || ( action.rfind( "pcbnew.", 0 ) != 0
+                    && !m_frame->Kiway().Player( FRAME_PCB_EDITOR, false ) );
+    }
+
+    if( !mine || !mgr || !mgr->GetActionManager()->FindAction( action ) )
     {
         ApiResponseStatus e;
         e.set_status( ApiStatusCode::AS_UNHANDLED );

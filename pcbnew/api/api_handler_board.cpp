@@ -839,9 +839,16 @@ std::vector<KICAD_T> API_HANDLER_BOARD::parseRequestedItemTypes(
 HANDLER_RESULT<RunActionResponse> API_HANDLER_BOARD::handleRunAction(
         const HANDLER_CONTEXT<RunAction>& aCtx )
 {
-    // An action this editor does not have (eeschema.*, another editor's) is not ours to refuse:
-    // the next handler (the schematic editor's) may know it
-    if( toolManager() && !toolManager()->GetActionManager()->FindAction( aCtx.Request.action() ) )
+    // Ours when the request names the PCB editor, or names no editor and is not the schematic's
+    // (eeschema.*): common actions such as undo/redo exist in both editors, and the handlers are
+    // asked in no fixed order, so a request with no editor must never reach the schematic's while
+    // the board is open.  An action this editor does not have goes on to the next handler.
+    const std::string& action = aCtx.Request.action();
+    types::FrameType   target = aCtx.Request.frame();
+    bool               mine = target == types::FT_PCB_EDITOR
+                              || ( target == types::FT_UNKNOWN && action.rfind( "eeschema.", 0 ) != 0 );
+
+    if( !mine || ( toolManager() && !toolManager()->GetActionManager()->FindAction( action ) ) )
     {
         ApiResponseStatus e;
         e.set_status( ApiStatusCode::AS_UNHANDLED );

@@ -301,6 +301,10 @@ def main():
             return len(api.request(editor.GetItems(header=header, types=[enums.KOT_PCB_TRACE]),
                                    editor.GetItemsResponse).items)
 
+        # Both editors are open here: undo and redo exist in both, and a RunAction that names no
+        # editor must reach the board's (bp.13 batch 5: it reached the schematic's, 371/371)
+        check(embed.FK_SCH in frames() and embed.FK_PCB in frames(),
+              "both editors are open for the undo/redo checks")
         with_edit = track_count()
         api.request(editor.RunAction(action="common.Interactive.undo"), editor.RunActionResponse)
         time.sleep(1)
@@ -309,6 +313,18 @@ def main():
         time.sleep(1)
         check(undone == with_edit - 1 and track_count() == with_edit,
               f"the undo stack was kept: undo/redo of the person's edit ({with_edit}, {undone})")
+
+        # The same with the editor named (runaction-frame)
+        pcb_frame = base.FT_PCB_EDITOR
+        api.request(editor.RunAction(action="common.Interactive.undo", frame=pcb_frame),
+                    editor.RunActionResponse)
+        time.sleep(1)
+        undone_named = track_count()
+        api.request(editor.RunAction(action="common.Interactive.redo", frame=pcb_frame),
+                    editor.RunActionResponse)
+        time.sleep(1)
+        check(undone_named == with_edit - 1 and track_count() == with_edit,
+              f"RunAction naming the PCB editor undoes and redoes on the board ({with_edit}, {undone_named})")
         wait_for(lambda: frames()[embed.FK_PCB].modified, 5)
         add_text(board_file, "EXTERNAL-RELOAD")
         wait_event(embed.ET_RELOAD_CONFLICT)

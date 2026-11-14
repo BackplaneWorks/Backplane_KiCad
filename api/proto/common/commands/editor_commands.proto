@@ -117,6 +117,12 @@ message RevertDocument
 message RunAction
 {
   string action = 1;  // Action name, like "eeschema.InteractiveSelection.ClearSelection"
+
+  // Backplane fork (capability runaction-frame): the editor to run it in.  FT_UNKNOWN (an older
+  // client): an eeschema.* action goes to the schematic editor, any other (pcbnew.*, common.*
+  // such as undo/redo) to the PCB editor while one is open, else to the schematic editor.  A
+  // frame that is not open, or does not have the action, leaves the request unhandled.
+  kiapi.common.types.FrameType frame = 100;
 }
 
 enum RunActionStatus
