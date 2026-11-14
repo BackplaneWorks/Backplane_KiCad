@@ -18,6 +18,7 @@ from collections import Counter
 import json
 from pathlib import Path
 import shutil
+import os
 import subprocess
 import sys
 import tempfile
@@ -45,10 +46,27 @@ def cli_findings(cli, project, work):
         out[side][key] += 1
         text[key] = f'{v.get("description", "")}: ' + "; ".join(i.get("description", "") for i in v.get("items", []))
 
+    # The CLI gets the editor's settings: an isolated home whose global library tables are empty,
+    # as the embedded Session writes them (never the person's own ~/.config/kicad, whose libraries
+    # would make the CLI miss the editor's lib_footprint/footprint_link findings)
+    env = dict(os.environ)
+    for variable, directory in (("HOME", "home"), ("XDG_CONFIG_HOME", "config"), ("XDG_DATA_HOME", "data"),
+                                ("XDG_CACHE_HOME", "cache")):
+        path = work / "cli-env" / directory
+        path.mkdir(parents=True, exist_ok=True)
+        env[variable] = str(path)
+    env.pop("KICAD_CONFIG_HOME", None)
+    for version in ("10.0", "10.99"):
+        config = work / "cli-env/config/kicad" / version
+        config.mkdir(parents=True, exist_ok=True)
+        (config / "sym-lib-table").write_text("(sym_lib_table\n  (version 7)\n)\n")
+        (config / "fp-lib-table").write_text("(fp_lib_table\n  (version 7)\n)\n")
+        (config / "design-block-lib-table").write_text("(design_block_lib_table\n  (version 7)\n)\n")
+
     if pcb.exists():
         j = work / f"{pro.stem}-drc.json"
         subprocess.run([str(cli), "pcb", "drc", "--severity-all", "--schematic-parity", "--format", "json",
-                        "-o", str(j), str(pcb)], capture_output=True, timeout=1800)
+                        "-o", str(j), str(pcb)], capture_output=True, timeout=1800, env=env)
         d = json.loads(j.read_text())
         for group in ("violations", "unconnected_items", "schematic_parity"):
             for v in d.get(group, []):
@@ -56,7 +74,7 @@ def cli_findings(cli, project, work):
     if sch.exists():
         j = work / f"{pro.stem}-erc.json"
         subprocess.run([str(cli), "sch", "erc", "--severity-all", "--format", "json", "-o", str(j), str(sch)],
-                       capture_output=True, timeout=1800)
+                       capture_output=True, timeout=1800, env=env)
         d = json.loads(j.read_text())
         for sheet in d.get("sheets", []):
             for v in sheet.get("violations", []):
