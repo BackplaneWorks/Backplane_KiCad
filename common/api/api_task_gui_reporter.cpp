@@ -18,15 +18,31 @@
  */
 
 #include <api/api_task_gui_reporter.h>
-#include <widgets/wx_event_utils.h>
+#include <api/api_server.h>
+#include <pgm_base.h>
+#include <wx/thread.h>
 
 
 bool API_TASK_GUI_PROGRESS_REPORTER::updateUI()
 {
     const bool result = WX_PROGRESS_REPORTER::updateUI();
 
-    // Serve pending API requests while the progress dialog updates
-    DrainPendingEvents( wxEVT_CATEGORY_THREAD );
+    // Serve the API requests that came in while the task ran.  The server hands each request to
+    // this thread as a queued wx event, and wx's YieldFor( category ) only runs queued events when
+    // asked for every category (wxEventLoopBase::DoYieldFor), so yielding for the thread category
+    // served none: every request waited for the whole task.  Yielding for everything would also
+    // run the application's other queued events (CallAfters, another task) inside this one, so the
+    // server's own queue is run instead.  The server answers reads and refuses changes while a task
+    // runs (KICAD_API_SERVER::handleApiRequestString).  Unthrottled: a request costs one dispatch.
+    if( wxThread::IsMain() && PgmOrNull() )
+    {
+        if( KICAD_API_SERVER* server = PgmOrNull()->ApiServerOrNull() )
+        {
+            // Bounded: requests that keep arriving are served at the next update
+            for( int ii = 0; ii < 64 && server->HasPendingEvents(); ++ii )
+                server->ProcessPendingEvents();
+        }
+    }
 
     return result;
 }
