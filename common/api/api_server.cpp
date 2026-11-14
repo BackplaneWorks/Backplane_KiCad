@@ -45,6 +45,8 @@
 #include <string_utils.h>
 
 #include <api/common/envelope.pb.h>
+#include <api/common/commands/editor_commands.pb.h>
+#include <api/common/types/base_types.pb.h>
 #include <api/backplane/embed.pb.h>
 
 #ifdef __UNIX__
@@ -698,6 +700,34 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
 
     if( notifyNetSettings )
         NotifyNetSettingsChanged();
+
+    // A RunAction that names an editor nobody answered for: say which and why at once, rather
+    // than "no handler" (runaction-frame).  Only the PCB and schematic editors take actions.
+    if( !result.has_value() && result.error().status() == ApiStatusCode::AS_UNHANDLED
+        && request.message().Is<kiapi::common::commands::RunAction>() )
+    {
+        kiapi::common::commands::RunAction runAction;
+
+        if( request.message().UnpackTo( &runAction )
+            && runAction.frame() != kiapi::common::types::FT_UNKNOWN )
+        {
+            using namespace kiapi::common::types;
+            FrameType   frame = runAction.frame();
+            std::string name = FrameType_IsValid( frame ) ? FrameType_Name( frame )
+                                                          : fmt::format( "frame {}", (int) frame );
+            ApiResponseStatus status;
+            status.set_status( ApiStatusCode::AS_BAD_REQUEST );
+
+            if( frame == FT_PCB_EDITOR || frame == FT_SCHEMATIC_EDITOR )
+                status.set_error_message( fmt::format( "RunAction: {} is not open", name ) );
+            else
+                status.set_error_message( fmt::format( "RunAction: {} does not accept actions (only "
+                                                       "FT_PCB_EDITOR and FT_SCHEMATIC_EDITOR do)",
+                                                       name ) );
+
+            result = tl::unexpected( status );
+        }
+    }
 
     // Co-editing: what this client has seen (an update it sends later is judged against it).
     if( result.has_value() )

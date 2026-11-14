@@ -121,7 +121,9 @@ message RunAction
   // Backplane fork (capability runaction-frame): the editor to run it in.  FT_UNKNOWN (an older
   // client): an eeschema.* action goes to the schematic editor, any other (pcbnew.*, common.*
   // such as undo/redo) to the PCB editor while one is open, else to the schematic editor.  A
-  // frame that is not open, or does not have the action, leaves the request unhandled.
+  // named frame that cannot run it is refused at once with AS_BAD_REQUEST and a message starting
+  // "RunAction: <FrameType> ": "is not open", "does not accept actions" (only FT_PCB_EDITOR and
+  // FT_SCHEMATIC_EDITOR do) or "has no action <name>".
   kiapi.common.types.FrameType frame = 100;
 }
 

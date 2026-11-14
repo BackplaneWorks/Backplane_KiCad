@@ -383,6 +383,14 @@ HANDLER_RESULT<RunActionResponse> API_HANDLER_SCH::handleRunAction( const HANDLE
                     && !m_frame->Kiway().Player( FRAME_PCB_EDITOR, false ) );
     }
 
+    if( target == FT_SCHEMATIC_EDITOR && mgr && !mgr->GetActionManager()->FindAction( action ) )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+        e.set_error_message( fmt::format( "RunAction: FT_SCHEMATIC_EDITOR has no action {}", action ) );
+        return tl::unexpected( e );
+    }
+
     if( !mine || !mgr || !mgr->GetActionManager()->FindAction( action ) )
     {
         ApiResponseStatus e;

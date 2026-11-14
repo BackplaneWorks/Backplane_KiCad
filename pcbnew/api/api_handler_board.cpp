@@ -848,6 +848,15 @@ HANDLER_RESULT<RunActionResponse> API_HANDLER_BOARD::handleRunAction(
     bool               mine = target == types::FT_PCB_EDITOR
                               || ( target == types::FT_UNKNOWN && action.rfind( "eeschema.", 0 ) != 0 );
 
+    if( target == types::FT_PCB_EDITOR && toolManager()
+        && !toolManager()->GetActionManager()->FindAction( action ) )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+        e.set_error_message( fmt::format( "RunAction: FT_PCB_EDITOR has no action {}", action ) );
+        return tl::unexpected( e );
+    }
+
     if( !mine || ( toolManager() && !toolManager()->GetActionManager()->FindAction( action ) ) )
     {
         ApiResponseStatus e;

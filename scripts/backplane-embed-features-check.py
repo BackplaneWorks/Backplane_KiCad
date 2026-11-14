@@ -82,6 +82,20 @@ def main():
                                  text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.strip()
             return int(out) if out.isdigit() else 0
 
+        # ---------------- RunAction naming an editor that cannot take it (runaction-frame) ----------------
+        def run_action_error(action, frame):
+            t0 = time.monotonic()
+            reply = api.request_raw(editor.RunAction(action=action, frame=frame))
+            return reply.status.status, reply.status.error_message, time.monotonic() - t0
+
+        if embed.FK_SCH not in frames():
+            status, message, took = run_action_error("common.Interactive.undo", base.FT_SCHEMATIC_EDITOR)
+            check(status == api.envelope.AS_BAD_REQUEST and "FT_SCHEMATIC_EDITOR is not open" in message
+                  and took < 5, f"RunAction naming the schematic editor before it is open is refused at once ({message})")
+        status, message, took = run_action_error("common.Interactive.undo", base.FT_SYMBOL_EDITOR)
+        check(status == api.envelope.AS_BAD_REQUEST and "FT_SYMBOL_EDITOR does not accept actions" in message
+              and took < 5, f"RunAction naming the symbol editor is refused at once ({message})")
+
         # ---------------- 0. Prewarm, then the host maps the frame itself ----------------
         t = time.monotonic()
         reply = api.request(embed.ShowFrame(kind=embed.FK_SCH, prewarm=True, width=w, height=h),
@@ -325,6 +339,9 @@ def main():
         time.sleep(1)
         check(undone_named == with_edit - 1 and track_count() == with_edit,
               f"RunAction naming the PCB editor undoes and redoes on the board ({with_edit}, {undone_named})")
+        status, message, _ = run_action_error("eeschema.NoSuch.action", base.FT_SCHEMATIC_EDITOR)
+        check(status == api.envelope.AS_BAD_REQUEST and "has no action eeschema.NoSuch.action" in message,
+              f"RunAction naming an action the schematic editor does not have is refused ({message})")
         wait_for(lambda: frames()[embed.FK_PCB].modified, 5)
         add_text(board_file, "EXTERNAL-RELOAD")
         wait_event(embed.ET_RELOAD_CONFLICT)
