@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import time
 
 from google.protobuf import descriptor_pb2
@@ -24,6 +25,9 @@ CAPABILITIES = {"api-server", "headless-pcb", "headless-sch", "export-v10", "par
                 "capabilities", "sketch-route", "board-structure", "assembly", "idle-exit",
                 "shutdown", "api-descriptor", "symbol-from-libid", "footprint-partial-update",
                 "drc-zone-guard", "rules-insert-position", "plan-keys"}
+if sys.platform == "win32":
+    # Windows only: the prewarm never takes the keyboard (verified on Windows)
+    CAPABILITIES.add("prewarm-keeps-focus")
 
 
 def check_describe(cli, env):
