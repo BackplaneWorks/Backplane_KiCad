@@ -510,6 +510,23 @@ jobs:
             scripts/backplane-embed-align-comment-check.py "release/${archive_root}/bin/kicad" \
             "release/${archive_root}/bin/kicad-cli" --out "$RUNNER_TEMP/embed-x11/align-comment"
 
+      # lane P (CI only): the checks gate's overlap case and the API silence during a check run
+      - name: Lane P overlap and responsiveness checks on Xvfb
+        if: always() && env.archive_root != ''
+        shell: bash
+        run: |
+          unset LD_LIBRARY_PATH
+          O="$RUNNER_TEMP/embed-x11/laneP"; mkdir -p "$O"
+          K="release/${archive_root}/bin/kicad"; C="release/${archive_root}/bin/kicad-cli"
+          P="$RUNNER_TEMP/ipc-smoke-venv/bin/python"
+          LIBGL_ALWAYS_SOFTWARE=1 timeout 1800 "$P" scripts/backplane-embed-checks-check.py "$K" "$C" \
+            --out "$O/checks" 2>&1 | tee "$O/checks.log" || true
+          LIBGL_ALWAYS_SOFTWARE=1 timeout 2400 "$P" scripts/backplane-embed-responsiveness-check.py "$K" "$C" \
+            --project demos/video --project demos/jetson-agx-thor-baseboard --runs 3 --record \
+            --out "$O/resp" 2>&1 | tee "$O/resp.log" || true
+          cp scripts/backplane-responsiveness-budget.json "$O/" 2>/dev/null || true
+          nproc | tee "$O/nproc.txt"
+
       - name: Upload embedded GUI screenshots
         if: always() && env.archive_root != ''
         uses: actions/upload-artifact@v4
