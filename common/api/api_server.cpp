@@ -491,6 +491,27 @@ void KICAD_API_SERVER::onApiRequest( std::string* aRequest )
 }
 
 
+bool KICAD_API_SERVER::IsReadServedDuringTask( const std::string& aType )
+{
+    // Each handler read and found to change nothing in a document, a frame or the view
+    // (reviewed for bp.13 batch 7); the hub's and the checks' needs during a run.
+    static const std::set<std::string> reads = {
+        "kiapi.common.commands.Ping",                       // returns Empty
+        "kiapi.common.commands.GetVersion",                 // build constants
+        "kiapi.backplane.GetCapabilities",                  // build constants
+        "kiapi.common.commands.GetOpenDocuments",           // names the open documents
+        "kiapi.common.tasks.GetTaskStatus",                 // the scheduler's task table
+        "kiapi.board.tasks.GetDrcTaskResult",               // a finished task's result
+        "kiapi.schematic.tasks.GetErcTaskResult",           // a finished task's result
+        "kiapi.backplane.embed.GetFrames",                  // frame table, never opens one
+        "kiapi.backplane.embed.NextEvents",                 // the event queue, never waits here
+        "kiapi.backplane.embed.GetMarkers",                 // the document's marker list
+    };
+
+    return reads.count( aType ) > 0;
+}
+
+
 void KICAD_API_SERVER::ServeDuringTask()
 {
     if( !wxThread::IsMain() || !PgmOrNull() || !API_TASK_SCHEDULER::Instance().AnyTaskRunning() )
@@ -572,49 +593,35 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
         return;
     }
 
-    // Only allow-listed API requests can be handled while a task is running; anything else
-    // is assumed to possible mess with state that the task might be depending on not changing.
+    // While an API task runs, its progress updates and step pumps serve this queue from inside
+    // code that is iterating the document (DRC, zone fill, the schematic's netlist).  Only the
+    // reads in s_readsDuringTask are dispatched then; everything else is answered AS_BUSY naming
+    // the task, never run there.  An allow-list of full type names, not a rule by package or
+    // name prefix: a type is added only after its handler is read and found to change nothing.
     std::optional<API_TASK_SCHEDULER::RUNNING> runningTask =
             request.has_message() ? API_TASK_SCHEDULER::Instance().RunningTask() : std::nullopt;
 
     if( runningTask )
     {
         std::string requestType;
+        google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &requestType );
 
-        if( google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &requestType ) )
+        if( !IsReadServedDuringTask( requestType ) )
         {
-            bool typeHandled = false;
-            bool allowedDuringTask = false;
+            ApiResponse error;
+            error.mutable_header()->set_kicad_token( m_token );
+            error.mutable_status()->set_status( ApiStatusCode::AS_BUSY );
+            error.mutable_status()->set_error_message( fmt::format(
+                    "a task is running: {} (token {}, for {:.1f} s); {} waits until it completes "
+                    "(GetTaskStatus with the token); only reads are answered meanwhile",
+                    runningTask->description.ToStdString( wxConvUTF8 ), runningTask->token,
+                    runningTask->seconds, requestType.empty() ? std::string( "this request" ) : requestType ) );
+            m_server->Reply( error.SerializeAsString() );
 
-            for( API_HANDLER* handler : m_handlers )
-            {
-                if( handler->CanHandle( requestType ) )
-                {
-                    typeHandled = true;
-                    allowedDuringTask = handler->AllowsDuringTask( requestType );
-                    break;
-                }
-            }
+            if( ADVANCED_CFG::GetCfg().m_EnableAPILogging )
+                log( "Response (ERROR): " + error.Utf8DebugString() );
 
-            // Reads are answered during a task (it runs on this thread and serves the API only in its
-            // progress yields, so a read sees a consistent document); only changes wait for it
-            if( typeHandled && !allowedDuringTask && !isReadOnlyRequest( requestType ) )
-            {
-                ApiResponse error;
-                error.mutable_header()->set_kicad_token( m_token );
-                error.mutable_status()->set_status( ApiStatusCode::AS_BUSY );
-                error.mutable_status()->set_error_message( fmt::format(
-                        "a task is running: {} (token {}, for {:.1f} s); changes wait until it "
-                        "completes (GetTaskStatus with the token); reads are answered",
-                        runningTask->description.ToStdString( wxConvUTF8 ), runningTask->token,
-                        runningTask->seconds ) );
-                m_server->Reply( error.SerializeAsString() );
-
-                if( ADVANCED_CFG::GetCfg().m_EnableAPILogging )
-                    log( "Response (ERROR): " + error.Utf8DebugString() );
-
-                return;
-            }
+            return;
         }
     }
 

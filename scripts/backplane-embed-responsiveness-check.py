@@ -68,6 +68,8 @@ def measure(args, project, out):
             stretches = []
             ping = True
             while not done and time.monotonic() - t_run < 600:
+                if args.probe_interval_ms > 0:
+                    time.sleep(args.probe_interval_ms / 1000)
                 if ping:
                     api.request_raw(base_cmds.Ping())
                     seen = []
@@ -121,6 +123,9 @@ def main():
     parser.add_argument("--out", type=Path, default=Path("embed-responsiveness-out"))
     parser.add_argument("--record", action="store_true")
     parser.add_argument("--ceiling-ms", type=float, default=300)
+    parser.add_argument("--probe-interval-ms", type=float, default=0,
+                        help="pause between probe requests (0: back to back); with a long pause the "
+                             "run's own length is measured with next to no probe load")
     args = parser.parse_args()
     projects = args.project or [Path(__file__).resolve().parents[1] / "demos/video"]
 

@@ -77,6 +77,10 @@ public:
      */
     static void ServeDuringTask();
 
+    /// The full request type names answered while an API task runs (an explicit allow-list of
+    /// reads); every other request is answered AS_BUSY naming the task.
+    static bool IsReadServedDuringTask( const std::string& aType );
+
     KICAD_API_SERVER( bool aAutoStart = true );
 
     ~KICAD_API_SERVER();
