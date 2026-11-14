@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <board_commit.h>
 #include <set>
 #include <vector>
 #include <wx/string.h>
@@ -49,6 +50,11 @@ class EDA_3D_CANVAS;
 class DIALOG_MIGRATE_3D_MODELS : public DIALOG_MIGRATE_3D_MODELS_BASE
 {
 public:
+    /// How a migration's commit is pushed: a 3D model path is not copper, so no teardrop is refitted
+    /// and no fill is touched (teardrops rebuilt for the footprints it touches would stop matching
+    /// the zone fills poured around the old ones)
+    static constexpr int COMMIT_FLAGS = SKIP_TEARDROPS;
+
     DIALOG_MIGRATE_3D_MODELS( PCB_EDIT_FRAME* aFrame );
     ~DIALOG_MIGRATE_3D_MODELS() override;
 

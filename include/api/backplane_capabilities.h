@@ -22,7 +22,9 @@
 namespace BACKPLANE
 {
 
-inline constexpr std::array<const char*, 19> CAPABILITIES = {
+// Deduced from the list itself (no hand-kept size): a platform-only entry sits inside it under its
+// #ifdef, and adding one cannot leave the size behind
+inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     "api-server",
     "headless-pcb",
     "headless-sch",
@@ -42,6 +44,9 @@ inline constexpr std::array<const char*, 19> CAPABILITIES = {
     "routing-plan",    // docs/backplane/floorplanner.md: kiapi.backplane.plan
     "drc-zone-guard",  // DRC checks a zone against its outline when its fill triangulation is bad
     "plan-keys",       // in plan view the plan tool's keys (A, R, W, L...) are its own, never KiCad's defaults
-};
+    "no-load-migration", // embedded: opening a document changes nothing (no load-time 3D migration;
+                         // KiCad's own load fixes are actor "kicad"); SaveDocument of an unmodified
+                         // document in an open editor writes nothing
+} );
 
 } // namespace BACKPLANE

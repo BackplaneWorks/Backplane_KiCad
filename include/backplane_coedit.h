@@ -50,6 +50,10 @@ KICOMMON_API const std::string& CurrentActor();
 
 inline bool AgentActing() { return !CurrentActor().empty(); }
 
+/// The actor of changes KiCad makes by itself (a load-time fixup), never the person's or the API
+/// client's that caused the load.  Not an agent (no "agent:" prefix).
+inline constexpr const char* KICAD_ACTOR = "kicad";
+
 /// An AI agent (Backplane's "agent:<thread>"), not the person and not Backplane's own housekeeping
 /// (other client names): only agents open the Agents pane and draw working areas.
 inline bool IsAgentActor( const std::string& aActor ) { return aActor.rfind( "agent:", 0 ) == 0; }

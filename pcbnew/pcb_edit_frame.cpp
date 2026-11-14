@@ -2228,6 +2228,10 @@ void PCB_EDIT_FRAME::SetActiveLayer( PCB_LAYER_ID aLayer, bool aForceRedraw )
 
 void PCB_EDIT_FRAME::OnBoardLoaded()
 {
+    // What KiCad changes by itself while it finishes a load is KiCad's, not the person's and not the
+    // API client's whose request opened the board
+    COEDIT::ACTOR_SCOPE loadActor( COEDIT::KICAD_ACTOR );
+
     wxFileName fn( GetBoard()->GetFileName() );
 
     ENUM_MAP<PCB_LAYER_ID>& layerEnum = ENUM_MAP<PCB_LAYER_ID>::Instance();
@@ -2263,7 +2267,9 @@ void PCB_EDIT_FRAME::OnBoardLoaded()
     // state on load.  The STEP exporter does its own WRL->STEP substitution at
     // export time via the --subst-models flag, and the 3D cache quietly falls
     // back to sibling STEP files for missing WRLs in headless contexts.
-    if( Pgm().IsGUI() )
+    // Embedded (Backplane), opening a board must not change it: the migration is left to the
+    // person (Edit > Migrate 3D Models), so a board opened, checked and saved stays as it was.
+    if( Pgm().IsGUI() && !BACKPLANE_EMBED::Get().Enabled() )
     {
         // Silently replace references whose filename uniquely identifies a
         // STEP sibling.  Leaves ambiguous cases for the infobar below.

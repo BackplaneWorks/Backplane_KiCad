@@ -435,6 +435,18 @@ HANDLER_RESULT<google::protobuf::Empty> API_HANDLER_SCH::handleSaveDocument( con
         return tl::unexpected( e );
     }
 
+    // Embedded (Backplane), an open editor with nothing changed writes nothing: a schematic opened and
+    // saved stays byte for byte as it was (no format upgrade, no rewrite of what the loader
+    // normalised).  A plain KiCad saves as upstream does; SaveDocumentAs and copies always write.
+    if( BACKPLANE_EMBED::Get().Enabled() )
+    {
+        if( auto* editor = frame(); editor && !editor->IsContentModified() )
+        {
+            m_okNote = "not modified: nothing written";
+            return google::protobuf::Empty();
+        }
+    }
+
     if( !context()->SaveSchematic() )
     {
         ApiResponseStatus e;

@@ -160,12 +160,18 @@ protected:
 
                     ctx.ClientName = aRequest.header().client_name();
 
+                    m_okNote.clear();
+
                     HANDLER_RESULT<ResponseType> response =
                             std::invoke( aHandler, static_cast<HandlerType*>( this ), ctx );
 
                     if( response.has_value() )
                     {
                         envelope.mutable_status()->set_status( ApiStatusCode::AS_OK );
+
+                        if( !m_okNote.empty() )
+                            envelope.mutable_status()->set_error_message( m_okNote );
+
                         envelope.mutable_message()->PackFrom( *response );
                         return envelope;
                     }
@@ -178,6 +184,11 @@ protected:
 
     /// Maps type name (without the URL prefix) to a handler method
     std::map<std::string, HANDLER_ENTRY> m_handlers;
+
+    /// A handler that succeeds can say more without changing its response type (old clients unpack
+    /// the same message): set here, it goes out as the AS_OK status's error_message.  Cleared
+    /// before each handler runs.  E.g. "not modified: nothing written".
+    std::string m_okNote;
 
     bool m_notifyNetSettings = false;
 
