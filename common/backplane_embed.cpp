@@ -194,15 +194,7 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
     hooks.dialog =
             [this]( uint64_t aWindow, bool aMapped, const wxString& aTitle )
             {
-                if( aMapped )
-                {
-                    m_openDialogs[aWindow] = aTitle;
-                    PushEvent( EMBED_EVENT_TYPE::DIALOG_OPENED, {}, aTitle.ToStdString( wxConvUTF8 ) );
-                }
-                else if( m_openDialogs.erase( aWindow ) )
-                {
-                    PushEvent( EMBED_EVENT_TYPE::DIALOG_CLOSED, {}, aTitle.ToStdString( wxConvUTF8 ) );
-                }
+                noteDialog( aWindow, aMapped, aTitle );
             };
     hooks.detached =
             [this]()
@@ -459,6 +451,30 @@ bool BACKPLANE_EMBED::isUnmanaged( uint64_t aWindow ) const
     }
 
     return m_manager && KIPLATFORM::EMBED::WindowId( m_manager ) == aWindow;
+}
+
+
+void BACKPLANE_EMBED::noteDialog( uint64_t aWindow, bool aMapped, const wxString& aTitle )
+{
+    if( aMapped )
+    {
+        if( m_openDialogs.count( aWindow ) )
+            return;
+
+        m_openDialogs[aWindow] = aTitle;
+        PushEvent( EMBED_EVENT_TYPE::DIALOG_OPENED, {}, aTitle.ToStdString( wxConvUTF8 ) );
+    }
+    else
+    {
+        auto it = m_openDialogs.find( aWindow );
+
+        if( it == m_openDialogs.end() )
+            return;
+
+        wxString title = aTitle.IsEmpty() ? it->second : aTitle;
+        m_openDialogs.erase( it );
+        PushEvent( EMBED_EVENT_TYPE::DIALOG_CLOSED, {}, title.ToStdString( wxConvUTF8 ) );
+    }
 }
 
 
@@ -1230,6 +1246,25 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
         return -1;
 
     noteCanvasInput( aEvent, type );
+
+#ifdef __WXMSW__
+    // A wx dialog shown or hidden (DIALOG_SHIM, KIDIALOG): the same ET_DIALOG_OPENED/CLOSED the
+    // toolkit hook gives on Linux, so the host can name what holds KiCad up.  Native modals (the
+    // TaskDialog message boxes, file dialogs) come from the port's CBT hook.  Keyed by HWND, so a
+    // dialog both paths see is said once.
+    if( type == wxEVT_SHOW || type == wxEVT_DESTROY )
+    {
+        if( wxDialog* dialog = wxDynamicCast( aEvent.GetEventObject(), wxDialog ) )
+        {
+            bool shown = type == wxEVT_SHOW && static_cast<wxShowEvent&>( aEvent ).IsShown();
+
+            if( uint64_t id = KIPLATFORM::EMBED::WindowId( dialog ) )
+                noteDialog( id, shown, dialog->GetTitle() );
+        }
+
+        return -1;
+    }
+#endif
 
     bool buttonDown = type == wxEVT_LEFT_DOWN || type == wxEVT_RIGHT_DOWN
                       || type == wxEVT_MIDDLE_DOWN || type == wxEVT_AUX1_DOWN
