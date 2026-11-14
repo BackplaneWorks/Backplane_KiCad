@@ -22,7 +22,7 @@
 namespace BACKPLANE
 {
 
-inline constexpr std::array<const char*, 20> CAPABILITIES = {
+inline constexpr std::array<const char*, 21> CAPABILITIES = {
     "api-server",
     "headless-pcb",
     "headless-sch",
@@ -43,6 +43,7 @@ inline constexpr std::array<const char*, 20> CAPABILITIES = {
     "comment-key-63",  // embedded: the comment action sends KEY_ATOM index 63; text fields keep ';'
     "drc-zone-guard",  // DRC checks a zone against its outline when its fill triangulation is bad
     "rules-insert-position", // EditCustomRules.insert: new rules first, last or before a named rule
+    "plan-keys",       // in plan view the plan tool's keys (A, R, W, L...) are its own, never KiCad's defaults
 };
 
 } // namespace BACKPLANE
