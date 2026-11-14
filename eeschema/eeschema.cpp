@@ -116,86 +116,24 @@ eeschemaAttachDiffCanvasesExport( int aKind, const wxString& aFileA, const wxStr
                                   KICAD_DIFF::DOCUMENT_DIFF* aDiff, REPORTER* aReporter );
 
 
-// TODO: This should move out of this file
-static std::unique_ptr<SCHEMATIC> readSchematicFromFile( const std::string& aFilename )
-{
-    IO_RELEASER<SCH_IO> pi( SCH_IO_MGR::FindPlugin( SCH_IO_MGR::SCH_KICAD ) );
-    std::unique_ptr<SCHEMATIC> schematic = std::make_unique<SCHEMATIC>( nullptr );
-
-    SETTINGS_MANAGER& manager = Pgm().GetSettingsManager();
-
-    wxFileName pro( aFilename );
-    pro.SetExt( FILEEXT::ProjectFileExtension );
-    pro.MakeAbsolute();
-    wxString projectPath = pro.GetFullPath();
-
-    PROJECT* project = manager.GetProject( projectPath );
-
-    if( !project )
-    {
-        manager.LoadProject( projectPath, true );
-        project = manager.GetProject( projectPath );
-    }
-
-    schematic->Reset();
-    schematic->SetProject( project );
-    SCH_SHEET* rootSheet = pi->LoadSchematicFile( aFilename, schematic.get() );
-
-    if( !rootSheet )
-        return nullptr;
-
-    std::vector<SCH_SHEET*> topLevelSheets = schematic->GetTopLevelSheets();
-    bool rootIsTopLevel = std::find( topLevelSheets.begin(), topLevelSheets.end(), rootSheet )
-                          != topLevelSheets.end();
-    bool rootIsVirtualRoot = rootSheet == &schematic->Root() || rootSheet->IsVirtualRootSheet();
-
-    if( !rootIsTopLevel && !rootIsVirtualRoot )
-        schematic->SetTopLevelSheets( { rootSheet } );
-
-    SCH_SCREENS screens( schematic->Root() );
-
-    for( SCH_SCREEN* screen = screens.GetFirst(); screen; screen = screens.GetNext() )
-        screen->UpdateLocalLibSymbolLinks();
-
-    SCH_SHEET_LIST sheets = schematic->Hierarchy();
-
-    // Restore all of the loaded symbol instances from the root sheet screen.
-    sheets.UpdateSymbolInstanceData( schematic->RootScreen()->GetSymbolInstances() );
-
-    if( schematic->RootScreen()->GetFileFormatVersionAtLoad() < 20230221 )
-    {
-        for( SCH_SCREEN* screen = screens.GetFirst(); screen; screen = screens.GetNext() )
-            screen->FixLegacyPowerSymbolMismatches();
-    }
-
-    for( SCH_SCREEN* screen = screens.GetFirst(); screen; screen = screens.GetNext() )
-        screen->MigrateSimModels();
-
-    // NOTE: This is required for multi-unit symbols to be correct
-    for( SCH_SHEET_PATH& sheet : sheets )
-        sheet.UpdateAllScreenReferences();
-
-    // TODO: this must handle SchematicCleanup somehow.  The original version didn't because
-    // it knew that QA test cases were saved in a clean state.
-
-    // TODO: does this need to handle PruneOrphanedSymbolInstances() and
-    // PruneOrphanedSheetInstances()?
-
-    schematic->ConnectionGraph()->Recalculate( sheets, true );
-
-    return schematic;
-}
-
-
-// TODO: This should move out of this file
 bool generateSchematicNetlist( const wxString& aFilename, std::string& aNetlist, KIWAY* aKiway )
 {
-    std::unique_ptr<SCHEMATIC> schematic = readSchematicFromFile( aFilename.ToStdString() );
+    // Load as `sch export netlist` and the editor do: the root sheet takes the project's top-level
+    // sheet UUID and symbols whose instance paths sit under another root UUID (a file saved before
+    // the project's UUID was applied, or a copied project) are resolved, so references are not
+    // replaced by symbol UUIDs in unconnected net names.  In memory only; nothing is written.
+    SCHEMATIC* loaded = EESCHEMA_HELPERS::LoadSchematic( aFilename, false, false );
 
-    if( !schematic )
+    if( !loaded )
         return false;
 
-    NETLIST_EXPORTER_KICAD exporter( schematic.get(), aKiway );
+    // With a schematic editor open on the active project the helper hands back its schematic.
+    std::unique_ptr<SCHEMATIC> owned;
+
+    if( !EESCHEMA_HELPERS::IsEditFrameSchematic( loaded ) )
+        owned.reset( loaded );
+
+    NETLIST_EXPORTER_KICAD exporter( loaded, aKiway );
     STRING_FORMATTER       formatter;
 
     exporter.Format( &formatter, GNL_ALL | GNL_OPT_KICAD );

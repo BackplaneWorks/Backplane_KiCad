@@ -30,6 +30,7 @@
 #include <eeschema_test_utils.h>
 
 #include <deque>
+#include <set>
 #include <eeschema_helpers.h>
 #include <locale_io.h>
 #include <sch_screen.h>
@@ -62,4 +63,45 @@ BOOST_AUTO_TEST_CASE( Issue18346JunctionFixupOnLoad )
     BOOST_CHECK_MESSAGE( needed == 0,
                          "Normal load path left " << needed
                          << " junction(s) missing; FixupJunctionsAfterImport did not run" );
+}
+
+
+/**
+ * The implied junctions (and wire segments split at them) are made again on every load of an
+ * older file; their ids come from the sheet and the point, so two loads give the same ids and a
+ * save with nothing else changed does not churn them.
+ */
+BOOST_AUTO_TEST_CASE( Issue18346JunctionFixupStableIds )
+{
+    LOCALE_IO dummy;
+
+    wxString schPath = wxString::FromUTF8( KI_TEST::GetEeschemaTestDataDir() ) +
+                       wxS( "issue18346.kicad_sch" );
+
+    auto itemIds =
+            [&]()
+            {
+                std::unique_ptr<SCHEMATIC> sch( EESCHEMA_HELPERS::LoadSchematic( schPath, true, true ) );
+                BOOST_REQUIRE( sch != nullptr );
+
+                std::set<wxString> ids;
+                SCH_SCREENS        screens( sch->Root() );
+
+                for( SCH_SCREEN* screen = screens.GetFirst(); screen; screen = screens.GetNext() )
+                {
+                    for( SCH_ITEM* item : screen->Items() )
+                    {
+                        if( item->Type() == SCH_JUNCTION_T || item->Type() == SCH_LINE_T )
+                            ids.insert( item->m_Uuid.AsString() );
+                    }
+                }
+
+                return ids;
+            };
+
+    std::set<wxString> first = itemIds();
+    std::set<wxString> second = itemIds();
+
+    BOOST_CHECK( !first.empty() );
+    BOOST_CHECK_MESSAGE( first == second, "the implied junctions or split wires took new ids on reload" );
 }

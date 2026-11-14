@@ -396,6 +396,16 @@ int SCH_EDITOR_CONTROL::Open( const TOOL_EVENT& aEvent )
 
 int SCH_EDITOR_CONTROL::Save( const TOOL_EVENT& aEvent )
 {
+    // Embedded, a save with nothing changed writes nothing: rewriting the files would carry load-time
+    // repairs (instance paths re-keyed to the project's sheet UUID, implied junctions) and a format
+    // upgrade the person never asked for.  Save As still writes.
+    if( BACKPLANE_EMBED::Get().Enabled() && !m_frame->IsContentModified()
+        && !m_frame->Schematic().GetFileName().IsEmpty() )
+    {
+        m_frame->SetStatusText( _( "No changes to save" ) );
+        return 0;
+    }
+
     m_frame->SaveProject();
     return 0;
 }

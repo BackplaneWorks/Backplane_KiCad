@@ -52,6 +52,10 @@ public:
                                             bool aCalculateConnectivity = true,
                                             REPORTER* aRootReporter = nullptr );
 
+    /// True when @a aSchematic is the open schematic editor's own (LoadSchematic may return it);
+    /// the caller must not delete it.
+    static bool              IsEditFrameSchematic( const SCHEMATIC* aSchematic );
+
 private:
     static SCH_EDIT_FRAME*   s_SchEditFrame;
 };
