@@ -525,6 +525,16 @@ jobs:
             --project demos/video --project demos/jetson-agx-thor-baseboard --runs 3 --record \
             --out "$O/resp" 2>&1 | tee "$O/resp.log" || true
           cp scripts/backplane-responsiveness-budget.json "$O/" 2>/dev/null || true
+          LIBGL_ALWAYS_SOFTWARE=1 timeout 1800 "$P" scripts/backplane-embed-task-gate-check.py "$K" "$C" \
+            --out "$O/gate" 2>&1 | tee "$O/gate.log" || true
+          LIBGL_ALWAYS_SOFTWARE=1 timeout 1500 "$P" scripts/backplane-embed-responsiveness-check.py "$K" "$C" \
+            --project demos/video --project demos/jetson-agx-thor-baseboard --runs 3 --probe-interval-ms 1000 \
+            --ceiling-ms 100000 --out "$O/quiet" 2>&1 | tee "$O/quiet.log" || true
+          "$RUNNER_TEMP/ipc-smoke-venv/bin/pip" install -q pynng 2>&1 | tail -1 || true
+          timeout 1500 "$P" scripts/backplane-coedit-scenarios.py "$K" "$C" --out "$O/scen" --seconds 45 \
+            2>&1 | tee "$O/coedit-scenarios.log" || true
+          timeout 1500 "$P" scripts/backplane-coedit-stress.py "$K" "$C" --out "$O/stress" --seconds 60 \
+            2>&1 | tee "$O/coedit-stress.log" || true
           nproc | tee "$O/nproc.txt"
 
       - name: Upload embedded GUI screenshots
