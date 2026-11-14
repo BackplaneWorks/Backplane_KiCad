@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <api/api_server.h>
 #include "conn_publish.h"
 #include <sch_connection.h>
 #include <algorithm>
@@ -74,6 +75,8 @@ PUBLICATION::ROW_UPDATE PUBLICATION::PrepareRows( const COMPONENTS& aCurrent,
 
     for( const auto& [node, component] : m_components )
     {
+        KICAD_API_SERVER::ServeDuringTask();   // per component: see INPUT_STORE::Capture
+
         const auto current = aCurrent.find( node );
 
         if( current == aCurrent.end() || !sameComponent( component, current->second ) )

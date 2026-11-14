@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <api/api_server.h>
 #include "conn_text.h"
 #include "conn_inputs.h"
 #include "conn_tasks.h"
@@ -361,6 +362,10 @@ std::vector<FRAME_INSTANCE> INPUT_STORE::Capture( const SCH_SHEET_LIST& aPaths, 
 
     for( const FRAME_INSTANCE& item : frame )
     {
+        // Between sheet instances: answer what the API has queued while a task (a board's parity
+        // check) waits on this; served requests are reads that never touch connectivity
+        KICAD_API_SERVER::ServeDuringTask();
+
         const SCH_SHEET_PATH& path = *paths.at( item.scope.instance );
         Instance( *path.LastScreen(), path, aTextEpoch );
         screens.insert( item.screen );

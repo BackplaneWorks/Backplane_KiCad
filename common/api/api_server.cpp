@@ -514,7 +514,21 @@ bool KICAD_API_SERVER::IsReadServedDuringTask( const std::string& aType )
 
 void KICAD_API_SERVER::ServeDuringTask()
 {
-    if( !wxThread::IsMain() || !PgmOrNull() || !API_TASK_SCHEDULER::Instance().AnyTaskRunning() )
+    if( !wxThread::IsMain() )
+        return;
+
+    // Called from inside tight loops (a library parse, the connectivity engine): at most every
+    // 20 ms, decided by a clock read before anything that takes a lock.  Main thread only, so the
+    // static is never shared.
+    static std::chrono::steady_clock::time_point last;
+    const std::chrono::steady_clock::time_point  now = std::chrono::steady_clock::now();
+
+    if( now - last < std::chrono::milliseconds( 20 ) )
+        return;
+
+    last = now;
+
+    if( !PgmOrNull() || !API_TASK_SCHEDULER::Instance().AnyTaskRunning() )
         return;
 
     KICAD_API_SERVER* server = PgmOrNull()->ApiServerOrNull();
