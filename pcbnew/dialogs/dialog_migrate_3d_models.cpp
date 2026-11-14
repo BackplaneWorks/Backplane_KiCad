@@ -368,7 +368,8 @@ int DIALOG_MIGRATE_3D_MODELS::AutoMigrateByFilename( PCB_EDIT_FRAME* aFrame )
     }
 
     if( !commit.Empty() )
-        commit.Push( _( "Auto-migrate 3D Model References" ) );
+        // A 3D model path is not copper: no teardrop is refitted, no fill touched
+        commit.Push( _( "Auto-migrate 3D Model References" ), COMMIT_FLAGS );
 
     return rewritten;
 }
@@ -1018,7 +1019,8 @@ void DIALOG_MIGRATE_3D_MODELS::OnReplaceClick( wxCommandEvent& )
         }
     }
 
-    commit.Push( _( "Migrate 3D Model References" ) );
+    // A 3D model path is not copper: no teardrop is refitted, no fill touched
+    commit.Push( _( "Migrate 3D Model References" ), COMMIT_FLAGS );
 
     EndModal( wxID_OK );
 }
