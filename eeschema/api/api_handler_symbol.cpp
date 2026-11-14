@@ -241,6 +241,13 @@ API_HANDLER_SYMBOL::handleOpenLibraryItem( const HANDLER_CONTEXT<commands::OpenL
 
 HANDLER_RESULT<Empty> API_HANDLER_SYMBOL::handleSaveDocument( const HANDLER_CONTEXT<commands::SaveDocument>& aCtx )
 {
+    // The document first: KiCad's API server asks its handlers in an unspecified order, so a
+    // request for another editor's document (a board, a schematic) must be AS_UNHANDLED here, not
+    // answered with this editor's state ("no library yet" refused board saves while the Symbol
+    // Editor held a new, unsaved symbol)
+    if( HANDLER_RESULT<bool> documentValidation = validateDocument( aCtx.Request.document() ); !documentValidation )
+        return tl::unexpected( documentValidation.error() );
+
     if( context()->GetLoadedLibId().GetLibNickname().empty() )
     {
         ApiResponseStatus e;
@@ -249,9 +256,6 @@ HANDLER_RESULT<Empty> API_HANDLER_SYMBOL::handleSaveDocument( const HANDLER_CONT
                              "path to save it" );
         return tl::unexpected( e );
     }
-
-    if( HANDLER_RESULT<bool> documentValidation = validateDocument( aCtx.Request.document() ); !documentValidation )
-        return tl::unexpected( documentValidation.error() );
 
     if( std::optional<ApiResponseStatus> busy = checkForBusy() )
         return tl::unexpected( *busy );
