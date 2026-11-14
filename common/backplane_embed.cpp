@@ -2099,13 +2099,19 @@ void BACKPLANE_EMBED::Prewarm( wxFrame* aFrame, int aWidth, int aHeight )
     m_prewarming.insert( aFrame );
     TRACE_SCOPE trace( "embed:prewarm@" + aFrame->GetName().ToStdString( wxConvUTF8 ) );
     KIPLATFORM::EMBED::SetFrameGeometry( aFrame, -30000, -30000, std::max( aWidth, 400 ), std::max( aHeight, 300 ) );
-    WithShowAllowed( [&]() { aFrame->Show( true ); } );
+
+    // Never activated: on Windows an activated prewarm kept the activation while hidden, and the
+    // next click on an editor tab gave the person's keys to it.  A focus it takes anyway (a
+    // SetFocus while it is built or first painted) goes back where it was before it is hidden.
+    uint64_t focusBefore = KIPLATFORM::EMBED::FocusedWindow();
+    WithShowAllowed( [&]() { KIPLATFORM::EMBED::ShowInactive( aFrame ); } );
+    KIPLATFORM::EMBED::ReturnFocusFrom( aFrame, focusBefore );
 
     wxWeakRef<wxFrame> weak( aFrame );
 
     // Hidden again after it has had time to paint (the paint comes from the next frames)
     aFrame->CallAfter(
-            [this, weak, aWidth, aHeight]()
+            [this, weak, aWidth, aHeight, focusBefore]()
             {
                 wxFrame* frame = weak.get();
 
@@ -2114,7 +2120,7 @@ void BACKPLANE_EMBED::Prewarm( wxFrame* aFrame, int aWidth, int aHeight )
 
                 wxTimer* later = new wxTimer();
                 later->Bind( wxEVT_TIMER,
-                             [this, weak, later, aWidth, aHeight]( wxTimerEvent& )
+                             [this, weak, later, aWidth, aHeight, focusBefore]( wxTimerEvent& )
                              {
                                  later->Stop();
 
@@ -2123,6 +2129,7 @@ void BACKPLANE_EMBED::Prewarm( wxFrame* aFrame, int aWidth, int aHeight )
                                      // Unmapped natively rather than hidden: it stays shown
                                      // to the toolkit, so the host may map it directly
                                      // (FrameInfo.realized), with no first-map cost
+                                     KIPLATFORM::EMBED::ReturnFocusFrom( f, focusBefore );
                                      KIPLATFORM::EMBED::UnmapNative( f );
                                      KIPLATFORM::EMBED::SetFrameGeometry( f, 0, 0, std::max( aWidth, 400 ),
                                                                           std::max( aHeight, 300 ) );

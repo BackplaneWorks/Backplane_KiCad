@@ -240,6 +240,10 @@ A prewarm ends with the frame realized (shown to the toolkit) but its window unm
 `FrameInfo.realized` true: the host may `XMapWindow` it directly for its first show, with no IPC
 and no first-map cost, exactly as for a frame `ShowFrame` showed and the host unmapped.
 `realized` is true for any frame the host may map and unmap itself; `HideFrame` clears it.
+A prewarm never takes the keyboard: on Windows the frame is shown without activating it
+(SW_SHOWNA), and a focus it takes anyway while it is built or first painted goes back, before it
+is hidden, to the window that had it, when that window is KiCad's (traced as `prewarm ...` in the
+embed trace).
 `ShowFrameResponse.frames` and `HideFrameResponse.frames` hold every frame's state after the
 call, so a switch needs no `GetFrames`.
 

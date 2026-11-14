@@ -40,6 +40,9 @@ void KIPLATFORM::EMBED::InstallLoopTimer( std::function<void( double, double )> 
 bool KIPLATFORM::EMBED::IsMapped( wxWindow* aFrame ) { return aFrame && aFrame->IsShown(); }
 void KIPLATFORM::EMBED::EnsureMapped( wxWindow* ) {}
 void KIPLATFORM::EMBED::UnmapNative( wxWindow* aFrame ) { if( aFrame ) aFrame->Show( false ); }
+void KIPLATFORM::EMBED::ShowInactive( wxWindow* aFrame ) { if( aFrame ) aFrame->Show( true ); }
+uint64_t KIPLATFORM::EMBED::FocusedWindow() { return 0; }
+void KIPLATFORM::EMBED::ReturnFocusFrom( wxWindow*, uint64_t ) {}
 bool KIPLATFORM::EMBED::NativeModalTitle( wxString& ) { return false; }
 void KIPLATFORM::EMBED::MakeTransientFor( wxWindow*, uint64_t ) {}
 

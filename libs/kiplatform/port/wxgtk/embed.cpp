@@ -728,6 +728,26 @@ void KIPLATFORM::EMBED::UnmapNative( wxWindow* aFrame )
 }
 
 
+void KIPLATFORM::EMBED::ShowInactive( wxWindow* aFrame )
+{
+    // A prewarmed frame lives in the holder (an X11 child), which the window manager never
+    // activates: Show() as before
+    if( aFrame )
+        aFrame->Show( true );
+}
+
+
+uint64_t KIPLATFORM::EMBED::FocusedWindow()
+{
+    return 0;
+}
+
+
+void KIPLATFORM::EMBED::ReturnFocusFrom( wxWindow*, uint64_t )
+{
+}
+
+
 bool KIPLATFORM::EMBED::HasFocus( wxWindow* aFrame )
 {
 #ifdef GDK_WINDOWING_X11

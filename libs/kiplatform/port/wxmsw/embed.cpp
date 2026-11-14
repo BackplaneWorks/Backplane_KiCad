@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <wx/app.h>
+#include <wx/toplevel.h>
 #include <wx/window.h>
 #include <windows.h>
 #include <dbghelp.h>
@@ -813,6 +814,59 @@ void KIPLATFORM::EMBED::UnmapNative( wxWindow* aFrame )
 {
     if( aFrame )
         ShowWindow( static_cast<HWND>( aFrame->GetHWND() ), SW_HIDE );
+}
+
+
+void KIPLATFORM::EMBED::ShowInactive( wxWindow* aFrame )
+{
+    if( !aFrame )
+        return;
+
+    // wxTopLevelWindowMSW::Show( true ) uses SW_SHOW, which activates the frame; this is the
+    // same show with SW_SHOWNA.  It skips the frame's Show() override, which for a prewarm
+    // only lets the show through.
+    if( wxTopLevelWindow* top = dynamic_cast<wxTopLevelWindow*>( aFrame ) )
+        top->ShowWithoutActivating();
+    else
+        aFrame->Show( true );
+
+    HWND frame = static_cast<HWND>( aFrame->GetHWND() );
+    trace( "prewarm show %s without activating: active %s, focus %s, fg %s", describe( frame ).c_str(),
+           describe( GetActiveWindow() ).c_str(), describe( GetFocus() ).c_str(),
+           describe( GetForegroundWindow() ).c_str() );
+}
+
+
+uint64_t KIPLATFORM::EMBED::FocusedWindow()
+{
+    return reinterpret_cast<uint64_t>( GetFocus() );
+}
+
+
+void KIPLATFORM::EMBED::ReturnFocusFrom( wxWindow* aFrame, uint64_t aBefore )
+{
+    HWND frame = aFrame ? static_cast<HWND>( aFrame->GetHWND() ) : nullptr;
+    HWND focus = GetFocus();
+
+    if( !frame || !focus || ( focus != frame && !IsChild( frame, focus ) ) )
+        return;
+
+    HWND before = reinterpret_cast<HWND>( aBefore );
+    bool usable = before && IsWindow( before ) && before != frame && !IsChild( frame, before )
+                  && GetWindowThreadProcessId( before, nullptr ) == GetCurrentThreadId();
+
+    if( !usable )
+    {
+        trace( "prewarm %s holds the focus (%s); left there: the window focused before, %s, is "
+               "gone, inside it or another thread's",
+               describe( frame ).c_str(), describe( focus ).c_str(), describe( before ).c_str() );
+        return;
+    }
+
+    SetFocus( before );
+    trace( "prewarm %s held the focus (%s); given back to %s, focus now %s, active %s",
+           describe( frame ).c_str(), describe( focus ).c_str(), describe( before ).c_str(),
+           describe( GetFocus() ).c_str(), describe( GetActiveWindow() ).c_str() );
 }
 
 

@@ -124,6 +124,21 @@ namespace EMBED
     /// shown state alone, so the host may map it again directly.  Elsewhere it hides the frame.
     void UnmapNative( wxWindow* aFrame );
 
+    /// Show aFrame for a prewarm without making it the active window.  Windows: wx's Show()
+    /// shows a top-level with SW_SHOW, which activates it, and the activation stayed with the
+    /// hidden frame: the next activation of KiCad's input queue (a click on an editor tab)
+    /// gave the person's keys to it.  Elsewhere aFrame->Show( true ).
+    void ShowInactive( wxWindow* aFrame );
+
+    /// The window holding the keyboard focus now (any process), for ReturnFocusFrom.
+    uint64_t FocusedWindow();
+
+    /// If the keyboard focus is inside aFrame (a prewarmed frame, about to be hidden), give it
+    /// back to aBefore when that window still exists, is outside aFrame and belongs to this
+    /// thread; else leave it where it is (a SetFocus from KiCad's thread cannot reach another
+    /// thread's window).  Traced either way.  Windows only; elsewhere nothing.
+    void ReturnFocusFrom( wxWindow* aFrame, uint64_t aBefore );
+
     /// True if the keyboard focus is in aFrame (the window or a descendant).
     bool HasFocus( wxWindow* aFrame );
 
