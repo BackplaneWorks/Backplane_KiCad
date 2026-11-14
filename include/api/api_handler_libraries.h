@@ -46,6 +46,8 @@ class PROJECT;
 class API_HANDLER_LIBRARIES : public API_HANDLER
 {
 public:
+    int DispatchRank() const override { return RANK_LIBRARIES; }
+
     API_HANDLER_LIBRARIES( LIBRARY_TABLE_TYPE aType = LIBRARY_TABLE_TYPE::DESIGN_BLOCK );
 
     ~API_HANDLER_LIBRARIES() override;

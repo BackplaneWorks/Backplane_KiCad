@@ -30,6 +30,8 @@ class KIWAY;
 class API_HANDLER_EMBED : public API_HANDLER
 {
 public:
+    int DispatchRank() const override { return RANK_EMBED; }
+
     explicit API_HANDLER_EMBED( KIWAY& aKiway );
 
 private:

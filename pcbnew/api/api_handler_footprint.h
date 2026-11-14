@@ -33,6 +33,8 @@ class FOOTPRINT_EDIT_FRAME;
 class API_HANDLER_FOOTPRINT : public API_HANDLER_BOARD
 {
 public:
+    int DispatchRank() const override { return RANK_FOOTPRINT_EDITOR; }
+
     API_HANDLER_FOOTPRINT( FOOTPRINT_EDIT_FRAME* aFrame );
     API_HANDLER_FOOTPRINT( std::shared_ptr<FOOTPRINT_CONTEXT> aContext,
                            FOOTPRINT_EDIT_FRAME* aFrame = nullptr );

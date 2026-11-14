@@ -66,6 +66,28 @@ public:
     virtual ~API_HANDLER() {}
 
     /**
+     * Where this handler is asked in the API server's dispatch (capability api-handler-order):
+     * lower first.  A request type registered by several handlers goes to the editors in a fixed
+     * order (PCB, schematic, footprint, symbol), then the library, embed, common and project
+     * handlers; two handlers of the same rank are asked in the order they were registered.
+     * Before, the server kept its handlers in pointer order, so which editor answered first
+     * depended on where they had been allocated.
+     */
+    enum DISPATCH_RANK
+    {
+        RANK_PCB_EDITOR       = 10,
+        RANK_SCH_EDITOR       = 20,
+        RANK_FOOTPRINT_EDITOR = 30,
+        RANK_SYMBOL_EDITOR    = 40,
+        RANK_LIBRARIES        = 50,
+        RANK_EMBED            = 60,
+        RANK_COMMON           = 70,
+        RANK_OTHER            = 80
+    };
+
+    virtual int DispatchRank() const { return RANK_OTHER; }
+
+    /**
      * Attempt to handle the given API request, if a handler exists in this class for the message.
      * @param aMsg is a request to attempt to handle
      * @return a response to send to the client, or an appropriate error

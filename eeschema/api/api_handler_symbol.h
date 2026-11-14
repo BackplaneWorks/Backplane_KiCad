@@ -37,6 +37,8 @@ class SYMBOL_EDIT_FRAME;
 class API_HANDLER_SYMBOL : public API_HANDLER_EDITOR
 {
 public:
+    int DispatchRank() const override { return RANK_SYMBOL_EDITOR; }
+
     API_HANDLER_SYMBOL( SYMBOL_EDIT_FRAME* aFrame );
     API_HANDLER_SYMBOL( std::shared_ptr<SYMBOL_EDITOR_CONTEXT> aContext,
                         SYMBOL_EDIT_FRAME* aFrame = nullptr );

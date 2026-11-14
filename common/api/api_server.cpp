@@ -280,7 +280,15 @@ void KICAD_API_SERVER::RegisterHandler( API_HANDLER* aHandler )
     wxCHECK( aHandler, /* void */ );
 
     aHandler->setApiServer( this );
-    m_handlers.insert( aHandler );
+
+    if( std::find( m_handlers.begin(), m_handlers.end(), aHandler ) != m_handlers.end() )
+        return;
+
+    // After every handler of the same or a lower rank: a fixed order, never the allocator's
+    int  rank = aHandler->DispatchRank();
+    auto pos = std::find_if( m_handlers.begin(), m_handlers.end(),
+                             [rank]( API_HANDLER* aOther ) { return aOther->DispatchRank() > rank; } );
+    m_handlers.insert( pos, aHandler );
 }
 
 
@@ -289,14 +297,20 @@ void KICAD_API_SERVER::DeregisterHandler( API_HANDLER* aHandler )
     if( aHandler )
         aHandler->setApiServer( nullptr );
 
-    m_handlers.erase( aHandler );
+    m_handlers.erase( std::remove( m_handlers.begin(), m_handlers.end(), aHandler ), m_handlers.end() );
 }
 
 
 void KICAD_API_SERVER::NotifyNetSettingsChanged()
 {
-    for( API_HANDLER* handler : m_handlers )
-        handler->onNetSettingsChanged();
+    // A copy: a handler may register or deregister others (a frame opening or closing)
+    std::vector<API_HANDLER*> handlers = m_handlers;
+
+    for( API_HANDLER* handler : handlers )
+    {
+        if( std::find( m_handlers.begin(), m_handlers.end(), handler ) != m_handlers.end() )
+            handler->onNetSettingsChanged();
+    }
 }
 
 
@@ -707,8 +721,15 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
 
     try
     {
-        for( API_HANDLER* handler : m_handlers )
+        // A copy, in dispatch order: handling a request may open or close a frame, which
+        // registers or deregisters handlers; one deregistered meanwhile is not asked
+        std::vector<API_HANDLER*> handlers = m_handlers;
+
+        for( API_HANDLER* handler : handlers )
         {
+            if( std::find( m_handlers.begin(), m_handlers.end(), handler ) == m_handlers.end() )
+                continue;
+
             result = handler->Handle( request );
             notifyNetSettings |= handler->clearNetSettingsNotification();
 

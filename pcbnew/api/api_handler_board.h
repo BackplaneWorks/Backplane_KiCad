@@ -54,6 +54,8 @@ class PCB_GENERATOR;
 class API_HANDLER_BOARD : public API_HANDLER_EDITOR
 {
 public:
+    int DispatchRank() const override { return RANK_PCB_EDITOR; }
+
     API_HANDLER_BOARD( std::shared_ptr<BOARD_CONTEXT> aContext, EDA_BASE_FRAME* aFrame = nullptr );
 
 protected:

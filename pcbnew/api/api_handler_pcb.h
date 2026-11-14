@@ -62,6 +62,8 @@ class PCB_MARKER;
 class API_HANDLER_PCB : public API_HANDLER_BOARD
 {
 public:
+    int DispatchRank() const override { return RANK_PCB_EDITOR; }
+
     API_HANDLER_PCB( PCB_EDIT_FRAME* aFrame );
     API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDIT_FRAME* aFrame = nullptr );
     ~API_HANDLER_PCB() override;

@@ -24,6 +24,7 @@ set( QA_API_SRCS
     test_api_tasks.cpp
     test_api_jobs.cpp
     test_api_run_action.cpp
+    test_api_handler_order.cpp
     test_api_wizards.cpp
     )
 
