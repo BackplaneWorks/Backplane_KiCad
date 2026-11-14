@@ -58,6 +58,29 @@ wxDECLARE_EVENT( API_REQUEST_EVENT, KICAD_API_REQUEST_EVENT );
 class KICOMMON_API KICAD_API_SERVER : public wxEvtHandler
 {
 public:
+    /// True when requests are queued for the main thread and not handled yet (a running task serves
+    /// them with ProcessPendingEvents; wxEvtHandler has no public accessor for its queue).
+    bool HasQueuedRequests()
+    {
+#if wxUSE_THREADS
+        wxCriticalSectionLocker lock( m_pendingEventsLock );
+#endif
+        return m_pendingEvents && !m_pendingEvents->IsEmpty();
+    }
+
+    /**
+     * Answer the requests queued for the main thread now, from inside a long step of a running API
+     * task: reads are answered and changes refused while a task runs (handleApiRequestString).
+     * Does nothing off the main thread or when no task runs (then nothing would refuse a change
+     * made in the middle of the caller's step).  Call it only between whole steps, where what a
+     * read sees is consistent.
+     */
+    static void ServeDuringTask();
+
+    /// The full request type names answered while an API task runs (an explicit allow-list of
+    /// reads); every other request is answered AS_BUSY naming the task.
+    static bool IsReadServedDuringTask( const std::string& aType );
+
     KICAD_API_SERVER( bool aAutoStart = true );
 
     ~KICAD_API_SERVER();

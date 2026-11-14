@@ -18,15 +18,16 @@
  */
 
 #include <api/api_task_gui_reporter.h>
-#include <widgets/wx_event_utils.h>
+#include <api/api_server.h>
 
 
 bool API_TASK_GUI_PROGRESS_REPORTER::updateUI()
 {
     const bool result = WX_PROGRESS_REPORTER::updateUI();
 
-    // Serve pending API requests while the progress dialog updates
-    DrainPendingEvents( wxEVT_CATEGORY_THREAD );
+    // Serve the API requests that came in while the task ran (the server's own queue: wx's
+    // YieldFor( wxEVT_CATEGORY_THREAD ) never ran them, so every request waited for the whole task)
+    KICAD_API_SERVER::ServeDuringTask();
 
     return result;
 }

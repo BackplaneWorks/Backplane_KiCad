@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include <optional>
+#include <widgets/progress_reporter_base.h>
 #include <cstdint>
 #include <thread>
 #include <zone.h>
@@ -87,7 +89,29 @@ std::vector<PCB_GENERATOR*> ZONE_FILLER_TOOL::RegenerateDirtyGenerators( BOARD_C
 }
 
 
-void ZONE_FILLER_TOOL::refillAroundGenerators( const std::vector<PCB_GENERATOR*>& aRegenerated )
+namespace
+{
+/// A nested fill's refreshes go to the caller's reporter (it serves what waits, an API task's
+/// answers API requests) without moving its phases or replacing its text
+class FORWARDING_PROGRESS_REPORTER : public PROGRESS_REPORTER_BASE
+{
+public:
+    explicit FORWARDING_PROGRESS_REPORTER( PROGRESS_REPORTER* aParent ) :
+            PROGRESS_REPORTER_BASE( 1 ),
+            m_parent( aParent )
+    {}
+
+protected:
+    bool updateUI() override { return m_parent->KeepRefreshing( false ); }
+
+private:
+    PROGRESS_REPORTER* m_parent;
+};
+} // namespace
+
+
+void ZONE_FILLER_TOOL::refillAroundGenerators( const std::vector<PCB_GENERATOR*>& aRegenerated,
+                                               PROGRESS_REPORTER* aReporter )
 {
     if( aRegenerated.empty() )
         return;
@@ -118,6 +142,14 @@ void ZONE_FILLER_TOOL::refillAroundGenerators( const std::vector<PCB_GENERATOR*>
 
     BOARD_COMMIT refillCommit( this );
     ZONE_FILLER  refiller( brd, &refillCommit );
+
+    std::optional<FORWARDING_PROGRESS_REPORTER> forward;
+
+    if( aReporter )
+    {
+        forward.emplace( aReporter );
+        refiller.SetProgressReporter( &*forward );
+    }
 
     if( refiller.Fill( toRefill ) )
         refillCommit.Push( wxEmptyString, APPEND_UNDO | SKIP_CONNECTIVITY | ZONE_FILL_OP );
@@ -229,22 +261,40 @@ bool ZONE_FILLER_TOOL::FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aRepo
 
     bool filled = false;
 
+    // Between the main-thread steps after the fill: name the next one and let the reporter serve
+    // what waits (an API task's reporter answers API requests in it), so none of them holds the
+    // UI for its whole length unseen
+    // Only with a caller's reporter (an API task, the DRC dialog); the plain fill keeps its own dialog as it was
+    PROGRESS_REPORTER* stepReporter = aReporter;
+
+    auto step = [stepReporter]( const wxString& aNext )
+    {
+        if( stepReporter )
+        {
+            stepReporter->Report( aNext );
+            stepReporter->KeepRefreshing();
+        }
+    };
+
     if( m_filler->Fill( toFill ) )
     {
         if( m_filler->GetProgressReporter() )
             m_filler->GetProgressReporter()->AdvancePhase();
 
         // First pass on allowing generators like via-stitch to update
+        step( _( "Updating generators..." ) );
         board()->OnZonesFilled( toFill );
         std::vector<PCB_GENERATOR*> regenerated = RegenerateDirtyGenerators( commit );
 
+        step( _( "Committing zone fills..." ) );
         commit.Push( _( "Fill Zone(s)" ), SKIP_CONNECTIVITY | ZONE_FILL_OP );
 
         if( !aHeadless )
             frame->m_ZoneFillsDirty = false;
 
         // Refill again as generators like via stitches can cause punch outs
-        refillAroundGenerators( regenerated );
+        step( _( "Refilling around generators..." ) );
+        refillAroundGenerators( regenerated, stepReporter );
 
         filled = true;
     }
@@ -253,7 +303,9 @@ bool ZONE_FILLER_TOOL::FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aRepo
         commit.Revert();
     }
 
+    step( _( "Updating connectivity after the fill..." ) );
     PostFillRefresh( aHeadless );
+    step( _( "Zones filled" ) );
 
     if( !aHeadless && m_filler->IsDebug() )
         frame->UpdateUserInterface();

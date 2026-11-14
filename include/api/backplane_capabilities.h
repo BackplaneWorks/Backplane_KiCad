@@ -22,11 +22,9 @@
 namespace BACKPLANE
 {
 
-#ifdef _WIN32
-inline constexpr std::array<const char*, 23> CAPABILITIES = {
-#else
-inline constexpr std::array<const char*, 22> CAPABILITIES = {
-#endif
+// Deduced from the list itself (no hand-kept size): a platform-only entry sits inside it under its
+// #ifdef, and adding one cannot leave the size behind
+inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     "api-server",
     "headless-pcb",
     "headless-sch",
@@ -49,12 +47,14 @@ inline constexpr std::array<const char*, 22> CAPABILITIES = {
     "rules-insert-position", // EditCustomRules.insert: new rules first, last or before a named rule
     "plan-keys",       // in plan view the plan tool's keys (A, R, W, L...) are its own, never KiCad's defaults
     "runaction-frame", // RunAction.frame names the editor; with none, shared actions go to the PCB editor
+    "task-gate-reads", // during an API task only KICAD_API_SERVER::IsReadServedDuringTask's reads are
+                       // answered (served while it runs); every other request is AS_BUSY at once, naming the task
 #ifdef _WIN32
     // embedded: a prewarm never takes the keyboard or the activation (shown with SW_SHOWNA; a focus
     // it takes while built goes back).  Windows only: verified there; the host gates its
     // self-started prewarm on it
     "prewarm-keeps-focus",
 #endif
-};
+} );
 
 } // namespace BACKPLANE

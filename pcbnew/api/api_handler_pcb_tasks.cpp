@@ -225,6 +225,34 @@ public:
 
         std::shared_ptr<DRC_ENGINE> drcEngine = m_board->GetDesignSettings().m_DRCEngine;
 
+        // The reporter exists from the start to the end of the run: every step names itself and lets
+        // it serve the API requests that wait (see API_TASK_GUI_PROGRESS_REPORTER), the rules,
+        // the parity netlist and the markers' commit included, not only the engine's providers
+        std::unique_ptr<API_TASK_GUI_PROGRESS_REPORTER> reporter;
+
+        if( PCB_EDIT_FRAME* reporterFrame = m_handler->frame() )
+        {
+            // RunChecks answered with this job's id before it began
+            std::optional<BACKPLANE_EMBED::PROGRESS_ID_SCOPE> adopt;
+
+            if( m_embed.on && m_embed.progressId )
+                adopt.emplace( m_embed.progressId );
+
+            reporter = std::make_unique<API_TASK_GUI_PROGRESS_REPORTER>( reporterFrame, _( "Running DRC" ), 1,
+                                                                        PR_CAN_ABORT );
+        }
+
+        auto step = [&reporter]( const wxString& aNext )
+        {
+            if( reporter )
+            {
+                reporter->Report( aNext );
+                reporter->KeepRefreshing();
+            }
+        };
+
+        step( _( "Compiling design rules..." ) );
+
         try
         {
             drcEngine->InitEngine( m_board->GetDesignRulesPath() );
@@ -236,8 +264,12 @@ public:
             return;
         }
 
+        step( _( "Fetching the schematic netlist..." ) );
+
         if( m_testFootprints && !fetchNetlist() )
             return;
+
+        step( _( "Preparing the checks..." ) );
 
         EDA_UNITS units = EDA_UNITS::MM;
         PCB_EDIT_FRAME* frame = m_handler->frame();
@@ -288,20 +320,8 @@ public:
         m_board->RecordDRCExclusions();
         m_board->DeleteMARKERs( true, true );
 
-        std::unique_ptr<API_TASK_GUI_PROGRESS_REPORTER> reporter;
-
-        if( frame )
-        {
-            // RunChecks answered with this job's id before it began
-            std::optional<BACKPLANE_EMBED::PROGRESS_ID_SCOPE> adopt;
-
-            if( m_embed.on && m_embed.progressId )
-                adopt.emplace( m_embed.progressId );
-
-            reporter = std::make_unique<API_TASK_GUI_PROGRESS_REPORTER>( frame, _( "Running DRC" ), 1,
-                                                                        PR_CAN_ABORT );
+        if( reporter )
             drcEngine->SetProgressReporter( reporter.get() );
-        }
 
         if( frame && m_embed.on && m_embed.refillZones )
         {
@@ -369,7 +389,6 @@ public:
             drcEngine->SetDrawingSheet( nullptr );
 
         headlessDrawingSheet.reset();
-        reporter.reset();
 
         if( m_testFootprints )
             drcEngine->SetSchematicNetlist( nullptr );
@@ -409,9 +428,12 @@ public:
             return;
         }
 
+        step( _( "Adding markers..." ) );
         m_commit->Push( _( "DRC" ), SKIP_UNDO | SKIP_SET_DIRTY );
+        step( _( "Resolving exclusions..." ) );
         m_board->ResolveDRCExclusions( false );
 
+        step( _( "Collecting the results..." ) );
         buildResult();
 
         m_commit.reset();
@@ -419,6 +441,8 @@ public:
 
         if( frame )
         {
+            step( _( "Updating the editor..." ) );
+
             if( DIALOG_DRC* dialog = drcTool->GetDRCDialog() )
                 dialog->UpdateData();
 

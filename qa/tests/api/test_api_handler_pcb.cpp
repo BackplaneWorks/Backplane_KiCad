@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <api/api_server.h>
 #include <memory>
 #include <vector>
 
@@ -778,6 +779,23 @@ BOOST_AUTO_TEST_CASE( TaskQueriesAllowedDuringTask )
             kiapi::board::tasks::StartRefillZonesTask().GetTypeName() ) );
     BOOST_CHECK( !handler.AllowsDuringTask(
             kiapi::common::commands::GetItems().GetTypeName() ) );
+
+    // What a running task serves is the server's explicit read allow-list: it holds every query a
+    // handler allows during a task, and nothing that starts or changes anything
+    BOOST_CHECK( KICAD_API_SERVER::IsReadServedDuringTask(
+            kiapi::board::tasks::GetDrcTaskResult().GetTypeName() ) );
+    BOOST_CHECK( KICAD_API_SERVER::IsReadServedDuringTask( "kiapi.common.tasks.GetTaskStatus" ) );
+    BOOST_CHECK( KICAD_API_SERVER::IsReadServedDuringTask( "kiapi.backplane.embed.GetMarkers" ) );
+
+    for( const char* change : { "kiapi.board.tasks.StartDrcTask", "kiapi.board.tasks.StartRefillZonesTask",
+                                "kiapi.common.commands.GetItems", "kiapi.common.commands.CreateItems",
+                                "kiapi.common.commands.DeleteItems", "kiapi.common.commands.BeginCommit",
+                                "kiapi.common.commands.RunAction", "kiapi.common.commands.SaveDocument",
+                                "kiapi.backplane.embed.ShowFrame", "kiapi.backplane.embed.SetHostMarkers",
+                                "kiapi.backplane.embed.RunChecks", "kiapi.backplane.plan.ApprovePlan" } )
+    {
+        BOOST_CHECK_MESSAGE( !KICAD_API_SERVER::IsReadServedDuringTask( change ), change );
+    }
 }
 
 

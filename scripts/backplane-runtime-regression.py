@@ -24,7 +24,7 @@ from backplane_ipc_test_support import IpcSession
 CAPABILITIES = {"api-server", "headless-pcb", "headless-sch", "export-v10", "parent-pid",
                 "capabilities", "sketch-route", "board-structure", "assembly", "idle-exit",
                 "shutdown", "api-descriptor", "symbol-from-libid", "footprint-partial-update",
-                "drc-zone-guard", "rules-insert-position", "plan-keys", "runaction-frame"}
+                "drc-zone-guard", "rules-insert-position", "plan-keys", "runaction-frame", "task-gate-reads"}
 if sys.platform == "win32":
     # Windows only: the prewarm never takes the keyboard (verified on Windows)
     CAPABILITIES.add("prewarm-keeps-focus")
