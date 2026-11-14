@@ -44,6 +44,9 @@ def staged(stale):
     if stale:
         pro = tmp / "complex_hierarchy.kicad_pro"
         d = json.loads(pro.read_text())
+        # The demo's ERC settings are schema 0, whose migration reads only legacy string exclusions:
+        # a KiCad 10 project (schema 1) stores them as markers, as Collar's does
+        d.setdefault("erc", {}).setdefault("meta", {})["version"] = 1
         path = {"path": [{"value": root}, {"value": DEAD_SHEET}]}
         d.setdefault("erc", {}).setdefault("erc_exclusions", []).append(
             {"marker": {"error_type": "ERCET_PIN_NOT_DRIVEN", "items": [{"value": DEAD_ITEM}],
