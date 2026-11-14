@@ -23,9 +23,9 @@ namespace BACKPLANE
 {
 
 #ifdef _WIN32
-inline constexpr std::array<const char*, 23> CAPABILITIES = {
+inline constexpr std::array<const char*, 24> CAPABILITIES = {
 #else
-inline constexpr std::array<const char*, 22> CAPABILITIES = {
+inline constexpr std::array<const char*, 23> CAPABILITIES = {
 #endif
     "api-server",
     "headless-pcb",
