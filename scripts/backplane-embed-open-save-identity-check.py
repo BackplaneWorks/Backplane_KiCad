@@ -120,8 +120,10 @@ def run_project(args, spec, out):
 
         def check_run(kind, label):
             events()
-            r = api.request_raw(embed.RunChecks(kind=kind, parity=(kind == embed.FK_PCB)))
-            if r.status.status == api.envelope.AS_OK:
+            # bp.12.x has no embed RunChecks message at all: its hub check is the in-editor task
+            r = api.request_raw(embed.RunChecks(kind=kind, parity=(kind == embed.FK_PCB))) \
+                if hasattr(embed, "RunChecks") else None
+            if r is not None and r.status.status == api.envelope.AS_OK:
                 wait_for(lambda: any(e.type == embed.ET_CHECKS_DONE for e in events()), 900, 0.5)
                 return len(api.request(embed.GetMarkers(kind=kind), embed.GetMarkersResponse).markers)
             if kind == embed.FK_PCB:
