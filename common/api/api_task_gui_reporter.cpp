@@ -39,7 +39,7 @@ bool API_TASK_GUI_PROGRESS_REPORTER::updateUI()
         if( KICAD_API_SERVER* server = PgmOrNull()->ApiServerOrNull() )
         {
             // Bounded: requests that keep arriving are served at the next update
-            for( int ii = 0; ii < 64 && server->HasPendingEvents(); ++ii )
+            for( int ii = 0; ii < 64 && server->HasQueuedRequests(); ++ii )
                 server->ProcessPendingEvents();
         }
     }
