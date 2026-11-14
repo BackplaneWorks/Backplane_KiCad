@@ -184,6 +184,9 @@ enum EventType
   ET_AGENT_NOTICE      = 21; // a notice for an agent about its operation (deferred, rebased,
                              // dropped, undo_took_back); detail = JSON {kind, actor, doc,
                              // details} (bp.11)
+                             // kind "lock_overridden" (bp.13, actor ""): a file another
+                             // process held was opened without asking, as nobody could answer
+                             // the question embedded; details = {message}
   ET_PLAN_CHANGED      = 22; // the routing plan changed (docs/backplane/floorplanner.md);
                              // detail = JSON {board, revision, actor, ops} (bp.11)
   ET_AGENT_CONTROL     = 23; // the person paused, resumed or steered an agent from KiCad;

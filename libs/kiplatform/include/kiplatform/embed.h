@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <string>
 
 #include <wx/string.h>
 
@@ -63,6 +64,26 @@ namespace EMBED
         std::function<bool( int aKeyCode, int aModifiers, const std::function<void()>& aClosePopup )>
                 popupKey;
     };
+
+    /// A line for the platform's embed trace (Windows: BACKPLANE_KICAD_EMBED_TRACE's log and
+    /// OutputDebugString; elsewhere nothing).  Any thread.
+    void TraceLine( const std::string& aLine );
+
+    /// Note the calling thread as the UI thread (called from Install).
+    void NoteMainThread();
+
+    /// The UI thread's call stack, one "module+0xoffset" per frame, from another thread
+    /// (Windows; elsewhere empty).  For a stall report.
+    std::string MainThreadStack();
+
+    /// Focus, capture, foreground and active window, for a trace line (Windows; elsewhere
+    /// empty).  Any thread.
+    std::string InputState();
+
+    /// Write a minidump of the whole process (every thread's stack) beside the embed trace, for
+    /// a hang the trace alone cannot explain.  Returns its path, or why none was written
+    /// (Windows with BACKPLANE_KICAD_EMBED_TRACE set; elsewhere empty).  Any thread.
+    std::string WriteMiniDump( const std::string& aWhy );
 
     /// True if the running toolkit backend can embed (X11 or Windows; not Wayland or macOS).
     bool Supported();
@@ -108,6 +129,16 @@ namespace EMBED
 
     /// Give aFrame the keyboard focus.
     void TakeFocus( wxWindow* aFrame );
+
+    /// A click in aFrame landed in aClicked: give the keyboard to what was clicked, as a click
+    /// in a top-level window would (Windows: SetFocus on the frame itself in the middle of the
+    /// click left the frame holding the mouse capture, so the next right click never reached
+    /// the canvas).  Elsewhere the same as TakeFocus( aFrame ).
+    void TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked );
+
+    /// After a click was handled: a mouse capture the frame itself still holds with no button
+    /// down is released (Windows; elsewhere nothing).  False if there was none.
+    bool ReleaseStrayCapture( wxWindow* aFrame );
 
     /**
      * Send a 32-bit ClientMessage of type aAtom with aData to aTarget (X11), or post

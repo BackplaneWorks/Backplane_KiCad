@@ -27,6 +27,9 @@
 #include <map>
 #include <stack>
 #include <trace_helpers.h>
+#include <chrono>
+#include <fmt/format.h>
+#include <kiplatform/embed.h>
 #include <kiplatform/ui.h>
 #include <app_monitor.h>
 
@@ -1009,7 +1012,31 @@ void TOOL_MANAGER::DispatchContextMenu( const TOOL_EVENT& aEvent )
         if( wxWindow* frame = dynamic_cast<wxWindow*>( m_frame ) )
         {
 	    // By providing an explicit position, wx engages its screen clamp mechanism
-            frame->PopupMenu( menu.get(), frame->ScreenToClient( KIPLATFORM::UI::GetMousePosition() ) );
+            wxPoint mouse = KIPLATFORM::UI::GetMousePosition();
+            wxPoint client = frame->ScreenToClient( mouse );
+
+            // Where a context menu's position comes from, step by step (embed trace only; a
+            // no-op unless BACKPLANE_KICAD_EMBED_TRACE is set on Windows)
+            wxPoint back = frame->ClientToScreen( client );
+            wxPoint origin = frame->ClientToScreen( wxPoint( 0, 0 ) );
+            wxPoint screenPos = frame->GetScreenPosition();
+            KIPLATFORM::EMBED::TraceLine( fmt::format(
+                    "context menu: mouse ({},{}) -> frame client ({},{}) -> back to screen ({},{}); "
+                    "frame client origin ({},{}), screen position ({},{}), position ({},{})",
+                    mouse.x, mouse.y, client.x, client.y, back.x, back.y, origin.x, origin.y,
+                    screenPos.x, screenPos.y, frame->GetPosition().x, frame->GetPosition().y ) );
+
+            std::string inputBefore = KIPLATFORM::EMBED::InputState();
+            auto        shownAt = std::chrono::steady_clock::now();
+
+            frame->PopupMenu( menu.get(), client );
+
+            long long upMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                     std::chrono::steady_clock::now() - shownAt )
+                                     .count();
+            KIPLATFORM::EMBED::TraceLine( fmt::format(
+                    "context menu: PopupMenu returned after {} ms, selected {}; before: {}; after: {}",
+                    upMs, menu->GetSelected(), inputBefore, KIPLATFORM::EMBED::InputState() ) );
         }
 
         // Warp the cursor if a menu item was selected

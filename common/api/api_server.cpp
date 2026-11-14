@@ -33,6 +33,8 @@
 #include <api/api_task_scheduler.h>
 #include <api/api_utils.h> // traceApi
 #include <api/api_server.h>
+#include <kiplatform/embed.h>
+#include <chrono>
 #include <set>
 #include <backplane_coedit.h>
 #include <kiid.h>
@@ -228,6 +230,8 @@ bool KICAD_API_SERVER::Start()
 
     wxLogTrace( traceApi, wxString::Format( "Server: listening at %s", SocketPath() ) );
     Bind( API_REQUEST_EVENT, &KICAD_API_SERVER::handleApiEvent, this );
+    BACKPLANE_EMBED::Get().StartupMark( "API socket bound" );
+    startWatchdog();
     return true;
 }
 
@@ -238,6 +242,7 @@ void KICAD_API_SERVER::Stop()
         return;
 
     wxLogTrace( traceApi, "Stopping server" );
+    stopWatchdog();
     Unbind( API_REQUEST_EVENT, &KICAD_API_SERVER::handleApiEvent, this );
 
     m_server->Stop();
@@ -306,8 +311,115 @@ std::string KICAD_API_SERVER::SocketPath() const
 }
 
 
+namespace
+{
+int64_t steadyMs()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+                   std::chrono::steady_clock::now().time_since_epoch() ).count();
+}
+}
+
+
+void KICAD_API_SERVER::SetReadyToReply( bool aReady )
+{
+    if( aReady && !m_readyToReply.load() )
+        BACKPLANE_EMBED::Get().StartupMark( "API ready to reply" );
+
+    m_readyToReply.store( aReady, std::memory_order_release );
+}
+
+
+void KICAD_API_SERVER::startWatchdog()
+{
+    // Only where a host waits on the answers: --embedded, or a host-given socket
+    if( !BACKPLANE_EMBED::Get().Enabled() && BACKPLANE_EMBED::Get().ApiSocket().empty() )
+        return;
+
+    m_watchdogStop = false;
+    m_watchdog = std::make_unique<std::thread>(
+            [this]()
+            {
+                int64_t reportedFor = 0;
+                int64_t lastReport = 0;
+                int64_t startedMs = steadyMs();
+                int64_t lastStartupReport = 0;
+                bool    dumped = false;
+
+                // One dump per process: the first stall is the one to read
+                auto dumpOnce = [&]( const std::string& aWhy ) -> std::string
+                {
+                    if( dumped )
+                        return {};
+
+                    dumped = true;
+                    std::string where = KIPLATFORM::EMBED::WriteMiniDump( aWhy );
+                    return where.empty() ? std::string() : "; minidump: " + where;
+                };
+
+                while( !m_watchdogStop.load() )
+                {
+                    std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+
+                    int64_t since = m_pendingSinceMs.load();
+                    int64_t now = steadyMs();
+
+                    // Startup that never gets ready: requests are answered AS_NOT_READY on this
+                    // server's thread, so none waits for the UI thread and the check below never
+                    // sees it.  The UI thread is still in startup: report where, at 5 s and then
+                    // every 10 s.
+                    if( !m_readyToReply.load() && now - startedMs >= 5000
+                        && ( !lastStartupReport || now - lastStartupReport >= 10000 ) )
+                    {
+                        lastStartupReport = now;
+                        BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+                        std::string      dump = dumpOnce( "startup not ready" );
+                        embed.StartupMark( fmt::format( "STALL: not ready to reply {:.1f} s after the socket "
+                                                        "opened, {} request(s) answered not-ready (last mark "
+                                                        "before: {}); UI thread stack: {}{}",
+                                                        ( now - startedMs ) / 1000.0, m_notReadyAnswers.load(),
+                                                        embed.LastStartupMark(),
+                                                        KIPLATFORM::EMBED::MainThreadStack(), dump ) );
+                    }
+
+                    if( !since || now - since < 5000 )
+                        continue;
+
+                    // Once at 5 s for each stall, then every 10 s while it lasts
+                    if( since == reportedFor && now - lastReport < 10000 )
+                        continue;
+
+                    reportedFor = since;
+                    lastReport = now;
+
+                    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+                    std::string      dump = dumpOnce( "request not dispatched" );
+                    embed.StartupMark( fmt::format( "STALL: {} request(s) waiting {:.1f} s for the UI thread "
+                                                    "(last mark before: {}); UI thread stack: {}{}",
+                                                    m_pending.load(), ( now - since ) / 1000.0,
+                                                    embed.LastStartupMark(),
+                                                    KIPLATFORM::EMBED::MainThreadStack(), dump ) );
+                }
+            } );
+}
+
+
+void KICAD_API_SERVER::stopWatchdog()
+{
+    if( !m_watchdog )
+        return;
+
+    m_watchdogStop = true;
+    m_watchdog->join();
+    m_watchdog.reset();
+}
+
+
 void KICAD_API_SERVER::onApiRequest( std::string* aRequest )
 {
+    if( !m_firstReceived.exchange( true ) )
+        BACKPLANE_EMBED::Get().StartupMark( "first API request received" );
+
     if( !m_readyToReply.load( std::memory_order_acquire ) )
     {
         ApiResponse notHandled;
@@ -315,6 +427,9 @@ void KICAD_API_SERVER::onApiRequest( std::string* aRequest )
         notHandled.mutable_status()->set_error_message( "KiCad is not ready to reply" );
         m_server->Reply( notHandled.SerializeAsString() );
         log( "Got incoming request but was not yet ready to reply." );
+
+        if( m_notReadyAnswers.fetch_add( 1 ) == 0 )
+            BACKPLANE_EMBED::Get().StartupMark( "first request answered not-ready" );
         return;
     }
 
@@ -364,6 +479,10 @@ void KICAD_API_SERVER::onApiRequest( std::string* aRequest )
     // We don't actually need write access to this string, but client data is non-const
     evt->SetClientData( static_cast<void*>( aRequest ) );
 
+    // Waiting for the UI thread from now: the watchdog reports a long wait
+    if( m_pending.fetch_add( 1 ) == 0 )
+        m_pendingSinceMs = steadyMs();
+
     // Takes ownership and frees the wxCommandEvent
     QueueEvent( evt );
 }
@@ -371,6 +490,14 @@ void KICAD_API_SERVER::onApiRequest( std::string* aRequest )
 
 void KICAD_API_SERVER::handleApiEvent( wxCommandEvent& aEvent )
 {
+    if( m_pending.fetch_sub( 1 ) <= 1 )
+        m_pendingSinceMs = 0;
+    else
+        m_pendingSinceMs = steadyMs();
+
+    if( !m_firstDispatched.exchange( true ) )
+        BACKPLANE_EMBED::Get().StartupMark( "first API request dispatched on the UI thread" );
+
     std::string& requestString = *static_cast<std::string*>( aEvent.GetClientData() );
     handleApiRequestString( requestString );
 }

@@ -22,6 +22,7 @@
 #include <confirm.h>
 
 #include <functional>
+#include <nlohmann/json.hpp>
 #include <wx/app.h>
 #include <wx/stockitem.h>
 #include <wx/richmsgdlg.h>
@@ -38,6 +39,24 @@ static const wxChar traceConfirm[] = wxT( "KICAD_CONFIRM" );
 
 bool AskOverrideLock( wxWindow* aParent, const wxString& aMessage )
 {
+    // Embedded, nobody would see the question: its dialog would wait, hidden, before KiCad is
+    // ready, and the host would never get an answer (bp-win: the first start after another
+    // process held the project).  The host owns every KiCad on its project and the usual holder
+    // is its own kicad-cli, so open anyway, and tell the host it was done.
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    if( embed.Enabled() )
+    {
+        std::string message = aMessage.ToStdString( wxConvUTF8 );
+        nlohmann::json notice = { { "kind", "lock_overridden" },
+                                  { "actor", "" },
+                                  { "doc", "" },
+                                  { "details", { { "message", message } } } };
+        embed.PushEvent( EMBED_EVENT_TYPE::AGENT_NOTICE, EMBED_FRAME_INFO(), notice.dump() );
+        embed.StartupMark( "opened a locked file anyway (embedded): " + message );
+        return true;
+    }
+
 #ifdef __APPLE__
     // wxMessageDialog gets the button spacing wrong on Mac so we have to use wxRichMessageDialog.
     // Note that its warning icon is more like wxMessageDialog's error icon, so we use it instead
