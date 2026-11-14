@@ -44,6 +44,7 @@
 #include <settings/common_settings.h>
 #include <refdes_tracker.h>
 #include <schematic.h>
+#include <wx/filename.h>
 #include <mail_type.h>
 #include <schematic_text_var_adapter.h>
 #include <sch_bus_entry.h>
@@ -2349,18 +2350,35 @@ int SCHEMATIC::FixupJunctionsAfterImport( const std::function<void( SCH_LINE*, S
         for( SCH_ITEM* item : screen->Items() )
             allItems.push_back( item );
 
+        // Implied junctions are made again on every load of an older file until it is saved; their
+        // ids (and those of the wires split at them) come from the sheet and the point, so loading
+        // and saving the same file twice writes the same ids.
+        const std::string sheetKey = screen->GetUuid().AsStdString() + ":"
+                                     + wxFileName( screen->GetFileName() ).GetFullName().ToStdString( wxConvUTF8 );
+
+        auto pointKey =
+                []( const VECTOR2I& aPoint )
+                {
+                    return std::to_string( aPoint.x ) + "," + std::to_string( aPoint.y );
+                };
+
         // Add missing junctions and breakup wires as needed
         for( const VECTOR2I& point : screen->GetNeededJunctions( allItems ) )
         {
             count++;
 
             SCH_JUNCTION* junction = new SCH_JUNCTION( point );
+            const_cast<KIID&>( junction->m_Uuid ) =
+                    KIID::FromName( "implied-junction:" + sheetKey + ":" + pointKey( point ) );
             screen->Append( junction );
 
             // Breakup wires
             for( SCH_LINE* wire : screen->GetBusesAndWires( point, true ) )
             {
                 SCH_LINE* newSegment = wire->NonGroupAware_BreakAt( point );
+                const_cast<KIID&>( newSegment->m_Uuid ) =
+                        KIID::FromName( "implied-junction-split:" + wire->m_Uuid.AsStdString() + ":"
+                                        + pointKey( point ) );
                 screen->Append( newSegment );
 
                 if( aOnSplit )
