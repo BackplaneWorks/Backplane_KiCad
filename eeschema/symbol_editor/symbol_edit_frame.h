@@ -165,7 +165,7 @@ public:
 
     wxString EmbedLibId() const override
     {
-        return m_symbol ? wxString( m_symbol->GetLibId().Format() ) : wxString();
+        return m_symbol ? m_symbol->GetLibId().Format().wx_str() : wxString();
     }
 
     /**

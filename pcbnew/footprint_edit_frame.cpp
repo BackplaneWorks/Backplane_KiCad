@@ -2628,5 +2628,5 @@ wxString FOOTPRINT_EDIT_FRAME::EmbedLibId() const
             id = footprint->GetFPID();
     }
 
-    return id.IsValid() ? wxString( id.Format() ) : wxString();
+    return id.IsValid() ? id.Format().wx_str() : wxString();
 }
