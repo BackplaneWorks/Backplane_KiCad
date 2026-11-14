@@ -9,9 +9,11 @@ parity netlist (KIFACE_NETLIST_SCHEMATIC, also the API's headless DRC) used a lo
 neither, so references came out empty and unconnected nets were named by symbol UUID
 ("unconnected-(0a4cc99b-...-PadD6)"): false net_conflict / extra footprint rows.
 
-Variants of qa/data/pcbnew/issue21184 (hierarchical, has unconnected-(U1-NC-Pad8)):
+Variants of qa/data/pcbnew/issue21184 (one sheet used twice, holding U1 and U2; has
+unconnected-(U1-NC-Pad8)):
   base     the fixture as is
-  old      project top-level UUID differs from the file's; paths still at the file's UUID
+  old      project top-level UUID differs from the file's; paths still at the file's UUID (each use
+           of the shared sheet must take its own instance, not the first: U1 and U2, not U1 twice)
   rekeyed  paths rewritten to the project's UUID (what any save in the editor writes)
 Each must give no parity row, and the run must not write any schematic file.
 
