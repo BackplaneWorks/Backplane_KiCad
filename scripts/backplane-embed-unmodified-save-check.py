@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Embedded, the editor's own Save (Ctrl+S, File > Save: common.Control.save) of a document with
-nothing changed writes nothing; after a real edit it writes.
+"""Embedded, the editor's own Save (Ctrl+S, File > Save) of a document with nothing changed writes
+nothing; after a real edit it writes.
 
 The fixture (qa/data/pcbnew/issue21184, an older file format) has a project top-level sheet UUID
 unlike the root file's own, so loading it repairs instance paths in memory and adds implied
 junctions: before this change a Save with nothing edited rewrote the files (paths re-keyed, the
-format upgraded, junctions with fresh random UUIDs).  One session per editor, as RunAction names no
-frame on older runtimes.
+format upgraded, junctions with fresh random UUIDs).  One session per editor; Save is the person's Ctrl+S on the
+focused frame (bp.12 has no RunAction for the schematic editor).
 
     backplane-embed-unmodified-save-check.py KICAD KICAD_CLI [--out DIR]
 """
@@ -54,9 +54,21 @@ def run(kicad, kicad_cli, out, project, kind_name):
         doctype = base.DOCTYPE_PCB if kind_name == "pcb" else base.DOCTYPE_SCHEMATIC
         files = sorted(s.project_dir.glob("*.kicad_pcb" if kind_name == "pcb" else "*.kicad_sch"))
         w, h = s.host.size
-        r = api.request(embed.ShowFrame(kind=kind, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        r = api.request(embed.ShowFrame(kind=kind, x=0, y=0, width=w, height=h, focus=True),
+                        embed.ShowFrameResponse)
         wait_for(lambda: viewable(s.host.display, r.frame.window), 180)
         time.sleep(3)
+        reserved = list(api.request(embed.GetFrames(), embed.GetFramesResponse).reserved_keys)
+        check(not any(k.lower().replace(" ", "") in ("ctrl+s", "control+s") for k in reserved),
+              f"{kind_name}: Ctrl+S is KiCad's, not reserved by the host ({reserved})")
+
+        def save():
+            api.request(embed.ShowFrame(kind=kind, x=0, y=0, width=w, height=h, focus=True),
+                        embed.ShowFrameResponse)
+            s.host.pump(0.5)
+            s.xdotool("mousemove", str(w // 2), str(h // 2))
+            s.xdotool("key", "Escape")
+            s.xdotool("key", "ctrl+s")
 
         def frame():
             return next((f for f in api.request(embed.GetFrames(), embed.GetFramesResponse).frames
@@ -69,7 +81,7 @@ def run(kicad, kicad_cli, out, project, kind_name):
 
         before = state(files)
         time.sleep(1.1)   # an mtime change shows even on a coarse clock
-        api.request_raw(editor.RunAction(action="common.Control.save"))
+        save()
         time.sleep(3)
         check(state(files) == before, f"{kind_name}: Save with nothing changed writes nothing (bytes and mtime)")
 
@@ -93,7 +105,7 @@ def run(kicad, kicad_cli, out, project, kind_name):
         api.request(editor.EndCommit(header=header, id=commit.id, action=editor.CMA_COMMIT,
                                      message="unmodified-save check edit"), editor.EndCommitResponse)
         check(wait_for(lambda: frame().modified, 10), f"{kind_name}: the edit marks it modified")
-        api.request_raw(editor.RunAction(action="common.Control.save"))
+        save()
         wait_for(lambda: not frame().modified, 20)
         after = state(files)
         main_file = files[0].name if kind_name == "pcb" else "issue21184.kicad_sch"
