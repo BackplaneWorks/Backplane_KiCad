@@ -22,11 +22,9 @@
 namespace BACKPLANE
 {
 
-#ifdef _WIN32
-inline constexpr std::array<const char*, 24> CAPABILITIES = {
-#else
-inline constexpr std::array<const char*, 23> CAPABILITIES = {
-#endif
+// Deduced from the list itself (no hand-kept size): a platform-only entry sits inside it under its
+// #ifdef, and adding one cannot leave the size behind
+inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     "api-server",
     "headless-pcb",
     "headless-sch",
@@ -57,6 +55,6 @@ inline constexpr std::array<const char*, 23> CAPABILITIES = {
     // self-started prewarm on it
     "prewarm-keeps-focus",
 #endif
-};
+} );
 
 } // namespace BACKPLANE
