@@ -8,6 +8,9 @@
 - RunChecks FK_PCB with parity while the schematic is shown asks to show no frame (ET_SHOW_REQUESTED);
   the board stays hidden.
 - A second RunChecks while one runs is refused (AS_BUSY); a kind with no checks is unhandled.
+- During a RunChecks (its own session on --overlap-board, default demos/video, long enough to land
+  requests inside the run), reads are answered within 2 s and a change is refused with the task named;
+  a run too short to prove it fails loudly instead of passing on zero reads.
 - SelectItems ids selects a marker's items (ids_not_found for an unknown one); zoom_box_nm and
   at_nm move the view; FK_SCH sheet_path shows that sheet.
 
@@ -30,6 +33,12 @@ def main():
     parser.add_argument("kicad", type=Path)
     parser.add_argument("kicad_cli", type=Path)
     parser.add_argument("--out", type=Path, default=Path("embed-checks-out"))
+    parser.add_argument("--overlap-board", type=Path,
+                        default=Path(__file__).resolve().parents[1] / "demos/video",
+                        help="project folder for the reads-during-a-run case: its DRC with refill must "
+                             "run for well over a read round trip (video: ~2 s; pic_programmer is too short "
+                             "since bp.13's parallel DRC)")
+    parser.add_argument("--overlap-tries", type=int, default=4)
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1] / "demos/pic_programmer"
 
@@ -141,43 +150,6 @@ def main():
                     or sorted(e.checks.progress_id for e in done) == sorted(ids) ),
               f"a second RunChecks is refused while one runs, or runs after it with its own result "
               f"(status {second.status.status}, done for {[e.checks.progress_id for e in done]})")
-        # bp.13 batch 5: during a run, reads are answered (within a bound) and a change is refused
-        # with the task named; refill_zones makes the run long enough to land requests inside it
-        events()
-        api.request_raw(embed.RunChecks(kind=embed.FK_PCB, parity=True, refill_zones=True))
-        reads, refusal, inside, finished = [], None, False, False
-        t_end = time.monotonic() + 120
-        while time.monotonic() < t_end:
-            t0 = time.monotonic()
-            r = api.request_raw(editor.GetOpenDocuments(type=base.DOCTYPE_PCB))
-            g = api.request_raw(embed.GetFrames())
-            dt = time.monotonic() - t0
-            finished = finished or any(e.type == embed.ET_CHECKS_DONE for e in events())
-            if not finished:
-                inside = True
-                reads.append((r.status.status, g.status.status, dt))
-                if refusal is None:
-                    sel = editor.BeginCommit(header=base.ItemHeader(document=docs.documents[0]))
-                    refusal = api.request_raw(sel)
-            else:
-                break
-        check(inside and reads and all(a == api.envelope.AS_OK and b == api.envelope.AS_OK for a, b, _ in reads),
-              f"during RunChecks, GetOpenDocuments and GetFrames are answered ({len(reads)} pairs inside the run)")
-        if reads:
-            worst = max(dt for _, _, dt in reads)
-            check(worst < 2.0, f"... each pair within 2 s while the run goes on (worst {worst:.2f} s)")
-        check(refusal is not None and refusal.status.status == api.envelope.AS_BUSY
-              and "a task is running:" in refusal.status.error_message and "token" in refusal.status.error_message,
-              f"a change during the run is refused with the task named "
-              f"({refusal.status.error_message[:120] if refusal is not None else 'not sent'})")
-        if refusal is not None and refusal.status.status == api.envelope.AS_OK:
-            begin = editor.BeginCommitResponse()
-            refusal.message.Unpack(begin)
-            api.request_raw(editor.EndCommit(header=base.ItemHeader(document=docs.documents[0]), id=begin.id,
-                                             action=editor.CMA_DROP))
-        if not finished:
-            wait_for(lambda: any(e.type == embed.ET_CHECKS_DONE for e in events()), 300, 0.2)
-
         other = api.request_raw(embed.RunChecks(kind=embed.FK_PCB_3D))
         check(other.status.status != api.envelope.AS_OK, "RunChecks for FK_PCB_3D is refused")
 
@@ -239,8 +211,114 @@ def main():
             check("pic_sockets" in title or "[" in title, f"SelectItems sheet_path shows the sheet ({title})")
             s.shot("05-sheet")
 
+    overlap(args)
+
     print(f"{len(FAILURES)} failed" if FAILURES else "ALL PASSED", flush=True)
     return 1 if FAILURES else 0
+
+
+def overlap(args):
+    """bp.13 batch 5: during a run, reads are answered (within a bound) and a change is refused with the
+    task named. Its own session on a board whose run is long (--overlap-board), because a read only
+    counts as inside the run when the event stream proves it: the run's ET_PROGRESS was seen before the
+    read was sent, and the ET_CHECKS_DONE had not arrived when the next NextEvents, sent after the read
+    was answered, came back. A run too short to land one read inside is retried up to --overlap-tries
+    times, then fails loudly with each run's length, never passes on zero reads."""
+    with Session(args.kicad, args.out / "overlap", args.overlap_board) as s, \
+            IpcSession(args.kicad_cli, api_socket=s.socket, timeout=300000) as api:
+        embed = api.module("backplane.embed")
+        base = api.module("common.types.base_types")
+        editor = api.module("common.commands.editor_commands")
+        w, h = s.host.size
+        since = [0]
+
+        def events():
+            reply = api.request(embed.NextEvents(since=since[0]), embed.NextEventsResponse)
+            for e in reply.events:
+                since[0] = max(since[0], e.seq)
+            return list(reply.events)
+
+        for f in api.request(embed.GetFrames(), embed.GetFramesResponse).frames:
+            if f.shown and f.kind != embed.FK_PCB:
+                api.request(embed.HideFrame(window=f.window), embed.HideFrameResponse)
+        frame = api.request(embed.ShowFrame(kind=embed.FK_PCB, x=0, y=0, width=w, height=h),
+                            embed.ShowFrameResponse).frame
+        wait_for(lambda: viewable(s.host.display, frame.window), 120)
+        time.sleep(2)
+        doc = api.request(editor.GetOpenDocuments(type=base.DOCTYPE_PCB),
+                          editor.GetOpenDocumentsResponse).documents[0]
+
+        reads, refusal, tries = [], None, []
+        for attempt in range(1, args.overlap_tries + 1):
+            events()
+            t_run = time.monotonic()
+            started = api.request(embed.RunChecks(kind=embed.FK_PCB, parity=True, refill_zones=True),
+                                  embed.RunChecksResponse)
+            pid = started.progress_id
+            running, finished, pairs, slowest = False, False, 0, 0.0
+            t_progress, t_done, timeline = None, None, []
+            t_end = t_run + 300
+            while not finished and time.monotonic() < t_end:
+                was_running = running
+                t0 = time.monotonic()
+                r = api.request_raw(editor.GetOpenDocuments(type=base.DOCTYPE_PCB))
+                g = api.request_raw(embed.GetFrames())
+                dt = time.monotonic() - t0
+                slowest = max(slowest, dt)
+                sent_change = None
+                if was_running and refusal is None:
+                    sent_change = api.request_raw(editor.BeginCommit(header=base.ItemHeader(document=doc)))
+                seen = events()
+                t_seen = time.monotonic() - t_run
+                running = running or any(e.type == embed.ET_PROGRESS and e.progress.id == pid for e in seen)
+                finished = any(e.type == embed.ET_CHECKS_DONE for e in seen)
+                if running and t_progress is None:
+                    t_progress = t_seen
+                if finished:
+                    t_done = t_seen
+                timeline.append(f"+{t0 - t_run:.2f}/{dt:.2f}")
+                if was_running and not finished:
+                    # the run had begun before this pair was sent and had not ended after it was answered
+                    reads.append((r.status.status, g.status.status, dt))
+                    pairs += 1
+                    if sent_change is not None:
+                        refusal = sent_change
+                if sent_change is not None and sent_change is not refusal \
+                        and sent_change.status.status == api.envelope.AS_OK:
+                    # served after the run ended: drop it and try the change in a later run
+                    begin = editor.BeginCommitResponse()
+                    sent_change.message.Unpack(begin)
+                    api.request_raw(editor.EndCommit(header=base.ItemHeader(document=doc), id=begin.id,
+                                                     action=editor.CMA_DROP))
+            tries.append(f"run {attempt}: {pairs} pairs inside, slowest pair {slowest:.2f} s, progress seen at "
+                         f"+{t_progress if t_progress is not None else -1:.2f} s, done seen at "
+                         f"+{t_done if t_done is not None else -1:.2f} s")
+            print(f"overlap run {attempt} pairs sent/took: {' '.join(timeline)}", flush=True)
+            print(f"overlap {tries[-1]}", flush=True)
+            if not finished:
+                break
+            if reads and refusal is not None:
+                break
+
+        check(bool(reads), f"a read lands inside a RunChecks on {args.overlap_board.name} "
+                           f"({'; '.join(tries)}): the run must outlast a read round trip (pick a longer "
+                           f"--overlap-board), and a slowest pair near the run's length means reads "
+                           f"wait for the run instead of being served in its yields")
+        check(reads and all(a == api.envelope.AS_OK and b == api.envelope.AS_OK for a, b, _ in reads),
+              f"during RunChecks, GetOpenDocuments and GetFrames are answered ({len(reads)} pairs inside the run)")
+        if reads:
+            worst = max(dt for _, _, dt in reads)
+            check(worst < 2.0, f"... each pair within 2 s while the run goes on (worst {worst:.2f} s)")
+        check(refusal is not None and refusal.status.status == api.envelope.AS_BUSY
+              and "a task is running:" in refusal.status.error_message and "token" in refusal.status.error_message,
+              f"a change during the run is refused with the task named "
+              f"({refusal.status.error_message[:120] if refusal is not None else 'never sent inside a run'})")
+        if refusal is not None and refusal.status.status == api.envelope.AS_OK:
+            begin = editor.BeginCommitResponse()
+            refusal.message.Unpack(begin)
+            api.request_raw(editor.EndCommit(header=base.ItemHeader(document=doc), id=begin.id,
+                                             action=editor.CMA_DROP))
+        s.shot("overlap-01")
 
 
 if __name__ == "__main__":
