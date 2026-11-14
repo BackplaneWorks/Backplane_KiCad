@@ -499,6 +499,28 @@ message GetMarkersResponse
   repeated Marker markers = 1;
 }
 
+// click-marker (bp.13 batch 8): do exactly what the person's left click on that marker does, by
+// the same code: a DRC/ERC marker becomes the selection (message panel; the DRC/ERC dialog, if
+// open, selects its row) and ET_MARKER_CLICKED is posted once, with the fields a real click
+// gives; a host marker posts ET_MARKER_CLICKED with its set and id.  The view is left alone
+// unless `zoom` (then it centres on the marker, as a dialog row's double-click does); an ERC
+// marker on another sheet shows that sheet, as only the sheet shown can be clicked.  A hidden
+// frame does the same and asks for no show.
+// Errors: an unknown marker is AS_BAD_REQUEST "ClickMarker: no marker <id> in <frame>"; a frame
+// not open is AS_UNHANDLED; during an API task, AS_BUSY like any change.
+message ClickMarker
+{
+  FrameKind                    kind   = 1;  // FK_PCB or FK_SCH
+  kiapi.common.types.KIID      marker = 2;  // a DRC/ERC marker's id (GetMarkers)
+  bool                         zoom   = 3;
+  MarkerRef                    host   = 4;  // instead of `marker`: a host marker (SetHostMarkers)
+}
+
+message ClickMarkerResponse
+{
+  uint64 event_seq = 1;  // the seq of the ET_MARKER_CLICKED it posted
+}
+
 enum ReloadMode
 {
   RM_IF_CLEAN = 0;  // reload only if the document has no unsaved changes

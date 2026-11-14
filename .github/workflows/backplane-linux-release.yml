@@ -510,6 +510,9 @@ jobs:
             scripts/backplane-embed-canvas-idle-check.py "release/${archive_root}/bin/kicad" \
             "release/${archive_root}/bin/kicad-cli" --out "$RUNNER_TEMP/embed-x11/canvas-idle"
           LIBGL_ALWAYS_SOFTWARE=1 "$RUNNER_TEMP/ipc-smoke-venv/bin/python" \
+            scripts/backplane-embed-click-marker-check.py "release/${archive_root}/bin/kicad" \
+            "release/${archive_root}/bin/kicad-cli" --out "$RUNNER_TEMP/embed-x11/click-marker"
+          LIBGL_ALWAYS_SOFTWARE=1 "$RUNNER_TEMP/ipc-smoke-venv/bin/python" \
             scripts/backplane-embed-align-comment-check.py "release/${archive_root}/bin/kicad" \
             "release/${archive_root}/bin/kicad-cli" --out "$RUNNER_TEMP/embed-x11/align-comment"
 

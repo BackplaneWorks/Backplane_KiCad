@@ -138,6 +138,8 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 // FrameInfo.canvas_input_ago_ms / tool_busy / tool_name and
                 // RunChecks.min_canvas_idle_ms (bp.13 batch 8)
                 reply.add_capabilities( "canvas-idle" );
+                // ClickMarker: a marker click by id, through the click's own code (bp.13 batch 8)
+                reply.add_capabilities( "click-marker" );
 #ifdef __WXGTK__
                 // A host-reserved chord pressed while a KiCad popup holds the keyboard closes
                 // the popup and reaches the host (X11; bp.13)

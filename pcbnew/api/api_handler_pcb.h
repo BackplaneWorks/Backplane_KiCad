@@ -345,6 +345,12 @@ private:
     /// A click in the canvas (embedded): on a host or DRC marker, ET_MARKER_CLICKED.
     void onCanvasClick();
 
+    HANDLER_RESULT<kiapi::backplane::embed::ClickMarkerResponse> handleClickMarker(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::ClickMarker>& aCtx );
+
+    /// What a click on a DRC marker does (onCanvasClick, ClickMarker): ET_MARKER_CLICKED; its seq
+    uint64_t drcMarkerClicked( PCB_MARKER* aMarker );
+
     /// The host's markers (HOST_MARKERS_TOOL keeps them in the view), or null
     HOST_MARKERS_ITEM* hostMarkers( bool aCreate ) const;
 
