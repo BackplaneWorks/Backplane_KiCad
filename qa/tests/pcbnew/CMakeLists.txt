@@ -165,6 +165,7 @@ set( QA_PCBNEW_SRCS
     test_save_load.cpp
     test_stacked_pin_netlist.cpp
     test_teardrop_shorts.cpp
+    test_migrate_3d_models_commit.cpp
     test_teardrop_uuid.cpp
     test_tracks_cleaner.cpp
     test_triangulation.cpp
