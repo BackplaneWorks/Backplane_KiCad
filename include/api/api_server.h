@@ -68,6 +68,15 @@ public:
         return m_pendingEvents && !m_pendingEvents->IsEmpty();
     }
 
+    /**
+     * Answer the requests queued for the main thread now, from inside a long step of a running API
+     * task: reads are answered and changes refused while a task runs (handleApiRequestString).
+     * Does nothing off the main thread or when no task runs (then nothing would refuse a change
+     * made in the middle of the caller's step).  Call it only between whole steps, where what a
+     * read sees is consistent.
+     */
+    static void ServeDuringTask();
+
     KICAD_API_SERVER( bool aAutoStart = true );
 
     ~KICAD_API_SERVER();

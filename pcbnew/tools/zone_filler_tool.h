@@ -95,7 +95,8 @@ private:
     /**
      * Triggers refill of zones near the given generators
      */
-    void refillAroundGenerators( const std::vector<PCB_GENERATOR*>& aRegenerated );
+    void refillAroundGenerators( const std::vector<PCB_GENERATOR*>& aRegenerated,
+                                 PROGRESS_REPORTER* aReporter = nullptr );
 
     /// Set up handlers for various events.
     void setTransitions() override;

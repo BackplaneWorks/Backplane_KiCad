@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include <optional>
+#include <widgets/progress_reporter_base.h>
 #include <cstdint>
 #include <thread>
 #include <zone.h>
@@ -87,7 +89,29 @@ std::vector<PCB_GENERATOR*> ZONE_FILLER_TOOL::RegenerateDirtyGenerators( BOARD_C
 }
 
 
-void ZONE_FILLER_TOOL::refillAroundGenerators( const std::vector<PCB_GENERATOR*>& aRegenerated )
+namespace
+{
+/// A nested fill's refreshes go to the caller's reporter (it serves what waits, an API task's
+/// answers API requests) without moving its phases or replacing its text
+class FORWARDING_PROGRESS_REPORTER : public PROGRESS_REPORTER_BASE
+{
+public:
+    explicit FORWARDING_PROGRESS_REPORTER( PROGRESS_REPORTER* aParent ) :
+            PROGRESS_REPORTER_BASE( 1 ),
+            m_parent( aParent )
+    {}
+
+protected:
+    bool updateUI() override { return m_parent->KeepRefreshing( false ); }
+
+private:
+    PROGRESS_REPORTER* m_parent;
+};
+} // namespace
+
+
+void ZONE_FILLER_TOOL::refillAroundGenerators( const std::vector<PCB_GENERATOR*>& aRegenerated,
+                                               PROGRESS_REPORTER* aReporter )
 {
     if( aRegenerated.empty() )
         return;
@@ -118,6 +142,14 @@ void ZONE_FILLER_TOOL::refillAroundGenerators( const std::vector<PCB_GENERATOR*>
 
     BOARD_COMMIT refillCommit( this );
     ZONE_FILLER  refiller( brd, &refillCommit );
+
+    std::optional<FORWARDING_PROGRESS_REPORTER> forward;
+
+    if( aReporter )
+    {
+        forward.emplace( aReporter );
+        refiller.SetProgressReporter( &*forward );
+    }
 
     if( refiller.Fill( toRefill ) )
         refillCommit.Push( wxEmptyString, APPEND_UNDO | SKIP_CONNECTIVITY | ZONE_FILL_OP );
@@ -262,7 +294,7 @@ bool ZONE_FILLER_TOOL::FillAllZones( wxWindow* aCaller, PROGRESS_REPORTER* aRepo
 
         // Refill again as generators like via stitches can cause punch outs
         step( _( "Refilling around generators..." ) );
-        refillAroundGenerators( regenerated );
+        refillAroundGenerators( regenerated, stepReporter );
 
         filled = true;
     }
