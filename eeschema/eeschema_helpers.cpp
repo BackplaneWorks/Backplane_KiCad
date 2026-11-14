@@ -52,6 +52,12 @@ void EESCHEMA_HELPERS::SetSchEditFrame( SCH_EDIT_FRAME* aSchEditFrame )
 }
 
 
+bool EESCHEMA_HELPERS::IsEditFrameSchematic( const SCHEMATIC* aSchematic )
+{
+    return aSchematic && s_SchEditFrame && aSchematic == &s_SchEditFrame->Schematic();
+}
+
+
 SCHEMATIC* EESCHEMA_HELPERS::LoadSchematic( const wxString& aFileName, bool aSetActive,
                                             bool aForceDefaultProject, PROJECT* aProject,
                                             bool aCalculateConnectivity, REPORTER* aRootReporter )

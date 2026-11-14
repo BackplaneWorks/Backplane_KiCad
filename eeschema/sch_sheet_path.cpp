@@ -19,6 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <optional>
 #include <set>
 #include <tuple>
@@ -1002,12 +1003,36 @@ void SCH_SHEET_PATH::CheckForMissingSymbolInstances( const wxString& aProjectNam
                 // variant DNP / value / field overrides across when v9-imported files have
                 // been re-rooted and their stored paths no longer match.
                 const std::vector<SCH_SYMBOL_INSTANCE>& instances = symbol->GetInstances();
+                const KIID_PATH                         path = Path();
+
+                // A hierarchy re-rooted at another top-level sheet UUID keeps every path below the
+                // root, so a shared sheet's instances are told apart by that part of the path; a
+                // plain "first instance" would give every use of the sheet the same reference.
+                auto belowRootMatches =
+                        [&path]( const SCH_SYMBOL_INSTANCE& aInstance )
+                        {
+                            return !path.empty() && aInstance.m_Path.size() == path.size()
+                                   && std::equal( path.begin() + 1, path.end(),
+                                                  aInstance.m_Path.begin() + 1 );
+                        };
 
                 auto sourceIt = std::find_if( instances.begin(), instances.end(),
-                        [&aProjectName]( const SCH_SYMBOL_INSTANCE& aInstance )
+                        [&]( const SCH_SYMBOL_INSTANCE& aInstance )
                         {
-                            return aInstance.m_ProjectName == aProjectName;
+                            return aInstance.m_ProjectName == aProjectName && belowRootMatches( aInstance );
                         } );
+
+                if( sourceIt == instances.end() )
+                    sourceIt = std::find_if( instances.begin(), instances.end(), belowRootMatches );
+
+                if( sourceIt == instances.end() )
+                {
+                    sourceIt = std::find_if( instances.begin(), instances.end(),
+                            [&aProjectName]( const SCH_SYMBOL_INSTANCE& aInstance )
+                            {
+                                return aInstance.m_ProjectName == aProjectName;
+                            } );
+                }
 
                 if( sourceIt == instances.end() )
                     sourceIt = instances.begin();

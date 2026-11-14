@@ -509,6 +509,15 @@ int BOARD_EDITOR_CONTROL::Save( const TOOL_EVENT& aEvent )
         }
     }
 
+    // Embedded, a save with nothing changed writes nothing: rewriting the file would carry load-time
+    // repairs and a format upgrade the person never asked for.  Save As / Save Copy still write.
+    if( BACKPLANE_EMBED::Get().Enabled() && !m_frame->IsContentModified()
+        && !m_frame->GetBoard()->GetFileName().IsEmpty() )
+    {
+        m_frame->SetStatusText( _( "No changes to save" ) );
+        return 0;
+    }
+
     m_frame->SaveBoard();
     return 0;
 }
