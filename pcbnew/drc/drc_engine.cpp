@@ -961,6 +961,19 @@ void DRC_ENGINE::RunTests( EDA_UNITS aUnits, bool aReportAllTrackErrors, bool aT
 
     DRC_TEST_PROVIDER::Init();
 
+    // The serial steps before the first provider name themselves and let the reporter serve what
+    // waits (an API task's reporter answers API requests in it)
+    auto step = [this]( const wxString& aNext )
+    {
+        if( m_progressReporter )
+        {
+            m_progressReporter->Report( aNext );
+            m_progressReporter->KeepRefreshing( false );
+        }
+    };
+
+    step( _( "Building DRC caches..." ) );
+
     m_board->IncrementTimeStamp();      // Invalidate all caches...
 
     DRC_CACHE_GENERATOR cacheGenerator;
@@ -974,6 +987,7 @@ void DRC_ENGINE::RunTests( EDA_UNITS aUnits, bool aReportAllTrackErrors, bool aT
     }
 
     // Recompute component classes
+    step( _( "Updating component classes..." ) );
     m_board->GetComponentClassManager().ForceComponentClassRecalculation();
 
     int timestamp = m_board->GetTimeStamp();
@@ -993,6 +1007,7 @@ void DRC_ENGINE::RunTests( EDA_UNITS aUnits, bool aReportAllTrackErrors, bool aT
             keepGoing = provider->RunTests( aUnits );
             m_bufferViolations = false;
 
+            step( _( "Reporting violations..." ) );
             flushPendingViolations();
         }
 
