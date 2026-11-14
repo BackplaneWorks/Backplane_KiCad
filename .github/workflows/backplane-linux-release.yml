@@ -33,7 +33,7 @@ jobs:
       - name: Prepare the build container
         run: |
           apt-get update
-          apt-get install --no-install-recommends -y sudo ca-certificates curl git git-lfs zstd file xz-utils
+          apt-get install --no-install-recommends -y sudo ca-certificates curl git git-lfs zstd file xz-utils python3
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Check out source
