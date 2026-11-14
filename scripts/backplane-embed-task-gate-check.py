@@ -33,7 +33,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("kicad", type=Path)
     parser.add_argument("kicad_cli", type=Path)
-    parser.add_argument("--project", type=Path, default=Path(__file__).resolve().parents[1] / "demos/video")
+    parser.add_argument("--project", type=Path,
+                        default=Path(__file__).resolve().parents[1] / "demos/jetson-agx-thor-baseboard",
+                        help="a board whose refill and DRC phases each last seconds (jetson: ~5 s each), so "
+                             "every write lands inside them")
     parser.add_argument("--out", type=Path, default=Path("embed-task-gate-out"))
     args = parser.parse_args()
 
@@ -118,6 +121,13 @@ def main():
                     for name, make in writes:
                         r = api.request_raw(make())
                         sent[phase].append((name, r.status.status, r.status.error_message, detail))
+                        if r.status.status == api.envelope.AS_OK:
+                            # Not refused: either the gate let a change in, or the run had already
+                            # ended. Send no more (each would change the board) and tell which below
+                            ended = any(e.type == embed.ET_CHECKS_DONE for e in events())
+                            sent[phase].append(("(after it)", -1, "run ended" if ended else "run still going", detail))
+                            done = done or ended
+                            break
             check(done, f"{label}: the run ends ({time.monotonic() - t0:.1f} s)")
             time.sleep(1)
             md, n = markers_digest()
@@ -133,6 +143,11 @@ def main():
             check(got is not None, f"B: writes were sent during the {phase} "
                                    f"({'at ' + repr(got[0][3]) if got else 'its phase was never seen'})")
             for name, status, message, _ in got or []:
+                if status == -1:
+                    check(message != "run ended",
+                          f"B {phase}: the writes were all sent before the run ended (a write was answered "
+                          f"after it: the test's timing, not the gate; use a board with a longer phase)")
+                    continue
                 check(status == api.envelope.AS_BUSY and "a task is running:" in message,
                       f"B {phase}: {name} is answered AS_BUSY naming the task ({status}: {message[:110]})")
 

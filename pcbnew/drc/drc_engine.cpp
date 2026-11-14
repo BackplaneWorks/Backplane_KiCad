@@ -19,6 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <api/api_server.h>
 #include <algorithm>
 #include <atomic>
 #include <iterator>
@@ -2556,10 +2557,10 @@ void DRC_ENGINE::flushPendingViolations()
 
     for( const PENDING_VIOLATION& pending : all )
     {
-        // A provider with many findings makes this a long serial step: let the reporter serve
-        // what waits every so often (each marker is complete before the next is made)
-        if( m_progressReporter && ( &pending - all.data() ) % 128 == 127 )
-            m_progressReporter->KeepRefreshing( false );
+        // A provider with many findings makes this a long serial step (a marker each, with its
+        // path): answer the API between them (each marker is complete before the next is made;
+        // ServeDuringTask acts at most every 20 ms and only while an API task runs)
+        KICAD_API_SERVER::ServeDuringTask();
 
         if( pending.path )
         {
