@@ -313,6 +313,8 @@ API_HANDLER_SCH::API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext,
             &API_HANDLER_SCH::handleGetMarkers, true );
     registerHandler<kiapi::backplane::embed::SetHostMarkers, kiapi::backplane::embed::SetHostMarkersResponse>(
             &API_HANDLER_SCH::handleSetHostMarkers );
+    registerHandler<kiapi::backplane::embed::ClickMarker, kiapi::backplane::embed::ClickMarkerResponse>(
+            &API_HANDLER_SCH::handleClickMarker );
     registerHandler<kiapi::backplane::embed::CommentSelection,
                     kiapi::backplane::embed::CommentSelectionResponse>(
             &API_HANDLER_SCH::handleCommentSelection );
@@ -3422,6 +3424,121 @@ void API_HANDLER_SCH::onCanvasClick()
             return;
         }
     }
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::ClickMarkerResponse>
+API_HANDLER_SCH::handleClickMarker( const HANDLER_CONTEXT<kiapi::backplane::embed::ClickMarker>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    // Routed by frame kind: the board editor's handler serves FK_PCB.
+    if( aCtx.Request.kind() != embed::FK_SCH )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "ClickMarker" ) )
+        return tl::unexpected( *headless );
+
+    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+        return tl::unexpected( *busy );
+
+    SCH_EDIT_FRAME* editor = frame();
+
+    auto notFound = []( const std::string& aWhat ) -> HANDLER_RESULT<embed::ClickMarkerResponse>
+                    {
+                        ApiResponseStatus e;
+                        e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+                        e.set_error_message( fmt::format( "ClickMarker: no marker {} in the schematic editor", aWhat ) );
+                        return tl::unexpected( e );
+                    };
+
+    embed::ClickMarkerResponse response;
+
+    if( aCtx.Request.has_host() && !aCtx.Request.host().id().empty() )
+    {
+        const std::string& set = aCtx.Request.host().set();
+        const std::string& id = aCtx.Request.host().id();
+
+        if( HOST_MARKERS_ITEM* hostItem = hostMarkers( false ) )
+        {
+            for( const HOST_MARKER* host : hostItem->All() )
+            {
+                if( host->set == set && host->id == id )
+                {
+                    if( aCtx.Request.zoom() )
+                        editor->FocusOnLocation( host->pos );
+
+                    response.set_event_seq( BACKPLANE_EMBED::Get().MarkerClicked( editor, set, id, std::string() ) );
+                    return response;
+                }
+            }
+        }
+
+        return notFound( set + "/" + id );
+    }
+
+    KIID                 id( aCtx.Request.marker().value() );
+    const SCH_SHEET_LIST sheets = editor->Schematic().Hierarchy();
+    SCH_MARKER*          marker = nullptr;
+    SCH_SHEET_PATH       markerPath;
+
+    // The sheet shown first: a screen shared by sheet instances holds the marker on each
+    std::vector<SCH_SHEET_PATH> order( 1, editor->GetCurrentSheet() );
+    order.insert( order.end(), sheets.begin(), sheets.end() );
+
+    for( const SCH_SHEET_PATH& path : order )
+    {
+        if( !path.LastScreen() )
+            continue;
+
+        for( SCH_ITEM* item : path.LastScreen()->Items().OfType( SCH_MARKER_T ) )
+        {
+            if( item->m_Uuid == id && static_cast<SCH_MARKER*>( item )->GetRCItem() )
+            {
+                marker = static_cast<SCH_MARKER*>( item );
+                markerPath = path;
+                break;
+            }
+        }
+
+        if( marker )
+            break;
+    }
+
+    if( !marker )
+        return notFound( aCtx.Request.marker().value() );
+
+    TOOL_MANAGER* mgr = editor->GetToolManager();
+
+    // Only the sheet shown can be clicked
+    if( markerPath.Path() != editor->GetCurrentSheet().Path() )
+    {
+        SCH_SHEET_PATH target = markerPath;
+        mgr->RunAction<SCH_SHEET_PATH*>( SCH_ACTIONS::changeSheet, &target );
+    }
+
+    // As the selection tool's click: the marker alone becomes the selection, which updates the
+    // message panel and, through SCH_INSPECTION_TOOL's cross-probe, the ERC dialog's row
+    if( SCH_SELECTION_TOOL* selTool = mgr->GetTool<SCH_SELECTION_TOOL>() )
+    {
+        selTool->ClearSelection( true );
+        selTool->AddItemToSel( marker );
+    }
+
+    if( aCtx.Request.zoom() )
+        editor->FocusOnLocation( marker->GetPosition() );
+
+    editor->GetCanvas()->Refresh();
+
+    kiapi::backplane::embed::Marker out;
+    fillEmbedSchMarker( &out, marker, markerPath, sheets );
+    response.set_event_seq( BACKPLANE_EMBED::Get().MarkerClicked( editor, std::string(), std::string(),
+                                                                  out.SerializeAsString() ) );
+    return response;
 }
 
 

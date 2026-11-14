@@ -422,7 +422,7 @@ public:
 
     /// The person clicked a marker in aFrame's canvas: a host marker (aSet, aId) or a DRC/ERC
     /// marker (aDrcMarker, a serialized kiapi.backplane.embed.Marker).  ET_MARKER_CLICKED.
-    void MarkerClicked( wxWindow* aFrame, const std::string& aSet, const std::string& aId,
+    uint64_t MarkerClicked( wxWindow* aFrame, const std::string& aSet, const std::string& aId,
                         const std::string& aDrcMarker );
 
     /// The host asked to stop it (CancelProgress).
