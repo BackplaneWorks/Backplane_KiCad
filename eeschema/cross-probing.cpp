@@ -19,6 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <api/api_server.h>
 #include <wx/tokenzr.h>
 #include <api/api_utils.h>
 #include <api/common/commands/cross_probe_commands.pb.h>
@@ -508,14 +509,20 @@ void SCH_EDIT_FRAME::KiwayMailIn( KIWAY_MAIL_EVENT& mail )
             }
         }
 
+        // A board's check run (an API task) waits on this mail: between its whole steps, answer
+        // what the API has queued (no-op outside a task)
+        KICAD_API_SERVER::ServeDuringTask();
         PrepareForNetlist();
+        KICAD_API_SERVER::ServeDuringTask();
 
         NETLIST_EXPORTER_KICAD exporter( &Schematic(), &Kiway() );
         STRING_FORMATTER formatter;
 
         exporter.Format( &formatter, GNL_ALL | GNL_OPT_KICAD );
+        KICAD_API_SERVER::ServeDuringTask();
 
         RefreshConnectivity( true );
+        KICAD_API_SERVER::ServeDuringTask();
         payload = formatter.GetString();
         break;
     }

@@ -2556,6 +2556,11 @@ void DRC_ENGINE::flushPendingViolations()
 
     for( const PENDING_VIOLATION& pending : all )
     {
+        // A provider with many findings makes this a long serial step: let the reporter serve
+        // what waits every so often (each marker is complete before the next is made)
+        if( m_progressReporter && ( &pending - all.data() ) % 128 == 127 )
+            m_progressReporter->KeepRefreshing( false );
+
         if( pending.path )
         {
             dispatchViolation( pending.item, pending.pos, pending.layer,

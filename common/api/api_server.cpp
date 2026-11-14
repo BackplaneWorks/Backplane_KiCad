@@ -26,6 +26,7 @@
 #include <wx/datetime.h>
 #include <wx/event.h>
 #include <wx/stdpaths.h>
+#include <wx/thread.h>
 
 #include <advanced_config.h>
 #include <backplane_embed.h>
@@ -366,6 +367,25 @@ void KICAD_API_SERVER::onApiRequest( std::string* aRequest )
 
     // Takes ownership and frees the wxCommandEvent
     QueueEvent( evt );
+}
+
+
+void KICAD_API_SERVER::ServeDuringTask()
+{
+    if( !wxThread::IsMain() || !PgmOrNull() || !API_TASK_SCHEDULER::Instance().AnyTaskRunning() )
+        return;
+
+    KICAD_API_SERVER* server = PgmOrNull()->ApiServerOrNull();
+
+    if( !server )
+        return;
+
+    // wx's YieldFor( category ) runs queued events only when asked for every category
+    // (wxEventLoopBase::DoYieldFor), and yielding for everything would run the application's
+    // other queued work inside the task; so this server's own queue is run.  Bounded: what keeps
+    // arriving is served at the next call.
+    for( int ii = 0; ii < 64 && server->HasQueuedRequests(); ++ii )
+        server->ProcessPendingEvents();
 }
 
 

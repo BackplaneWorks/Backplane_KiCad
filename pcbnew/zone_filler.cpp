@@ -1520,6 +1520,9 @@ bool ZONE_FILLER::Fill( const std::vector<ZONE*>& aZones, bool aCheck, wxWindow*
             for( const auto& [zone, layer] : zonesToRefill )
                 snapshotLayers.set( layer );
 
+            if( m_progressReporter )
+                m_progressReporter->KeepRefreshing();   // between whole serial steps: serve what waits
+
             FillSnapshot snapshot;
 
             forEachBoardAndFootprintZone( m_board,
@@ -1543,6 +1546,9 @@ bool ZONE_FILLER::Fill( const std::vector<ZONE*>& aZones, bool aCheck, wxWindow*
                                                       snapshot[{ zone, layer }] = sp->CloneDropTriangulation();
                                               }
                                           } );
+
+            if( m_progressReporter )
+                m_progressReporter->KeepRefreshing();   // between whole serial steps: serve what waits
 
             auto cached_refill_fill_lambda =
                     [&]( const std::pair<ZONE*, PCB_LAYER_ID>& aFillItem ) -> int
@@ -1579,7 +1585,13 @@ bool ZONE_FILLER::Fill( const std::vector<ZONE*>& aZones, bool aCheck, wxWindow*
                 refillIslandsMap[zone][layer] = ISOLATED_ISLANDS();
             }
 
+            if( m_progressReporter )
+                m_progressReporter->KeepRefreshing();   // between whole serial steps: serve what waits
+
             connectivity->FillIsolatedIslandsMap( refillIslandsMap );
+
+            if( m_progressReporter )
+                m_progressReporter->KeepRefreshing();   // between whole serial steps: serve what waits
 
             for( const auto& [zone, zoneIslands] : refillIslandsMap )
             {
@@ -1625,6 +1637,9 @@ bool ZONE_FILLER::Fill( const std::vector<ZONE*>& aZones, bool aCheck, wxWindow*
                     zone->CalculateFilledArea();
                 }
             }
+
+            if( m_progressReporter )
+                m_progressReporter->KeepRefreshing();   // between whole serial steps: serve what waits
 
             // Convergence check: collect zone-layer pairs whose fill changed (refill or
             // island removal) compared to the pre-wave hash snapshot.  These seed the next
