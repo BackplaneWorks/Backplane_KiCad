@@ -44,6 +44,8 @@ inline constexpr std::array<const char*, 21> CAPABILITIES = {
     "drc-zone-guard",  // DRC checks a zone against its outline when its fill triangulation is bad
     "rules-insert-position", // EditCustomRules.insert: new rules first, last or before a named rule
     "plan-keys",       // in plan view the plan tool's keys (A, R, W, L...) are its own, never KiCad's defaults
+    "task-gate-reads", // during an API task only KICAD_API_SERVER::IsReadServedDuringTask's reads are
+                       // answered (served while it runs); every other request is AS_BUSY at once, naming the task
 };
 
 } // namespace BACKPLANE

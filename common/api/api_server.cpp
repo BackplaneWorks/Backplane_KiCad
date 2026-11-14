@@ -482,6 +482,8 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
             ApiResponse error;
             error.mutable_header()->set_kicad_token( m_token );
             error.mutable_status()->set_status( ApiStatusCode::AS_BUSY );
+            // Stable for clients (capability task-gate-reads): the text starts "a task is running: "
+            // and holds "(token <token>, " with the task's token, which GetTaskStatus takes
             error.mutable_status()->set_error_message( fmt::format(
                     "a task is running: {} (token {}, for {:.1f} s); {} waits until it completes "
                     "(GetTaskStatus with the token); only reads are answered meanwhile",
