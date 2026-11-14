@@ -284,6 +284,13 @@ API_HANDLER_SCH::handleRunChecks( const HANDLER_CONTEXT<kiapi::backplane::embed:
     if( std::optional<wxString> dialog = BACKPLANE_EMBED::ModalBlocker() )
         return busy( fmt::format( "KiCad is showing the dialog '{}'", dialog->ToStdString( wxConvUTF8 ) ) );
 
+    if( uint64_t minIdle = aCtx.Request.min_canvas_idle_ms() )
+    {
+        // canvas-idle: a check never takes the UI thread in the middle of the person's gesture
+        if( std::optional<std::string> inUse = BACKPLANE_EMBED::Get().CanvasInUse( frame(), minIdle ) )
+            return busy( *inUse );
+    }
+
     if( !frame()->ToolStackIsEmpty() )
         return busy( "a tool is active in the schematic editor" );
 

@@ -151,6 +151,8 @@ struct EMBED_FRAME_OPS
                         std::vector<std::pair<wxString, wxString>>& aErrors )> openFiles;
     std::function<void()>                      autoPanels;       ///< side panels for the width (EmbedAutoPanels)
     std::function<wxWindow*()>                 canvas;           ///< the frame's drawing canvas, if any
+    /// canvas-idle: whether an interactive tool is mid-operation, and the current tool's name
+    std::function<bool( std::string& aToolName )> toolBusy;
 };
 
 struct EMBED_FRAME_INFO
@@ -168,6 +170,9 @@ struct EMBED_FRAME_INFO
     int              minHeight = 0;
     wxString         libId;            ///< FK_FOOTPRINT_EDITOR / FK_SYMBOL_EDITOR
     std::vector<wxString> files;       ///< FK_GERBVIEW
+    uint64_t         canvasInputAgoMs = UINT64_MAX;  ///< canvas-idle; UINT64_MAX: none yet
+    bool             toolBusy = false;
+    std::string      toolName;
 };
 
 /// A box in millimetres, the document's own frame (Y down), kiapi.backplane.embed.BoxMm.
@@ -381,6 +386,14 @@ public:
      */
     static std::optional<wxString> ModalBlocker( bool aNestedLoops = true );
 
+    /**
+     * canvas-idle: why a check must not start now on aFrame (RunChecks.min_canvas_idle_ms): its
+     * canvas had input within aMinIdleMs, or its tool is busy; with aAlsoTool, that frame's tool
+     * being busy too (DRC parity and the schematic editor).  "canvas in use: ..." or nothing.
+     */
+    std::optional<std::string> CanvasInUse( wxFrame* aFrame, uint64_t aMinIdleMs,
+                                            wxFrame* aAlsoTool = nullptr ) const;
+
     // Progress of long jobs (bp.12): in --embedded the progress dialogs stay hidden and report
     // here instead; the host hears ET_PROGRESS.  Begin/Update/End are main-thread only;
     // RequestCancel and ProgressCancelled are thread-safe.
@@ -590,7 +603,12 @@ private:
         bool             awaitDrawn = false;  ///< shown by ShowEmbedded, not yet drawn
         std::chrono::steady_clock::time_point shownAt;
         bool             editorRequestPending = false;   ///< an ET_EDITOR_REQUESTED is on its way
+        /// canvas-idle: the person's last input on the canvas (epoch: none yet)
+        std::chrono::steady_clock::time_point canvasInput;
     };
+
+    /// canvas-idle: note input on an embedded frame's canvas (FilterEvent)
+    void noteCanvasInput( wxEvent& aEvent, wxEventType aType );
 
     FRAME_ENTRY*       entry( const wxFrame* aFrame );
     const FRAME_ENTRY* entry( const wxFrame* aFrame ) const;

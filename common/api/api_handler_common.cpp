@@ -135,6 +135,9 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 // Event.detail of ET_SHOW_REQUESTED / ET_EDITOR_REQUESTED names the API client
                 // that caused it ("" = the person or KiCad itself); DRC parity is quiet (bp.13)
                 reply.add_capabilities( "embed-request-actor" );
+                // FrameInfo.canvas_input_ago_ms / tool_busy / tool_name and
+                // RunChecks.min_canvas_idle_ms (bp.13 batch 8)
+                reply.add_capabilities( "canvas-idle" );
 #ifdef __WXGTK__
                 // A host-reserved chord pressed while a KiCad popup holds the keyboard closes
                 // the popup and reaches the host (X11; bp.13)

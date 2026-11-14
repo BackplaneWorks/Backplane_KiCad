@@ -715,6 +715,18 @@ API_HANDLER_PCB::handleRunChecks( const HANDLER_CONTEXT<kiapi::backplane::embed:
     if( std::optional<wxString> dialog = BACKPLANE_EMBED::ModalBlocker() )
         return busy( fmt::format( "KiCad is showing the dialog '{}'", dialog->ToStdString( wxConvUTF8 ) ) );
 
+    if( uint64_t minIdle = aCtx.Request.min_canvas_idle_ms() )
+    {
+        // canvas-idle: a check never takes the UI thread in the middle of the person's gesture.
+        // With parity it loads into the schematic editor: a busy tool there blocks it too.
+        wxFrame* sch = aCtx.Request.parity()
+                               ? dynamic_cast<wxFrame*>( frame()->Kiway().Player( FRAME_SCH, false ) )
+                               : nullptr;
+
+        if( std::optional<std::string> inUse = BACKPLANE_EMBED::Get().CanvasInUse( frame(), minIdle, sch ) )
+            return busy( *inUse );
+    }
+
     if( !frame()->ToolStackIsEmpty() )
         return busy( "a tool is active in the PCB editor" );
 

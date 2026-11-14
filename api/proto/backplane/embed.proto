@@ -59,6 +59,16 @@ message FrameInfo
                              // XMapWindow/XUnmapWindow `window` itself; HideFrame clears it
   string          lib_id = 12;   // FK_FOOTPRINT_EDITOR / FK_SYMBOL_EDITOR: "Lib:Name" on screen (bp.13)
   repeated string files  = 13;   // FK_GERBVIEW: the Gerber / drill / job files loaded, absolute (bp.13)
+
+  // canvas-idle (bp.13): the person's input on this frame's canvas.  Input is a mouse button
+  // press or release, a drag, a wheel event or a key while the canvas has the keyboard; motion
+  // with no button down is not.  Milliseconds since the last one (monotonic), or max uint64 when
+  // none since the frame opened.
+  uint64 canvas_input_ago_ms = 14;
+  bool   tool_busy           = 15; // an interactive tool is mid-operation: Escape would cancel
+                                   // something (a move or drag, a track started, a shape's first
+                                   // point placed); a tool merely chosen is not busy
+  string tool_name           = 16; // the current tool ("pcbnew.InteractiveRouter"), for logs
 }
 
 // Parent (or re-parent) every embedded frame under a host window.
@@ -377,6 +387,11 @@ message RunChecks
   bool      refill_zones = 2;  // FK_PCB: refill zones first (default: the current fills, as
                                // kicad-cli does)
   bool      parity       = 3;  // FK_PCB: also schematic parity
+
+  // canvas-idle: when non-zero, refused with AS_BUSY ("canvas in use: ...") if the checked
+  // frame's canvas had input within this many ms or its tool is busy (with parity, also a busy
+  // schematic tool).  KiCad never waits or queues: it refuses or runs.  0: no such check.
+  uint64    min_canvas_idle_ms = 4;
 }
 
 message RunChecksResponse

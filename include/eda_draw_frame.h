@@ -485,6 +485,7 @@ public:
     virtual EDA_DRAW_PANEL_GAL* GetCanvas() const { return m_canvas; }
 
     wxWindow* EmbedCanvas() const override;
+    bool      EmbedToolBusy( std::string& aToolName ) const override;
     void SetCanvas( EDA_DRAW_PANEL_GAL* aPanel ) { m_canvas = aPanel; }
 
     wxWindow* GetToolCanvas() const override { return GetCanvas(); }

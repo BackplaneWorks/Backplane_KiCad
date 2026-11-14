@@ -1692,3 +1692,25 @@ wxWindow* EDA_DRAW_FRAME::EmbedCanvas() const
 {
     return GetCanvas();
 }
+
+
+bool EDA_DRAW_FRAME::EmbedToolBusy( std::string& aToolName ) const
+{
+    if( m_toolManager )
+    {
+        if( TOOL_BASE* tool = m_toolManager->GetCurrentTool() )
+            aToolName = tool->GetName();
+    }
+
+    // Mid-operation is when the tool holds the view: every interactive operation (a move, a
+    // track being routed, a shape or zone outline after its first point, a selection box)
+    // turns on auto-pan and/or captures the cursor, and gives both back when it ends or is
+    // cancelled.  A tool that is merely chosen does neither.
+    EDA_DRAW_PANEL_GAL* canvas = GetCanvas();
+
+    if( !canvas || !canvas->GetViewControls() )
+        return false;
+
+    const KIGFX::VC_SETTINGS& settings = canvas->GetViewControls()->GetSettings();
+    return settings.m_autoPanEnabled || settings.m_cursorCaptured;
+}
