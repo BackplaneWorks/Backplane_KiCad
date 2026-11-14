@@ -1,0 +1,96 @@
+name: Backplane KiCad QA unit tests (Linux)
+
+# KiCad's own unit tests (qa_common, qa_eeschema, qa_pcbnew) on a branch pushed under qa/**, for
+# when the build box that normally runs them is unavailable. Nothing is released.
+on:
+  push:
+    branches:
+      - 'qa/**'
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-24.04
+    container:
+      image: ubuntu:26.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    timeout-minutes: 340
+    steps:
+      - name: Prepare the build container
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y sudo ca-certificates curl git git-lfs zstd file xz-utils xvfb xauth
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install KiCad build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            build-essential cmake ninja-build pkg-config ccache \
+            libboost-all-dev libbz2-dev libcairo2-dev libcurl4-openssl-dev \
+            libeigen3-dev libfontconfig1-dev libfreetype-dev libgl-dev \
+            libglm-dev \
+            libgl1-mesa-dev libglew-dev libglu1-mesa-dev libglib2.0-dev \
+            libgtk-3-dev libharfbuzz-dev libgit2-dev libssl-dev \
+            libngspice0-dev ngspice libnng-dev libocct-data-exchange-dev \
+            libocct-foundation-dev libocct-modeling-algorithms-dev \
+            libocct-modeling-data-dev libocct-ocaf-dev \
+            libocct-visualization-dev libpixman-1-dev libpng-dev \
+            libpoppler-dev libpoppler-glib-dev libprotobuf-dev \
+            libsecret-1-dev libspnav-dev libtool \
+            libwxgtk3.2-dev libwxgtk-webview3.2-dev libx11-dev \
+            libx11-xcb-dev libxkbcommon-x11-dev libyaml-cpp-dev \
+            libzstd-dev mesa-common-dev pax-utils protobuf-compiler \
+            python3 python3-venv rapidjson-dev shared-mime-info unixodbc-dev \
+            zlib1g-dev libzint-dev glslang-tools spirv-tools
+
+      - name: Free disk space
+        run: df -h / ; rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc 2>/dev/null || true; df -h /
+
+      - name: Restore compiler cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ccache
+          key: kicad-ccache-${{ runner.os }}-qa-${{ github.sha }}
+          restore-keys: |
+            kicad-ccache-${{ runner.os }}-
+
+      - name: Configure
+        run: |
+          ccache --max-size=4G
+          cmake -S . -B build/qa -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DKICAD_BUILD_QA_TESTS=ON -DKICAD_BUILD_I18N=OFF -DKICAD_USE_SENTRY=OFF -DKICAD_USE_PCH=OFF \
+            -DBACKPLANE_FORK_VERSION="$(cat BACKPLANE_VERSION)" -DBACKPLANE_UPSTREAM_COMMIT="$(cat BACKPLANE_UPSTREAM)" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build the unit tests
+        run: cmake --build build/qa --parallel 4 --target qa_common qa_eeschema qa_pcbnew -- -k 0
+
+      - name: Run the unit tests
+        run: |
+          set +e
+          rc=0
+          for t in common eeschema pcbnew; do
+            b=$(find build/qa/qa/tests -name qa_$t -type f -executable | head -1)
+            [ -n "$b" ] || { echo "== qa_$t not built"; rc=1; continue; }
+            ( cd "$(dirname "$b")" && timeout 5400 xvfb-run -a "$PWD/$(basename "$b")" --report_level=short --log_level=test_suite > "$GITHUB_WORKSPACE/qa_$t.log" 2>&1 ); r=$?
+            echo "== qa_$t rc=$r $(grep -E 'test cases? out of|assertions? out of' "$GITHUB_WORKSPACE/qa_$t.log" | tail -2 | tr '\n' ' ')"
+            grep -E 'error: in "|fatal error: in "' "$GITHUB_WORKSPACE/qa_$t.log" | sed 's/.*error: in "\([^"]*\)".*/  FAIL \1/' | sort -u
+            [ $r = 0 ] || rc=1
+          done
+          exit $rc
+
+      - name: Upload the unit test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-logs
+          path: qa_*.log
