@@ -22,6 +22,8 @@
 
 #include <set>
 
+#include <board_connected_item.h>
+
 class DRC_RULE;
 
 class DRC_LENGTH_REPORT
@@ -37,7 +39,17 @@ public:
         DRC_RULE*                       matchingRule;
         wxString                        from;
         wxString                        to;
-        std::set<BOARD_CONNECTED_ITEM*> items;
+        /// Ordered by item id, not by address: which item a finding names first (and where its
+        /// marker sits) must not depend on how a build's allocations happened to lay items out
+        struct BY_ID
+        {
+            bool operator()( const BOARD_CONNECTED_ITEM* a, const BOARD_CONNECTED_ITEM* b ) const
+            {
+                return a->m_Uuid < b->m_Uuid;
+            }
+        };
+
+        std::set<BOARD_CONNECTED_ITEM*, BY_ID> items;
         int                             viaCount;
         double                          totalRoute;
         double                          totalRouteDelay;

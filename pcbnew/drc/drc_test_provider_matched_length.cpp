@@ -426,7 +426,7 @@ bool DRC_TEST_PROVIDER_MATCHED_LENGTH::runInternal( bool aDelayReportMode )
             lengthItems.reserve( netItems.size() );
 
             CONNECTION ent;
-            ent.items = netItems;
+            ent.items.insert( netItems.begin(), netItems.end() );
             ent.netcode = netCode;
             ent.netname = m_board->GetNetInfo().GetNetItem( ent.netcode )->GetNetname();
             ent.netinfo = m_board->GetNetInfo().GetNetItem( ent.netcode );
@@ -475,7 +475,7 @@ bool DRC_TEST_PROVIDER_MATCHED_LENGTH::runInternal( bool aDelayReportMode )
                              + static_cast<double>( ent.totalPadToDieDelay );
             ent.matchingRule = rule;
 
-            if( FROM_TO_CACHE::FT_PATH* ftPath = ftCache->QueryFromToPath( ent.items ) )
+            if( FROM_TO_CACHE::FT_PATH* ftPath = ftCache->QueryFromToPath( netItems ) )
             {
                 ent.from = ftPath->fromName;
                 ent.to = ftPath->toName;
