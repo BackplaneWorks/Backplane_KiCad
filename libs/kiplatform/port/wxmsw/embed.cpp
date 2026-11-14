@@ -499,12 +499,65 @@ LRESULT CALLBACK activateWndProc( int aCode, WPARAM aWParam, LPARAM aLParam )
 }
 
 
+/// A native modal of this process (MessageBoxW, wx 3.3's TaskDialog message boxes, the common
+/// file dialogs): a top-level of the dialog manager's class #32770.  wx's own dialogs
+/// (DIALOG_SHIM, KIDIALOG) are wx windows of another class, reported by BACKPLANE_EMBED's
+/// wxEVT_SHOW path instead.
+bool isNativeModal( HWND aWindow )
+{
+    char cls[16] = {};
+    GetClassNameA( aWindow, cls, sizeof( cls ) );
+
+    return strcmp( cls, "#32770" ) == 0 && !( GetWindowLongPtrW( aWindow, GWL_STYLE ) & WS_CHILD );
+}
+
+
+std::wstring windowText( HWND aWindow )
+{
+    wchar_t text[256] = {};
+    GetWindowTextW( aWindow, text, 256 );
+    return text;
+}
+
+
+std::vector<HWND> s_nativeOpen;   ///< native modals reported open, UI thread only
+
+
+/// Windows has no map signal to watch as wxgtk does: the CBT hook below sees a native modal
+/// activated (the first time: opened) and destroyed (closed) and tells hooks.dialog, so the host
+/// gets ET_DIALOG_OPENED/CLOSED with its title.
+void noteNativeModal( int aCode, HWND aWindow )
+{
+    auto it = std::find( s_nativeOpen.begin(), s_nativeOpen.end(), aWindow );
+
+    if( aCode == HCBT_ACTIVATE && it == s_nativeOpen.end() && isNativeModal( aWindow ) )
+    {
+        s_nativeOpen.push_back( aWindow );
+        trace( "native modal opened %s", describe( aWindow ).c_str() );
+
+        if( s_hooks.dialog )
+            s_hooks.dialog( reinterpret_cast<uint64_t>( aWindow ), true, wxString( windowText( aWindow ) ) );
+    }
+    else if( aCode == HCBT_DESTROYWND && it != s_nativeOpen.end() )
+    {
+        s_nativeOpen.erase( it );
+        trace( "native modal closed %s", describe( aWindow ).c_str() );
+
+        if( s_hooks.dialog )
+            s_hooks.dialog( reinterpret_cast<uint64_t>( aWindow ), false, wxString( windowText( aWindow ) ) );
+    }
+}
+
+
 /// A frame not on screen (a prewarm, a hidden tab) never takes the keyboard or the activation:
 /// its window is a child of the host's, so a SetFocus in it (wx restoring its last focus, a
 /// control taking focus as it is built or first painted) moved the person's keys to a frame they
 /// cannot see.  Refused here whoever asks, and traced with the caller's stack.
 LRESULT CALLBACK focusCbtProc( int aCode, WPARAM aWParam, LPARAM aLParam )
 {
+    if( aCode == HCBT_ACTIVATE || aCode == HCBT_DESTROYWND )
+        noteNativeModal( aCode, reinterpret_cast<HWND>( aWParam ) );
+
     if( aCode == HCBT_SETFOCUS || aCode == HCBT_ACTIVATE )
     {
         HWND        target = reinterpret_cast<HWND>( aWParam );
@@ -1156,9 +1209,31 @@ void KIPLATFORM::EMBED::ReturnFocusFrom( wxWindow* aFrame, uint64_t aBefore )
 }
 
 
-bool KIPLATFORM::EMBED::NativeModalTitle( wxString& )
+bool KIPLATFORM::EMBED::NativeModalTitle( wxString& aTitle )
 {
-    return false;
+    // The UI thread's windows, asked from whichever thread wants to name what holds KiCad up
+    DWORD thread = s_mainThreadId ? s_mainThreadId : GetCurrentThreadId();
+    HWND  found = nullptr;
+
+    EnumThreadWindows(
+            thread,
+            []( HWND aWindow, LPARAM aFound ) -> BOOL
+            {
+                if( IsWindowVisible( aWindow ) && isNativeModal( aWindow ) )
+                {
+                    *reinterpret_cast<HWND*>( aFound ) = aWindow;
+                    return FALSE;
+                }
+
+                return TRUE;
+            },
+            reinterpret_cast<LPARAM>( &found ) );
+
+    if( !found )
+        return false;
+
+    aTitle = wxString( windowText( found ) );
+    return true;
 }
 
 
