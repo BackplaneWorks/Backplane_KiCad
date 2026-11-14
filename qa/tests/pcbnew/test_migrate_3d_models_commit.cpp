@@ -46,7 +46,7 @@ std::map<wxString, std::string> zoneState( BOARD* aBoard )
         std::string s = zone->IsTeardropArea() ? "teardrop " : "zone ";
         s += zone->Outline()->GetHash().ToString();
 
-        for( PCB_LAYER_ID layer : zone->GetLayerSet() & LSET::AllCuMask() )
+        for( PCB_LAYER_ID layer : ( zone->GetLayerSet() & LSET::AllCuMask() ).Seq() )
         {
             zone->BuildHashValue( layer );
             s += " " + zone->GetHashValue( layer ).ToString();
