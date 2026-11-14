@@ -1,0 +1,68 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:45",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "creepage.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Creepage violation (rule 'GND-HV_CRE' creepage 8.0000 mm; actual 3.9263 mm)",
+            "items": [
+                {
+                    "description": "Track [GND] on F.Cu, length 11.1200 mm",
+                    "pos": {
+                        "x": 74.88,
+                        "y": 107.84
+                    },
+                    "uuid": "507a1a59-f68c-46b3-ae0f-fa53bac8933e"
+                },
+                {
+                    "description": "PTH pad 1 [Net-(C1-Pad1)] of R1",
+                    "pos": {
+                        "x": 71.43,
+                        "y": 109.39
+                    },
+                    "uuid": "8b2d9726-bcb2-422c-9587-5a0da0c3dc8d"
+                }
+            ],
+            "severity": "error",
+            "type": "creepage"
+        }
+    ]
+}

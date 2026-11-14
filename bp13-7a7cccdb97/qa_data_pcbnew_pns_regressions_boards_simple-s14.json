@@ -1,0 +1,490 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:28",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "simple.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0105 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 124.0,
+                        "y": 78.0
+                    },
+                    "uuid": "a8b5f800-0b78-41cd-86d9-6fbf6d87c579"
+                },
+                {
+                    "description": "Zone [GND] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 185.0,
+                        "y": 125.0
+                    },
+                    "uuid": "754c1c43-ce1c-402f-8633-c6299f05323c"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'LEMO THD'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 134.76,
+                        "y": 101.51
+                    },
+                    "uuid": "45d9ee34-fd6b-4cf9-87da-ab35e259dad8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 141.49,
+                        "y": 100.35
+                    },
+                    "uuid": "1b7e84d6-ddaa-48f3-8810-f1e0cdc57069"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 142.52,
+                        "y": 105.91
+                    },
+                    "uuid": "e81e2f26-bb1f-4ea6-974e-4798d237c79b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Switches'",
+            "items": [
+                {
+                    "description": "Footprint PB1",
+                    "pos": {
+                        "x": 144.61,
+                        "y": 114.08
+                    },
+                    "uuid": "7b4f681f-e0e0-4a6b-beb1-38fb914373c6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 144.66,
+                        "y": 101.32
+                    },
+                    "uuid": "1b5ff66d-3372-4748-9cae-cbff5145f770"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R9",
+                    "pos": {
+                        "x": 145.47,
+                        "y": 95.27
+                    },
+                    "uuid": "fab08214-cc6a-4fff-acd3-357255f22f31"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Capacitors SMD'",
+            "items": [
+                {
+                    "description": "Footprint C2",
+                    "pos": {
+                        "x": 145.72,
+                        "y": 106.81
+                    },
+                    "uuid": "07145271-b1fd-440c-963c-c0b9bd5b769a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'LEMO THD'",
+            "items": [
+                {
+                    "description": "Footprint J3",
+                    "pos": {
+                        "x": 146.38,
+                        "y": 89.47
+                    },
+                    "uuid": "9319d1f0-abf1-43e4-8424-d65abee75bb6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Capacitors SMD'",
+            "items": [
+                {
+                    "description": "Footprint C1",
+                    "pos": {
+                        "x": 147.91,
+                        "y": 100.48
+                    },
+                    "uuid": "8a41aa02-e348-4860-829f-a4f1eb43b78b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R5",
+                    "pos": {
+                        "x": 148.275,
+                        "y": 105.925
+                    },
+                    "uuid": "8e0d1f0f-b408-4ce8-b459-52d3297f314b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 151.03,
+                        "y": 98.15
+                    },
+                    "uuid": "fd7965bc-6a89-4fa6-af43-3109602b8158"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R7",
+                    "pos": {
+                        "x": 153.4,
+                        "y": 112.675
+                    },
+                    "uuid": "3d028a3d-e2ff-4ac9-886d-a0eff74e3b79"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'ICs And Semiconductors SMD'",
+            "items": [
+                {
+                    "description": "Footprint IC1",
+                    "pos": {
+                        "x": 154.02,
+                        "y": 104.2975
+                    },
+                    "uuid": "dabb6a79-6c25-42bf-87b1-5d6172ead946"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R8",
+                    "pos": {
+                        "x": 155.04,
+                        "y": 95.5
+                    },
+                    "uuid": "1b61debb-162a-4b17-bdc5-7caa0b22d45e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R11",
+                    "pos": {
+                        "x": 155.75,
+                        "y": 98.2
+                    },
+                    "uuid": "fad4e105-e591-449a-adfc-0590bf04a5c2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'LEMO THD'",
+            "items": [
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 156.0,
+                        "y": 89.65
+                    },
+                    "uuid": "67a7f0f5-19d6-4acf-8f57-22d1daa98f2d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'ICs And Semiconductors SMD'",
+            "items": [
+                {
+                    "description": "Footprint Q1",
+                    "pos": {
+                        "x": 158.3895,
+                        "y": 112.65
+                    },
+                    "uuid": "ce5843b0-0cce-4baf-b1c6-96922fde212e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R12",
+                    "pos": {
+                        "x": 159.625,
+                        "y": 104.1
+                    },
+                    "uuid": "1d870e40-d858-4757-b44d-f952816d0d56"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R6",
+                    "pos": {
+                        "x": 160.325,
+                        "y": 107.075
+                    },
+                    "uuid": "106b1b7f-d15a-4ebf-b364-38a766eeb9da"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Resistors SMD'",
+            "items": [
+                {
+                    "description": "Footprint R10",
+                    "pos": {
+                        "x": 163.09,
+                        "y": 102.0
+                    },
+                    "uuid": "812aa8da-7a15-4f77-99f7-0e739c5d0869"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Pin_Headers'",
+            "items": [
+                {
+                    "description": "Footprint J4",
+                    "pos": {
+                        "x": 170.49,
+                        "y": 98.93
+                    },
+                    "uuid": "957f2004-577e-4966-9210-a41838d8a122"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R12",
+                    "pos": {
+                        "x": 157.649,
+                        "y": 104.1
+                    },
+                    "uuid": "539d82b7-b1b2-45ee-8ccd-94e942597c3c"
+                },
+                {
+                    "description": "Pad 16 [unconnected-(IC1-RC0)] of IC1 on F.Cu",
+                    "pos": {
+                        "x": 156.97,
+                        "y": 103.9725
+                    },
+                    "uuid": "13ce3927-b281-4585-ade8-e5b92a5f8e8e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R12",
+                    "pos": {
+                        "x": 157.649,
+                        "y": 104.1
+                    },
+                    "uuid": "539d82b7-b1b2-45ee-8ccd-94e942597c3c"
+                },
+                {
+                    "description": "Pad 14 [Net-(IC1-RC2)] of IC1 on F.Cu",
+                    "pos": {
+                        "x": 156.97,
+                        "y": 105.2725
+                    },
+                    "uuid": "034e22bf-7b14-4e59-905b-d7e9a84c32aa"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R12",
+                    "pos": {
+                        "x": 157.649,
+                        "y": 104.1
+                    },
+                    "uuid": "539d82b7-b1b2-45ee-8ccd-94e942597c3c"
+                },
+                {
+                    "description": "Pad 15 [unconnected-(IC1-RC1)] of IC1 on F.Cu",
+                    "pos": {
+                        "x": 156.97,
+                        "y": 104.6225
+                    },
+                    "uuid": "936c9d86-a1cb-454c-8954-dd4bb76ed5b5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R12",
+                    "pos": {
+                        "x": 157.649,
+                        "y": 104.1
+                    },
+                    "uuid": "539d82b7-b1b2-45ee-8ccd-94e942597c3c"
+                },
+                {
+                    "description": "Pad 18 [Net-(IC1-RA1/ICSPCLK)] of IC1 on F.Cu",
+                    "pos": {
+                        "x": 156.97,
+                        "y": 102.6725
+                    },
+                    "uuid": "f998891b-0805-4791-bd33-bb0d0a8c6d07"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R12",
+                    "pos": {
+                        "x": 157.649,
+                        "y": 104.1
+                    },
+                    "uuid": "539d82b7-b1b2-45ee-8ccd-94e942597c3c"
+                },
+                {
+                    "description": "Pad 17 [/DATA] of IC1 on F.Cu",
+                    "pos": {
+                        "x": 156.97,
+                        "y": 103.3225
+                    },
+                    "uuid": "ca3fc7fb-36ae-40db-a29d-b46760891fc5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

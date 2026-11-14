@@ -1,0 +1,97 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:05",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue24799.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 101.69,
+                        "y": 51.81
+                    },
+                    "uuid": "448e24d9-fe65-451f-953d-9e1cf55e288c"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [A] on F.Cu, length 1.1455 mm",
+                    "pos": {
+                        "x": 122.61,
+                        "y": 79.05
+                    },
+                    "uuid": "22006acf-e3aa-4cda-a620-0d1d2f43f7cf"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [A] on F.Cu, length 5.9200 mm",
+                    "pos": {
+                        "x": 122.61,
+                        "y": 73.13
+                    },
+                    "uuid": "a5f868d2-e7cd-49e8-98fc-b728763f3541"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Footprint 'MountingHole_2.2mm_M2_DIN965' does not match copy in library 'MountingHole'",
+            "items": [
+                {
+                    "description": "Footprint REF**",
+                    "pos": {
+                        "x": 119.52,
+                        "y": 75.69
+                    },
+                    "uuid": "a2a41983-11fb-4a5b-afdb-2bd1af898fb7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

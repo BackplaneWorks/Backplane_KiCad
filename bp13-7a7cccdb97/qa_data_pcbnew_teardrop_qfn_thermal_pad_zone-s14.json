@@ -1,0 +1,1499 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:34",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "teardrop_qfn_thermal_pad_zone.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [VSYS] on F.Cu, length 0.7071 mm",
+                    "pos": {
+                        "x": 142.48,
+                        "y": 102.4
+                    },
+                    "uuid": "d9ac2279-659c-4652-bf3b-c03d52184263"
+                },
+                {
+                    "description": "Track [VSYS] on F.Cu, length 1.1100 mm",
+                    "pos": {
+                        "x": 147.83,
+                        "y": 102.01
+                    },
+                    "uuid": "532fad66-ad9c-44e8-a8c3-6dc3ca6b8522"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 143.11,
+                        "y": 108.03
+                    },
+                    "uuid": "699bdc2a-12a7-428e-ba7f-6b5b215137ba"
+                },
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 0.9662 mm",
+                    "pos": {
+                        "x": 153.073185,
+                        "y": 107.878921
+                    },
+                    "uuid": "4e55ef8b-b3b8-4095-9872-8a1236645d98"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [VSYS] on F.Cu, length 1.7300 mm",
+                    "pos": {
+                        "x": 147.33,
+                        "y": 106.91
+                    },
+                    "uuid": "5e9b9994-a8a9-4d6c-8e8c-cdea0f8b75c8"
+                },
+                {
+                    "description": "Track [VSYS] on F.Cu, length 1.1100 mm",
+                    "pos": {
+                        "x": 147.83,
+                        "y": 102.01
+                    },
+                    "uuid": "532fad66-ad9c-44e8-a8c3-6dc3ca6b8522"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [GND] on F.Cu, length 1.0850 mm",
+                    "pos": {
+                        "x": 150.73,
+                        "y": 108.66
+                    },
+                    "uuid": "b241cdcb-c35a-4dd9-893f-5d4a1faa4a30"
+                },
+                {
+                    "description": "Track [GND] on F.Cu, length 1.7000 mm",
+                    "pos": {
+                        "x": 148.33,
+                        "y": 106.91
+                    },
+                    "uuid": "d718acb8-9c0c-43f4-af76-b055c28dd484"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1639 mm)",
+            "items": [
+                {
+                    "description": "Track [VBUS] on F.Cu, length 1.1879 mm",
+                    "pos": {
+                        "x": 146.83,
+                        "y": 101.44
+                    },
+                    "uuid": "58fa94ba-a7df-44d7-8873-f7330c7c182a"
+                },
+                {
+                    "description": "Track [/Debugger/USB.CC1] on F.Cu, length 0.5657 mm",
+                    "pos": {
+                        "x": 145.93,
+                        "y": 101.09
+                    },
+                    "uuid": "e065fd4e-819a-42f5-a927-46e17fb4dc6a"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1639 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/USB.CC1] on F.Cu, length 0.5200 mm",
+                    "pos": {
+                        "x": 146.33,
+                        "y": 101.49
+                    },
+                    "uuid": "0f5e0713-b0e4-43bc-9d99-c29054daa57c"
+                },
+                {
+                    "description": "Track [VBUS] on F.Cu, length 1.1879 mm",
+                    "pos": {
+                        "x": 146.83,
+                        "y": 101.44
+                    },
+                    "uuid": "58fa94ba-a7df-44d7-8873-f7330c7c182a"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1850 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(U2-VSET2)] on F.Cu, length 0.1273 mm",
+                    "pos": {
+                        "x": 150.7,
+                        "y": 102.8
+                    },
+                    "uuid": "7fed3601-9062-4fc7-adf3-bcb356b5a5f8"
+                },
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.7457 mm",
+                    "pos": {
+                        "x": 150.03,
+                        "y": 103.21
+                    },
+                    "uuid": "9ab61fc8-8998-4b96-a957-5420679c744d"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1850 mm)",
+            "items": [
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.1216 mm",
+                    "pos": {
+                        "x": 150.775726,
+                        "y": 103.21
+                    },
+                    "uuid": "4cdf6adf-a1ac-4cf1-82a8-0c34084910a6"
+                },
+                {
+                    "description": "Track [Net-(U2-VSET2)] on F.Cu, length 0.5000 mm",
+                    "pos": {
+                        "x": 151.2,
+                        "y": 102.8
+                    },
+                    "uuid": "f338935a-05d8-4f76-9204-d238de5873c8"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1850 mm)",
+            "items": [
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.7457 mm",
+                    "pos": {
+                        "x": 150.03,
+                        "y": 103.21
+                    },
+                    "uuid": "9ab61fc8-8998-4b96-a957-5420679c744d"
+                },
+                {
+                    "description": "Track [Net-(U2-VSET2)] on F.Cu, length 0.5000 mm",
+                    "pos": {
+                        "x": 151.2,
+                        "y": 102.8
+                    },
+                    "uuid": "f338935a-05d8-4f76-9204-d238de5873c8"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1513 mm)",
+            "items": [
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.9723 mm",
+                    "pos": {
+                        "x": 150.861726,
+                        "y": 103.296
+                    },
+                    "uuid": "b3e721f1-591b-4c52-aba9-b995dad49bc7"
+                },
+                {
+                    "description": "Track [/nPM1300/NPM1300.SCL] on F.Cu, length 0.3499 mm",
+                    "pos": {
+                        "x": 152.301405,
+                        "y": 103.573512
+                    },
+                    "uuid": "b9652d96-c7ab-45d8-91b5-4f517e86c810"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1513 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.SCL] on F.Cu, length 0.1930 mm",
+                    "pos": {
+                        "x": 151.951463,
+                        "y": 103.573512
+                    },
+                    "uuid": "4d703c7c-9674-45fe-9e5c-690d7d7d9fa6"
+                },
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.6590 mm",
+                    "pos": {
+                        "x": 151.834,
+                        "y": 103.296
+                    },
+                    "uuid": "e0ebdf15-6538-40fd-82f9-52f3ce55e858"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1513 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.SCL] on F.Cu, length 0.3499 mm",
+                    "pos": {
+                        "x": 152.301405,
+                        "y": 103.573512
+                    },
+                    "uuid": "b9652d96-c7ab-45d8-91b5-4f517e86c810"
+                },
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.6590 mm",
+                    "pos": {
+                        "x": 151.834,
+                        "y": 103.296
+                    },
+                    "uuid": "e0ebdf15-6538-40fd-82f9-52f3ce55e858"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 33 [GND] of U2",
+                    "pos": {
+                        "x": 146.58,
+                        "y": 103.46
+                    },
+                    "uuid": "8c575067-b92f-4496-bdc0-20409f7a1ad3"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 33 [GND] of U2",
+                    "pos": {
+                        "x": 146.58,
+                        "y": 104.46
+                    },
+                    "uuid": "c7b8f28d-8a75-48be-b349-28006529c804"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 33 [GND] of U2",
+                    "pos": {
+                        "x": 146.58,
+                        "y": 105.46
+                    },
+                    "uuid": "b3c83326-5197-4566-9f2b-3198cd43224a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 33 [GND] of U2",
+                    "pos": {
+                        "x": 147.58,
+                        "y": 103.46
+                    },
+                    "uuid": "e953d065-ff57-4d14-a8ef-7a60c221431f"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 33 [GND] of U2",
+                    "pos": {
+                        "x": 147.58,
+                        "y": 104.46
+                    },
+                    "uuid": "d9669fda-cc41-4b92-b98b-6ca6d0e7ed56"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 33 [GND] of U2",
+                    "pos": {
+                        "x": 147.58,
+                        "y": 105.46
+                    },
+                    "uuid": "e70f5d4f-bca5-4c40-ae8e-5f04aba4be2a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 33 [GND] of U2",
+                    "pos": {
+                        "x": 148.58,
+                        "y": 103.46
+                    },
+                    "uuid": "37c9ef14-1c24-4af4-9d11-a5a9e45dc1d4"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 33 [GND] of U2",
+                    "pos": {
+                        "x": 148.58,
+                        "y": 104.46
+                    },
+                    "uuid": "5fa1c891-27ee-40c8-9f41-c00185b49aae"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 33 [GND] of U2",
+                    "pos": {
+                        "x": 148.58,
+                        "y": 105.46
+                    },
+                    "uuid": "601ac208-a50b-4f3d-bbd2-6966a0baf20b"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "0477d381-cec1-4639-a1b3-a4e8a0e0d334"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/nRF52_VDD] on F.Cu, length 1.3300 mm",
+                    "pos": {
+                        "x": 143.11,
+                        "y": 107.01
+                    },
+                    "uuid": "722c6482-f376-444b-a0c7-e510fbedf631"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 0.8061 mm",
+                    "pos": {
+                        "x": 143.11,
+                        "y": 108.43
+                    },
+                    "uuid": "2f9a854c-233f-4c82-a119-9f42c7e915e0"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 143.11,
+                        "y": 108.03
+                    },
+                    "uuid": "699bdc2a-12a7-428e-ba7f-6b5b215137ba"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/USB.CC2] on F.Cu, length 0.5000 mm",
+                    "pos": {
+                        "x": 145.83,
+                        "y": 102.01
+                    },
+                    "uuid": "c8a277b0-08fb-4a4e-947f-a2e35e8ea813"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/USB.CC1] on F.Cu, length 0.6000 mm",
+                    "pos": {
+                        "x": 145.33,
+                        "y": 101.09
+                    },
+                    "uuid": "e5a32db2-27a0-437e-b2e5-70fbe3fadc88"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/USB.CC1] on F.Cu, length 0.5657 mm",
+                    "pos": {
+                        "x": 145.93,
+                        "y": 101.09
+                    },
+                    "uuid": "e065fd4e-819a-42f5-a927-46e17fb4dc6a"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/USB.CC1] on F.Cu, length 0.5200 mm",
+                    "pos": {
+                        "x": 146.33,
+                        "y": 101.49
+                    },
+                    "uuid": "0f5e0713-b0e4-43bc-9d99-c29054daa57c"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(U2-SW2)] on F.Cu, length 0.2722 mm",
+                    "pos": {
+                        "x": 148.162452,
+                        "y": 107.727548
+                    },
+                    "uuid": "66dc1224-beb5-4052-a329-d7d4a80810dc"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(U2-SW2)] on F.Cu, length 0.1684 mm",
+                    "pos": {
+                        "x": 148.354904,
+                        "y": 107.92
+                    },
+                    "uuid": "18755e36-200d-4cad-80a4-ffdd00231c3e"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(U2-SW2)] on F.Cu, length 0.4761 mm",
+                    "pos": {
+                        "x": 148.523342,
+                        "y": 107.92
+                    },
+                    "uuid": "8e4081cc-ea15-49bd-97c6-e2571671d94c"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.INT] on F.Cu, length 0.5700 mm",
+                    "pos": {
+                        "x": 148.83,
+                        "y": 106.91
+                    },
+                    "uuid": "d43da503-3241-4e03-95a8-3fc589c41ec2"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(U2-SW2)] on F.Cu, length 0.8733 mm",
+                    "pos": {
+                        "x": 148.86,
+                        "y": 108.256658
+                    },
+                    "uuid": "96e7ff6f-abe1-4bcb-8ba6-84410640a0e3"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.INT] on F.Cu, length 0.1556 mm",
+                    "pos": {
+                        "x": 148.83,
+                        "y": 107.48
+                    },
+                    "uuid": "76674d3b-8977-4f3b-9058-63150822b6fb"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.INT] on F.Cu, length 0.1556 mm",
+                    "pos": {
+                        "x": 148.94,
+                        "y": 107.59
+                    },
+                    "uuid": "fad92711-f9e4-459d-87b8-ac5047f42582"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.INT] on F.Cu, length 1.0200 mm",
+                    "pos": {
+                        "x": 149.05,
+                        "y": 107.7
+                    },
+                    "uuid": "6d1d770c-7491-4e32-83a4-cdf8704f94e2"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Connectors/ENABLE] on F.Cu, length 1.6329 mm",
+                    "pos": {
+                        "x": 150.962892,
+                        "y": 106.91
+                    },
+                    "uuid": "5f7c0687-5a55-4796-97bf-6ce72ff3294f"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.7457 mm",
+                    "pos": {
+                        "x": 150.03,
+                        "y": 103.21
+                    },
+                    "uuid": "9ab61fc8-8998-4b96-a957-5420679c744d"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.INT] on F.Cu, length 0.6671 mm",
+                    "pos": {
+                        "x": 150.07,
+                        "y": 107.7
+                    },
+                    "uuid": "ccc15efc-28bf-42e6-b8fe-19fa298e2372"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.SDA] on F.Cu, length 1.4500 mm",
+                    "pos": {
+                        "x": 150.03,
+                        "y": 104.21
+                    },
+                    "uuid": "97c150d5-8ac8-45da-ad73-b8ab72fba0b4"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.1216 mm",
+                    "pos": {
+                        "x": 150.775726,
+                        "y": 103.21
+                    },
+                    "uuid": "4cdf6adf-a1ac-4cf1-82a8-0c34084910a6"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.SCL] on F.Cu, length 1.7850 mm",
+                    "pos": {
+                        "x": 151.814975,
+                        "y": 103.71
+                    },
+                    "uuid": "93497be0-48c8-4dac-99d2-17b114798794"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.INT] on F.Cu, length 0.6971 mm",
+                    "pos": {
+                        "x": 150.737107,
+                        "y": 107.7
+                    },
+                    "uuid": "fe066c2e-ff08-4428-8649-9919b0d5ca34"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.INT] on F.Cu, length 0.5171 mm",
+                    "pos": {
+                        "x": 151.23,
+                        "y": 108.192893
+                    },
+                    "uuid": "475cc76f-2cf6-4239-8cdc-1520ecccc7ff"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.INT] on F.Cu, length 2.8600 mm",
+                    "pos": {
+                        "x": 151.23,
+                        "y": 108.71
+                    },
+                    "uuid": "fd2e6fbd-e450-47d3-9ef5-791a7709a79c"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.9723 mm",
+                    "pos": {
+                        "x": 150.861726,
+                        "y": 103.296
+                    },
+                    "uuid": "b3e721f1-591b-4c52-aba9-b995dad49bc7"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/UART_RX_NRF52] on F.Cu, length 4.3500 mm",
+                    "pos": {
+                        "x": 151.74,
+                        "y": 109.4
+                    },
+                    "uuid": "246aa02a-973a-425c-857c-821a450b2fb7"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.SCL] on F.Cu, length 0.1930 mm",
+                    "pos": {
+                        "x": 151.951463,
+                        "y": 103.573512
+                    },
+                    "uuid": "4d703c7c-9674-45fe-9e5c-690d7d7d9fa6"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.6590 mm",
+                    "pos": {
+                        "x": 151.834,
+                        "y": 103.296
+                    },
+                    "uuid": "e0ebdf15-6538-40fd-82f9-52f3ce55e858"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/UART_TX_NRF52] on F.Cu, length 2.3882 mm",
+                    "pos": {
+                        "x": 152.07,
+                        "y": 107.588248
+                    },
+                    "uuid": "528f4761-7594-4f0c-9fb0-0b8c35982f50"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.SCL] on F.Cu, length 0.3499 mm",
+                    "pos": {
+                        "x": 152.301405,
+                        "y": 103.573512
+                    },
+                    "uuid": "b9652d96-c7ab-45d8-91b5-4f517e86c810"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/UART_RX_NRF52] on F.Cu, length 1.2445 mm",
+                    "pos": {
+                        "x": 151.74,
+                        "y": 105.05
+                    },
+                    "uuid": "c1b38706-a745-43dd-9d53-7c4ad8f0102e"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/UART_TX_NRF52] on F.Cu, length 0.4524 mm",
+                    "pos": {
+                        "x": 152.389916,
+                        "y": 107.908164
+                    },
+                    "uuid": "e509bca5-5004-4847-9c18-23ac0ce9df28"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/UART_TX_NRF52] on F.Cu, length 0.7495 mm",
+                    "pos": {
+                        "x": 152.07,
+                        "y": 105.2
+                    },
+                    "uuid": "eff7d67e-9384-4471-a163-f7d4006854b3"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/UART_TX_NRF52] on F.Cu, length 0.5125 mm",
+                    "pos": {
+                        "x": 152.389916,
+                        "y": 108.420654
+                    },
+                    "uuid": "369602a3-4282-4713-ac3f-0e8814f844ff"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 1.8257 mm",
+                    "pos": {
+                        "x": 152.39,
+                        "y": 107.195736
+                    },
+                    "uuid": "947a475b-a85a-4a20-a16b-720375db6136"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 0.2828 mm",
+                    "pos": {
+                        "x": 152.39,
+                        "y": 105.37
+                    },
+                    "uuid": "26690cd1-a024-4642-b371-c3585cca7919"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 0.9662 mm",
+                    "pos": {
+                        "x": 153.073185,
+                        "y": 107.878921
+                    },
+                    "uuid": "4e55ef8b-b3b8-4095-9872-8a1236645d98"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [VBUS] on F.Cu, length 2.1567 mm",
+                    "pos": {
+                        "x": 141.43,
+                        "y": 101.12
+                    },
+                    "uuid": "62803711-fdb3-4e1f-b9d4-674925703371"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [VSYS] on F.Cu, length 0.7071 mm",
+                    "pos": {
+                        "x": 142.48,
+                        "y": 102.4
+                    },
+                    "uuid": "d9ac2279-659c-4652-bf3b-c03d52184263"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(D3-BK)] on F.Cu, length 0.3677 mm",
+                    "pos": {
+                        "x": 142.74,
+                        "y": 106.17
+                    },
+                    "uuid": "c164cb41-96cb-4003-b6ce-95f1c11a8c9d"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 0.8061 mm",
+                    "pos": {
+                        "x": 143.11,
+                        "y": 108.43
+                    },
+                    "uuid": "2f9a854c-233f-4c82-a119-9f42c7e915e0"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/nRF52_VDD] on F.Cu, length 1.3300 mm",
+                    "pos": {
+                        "x": 143.11,
+                        "y": 107.01
+                    },
+                    "uuid": "722c6482-f376-444b-a0c7-e510fbedf631"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 143.11,
+                        "y": 108.03
+                    },
+                    "uuid": "699bdc2a-12a7-428e-ba7f-6b5b215137ba"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(D3-RK)] on F.Cu, length 1.3300 mm",
+                    "pos": {
+                        "x": 143.28,
+                        "y": 104.58
+                    },
+                    "uuid": "1c3d3171-fb88-43c4-ae77-1f11321d5662"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(D3-GK)] on F.Cu, length 0.3700 mm",
+                    "pos": {
+                        "x": 143.65,
+                        "y": 105.38
+                    },
+                    "uuid": "16cec03a-498d-4eb4-970e-dff444617712"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(JP1-A)] on F.Cu, length 3.0100 mm",
+                    "pos": {
+                        "x": 143.96,
+                        "y": 109.73
+                    },
+                    "uuid": "ef4186d6-54a2-4d3d-94e1-0decd3efbf13"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/USB.CC1] on F.Cu, length 0.6000 mm",
+                    "pos": {
+                        "x": 145.33,
+                        "y": 101.09
+                    },
+                    "uuid": "e5a32db2-27a0-437e-b2e5-70fbe3fadc88"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/USB.CC2] on F.Cu, length 0.5000 mm",
+                    "pos": {
+                        "x": 145.83,
+                        "y": 102.01
+                    },
+                    "uuid": "c8a277b0-08fb-4a4e-947f-a2e35e8ea813"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/USB.VBUS] on F.Cu, length 1.2650 mm",
+                    "pos": {
+                        "x": 147.01,
+                        "y": 100.86
+                    },
+                    "uuid": "6d34729a-30c3-4064-9852-fcb9f6ab0ad7"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [VSYS] on F.Cu, length 0.7250 mm",
+                    "pos": {
+                        "x": 147.36,
+                        "y": 108.67
+                    },
+                    "uuid": "55f8b144-d94c-44ad-a41d-9352d7257f80"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(U2-SW2)] on F.Cu, length 1.0125 mm",
+                    "pos": {
+                        "x": 148.86,
+                        "y": 110.1425
+                    },
+                    "uuid": "2d41ad9d-d56e-4126-a535-5787d38625fb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [VSYS] on F.Cu, length 0.2758 mm",
+                    "pos": {
+                        "x": 149.335,
+                        "y": 99.595
+                    },
+                    "uuid": "ede1acbf-6ee8-41e3-a399-66eb11c795b9"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [GND] on F.Cu, length 0.0141 mm",
+                    "pos": {
+                        "x": 149.645,
+                        "y": 108.66
+                    },
+                    "uuid": "d5aefa99-686f-4adf-a6df-9276161105c8"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [+BATT] on F.Cu, length 1.0150 mm",
+                    "pos": {
+                        "x": 149.03,
+                        "y": 100.59
+                    },
+                    "uuid": "afada80d-2afc-4ffb-a19e-5b26975677f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [GND] on F.Cu, length 1.0850 mm",
+                    "pos": {
+                        "x": 150.73,
+                        "y": 108.66
+                    },
+                    "uuid": "b241cdcb-c35a-4dd9-893f-5d4a1faa4a30"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Connectors/ENABLE] on F.Cu, length 1.6329 mm",
+                    "pos": {
+                        "x": 150.962892,
+                        "y": 106.91
+                    },
+                    "uuid": "5f7c0687-5a55-4796-97bf-6ce72ff3294f"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [VDD] on F.Cu, length 0.3500 mm",
+                    "pos": {
+                        "x": 151.14,
+                        "y": 105.21
+                    },
+                    "uuid": "fd3c48c5-b228-4ef5-861b-ad08761055de"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(U2-VSET2)] on F.Cu, length 0.5000 mm",
+                    "pos": {
+                        "x": 151.2,
+                        "y": 102.8
+                    },
+                    "uuid": "f338935a-05d8-4f76-9204-d238de5873c8"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.INT] on F.Cu, length 2.8600 mm",
+                    "pos": {
+                        "x": 151.23,
+                        "y": 108.71
+                    },
+                    "uuid": "fd2e6fbd-e450-47d3-9ef5-791a7709a79c"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.SDA] on F.Cu, length 1.4500 mm",
+                    "pos": {
+                        "x": 150.03,
+                        "y": 104.21
+                    },
+                    "uuid": "97c150d5-8ac8-45da-ad73-b8ab72fba0b4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/UART_RX_NRF52] on F.Cu, length 4.3500 mm",
+                    "pos": {
+                        "x": 151.74,
+                        "y": 109.4
+                    },
+                    "uuid": "246aa02a-973a-425c-857c-821a450b2fb7"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Connectors/SHPHLD] on F.Cu, length 0.6590 mm",
+                    "pos": {
+                        "x": 151.834,
+                        "y": 103.296
+                    },
+                    "uuid": "e0ebdf15-6538-40fd-82f9-52f3ce55e858"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/nPM1300/NPM1300.SCL] on F.Cu, length 0.3499 mm",
+                    "pos": {
+                        "x": 152.301405,
+                        "y": 103.573512
+                    },
+                    "uuid": "b9652d96-c7ab-45d8-91b5-4f517e86c810"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/UART_TX_NRF52] on F.Cu, length 0.5125 mm",
+                    "pos": {
+                        "x": 152.389916,
+                        "y": 108.420654
+                    },
+                    "uuid": "369602a3-4282-4713-ac3f-0e8814f844ff"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 0.2828 mm",
+                    "pos": {
+                        "x": 152.39,
+                        "y": 105.37
+                    },
+                    "uuid": "26690cd1-a024-4642-b371-c3585cca7919"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/UART_TX_NRF52] on F.Cu, length 0.7495 mm",
+                    "pos": {
+                        "x": 152.07,
+                        "y": 105.2
+                    },
+                    "uuid": "eff7d67e-9384-4471-a163-f7d4006854b3"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/UART_RX_NRF52] on F.Cu, length 1.2445 mm",
+                    "pos": {
+                        "x": 151.74,
+                        "y": 105.05
+                    },
+                    "uuid": "c1b38706-a745-43dd-9d53-7c4ad8f0102e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Debugger/TRG_~{RESET}_NRF52] on F.Cu, length 0.9662 mm",
+                    "pos": {
+                        "x": 153.073185,
+                        "y": 107.878921
+                    },
+                    "uuid": "4e55ef8b-b3b8-4095-9872-8a1236645d98"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Footprint 'QFN-32-1EP_5x5mm_P0.5mm_EP3.6x3.6mm_ThermalVias' does not match copy in library 'Package_DFN_QFN'",
+            "items": [
+                {
+                    "description": "Footprint U2",
+                    "pos": {
+                        "x": 147.58,
+                        "y": 104.46
+                    },
+                    "uuid": "29636710-ac40-426a-924d-c40f4318e62d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

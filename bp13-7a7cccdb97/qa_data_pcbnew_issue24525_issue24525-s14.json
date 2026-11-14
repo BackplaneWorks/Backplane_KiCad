@@ -1,0 +1,112 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:03",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue24525.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Text or graphic on Edge.Cuts layer",
+            "items": [
+                {
+                    "description": "PCB text 'THIS IS A TEXT' on Edge.Cuts",
+                    "pos": {
+                        "x": 106.5,
+                        "y": 77.5
+                    },
+                    "uuid": "c5f57c90-1d2e-41ff-b995-7a64a5942fb4"
+                }
+            ],
+            "severity": "error",
+            "type": "text_on_edge_cuts"
+        },
+        {
+            "description": "Text or graphic on Edge.Cuts layer",
+            "items": [
+                {
+                    "description": "Dimension '34.5' on Edge.Cuts",
+                    "pos": {
+                        "x": 106.5,
+                        "y": 81.0
+                    },
+                    "uuid": "bbc85159-3098-4bca-bc02-d58791db5dc6"
+                }
+            ],
+            "severity": "error",
+            "type": "text_on_edge_cuts"
+        },
+        {
+            "description": "Text or graphic on Edge.Cuts layer",
+            "items": [
+                {
+                    "description": "Barcode 'THIS IS A TEXT' on Edge.Cuts",
+                    "pos": {
+                        "x": 125.0,
+                        "y": 102.0
+                    },
+                    "uuid": "800b831e-bdad-4262-a72f-2b366ec9a516"
+                }
+            ],
+            "severity": "error",
+            "type": "text_on_edge_cuts"
+        },
+        {
+            "description": "Text or graphic on Edge.Cuts layer",
+            "items": [
+                {
+                    "description": "2 column table",
+                    "pos": {
+                        "x": 146.5,
+                        "y": 75.5
+                    },
+                    "uuid": "d6f049b1-ff3f-4087-ba96-404a150d1c9b"
+                }
+            ],
+            "severity": "error",
+            "type": "text_on_edge_cuts"
+        },
+        {
+            "description": "Text or graphic on Edge.Cuts layer",
+            "items": [
+                {
+                    "description": "2 column table",
+                    "pos": {
+                        "x": 151.518301,
+                        "y": 101.869521
+                    },
+                    "uuid": "77270f45-8256-41d9-ab60-92f02bbd10d6"
+                }
+            ],
+            "severity": "error",
+            "type": "text_on_edge_cuts"
+        }
+    ]
+}

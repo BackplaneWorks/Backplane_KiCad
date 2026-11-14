@@ -1,0 +1,97 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:48",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "StackNotTilingItsSpanReported.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on F.Cu - In2.Cu",
+                    "pos": {
+                        "x": 110.0,
+                        "y": 110.0
+                    },
+                    "uuid": "4de686d4-ba23-45f3-908f-496fb9a6f97c"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "d2c70623-084c-43e7-90ff-22ca22174a95"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Microvia stack has malformed span",
+            "items": [
+                {
+                    "description": "Microvia Stack",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "f1792c47-1494-4c19-b55d-7dcd016184e1"
+                }
+            ],
+            "severity": "error",
+            "type": "malformed_microvia_stack_span"
+        },
+        {
+            "description": "The stackup gives the dielectric between F.Cu and In2.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on F.Cu - In2.Cu",
+                    "pos": {
+                        "x": 110.0,
+                        "y": 110.0
+                    },
+                    "uuid": "4de686d4-ba23-45f3-908f-496fb9a6f97c"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        }
+    ]
+}

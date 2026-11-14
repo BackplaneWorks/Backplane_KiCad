@@ -1,0 +1,5603 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:37",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "ZoneFill-4.0.7.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000014] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 73.025
+                    },
+                    "uuid": "3cf023f4-1ae5-42e5-b28a-217e76114f97"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000014] on Dessous, length 3.1750 mm",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 76.2
+                    },
+                    "uuid": "ecb98f85-ca4c-476f-b715-afaf79d68d74"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000033] on Dessous, length 3.1750 mm",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 86.36
+                    },
+                    "uuid": "a42268e8-9fcd-489d-9824-1ed0a27378d1"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000033] on Dessous, length 4.4450 mm",
+                    "pos": {
+                        "x": 122.555,
+                        "y": 90.17
+                    },
+                    "uuid": "57531d3b-be2b-4662-8d78-749ab0966101"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000033] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 89.535
+                    },
+                    "uuid": "e22ee5c1-3207-4a7f-854d-2f02a196cd7f"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000014] on Dessous, length 4.4450 mm",
+                    "pos": {
+                        "x": 122.555,
+                        "y": 72.39
+                    },
+                    "uuid": "2b87b51d-5464-449a-9434-2c98735ab146"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 125.73,
+                        "y": 93.98
+                    },
+                    "uuid": "389e1258-c8ca-4087-94f0-c1de509b0069"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 1.2700 mm",
+                    "pos": {
+                        "x": 125.095,
+                        "y": 94.615
+                    },
+                    "uuid": "9e216b36-f3b0-4e1c-b348-8ebe0898662a"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000031] on Dessous, length 2.5400 mm",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 83.82
+                    },
+                    "uuid": "1cb08a3b-4e75-4984-a0e2-9b79a40b1569"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000031] on Dessous, length 1.7961 mm",
+                    "pos": {
+                        "x": 124.46,
+                        "y": 83.82
+                    },
+                    "uuid": "4bd25c9f-8203-4740-b1a2-541e7241eccd"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4916 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 3.1750 mm",
+                    "pos": {
+                        "x": 125.73,
+                        "y": 96.52
+                    },
+                    "uuid": "38db2332-c223-4090-98a4-3097397df86d"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4916 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 125.73,
+                        "y": 96.52
+                    },
+                    "uuid": "a395e93d-6a4e-42ae-ad27-d7c391645ec6"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 5 [N-000016] of U1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 92.71
+                    },
+                    "uuid": "f3a1d0b8-f578-4a1a-a31a-da0171e16999"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 3 [N-000038] of U1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 87.63
+                    },
+                    "uuid": "2d315e03-78cb-4c34-bd4e-5e5ce2e8d620"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 4 [N-000033] of U1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 90.17
+                    },
+                    "uuid": "efb2edea-074d-49c5-8d1f-c2a8c4a27bdd"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4898 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 0.6350 mm",
+                    "pos": {
+                        "x": 128.905,
+                        "y": 96.52
+                    },
+                    "uuid": "83f34ae0-15c4-4627-9f27-13d7e0eac5d0"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000032] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 131.445,
+                        "y": 87.63
+                    },
+                    "uuid": "7140feb4-149c-4b8b-9cae-f8a198498dae"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000032] on Dessous, length 5.0800 mm",
+                    "pos": {
+                        "x": 130.81,
+                        "y": 86.995
+                    },
+                    "uuid": "b906986a-9895-4141-b754-66c684b2b144"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 6.9850 mm",
+                    "pos": {
+                        "x": 130.81,
+                        "y": 97.79
+                    },
+                    "uuid": "bdb27efe-5b68-4d7f-91a7-22e62e92c559"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000030] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 131.445,
+                        "y": 78.74
+                    },
+                    "uuid": "06568bc5-d6a4-4273-b97c-7fc2dbfad596"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000030] on Dessous, length 9.5250 mm",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 78.74
+                    },
+                    "uuid": "27bf6022-d826-4324-9c33-8318c1e594e2"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 13.3350 mm",
+                    "pos": {
+                        "x": 132.08,
+                        "y": 106.045
+                    },
+                    "uuid": "41d190c9-c74d-4557-85fd-e27854f88beb"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 1.7961 mm",
+                    "pos": {
+                        "x": 130.81,
+                        "y": 104.775
+                    },
+                    "uuid": "867e13da-5dc6-4ecc-93e5-1b1b3951c5d1"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000030] on Dessous, length 3.8100 mm",
+                    "pos": {
+                        "x": 132.08,
+                        "y": 79.375
+                    },
+                    "uuid": "d4b0ea5b-b063-4347-9afb-2a739b5b10ed"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 14 [VCC] of U1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 82.55
+                    },
+                    "uuid": "47e4619f-5bdf-4cc1-867b-f80db05c07e8"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000030] on Dessous, length 1.7961 mm",
+                    "pos": {
+                        "x": 136.525,
+                        "y": 83.82
+                    },
+                    "uuid": "7d8bb680-c64c-458d-b837-c5670da181bb"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000038] on Dessous, length 7.6200 mm",
+                    "pos": {
+                        "x": 138.43,
+                        "y": 83.82
+                    },
+                    "uuid": "0c7ada6f-0ed0-4aef-9877-498310361dea"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 3 [N-000015] of U2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 87.63
+                    },
+                    "uuid": "bd7110bd-b283-4278-a12b-73ed70c45d22"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 2 [N-000038] of U2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 85.09
+                    },
+                    "uuid": "a26fbd77-d368-4afa-87c1-e5e8f2fd6e56"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 6 [<no net>] of U2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 95.25
+                    },
+                    "uuid": "c64c8109-4b31-43ad-848a-1fb7ff3e0bab"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000038] on Dessous, length 5.3882 mm",
+                    "pos": {
+                        "x": 138.43,
+                        "y": 76.2
+                    },
+                    "uuid": "79ea6640-e502-40e9-9451-525a566b344d"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000038] on Dessous, length 5.0800 mm",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 72.39
+                    },
+                    "uuid": "82c68ef4-b6fd-43fb-af14-80d7153c1b21"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000038] on Dessous, length 1.7961 mm",
+                    "pos": {
+                        "x": 144.78,
+                        "y": 86.36
+                    },
+                    "uuid": "0d35ec55-7926-4de8-af39-479a8efbfa59"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000038] on Dessous, length 2.5400 mm",
+                    "pos": {
+                        "x": 143.51,
+                        "y": 85.09
+                    },
+                    "uuid": "a5d62e91-83e7-4f57-b2b0-be8d6f29bf9e"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000035] on Dessous, length 5.7150 mm",
+                    "pos": {
+                        "x": 144.145,
+                        "y": 99.695
+                    },
+                    "uuid": "0a14c77d-46ee-431e-8671-78622b479c3a"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000035] on Dessous, length 4.4901 mm",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 102.87
+                    },
+                    "uuid": "cca052e5-4741-4c70-84a9-3b3426f77ee3"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000038] on Dessous, length 1.9050 mm",
+                    "pos": {
+                        "x": 144.78,
+                        "y": 88.265
+                    },
+                    "uuid": "41b61a33-a104-42c8-b4fc-00dc21973028"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000038] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 145.415,
+                        "y": 88.9
+                    },
+                    "uuid": "2a87da55-c048-413d-aa73-b9a6b09951ac"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000038] on Dessous, length 1.9050 mm",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 72.39
+                    },
+                    "uuid": "2fa4294a-28d6-4c8d-bb7b-5aebb47c9bd1"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 1.2700 mm",
+                    "pos": {
+                        "x": 146.685,
+                        "y": 104.775
+                    },
+                    "uuid": "0c0f8d33-29f6-43bd-8611-318d89dbc268"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 1.7961 mm",
+                    "pos": {
+                        "x": 145.415,
+                        "y": 106.045
+                    },
+                    "uuid": "aa33ce30-09e8-4884-ba46-8e43e4da886e"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 11 [<no net>] of U2",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 90.17
+                    },
+                    "uuid": "9e22dbdc-4299-4a68-adce-a9ea41b82854"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4860 mm)",
+            "items": [
+                {
+                    "description": "Track [VCC] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 79.375
+                    },
+                    "uuid": "8efe6478-afbd-4092-a5ca-e9db5983f514"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4860 mm)",
+            "items": [
+                {
+                    "description": "Track [VCC] on Dessous, length 3.1750 mm",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 82.55
+                    },
+                    "uuid": "8f880f0d-89e1-422e-8d4b-f957d879c409"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000038] on Dessous, length 3.1750 mm",
+                    "pos": {
+                        "x": 147.955,
+                        "y": 69.85
+                    },
+                    "uuid": "b4bb95fc-2cfb-4d94-a5fc-9edc3115723a"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000038] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 70.485
+                    },
+                    "uuid": "b5c779b3-dc53-46d5-8bad-455b5c65d3d6"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4860 mm)",
+            "items": [
+                {
+                    "description": "Track [VCC] on Dessous, length 1.9050 mm",
+                    "pos": {
+                        "x": 149.225,
+                        "y": 78.74
+                    },
+                    "uuid": "f7a56790-4508-4d93-9552-60b60dafc9bb"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 8 [<no net>] of U2",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 97.79
+                    },
+                    "uuid": "fb7df77e-828a-44e1-b081-598d0e0ae318"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 14 [VCC] of U2",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 82.55
+                    },
+                    "uuid": "9e0f5139-7b77-4fbf-bdfb-7c71eb1eecec"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 151.765,
+                        "y": 102.87
+                    },
+                    "uuid": "04ba0072-70b5-4948-a763-d8ae29b16deb"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 3.1750 mm",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 102.87
+                    },
+                    "uuid": "d93fade5-133a-471d-9530-6e3303a6c2e8"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000036] on Dessous, length 5.0800 mm",
+                    "pos": {
+                        "x": 146.685,
+                        "y": 100.965
+                    },
+                    "uuid": "e8e706ba-8780-4bd2-b4f6-483259e955a7"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000035] on Dessous, length 2.5400 mm",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 96.52
+                    },
+                    "uuid": "16cab1b1-fb0c-4b6e-9860-9077f9167006"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000035] on Dessous, length 2.6941 mm",
+                    "pos": {
+                        "x": 150.495,
+                        "y": 98.425
+                    },
+                    "uuid": "ac63a4be-c915-4d22-816a-238579692fd8"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000034] on Dessous, length 1.9050 mm",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 103.505
+                    },
+                    "uuid": "ee9ed775-d2c3-41c0-99f8-a61340efef20"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000036] on Dessous, length 1.2700 mm",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 100.33
+                    },
+                    "uuid": "30e9b628-7a72-4d51-8f08-ee23c8305b78"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [N-000036] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 151.765,
+                        "y": 100.965
+                    },
+                    "uuid": "ace411e2-c6fb-4815-b382-d9e13ce93625"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TD0-DONE] on Dessous, length 1.9050 mm",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 88.9
+                    },
+                    "uuid": "e144acd6-51ba-4dd8-ba17-568b65384890"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4860 mm)",
+            "items": [
+                {
+                    "description": "Track [/PWR_3,3-5V] on Dessous, length 2.5400 mm",
+                    "pos": {
+                        "x": 160.02,
+                        "y": 78.74
+                    },
+                    "uuid": "ab65b624-81af-4f7b-890a-a2820fec01f9"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4860 mm)",
+            "items": [
+                {
+                    "description": "Track [/PWR_3,3-5V] on Dessous, length 3.5921 mm",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 78.74
+                    },
+                    "uuid": "d78de02c-95d2-4dc5-8d34-f2cc728bb9d9"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TD0-DONE] on Dessous, length 6.9850 mm",
+                    "pos": {
+                        "x": 163.195,
+                        "y": 86.36
+                    },
+                    "uuid": "074359d7-6cbd-4ff9-87f5-66bc9beb1e64"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TD0-DONE] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 86.995
+                    },
+                    "uuid": "949b546c-9869-4a8a-bcfa-91101ef0ad3e"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4860 mm)",
+            "items": [
+                {
+                    "description": "Track [/PWR_3,3-5V] on Dessous, length 5.0800 mm",
+                    "pos": {
+                        "x": 165.1,
+                        "y": 76.2
+                    },
+                    "uuid": "013c93e0-70a5-4654-a50f-1e7d181749ff"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TDI-DIN] on Dessous, length 5.0800 mm",
+                    "pos": {
+                        "x": 165.1,
+                        "y": 91.44
+                    },
+                    "uuid": "a7d4f53d-7b0e-4914-a97b-a77056be43c9"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TDI-DIN] on Dessous, length 3.5921 mm",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 93.98
+                    },
+                    "uuid": "b870afa4-e0e5-4403-993e-564b24dbf33e"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TCK-CCLK] on Dessous, length 3.5921 mm",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 99.06
+                    },
+                    "uuid": "493c301e-9848-420f-b845-082ae940f719"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TCK-CCLK] on Dessous, length 5.0800 mm",
+                    "pos": {
+                        "x": 165.1,
+                        "y": 96.52
+                    },
+                    "uuid": "a1d54fb9-de4d-4fbf-a16e-6d58844bde03"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TMS-PROG] on Dessous, length 6.9850 mm",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 105.41
+                    },
+                    "uuid": "28d7ab8a-0185-4b98-baad-3b7edf865f2f"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TMS-PROG] on Dessous, length 3.1750 mm",
+                    "pos": {
+                        "x": 170.18,
+                        "y": 104.775
+                    },
+                    "uuid": "9a5928eb-27d6-44b3-9f85-08a700996ff0"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TMS-PROG] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 169.545,
+                        "y": 105.41
+                    },
+                    "uuid": "d75c7fad-bbed-4c07-a927-946a8832c18e"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TMS-PROG] on Dessous, length 2.5400 mm",
+                    "pos": {
+                        "x": 170.18,
+                        "y": 101.6
+                    },
+                    "uuid": "386316cc-5b7c-40e9-b21e-10b7c9b746fa"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TMS-PROG] on Dessous, length 8.0822 mm",
+                    "pos": {
+                        "x": 172.72,
+                        "y": 101.6
+                    },
+                    "uuid": "c389a85c-463c-4e8c-9697-0b9b2091f6c1"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TD0-DONE] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 177.8,
+                        "y": 86.36
+                    },
+                    "uuid": "880fd523-0894-4627-a343-fd40dfe9e98d"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4897 mm)",
+            "items": [
+                {
+                    "description": "Track [/TD0-DONE] on Dessous, length 7.6200 mm",
+                    "pos": {
+                        "x": 170.18,
+                        "y": 86.36
+                    },
+                    "uuid": "e96f7a04-cc87-4a8c-8939-0096a52edcc4"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4860 mm)",
+            "items": [
+                {
+                    "description": "Track [/PWR_3,3-5V] on Dessous, length 0.8980 mm",
+                    "pos": {
+                        "x": 181.61,
+                        "y": 76.835
+                    },
+                    "uuid": "02b5fce6-d3f3-407e-9f98-97c63dfecd16"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4860 mm)",
+            "items": [
+                {
+                    "description": "Track [/PWR_3,3-5V] on Dessous, length 10.7950 mm",
+                    "pos": {
+                        "x": 170.18,
+                        "y": 76.2
+                    },
+                    "uuid": "c4791f8f-d642-47f3-8cbc-cc75555703f9"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (zone clearance 0.5080 mm; actual 0.4860 mm)",
+            "items": [
+                {
+                    "description": "Track [/PWR_3,3-5V] on Dessous, length 7.7470 mm",
+                    "pos": {
+                        "x": 181.61,
+                        "y": 76.835
+                    },
+                    "uuid": "063d410f-43a2-4f4f-bb3e-9b03f25a8cdf"
+                },
+                {
+                    "description": "Zone [GND] on Dessous, priority 0",
+                    "pos": {
+                        "x": 182.88,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004bf0f951"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2828 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 102.87,
+                        "y": 67.31
+                    },
+                    "uuid": "1f469b66-b09b-416e-bea7-d7c4626eb1de"
+                },
+                {
+                    "description": "PCB text 'Copper layer' on Dessous",
+                    "pos": {
+                        "x": 119.38,
+                        "y": 68.58
+                    },
+                    "uuid": "dac40f03-dff9-4073-bf52-1a6d92606eaa"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 102.87,
+                        "y": 71.12
+                    },
+                    "uuid": "f5455e8c-59b1-4eb8-803b-46518326475e"
+                },
+                {
+                    "description": "Segment of J1 on F.SilkS",
+                    "pos": {
+                        "x": 102.362,
+                        "y": 69.85
+                    },
+                    "uuid": "d0b8260e-8108-4714-99b6-c1a5bfd3f64d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 102.87,
+                        "y": 110.49
+                    },
+                    "uuid": "49378891-dd23-438d-83f4-6789af84e9ac"
+                },
+                {
+                    "description": "Segment of J1 on F.SilkS",
+                    "pos": {
+                        "x": 102.362,
+                        "y": 107.95
+                    },
+                    "uuid": "edd4fb29-85fb-421c-90a0-13b1833213ca"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 184.15,
+                        "y": 67.31
+                    },
+                    "uuid": "1b38cac2-5f41-4eed-975b-b10eb1f78890"
+                },
+                {
+                    "description": "Segment of J2 on F.SilkS",
+                    "pos": {
+                        "x": 184.15,
+                        "y": 81.026
+                    },
+                    "uuid": "aff5d27d-5759-4e82-954f-e68fc15b8eee"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 184.15,
+                        "y": 67.31
+                    },
+                    "uuid": "1b38cac2-5f41-4eed-975b-b10eb1f78890"
+                },
+                {
+                    "description": "Segment of J2 on F.SilkS",
+                    "pos": {
+                        "x": 184.15,
+                        "y": 82.931
+                    },
+                    "uuid": "3d250bdd-3d70-4b0c-a6fe-d72f85586b33"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 184.15,
+                        "y": 97.79
+                    },
+                    "uuid": "9f3d5445-75e0-4f71-8d5e-2f6a5feb8d80"
+                },
+                {
+                    "description": "Segment of J2 on F.SilkS",
+                    "pos": {
+                        "x": 184.15,
+                        "y": 97.536
+                    },
+                    "uuid": "ad268d26-807f-4639-bf5a-035507ab322a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 184.15,
+                        "y": 97.79
+                    },
+                    "uuid": "9f3d5445-75e0-4f71-8d5e-2f6a5feb8d80"
+                },
+                {
+                    "description": "Segment of J2 on F.SilkS",
+                    "pos": {
+                        "x": 184.15,
+                        "y": 99.441
+                    },
+                    "uuid": "0b0eaa78-66a3-42ab-8bfa-7313a51ec754"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R1 on F.SilkS",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 77.216
+                    },
+                    "uuid": "4d2737ee-22d5-4eb1-8409-e77a1fba0db1"
+                },
+                {
+                    "description": "PTH pad 2 [/VCC_SENSE-ERROR*] of R1",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 76.2
+                    },
+                    "uuid": "0f909b17-1c02-4303-a205-6b7ccff8185d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R10 on F.SilkS",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 79.756
+                    },
+                    "uuid": "c5ecdb43-9b30-4e25-a386-a1f66cc66835"
+                },
+                {
+                    "description": "PTH pad 2 [/CLK-D1] of R10",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 78.74
+                    },
+                    "uuid": "bb5176ed-a0f0-4c3f-b1c1-d3ca7fbf3b44"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R9 on F.SilkS",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 82.296
+                    },
+                    "uuid": "3869e76d-cf9c-447a-9e2c-e73ecf701985"
+                },
+                {
+                    "description": "PTH pad 2 [/TMS-PROG-D2] of R9",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 81.28
+                    },
+                    "uuid": "ba11c803-ec65-4bb0-8260-37fb42a6b9bf"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R6 on F.SilkS",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 84.836
+                    },
+                    "uuid": "756c3a8c-7fe2-491f-a757-0a90b53e2a30"
+                },
+                {
+                    "description": "PTH pad 2 [/TD0-PROG-D4] of R6",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 83.82
+                    },
+                    "uuid": "d21000eb-bb67-473c-90ee-04b57837a395"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R8 on F.SilkS",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 87.376
+                    },
+                    "uuid": "8a5083ab-d954-4f11-9051-0246d7fd967a"
+                },
+                {
+                    "description": "PTH pad 2 [/CTRL-D3] of R8",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 86.36
+                    },
+                    "uuid": "5e46d39f-1353-4e12-a4f7-0eb1e8a2e3b2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R7 on F.SilkS",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 93.726
+                    },
+                    "uuid": "87e6dc0e-cb04-4aaf-acb0-4da8041abb64"
+                },
+                {
+                    "description": "PTH pad 2 [/TDI-DIN-D0] of R7",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 92.71
+                    },
+                    "uuid": "0802055d-bfe1-4029-8f6c-37a78d4deaa7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R4 on F.SilkS",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 105.156
+                    },
+                    "uuid": "174ef591-73ed-4afe-aca1-3321910221f6"
+                },
+                {
+                    "description": "PTH pad 2 [/DONE-SELECT*] of R4",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 104.14
+                    },
+                    "uuid": "09d42456-80d8-41dd-8ea5-9d9b72f3e344"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R1 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 75.184
+                    },
+                    "uuid": "2ca4afb6-5df8-4e17-9a94-90476b4a7ff1"
+                },
+                {
+                    "description": "PTH pad 1 [N-000014] of R1",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 76.2
+                    },
+                    "uuid": "50d49243-ecd1-4e12-b719-f6a05b9470a0"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R1 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 76.2
+                    },
+                    "uuid": "beee9780-4014-4a61-ab25-b6d69a5482e3"
+                },
+                {
+                    "description": "PTH pad 1 [N-000014] of R1",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 76.2
+                    },
+                    "uuid": "50d49243-ecd1-4e12-b719-f6a05b9470a0"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R10 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 77.724
+                    },
+                    "uuid": "3b602902-9b9e-4e1b-8913-5aa3e22969a6"
+                },
+                {
+                    "description": "PTH pad 1 [N-000030] of R10",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 78.74
+                    },
+                    "uuid": "e3a3335a-5841-416c-90c5-670340d13c85"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R10 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 78.74
+                    },
+                    "uuid": "62bf065c-a690-4141-bfb7-d4cf67e02707"
+                },
+                {
+                    "description": "PTH pad 1 [N-000030] of R10",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 78.74
+                    },
+                    "uuid": "e3a3335a-5841-416c-90c5-670340d13c85"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R9 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 80.264
+                    },
+                    "uuid": "098878d8-1c46-4910-998c-7e6066777a9a"
+                },
+                {
+                    "description": "PTH pad 1 [N-000032] of R9",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 81.28
+                    },
+                    "uuid": "79ee78cd-2841-4f87-83ca-62a3f36e3211"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R9 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 81.28
+                    },
+                    "uuid": "73a88ff8-58ed-428a-b231-331bfe63bb88"
+                },
+                {
+                    "description": "PTH pad 1 [N-000032] of R9",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 81.28
+                    },
+                    "uuid": "79ee78cd-2841-4f87-83ca-62a3f36e3211"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R6 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 82.804
+                    },
+                    "uuid": "ad747768-b174-496b-bf22-23d7f417a33b"
+                },
+                {
+                    "description": "PTH pad 1 [N-000031] of R6",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 83.82
+                    },
+                    "uuid": "56d8ce41-7910-4a01-be2c-0a610635c94b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R6 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 83.82
+                    },
+                    "uuid": "3a454eda-c892-48fd-b6d6-02c9fd1327a4"
+                },
+                {
+                    "description": "PTH pad 1 [N-000031] of R6",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 83.82
+                    },
+                    "uuid": "56d8ce41-7910-4a01-be2c-0a610635c94b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R8 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 85.344
+                    },
+                    "uuid": "56f013f6-2dd7-4379-b529-e5f749b51efc"
+                },
+                {
+                    "description": "PTH pad 1 [N-000033] of R8",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 86.36
+                    },
+                    "uuid": "c9cb4dba-e792-41c7-8b6b-d51bad83cf25"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R8 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 86.36
+                    },
+                    "uuid": "12d12ab6-ffeb-4d4a-908f-ffe29d2306bb"
+                },
+                {
+                    "description": "PTH pad 1 [N-000033] of R8",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 86.36
+                    },
+                    "uuid": "c9cb4dba-e792-41c7-8b6b-d51bad83cf25"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R7 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 91.694
+                    },
+                    "uuid": "be34b4a9-47a3-4251-9458-3669eb0dc414"
+                },
+                {
+                    "description": "PTH pad 1 [N-000016] of R7",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 92.71
+                    },
+                    "uuid": "eb7ab5e7-ac18-46eb-869c-313c37008247"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R7 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 92.71
+                    },
+                    "uuid": "86525ea5-7d1b-45d8-9315-ca295302347f"
+                },
+                {
+                    "description": "PTH pad 1 [N-000016] of R7",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 92.71
+                    },
+                    "uuid": "eb7ab5e7-ac18-46eb-869c-313c37008247"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R4 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 103.124
+                    },
+                    "uuid": "937ee58b-528f-498c-96e4-314b4063bf5f"
+                },
+                {
+                    "description": "PTH pad 1 [N-000015] of R4",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 104.14
+                    },
+                    "uuid": "ff964fa4-7754-4186-9965-a3a085008cb9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R4 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 104.14
+                    },
+                    "uuid": "8a7e1e68-9681-401e-9b79-c9496e3ca352"
+                },
+                {
+                    "description": "PTH pad 1 [N-000015] of R4",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 104.14
+                    },
+                    "uuid": "ff964fa4-7754-4186-9965-a3a085008cb9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R1 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 76.708
+                    },
+                    "uuid": "6a1e2e6e-a1f7-45b0-ab86-3575586ac54d"
+                },
+                {
+                    "description": "PTH pad 1 [N-000014] of R1",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 76.2
+                    },
+                    "uuid": "50d49243-ecd1-4e12-b719-f6a05b9470a0"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R10 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 79.248
+                    },
+                    "uuid": "edc717e9-b741-4a5e-9092-f29a1bf8e4fe"
+                },
+                {
+                    "description": "PTH pad 1 [N-000030] of R10",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 78.74
+                    },
+                    "uuid": "e3a3335a-5841-416c-90c5-670340d13c85"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R9 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 81.788
+                    },
+                    "uuid": "4cb09f92-946c-4359-9320-989c95a11ef8"
+                },
+                {
+                    "description": "PTH pad 1 [N-000032] of R9",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 81.28
+                    },
+                    "uuid": "79ee78cd-2841-4f87-83ca-62a3f36e3211"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R6 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 84.328
+                    },
+                    "uuid": "2e5d46a6-d71a-41e6-8bf5-226155d69d25"
+                },
+                {
+                    "description": "PTH pad 1 [N-000031] of R6",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 83.82
+                    },
+                    "uuid": "56d8ce41-7910-4a01-be2c-0a610635c94b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R8 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 86.868
+                    },
+                    "uuid": "94bd5e71-991f-45d1-b54f-9e2cf9db70a5"
+                },
+                {
+                    "description": "PTH pad 1 [N-000033] of R8",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 86.36
+                    },
+                    "uuid": "c9cb4dba-e792-41c7-8b6b-d51bad83cf25"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R7 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 93.218
+                    },
+                    "uuid": "5584e692-3244-4c5a-b805-109ad84859e8"
+                },
+                {
+                    "description": "PTH pad 1 [N-000016] of R7",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 92.71
+                    },
+                    "uuid": "eb7ab5e7-ac18-46eb-869c-313c37008247"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R4 on F.SilkS",
+                    "pos": {
+                        "x": 120.904,
+                        "y": 104.648
+                    },
+                    "uuid": "dbcc99fb-df06-407b-b367-066444f15f3d"
+                },
+                {
+                    "description": "PTH pad 1 [N-000015] of R4",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 104.14
+                    },
+                    "uuid": "ff964fa4-7754-4186-9965-a3a085008cb9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of D1 on F.SilkS",
+                    "pos": {
+                        "x": 133.858,
+                        "y": 71.374
+                    },
+                    "uuid": "444fcdbc-72af-4989-b291-ac11b58b8156"
+                },
+                {
+                    "description": "PTH pad 2 [N-000014] of D1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 72.39
+                    },
+                    "uuid": "151f81bc-0822-477d-b474-90749814d014"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of D1 on F.SilkS",
+                    "pos": {
+                        "x": 127.762,
+                        "y": 73.406
+                    },
+                    "uuid": "6745acd7-c2d5-4636-beb0-b044d39d9e13"
+                },
+                {
+                    "description": "PTH pad 2 [N-000014] of D1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 72.39
+                    },
+                    "uuid": "151f81bc-0822-477d-b474-90749814d014"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R2 on F.SilkS",
+                    "pos": {
+                        "x": 138.176,
+                        "y": 71.882
+                    },
+                    "uuid": "7746788a-1b26-4f7d-94ae-a5e841d964ea"
+                },
+                {
+                    "description": "PTH pad 1 [VCC] of R2",
+                    "pos": {
+                        "x": 137.16,
+                        "y": 72.39
+                    },
+                    "uuid": "3de6d4e2-15fa-4cdb-bedc-ae45a71631a6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R2 on F.SilkS",
+                    "pos": {
+                        "x": 138.176,
+                        "y": 72.39
+                    },
+                    "uuid": "d1ad8cf4-4421-42c1-9cd6-3db641d3730f"
+                },
+                {
+                    "description": "PTH pad 1 [VCC] of R2",
+                    "pos": {
+                        "x": 137.16,
+                        "y": 72.39
+                    },
+                    "uuid": "3de6d4e2-15fa-4cdb-bedc-ae45a71631a6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R2 on F.SilkS",
+                    "pos": {
+                        "x": 138.176,
+                        "y": 73.406
+                    },
+                    "uuid": "5f53726f-8843-483a-ad58-572589f60a33"
+                },
+                {
+                    "description": "PTH pad 1 [VCC] of R2",
+                    "pos": {
+                        "x": 137.16,
+                        "y": 72.39
+                    },
+                    "uuid": "3de6d4e2-15fa-4cdb-bedc-ae45a71631a6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C2 on F.SilkS",
+                    "pos": {
+                        "x": 139.954,
+                        "y": 108.966
+                    },
+                    "uuid": "5c69e9bc-47db-46eb-b2b5-70aa2a48c3ed"
+                },
+                {
+                    "description": "PTH pad 1 [N-000035] of C2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 102.87
+                    },
+                    "uuid": "67b4b1c8-23ff-42c5-9ea9-590e2ff935bf"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C2 on F.SilkS",
+                    "pos": {
+                        "x": 139.954,
+                        "y": 108.966
+                    },
+                    "uuid": "5c69e9bc-47db-46eb-b2b5-70aa2a48c3ed"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 107.95
+                    },
+                    "uuid": "932b6cff-b47b-4d74-b6f8-606089b66501"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C2 on F.SilkS",
+                    "pos": {
+                        "x": 141.986,
+                        "y": 108.966
+                    },
+                    "uuid": "82463e1f-5c29-47b8-99c0-1a6b10c6f004"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 107.95
+                    },
+                    "uuid": "932b6cff-b47b-4d74-b6f8-606089b66501"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C2 on F.SilkS",
+                    "pos": {
+                        "x": 139.954,
+                        "y": 101.854
+                    },
+                    "uuid": "a976c400-47de-4098-87d9-b8fca31fb724"
+                },
+                {
+                    "description": "PTH pad 1 [N-000035] of C2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 102.87
+                    },
+                    "uuid": "67b4b1c8-23ff-42c5-9ea9-590e2ff935bf"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C2 on F.SilkS",
+                    "pos": {
+                        "x": 141.478,
+                        "y": 101.854
+                    },
+                    "uuid": "e46a22d4-d193-4bc4-94d4-61c117a7103c"
+                },
+                {
+                    "description": "PTH pad 1 [N-000035] of C2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 102.87
+                    },
+                    "uuid": "67b4b1c8-23ff-42c5-9ea9-590e2ff935bf"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C2 on F.SilkS",
+                    "pos": {
+                        "x": 141.986,
+                        "y": 101.854
+                    },
+                    "uuid": "73184348-2c83-4072-a343-7d3748388aee"
+                },
+                {
+                    "description": "PTH pad 1 [N-000035] of C2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 102.87
+                    },
+                    "uuid": "67b4b1c8-23ff-42c5-9ea9-590e2ff935bf"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C2 on F.SilkS",
+                    "pos": {
+                        "x": 141.986,
+                        "y": 101.854
+                    },
+                    "uuid": "73184348-2c83-4072-a343-7d3748388aee"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 107.95
+                    },
+                    "uuid": "932b6cff-b47b-4d74-b6f8-606089b66501"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C5 on F.SilkS",
+                    "pos": {
+                        "x": 143.764,
+                        "y": 108.966
+                    },
+                    "uuid": "c42e66a5-1963-401f-86fc-f4e85f0b7d07"
+                },
+                {
+                    "description": "PTH pad 1 [N-000036] of C5",
+                    "pos": {
+                        "x": 144.78,
+                        "y": 102.87
+                    },
+                    "uuid": "411fc405-2bc0-4195-aad7-1400ffd9849b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C5 on F.SilkS",
+                    "pos": {
+                        "x": 143.764,
+                        "y": 108.966
+                    },
+                    "uuid": "c42e66a5-1963-401f-86fc-f4e85f0b7d07"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C5",
+                    "pos": {
+                        "x": 144.78,
+                        "y": 107.95
+                    },
+                    "uuid": "7b6952f9-26ba-4d4c-a961-191dd5a007af"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C5 on F.SilkS",
+                    "pos": {
+                        "x": 145.796,
+                        "y": 108.966
+                    },
+                    "uuid": "0f5f712e-1db5-46da-adb6-b5196b3ff8af"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C5",
+                    "pos": {
+                        "x": 144.78,
+                        "y": 107.95
+                    },
+                    "uuid": "7b6952f9-26ba-4d4c-a961-191dd5a007af"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C5 on F.SilkS",
+                    "pos": {
+                        "x": 143.764,
+                        "y": 101.854
+                    },
+                    "uuid": "4df21a49-c6c3-4117-879f-d3d8e5e0eb40"
+                },
+                {
+                    "description": "PTH pad 1 [N-000036] of C5",
+                    "pos": {
+                        "x": 144.78,
+                        "y": 102.87
+                    },
+                    "uuid": "411fc405-2bc0-4195-aad7-1400ffd9849b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C5 on F.SilkS",
+                    "pos": {
+                        "x": 145.288,
+                        "y": 101.854
+                    },
+                    "uuid": "7d586737-b876-4dba-9bf1-65949770bee7"
+                },
+                {
+                    "description": "PTH pad 1 [N-000036] of C5",
+                    "pos": {
+                        "x": 144.78,
+                        "y": 102.87
+                    },
+                    "uuid": "411fc405-2bc0-4195-aad7-1400ffd9849b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C5 on F.SilkS",
+                    "pos": {
+                        "x": 145.796,
+                        "y": 101.854
+                    },
+                    "uuid": "839d7cc8-646d-4bd4-9c02-c4e79386036c"
+                },
+                {
+                    "description": "PTH pad 1 [N-000036] of C5",
+                    "pos": {
+                        "x": 144.78,
+                        "y": 102.87
+                    },
+                    "uuid": "411fc405-2bc0-4195-aad7-1400ffd9849b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C5 on F.SilkS",
+                    "pos": {
+                        "x": 145.796,
+                        "y": 101.854
+                    },
+                    "uuid": "839d7cc8-646d-4bd4-9c02-c4e79386036c"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C5",
+                    "pos": {
+                        "x": 144.78,
+                        "y": 107.95
+                    },
+                    "uuid": "7b6952f9-26ba-4d4c-a961-191dd5a007af"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R2 on F.SilkS",
+                    "pos": {
+                        "x": 146.304,
+                        "y": 71.374
+                    },
+                    "uuid": "cc2ebfdd-0835-4251-af8a-26223b64f81f"
+                },
+                {
+                    "description": "PTH pad 2 [N-000038] of R2",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 72.39
+                    },
+                    "uuid": "d66ad14a-4219-451e-bcce-200cf7969c2d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C4 on F.SilkS",
+                    "pos": {
+                        "x": 147.574,
+                        "y": 108.966
+                    },
+                    "uuid": "41557614-37ea-4216-97ef-5116f7c60c36"
+                },
+                {
+                    "description": "PTH pad 1 [N-000034] of C4",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 102.87
+                    },
+                    "uuid": "12274e18-0724-4e51-923f-13e2f9fea4f2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C4 on F.SilkS",
+                    "pos": {
+                        "x": 147.574,
+                        "y": 108.966
+                    },
+                    "uuid": "41557614-37ea-4216-97ef-5116f7c60c36"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C4",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 107.95
+                    },
+                    "uuid": "90cb9f2b-6df7-40f9-a938-ab1bc8012012"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C4 on F.SilkS",
+                    "pos": {
+                        "x": 149.606,
+                        "y": 108.966
+                    },
+                    "uuid": "5a4ffebf-b9c2-44da-bdb4-942373abbdc9"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C4",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 107.95
+                    },
+                    "uuid": "90cb9f2b-6df7-40f9-a938-ab1bc8012012"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C4 on F.SilkS",
+                    "pos": {
+                        "x": 147.574,
+                        "y": 101.854
+                    },
+                    "uuid": "0c6434a5-88cd-4544-97c9-ea58acbe1740"
+                },
+                {
+                    "description": "PTH pad 1 [N-000034] of C4",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 102.87
+                    },
+                    "uuid": "12274e18-0724-4e51-923f-13e2f9fea4f2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C4 on F.SilkS",
+                    "pos": {
+                        "x": 149.098,
+                        "y": 101.854
+                    },
+                    "uuid": "6cb30853-9825-4f36-92b0-8f83eedaf091"
+                },
+                {
+                    "description": "PTH pad 1 [N-000034] of C4",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 102.87
+                    },
+                    "uuid": "12274e18-0724-4e51-923f-13e2f9fea4f2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C4 on F.SilkS",
+                    "pos": {
+                        "x": 149.606,
+                        "y": 101.854
+                    },
+                    "uuid": "0e2d4609-ee22-4911-ae43-6c05ab88261a"
+                },
+                {
+                    "description": "PTH pad 1 [N-000034] of C4",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 102.87
+                    },
+                    "uuid": "12274e18-0724-4e51-923f-13e2f9fea4f2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C4 on F.SilkS",
+                    "pos": {
+                        "x": 149.606,
+                        "y": 101.854
+                    },
+                    "uuid": "0e2d4609-ee22-4911-ae43-6c05ab88261a"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C4",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 107.95
+                    },
+                    "uuid": "90cb9f2b-6df7-40f9-a938-ab1bc8012012"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C3 on F.SilkS",
+                    "pos": {
+                        "x": 150.114,
+                        "y": 70.866
+                    },
+                    "uuid": "36f40157-e08d-41f5-af06-c5d9f03be09f"
+                },
+                {
+                    "description": "PTH pad 1 [N-000038] of C3",
+                    "pos": {
+                        "x": 151.13,
+                        "y": 69.85
+                    },
+                    "uuid": "8453052a-61d8-4f1c-9b92-9f732c13fd24"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C3 on F.SilkS",
+                    "pos": {
+                        "x": 150.114,
+                        "y": 69.342
+                    },
+                    "uuid": "b60019b3-156f-4ea7-9c82-98151c3a04b9"
+                },
+                {
+                    "description": "PTH pad 1 [N-000038] of C3",
+                    "pos": {
+                        "x": 151.13,
+                        "y": 69.85
+                    },
+                    "uuid": "8453052a-61d8-4f1c-9b92-9f732c13fd24"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C3 on F.SilkS",
+                    "pos": {
+                        "x": 157.226,
+                        "y": 70.866
+                    },
+                    "uuid": "de6d06c4-06e1-413a-8c05-cde4f8065bec"
+                },
+                {
+                    "description": "PTH pad 1 [N-000038] of C3",
+                    "pos": {
+                        "x": 151.13,
+                        "y": 69.85
+                    },
+                    "uuid": "8453052a-61d8-4f1c-9b92-9f732c13fd24"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C3 on F.SilkS",
+                    "pos": {
+                        "x": 150.114,
+                        "y": 68.834
+                    },
+                    "uuid": "5d9be6d4-3f63-42a5-a218-c8766aeaebfa"
+                },
+                {
+                    "description": "PTH pad 1 [N-000038] of C3",
+                    "pos": {
+                        "x": 151.13,
+                        "y": 69.85
+                    },
+                    "uuid": "8453052a-61d8-4f1c-9b92-9f732c13fd24"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R5 on F.SilkS",
+                    "pos": {
+                        "x": 152.146,
+                        "y": 73.152
+                    },
+                    "uuid": "3064338c-b06f-49ec-99c1-493ff2b650d0"
+                },
+                {
+                    "description": "PTH pad 1 [VCC] of R5",
+                    "pos": {
+                        "x": 151.13,
+                        "y": 73.66
+                    },
+                    "uuid": "296ccf8b-9111-42d3-86e4-dec5cda1deb4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R5 on F.SilkS",
+                    "pos": {
+                        "x": 152.146,
+                        "y": 73.66
+                    },
+                    "uuid": "79447797-34fe-4f5d-bc01-22b0d2df04be"
+                },
+                {
+                    "description": "PTH pad 1 [VCC] of R5",
+                    "pos": {
+                        "x": 151.13,
+                        "y": 73.66
+                    },
+                    "uuid": "296ccf8b-9111-42d3-86e4-dec5cda1deb4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R5 on F.SilkS",
+                    "pos": {
+                        "x": 152.146,
+                        "y": 74.676
+                    },
+                    "uuid": "00c7db40-f9db-4e06-beb1-8025d3e812d8"
+                },
+                {
+                    "description": "PTH pad 1 [VCC] of R5",
+                    "pos": {
+                        "x": 151.13,
+                        "y": 73.66
+                    },
+                    "uuid": "296ccf8b-9111-42d3-86e4-dec5cda1deb4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of D2 on F.SilkS",
+                    "pos": {
+                        "x": 159.258,
+                        "y": 77.724
+                    },
+                    "uuid": "e23c8e28-f306-4991-a0a1-3154dffa5507"
+                },
+                {
+                    "description": "PTH pad 2 [VCC] of D2",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 78.74
+                    },
+                    "uuid": "f6ea5bc2-0d50-42cf-bd36-ccd2e8d23b02"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of D2 on F.SilkS",
+                    "pos": {
+                        "x": 153.162,
+                        "y": 79.756
+                    },
+                    "uuid": "740cf2b7-17a4-4f02-8a76-9d144743c429"
+                },
+                {
+                    "description": "PTH pad 2 [VCC] of D2",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 78.74
+                    },
+                    "uuid": "f6ea5bc2-0d50-42cf-bd36-ccd2e8d23b02"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R14 on F.SilkS",
+                    "pos": {
+                        "x": 153.416,
+                        "y": 89.916
+                    },
+                    "uuid": "335cb9b8-f4d9-447d-b796-a4f067336505"
+                },
+                {
+                    "description": "PTH pad 2 [N-000038] of R14",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 88.9
+                    },
+                    "uuid": "a344f08b-7de3-4eb8-a78e-ecaff96776c9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R11 on F.SilkS",
+                    "pos": {
+                        "x": 153.416,
+                        "y": 94.996
+                    },
+                    "uuid": "597ebb43-c1d0-4ac7-89a5-081690473845"
+                },
+                {
+                    "description": "PTH pad 2 [N-000035] of R11",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 93.98
+                    },
+                    "uuid": "6a8054f3-c04c-4dff-85e3-f0ccfd0c17b7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R12 on F.SilkS",
+                    "pos": {
+                        "x": 153.416,
+                        "y": 100.076
+                    },
+                    "uuid": "c9b2b7ab-9c87-467d-8004-d9e4730d5aaa"
+                },
+                {
+                    "description": "PTH pad 2 [N-000036] of R12",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 99.06
+                    },
+                    "uuid": "c89988d6-2c31-4872-8abc-a8fc78672a85"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R13 on F.SilkS",
+                    "pos": {
+                        "x": 153.416,
+                        "y": 106.426
+                    },
+                    "uuid": "27eb5243-c3e5-4c0f-ad7e-c8beef0e8921"
+                },
+                {
+                    "description": "PTH pad 2 [N-000034] of R13",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 105.41
+                    },
+                    "uuid": "8d98e808-ccf6-413c-840f-c2018d25c485"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C3 on F.SilkS",
+                    "pos": {
+                        "x": 157.226,
+                        "y": 70.866
+                    },
+                    "uuid": "de6d06c4-06e1-413a-8c05-cde4f8065bec"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C3",
+                    "pos": {
+                        "x": 156.21,
+                        "y": 69.85
+                    },
+                    "uuid": "aa60c503-2f38-44c6-8c58-2f8d0c548eb3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C3 on F.SilkS",
+                    "pos": {
+                        "x": 150.114,
+                        "y": 68.834
+                    },
+                    "uuid": "5d9be6d4-3f63-42a5-a218-c8766aeaebfa"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C3",
+                    "pos": {
+                        "x": 156.21,
+                        "y": 69.85
+                    },
+                    "uuid": "aa60c503-2f38-44c6-8c58-2f8d0c548eb3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C3 on F.SilkS",
+                    "pos": {
+                        "x": 157.226,
+                        "y": 68.834
+                    },
+                    "uuid": "8baa3ad0-85af-40cd-89cb-0d7484ac652c"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C3",
+                    "pos": {
+                        "x": 156.21,
+                        "y": 69.85
+                    },
+                    "uuid": "aa60c503-2f38-44c6-8c58-2f8d0c548eb3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R5 on F.SilkS",
+                    "pos": {
+                        "x": 160.274,
+                        "y": 72.644
+                    },
+                    "uuid": "c9fb6b23-f010-4c76-99fe-686faea6ac46"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of R5",
+                    "pos": {
+                        "x": 161.29,
+                        "y": 73.66
+                    },
+                    "uuid": "d6dc29fd-a4f0-442e-b701-8910b3257603"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R14 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 87.884
+                    },
+                    "uuid": "154cf7d8-0cb4-45ac-a5ab-eceb50f043ed"
+                },
+                {
+                    "description": "PTH pad 1 [/TD0-DONE] of R14",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 88.9
+                    },
+                    "uuid": "fa7481af-655e-40a1-adbf-78ddbeea64d4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R14 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 88.9
+                    },
+                    "uuid": "a8e27793-dc12-493f-92f0-359b42acd8d9"
+                },
+                {
+                    "description": "PTH pad 1 [/TD0-DONE] of R14",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 88.9
+                    },
+                    "uuid": "fa7481af-655e-40a1-adbf-78ddbeea64d4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R11 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 92.964
+                    },
+                    "uuid": "68e3e2a5-1b0e-415f-a26e-c61bf3a55465"
+                },
+                {
+                    "description": "PTH pad 1 [/TDI-DIN] of R11",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 93.98
+                    },
+                    "uuid": "5a76e5c8-5a20-43f6-bd79-70574b4b64c1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R11 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 93.98
+                    },
+                    "uuid": "538ab37f-5e87-4a9c-ae2b-39154989ac78"
+                },
+                {
+                    "description": "PTH pad 1 [/TDI-DIN] of R11",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 93.98
+                    },
+                    "uuid": "5a76e5c8-5a20-43f6-bd79-70574b4b64c1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R12 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 98.044
+                    },
+                    "uuid": "8790e15c-d5c1-4110-a518-20c418049396"
+                },
+                {
+                    "description": "PTH pad 1 [/TCK-CCLK] of R12",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 99.06
+                    },
+                    "uuid": "02f50e19-05cd-41c6-8881-04e08a7c5cd2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R12 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 99.06
+                    },
+                    "uuid": "cefd5f3c-03cb-4b81-9e2f-3d9fd8af7580"
+                },
+                {
+                    "description": "PTH pad 1 [/TCK-CCLK] of R12",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 99.06
+                    },
+                    "uuid": "02f50e19-05cd-41c6-8881-04e08a7c5cd2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R13 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 104.394
+                    },
+                    "uuid": "024ef002-22d2-4195-857c-d14852c7b1e1"
+                },
+                {
+                    "description": "PTH pad 1 [/TMS-PROG] of R13",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 105.41
+                    },
+                    "uuid": "d1009a4f-9171-44cc-96b4-29766a7267ef"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R13 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 105.41
+                    },
+                    "uuid": "a45156f0-a0d4-4a04-a64f-ce1c44b3adf5"
+                },
+                {
+                    "description": "PTH pad 1 [/TMS-PROG] of R13",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 105.41
+                    },
+                    "uuid": "d1009a4f-9171-44cc-96b4-29766a7267ef"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R14 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 89.408
+                    },
+                    "uuid": "85c1cf4e-73c8-4791-b72a-b36ed20c4a65"
+                },
+                {
+                    "description": "PTH pad 1 [/TD0-DONE] of R14",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 88.9
+                    },
+                    "uuid": "fa7481af-655e-40a1-adbf-78ddbeea64d4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R11 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 94.488
+                    },
+                    "uuid": "f5fe999c-118e-46c2-925b-a6ccfad137b5"
+                },
+                {
+                    "description": "PTH pad 1 [/TDI-DIN] of R11",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 93.98
+                    },
+                    "uuid": "5a76e5c8-5a20-43f6-bd79-70574b4b64c1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R12 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 99.568
+                    },
+                    "uuid": "50228635-f84c-4bad-9fc8-c65fcad018e3"
+                },
+                {
+                    "description": "PTH pad 1 [/TCK-CCLK] of R12",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 99.06
+                    },
+                    "uuid": "02f50e19-05cd-41c6-8881-04e08a7c5cd2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R13 on F.SilkS",
+                    "pos": {
+                        "x": 161.544,
+                        "y": 105.918
+                    },
+                    "uuid": "64519f87-60a5-447b-9e1b-993a2a427371"
+                },
+                {
+                    "description": "PTH pad 1 [/TMS-PROG] of R13",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 105.41
+                    },
+                    "uuid": "d1009a4f-9171-44cc-96b4-29766a7267ef"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [/VCC_SENSE-ERROR*] of R1",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 76.2
+                    },
+                    "uuid": "0f909b17-1c02-4303-a205-6b7ccff8185d"
+                },
+                {
+                    "description": "Segment of R1 on F.SilkS",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 76.2
+                    },
+                    "uuid": "1571253f-db2a-4dc2-bce6-d61bb342be35"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R6 on F.SilkS",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 83.82
+                    },
+                    "uuid": "9a26b35b-b43d-4a77-a068-dc77d99dde97"
+                },
+                {
+                    "description": "PTH pad 2 [/TD0-PROG-D4] of R6",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 83.82
+                    },
+                    "uuid": "d21000eb-bb67-473c-90ee-04b57837a395"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [/DONE-SELECT*] of R4",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 104.14
+                    },
+                    "uuid": "09d42456-80d8-41dd-8ea5-9d9b72f3e344"
+                },
+                {
+                    "description": "Segment of R4 on F.SilkS",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 104.14
+                    },
+                    "uuid": "223e7bf9-7ed0-4f79-8657-64cb3321966f"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [/CLK-D1] of R10",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 78.74
+                    },
+                    "uuid": "bb5176ed-a0f0-4c3f-b1c1-d3ca7fbf3b44"
+                },
+                {
+                    "description": "Segment of R10 on F.SilkS",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 78.74
+                    },
+                    "uuid": "ec411707-c34f-4600-a092-bfb258899f89"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R9 on F.SilkS",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 81.28
+                    },
+                    "uuid": "77155b33-c81a-42bb-a2f9-f90fa2b128c8"
+                },
+                {
+                    "description": "PTH pad 2 [/TMS-PROG-D2] of R9",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 81.28
+                    },
+                    "uuid": "ba11c803-ec65-4bb0-8260-37fb42a6b9bf"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [/CTRL-D3] of R8",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 86.36
+                    },
+                    "uuid": "5e46d39f-1353-4e12-a4f7-0eb1e8a2e3b2"
+                },
+                {
+                    "description": "Segment of R8 on F.SilkS",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 86.36
+                    },
+                    "uuid": "77eaeb9a-7e53-440e-89ac-4a3a2fc760b6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [/TDI-DIN-D0] of R7",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 92.71
+                    },
+                    "uuid": "0802055d-bfe1-4029-8f6c-37a78d4deaa7"
+                },
+                {
+                    "description": "Segment of R7 on F.SilkS",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 92.71
+                    },
+                    "uuid": "5e6b97e9-697a-4b58-bdf0-08886d65f7b9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of R4",
+                    "pos": {
+                        "x": 116.84,
+                        "y": 104.14
+                    },
+                    "uuid": "d2a0db9c-be0c-48e7-9bf0-b7077a4b08e7"
+                },
+                {
+                    "description": "Segment of R4 on F.SilkS",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 103.124
+                    },
+                    "uuid": "e4eb99d4-7d16-4022-9112-398f8ea3b48c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 1 [N-000014] of R1",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 76.2
+                    },
+                    "uuid": "50d49243-ecd1-4e12-b719-f6a05b9470a0"
+                },
+                {
+                    "description": "Segment of R1 on F.SilkS",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 76.2
+                    },
+                    "uuid": "85fc8175-457a-4496-89d6-e1de27328390"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R10 on F.SilkS",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 78.74
+                    },
+                    "uuid": "bf15fdd8-23e5-4f00-92f0-2e7e42e2c9e1"
+                },
+                {
+                    "description": "PTH pad 1 [N-000030] of R10",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 78.74
+                    },
+                    "uuid": "e3a3335a-5841-416c-90c5-670340d13c85"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R9 on F.SilkS",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 81.28
+                    },
+                    "uuid": "275734a2-a6fc-41eb-9c0c-24373f569bbf"
+                },
+                {
+                    "description": "PTH pad 1 [N-000032] of R9",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 81.28
+                    },
+                    "uuid": "79ee78cd-2841-4f87-83ca-62a3f36e3211"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R6 on F.SilkS",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 83.82
+                    },
+                    "uuid": "27909951-b339-4c80-8dfe-31b1d74b428e"
+                },
+                {
+                    "description": "PTH pad 1 [N-000031] of R6",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 83.82
+                    },
+                    "uuid": "56d8ce41-7910-4a01-be2c-0a610635c94b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R8 on F.SilkS",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 86.36
+                    },
+                    "uuid": "a4a6a918-efcb-440a-a52a-ec02e959330b"
+                },
+                {
+                    "description": "PTH pad 1 [N-000033] of R8",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 86.36
+                    },
+                    "uuid": "c9cb4dba-e792-41c7-8b6b-d51bad83cf25"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R7 on F.SilkS",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 92.71
+                    },
+                    "uuid": "2840bdec-2ea6-4c01-b494-44ea39217517"
+                },
+                {
+                    "description": "PTH pad 1 [N-000016] of R7",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 92.71
+                    },
+                    "uuid": "eb7ab5e7-ac18-46eb-869c-313c37008247"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R4 on F.SilkS",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 104.14
+                    },
+                    "uuid": "a3aa2eb0-6494-4adb-a2eb-5ab64de4bed6"
+                },
+                {
+                    "description": "PTH pad 1 [N-000015] of R4",
+                    "pos": {
+                        "x": 121.92,
+                        "y": 104.14
+                    },
+                    "uuid": "ff964fa4-7754-4186-9965-a3a085008cb9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [N-000014] of D1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 72.39
+                    },
+                    "uuid": "151f81bc-0822-477d-b474-90749814d014"
+                },
+                {
+                    "description": "Segment of D1 on F.SilkS",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 72.39
+                    },
+                    "uuid": "e252ded4-197e-439a-b5bc-7ba7243a60f2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [GND] of U1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 85.09
+                    },
+                    "uuid": "94a922e3-75a9-40e7-a102-f63c04ea1ffb"
+                },
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 128.27,
+                        "y": 100.33
+                    },
+                    "uuid": "df6404f5-9575-425a-8301-a5f73783cd13"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 3 [N-000038] of U1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 87.63
+                    },
+                    "uuid": "2d315e03-78cb-4c34-bd4e-5e5ce2e8d620"
+                },
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 128.27,
+                        "y": 100.33
+                    },
+                    "uuid": "df6404f5-9575-425a-8301-a5f73783cd13"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 6 [N-000035] of U1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 95.25
+                    },
+                    "uuid": "08d8733a-945c-493e-a8da-b4b345dbb2de"
+                },
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 128.27,
+                        "y": 100.33
+                    },
+                    "uuid": "df6404f5-9575-425a-8301-a5f73783cd13"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 7 [GND] of U1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 97.79
+                    },
+                    "uuid": "a574b11b-82f2-4c86-8849-95e11ba4beb2"
+                },
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 128.27,
+                        "y": 100.33
+                    },
+                    "uuid": "df6404f5-9575-425a-8301-a5f73783cd13"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [N-000014] of D1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 72.39
+                    },
+                    "uuid": "151f81bc-0822-477d-b474-90749814d014"
+                },
+                {
+                    "description": "Segment of D1 on F.SilkS",
+                    "pos": {
+                        "x": 127.762,
+                        "y": 71.374
+                    },
+                    "uuid": "628704cf-7107-448f-b0f7-84845c883f42"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [N-000014] of D1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 72.39
+                    },
+                    "uuid": "151f81bc-0822-477d-b474-90749814d014"
+                },
+                {
+                    "description": "Segment of D1 on F.SilkS",
+                    "pos": {
+                        "x": 127.762,
+                        "y": 72.39
+                    },
+                    "uuid": "36a212c9-b084-48b4-85e5-a1e836b3cfea"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 1 [N-000031] of U1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 82.55
+                    },
+                    "uuid": "a465d4b4-04d4-4137-a14a-e7e357f813da"
+                },
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 128.27,
+                        "y": 100.33
+                    },
+                    "uuid": "df6404f5-9575-425a-8301-a5f73783cd13"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 128.27,
+                        "y": 100.33
+                    },
+                    "uuid": "df6404f5-9575-425a-8301-a5f73783cd13"
+                },
+                {
+                    "description": "PTH pad 4 [N-000033] of U1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 90.17
+                    },
+                    "uuid": "efb2edea-074d-49c5-8d1f-c2a8c4a27bdd"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 128.27,
+                        "y": 100.33
+                    },
+                    "uuid": "df6404f5-9575-425a-8301-a5f73783cd13"
+                },
+                {
+                    "description": "PTH pad 5 [N-000016] of U1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 92.71
+                    },
+                    "uuid": "f3a1d0b8-f578-4a1a-a31a-da0171e16999"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 133.35,
+                        "y": 80.01
+                    },
+                    "uuid": "290ecd2e-6983-4347-8c83-e9c714ab9e66"
+                },
+                {
+                    "description": "PTH pad 14 [VCC] of U1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 82.55
+                    },
+                    "uuid": "47e4619f-5bdf-4cc1-867b-f80db05c07e8"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 133.35,
+                        "y": 80.01
+                    },
+                    "uuid": "290ecd2e-6983-4347-8c83-e9c714ab9e66"
+                },
+                {
+                    "description": "PTH pad 13 [N-000033] of U1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 85.09
+                    },
+                    "uuid": "a98eab27-9449-4697-ac9d-0a05d073f6fd"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 133.35,
+                        "y": 80.01
+                    },
+                    "uuid": "290ecd2e-6983-4347-8c83-e9c714ab9e66"
+                },
+                {
+                    "description": "PTH pad 11 [N-000034] of U1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 90.17
+                    },
+                    "uuid": "84399a3b-6afc-4d41-9877-398906dbfd5b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 133.35,
+                        "y": 80.01
+                    },
+                    "uuid": "290ecd2e-6983-4347-8c83-e9c714ab9e66"
+                },
+                {
+                    "description": "PTH pad 9 [N-000030] of U1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 95.25
+                    },
+                    "uuid": "a589fd97-2b88-4f7f-845d-54afdb2713eb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 133.35,
+                        "y": 80.01
+                    },
+                    "uuid": "290ecd2e-6983-4347-8c83-e9c714ab9e66"
+                },
+                {
+                    "description": "PTH pad 8 [N-000036] of U1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 97.79
+                    },
+                    "uuid": "54dd2987-5aae-4844-b88b-bea3d429f878"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of D1 on F.SilkS",
+                    "pos": {
+                        "x": 133.858,
+                        "y": 73.406
+                    },
+                    "uuid": "2fc1085f-e94e-48ee-b635-928bb4fc3e6b"
+                },
+                {
+                    "description": "PTH pad 1 [VCC] of D1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 72.39
+                    },
+                    "uuid": "cb7b7da1-c3ee-4a5f-960f-ba782c721af5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of D1 on F.SilkS",
+                    "pos": {
+                        "x": 133.858,
+                        "y": 72.39
+                    },
+                    "uuid": "b9918aff-e3d1-44dc-8420-438801bef327"
+                },
+                {
+                    "description": "PTH pad 1 [VCC] of D1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 72.39
+                    },
+                    "uuid": "cb7b7da1-c3ee-4a5f-960f-ba782c721af5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 12 [N-000032] of U1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 87.63
+                    },
+                    "uuid": "04ea39da-be7d-42ce-b67b-153babe98fd1"
+                },
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 133.35,
+                        "y": 80.01
+                    },
+                    "uuid": "290ecd2e-6983-4347-8c83-e9c714ab9e66"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 10 [N-000033] of U1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 92.71
+                    },
+                    "uuid": "07a91969-e41e-4799-b004-42ae78626ee6"
+                },
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 133.35,
+                        "y": 80.01
+                    },
+                    "uuid": "290ecd2e-6983-4347-8c83-e9c714ab9e66"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of D1 on F.SilkS",
+                    "pos": {
+                        "x": 133.858,
+                        "y": 72.39
+                    },
+                    "uuid": "380e0c0c-813e-4cea-892b-ddf476805f0a"
+                },
+                {
+                    "description": "PTH pad 1 [VCC] of D1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 72.39
+                    },
+                    "uuid": "cb7b7da1-c3ee-4a5f-960f-ba782c721af5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of C1 on F.SilkS",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 76.2
+                    },
+                    "uuid": "7c983088-ee91-4f2e-af62-deacbdc07574"
+                },
+                {
+                    "description": "PTH pad 1 [VCC] of C1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 76.2
+                    },
+                    "uuid": "9be17d16-1398-4adf-955a-4ebc16820067"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 1 [VCC] of C1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 76.2
+                    },
+                    "uuid": "9be17d16-1398-4adf-955a-4ebc16820067"
+                },
+                {
+                    "description": "Segment of C1 on F.SilkS",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 76.2
+                    },
+                    "uuid": "ca900019-1dbe-4672-97d1-4902c863082e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 1 [VCC] of R2",
+                    "pos": {
+                        "x": 137.16,
+                        "y": 72.39
+                    },
+                    "uuid": "3de6d4e2-15fa-4cdb-bedc-ae45a71631a6"
+                },
+                {
+                    "description": "Segment of R2 on F.SilkS",
+                    "pos": {
+                        "x": 137.16,
+                        "y": 72.39
+                    },
+                    "uuid": "47082a6c-bde3-4e9e-8947-24bdb97a8fe8"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 100.33
+                    },
+                    "uuid": "19efad35-c3d9-40f7-9471-52daf18503b7"
+                },
+                {
+                    "description": "PTH pad 1 [GND] of U2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 82.55
+                    },
+                    "uuid": "8d72500c-3d8b-4f2d-b13a-7a932e0f5e8f"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 100.33
+                    },
+                    "uuid": "19efad35-c3d9-40f7-9471-52daf18503b7"
+                },
+                {
+                    "description": "PTH pad 2 [N-000038] of U2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 85.09
+                    },
+                    "uuid": "a26fbd77-d368-4afa-87c1-e5e8f2fd6e56"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 100.33
+                    },
+                    "uuid": "19efad35-c3d9-40f7-9471-52daf18503b7"
+                },
+                {
+                    "description": "PTH pad 3 [N-000015] of U2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 87.63
+                    },
+                    "uuid": "bd7110bd-b283-4278-a12b-73ed70c45d22"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 100.33
+                    },
+                    "uuid": "19efad35-c3d9-40f7-9471-52daf18503b7"
+                },
+                {
+                    "description": "PTH pad 4 [GND] of U2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 90.17
+                    },
+                    "uuid": "60d73333-8153-4def-8c2d-9da4c094ec42"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 100.33
+                    },
+                    "uuid": "19efad35-c3d9-40f7-9471-52daf18503b7"
+                },
+                {
+                    "description": "PTH pad 5 [GND] of U2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 92.71
+                    },
+                    "uuid": "8731b0cb-d19f-4631-93cc-c38d1fca7679"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 100.33
+                    },
+                    "uuid": "19efad35-c3d9-40f7-9471-52daf18503b7"
+                },
+                {
+                    "description": "PTH pad 6 [<no net>] of U2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 95.25
+                    },
+                    "uuid": "c64c8109-4b31-43ad-848a-1fb7ff3e0bab"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 100.33
+                    },
+                    "uuid": "19efad35-c3d9-40f7-9471-52daf18503b7"
+                },
+                {
+                    "description": "PTH pad 7 [GND] of U2",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 97.79
+                    },
+                    "uuid": "ed617363-4d1a-4c52-bdd0-3374d7435f0b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R2 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 72.39
+                    },
+                    "uuid": "64629379-4f80-42d1-bff5-d72c7cff9639"
+                },
+                {
+                    "description": "PTH pad 2 [N-000038] of R2",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 72.39
+                    },
+                    "uuid": "d66ad14a-4219-451e-bcce-200cf7969c2d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [GND] of C1",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 76.2
+                    },
+                    "uuid": "0ccfbe23-0848-4243-866f-8fd5bbb379d0"
+                },
+                {
+                    "description": "Segment of C1 on F.SilkS",
+                    "pos": {
+                        "x": 146.05,
+                        "y": 76.2
+                    },
+                    "uuid": "353e140e-d2cc-402e-a2f0-b7ccab08ddf5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [GND] of C1",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 76.2
+                    },
+                    "uuid": "0ccfbe23-0848-4243-866f-8fd5bbb379d0"
+                },
+                {
+                    "description": "Segment of C1 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 76.2
+                    },
+                    "uuid": "6ced8d91-5801-4e9a-9495-26b2d85febe7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [GND] of C1",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 76.2
+                    },
+                    "uuid": "0ccfbe23-0848-4243-866f-8fd5bbb379d0"
+                },
+                {
+                    "description": "Segment of C1 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 76.2
+                    },
+                    "uuid": "87bc5337-019c-4ce9-bd62-c8f8aba8146a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 2 [GND] of C1",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 76.2
+                    },
+                    "uuid": "0ccfbe23-0848-4243-866f-8fd5bbb379d0"
+                },
+                {
+                    "description": "Segment of C1 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 76.2
+                    },
+                    "uuid": "e874af33-e250-4531-b8cf-4477e0b38ed4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 80.01
+                    },
+                    "uuid": "b3accd7c-cd1d-402d-a478-dd34fb221191"
+                },
+                {
+                    "description": "PTH pad 8 [<no net>] of U2",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 97.79
+                    },
+                    "uuid": "fb7df77e-828a-44e1-b081-598d0e0ae318"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 14 [VCC] of U2",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 82.55
+                    },
+                    "uuid": "9e0f5139-7b77-4fbf-bdfb-7c71eb1eecec"
+                },
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 80.01
+                    },
+                    "uuid": "b3accd7c-cd1d-402d-a478-dd34fb221191"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 13 [GND] of U2",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 85.09
+                    },
+                    "uuid": "5fbd001d-b005-4669-8721-bb0770708623"
+                },
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 80.01
+                    },
+                    "uuid": "b3accd7c-cd1d-402d-a478-dd34fb221191"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 12 [GND] of U2",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 87.63
+                    },
+                    "uuid": "81dd3e7c-526a-4e5f-b4e2-fc8ef430556b"
+                },
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 80.01
+                    },
+                    "uuid": "b3accd7c-cd1d-402d-a478-dd34fb221191"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 11 [<no net>] of U2",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 90.17
+                    },
+                    "uuid": "9e22dbdc-4299-4a68-adce-a9ea41b82854"
+                },
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 80.01
+                    },
+                    "uuid": "b3accd7c-cd1d-402d-a478-dd34fb221191"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 10 [GND] of U2",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 92.71
+                    },
+                    "uuid": "298e4720-c90e-4af2-b23a-30f8c0413bc8"
+                },
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 80.01
+                    },
+                    "uuid": "b3accd7c-cd1d-402d-a478-dd34fb221191"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 9 [GND] of U2",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 95.25
+                    },
+                    "uuid": "31fed56f-94aa-41e0-a294-d6b0fddddf74"
+                },
+                {
+                    "description": "Segment of U2 on F.SilkS",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 80.01
+                    },
+                    "uuid": "b3accd7c-cd1d-402d-a478-dd34fb221191"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 1 [VCC] of R5",
+                    "pos": {
+                        "x": 151.13,
+                        "y": 73.66
+                    },
+                    "uuid": "296ccf8b-9111-42d3-86e4-dec5cda1deb4"
+                },
+                {
+                    "description": "Segment of R5 on F.SilkS",
+                    "pos": {
+                        "x": 151.13,
+                        "y": 73.66
+                    },
+                    "uuid": "8c0f9b1a-3f52-47c8-9675-1d88ca9d3cbe"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of D2 on F.SilkS",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 78.74
+                    },
+                    "uuid": "99aba5e4-f4cc-43b1-b198-bdde1511f334"
+                },
+                {
+                    "description": "PTH pad 2 [VCC] of D2",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 78.74
+                    },
+                    "uuid": "f6ea5bc2-0d50-42cf-bd36-ccd2e8d23b02"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of D2 on F.SilkS",
+                    "pos": {
+                        "x": 153.162,
+                        "y": 77.724
+                    },
+                    "uuid": "9e45aa15-778f-4f09-9339-889213664d5d"
+                },
+                {
+                    "description": "PTH pad 2 [VCC] of D2",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 78.74
+                    },
+                    "uuid": "f6ea5bc2-0d50-42cf-bd36-ccd2e8d23b02"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of D2 on F.SilkS",
+                    "pos": {
+                        "x": 153.162,
+                        "y": 78.74
+                    },
+                    "uuid": "d9f29161-ae25-4eb7-8cd0-fcdc74c86cd6"
+                },
+                {
+                    "description": "PTH pad 2 [VCC] of D2",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 78.74
+                    },
+                    "uuid": "f6ea5bc2-0d50-42cf-bd36-ccd2e8d23b02"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R14 on F.SilkS",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 88.9
+                    },
+                    "uuid": "93660f05-3725-4901-b41b-3ed9e2f8af74"
+                },
+                {
+                    "description": "PTH pad 2 [N-000038] of R14",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 88.9
+                    },
+                    "uuid": "a344f08b-7de3-4eb8-a78e-ecaff96776c9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R11 on F.SilkS",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 93.98
+                    },
+                    "uuid": "3cadfa28-6ef6-4401-833d-b0939fdde808"
+                },
+                {
+                    "description": "PTH pad 2 [N-000035] of R11",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 93.98
+                    },
+                    "uuid": "6a8054f3-c04c-4dff-85e3-f0ccfd0c17b7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R12 on F.SilkS",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 99.06
+                    },
+                    "uuid": "797dd684-0df6-4727-b5b5-bc92ef6c5847"
+                },
+                {
+                    "description": "PTH pad 2 [N-000036] of R12",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 99.06
+                    },
+                    "uuid": "c89988d6-2c31-4872-8abc-a8fc78672a85"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R13 on F.SilkS",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 105.41
+                    },
+                    "uuid": "21b5701d-5711-4f6d-83fe-04e10160952d"
+                },
+                {
+                    "description": "PTH pad 2 [N-000034] of R13",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 105.41
+                    },
+                    "uuid": "8d98e808-ccf6-413c-840f-c2018d25c485"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R14 on F.SilkS",
+                    "pos": {
+                        "x": 153.416,
+                        "y": 87.884
+                    },
+                    "uuid": "1ff51dd2-fd36-4554-a89e-70fb5c11275f"
+                },
+                {
+                    "description": "Reference field of R14",
+                    "pos": {
+                        "x": 157.48,
+                        "y": 88.9
+                    },
+                    "uuid": "ebae917d-f6a9-4913-bc71-88aa667999d8"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of D2 on F.SilkS",
+                    "pos": {
+                        "x": 159.258,
+                        "y": 78.74
+                    },
+                    "uuid": "3ba1239e-11ae-4abc-80ad-1e4ef5a07005"
+                },
+                {
+                    "description": "PTH pad 1 [/PWR_3,3-5V] of D2",
+                    "pos": {
+                        "x": 160.02,
+                        "y": 78.74
+                    },
+                    "uuid": "fb9b2b90-5c04-49d1-99f2-67958c0b34e6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of D2 on F.SilkS",
+                    "pos": {
+                        "x": 159.258,
+                        "y": 79.756
+                    },
+                    "uuid": "5437210f-3149-448e-bb73-64367368cdc7"
+                },
+                {
+                    "description": "PTH pad 1 [/PWR_3,3-5V] of D2",
+                    "pos": {
+                        "x": 160.02,
+                        "y": 78.74
+                    },
+                    "uuid": "fb9b2b90-5c04-49d1-99f2-67958c0b34e6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of D2 on F.SilkS",
+                    "pos": {
+                        "x": 159.258,
+                        "y": 78.74
+                    },
+                    "uuid": "2badf571-88fb-497a-b7f1-d0840be80551"
+                },
+                {
+                    "description": "PTH pad 1 [/PWR_3,3-5V] of D2",
+                    "pos": {
+                        "x": 160.02,
+                        "y": 78.74
+                    },
+                    "uuid": "fb9b2b90-5c04-49d1-99f2-67958c0b34e6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R5 on F.SilkS",
+                    "pos": {
+                        "x": 161.29,
+                        "y": 73.66
+                    },
+                    "uuid": "10ef8449-e99e-47dc-b360-4c544eead1fe"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of R5",
+                    "pos": {
+                        "x": 161.29,
+                        "y": 73.66
+                    },
+                    "uuid": "d6dc29fd-a4f0-442e-b701-8910b3257603"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 1 [/TDI-DIN] of R11",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 93.98
+                    },
+                    "uuid": "5a76e5c8-5a20-43f6-bd79-70574b4b64c1"
+                },
+                {
+                    "description": "Segment of R11 on F.SilkS",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 93.98
+                    },
+                    "uuid": "e5c4004a-d933-4e96-ab4b-a1071f83d764"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "PTH pad 1 [/TCK-CCLK] of R12",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 99.06
+                    },
+                    "uuid": "02f50e19-05cd-41c6-8881-04e08a7c5cd2"
+                },
+                {
+                    "description": "Segment of R12 on F.SilkS",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 99.06
+                    },
+                    "uuid": "528c05da-4f92-4de5-88f9-2fb9c5b20f9a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R14 on F.SilkS",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 88.9
+                    },
+                    "uuid": "5ed73c3e-a294-4c85-8bdd-5405b97bf2ae"
+                },
+                {
+                    "description": "PTH pad 1 [/TD0-DONE] of R14",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 88.9
+                    },
+                    "uuid": "fa7481af-655e-40a1-adbf-78ddbeea64d4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R13 on F.SilkS",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 105.41
+                    },
+                    "uuid": "9d5f33c3-6b41-4b24-a47d-0621e3552c40"
+                },
+                {
+                    "description": "PTH pad 1 [/TMS-PROG] of R13",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 105.41
+                    },
+                    "uuid": "d1009a4f-9171-44cc-96b4-29766a7267ef"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

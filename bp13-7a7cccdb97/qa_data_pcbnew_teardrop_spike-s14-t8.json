@@ -1,0 +1,148 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:34",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "teardrop_spike.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Via [/~{CS}_R_BACK] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 94.07498,
+                        "y": 82.949707
+                    },
+                    "uuid": "753f43cc-f3c8-4dbb-a6e0-b5a5b0468fe1"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "43edcdf1-183d-4305-9a43-cf33c6022720"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1270 mm)",
+            "items": [
+                {
+                    "description": "Track [/~{CS}_R_BACK] on F.Cu, length 0.6483 mm",
+                    "pos": {
+                        "x": 93.853,
+                        "y": 83.171687
+                    },
+                    "uuid": "a2235c7b-c9f4-491d-a757-e059b669e7fb"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1270 mm)",
+            "items": [
+                {
+                    "description": "Track [/~{CS}_R_BACK] on F.Cu, length 0.3139 mm",
+                    "pos": {
+                        "x": 94.07498,
+                        "y": 82.949707
+                    },
+                    "uuid": "f3355a60-1098-4082-a30e-16481250b29a"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1270 mm)",
+            "items": [
+                {
+                    "description": "Track [/~{CS}_R_BACK] on B.Cu, length 0.3126 mm",
+                    "pos": {
+                        "x": 94.07498,
+                        "y": 82.949707
+                    },
+                    "uuid": "a85a9575-7215-4f39-bea5-26b9c12c3cab"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.3500 mm)",
+            "items": [
+                {
+                    "description": "Via [/~{CS}_R_BACK] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 94.07498,
+                        "y": 82.949707
+                    },
+                    "uuid": "753f43cc-f3c8-4dbb-a6e0-b5a5b0468fe1"
+                }
+            ],
+            "severity": "error",
+            "type": "via_diameter"
+        },
+        {
+            "description": "Footprint 'TSSOP-16_4.4x5mm_P0.65mm' does not match copy in library 'Package_SO'",
+            "items": [
+                {
+                    "description": "Footprint U42",
+                    "pos": {
+                        "x": 94.438318,
+                        "y": 80.999196
+                    },
+                    "uuid": "acd40bcb-14b5-4c5c-85f5-afb0641a8adb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Copper sliver (F.Cu)",
+            "items": [],
+            "severity": "warning",
+            "type": "copper_sliver"
+        }
+    ]
+}

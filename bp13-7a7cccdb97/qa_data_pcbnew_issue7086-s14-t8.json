@@ -1,0 +1,236 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:14",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue7086.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(J3-Pad1)] of J3 on F.Cu",
+                    "pos": {
+                        "x": 129.895,
+                        "y": 68.75
+                    },
+                    "uuid": "1e53baa4-d0aa-418f-b29b-235285c77c1f"
+                },
+                {
+                    "description": "PTH pad 2 [Net-(J3-Pad1)] of J1",
+                    "pos": {
+                        "x": 136.16,
+                        "y": 68.79
+                    },
+                    "uuid": "74e8de01-da27-4cbd-9a20-ecc609ee3c46"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [Net-(J3-Pad4)] of J1",
+                    "pos": {
+                        "x": 133.62,
+                        "y": 68.79
+                    },
+                    "uuid": "1d47edde-9be6-49af-97a0-4d7b794b0395"
+                },
+                {
+                    "description": "Pad 4 [Net-(J3-Pad4)] of J3 on F.Cu",
+                    "pos": {
+                        "x": 126.585,
+                        "y": 76.37
+                    },
+                    "uuid": "5d070306-84b5-46f9-8d6e-6adbe0b42531"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 4 [Net-(J3-Pad4)] of J1",
+                    "pos": {
+                        "x": 141.24,
+                        "y": 68.79
+                    },
+                    "uuid": "c6ac7803-cbcc-49f9-8644-cb11d0f6177a"
+                },
+                {
+                    "description": "PTH pad 1 [Net-(J3-Pad4)] of J1",
+                    "pos": {
+                        "x": 133.62,
+                        "y": 68.79
+                    },
+                    "uuid": "1d47edde-9be6-49af-97a0-4d7b794b0395"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 4 [Net-(J3-Pad4)] of J2 on F.Cu",
+                    "pos": {
+                        "x": 145.505,
+                        "y": 76.9
+                    },
+                    "uuid": "ad922073-0aff-4353-9660-7074e7eba0b7"
+                },
+                {
+                    "description": "PTH pad 4 [Net-(J3-Pad4)] of J1",
+                    "pos": {
+                        "x": 141.24,
+                        "y": 68.79
+                    },
+                    "uuid": "c6ac7803-cbcc-49f9-8644-cb11d0f6177a"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 133.62,
+                        "y": 68.79
+                    },
+                    "uuid": "3f74bf10-ea19-4f49-bb02-3ee70480d54c"
+                },
+                {
+                    "description": "Footprint REF**",
+                    "pos": {
+                        "x": 138.74,
+                        "y": 75.22
+                    },
+                    "uuid": "d4b84c24-6452-4be8-9e08-c8fb6dd5d49e"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'digikey-footprints'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 133.62,
+                        "y": 68.79
+                    },
+                    "uuid": "3f74bf10-ea19-4f49-bb02-3ee70480d54c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'qli-footprints'",
+            "items": [
+                {
+                    "description": "Footprint REF**",
+                    "pos": {
+                        "x": 138.74,
+                        "y": 75.22
+                    },
+                    "uuid": "d4b84c24-6452-4be8-9e08-c8fb6dd5d49e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x06_P2.54mm_Vertical_SMD_Pin1Right' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J3",
+                    "pos": {
+                        "x": 128.24,
+                        "y": 75.1
+                    },
+                    "uuid": "ca6f8353-3d7d-4fed-8153-e05792a379bb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x06_P2.54mm_Vertical_SMD_Pin1Right' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 147.16,
+                        "y": 75.63
+                    },
+                    "uuid": "db320a90-0d8a-42b0-ad39-208c9f1cbe08"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of REF**",
+                    "pos": {
+                        "x": 139.24,
+                        "y": 79.72
+                    },
+                    "uuid": "b51d3288-fcc2-4903-96cd-0794c574f1b9"
+                },
+                {
+                    "description": "NPTH pad of H1",
+                    "pos": {
+                        "x": 137.87,
+                        "y": 81.99
+                    },
+                    "uuid": "b58e39e5-3fcd-446f-a08e-37d1031be676"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

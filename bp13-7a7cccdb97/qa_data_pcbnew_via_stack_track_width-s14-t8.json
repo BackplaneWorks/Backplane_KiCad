@@ -1,0 +1,117 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:36",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Footprint has malformed courtyard",
+            "key": "malformed_courtyard"
+        },
+        {
+            "description": "Copper connection too narrow",
+            "key": "connection_width"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint attributes don't match symbol",
+            "key": "footprint_symbol_mismatch"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "key": "silk_edge_clearance"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        },
+        {
+            "description": "Footprint doesn't match copy in library",
+            "key": "lib_footprint_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "via_stack_track_width.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/DDR4-PS.RSTN] on Top Layer, length 0.5568 mm",
+                    "pos": {
+                        "x": 153.12782,
+                        "y": 211.474395
+                    },
+                    "uuid": "892f8d8b-6142-445f-a82d-a14f197154ad"
+                }
+            ],
+            "severity": "error",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/DDR4-PS.CK_N] on Top Layer, length 0.5568 mm",
+                    "pos": {
+                        "x": 154.72782,
+                        "y": 209.074395
+                    },
+                    "uuid": "f2a9766d-6760-44f4-a71f-1825b08fa470"
+                }
+            ],
+            "severity": "error",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/DDR4-PS.CK_P] on Top Layer, length 0.5568 mm",
+                    "pos": {
+                        "x": 154.72782,
+                        "y": 209.874385
+                    },
+                    "uuid": "6492e3a2-bf99-4d3d-9e54-724806cce92b"
+                }
+            ],
+            "severity": "error",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "c703ef4c-ce79-4961-a833-cbef0f166a70"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        }
+    ]
+}

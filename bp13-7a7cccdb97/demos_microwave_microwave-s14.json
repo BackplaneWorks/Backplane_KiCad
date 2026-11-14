@@ -1,0 +1,469 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:35",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "microwave.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Items shorting two nets (nets <no net> and <no net>)",
+            "items": [
+                {
+                    "description": "Polygon [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.43954,
+                        "y": 121.54408
+                    },
+                    "uuid": "bd6c5b77-d3b3-4fbf-a190-efa832e9a17a"
+                },
+                {
+                    "description": "Pad 2 [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.43954,
+                        "y": 121.23928
+                    },
+                    "uuid": "c832f9db-acfd-497d-8ad8-b83b45299a7a"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets <no net> and <no net>)",
+            "items": [
+                {
+                    "description": "Polygon [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.4497,
+                        "y": 119.38
+                    },
+                    "uuid": "14ac8f38-fc64-4847-b7f1-4bbcc9cf300e"
+                },
+                {
+                    "description": "Pad 2 [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.4497,
+                        "y": 119.38
+                    },
+                    "uuid": "1d3dc29d-b563-47d6-95fb-e7975833a5ed"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets <no net> and <no net>)",
+            "items": [
+                {
+                    "description": "Polygon [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.4497,
+                        "y": 119.38
+                    },
+                    "uuid": "14ac8f38-fc64-4847-b7f1-4bbcc9cf300e"
+                },
+                {
+                    "description": "Pad 1 [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 338.9503,
+                        "y": 119.38
+                    },
+                    "uuid": "7dcebb44-2edd-43e4-9a46-748b4fe8e9b8"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets <no net> and <no net>)",
+            "items": [
+                {
+                    "description": "Polygon [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.4497,
+                        "y": 144.78
+                    },
+                    "uuid": "21a60117-b803-4e2f-aae3-2473138e7cfb"
+                },
+                {
+                    "description": "Pad 1 [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 338.9503,
+                        "y": 144.78
+                    },
+                    "uuid": "9ec8632a-f24d-49db-8acf-2013c220b809"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets <no net> and <no net>)",
+            "items": [
+                {
+                    "description": "Polygon [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.42938,
+                        "y": 117.21084
+                    },
+                    "uuid": "be859512-c8da-42c0-b731-2877e3de51d3"
+                },
+                {
+                    "description": "Pad 1 [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 338.92998,
+                        "y": 117.51564
+                    },
+                    "uuid": "e51715bb-c536-4d27-8d90-92833f0af85b"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets <no net> and <no net>)",
+            "items": [
+                {
+                    "description": "Polygon [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.43954,
+                        "y": 121.54408
+                    },
+                    "uuid": "bd6c5b77-d3b3-4fbf-a190-efa832e9a17a"
+                },
+                {
+                    "description": "Pad 1 [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 338.94014,
+                        "y": 121.23928
+                    },
+                    "uuid": "dc3ce03f-9af6-43ca-964a-91ac30f4ae5f"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2540 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Pad 2 [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.42938,
+                        "y": 117.51564
+                    },
+                    "uuid": "93b38643-2383-4181-bc0d-0195dd97ea5e"
+                },
+                {
+                    "description": "Polygon [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.42938,
+                        "y": 117.21084
+                    },
+                    "uuid": "be859512-c8da-42c0-b731-2877e3de51d3"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2540 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Pad 2 [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.4497,
+                        "y": 144.78
+                    },
+                    "uuid": "08e6510a-33ef-469c-adba-fa75fa9ef694"
+                },
+                {
+                    "description": "Polygon [<no net>] of POLY on F.Cu",
+                    "pos": {
+                        "x": 67.4497,
+                        "y": 144.78
+                    },
+                    "uuid": "21a60117-b803-4e2f-aae3-2473138e7cfb"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0762 mm)",
+            "items": [
+                {
+                    "description": "Value field of POLY (VAL**)",
+                    "pos": {
+                        "x": 203.17968,
+                        "y": 117.13464
+                    },
+                    "uuid": "6a26270e-f126-4085-be1b-7bb4f5d9a065"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0762 mm)",
+            "items": [
+                {
+                    "description": "Reference field of POLY",
+                    "pos": {
+                        "x": 203.17968,
+                        "y": 117.28704
+                    },
+                    "uuid": "8daee5c7-4733-4614-b07b-ec3350394c88"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0762 mm)",
+            "items": [
+                {
+                    "description": "Value field of POLY (VAL**)",
+                    "pos": {
+                        "x": 203.18984,
+                        "y": 121.46788
+                    },
+                    "uuid": "dfb3d6c2-0444-42d2-a324-f139509a350c"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0762 mm)",
+            "items": [
+                {
+                    "description": "Reference field of POLY",
+                    "pos": {
+                        "x": 203.18984,
+                        "y": 121.62028
+                    },
+                    "uuid": "d85eee4e-18af-4421-9a23-b8df18135ff8"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0762 mm)",
+            "items": [
+                {
+                    "description": "Value field of POLY (VAL**)",
+                    "pos": {
+                        "x": 203.2,
+                        "y": 119.3038
+                    },
+                    "uuid": "1d47d76e-5ce8-4e94-821e-fee3d674d9fc"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0762 mm)",
+            "items": [
+                {
+                    "description": "Reference field of POLY",
+                    "pos": {
+                        "x": 203.2,
+                        "y": 119.4562
+                    },
+                    "uuid": "eda30dee-fe4e-42b3-9403-b981f956b481"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0762 mm)",
+            "items": [
+                {
+                    "description": "Value field of POLY (VAL**)",
+                    "pos": {
+                        "x": 203.2,
+                        "y": 144.7038
+                    },
+                    "uuid": "e2401d1f-56ea-4ba1-8b35-ecb6acafda1f"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0762 mm)",
+            "items": [
+                {
+                    "description": "Reference field of POLY",
+                    "pos": {
+                        "x": 203.2,
+                        "y": 144.8562
+                    },
+                    "uuid": "48f30b84-34fa-4497-8a52-ec90fa3e1c21"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0191 mm)",
+            "items": [
+                {
+                    "description": "Value field of POLY (VAL**)",
+                    "pos": {
+                        "x": 203.17968,
+                        "y": 117.13464
+                    },
+                    "uuid": "6a26270e-f126-4085-be1b-7bb4f5d9a065"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0191 mm)",
+            "items": [
+                {
+                    "description": "Reference field of POLY",
+                    "pos": {
+                        "x": 203.17968,
+                        "y": 117.28704
+                    },
+                    "uuid": "8daee5c7-4733-4614-b07b-ec3350394c88"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0191 mm)",
+            "items": [
+                {
+                    "description": "Value field of POLY (VAL**)",
+                    "pos": {
+                        "x": 203.18984,
+                        "y": 121.46788
+                    },
+                    "uuid": "dfb3d6c2-0444-42d2-a324-f139509a350c"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0191 mm)",
+            "items": [
+                {
+                    "description": "Reference field of POLY",
+                    "pos": {
+                        "x": 203.18984,
+                        "y": 121.62028
+                    },
+                    "uuid": "d85eee4e-18af-4421-9a23-b8df18135ff8"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0191 mm)",
+            "items": [
+                {
+                    "description": "Value field of POLY (VAL**)",
+                    "pos": {
+                        "x": 203.2,
+                        "y": 119.3038
+                    },
+                    "uuid": "1d47d76e-5ce8-4e94-821e-fee3d674d9fc"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0191 mm)",
+            "items": [
+                {
+                    "description": "Reference field of POLY",
+                    "pos": {
+                        "x": 203.2,
+                        "y": 119.4562
+                    },
+                    "uuid": "eda30dee-fe4e-42b3-9403-b981f956b481"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0191 mm)",
+            "items": [
+                {
+                    "description": "Value field of POLY (VAL**)",
+                    "pos": {
+                        "x": 203.2,
+                        "y": 144.7038
+                    },
+                    "uuid": "e2401d1f-56ea-4ba1-8b35-ecb6acafda1f"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0191 mm)",
+            "items": [
+                {
+                    "description": "Reference field of POLY",
+                    "pos": {
+                        "x": 203.2,
+                        "y": 144.8562
+                    },
+                    "uuid": "48f30b84-34fa-4497-8a52-ec90fa3e1c21"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        }
+    ]
+}

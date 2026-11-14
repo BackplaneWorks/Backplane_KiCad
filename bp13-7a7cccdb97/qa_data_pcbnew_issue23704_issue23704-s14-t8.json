@@ -1,0 +1,157 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:01",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue23704.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "The current configuration does not include the footprint library 'Dennis'",
+            "items": [
+                {
+                    "description": "Footprint MB4",
+                    "pos": {
+                        "x": 75.25,
+                        "y": 75.0
+                    },
+                    "uuid": "d96d9a25-d3d0-475a-974d-ebb31f8d8028"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Dennis'",
+            "items": [
+                {
+                    "description": "Footprint MB5",
+                    "pos": {
+                        "x": 75.25,
+                        "y": 113.25
+                    },
+                    "uuid": "306b55c4-e390-49ef-ab16-687da90c9d1a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Dennis'",
+            "items": [
+                {
+                    "description": "Footprint MB9",
+                    "pos": {
+                        "x": 75.25,
+                        "y": 141.75
+                    },
+                    "uuid": "8fb4ac36-b574-4cf6-83b2-58282c25dde6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Dennis'",
+            "items": [
+                {
+                    "description": "Footprint MB3",
+                    "pos": {
+                        "x": 79.0,
+                        "y": 75.0
+                    },
+                    "uuid": "46c2f941-8846-41b7-a35a-e21061d9fc6f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Dennis'",
+            "items": [
+                {
+                    "description": "Footprint MB8",
+                    "pos": {
+                        "x": 79.0,
+                        "y": 113.25
+                    },
+                    "uuid": "3c214e90-bc99-4e77-81d9-a495550eb29a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Dennis'",
+            "items": [
+                {
+                    "description": "Footprint MB14",
+                    "pos": {
+                        "x": 79.0,
+                        "y": 141.75
+                    },
+                    "uuid": "b5754478-129b-4fa2-ad94-a97e6e08ae1c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Dennis'",
+            "items": [
+                {
+                    "description": "Footprint MB1",
+                    "pos": {
+                        "x": 159.0,
+                        "y": 100.0
+                    },
+                    "uuid": "c5c0dc70-3c86-4132-b9f5-2277368316f7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Dennis'",
+            "items": [
+                {
+                    "description": "Footprint MB2",
+                    "pos": {
+                        "x": 159.0,
+                        "y": 103.0
+                    },
+                    "uuid": "5cfe5dcb-86ca-49f7-b46b-5ff1393f1265"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

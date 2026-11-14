@@ -1,0 +1,119 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:15",
+    "ignored_checks": [
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "key": "via_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "key": "track_dangling"
+        },
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Solder mask aperture bridges items with different nets",
+            "key": "solder_mask_bridge"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "key": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "key": "silk_edge_clearance"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint not found in libraries",
+            "key": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint doesn't match copy in library",
+            "key": "lib_footprint_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue7325.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Hole clearance violation (pad clearance 1.4000 mm; actual 0.3341 mm)",
+            "items": [
+                {
+                    "description": "Track [/5V ] on F.Cu, length 5.6216 mm",
+                    "pos": {
+                        "x": 201.0029,
+                        "y": 58.1152
+                    },
+                    "uuid": "bf346bda-aa3c-4f1d-a1d0-060d8b17c6a9"
+                },
+                {
+                    "description": "NPTH pad of MH2",
+                    "pos": {
+                        "x": 206.0,
+                        "y": 59.946
+                    },
+                    "uuid": "7c1b7c19-9f8e-4f97-a7d6-17ff97d5621d"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (pad clearance 1.4000 mm; actual 0.4706 mm)",
+            "items": [
+                {
+                    "description": "Track [/5V ] on F.Cu, length 9.7079 mm",
+                    "pos": {
+                        "x": 204.978,
+                        "y": 62.0903
+                    },
+                    "uuid": "06b0f59d-5955-4cff-a86d-1a17e2ebba6e"
+                },
+                {
+                    "description": "NPTH pad of MH2",
+                    "pos": {
+                        "x": 206.0,
+                        "y": 59.946
+                    },
+                    "uuid": "7c1b7c19-9f8e-4f97-a7d6-17ff97d5621d"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        }
+    ]
+}

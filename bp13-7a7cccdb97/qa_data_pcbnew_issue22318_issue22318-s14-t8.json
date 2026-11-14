@@ -1,0 +1,1271 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:57",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue22318.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R302-Pad1)] of R302 on F.Cu",
+                    "pos": {
+                        "x": 60.245,
+                        "y": 107.07
+                    },
+                    "uuid": "7c53ca11-47dc-4218-accc-b8e8ba0a3604"
+                },
+                {
+                    "description": "Pad 1 [Net-(R302-Pad1)] of R303 on F.Cu",
+                    "pos": {
+                        "x": 60.245,
+                        "y": 110.38
+                    },
+                    "uuid": "7c07cd42-bea3-4d8c-9c29-2f61773941cf"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R304-Pad1)] of R304 on F.Cu",
+                    "pos": {
+                        "x": 60.245,
+                        "y": 113.69
+                    },
+                    "uuid": "223b982c-116c-446f-9df8-4d5168c83202"
+                },
+                {
+                    "description": "Pad 1 [Net-(R304-Pad1)] of R305 on F.Cu",
+                    "pos": {
+                        "x": 60.245,
+                        "y": 117.0
+                    },
+                    "uuid": "115208f6-aebb-4504-a94d-0ee6ab15f677"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R301-Pad2)] of R301 on F.Cu",
+                    "pos": {
+                        "x": 63.17,
+                        "y": 103.76
+                    },
+                    "uuid": "8c8ce4f6-622e-4e65-8105-f5f42c73b32f"
+                },
+                {
+                    "description": "Pad 2 [Net-(R301-Pad2)] of R302 on F.Cu",
+                    "pos": {
+                        "x": 63.17,
+                        "y": 107.07
+                    },
+                    "uuid": "ebcd90e1-2051-4ad2-944f-e7a1ed7bffc3"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R303-Pad2)] of R303 on F.Cu",
+                    "pos": {
+                        "x": 63.17,
+                        "y": 110.38
+                    },
+                    "uuid": "81c313ca-02bd-4c76-9ff3-8af11b7cd395"
+                },
+                {
+                    "description": "Pad 2 [Net-(R303-Pad2)] of R304 on F.Cu",
+                    "pos": {
+                        "x": 63.17,
+                        "y": 113.69
+                    },
+                    "uuid": "90473dab-3b48-4edf-8079-fba0870f3e02"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R305 on F.Cu",
+                    "pos": {
+                        "x": 63.17,
+                        "y": 117.0
+                    },
+                    "uuid": "bdfd4d62-ff4f-4f2c-9877-4868f6bdc0c5"
+                },
+                {
+                    "description": "Pad 2 [GND] of R405 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 117.0
+                    },
+                    "uuid": "0d9a5591-c548-43f6-9061-b3f10f6b9d00"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [+24V] of R401 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 103.76
+                    },
+                    "uuid": "edaf502d-3e9e-4372-b4a8-5f796f6659ff"
+                },
+                {
+                    "description": "Pad 1 [+24V] of R301 on F.Cu",
+                    "pos": {
+                        "x": 60.245,
+                        "y": 103.76
+                    },
+                    "uuid": "749dee1d-490c-40bc-8dad-49f5d6f1ee94"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R402-Pad1)] of R402 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 107.07
+                    },
+                    "uuid": "f38f2df5-21d8-40af-9af2-e79417e8513d"
+                },
+                {
+                    "description": "Pad 1 [Net-(R402-Pad1)] of R403 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 110.38
+                    },
+                    "uuid": "5dec2ba1-ffee-4dd8-8fcb-e37b1239c76c"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R404-Pad1)] of R404 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 113.69
+                    },
+                    "uuid": "893f133a-e97e-4343-b8c6-bbb676bae5e7"
+                },
+                {
+                    "description": "Pad 1 [Net-(R404-Pad1)] of R405 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 117.0
+                    },
+                    "uuid": "8f29ef69-93f7-4124-a657-bc041e88294d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R401-Pad2)] of R401 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 103.76
+                    },
+                    "uuid": "75c865bc-782f-4f97-abca-93f64a095d39"
+                },
+                {
+                    "description": "Pad 2 [Net-(R401-Pad2)] of R402 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 107.07
+                    },
+                    "uuid": "2df252be-daf5-4179-9541-ac7ea5f28aa5"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R403-Pad2)] of R403 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 110.38
+                    },
+                    "uuid": "1bf90615-138d-41ca-a743-37e6410f5e33"
+                },
+                {
+                    "description": "Pad 2 [Net-(R403-Pad2)] of R404 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 113.69
+                    },
+                    "uuid": "9b37fab6-2e6f-45f2-9104-a12f2c2ea0ae"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R405 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 117.0
+                    },
+                    "uuid": "0d9a5591-c548-43f6-9061-b3f10f6b9d00"
+                },
+                {
+                    "description": "Pad 2 [GND] of R505 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 117.0
+                    },
+                    "uuid": "cfc98557-fb3f-4c04-853e-756657056566"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [+24V] of R501 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 103.76
+                    },
+                    "uuid": "6b12feec-7e53-43db-b667-3e8d98b8e5e2"
+                },
+                {
+                    "description": "Pad 1 [+24V] of R401 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 103.76
+                    },
+                    "uuid": "edaf502d-3e9e-4372-b4a8-5f796f6659ff"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R502-Pad1)] of R502 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 107.07
+                    },
+                    "uuid": "ad9f57ba-5c38-47ca-beee-7cad835a566d"
+                },
+                {
+                    "description": "Pad 1 [Net-(R502-Pad1)] of R503 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 110.38
+                    },
+                    "uuid": "ce133404-b559-42ad-879c-3420f95bef21"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R504-Pad1)] of R504 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 113.69
+                    },
+                    "uuid": "d79263b1-84f8-4997-8097-398d0c7815b2"
+                },
+                {
+                    "description": "Pad 1 [Net-(R504-Pad1)] of R505 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 117.0
+                    },
+                    "uuid": "a8b789e7-4b74-4e27-92a8-126b00321dda"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R501-Pad2)] of R501 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 103.76
+                    },
+                    "uuid": "ab0afb33-d938-4837-adec-0a1d474f59fa"
+                },
+                {
+                    "description": "Pad 2 [Net-(R501-Pad2)] of R502 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 107.07
+                    },
+                    "uuid": "d1d50ac7-7702-4edc-b2f0-3ab26256f36c"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R503-Pad2)] of R503 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 110.38
+                    },
+                    "uuid": "5cb829a6-d93f-413b-b871-ff1130349299"
+                },
+                {
+                    "description": "Pad 2 [Net-(R503-Pad2)] of R504 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 113.69
+                    },
+                    "uuid": "7fd25c00-e862-494e-b233-41c5cb4b1e3d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R505 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 117.0
+                    },
+                    "uuid": "cfc98557-fb3f-4c04-853e-756657056566"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 99.0,
+                        "y": 59.0
+                    },
+                    "uuid": "bd214f6f-6846-4593-be6e-f3ac87b502ec"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [+24V] of R201 on F.Cu",
+                    "pos": {
+                        "x": 104.5375,
+                        "y": 104.0
+                    },
+                    "uuid": "27074dd4-a831-4a18-b855-43c2aece6d35"
+                },
+                {
+                    "description": "Pad 1 [+24V] of R501 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 103.76
+                    },
+                    "uuid": "6b12feec-7e53-43db-b667-3e8d98b8e5e2"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [+24V] of R301 on F.Cu",
+                    "pos": {
+                        "x": 60.245,
+                        "y": 103.76
+                    },
+                    "uuid": "749dee1d-490c-40bc-8dad-49f5d6f1ee94"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R302-Pad1)] of R302 on F.Cu",
+                    "pos": {
+                        "x": 60.245,
+                        "y": 107.07
+                    },
+                    "uuid": "7c53ca11-47dc-4218-accc-b8e8ba0a3604"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R302-Pad1)] of R303 on F.Cu",
+                    "pos": {
+                        "x": 60.245,
+                        "y": 110.38
+                    },
+                    "uuid": "7c07cd42-bea3-4d8c-9c29-2f61773941cf"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R304-Pad1)] of R304 on F.Cu",
+                    "pos": {
+                        "x": 60.245,
+                        "y": 113.69
+                    },
+                    "uuid": "223b982c-116c-446f-9df8-4d5168c83202"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R304-Pad1)] of R305 on F.Cu",
+                    "pos": {
+                        "x": 60.245,
+                        "y": 117.0
+                    },
+                    "uuid": "115208f6-aebb-4504-a94d-0ee6ab15f677"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R301-Pad2)] of R301 on F.Cu",
+                    "pos": {
+                        "x": 63.17,
+                        "y": 103.76
+                    },
+                    "uuid": "8c8ce4f6-622e-4e65-8105-f5f42c73b32f"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R301-Pad2)] of R302 on F.Cu",
+                    "pos": {
+                        "x": 63.17,
+                        "y": 107.07
+                    },
+                    "uuid": "ebcd90e1-2051-4ad2-944f-e7a1ed7bffc3"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R303-Pad2)] of R303 on F.Cu",
+                    "pos": {
+                        "x": 63.17,
+                        "y": 110.38
+                    },
+                    "uuid": "81c313ca-02bd-4c76-9ff3-8af11b7cd395"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R303-Pad2)] of R304 on F.Cu",
+                    "pos": {
+                        "x": 63.17,
+                        "y": 113.69
+                    },
+                    "uuid": "90473dab-3b48-4edf-8079-fba0870f3e02"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R305 on F.Cu",
+                    "pos": {
+                        "x": 63.17,
+                        "y": 117.0
+                    },
+                    "uuid": "bdfd4d62-ff4f-4f2c-9877-4868f6bdc0c5"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [+24V] of R401 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 103.76
+                    },
+                    "uuid": "edaf502d-3e9e-4372-b4a8-5f796f6659ff"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R402-Pad1)] of R402 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 107.07
+                    },
+                    "uuid": "f38f2df5-21d8-40af-9af2-e79417e8513d"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R402-Pad1)] of R403 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 110.38
+                    },
+                    "uuid": "5dec2ba1-ffee-4dd8-8fcb-e37b1239c76c"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R404-Pad1)] of R404 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 113.69
+                    },
+                    "uuid": "893f133a-e97e-4343-b8c6-bbb676bae5e7"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R404-Pad1)] of R405 on F.Cu",
+                    "pos": {
+                        "x": 67.855,
+                        "y": 117.0
+                    },
+                    "uuid": "8f29ef69-93f7-4124-a657-bc041e88294d"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R401-Pad2)] of R401 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 103.76
+                    },
+                    "uuid": "75c865bc-782f-4f97-abca-93f64a095d39"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R401-Pad2)] of R402 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 107.07
+                    },
+                    "uuid": "2df252be-daf5-4179-9541-ac7ea5f28aa5"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R403-Pad2)] of R403 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 110.38
+                    },
+                    "uuid": "1bf90615-138d-41ca-a743-37e6410f5e33"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R403-Pad2)] of R404 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 113.69
+                    },
+                    "uuid": "9b37fab6-2e6f-45f2-9104-a12f2c2ea0ae"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R405 on F.Cu",
+                    "pos": {
+                        "x": 70.78,
+                        "y": 117.0
+                    },
+                    "uuid": "0d9a5591-c548-43f6-9061-b3f10f6b9d00"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [+24V] of R501 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 103.76
+                    },
+                    "uuid": "6b12feec-7e53-43db-b667-3e8d98b8e5e2"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R502-Pad1)] of R502 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 107.07
+                    },
+                    "uuid": "ad9f57ba-5c38-47ca-beee-7cad835a566d"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R502-Pad1)] of R503 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 110.38
+                    },
+                    "uuid": "ce133404-b559-42ad-879c-3420f95bef21"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R504-Pad1)] of R504 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 113.69
+                    },
+                    "uuid": "d79263b1-84f8-4997-8097-398d0c7815b2"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(R504-Pad1)] of R505 on F.Cu",
+                    "pos": {
+                        "x": 75.465,
+                        "y": 117.0
+                    },
+                    "uuid": "a8b789e7-4b74-4e27-92a8-126b00321dda"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R501-Pad2)] of R501 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 103.76
+                    },
+                    "uuid": "ab0afb33-d938-4837-adec-0a1d474f59fa"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R501-Pad2)] of R502 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 107.07
+                    },
+                    "uuid": "d1d50ac7-7702-4edc-b2f0-3ab26256f36c"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R503-Pad2)] of R503 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 110.38
+                    },
+                    "uuid": "5cb829a6-d93f-413b-b871-ff1130349299"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(R503-Pad2)] of R504 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 113.69
+                    },
+                    "uuid": "7fd25c00-e862-494e-b233-41c5cb4b1e3d"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R505 on F.Cu",
+                    "pos": {
+                        "x": 78.39,
+                        "y": 117.0
+                    },
+                    "uuid": "cfc98557-fb3f-4c04-853e-756657056566"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R301",
+                    "pos": {
+                        "x": 61.7075,
+                        "y": 103.76
+                    },
+                    "uuid": "a4662b0f-fb6f-4565-9bfc-73054544c950"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R302",
+                    "pos": {
+                        "x": 61.7075,
+                        "y": 107.07
+                    },
+                    "uuid": "2bcfd75a-d62f-4e5d-a399-8e4d84df18c8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R303",
+                    "pos": {
+                        "x": 61.7075,
+                        "y": 110.38
+                    },
+                    "uuid": "77e8acb4-448e-4fb2-85fe-b77808fb9384"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R304",
+                    "pos": {
+                        "x": 61.7075,
+                        "y": 113.69
+                    },
+                    "uuid": "ef648374-1f42-42d1-941a-13e0cd9267f1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R305",
+                    "pos": {
+                        "x": 61.7075,
+                        "y": 117.0
+                    },
+                    "uuid": "93ed2318-a32e-4d30-bc51-cccfa0d8c128"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R401",
+                    "pos": {
+                        "x": 69.3175,
+                        "y": 103.76
+                    },
+                    "uuid": "e6bde1df-9197-402b-a8dc-2e03ceea7617"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R402",
+                    "pos": {
+                        "x": 69.3175,
+                        "y": 107.07
+                    },
+                    "uuid": "d3986ed7-e7a3-465b-8588-795b614a9178"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R403",
+                    "pos": {
+                        "x": 69.3175,
+                        "y": 110.38
+                    },
+                    "uuid": "a65143cd-41f0-476c-9aa8-c792404c8280"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R404",
+                    "pos": {
+                        "x": 69.3175,
+                        "y": 113.69
+                    },
+                    "uuid": "4ec20fd1-771d-4594-80de-8964f542a575"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R405",
+                    "pos": {
+                        "x": 69.3175,
+                        "y": 117.0
+                    },
+                    "uuid": "036df80a-0c84-4e41-b30b-411d9aca8d6d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R501",
+                    "pos": {
+                        "x": 76.9275,
+                        "y": 103.76
+                    },
+                    "uuid": "2f80f4b1-83d4-428b-84be-5587cf225e62"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R502",
+                    "pos": {
+                        "x": 76.9275,
+                        "y": 107.07
+                    },
+                    "uuid": "be7531d0-df71-4c85-9479-380c9be6b940"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R503",
+                    "pos": {
+                        "x": 76.9275,
+                        "y": 110.38
+                    },
+                    "uuid": "61f319b2-40be-4a2d-b5cf-a20fc27e3734"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R504",
+                    "pos": {
+                        "x": 76.9275,
+                        "y": 113.69
+                    },
+                    "uuid": "93591a56-ae82-44ea-821c-0b4248486788"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R505",
+                    "pos": {
+                        "x": 76.9275,
+                        "y": 117.0
+                    },
+                    "uuid": "b7d63b12-f55e-479e-b15f-2ecdb78c7700"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R201",
+                    "pos": {
+                        "x": 106.0,
+                        "y": 104.0
+                    },
+                    "uuid": "871c7a01-533b-4be7-9aa2-9afa53f418f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R202",
+                    "pos": {
+                        "x": 106.0,
+                        "y": 107.0
+                    },
+                    "uuid": "5bd7c450-2c9d-4097-8469-9d8b312d51db"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R203",
+                    "pos": {
+                        "x": 106.0,
+                        "y": 110.0
+                    },
+                    "uuid": "4b3046e5-928d-4887-9572-ba633803fe3d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R204",
+                    "pos": {
+                        "x": 106.0,
+                        "y": 113.0
+                    },
+                    "uuid": "8f3cac43-c843-4e56-9253-a08c222f645b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R205",
+                    "pos": {
+                        "x": 106.0,
+                        "y": 116.0
+                    },
+                    "uuid": "7d5bbb19-117d-4f88-a806-148fba939efb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of L102",
+                    "pos": {
+                        "x": 116.7,
+                        "y": 72.0
+                    },
+                    "uuid": "759d014b-1f75-4fd6-a41c-4edecc9806b2"
+                },
+                {
+                    "description": "Segment of L102 on F.Silkscreen",
+                    "pos": {
+                        "x": 116.39,
+                        "y": 66.745
+                    },
+                    "uuid": "996052b7-aa72-41b2-9a66-b278b8529523"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of L103",
+                    "pos": {
+                        "x": 117.0,
+                        "y": 80.3
+                    },
+                    "uuid": "38702e08-1014-4c52-a63e-1e31e836f341"
+                },
+                {
+                    "description": "Segment of L103 on F.Silkscreen",
+                    "pos": {
+                        "x": 111.745,
+                        "y": 80.61
+                    },
+                    "uuid": "d74cb0bf-5049-4829-90e1-9ca5a2b0774d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of L101",
+                    "pos": {
+                        "x": 125.0,
+                        "y": 64.3
+                    },
+                    "uuid": "5f2071f6-025f-485a-9bd0-52ea6f4ea41d"
+                },
+                {
+                    "description": "Segment of L101 on F.Silkscreen",
+                    "pos": {
+                        "x": 119.745,
+                        "y": 64.61
+                    },
+                    "uuid": "8b65608a-17f1-4512-88f2-e0f03d2d80e7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

@@ -1,0 +1,826 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:51",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue12964.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                },
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                },
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                },
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                },
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                },
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                },
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                },
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.1000 mm; actual 0.0999 mm)",
+            "items": [
+                {
+                    "description": "Zone [+3.3V] on Top_layer, priority 2",
+                    "pos": {
+                        "x": 108.331649,
+                        "y": 100.75
+                    },
+                    "uuid": "0b0bec76-9092-4685-b190-3eb92712710f"
+                },
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [+3.3V] on Top_layer, priority 2",
+                    "pos": {
+                        "x": 108.331649,
+                        "y": 100.75
+                    },
+                    "uuid": "0b0bec76-9092-4685-b190-3eb92712710f"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on Top_layer, priority 0",
+                    "pos": {
+                        "x": 100.55,
+                        "y": 107.9
+                    },
+                    "uuid": "f4bf9aa6-e5df-4b19-8ade-cc016bc7b8f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 109.9,
+                        "y": 94.05
+                    },
+                    "uuid": "f5cea4eb-49d9-40f8-ba50-604e83453cf7"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 110.9,
+                        "y": 94.1
+                    },
+                    "uuid": "ad3f3709-e32d-4b5c-9d8f-2fba71888a40"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 111.9,
+                        "y": 94.15
+                    },
+                    "uuid": "464c85dd-3042-402f-8087-ac62b1e54ec4"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 112.9,
+                        "y": 94.2
+                    },
+                    "uuid": "9d5052c7-4f4b-46ca-a724-1bea96df1cae"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 113.9,
+                        "y": 94.25
+                    },
+                    "uuid": "4fdb7e38-fd40-49b9-95a2-17181df868de"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 114.9,
+                        "y": 94.3
+                    },
+                    "uuid": "4bfb118e-b4e0-400e-86fa-a3b18bee3ba1"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 115.9,
+                        "y": 94.35
+                    },
+                    "uuid": "447e3d0e-7f77-4cb6-95c8-ce291777d981"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 116.9,
+                        "y": 94.4
+                    },
+                    "uuid": "2879dcb0-3177-4ad8-8a40-86c6f758754d"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 117.9,
+                        "y": 94.45
+                    },
+                    "uuid": "7f804eab-6dde-4240-874c-90e344899708"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 118.9,
+                        "y": 94.5
+                    },
+                    "uuid": "1d8f6a0b-4fef-41c2-b095-9599ec3007e2"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 119.9,
+                        "y": 94.55
+                    },
+                    "uuid": "4dfd7a9a-dbfa-47d3-9769-025ca4054f68"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 120.9,
+                        "y": 94.6
+                    },
+                    "uuid": "1519798a-5e6d-4616-9ed0-6e793914e9e7"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 121.9,
+                        "y": 94.65
+                    },
+                    "uuid": "dc96d1a9-032b-44e0-a095-73822e42ba29"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 122.9,
+                        "y": 94.7
+                    },
+                    "uuid": "4dd4a1ed-15d5-418f-8ce4-3c839a6a9977"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 123.9,
+                        "y": 94.75
+                    },
+                    "uuid": "df4f61ef-62a1-44ea-8832-3a9f58ae4faa"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 124.9,
+                        "y": 94.8
+                    },
+                    "uuid": "9c05a736-1421-4756-91ab-a9190be99d15"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 125.9,
+                        "y": 94.85
+                    },
+                    "uuid": "b571f4f6-10db-4a58-93e5-5d5951f228aa"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 126.9,
+                        "y": 94.9
+                    },
+                    "uuid": "de16d41a-723c-4602-a403-5ff6f9a38e0e"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 127.9,
+                        "y": 94.95
+                    },
+                    "uuid": "1e6064ea-10cd-44a0-8f09-fc6095fb6d9e"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 128.9,
+                        "y": 95.0
+                    },
+                    "uuid": "efe0e841-3a24-47b3-8c4d-a642ec687279"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 129.9,
+                        "y": 95.05
+                    },
+                    "uuid": "aec3396a-90b5-455d-877a-7761a368820a"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 130.9,
+                        "y": 95.1
+                    },
+                    "uuid": "593a7ab3-f370-4e08-85b0-3ccbbc470652"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 131.9,
+                        "y": 95.15
+                    },
+                    "uuid": "30bc243a-f6bf-45ea-b8c4-b0e23c53bf2e"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 132.9,
+                        "y": 95.2
+                    },
+                    "uuid": "6582d9cc-ec96-4482-bf90-fa1cb71461bd"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 133.9,
+                        "y": 95.25
+                    },
+                    "uuid": "f39e907e-41b5-417f-9f5a-705140f8a99f"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 134.9,
+                        "y": 95.3
+                    },
+                    "uuid": "7bf6b7c6-33c1-443e-9062-9aa69e56d00c"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 135.9,
+                        "y": 95.35
+                    },
+                    "uuid": "fce03433-b726-4648-9c89-a2ef5afd99ad"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 136.9,
+                        "y": 95.4
+                    },
+                    "uuid": "4fefcc8d-610e-4ef2-b596-5728416f040d"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 137.9,
+                        "y": 95.45
+                    },
+                    "uuid": "3a041c41-bc26-4ff9-b43b-86660a26215b"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on Top_layer - Bottom_layer",
+                    "pos": {
+                        "x": 138.9,
+                        "y": 95.5
+                    },
+                    "uuid": "d558d8d2-d273-4d33-9b46-646642d7b824"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        }
+    ]
+}

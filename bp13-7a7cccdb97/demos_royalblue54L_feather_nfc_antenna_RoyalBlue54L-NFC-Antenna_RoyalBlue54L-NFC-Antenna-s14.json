@@ -1,0 +1,166 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:36",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "RoyalBlue54L-NFC-Antenna.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment of J1 on Edge.Cuts",
+                    "pos": {
+                        "x": 150.14971,
+                        "y": 66.560695
+                    },
+                    "uuid": "4ddee9aa-a15e-488d-af12-af36b2b36a44"
+                },
+                {
+                    "description": "Pad 1 [/ANT] of J1 on F.Cu",
+                    "pos": {
+                        "x": 150.94971,
+                        "y": 67.310695
+                    },
+                    "uuid": "4f98f886-e4af-48a9-a39c-8d99ba8e4051"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment of J1 on Edge.Cuts",
+                    "pos": {
+                        "x": 150.14971,
+                        "y": 66.560695
+                    },
+                    "uuid": "4ddee9aa-a15e-488d-af12-af36b2b36a44"
+                },
+                {
+                    "description": "Pad 2 [/ANT] of J1 on F.Cu",
+                    "pos": {
+                        "x": 151.94971,
+                        "y": 67.310695
+                    },
+                    "uuid": "05e3068b-afff-4115-9afe-e925b541d76b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [/ANT] on F.Cu, length 0.0057 mm",
+                    "pos": {
+                        "x": 152.9499,
+                        "y": 101.6
+                    },
+                    "uuid": "3e3dac54-3838-44c1-8491-21c627a627c0"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [/ANT] on F.Cu, length 0.0057 mm",
+                    "pos": {
+                        "x": 152.9499,
+                        "y": 102.6
+                    },
+                    "uuid": "2ae8074f-b195-4d0f-a729-264e92fed580"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [/ANT] on F.Cu, length 0.0057 mm",
+                    "pos": {
+                        "x": 152.9499,
+                        "y": 103.6
+                    },
+                    "uuid": "d633e1a2-9da6-4715-974d-703c213efdb4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [/ANT] on F.Cu, length 0.0088 mm",
+                    "pos": {
+                        "x": 152.8925,
+                        "y": 100.7434
+                    },
+                    "uuid": "16688252-cb48-4345-bbc2-f03b66a31f91"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The footprint library 'LordsBoards-Symbol' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint REF**",
+                    "pos": {
+                        "x": 153.1125,
+                        "y": 118.976103
+                    },
+                    "uuid": "e97ea8ae-cf5a-42fa-bd24-3db393218501"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

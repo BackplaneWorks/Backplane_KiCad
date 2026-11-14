@@ -1,0 +1,244 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:53",
+    "ignored_checks": [
+        {
+            "description": "Board edge clearance violation",
+            "key": "copper_edge_clearance"
+        },
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "key": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue15280.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [/Motor1/VMOT] of C101",
+                    "pos": {
+                        "x": 117.25,
+                        "y": 93.5
+                    },
+                    "uuid": "f3cafbd8-836a-4856-99fa-4a3cb504c0fa"
+                },
+                {
+                    "description": "PTH pad 1 [/Motor1/VMOT] of C708",
+                    "pos": {
+                        "x": 108.5,
+                        "y": 93.5
+                    },
+                    "uuid": "7798ea96-00d5-47ec-858a-8a57c55760d5"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [/Motor1/VMOT] of C101",
+                    "pos": {
+                        "x": 117.25,
+                        "y": 93.5
+                    },
+                    "uuid": "f3cafbd8-836a-4856-99fa-4a3cb504c0fa"
+                },
+                {
+                    "description": "PTH pad 1 [/Motor1/VMOT] of C311",
+                    "pos": {
+                        "x": 178.0,
+                        "y": 95.25
+                    },
+                    "uuid": "f9f1a9e0-7e23-41bb-9e3d-52ab67e5ccc9"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [/Motor1/VMOT] of C311",
+                    "pos": {
+                        "x": 178.0,
+                        "y": 95.25
+                    },
+                    "uuid": "f9f1a9e0-7e23-41bb-9e3d-52ab67e5ccc9"
+                },
+                {
+                    "description": "PTH pad 1 [/Motor1/VMOT] of C102",
+                    "pos": {
+                        "x": 238.75,
+                        "y": 93.5
+                    },
+                    "uuid": "2111455b-3a18-4521-946f-271fd102c66d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [/Motor1/VMOT] of C511",
+                    "pos": {
+                        "x": 247.75,
+                        "y": 93.5
+                    },
+                    "uuid": "6c5f2b72-188e-4bda-bf7e-d3c9f5aa832e"
+                },
+                {
+                    "description": "PTH pad 1 [/Motor1/VMOT] of C102",
+                    "pos": {
+                        "x": 238.75,
+                        "y": 93.5
+                    },
+                    "uuid": "2111455b-3a18-4521-946f-271fd102c66d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Rectangle on Edge.Cuts",
+                    "pos": {
+                        "x": 104.0,
+                        "y": 67.0
+                    },
+                    "uuid": "dbe4d9ac-aafd-44fe-b713-44705ca68a17"
+                },
+                {
+                    "description": "Circle of C511 on B.Silkscreen",
+                    "pos": {
+                        "x": 247.75,
+                        "y": 95.25
+                    },
+                    "uuid": "7894f372-f4e6-42d9-b5de-8e0ee6845897"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0_EPAK'",
+            "items": [
+                {
+                    "description": "Footprint C708",
+                    "pos": {
+                        "x": 108.5,
+                        "y": 95.25
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b015df7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0_EPAK'",
+            "items": [
+                {
+                    "description": "Footprint C101",
+                    "pos": {
+                        "x": 117.25,
+                        "y": 95.25
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b015d8b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0_EPAK'",
+            "items": [
+                {
+                    "description": "Footprint C311",
+                    "pos": {
+                        "x": 176.25,
+                        "y": 95.25
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b015e48"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0_EPAK'",
+            "items": [
+                {
+                    "description": "Footprint C102",
+                    "pos": {
+                        "x": 238.75,
+                        "y": 95.25
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b015da6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0_EPAK'",
+            "items": [
+                {
+                    "description": "Footprint C511",
+                    "pos": {
+                        "x": 247.75,
+                        "y": 95.25
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b015e7e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

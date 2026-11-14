@@ -1,0 +1,4718 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:37",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Text thickness out of range",
+            "key": "text_thickness"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "RoyalBlue54L-Feather.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Annular width (board setup constraints min annular width 0.0500 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 1 [+BATT] of J2",
+                    "pos": {
+                        "x": 143.23,
+                        "y": 94.82
+                    },
+                    "uuid": "0748ed42-5622-4acc-8f34-ac8f04299fcf"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.0500 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 1 [+BATT] of J2",
+                    "pos": {
+                        "x": 143.23,
+                        "y": 94.82
+                    },
+                    "uuid": "f0badf1d-8035-4bba-a5af-6e0bcfa1703a"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "Pad A5 [/Debugger/USB.CC1] of J3 on F.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 103.73
+                    },
+                    "uuid": "095a7644-e57b-44a5-97d1-e02b75614eb2"
+                },
+                {
+                    "description": "Pad B7 [/Debugger/D-] of J3 on F.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 104.23
+                    },
+                    "uuid": "0b849fe7-825a-4dc0-9d26-bae6ef77059c"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "Pad B7 [/Debugger/D-] of J3 on F.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 104.23
+                    },
+                    "uuid": "0b849fe7-825a-4dc0-9d26-bae6ef77059c"
+                },
+                {
+                    "description": "Pad A6 [/Debugger/D+] of J3 on F.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 104.73
+                    },
+                    "uuid": "419e93b6-4de0-4f86-8ffa-53c7e1873c28"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "Pad A6 [/Debugger/D+] of J3 on F.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 104.73
+                    },
+                    "uuid": "419e93b6-4de0-4f86-8ffa-53c7e1873c28"
+                },
+                {
+                    "description": "Pad A7 [/Debugger/D-] of J3 on F.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 105.23
+                    },
+                    "uuid": "99e8f8c0-c890-4592-a6cf-a9ac9d286ff7"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "Pad B6 [/Debugger/D+] of J3 on F.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 105.73
+                    },
+                    "uuid": "640dd2ef-4893-492d-800d-5449a3d79a8b"
+                },
+                {
+                    "description": "Pad A7 [/Debugger/D-] of J3 on F.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 105.23
+                    },
+                    "uuid": "99e8f8c0-c890-4592-a6cf-a9ac9d286ff7"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "Pad B6 [/Debugger/D+] of J3 on F.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 105.73
+                    },
+                    "uuid": "640dd2ef-4893-492d-800d-5449a3d79a8b"
+                },
+                {
+                    "description": "Pad A8 [unconnected-(J3-SBU1-PadA8)] of J3 on F.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 106.23
+                    },
+                    "uuid": "ed11d40c-a72d-4a35-98bf-1694da27a758"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.1975 mm)",
+            "items": [
+                {
+                    "description": "Pad 2 [/Debugger/D-] of U3 on F.Cu",
+                    "pos": {
+                        "x": 127.8975,
+                        "y": 104.9725
+                    },
+                    "uuid": "a48d7430-851c-46bc-8262-da2e4e5607cc"
+                },
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.46,
+                        "y": 105.48
+                    },
+                    "uuid": "d542105e-c86d-4eee-9ba3-11ea0efff774"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.1914 mm)",
+            "items": [
+                {
+                    "description": "Track [GND] on F.Cu, length 0.4425 mm",
+                    "pos": {
+                        "x": 127.91,
+                        "y": 105.4725
+                    },
+                    "uuid": "9b874f4a-160e-4ee4-86fc-0ac1c6fd260a"
+                },
+                {
+                    "description": "Pad 2 [/Debugger/D-] of U3 on F.Cu",
+                    "pos": {
+                        "x": 127.8975,
+                        "y": 104.9725
+                    },
+                    "uuid": "a48d7430-851c-46bc-8262-da2e4e5607cc"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Pad 1 [unconnected-(U3-IO1-Pad1)] of U3 on F.Cu",
+                    "pos": {
+                        "x": 127.8975,
+                        "y": 104.4725
+                    },
+                    "uuid": "10ba4184-4282-4a91-841c-7f93e17e9398"
+                },
+                {
+                    "description": "Pad 2 [/Debugger/D-] of U3 on F.Cu",
+                    "pos": {
+                        "x": 127.8975,
+                        "y": 104.9725
+                    },
+                    "uuid": "a48d7430-851c-46bc-8262-da2e4e5607cc"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Pad 3 [GND] of U3 on F.Cu",
+                    "pos": {
+                        "x": 127.8975,
+                        "y": 105.4725
+                    },
+                    "uuid": "926dc21f-c5ad-4f2a-b497-a9df55c39ea4"
+                },
+                {
+                    "description": "Pad 2 [/Debugger/D-] of U3 on F.Cu",
+                    "pos": {
+                        "x": 127.8975,
+                        "y": 104.9725
+                    },
+                    "uuid": "a48d7430-851c-46bc-8262-da2e4e5607cc"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Pad 13 [/Debugger/D+] of U5 on F.Cu",
+                    "pos": {
+                        "x": 137.88,
+                        "y": 105.6925
+                    },
+                    "uuid": "4a47c0be-d335-469a-bad9-7a728c3a4de0"
+                },
+                {
+                    "description": "Pad 14 [unconnected-(U5-P0.15-Pad14)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 137.48,
+                        "y": 105.6925
+                    },
+                    "uuid": "9a23b59f-9e10-4eff-8f3a-1e576975e003"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Pad 13 [/Debugger/D+] of U5 on F.Cu",
+                    "pos": {
+                        "x": 137.88,
+                        "y": 105.6925
+                    },
+                    "uuid": "4a47c0be-d335-469a-bad9-7a728c3a4de0"
+                },
+                {
+                    "description": "Pad 12 [/Debugger/D-] of U5 on F.Cu",
+                    "pos": {
+                        "x": 138.28,
+                        "y": 105.6925
+                    },
+                    "uuid": "d761f0d0-7203-4bce-9c37-da4991ba1fd6"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.1500 mm)",
+            "items": [
+                {
+                    "description": "Pad 12 [/Debugger/D-] of U5 on F.Cu",
+                    "pos": {
+                        "x": 138.28,
+                        "y": 105.6925
+                    },
+                    "uuid": "d761f0d0-7203-4bce-9c37-da4991ba1fd6"
+                },
+                {
+                    "description": "Pad 11 [Net-(U5-DECUSB)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 138.68,
+                        "y": 105.6925
+                    },
+                    "uuid": "f29753d4-da02-4dbd-b50a-cbeb91bb24c2"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'USB_DIFF' clearance 0.2032 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(U5-DECUSB)] on F.Cu, length 0.5325 mm",
+                    "pos": {
+                        "x": 138.68,
+                        "y": 105.16
+                    },
+                    "uuid": "328ed72a-4f2b-4b45-8838-ee128183cb5e"
+                },
+                {
+                    "description": "Pad 12 [/Debugger/D-] of U5 on F.Cu",
+                    "pos": {
+                        "x": 138.28,
+                        "y": 105.6925
+                    },
+                    "uuid": "d761f0d0-7203-4bce-9c37-da4991ba1fd6"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint TP6",
+                    "pos": {
+                        "x": 122.3,
+                        "y": 108.58
+                    },
+                    "uuid": "5ef5f36c-4f35-4b03-9b84-d0164ea02514"
+                },
+                {
+                    "description": "Footprint TP7",
+                    "pos": {
+                        "x": 122.4,
+                        "y": 106.18
+                    },
+                    "uuid": "bc0294e4-4c85-45ea-b9dd-e679426afd75"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint TP8",
+                    "pos": {
+                        "x": 122.4,
+                        "y": 103.78
+                    },
+                    "uuid": "654b1424-abf6-4d94-b59c-2531e79c9db9"
+                },
+                {
+                    "description": "Footprint TP7",
+                    "pos": {
+                        "x": 122.4,
+                        "y": 106.18
+                    },
+                    "uuid": "bc0294e4-4c85-45ea-b9dd-e679426afd75"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint TP8",
+                    "pos": {
+                        "x": 122.4,
+                        "y": 103.78
+                    },
+                    "uuid": "654b1424-abf6-4d94-b59c-2531e79c9db9"
+                },
+                {
+                    "description": "Footprint TP5",
+                    "pos": {
+                        "x": 122.3,
+                        "y": 101.38
+                    },
+                    "uuid": "abbdf647-b954-44d3-b88d-ddfdbb6e9529"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint H1",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 96.09
+                    },
+                    "uuid": "a03d9496-1ee4-485a-ad59-a5ef1be43a46"
+                },
+                {
+                    "description": "Footprint J5",
+                    "pos": {
+                        "x": 127.99,
+                        "y": 96.633
+                    },
+                    "uuid": "cfa37584-bba0-4659-8a04-91f56bdcee0b"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J3",
+                    "pos": {
+                        "x": 121.36,
+                        "y": 104.98
+                    },
+                    "uuid": "4f7c2d6e-214e-4baa-a3f3-3f0c51276db6"
+                },
+                {
+                    "description": "Footprint J5",
+                    "pos": {
+                        "x": 127.99,
+                        "y": 96.633
+                    },
+                    "uuid": "cfa37584-bba0-4659-8a04-91f56bdcee0b"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint TP12",
+                    "pos": {
+                        "x": 136.7,
+                        "y": 102.38
+                    },
+                    "uuid": "121e5a94-e3b2-4b85-9201-6241828629a8"
+                },
+                {
+                    "description": "Footprint TP10",
+                    "pos": {
+                        "x": 136.7,
+                        "y": 99.98
+                    },
+                    "uuid": "abd1250e-c465-4cb9-9a40-8a2155fe0d03"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint TP12",
+                    "pos": {
+                        "x": 136.7,
+                        "y": 102.38
+                    },
+                    "uuid": "121e5a94-e3b2-4b85-9201-6241828629a8"
+                },
+                {
+                    "description": "Footprint TP11",
+                    "pos": {
+                        "x": 139.1,
+                        "y": 102.38
+                    },
+                    "uuid": "a9b02bb2-46c4-4ba5-a746-484e5b943abe"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint TP9",
+                    "pos": {
+                        "x": 139.1,
+                        "y": 99.98
+                    },
+                    "uuid": "145fbad6-e5ce-4aca-8364-9d4a730b7207"
+                },
+                {
+                    "description": "Footprint TP10",
+                    "pos": {
+                        "x": 136.7,
+                        "y": 99.98
+                    },
+                    "uuid": "abd1250e-c465-4cb9-9a40-8a2155fe0d03"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint TP9",
+                    "pos": {
+                        "x": 139.1,
+                        "y": 99.98
+                    },
+                    "uuid": "145fbad6-e5ce-4aca-8364-9d4a730b7207"
+                },
+                {
+                    "description": "Footprint TP11",
+                    "pos": {
+                        "x": 139.1,
+                        "y": 102.38
+                    },
+                    "uuid": "a9b02bb2-46c4-4ba5-a746-484e5b943abe"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J4",
+                    "pos": {
+                        "x": 136.88,
+                        "y": 98.458
+                    },
+                    "uuid": "11daad2c-caeb-4244-9bbe-f182456ef532"
+                },
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 143.23,
+                        "y": 94.82
+                    },
+                    "uuid": "a6a3e7bb-811a-4026-833b-78608d3b4a89"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint H2",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 96.09
+                    },
+                    "uuid": "492bd2af-6285-41da-9e00-065f59000bad"
+                },
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 143.23,
+                        "y": 94.82
+                    },
+                    "uuid": "a6a3e7bb-811a-4026-833b-78608d3b4a89"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 1 [/Debugger/SWD_TRG.~{RESET}] of J1",
+                    "pos": {
+                        "x": 133.07,
+                        "y": 116.41
+                    },
+                    "uuid": "4d3b4077-7f5c-4944-bfe5-c386a2d9aa76"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 2 [VDD] of J1",
+                    "pos": {
+                        "x": 135.61,
+                        "y": 116.41
+                    },
+                    "uuid": "0e080c73-c8da-4039-afba-38bbf536ee19"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 3 [unconnected-(J1-Pin_3-Pad3)] of J1",
+                    "pos": {
+                        "x": 138.15,
+                        "y": 116.41
+                    },
+                    "uuid": "80b9f90a-93d9-4955-9d5e-b533ecef534f"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 4 [GND] of J1",
+                    "pos": {
+                        "x": 140.69,
+                        "y": 116.41
+                    },
+                    "uuid": "fe1a72c2-8d8d-4f75-b151-f851f05a1cfa"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 1 [+BATT] of J2",
+                    "pos": {
+                        "x": 143.23,
+                        "y": 93.55
+                    },
+                    "uuid": "bd8969d6-4205-4eaf-bb9b-d09cdda5f52f"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 5 [/Connectors/ANALOG.A0] of J1",
+                    "pos": {
+                        "x": 143.23,
+                        "y": 116.41
+                    },
+                    "uuid": "cef3edbe-7ea9-4223-a71e-267627337107"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 2 [/Connectors/ENABLE] of J2",
+                    "pos": {
+                        "x": 145.77,
+                        "y": 93.55
+                    },
+                    "uuid": "c8fa86a4-59f0-47b6-99ed-373e567d2573"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 6 [/Connectors/ANALOG.A1] of J1",
+                    "pos": {
+                        "x": 145.77,
+                        "y": 116.41
+                    },
+                    "uuid": "5212ecdd-8aca-4bae-907f-a28196704e42"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 3 [VSYS] of J2",
+                    "pos": {
+                        "x": 148.31,
+                        "y": 93.55
+                    },
+                    "uuid": "6c09ef7d-2e45-41ba-975d-63a02dc504f4"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 7 [/Connectors/ANALOG.A2] of J1",
+                    "pos": {
+                        "x": 148.31,
+                        "y": 116.41
+                    },
+                    "uuid": "a6750b37-10a9-4a5e-a5fe-894415644b1b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 4 [/Connectors/DIG.D13] of J2",
+                    "pos": {
+                        "x": 150.85,
+                        "y": 93.55
+                    },
+                    "uuid": "6c732783-ab87-458e-bffc-e858bc4d4831"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 8 [/Connectors/ANALOG.A3] of J1",
+                    "pos": {
+                        "x": 150.85,
+                        "y": 116.41
+                    },
+                    "uuid": "111e372d-1db0-4eaf-8ccd-2eedeacb5b8d"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 5 [/Connectors/DIG.D12] of J2",
+                    "pos": {
+                        "x": 153.39,
+                        "y": 93.55
+                    },
+                    "uuid": "0979d5bc-3dec-434f-92a7-4d002d72265a"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 9 [/Connectors/ANALOG.A4] of J1",
+                    "pos": {
+                        "x": 153.39,
+                        "y": 116.41
+                    },
+                    "uuid": "c56b02a2-e051-4cc4-8db0-03eb820f0053"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 6 [/Connectors/DIG.D11] of J2",
+                    "pos": {
+                        "x": 155.93,
+                        "y": 93.55
+                    },
+                    "uuid": "35afedec-eac3-4316-a41a-b28f94fb66ba"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 10 [/Connectors/ANALOG.A5] of J1",
+                    "pos": {
+                        "x": 155.93,
+                        "y": 116.41
+                    },
+                    "uuid": "cc908351-9e27-40f7-a061-395c4b0353f3"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 7 [/Connectors/DIG.D10] of J2",
+                    "pos": {
+                        "x": 158.47,
+                        "y": 93.55
+                    },
+                    "uuid": "61b7c865-6d47-4ab1-b8b1-d3c4ace76ee2"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 11 [/Connectors/SPI.SCK] of J1",
+                    "pos": {
+                        "x": 158.47,
+                        "y": 116.41
+                    },
+                    "uuid": "202627e1-50fe-4017-9866-2182ad255de9"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 8 [/Connectors/DIG.D9] of J2",
+                    "pos": {
+                        "x": 161.01,
+                        "y": 93.55
+                    },
+                    "uuid": "537e8a03-4658-4ae3-810f-da8f1daffd39"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 12 [/Connectors/SPI.MOSI] of J1",
+                    "pos": {
+                        "x": 161.01,
+                        "y": 116.41
+                    },
+                    "uuid": "c97d66c5-f926-495a-a221-c1164ade83a1"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 9 [/Connectors/DIG.D6] of J2",
+                    "pos": {
+                        "x": 163.55,
+                        "y": 93.55
+                    },
+                    "uuid": "27fab0a9-17b0-4d3f-b0b7-29100819deb3"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 13 [/Connectors/SPI.MISO] of J1",
+                    "pos": {
+                        "x": 163.55,
+                        "y": 116.41
+                    },
+                    "uuid": "9c34f1cf-2005-4e23-a084-3429b1f85152"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 10 [/Connectors/DIG.D5] of J2",
+                    "pos": {
+                        "x": 166.09,
+                        "y": 93.55
+                    },
+                    "uuid": "ee4a08c8-ecad-4b99-b265-5924ee334b4f"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 14 [/Connectors/UART.RX] of J1",
+                    "pos": {
+                        "x": 166.09,
+                        "y": 116.41
+                    },
+                    "uuid": "a5a5672f-c0ad-4b21-92dd-0fa12dc5e8c6"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 11 [/Connectors/I2C.SCL] of J2",
+                    "pos": {
+                        "x": 168.63,
+                        "y": 93.55
+                    },
+                    "uuid": "16a4f376-d2bf-4366-97df-0f4b01936bce"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 15 [/Connectors/UART.TX] of J1",
+                    "pos": {
+                        "x": 168.63,
+                        "y": 116.41
+                    },
+                    "uuid": "fa9c45b5-68cb-43a4-b848-6eaa1730802b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.64,
+                        "y": 93.55
+                    },
+                    "uuid": "6d060453-c329-4726-9e58-068a3a3b2f50"
+                },
+                {
+                    "description": "PTH pad 12 [/Connectors/I2C.SDA] of J2",
+                    "pos": {
+                        "x": 171.17,
+                        "y": 93.55
+                    },
+                    "uuid": "7d248b7b-7a49-467c-9e8f-2ee4cbcfc5aa"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 174.98,
+                        "y": 116.41
+                    },
+                    "uuid": "fa6054aa-99ef-4067-b952-bfa111a8f206"
+                },
+                {
+                    "description": "PTH pad 16 [/Connectors/SHPHLD] of J1",
+                    "pos": {
+                        "x": 171.17,
+                        "y": 116.41
+                    },
+                    "uuid": "af57b577-d273-4574-aded-8ade0f544eb7"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.06,
+                        "y": 110.53
+                    },
+                    "uuid": "552aae55-7127-413c-9bb4-62601ae787f9"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/USB.CC1] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 124.36,
+                        "y": 103.73
+                    },
+                    "uuid": "c31f7f8c-1c34-4225-9df9-41721a7c89d3"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/USB.CC2] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 124.385,
+                        "y": 106.73
+                    },
+                    "uuid": "72fe15e4-d764-4fc6-81c4-051235bb45bc"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 125.06,
+                        "y": 110.53
+                    },
+                    "uuid": "cbce840d-a179-4d0f-8b8a-1ac8df79f316"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 125.06,
+                        "y": 112.53
+                    },
+                    "uuid": "85862fa7-6e46-409d-b7e3-e544bb82069d"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 101.73
+                    },
+                    "uuid": "8f0cbf75-1d80-4d5b-982d-814a9afbcc54"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/USB.VBUS] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 102.53
+                    },
+                    "uuid": "0da4d260-51a8-434b-bacb-bc2ea1b7d20a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 125.405,
+                        "y": 108.23
+                    },
+                    "uuid": "1ddd80b9-33cd-4a3f-9543-38f90063622e"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/I2C.SCL] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.49,
+                        "y": 98.633
+                    },
+                    "uuid": "74d28f55-444b-44ff-ad25-674b8375b586"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/D+] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.685,
+                        "y": 105.73
+                    },
+                    "uuid": "08c36965-be71-4c23-b5ac-9098a1d0ddfd"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/D-] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.785,
+                        "y": 104.755
+                    },
+                    "uuid": "4c56ad8e-20c0-4cf7-ab0b-f7673e71fe55"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.06,
+                        "y": 94.53
+                    },
+                    "uuid": "64fbf118-ea71-490d-bf30-5e1f1024db63"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.06,
+                        "y": 96.53
+                    },
+                    "uuid": "460b38f8-538b-444f-aed9-659e67722ac9"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.103416,
+                        "y": 101.355058
+                    },
+                    "uuid": "91a589e9-3f20-4b7d-87a1-d824607f95ba"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J8-~{RESET})] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.31,
+                        "y": 104.0
+                    },
+                    "uuid": "5a44dc9e-1c6b-4458-9071-6c455039c2d0"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J6-Pin_2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.31,
+                        "y": 111.855
+                    },
+                    "uuid": "cf46fd7b-9f22-45ee-8c07-d10ef9fa67aa"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/nRF52_VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.41,
+                        "y": 106.81
+                    },
+                    "uuid": "58fcee02-e99c-4746-a920-e3160604a905"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.46,
+                        "y": 105.48
+                    },
+                    "uuid": "d542105e-c86d-4eee-9ba3-11ea0efff774"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/I2C.SDA] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.49,
+                        "y": 98.633
+                    },
+                    "uuid": "f5b99fe8-4154-42ce-b460-ee508e7daad0"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.81,
+                        "y": 114.52
+                    },
+                    "uuid": "e6a01e8d-df51-4f7c-b871-572f2e900534"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 128.043416,
+                        "y": 101.355058
+                    },
+                    "uuid": "b92b466e-7e1a-45db-baa7-e1fb9b2f5f77"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J6-Pin_4)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 128.31,
+                        "y": 111.855
+                    },
+                    "uuid": "ce6ae9a4-428e-4ace-ab78-ae0fce7791ce"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 128.49,
+                        "y": 98.633
+                    },
+                    "uuid": "85bf6b50-b429-478c-9893-38f467536cbc"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 129.06,
+                        "y": 94.53
+                    },
+                    "uuid": "60a2802a-4bb9-449c-a45a-a44c61d2fc39"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 129.06,
+                        "y": 96.53
+                    },
+                    "uuid": "35683439-55ae-4371-84e0-4c45baf62650"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 129.49,
+                        "y": 98.633
+                    },
+                    "uuid": "2cafac67-ca31-4b0a-bf45-e164987bde16"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J8-SWDIO)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 129.77,
+                        "y": 106.76
+                    },
+                    "uuid": "4b3c1cd9-8462-4224-8693-834fa08c52a5"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 129.93,
+                        "y": 108.82
+                    },
+                    "uuid": "528aabfa-c16e-4356-aecd-9c421e7721a4"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J8-SWCLK)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 130.16,
+                        "y": 106.35
+                    },
+                    "uuid": "40f96072-262e-4887-b7a4-ac055d81f598"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 131.14,
+                        "y": 110.9
+                    },
+                    "uuid": "5bd4ce6c-e6c4-4ba6-8a69-265068cc7005"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 131.21,
+                        "y": 112.06
+                    },
+                    "uuid": "f9fae95f-2995-4fda-838b-0c39f05a8dd6"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 131.82,
+                        "y": 107.74
+                    },
+                    "uuid": "89b2b251-3521-4080-8f9d-3182dbe905e9"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 132.24,
+                        "y": 109.5
+                    },
+                    "uuid": "48e26553-46b2-40ca-a115-904c0b0e00d0"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 132.3,
+                        "y": 106.78
+                    },
+                    "uuid": "afa6569a-adc8-4bd7-b18d-5c1636115ecb"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J8-~{RESET})] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 132.72,
+                        "y": 105.66
+                    },
+                    "uuid": "404b88e2-0c39-4a74-8a89-9b1ab0232741"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 133.26,
+                        "y": 105.73
+                    },
+                    "uuid": "ae5425a0-d7f2-4538-bd2b-5787e45d39cd"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J8-SWDIO)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 133.39,
+                        "y": 104.33
+                    },
+                    "uuid": "5106a193-e06e-445b-bc9e-d537a4d39b5a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 133.48,
+                        "y": 111.71
+                    },
+                    "uuid": "bbaed690-dedb-442e-b408-8b0b6b2ffbd3"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(U5-DEC4)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 133.609447,
+                        "y": 108.05997
+                    },
+                    "uuid": "2baeee00-9bac-49a5-bdb4-a98e6e3fa6ca"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J8-SWCLK)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 133.84,
+                        "y": 105.4
+                    },
+                    "uuid": "2480f0ce-462c-41aa-b922-1e762d1dab52"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/nRF52_VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 134.44,
+                        "y": 111.71
+                    },
+                    "uuid": "5373b8f4-50b8-4cf5-befc-6f771769e83f"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 134.91,
+                        "y": 104.4
+                    },
+                    "uuid": "fce77235-548d-45b7-bc73-c26469669e1d"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/nRF52_VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 135.87,
+                        "y": 104.4
+                    },
+                    "uuid": "ab9ea2c7-9a7d-419f-b37b-e33f9b015857"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 136.06,
+                        "y": 95.53
+                    },
+                    "uuid": "e0d399ae-1ba6-45b2-9a90-58e292eb84e6"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 136.07,
+                        "y": 98.06
+                    },
+                    "uuid": "284c1072-9b01-4182-b03b-354586902b89"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J8-~{RESET})] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 136.68,
+                        "y": 104.95
+                    },
+                    "uuid": "1a1fd6dd-8c15-476d-b0b7-02257d0f5806"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [+BATT] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 137.88,
+                        "y": 101.308
+                    },
+                    "uuid": "1262199a-38ae-4963-881a-9d3bc3da20f7"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(U5-DEC4)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 137.88,
+                        "y": 111.28
+                    },
+                    "uuid": "08bfb636-0232-4dc4-93f1-1b117416c0e7"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/nRF52_VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 138.59,
+                        "y": 111.69
+                    },
+                    "uuid": "308fc8b1-338d-4ae0-9eba-655bf5a7f305"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 139.55,
+                        "y": 111.69
+                    },
+                    "uuid": "045bfcd1-f0b7-4a6f-bc81-43e00dc5f8c6"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 139.88,
+                        "y": 104.57
+                    },
+                    "uuid": "800b342b-9dc9-48b6-8374-8c8f83669311"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 140.44,
+                        "y": 105.46
+                    },
+                    "uuid": "7732c5a9-9ced-4713-90e5-59afba40fdb3"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/nRF52_VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 140.44,
+                        "y": 107.28
+                    },
+                    "uuid": "60d27432-53b5-44a0-ba99-debac25dbd72"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 140.44,
+                        "y": 108.24
+                    },
+                    "uuid": "55965384-fd04-433c-b720-4cacddb90a67"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 140.44,
+                        "y": 111.01
+                    },
+                    "uuid": "0e568507-ba47-4a85-af0f-d6051898a8f7"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/UART_RX_NRF52] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 141.54,
+                        "y": 108.41
+                    },
+                    "uuid": "7b7b634f-cf47-4e1a-8bf9-4b409d954f2b"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 141.95,
+                        "y": 107.59
+                    },
+                    "uuid": "560895ec-d172-475e-aed2-f5446fcf1fbc"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/UART_TX_NRF52] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 142.04,
+                        "y": 108.95
+                    },
+                    "uuid": "790169e0-7809-48d9-a083-84a11f532127"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/TRG_~{RESET}_NRF52] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 142.54,
+                        "y": 109.39
+                    },
+                    "uuid": "96f92b4d-3380-4b36-b59e-26369b60248e"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 142.56,
+                        "y": 112.63
+                    },
+                    "uuid": "ef092e02-2e96-43b2-b15b-5a241f913876"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VSYS] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 142.98,
+                        "y": 101.9
+                    },
+                    "uuid": "528e2531-5fd8-4f46-8ec3-63b4cbd0e606"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/TRG_SWDIO_NRF52] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 143.04,
+                        "y": 109.9
+                    },
+                    "uuid": "ae0b1343-85c3-4fd5-abc6-67caffbc19ad"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 143.06,
+                        "y": 112.03
+                    },
+                    "uuid": "60ee63d4-0dd8-40dd-aaf4-23faa4dc5679"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/TRG_SWDCLK_NRF52] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 143.54,
+                        "y": 110.320347
+                    },
+                    "uuid": "214f1727-6391-4471-930f-75104ec17c08"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 144.085,
+                        "y": 102.03
+                    },
+                    "uuid": "0d3204e7-f52a-4d72-8c31-7b933247e245"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 144.88,
+                        "y": 98.045
+                    },
+                    "uuid": "5280dc34-aac6-466a-9cbc-bda838dae6dd"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 145.065,
+                        "y": 108.67
+                    },
+                    "uuid": "748a8ec3-1616-4ccd-a129-2ed92b33bc0f"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/USB.CC1] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 145.33,
+                        "y": 101.09
+                    },
+                    "uuid": "6dc317eb-be69-4532-bca8-c6efa008cbb8"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/USB.CC2] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 145.33,
+                        "y": 102.01
+                    },
+                    "uuid": "4151234b-4691-405d-95d1-ae80d4af9af0"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 147.01,
+                        "y": 98.045
+                    },
+                    "uuid": "79797639-c466-4a7a-8ddc-8d6cec4cbdfd"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/USB.VBUS] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 147.01,
+                        "y": 99.595
+                    },
+                    "uuid": "59a7878d-cfcf-4d53-bdea-85162c052480"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 147.06,
+                        "y": 110.13
+                    },
+                    "uuid": "4f1e714c-f518-4afd-9e68-f79c04574604"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 147.06,
+                        "y": 110.93
+                    },
+                    "uuid": "22244148-5fcb-4aef-aa49-e2882089b095"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VSYS] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 147.36,
+                        "y": 108.67
+                    },
+                    "uuid": "be4dd23d-527d-4eb6-bcb5-3da2814633d6"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VSYS] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 148.165,
+                        "y": 100.565
+                    },
+                    "uuid": "e9c4361b-712d-40b4-9fb3-3f682aa992d7"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 148.58,
+                        "y": 98.045
+                    },
+                    "uuid": "5a0678f2-21de-48ac-a440-e3847014365c"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [+BATT] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 150.045,
+                        "y": 100.59
+                    },
+                    "uuid": "7d6bdba5-432e-4e06-824e-0dfb0de81236"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 150.36,
+                        "y": 110.13
+                    },
+                    "uuid": "6ae8fcf0-03c4-4c99-be7f-a57fda1f600d"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(JP1-A)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 150.37,
+                        "y": 111.705
+                    },
+                    "uuid": "5f2f5f50-1e9c-4cd6-ae2b-6784aea15398"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 150.73,
+                        "y": 108.66
+                    },
+                    "uuid": "87ab3aa5-b958-4fc3-8947-cde2bb835d27"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 150.84,
+                        "y": 97.92
+                    },
+                    "uuid": "f628998d-f5e7-4ac2-962d-019656e0b36e"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/ENABLE] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 150.962892,
+                        "y": 106.91
+                    },
+                    "uuid": "651954e7-99a5-40ac-b6b3-0d7035ba32b5"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 151.14,
+                        "y": 105.21
+                    },
+                    "uuid": "7c2c0ee4-52d6-4668-8890-3be538bcc173"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 151.14,
+                        "y": 106.17
+                    },
+                    "uuid": "b629ae2d-8d8c-496c-8637-255dcc91928a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 151.2,
+                        "y": 101.78
+                    },
+                    "uuid": "0e60693e-4ba1-418a-b00c-3232f541cf20"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/nPM1300/NPM1300.SDA] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 151.48,
+                        "y": 104.21
+                    },
+                    "uuid": "7ed28c10-feeb-4411-928a-57cef0bf42c1"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 151.595,
+                        "y": 100.59
+                    },
+                    "uuid": "731adf58-f9b5-41e4-b77e-549588907d93"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/UART_RX_NRF52] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 151.74,
+                        "y": 109.4
+                    },
+                    "uuid": "576aa555-59f5-4eb7-8c38-abab9e3910aa"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/SHPHLD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 152.3,
+                        "y": 102.83
+                    },
+                    "uuid": "6fdfc02d-5ffe-48f5-8483-385e20491d76"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/nPM1300/NPM1300.SCL] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 152.301405,
+                        "y": 103.573512
+                    },
+                    "uuid": "97f101ce-b859-4e88-ace0-63ad10ebe6aa"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/UART_TX_NRF52] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 152.389916,
+                        "y": 108.420654
+                    },
+                    "uuid": "abf544f2-9749-4e63-819e-cbab6202a901"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/TRG_~{RESET}_NRF52] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 153.073185,
+                        "y": 108.396815
+                    },
+                    "uuid": "7651e58d-c158-4d36-a571-cfe09c1c0128"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/nRF52_VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 153.23,
+                        "y": 101.81
+                    },
+                    "uuid": "93371498-290c-4c3d-ba2c-4635678164f9"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/nRF52_VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 153.41,
+                        "y": 103.04
+                    },
+                    "uuid": "18af769c-fd3b-4205-b8fa-e0e0c98d6034"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 153.71,
+                        "y": 98.355
+                    },
+                    "uuid": "fe749f44-4256-45c7-b86d-a690e4a2f6b8"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/TRG_SWDIO_NRF52] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 153.74,
+                        "y": 108.39
+                    },
+                    "uuid": "e4878098-a8bb-4e41-ace9-1955efae57de"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 154.19,
+                        "y": 101.81
+                    },
+                    "uuid": "04c4b0fe-616e-44a0-822a-c183652efc5b"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 154.45,
+                        "y": 102.875
+                    },
+                    "uuid": "8bf564c8-af2e-4ece-9155-b94e18fed540"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/nRF52_VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 154.46,
+                        "y": 106.94
+                    },
+                    "uuid": "d8290f23-63a6-4332-853a-a5992bf34bf5"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/TRG_SWDCLK_NRF52] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 154.46,
+                        "y": 108.38
+                    },
+                    "uuid": "279e0c74-0953-406c-a3ca-1c0e92e02eae"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 155.13,
+                        "y": 98.67
+                    },
+                    "uuid": "7be0c2e7-bee4-4a81-b502-ebfcf32300f8"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/SHPHLD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 155.13,
+                        "y": 113.42
+                    },
+                    "uuid": "90194d02-d4e0-48ad-948d-07a0d532535a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 155.2,
+                        "y": 104.92
+                    },
+                    "uuid": "2d8482af-9397-47e7-8838-d19593facfa5"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 155.66,
+                        "y": 111.33
+                    },
+                    "uuid": "b4242ee9-5596-4f20-be51-c8bd5a17ccab"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/SWD_TRG.~{RESET}] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 155.689293,
+                        "y": 109.459293
+                    },
+                    "uuid": "ece78503-db11-48fa-87a0-f7d44beb8389"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 155.95,
+                        "y": 102.875
+                    },
+                    "uuid": "b3b7a55b-492d-4446-8ab8-e7d17b462869"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 155.95,
+                        "y": 106.965
+                    },
+                    "uuid": "1c6ae9f5-616c-4761-a0f2-bbf5d60152b2"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 156.37,
+                        "y": 101.77
+                    },
+                    "uuid": "2315b636-4c11-42d5-b9e6-def9d29724ef"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 157.85,
+                        "y": 111.6
+                    },
+                    "uuid": "f5f19495-f171-4536-84f1-a712b6623b55"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/UART.TX] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 158.056662,
+                        "y": 104.774726
+                    },
+                    "uuid": "5052b303-6a47-4a54-b022-09bfda7c4002"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 158.06,
+                        "y": 102.46
+                    },
+                    "uuid": "7f5c65d7-e227-4692-b920-a85efd1f8d2b"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 158.06,
+                        "y": 103.42
+                    },
+                    "uuid": "8957c4fd-fe8b-415d-8eda-1de6f8225d4b"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/SWD_TRG.~{RESET}] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 158.072847,
+                        "y": 108.632847
+                    },
+                    "uuid": "01299b9b-cbb7-4032-9c22-47303d325219"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/UART.RX] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 158.075565,
+                        "y": 104.124999
+                    },
+                    "uuid": "bf22ff14-e681-4dc1-a3ed-17608fb595ef"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 158.66,
+                        "y": 105.105
+                    },
+                    "uuid": "02b96290-5747-4d11-b90d-996263064b58"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/SPI.MOSI] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 158.83,
+                        "y": 109.14
+                    },
+                    "uuid": "5cecee07-c956-462c-a32d-a1c4a2f2197a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 158.879468,
+                        "y": 106.005
+                    },
+                    "uuid": "3659d590-e932-4daf-bf7e-ecace0108a00"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/SPI.SCK] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 159.364035,
+                        "y": 108.769445
+                    },
+                    "uuid": "049c779b-b7cd-4194-a318-f6784c90d4ee"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/nRF54L15/D2_FLASH] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 159.530046,
+                        "y": 103.162861
+                    },
+                    "uuid": "8ce442b4-59a7-44b5-8ac5-595b110f5762"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(U1-P1.01/XL2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 159.84,
+                        "y": 98.23
+                    },
+                    "uuid": "c50fbc4c-5933-41e4-8d2a-f686b0ff49ba"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/SPI.MISO] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 160.02,
+                        "y": 103.59
+                    },
+                    "uuid": "6cb3ae06-ac8f-47dc-abc7-aa0837ec3100"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 160.21,
+                        "y": 109.14
+                    },
+                    "uuid": "33585d73-e879-47c8-a8d9-0167a8d0bef2"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 160.21,
+                        "y": 110.1
+                    },
+                    "uuid": "87b5187d-61d5-43b4-8589-730d6ba8ba1a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 160.26,
+                        "y": 99.91
+                    },
+                    "uuid": "1bd6f21b-a941-4d5b-903a-d07d3c0b2e00"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 160.26,
+                        "y": 100.87
+                    },
+                    "uuid": "6724e17f-4879-4687-8257-e59c022df34d"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/nRF54L15/~{CS}_FLASH] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 160.36,
+                        "y": 104.15
+                    },
+                    "uuid": "bfafe20b-c0b4-4f34-afb7-93efe858896d"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/ANALOG.A2] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 160.99,
+                        "y": 105.43
+                    },
+                    "uuid": "01fc762a-224d-4305-868d-a5dee5a3fe46"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 161.72,
+                        "y": 100.93
+                    },
+                    "uuid": "2e64c863-db92-4271-9f89-0e0cf21e4b3e"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 161.72,
+                        "y": 101.83
+                    },
+                    "uuid": "b54c94a7-1bb0-403b-82d3-a58f8ff67c4e"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(U1-P1.01/XL2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 161.72,
+                        "y": 102.73
+                    },
+                    "uuid": "6ee84325-08fd-48d3-b130-9118c60f45bd"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/ANALOG.A0] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 161.72,
+                        "y": 104.53
+                    },
+                    "uuid": "1965d25a-abcc-4b55-95f2-bb1ff18f5ae8"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/ANALOG.A3] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 161.72,
+                        "y": 106.33
+                    },
+                    "uuid": "2125af15-9686-4fdf-9936-ad7a9545f6cd"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/SPI.MISO] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 161.72,
+                        "y": 109.03
+                    },
+                    "uuid": "e2789042-cb4e-457d-a610-975e7c849882"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J6-Pin_2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 162.030553,
+                        "y": 103.301016
+                    },
+                    "uuid": "266a15b9-9b5f-4346-96b7-6191fe5873fc"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(U1-P1.00/XL1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 162.34,
+                        "y": 98.23
+                    },
+                    "uuid": "1bc0908f-b701-4ebc-ac92-cb0bef3f0c4a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 162.35,
+                        "y": 109.65
+                    },
+                    "uuid": "b5499670-85ef-4d09-9013-696f751eae33"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 111.63
+                    },
+                    "uuid": "89fe0943-47a8-4eeb-8078-39acc8047c9e"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 162.62,
+                        "y": 101.83
+                    },
+                    "uuid": "fa24aa96-f2f3-4918-b253-19570de7b2d8"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 162.62,
+                        "y": 102.73
+                    },
+                    "uuid": "aa91dde8-3eb9-4784-9d11-bd1f75787e88"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(U1-P1.00/XL1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 162.62,
+                        "y": 103.63
+                    },
+                    "uuid": "a3b3d0b3-c102-4662-a854-aaf78c5c3175"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/ANALOG.A1] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 162.62,
+                        "y": 105.43
+                    },
+                    "uuid": "05a887eb-9059-4782-8bb3-98bae32c9507"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/SPI.MOSI] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 162.62,
+                        "y": 108.13
+                    },
+                    "uuid": "ffdde81e-3a8a-41b8-8490-8dbdf433fcfd"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/nRF54L15/~{CS}_FLASH] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 162.62,
+                        "y": 109.03
+                    },
+                    "uuid": "21cbace2-12a8-4eae-a415-d299343e5513"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/I2C.SCL] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 163.126446,
+                        "y": 106.036446
+                    },
+                    "uuid": "7f92edb9-0585-4960-be0e-62e2045839fe"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(J6-Pin_4)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 163.22,
+                        "y": 104.26
+                    },
+                    "uuid": "6b92b596-d6b6-4860-b142-9aae4de63233"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 163.38,
+                        "y": 107.23
+                    },
+                    "uuid": "5cff82d1-dc65-45f4-beac-5b6cf3d7eb6d"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 163.52,
+                        "y": 101.83
+                    },
+                    "uuid": "4acce157-509b-4161-9a34-0cabc8fcb6ba"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/nRF54L15/D2_FLASH] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 163.52,
+                        "y": 108.13
+                    },
+                    "uuid": "33afd8b1-e3a3-45a3-8030-e0144ce81296"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(D1-A)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 163.53,
+                        "y": 109.02
+                    },
+                    "uuid": "46a9ef75-f12a-4368-ac93-ea09f75b94bc"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 163.56,
+                        "y": 105.41
+                    },
+                    "uuid": "2bd9f29f-b526-4940-8a03-48322db93ccf"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [Net-(D1-A)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 164.0625,
+                        "y": 111.65
+                    },
+                    "uuid": "6c1f1cc5-a828-4571-8418-51f5a0eb2bcb"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 164.105,
+                        "y": 109.76
+                    },
+                    "uuid": "03845962-5100-470d-bdf4-2b08f03a7757"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/DIG.D10] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 164.42,
+                        "y": 109.03
+                    },
+                    "uuid": "cebe7aff-c9e2-4690-995c-12c72f3ed2cd"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/DIG.D13] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 164.988554,
+                        "y": 105.718554
+                    },
+                    "uuid": "36ed2f89-f112-47eb-8097-d888421ee4dd"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/ANALOG.A4] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 165.18,
+                        "y": 104.39
+                    },
+                    "uuid": "3fba9cda-171c-40f5-a2e6-fd08c25668a3"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/DIG.D9] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 165.32,
+                        "y": 109.03
+                    },
+                    "uuid": "b8c0bb5c-69e2-4a90-a06a-f4278b8663f9"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/DIG.D12] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 165.638446,
+                        "y": 105.730524
+                    },
+                    "uuid": "64664834-6990-4f55-893a-f1faa4594514"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/DIG.D6] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 165.92,
+                        "y": 109.37
+                    },
+                    "uuid": "bfda4b7e-be16-493d-9b22-810bc1a1d411"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 165.95,
+                        "y": 107.51
+                    },
+                    "uuid": "52c257ec-5f9c-4513-b4d1-815d2bdce73e"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/ANALOG.A5] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 166.03,
+                        "y": 104.31
+                    },
+                    "uuid": "d5de3923-5d6b-4f6d-9423-8a64329b381c"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/SWD_TRG.SWDIO] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 166.19,
+                        "y": 110.01
+                    },
+                    "uuid": "0190ad83-9d67-4bb2-925d-dc9a4e670b36"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/ANALOG.A4] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 166.23,
+                        "y": 100.74
+                    },
+                    "uuid": "a3e0094a-68ef-48c9-83eb-cf813a0b8ea5"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/SWD_TRG.~{RESET}] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 166.754293,
+                        "y": 103.874293
+                    },
+                    "uuid": "bfbebdeb-ef50-497c-a55a-d31e15645bcb"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/DIG.D11] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 167.06,
+                        "y": 107.41
+                    },
+                    "uuid": "586cabde-943c-42c6-b580-ef2233d2d881"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/UART.RX] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 167.12,
+                        "y": 100.93
+                    },
+                    "uuid": "1e274cbf-c404-4e33-b2f9-e9e04b12857c"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/I2C.SDA] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 167.12,
+                        "y": 101.83
+                    },
+                    "uuid": "1471911c-63f2-44f8-beb8-3399e3f4fad0"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/SWD_TRG.SWDIO] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 167.12,
+                        "y": 108.13
+                    },
+                    "uuid": "314dee3b-12c9-433b-a2b9-4a42438cd344"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Debugger/SWD_TRG.SWDCLK] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 167.12,
+                        "y": 109.03
+                    },
+                    "uuid": "7996ff11-09a5-4713-b106-c49d98a8126e"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/Connectors/UART.TX] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 167.18,
+                        "y": 102.76
+                    },
+                    "uuid": "9afcbe65-c8b8-4508-98f6-3bdbd1dbb9df"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 167.96,
+                        "y": 111.65
+                    },
+                    "uuid": "91fb9a11-6495-48ba-9a6e-65e9905e2974"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/nPM1300/NPM1300.INT] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 168.02,
+                        "y": 109.03
+                    },
+                    "uuid": "f7cea276-3e8d-4cde-b99f-f646e5a50586"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 168.92,
+                        "y": 100.93
+                    },
+                    "uuid": "9f1cd086-4bbb-4a59-8f67-7b540fe86857"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 168.92,
+                        "y": 101.83
+                    },
+                    "uuid": "2d1daa1f-066d-43ba-86d6-7e2b4998796a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 168.92,
+                        "y": 103.63
+                    },
+                    "uuid": "110fee95-6c6d-4028-9fbe-2da4909dd0ac"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 168.92,
+                        "y": 104.53
+                    },
+                    "uuid": "c7969ead-5d66-43ba-b726-c01a9169ea1d"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 168.92,
+                        "y": 105.43
+                    },
+                    "uuid": "99ccb02d-26e4-4153-bdf9-2bbeb2d73018"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/nPM1300/NPM1300.SDA] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 169.19,
+                        "y": 111.13
+                    },
+                    "uuid": "41b02c89-1ef6-4ed1-9a2d-7a16792f6f8e"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/nPM1300/NPM1300.SCL] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 169.19,
+                        "y": 112.07
+                    },
+                    "uuid": "41b682a6-3a0c-4938-acb0-9dd132b874cc"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 169.59,
+                        "y": 97.88
+                    },
+                    "uuid": "d54239c2-b8e6-40b6-b941-1ad3b9f31d92"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [/nPM1300/NPM1300.INT] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 169.75,
+                        "y": 113.08
+                    },
+                    "uuid": "61f6d26b-6408-4b5b-a0ef-8fcbd03b996a"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 170.21,
+                        "y": 111.13
+                    },
+                    "uuid": "5a15e267-1a24-4a05-8e21-15bd31f50232"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [VDD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 170.21,
+                        "y": 112.07
+                    },
+                    "uuid": "93e27e3e-d34f-4f41-97b8-0771b95cd0c3"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.2000 mm; actual 1.000e-05 mm)",
+            "items": [
+                {
+                    "description": "Blind via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 170.22,
+                        "y": 97.33
+                    },
+                    "uuid": "aed56524-fb6b-4da4-b7e4-1f53e79c7f9b"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Drilled holes co-located",
+            "items": [
+                {
+                    "description": "PTH pad 1 [+BATT] of J2",
+                    "pos": {
+                        "x": 143.23,
+                        "y": 94.82
+                    },
+                    "uuid": "0748ed42-5622-4acc-8f34-ac8f04299fcf"
+                },
+                {
+                    "description": "PTH pad 1 [+BATT] of J2",
+                    "pos": {
+                        "x": 143.23,
+                        "y": 94.82
+                    },
+                    "uuid": "f0badf1d-8035-4bba-a5af-6e0bcfa1703a"
+                }
+            ],
+            "severity": "warning",
+            "type": "holes_co_located"
+        },
+        {
+            "description": "The footprint library 'marbastlib-various' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint J3",
+                    "pos": {
+                        "x": 121.36,
+                        "y": 104.98
+                    },
+                    "uuid": "4f7c2d6e-214e-4baa-a3f3-3f0c51276db6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'nordic-lib-kicad-nrf54-modules' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 169.12,
+                        "y": 104.98
+                    },
+                    "uuid": "18fe21cf-ddc9-4b54-8e7e-9b81dfaa50b3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C14",
+                    "pos": {
+                        "x": 126.83,
+                        "y": 111.855
+                    },
+                    "uuid": "c4246327-6f1f-4a53-a4a7-2404dc9d80ec"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 127.103416,
+                        "y": 100.845058
+                    },
+                    "uuid": "3ae89f06-369a-4b8f-a5e2-8d00d2ddb1c4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'JST_SH_SM04B-SRSS-TB_1x04-1MP_P1.00mm_Horizontal' does not match copy in library 'Connector_JST'",
+            "items": [
+                {
+                    "description": "Footprint J5",
+                    "pos": {
+                        "x": 127.99,
+                        "y": 96.633
+                    },
+                    "uuid": "cfa37584-bba0-4659-8a04-91f56bdcee0b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 128.043416,
+                        "y": 100.845058
+                    },
+                    "uuid": "afe94855-ac6c-4b75-bae9-e82dea162e13"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'SOT-553' does not match copy in library 'Package_TO_SOT_SMD'",
+            "items": [
+                {
+                    "description": "Footprint U3",
+                    "pos": {
+                        "x": 128.61,
+                        "y": 104.9725
+                    },
+                    "uuid": "b59fe9c3-052b-4ec8-bc43-53137dc8d8f0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C13",
+                    "pos": {
+                        "x": 128.79,
+                        "y": 111.855
+                    },
+                    "uuid": "801687d9-6998-424d-b91a-10ad60e2daf8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C18",
+                    "pos": {
+                        "x": 129.93,
+                        "y": 109.3
+                    },
+                    "uuid": "53fae6dc-9ea3-4ef0-a41c-bfd73f75ed43"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'Crystal_SMD_2016-4Pin_2.0x1.6mm' does not match copy in library 'Crystal'",
+            "items": [
+                {
+                    "description": "Footprint Y2",
+                    "pos": {
+                        "x": 131.69,
+                        "y": 110.2
+                    },
+                    "uuid": "57fd8d91-3f04-4779-817a-a10c7a84599d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C20",
+                    "pos": {
+                        "x": 131.69,
+                        "y": 112.06
+                    },
+                    "uuid": "fde99d14-5ff7-4301-bf1d-f11a2af437ea"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C21",
+                    "pos": {
+                        "x": 132.3,
+                        "y": 107.74
+                    },
+                    "uuid": "cbd87144-0eb9-431a-b25a-e4d3587ff30f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C22",
+                    "pos": {
+                        "x": 132.78,
+                        "y": 106.78
+                    },
+                    "uuid": "5c09a68b-dd2f-4f8e-8cb5-515e27118e07"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C16",
+                    "pos": {
+                        "x": 133.96,
+                        "y": 111.71
+                    },
+                    "uuid": "59b6a341-105f-4c64-912c-06dc30b69229"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C17",
+                    "pos": {
+                        "x": 135.39,
+                        "y": 104.4
+                    },
+                    "uuid": "dc74881b-ba65-4ba8-9b37-6095999ebde2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'JST_PH_S2B-PH-SM4-TB_1x02-1MP_P2.00mm_Horizontal' does not match copy in library 'Connector_JST'",
+            "items": [
+                {
+                    "description": "Footprint J4",
+                    "pos": {
+                        "x": 136.88,
+                        "y": 98.458
+                    },
+                    "uuid": "11daad2c-caeb-4244-9bbe-f182456ef532"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'QFN-40-1EP_5x5mm_P0.4mm_EP3.6x3.6mm_ThermalVias' does not match copy in library 'Package_DFN_QFN'",
+            "items": [
+                {
+                    "description": "Footprint U5",
+                    "pos": {
+                        "x": 136.88,
+                        "y": 108.13
+                    },
+                    "uuid": "efaa8e7c-761f-46f6-a683-37e4bae66b68"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C15",
+                    "pos": {
+                        "x": 139.07,
+                        "y": 111.69
+                    },
+                    "uuid": "b576127a-190b-4a4d-bf2d-b0ace08922a7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C23",
+                    "pos": {
+                        "x": 139.4,
+                        "y": 104.57
+                    },
+                    "uuid": "397886e9-50b8-4e36-9058-62dd8d16c615"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C7",
+                    "pos": {
+                        "x": 140.44,
+                        "y": 105.94
+                    },
+                    "uuid": "c6eaf439-a42b-4b1d-9dff-4632f99e090b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C10",
+                    "pos": {
+                        "x": 140.44,
+                        "y": 107.76
+                    },
+                    "uuid": "255b1353-cc99-47c3-a3cd-dc959b410d6a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C19",
+                    "pos": {
+                        "x": 140.44,
+                        "y": 110.53
+                    },
+                    "uuid": "4cd75654-2831-4356-9c1b-7756e94979d2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R8",
+                    "pos": {
+                        "x": 143.11,
+                        "y": 107.52
+                    },
+                    "uuid": "6fdf7692-773b-49a3-ad0a-78c8042fca76"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C6",
+                    "pos": {
+                        "x": 144.88,
+                        "y": 98.82
+                    },
+                    "uuid": "5cd63fad-cad9-4079-a49c-9674d19c6993"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C3",
+                    "pos": {
+                        "x": 145.84,
+                        "y": 108.67
+                    },
+                    "uuid": "dbfe7c56-3048-4bb0-a09e-e892b214a4f2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C5",
+                    "pos": {
+                        "x": 147.01,
+                        "y": 98.82
+                    },
+                    "uuid": "c53ec5ae-5f00-4d1a-b68b-65e7ea0338f5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'QFN-32-1EP_5x5mm_P0.5mm_EP3.6x3.6mm_ThermalVias' does not match copy in library 'Package_DFN_QFN'",
+            "items": [
+                {
+                    "description": "Footprint U2",
+                    "pos": {
+                        "x": 147.58,
+                        "y": 104.46
+                    },
+                    "uuid": "29636710-ac40-426a-924d-c40f4318e62d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C4",
+                    "pos": {
+                        "x": 148.58,
+                        "y": 98.82
+                    },
+                    "uuid": "57d190b5-6d8e-4448-b4de-deb84dc2dc59"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C2",
+                    "pos": {
+                        "x": 148.86,
+                        "y": 108.67
+                    },
+                    "uuid": "afe32bde-da54-45cb-b36e-9244f52459c9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'L_0603_1608Metric' does not match copy in library 'Inductor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint L1",
+                    "pos": {
+                        "x": 148.86,
+                        "y": 110.93
+                    },
+                    "uuid": "bbedb4c5-45bf-4aaa-8026-57cb05475979"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C8",
+                    "pos": {
+                        "x": 150.37,
+                        "y": 110.93
+                    },
+                    "uuid": "aee05f50-fc7f-4e11-8bc2-e9fad1b7fbdb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C11",
+                    "pos": {
+                        "x": 150.82,
+                        "y": 100.59
+                    },
+                    "uuid": "9694cca4-ed7d-441d-a7ec-39c97fa0c52f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C1",
+                    "pos": {
+                        "x": 151.14,
+                        "y": 105.69
+                    },
+                    "uuid": "4e607fbf-7729-4956-abac-f72049239eeb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 151.2,
+                        "y": 102.29
+                    },
+                    "uuid": "948f7370-8a3b-4b35-8083-925d547dadbd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm' does not match copy in library 'Jumper'",
+            "items": [
+                {
+                    "description": "Footprint JP1",
+                    "pos": {
+                        "x": 152.86,
+                        "y": 106.33
+                    },
+                    "uuid": "018fe4d2-3d6b-4976-925c-22151c878077"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C25",
+                    "pos": {
+                        "x": 153.71,
+                        "y": 101.81
+                    },
+                    "uuid": "1094e5a3-85b0-4c17-91f4-c9395e434796"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 155.76,
+                        "y": 108.04
+                    },
+                    "uuid": "ca2a6f67-ecaf-43fe-8919-e057b6435db1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C24",
+                    "pos": {
+                        "x": 158.06,
+                        "y": 102.94
+                    },
+                    "uuid": "41e2e050-6f25-40cf-90a8-e8d91ee38b77"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'Winbond_USON-8-1EP_3x2mm_P0.5mm_EP0.2x1.6mm' does not match copy in library 'Package_SON'",
+            "items": [
+                {
+                    "description": "Footprint U4",
+                    "pos": {
+                        "x": 159.46,
+                        "y": 106.53
+                    },
+                    "uuid": "57914dc8-26b9-45cb-b83c-449f42b585d7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C12",
+                    "pos": {
+                        "x": 160.21,
+                        "y": 109.62
+                    },
+                    "uuid": "fb79768d-61b1-4677-8079-60dfe17135f2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0402_1005Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C9",
+                    "pos": {
+                        "x": 160.26,
+                        "y": 100.39
+                    },
+                    "uuid": "5c9ca473-2897-4415-a481-25bf3851acfb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_0603_1608Metric' does not match copy in library 'LED_SMD'",
+            "items": [
+                {
+                    "description": "Footprint D1",
+                    "pos": {
+                        "x": 164.85,
+                        "y": 111.65
+                    },
+                    "uuid": "78e03cf3-0468-4cbb-90bc-f26c94443b2b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R6",
+                    "pos": {
+                        "x": 167.45,
+                        "y": 111.65
+                    },
+                    "uuid": "1b11c9e4-e8da-4efd-9935-3f73f1d63ab2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R7",
+                    "pos": {
+                        "x": 169.7,
+                        "y": 111.13
+                    },
+                    "uuid": "262a9fce-439b-4943-b0a6-b8385c43796c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R5",
+                    "pos": {
+                        "x": 169.7,
+                        "y": 112.07
+                    },
+                    "uuid": "110a807a-b162-496a-ae5d-55a2290483d1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

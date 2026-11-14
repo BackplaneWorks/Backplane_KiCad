@@ -1,0 +1,2886 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:18",
+    "ignored_checks": [
+        {
+            "description": "Track has unconnected end",
+            "key": "track_dangling"
+        },
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Missing connection between items",
+            "key": "unconnected_items"
+        },
+        {
+            "description": "Isolated copper fill",
+            "key": "isolated_copper"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        },
+        {
+            "description": "Footprint not found in libraries",
+            "key": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint doesn't match copy in library",
+            "key": "lib_footprint_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "line_ending_drc_fail.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_SQUARE_ROUTE_LINE_A and SHOULD_FAIL_LINE_START_SQUARE_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_SQUARE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 31.0,
+                        "y": 142.0
+                    },
+                    "uuid": "3e42bd23-0b07-5c36-a4da-4f568bcc2979"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_LINE_START_SQUARE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 34.8,
+                        "y": 142.0
+                    },
+                    "uuid": "69a7cce0-6c0e-5ca9-a664-20e5f81332d2"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_CIRCLE_ROUTE_LINE_A and SHOULD_FAIL_LINE_END_CIRCLE_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_CIRCLE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 31.0,
+                        "y": 332.0
+                    },
+                    "uuid": "8ff8fa40-e82b-521a-9ecd-b435eadf02d1"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_LINE_END_CIRCLE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 27.2,
+                        "y": 350.0
+                    },
+                    "uuid": "99c29658-2c08-5f2c-a21c-c7a1d57e304f"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_ARROW_ROUTE_LINE_B and SHOULD_FAIL_LINE_END_ARROW_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_LINE_END_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 26.54,
+                        "y": 234.35
+                    },
+                    "uuid": "5a7c661e-a4d7-599a-938a-39e3b35cd55a"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 31.0,
+                        "y": 218.0
+                    },
+                    "uuid": "bfde8c51-5c26-5d9c-aa72-173de471edfc"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_OPEN_ARROW_ROUTE_LINE_A and SHOULD_FAIL_LINE_START_OPEN_ARROW_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_OPEN_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 31.0,
+                        "y": 104.0
+                    },
+                    "uuid": "2daddda3-a7ea-5c2c-bdc5-5dd3baea5eca"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_LINE_START_OPEN_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 34.8,
+                        "y": 106.4
+                    },
+                    "uuid": "d527f77b-7927-5bef-a04b-a4eaadaea6ea"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_OPEN_ARROW_ROUTE_LINE_B and SHOULD_FAIL_LINE_END_OPEN_ARROW_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_LINE_END_OPEN_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 27.2,
+                        "y": 271.6
+                    },
+                    "uuid": "1ae03f53-4362-5dcc-b31d-10296f683a93"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_OPEN_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 31.0,
+                        "y": 256.0
+                    },
+                    "uuid": "b6a2e623-2476-5b63-9c41-a95b2fca0ef5"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_ARROW_ROUTE_LINE_B and SHOULD_FAIL_LINE_START_ARROW_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_LINE_START_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 35.46,
+                        "y": 67.65
+                    },
+                    "uuid": "3481cf47-dca9-5945-82e0-5a8cee90c922"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 31.0,
+                        "y": 66.0
+                    },
+                    "uuid": "8086e2f2-bd75-5777-82e9-e900cdb49024"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_LINE_B and SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 32.096,
+                        "y": 399.248
+                    },
+                    "uuid": "0ec70607-1dd0-5b35-9a3c-f9761ff2ba96"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 31.0,
+                        "y": 384.0
+                    },
+                    "uuid": "94cc6a6c-6a70-52f6-858e-884117f639e3"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_CIRCLE_ROUTE_LINE_A and SHOULD_FAIL_LINE_START_CIRCLE_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_CIRCLE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 31.0,
+                        "y": 180.0
+                    },
+                    "uuid": "7227a4b7-8e45-5b98-a2d4-688eb307ec10"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_LINE_START_CIRCLE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 34.8,
+                        "y": 180.0
+                    },
+                    "uuid": "d1a05726-626f-5432-b1c5-34a360959c1b"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_SQUARE_ROUTE_LINE_A and SHOULD_FAIL_LINE_END_SQUARE_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_SQUARE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 31.0,
+                        "y": 294.0
+                    },
+                    "uuid": "0c7013cd-081c-5f30-a7ae-c7f47b070b45"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_LINE_END_SQUARE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 27.2,
+                        "y": 312.0
+                    },
+                    "uuid": "d12fc57c-9b40-585f-9cf8-fca5e7e75738"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_SQUARE_ROUTE_ARC_B and SHOULD_FAIL_LINE_START_SQUARE_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_LINE_START_SQUARE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 69.95,
+                        "y": 137.65294
+                    },
+                    "uuid": "aa14620f-cb3c-5ae0-b61d-648e7fcf97df"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_SQUARE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 69.0,
+                        "y": 142.0
+                    },
+                    "uuid": "bad58910-9cd6-5088-95af-1ef92047e3ce"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_CIRCLE_ROUTE_ARC_A and SHOULD_FAIL_LINE_END_CIRCLE_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_CIRCLE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 69.0,
+                        "y": 332.0
+                    },
+                    "uuid": "4a706a4e-4dd5-5227-a766-4ce422bc9fb5"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_LINE_END_CIRCLE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 68.05,
+                        "y": 354.34706
+                    },
+                    "uuid": "d256e3ff-4a55-5a39-9ac8-7d15f2efc49f"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_ARROW_ROUTE_ARC_A and SHOULD_FAIL_LINE_END_ARROW_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 69.0,
+                        "y": 218.0
+                    },
+                    "uuid": "41f9ece7-186e-559c-8506-199b8e05cc2b"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_LINE_END_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 67.39,
+                        "y": 238.69706
+                    },
+                    "uuid": "bdee16c6-1c35-57c5-907e-959e28542f38"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_OPEN_ARROW_ROUTE_ARC_B and SHOULD_FAIL_LINE_START_OPEN_ARROW_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_LINE_START_OPEN_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 69.95,
+                        "y": 102.05294
+                    },
+                    "uuid": "a04133e2-8967-53e4-9bfd-dc8edef5187c"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_OPEN_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 69.0,
+                        "y": 104.0
+                    },
+                    "uuid": "e4b3d6a6-c398-5925-ac7a-ad6746213a0d"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_OPEN_ARROW_ROUTE_ARC_B and SHOULD_FAIL_LINE_END_OPEN_ARROW_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_LINE_END_OPEN_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 68.05,
+                        "y": 275.94706
+                    },
+                    "uuid": "c00444c0-7ea4-5c2f-83c2-80ec82950577"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_OPEN_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 69.0,
+                        "y": 256.0
+                    },
+                    "uuid": "ee63fac9-e92d-5076-ab5b-bb06f4e4e40d"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_ARROW_ROUTE_ARC_A and SHOULD_FAIL_LINE_START_ARROW_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 69.0,
+                        "y": 66.0
+                    },
+                    "uuid": "5124d66b-a833-573c-8773-24ff1ea2c554"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_LINE_START_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 70.61,
+                        "y": 63.30294
+                    },
+                    "uuid": "ebd9041d-4b68-54b7-965f-7798ee1efb93"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_CIRCLE_ROUTE_ARC_B and SHOULD_FAIL_LINE_START_CIRCLE_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_LINE_START_CIRCLE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 69.95,
+                        "y": 175.65294
+                    },
+                    "uuid": "3657b993-5338-5e6a-a204-c728d2c605fb"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_CIRCLE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 69.0,
+                        "y": 180.0
+                    },
+                    "uuid": "3973eccf-32e4-5f29-bc7d-958c0743e686"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_ARC_B and SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 74.6118,
+                        "y": 390.4964
+                    },
+                    "uuid": "94beeac5-cfe1-5ad4-b9bd-58dc0b2e3eb2"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 69.0,
+                        "y": 384.0
+                    },
+                    "uuid": "d69b96dd-02d5-5ac5-8432-677d85198203"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_SQUARE_ROUTE_ARC_A and SHOULD_FAIL_LINE_END_SQUARE_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_SQUARE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 69.0,
+                        "y": 294.0
+                    },
+                    "uuid": "cdf1648c-2cf9-540d-99e7-e16e5800495f"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_LINE_END_SQUARE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 68.05,
+                        "y": 316.34706
+                    },
+                    "uuid": "ed6a6dcf-c378-5c99-810d-f2acb9fc3fb3"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_LINE_B and SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 110.8,
+                        "y": 142.0
+                    },
+                    "uuid": "455c1978-73e1-5fa5-8d01-29648bda25bc"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 107.0,
+                        "y": 142.0
+                    },
+                    "uuid": "eb55b67b-cb51-55cb-a48d-6870f6dfe4a2"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_LINE_A and SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 107.0,
+                        "y": 332.0
+                    },
+                    "uuid": "0138574c-5d19-5869-80f9-22749194365f"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 103.2,
+                        "y": 350.0
+                    },
+                    "uuid": "2903ac3e-2c46-5cc0-9b87-79541d071e50"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_LINE_A and SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 107.0,
+                        "y": 218.0
+                    },
+                    "uuid": "2eb6a537-c1ba-52a1-b0dd-e205e42fddd4"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 102.54,
+                        "y": 234.35
+                    },
+                    "uuid": "a9572a5f-f0ad-5224-819b-364e1304ed6b"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_LINE_A and SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 107.0,
+                        "y": 104.0
+                    },
+                    "uuid": "0960b8ca-f079-556d-a932-e53a274401f1"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 110.8,
+                        "y": 106.4
+                    },
+                    "uuid": "31d8280b-b843-5e6a-9ebd-5936ef46fb73"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_LINE_B and SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 103.2,
+                        "y": 271.6
+                    },
+                    "uuid": "3651da07-5dcf-59b3-a8ee-4664b36d55f8"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 107.0,
+                        "y": 256.0
+                    },
+                    "uuid": "8939fd94-bd96-574a-bcc7-1abd6cc1d825"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_LINE_B and SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 111.46,
+                        "y": 67.65
+                    },
+                    "uuid": "6a6af7e2-7d4f-5d27-a98a-791f7d2cc0ef"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 107.0,
+                        "y": 66.0
+                    },
+                    "uuid": "721e2c5e-d1e5-523e-ab7d-8b61fe51dd4c"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_SPLINE_B and SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 108.096,
+                        "y": 399.248
+                    },
+                    "uuid": "3d256d30-efb0-565a-8e06-1590d3c1752f"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_OPEN_ARROW_LEG_END_OPEN_ARROW_SINGLE_LEG_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 107.0,
+                        "y": 384.0
+                    },
+                    "uuid": "c7f794e6-bc3e-5f29-b525-2469d9062446"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_LINE_A and SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 107.0,
+                        "y": 180.0
+                    },
+                    "uuid": "c35b8e47-b07d-522e-8a1e-fd1d6d47c225"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 110.8,
+                        "y": 180.0
+                    },
+                    "uuid": "f8b2c7ce-9f41-5e4f-b7f6-26d78ec1542a"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_LINE_A and SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 107.0,
+                        "y": 294.0
+                    },
+                    "uuid": "c900a0db-273e-5668-b1ce-cc406c002481"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 103.2,
+                        "y": 312.0
+                    },
+                    "uuid": "d42d97bc-33e0-53f6-b912-a98478ccf715"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_ARC_B and SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 145.95,
+                        "y": 137.65294
+                    },
+                    "uuid": "0c3f8df7-b73a-5f33-be80-2db77b3b8a6d"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 142.0
+                    },
+                    "uuid": "de6ee539-f7fe-506e-b1b3-1483c10cc5b1"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_ARC_A and SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 332.0
+                    },
+                    "uuid": "2e773435-a960-58fe-a170-1ed58d2709e0"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 144.05,
+                        "y": 354.34706
+                    },
+                    "uuid": "51a49854-8c7e-5d00-8db9-6d1b9e2be2a8"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_ARC_B and SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 143.39,
+                        "y": 238.69706
+                    },
+                    "uuid": "3f4b872f-3ff8-500e-8486-c64bca761b3e"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 218.0
+                    },
+                    "uuid": "9ac66466-3a9f-57d3-bfd5-4729cacae5a9"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_ARC_B and SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 145.95,
+                        "y": 102.05294
+                    },
+                    "uuid": "a6fb21ab-f6fe-5e00-84e1-21d0c0f3a538"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 104.0
+                    },
+                    "uuid": "fe86296f-116d-5bbf-9f48-ceef27de816e"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_ARC_A and SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 256.0
+                    },
+                    "uuid": "7e7f9be2-d42e-560e-9b0c-066e4f613114"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 144.05,
+                        "y": 275.94706
+                    },
+                    "uuid": "c02da865-c6ab-5368-a960-113d3881bfd4"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_ARC_A and SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 66.0
+                    },
+                    "uuid": "ab745479-2ea7-541b-b75e-650e757ad67d"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 146.61,
+                        "y": 63.30294
+                    },
+                    "uuid": "dc361275-2640-58b3-82fb-15fdcb70bf08"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_ARC_A and SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 180.0
+                    },
+                    "uuid": "75552f31-6323-5638-8665-cea214ef7e97"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 145.95,
+                        "y": 175.65294
+                    },
+                    "uuid": "9e97fec8-a58e-5f63-9f25-b7bd8eb19499"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_ARC_B and SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 144.05,
+                        "y": 316.34706
+                    },
+                    "uuid": "7b8bb5f6-c66d-582f-a855-22e7c8e1220f"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 294.0
+                    },
+                    "uuid": "fb80804c-64a8-5752-aef1-3a77666068bf"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_SPLINE_B and SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 179.2,
+                        "y": 271.6
+                    },
+                    "uuid": "9f97cae2-48c5-5506-9227-249757afac9f"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_OPEN_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 183.0,
+                        "y": 256.0
+                    },
+                    "uuid": "ecc647cb-8c9a-5e81-8c43-3321813a4f42"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_SPLINE_B and SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 179.2,
+                        "y": 312.0
+                    },
+                    "uuid": "889e49bc-d599-5775-831b-d241fdf570a4"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_SQUARE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 183.0,
+                        "y": 294.0
+                    },
+                    "uuid": "cc932256-dd3a-5018-813a-4c6559f82a80"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_SPLINE_A and SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 183.0,
+                        "y": 332.0
+                    },
+                    "uuid": "95454314-7202-5e16-ac5e-ccf4a89d2713"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_LINE_END_CIRCLE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 179.2,
+                        "y": 350.0
+                    },
+                    "uuid": "ad4fe52c-44cc-5e49-a5f0-43f341f57a1f"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_SPLINE_B and SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 178.54,
+                        "y": 234.35
+                    },
+                    "uuid": "a762f98d-0c49-56bd-85cb-7dfb1fc19498"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_END_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 183.0,
+                        "y": 218.0
+                    },
+                    "uuid": "c1629505-0838-51ca-b2bd-679baa5287ba"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_SPLINE_A and SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 183.0,
+                        "y": 66.0
+                    },
+                    "uuid": "3001e1a8-117a-5ec2-ae83-de8aa0afb471"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_LINE_START_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 187.46,
+                        "y": 67.65
+                    },
+                    "uuid": "b9bc3164-3ac5-58e3-a2d8-1b02054291ad"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_SPLINE_B and SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 186.8,
+                        "y": 180.0
+                    },
+                    "uuid": "c05c113b-4219-570e-a4c5-863311a04b03"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_CIRCLE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 183.0,
+                        "y": 180.0
+                    },
+                    "uuid": "c99574d0-ba24-5a35-b22c-e7e1d08ee521"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_SPLINE_A and SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 183.0,
+                        "y": 142.0
+                    },
+                    "uuid": "609f5879-e897-5967-9c0d-708eecd3a34d"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_LINE_START_SQUARE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 186.8,
+                        "y": 142.0
+                    },
+                    "uuid": "8f164c84-ff2e-5a5a-9f26-783f065d86d4"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_SPLINE_B and SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 186.8,
+                        "y": 106.4
+                    },
+                    "uuid": "26d85334-bd78-56da-b336-71a0ba7593f6"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_LINE_START_OPEN_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 183.0,
+                        "y": 104.0
+                    },
+                    "uuid": "cf9f6110-396c-5b5e-b68d-f8a7344b6af7"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_SQUARE_ROUTE_LINE_B and SHOULD_FAIL_ARC_START_SQUARE_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_ARC_START_SQUARE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 223.28,
+                        "y": 138.96
+                    },
+                    "uuid": "7979bbb9-d3a9-52b0-b659-ae5427200679"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_SQUARE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 214.25,
+                        "y": 151.0
+                    },
+                    "uuid": "a775d728-553f-5fc1-b9e6-691048d59999"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_CIRCLE_ROUTE_LINE_A and SHOULD_FAIL_ARC_END_CIRCLE_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_CIRCLE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 214.25,
+                        "y": 341.0
+                    },
+                    "uuid": "b95ed6c1-2c95-5477-aaea-c319d88379c0"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_ARC_END_CIRCLE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 218.72,
+                        "y": 346.96
+                    },
+                    "uuid": "e53b7a7a-b1b0-53a4-a350-4f9a2464405f"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_ARROW_ROUTE_LINE_A and SHOULD_FAIL_ARC_END_ARROW_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 214.25,
+                        "y": 227.0
+                    },
+                    "uuid": "015cec5d-0b73-52c1-b848-77b6881455c9"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_ARC_END_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 219.644,
+                        "y": 231.442
+                    },
+                    "uuid": "3f9a2688-d6f7-5b77-8104-08df4a6ed188"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_CIRCLE_ROUTE_LINE_A and SHOULD_FAIL_ARC_START_CIRCLE_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_CIRCLE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 214.25,
+                        "y": 189.0
+                    },
+                    "uuid": "10dc8df5-e767-59f7-b7f0-dea156d23c0d"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_ARC_START_CIRCLE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 223.28,
+                        "y": 176.96
+                    },
+                    "uuid": "1de5a095-1583-5eea-982a-629b29a30aca"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_SQUARE_ROUTE_LINE_B and SHOULD_FAIL_ARC_END_SQUARE_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_ARC_END_SQUARE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 218.72,
+                        "y": 308.96
+                    },
+                    "uuid": "c6e4df9d-d857-5346-a7bc-b5b57bf17a3a"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_SQUARE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 214.25,
+                        "y": 303.0
+                    },
+                    "uuid": "d72c1677-3710-5357-a71d-5f7d852c99be"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_OPEN_ARROW_ROUTE_LINE_B and SHOULD_FAIL_ARC_START_OPEN_ARROW_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_ARC_START_OPEN_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 225.2,
+                        "y": 102.4
+                    },
+                    "uuid": "579bfd35-dc2c-554b-8425-00bc49cfa68d"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_OPEN_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 214.25,
+                        "y": 113.0
+                    },
+                    "uuid": "75683e40-f6d0-5c7b-84dc-94c9a74527f6"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_OPEN_ARROW_ROUTE_LINE_B and SHOULD_FAIL_ARC_END_OPEN_ARROW_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_ARC_END_OPEN_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 220.64,
+                        "y": 269.52
+                    },
+                    "uuid": "c2c173b7-acf9-5373-9e52-cda62c6151e3"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_OPEN_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 214.25,
+                        "y": 265.0
+                    },
+                    "uuid": "d1847aef-ff66-54ee-9f0a-8e390e2ff835"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_ARROW_ROUTE_LINE_B and SHOULD_FAIL_ARC_START_ARROW_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_ARC_START_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 224.996,
+                        "y": 63.422
+                    },
+                    "uuid": "915f9f27-feb3-549f-8cea-87084a4b8852"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 214.25,
+                        "y": 75.0
+                    },
+                    "uuid": "b6ce7532-c2f4-5c2b-b9c4-f176e9acff20"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_SQUARE_ROUTE_ARC_B and SHOULD_FAIL_ARC_START_SQUARE_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_ARC_START_SQUARE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 256.092353,
+                        "y": 138.631765
+                    },
+                    "uuid": "34daaf91-ab71-5ca1-8722-c6a339c8b038"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_SQUARE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 252.25,
+                        "y": 151.0
+                    },
+                    "uuid": "c7732b0b-f6a0-5867-b1b6-99bc6efa020f"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_CIRCLE_ROUTE_ARC_A and SHOULD_FAIL_ARC_END_CIRCLE_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_CIRCLE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 252.25,
+                        "y": 341.0
+                    },
+                    "uuid": "6d1d3598-7621-5419-8d60-4b2eea7c0094"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_ARC_END_CIRCLE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 254.952353,
+                        "y": 351.848235
+                    },
+                    "uuid": "cabf78a5-0fd1-5b9b-b6fc-ea33c024dfd2"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_SQUARE_ROUTE_ARC_B and SHOULD_FAIL_ARC_END_SQUARE_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_ARC_END_SQUARE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 254.952353,
+                        "y": 313.848235
+                    },
+                    "uuid": "4f8597fb-f743-5562-8bb3-4c1dfdae0e5a"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_SQUARE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 252.25,
+                        "y": 303.0
+                    },
+                    "uuid": "7d843ade-4a09-56d7-ac2f-80b5296fdb7d"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_ARROW_ROUTE_ARC_A and SHOULD_FAIL_ARC_END_ARROW_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 252.25,
+                        "y": 227.0
+                    },
+                    "uuid": "2ecb24e9-90ef-50f1-b3c9-828aaf631dcb"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_ARC_END_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 255.876353,
+                        "y": 236.330235
+                    },
+                    "uuid": "40619609-fa19-52b4-888c-d7320f41f5bf"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_CIRCLE_ROUTE_ARC_A and SHOULD_FAIL_ARC_START_CIRCLE_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_CIRCLE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 252.25,
+                        "y": 189.0
+                    },
+                    "uuid": "4c6d8a1c-b689-5718-b424-3bac3b3eb415"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_ARC_START_CIRCLE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 256.092353,
+                        "y": 176.631765
+                    },
+                    "uuid": "775a2c59-93f2-5f5e-91e6-a2b40235537c"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_OPEN_ARROW_ROUTE_ARC_B and SHOULD_FAIL_ARC_START_OPEN_ARROW_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_ARC_START_OPEN_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 258.012353,
+                        "y": 102.071765
+                    },
+                    "uuid": "66cf741a-0917-59bf-926c-5aafb8b38724"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_OPEN_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 252.25,
+                        "y": 113.0
+                    },
+                    "uuid": "b4e933db-49b9-540c-890b-c6a8924a206e"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_OPEN_ARROW_ROUTE_ARC_B and SHOULD_FAIL_ARC_END_OPEN_ARROW_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_ARC_END_OPEN_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 256.872353,
+                        "y": 274.408235
+                    },
+                    "uuid": "12cf36be-2ad3-58c9-896a-584cdb2ecade"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_OPEN_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 252.25,
+                        "y": 265.0
+                    },
+                    "uuid": "e3997398-ff7c-5fd8-b068-6e02066f72ad"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_ARROW_ROUTE_ARC_A and SHOULD_FAIL_ARC_START_ARROW_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 252.25,
+                        "y": 75.0
+                    },
+                    "uuid": "7e1481bf-04f0-5404-8102-5ee22f88199f"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_ARC_START_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 257.808353,
+                        "y": 63.093765
+                    },
+                    "uuid": "f20e507d-c5f6-59bc-b359-983d24d57baf"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_LINE_B and SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 299.28,
+                        "y": 138.96
+                    },
+                    "uuid": "32719709-788d-546e-9653-ac5e3ed44762"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 290.25,
+                        "y": 151.0
+                    },
+                    "uuid": "73a968f2-522f-5bcd-9414-40549db6b216"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_LINE_A and SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 290.25,
+                        "y": 341.0
+                    },
+                    "uuid": "8cdc1273-7a22-53db-a0cb-912b2eb17bff"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 294.72,
+                        "y": 346.96
+                    },
+                    "uuid": "c4e56615-50af-52b5-b0a2-52db1e10669c"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_LINE_B and SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 295.644,
+                        "y": 231.442
+                    },
+                    "uuid": "a748b2b2-e583-56fe-9c06-177616209128"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 290.25,
+                        "y": 227.0
+                    },
+                    "uuid": "c3d16443-73f0-5af9-9f3b-606ff16aa4db"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_LINE_B and SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 299.28,
+                        "y": 176.96
+                    },
+                    "uuid": "1803aec6-e41b-57e1-a396-23e58338a287"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 290.25,
+                        "y": 189.0
+                    },
+                    "uuid": "a742daed-6a6c-58e6-b61c-eda695b5e671"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_LINE_B and SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 294.72,
+                        "y": 308.96
+                    },
+                    "uuid": "265dfa5d-42e2-5945-90d1-1609d2010746"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 290.25,
+                        "y": 303.0
+                    },
+                    "uuid": "53b24572-3259-5bec-9da8-26dc0743753a"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_LINE_A and SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 290.25,
+                        "y": 113.0
+                    },
+                    "uuid": "2c4b689c-6925-516c-9b3c-182eae1bd0ad"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 301.2,
+                        "y": 102.4
+                    },
+                    "uuid": "bca3a119-9758-5ca8-96d3-638dd50ab8e9"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_LINE_B and SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 296.64,
+                        "y": 269.52
+                    },
+                    "uuid": "cb013275-9908-5f54-8dd0-9fe24e997c38"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 290.25,
+                        "y": 265.0
+                    },
+                    "uuid": "e3d1c6f8-f3b1-5be9-a2d2-6bee4e6ee420"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_LINE_A and SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 290.25,
+                        "y": 75.0
+                    },
+                    "uuid": "6c69bbc2-0007-57f3-98ff-aa369089bdf6"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 300.996,
+                        "y": 63.422
+                    },
+                    "uuid": "7c5bb19b-a4e9-5c11-9a0a-57d0c67e8e7d"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_ARC_B and SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 332.092353,
+                        "y": 138.631765
+                    },
+                    "uuid": "1cc675d6-aa71-5ad3-a581-bf807eb0cf6f"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 328.25,
+                        "y": 151.0
+                    },
+                    "uuid": "e030f852-4103-5234-ac2f-9d2b395089ce"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_ARC_B and SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 330.952353,
+                        "y": 351.848235
+                    },
+                    "uuid": "06eeb18e-f7f8-5ba9-bfa6-433936c9401a"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 328.25,
+                        "y": 341.0
+                    },
+                    "uuid": "0786c18c-4a6f-5383-b1dc-7336bab5769e"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_ARC_B and SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 330.952353,
+                        "y": 313.848235
+                    },
+                    "uuid": "4b406f79-6d92-5d40-9663-b670de6b0074"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 328.25,
+                        "y": 303.0
+                    },
+                    "uuid": "99578c52-e309-5f24-8ccf-15d8e8d3a9ac"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_ARC_B and SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 331.876353,
+                        "y": 236.330235
+                    },
+                    "uuid": "daa9be51-3733-550e-a72b-86c994b5c843"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 328.25,
+                        "y": 227.0
+                    },
+                    "uuid": "f539cde4-edde-563e-abac-ff94d32a593a"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_ARC_A and SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 328.25,
+                        "y": 189.0
+                    },
+                    "uuid": "86112716-0f5a-58f2-ade0-9096bea081cf"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 332.092353,
+                        "y": 176.631765
+                    },
+                    "uuid": "c001719f-347c-5ef1-8830-2267cf2791dc"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_ARC_A and SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 328.25,
+                        "y": 113.0
+                    },
+                    "uuid": "0da2adaa-f8b9-572b-b91d-f99c95d45517"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 334.012353,
+                        "y": 102.071765
+                    },
+                    "uuid": "c7d1346a-ba3e-5d10-96a2-68d958a726ec"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_ARC_A and SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 328.25,
+                        "y": 265.0
+                    },
+                    "uuid": "ad23a771-4078-5e12-b7d4-eafc3a042b65"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 332.872353,
+                        "y": 274.408235
+                    },
+                    "uuid": "fd00ac3a-a132-5f39-86df-5fd68ee7cd6d"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_ARC_A and SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 328.25,
+                        "y": 75.0
+                    },
+                    "uuid": "5fffb0a5-b62b-5b56-9b43-30636bd66438"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 333.808353,
+                        "y": 63.093765
+                    },
+                    "uuid": "ac5939a5-e985-5cec-9e51-63a6d537b6db"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_SPLINE_A and SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 366.25,
+                        "y": 303.0
+                    },
+                    "uuid": "39512e38-96ad-5b7b-93c5-31c92d3ccfd5"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_ARC_END_SQUARE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 370.72,
+                        "y": 308.96
+                    },
+                    "uuid": "5e2c748e-4ba5-5f84-ae86-b46863654e07"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_SPLINE_B and SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 370.72,
+                        "y": 346.96
+                    },
+                    "uuid": "41264632-067b-59bf-8c9d-8ccf529a7bf3"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_CIRCLE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 366.25,
+                        "y": 341.0
+                    },
+                    "uuid": "483be624-4552-5dbf-b8c0-636d90fdb460"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_SPLINE_B and SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 371.644,
+                        "y": 231.442
+                    },
+                    "uuid": "673b7653-0daf-5377-9477-7dcb12829132"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 366.25,
+                        "y": 227.0
+                    },
+                    "uuid": "ad0f70e7-93ff-586c-8488-f5f4c53d13ed"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_SPLINE_A and SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 366.25,
+                        "y": 189.0
+                    },
+                    "uuid": "cbe03e54-6c5c-58ef-8e2a-0de66eee1f0f"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_ARC_START_CIRCLE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 375.28,
+                        "y": 176.96
+                    },
+                    "uuid": "ce27c3b6-cda8-5726-9a1e-ff89280e8b9d"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_SPLINE_B and SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 375.28,
+                        "y": 138.96
+                    },
+                    "uuid": "0ad66914-f232-5282-8692-b9a9ee01c82f"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_SQUARE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 366.25,
+                        "y": 151.0
+                    },
+                    "uuid": "7c2ea31e-0115-5d7e-9217-7183ecf974bc"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_SPLINE_A and SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 366.25,
+                        "y": 113.0
+                    },
+                    "uuid": "74bb243c-2b8b-5691-a3da-13fd4b2f66e0"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_ARC_START_OPEN_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 377.2,
+                        "y": 102.4
+                    },
+                    "uuid": "d563c03c-1480-56b6-a931-07246f836f18"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_SPLINE_A and SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 366.25,
+                        "y": 265.0
+                    },
+                    "uuid": "c943747f-a9b6-52d9-b06e-ab324ab66e81"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_ARC_END_OPEN_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 372.64,
+                        "y": 269.52
+                    },
+                    "uuid": "f4d26a6e-beea-5dca-b06b-0743aaa8548c"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_SPLINE_B and SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 376.996,
+                        "y": 63.422
+                    },
+                    "uuid": "87eef05b-e3a4-5c83-b4d2-eaa2889ac7c5"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_ARC_START_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 366.25,
+                        "y": 75.0
+                    },
+                    "uuid": "f770df66-7fba-51e1-ac81-0e224b806bc9"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_ARROW_ROUTE_LINE_B and SHOULD_FAIL_SPLINE_END_ARROW_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_SPLINE_END_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 406.442,
+                        "y": 237.356
+                    },
+                    "uuid": "5a7d6e01-a620-523a-845b-9e1e89677c91"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 411.0,
+                        "y": 218.0
+                    },
+                    "uuid": "7b17783f-3020-551c-8004-aa6507e3af21"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_SQUARE_ROUTE_LINE_B and SHOULD_FAIL_SPLINE_START_SQUARE_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_SPLINE_START_SQUARE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 414.04,
+                        "y": 139.72
+                    },
+                    "uuid": "33f57d9d-1335-521f-af98-46b42be7e857"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_SQUARE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 411.0,
+                        "y": 142.0
+                    },
+                    "uuid": "3733365b-28b3-5132-a797-7dbff4887743"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_CIRCLE_ROUTE_LINE_A and SHOULD_FAIL_SPLINE_END_CIRCLE_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_CIRCLE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 411.0,
+                        "y": 332.0
+                    },
+                    "uuid": "333806d8-739d-5fe4-99fb-89e18fce8bc9"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_SPLINE_END_CIRCLE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 407.96,
+                        "y": 352.28
+                    },
+                    "uuid": "d5fd5e44-d8e8-5a1d-9581-b21535f0a29b"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_OPEN_ARROW_ROUTE_LINE_B and SHOULD_FAIL_SPLINE_END_OPEN_ARROW_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_SPLINE_END_OPEN_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 406.52,
+                        "y": 274.36
+                    },
+                    "uuid": "0ab7cf8d-ee57-52a2-ae71-e0800cf57c95"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_OPEN_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 411.0,
+                        "y": 256.0
+                    },
+                    "uuid": "e40674ff-3a45-5650-9e87-726fd1d37c2a"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_OPEN_ARROW_ROUTE_LINE_B and SHOULD_FAIL_SPLINE_START_OPEN_ARROW_ROUTE_LINE_A)",
+            "items": [
+                {
+                    "description": "Track [SHOULD_FAIL_SPLINE_START_OPEN_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 415.48,
+                        "y": 103.64
+                    },
+                    "uuid": "05a61091-6448-5965-ab36-7dc2e679989d"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_OPEN_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 411.0,
+                        "y": 104.0
+                    },
+                    "uuid": "853333bc-96fb-527f-a96f-e56dc71e570d"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_CIRCLE_ROUTE_LINE_A and SHOULD_FAIL_SPLINE_START_CIRCLE_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_CIRCLE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 411.0,
+                        "y": 180.0
+                    },
+                    "uuid": "7d6b1fea-87ea-5b52-8e71-e55f3de06a13"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_SPLINE_START_CIRCLE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 414.04,
+                        "y": 177.72
+                    },
+                    "uuid": "9fa49505-945c-50ca-ad65-a333f8681776"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_SQUARE_ROUTE_LINE_A and SHOULD_FAIL_SPLINE_END_SQUARE_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_SQUARE_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 411.0,
+                        "y": 294.0
+                    },
+                    "uuid": "7bb277cf-32c3-510e-b6be-e0e791a22975"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_SPLINE_END_SQUARE_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 407.96,
+                        "y": 314.28
+                    },
+                    "uuid": "ffd573cf-d041-50f6-9835-08ca756aa344"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_ARROW_ROUTE_LINE_A and SHOULD_FAIL_SPLINE_START_ARROW_ROUTE_LINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_ARROW_ROUTE_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 411.0,
+                        "y": 66.0
+                    },
+                    "uuid": "8c72e747-3237-56be-99c0-2f8d245bb12c"
+                },
+                {
+                    "description": "Track [SHOULD_FAIL_SPLINE_START_ARROW_ROUTE_LINE_B] on F.Cu, length 5.7000 mm",
+                    "pos": {
+                        "x": 415.558,
+                        "y": 64.644
+                    },
+                    "uuid": "bcb4d775-724a-50ed-8b25-2417479df8bc"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_ARROW_ROUTE_ARC_B and SHOULD_FAIL_SPLINE_END_ARROW_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_SPLINE_END_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 449.330235,
+                        "y": 239.123647
+                    },
+                    "uuid": "08334d57-f6e4-5bfc-80ba-d48698168920"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 449.0,
+                        "y": 218.0
+                    },
+                    "uuid": "b4d92684-8059-5d1b-a6bd-688c1cc130b9"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_CIRCLE_ROUTE_ARC_B and SHOULD_FAIL_SPLINE_END_CIRCLE_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_SPLINE_END_CIRCLE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 450.848235,
+                        "y": 354.047647
+                    },
+                    "uuid": "83d4b142-d748-5a5f-b038-f3e7b4ca4a7c"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_CIRCLE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 449.0,
+                        "y": 332.0
+                    },
+                    "uuid": "8e92edda-5ff5-5134-8990-089b82d9680e"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_OPEN_ARROW_ROUTE_ARC_A and SHOULD_FAIL_SPLINE_END_OPEN_ARROW_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_OPEN_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 449.0,
+                        "y": 256.0
+                    },
+                    "uuid": "5e7e8f4c-6883-5dae-a0bb-98ee89e24990"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_SPLINE_END_OPEN_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 449.408235,
+                        "y": 276.127647
+                    },
+                    "uuid": "c418d57c-b1f7-5da7-9923-5a8208d786ce"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_SQUARE_ROUTE_ARC_A and SHOULD_FAIL_SPLINE_START_SQUARE_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_SQUARE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 449.0,
+                        "y": 142.0
+                    },
+                    "uuid": "8cc37d87-21f8-5e4d-97ae-4dd8c5be8801"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_SPLINE_START_SQUARE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 447.151765,
+                        "y": 137.952353
+                    },
+                    "uuid": "d5513cc9-e73e-5ac6-afe3-0caa3f2e66ef"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_SQUARE_ROUTE_ARC_B and SHOULD_FAIL_SPLINE_END_SQUARE_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_SPLINE_END_SQUARE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 450.848235,
+                        "y": 316.047647
+                    },
+                    "uuid": "6189ae73-e7da-5019-b8ec-6552a5cfd230"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_SQUARE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 449.0,
+                        "y": 294.0
+                    },
+                    "uuid": "b20560ce-bc50-5d1e-aa01-b3bedc94955c"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_OPEN_ARROW_ROUTE_ARC_A and SHOULD_FAIL_SPLINE_START_OPEN_ARROW_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_OPEN_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 449.0,
+                        "y": 104.0
+                    },
+                    "uuid": "9d070a49-c913-5b3d-b786-0d9204672914"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_SPLINE_START_OPEN_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 448.591765,
+                        "y": 101.872353
+                    },
+                    "uuid": "dddbee12-e9f3-5c8e-b743-910b409d63c6"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_CIRCLE_ROUTE_ARC_A and SHOULD_FAIL_SPLINE_START_CIRCLE_ROUTE_ARC_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_CIRCLE_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 449.0,
+                        "y": 180.0
+                    },
+                    "uuid": "3e758c26-c662-5e48-b929-78fe24e52d3b"
+                },
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_SPLINE_START_CIRCLE_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 447.151765,
+                        "y": 175.952353
+                    },
+                    "uuid": "a5949c4a-130d-50b6-9760-deb794c42dc3"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_ARROW_ROUTE_ARC_B and SHOULD_FAIL_SPLINE_START_ARROW_ROUTE_ARC_A)",
+            "items": [
+                {
+                    "description": "Track (arc) [SHOULD_FAIL_SPLINE_START_ARROW_ROUTE_ARC_B] on F.Cu, length 6.0330 mm",
+                    "pos": {
+                        "x": 448.669765,
+                        "y": 62.876353
+                    },
+                    "uuid": "2c0d13b1-a8a0-5c92-b397-1648faaa7030"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_ARROW_ROUTE_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 449.0,
+                        "y": 66.0
+                    },
+                    "uuid": "904d20fd-c81e-5c4f-a889-f11b0e3c2e9f"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_LINE_A and SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 487.0,
+                        "y": 218.0
+                    },
+                    "uuid": "03d8e564-8e89-55d4-96e8-64cb0bd7dfb2"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 482.442,
+                        "y": 237.356
+                    },
+                    "uuid": "951c1852-b573-539b-b7a8-1276018536df"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_LINE_B and SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 490.04,
+                        "y": 139.72
+                    },
+                    "uuid": "49e600e0-463a-5386-8d8e-419c53f158dc"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 487.0,
+                        "y": 142.0
+                    },
+                    "uuid": "99a9664a-78af-5b48-adef-278627348faa"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_LINE_B and SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 483.96,
+                        "y": 352.28
+                    },
+                    "uuid": "6945a330-d71f-5c7c-8143-3820fa53e399"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 487.0,
+                        "y": 332.0
+                    },
+                    "uuid": "8ecce3f6-2d8c-52fb-ab5e-43ce6a12a1b6"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_LINE_A and SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 487.0,
+                        "y": 256.0
+                    },
+                    "uuid": "1bfd7e78-58d6-5083-a8b2-6dbfe7816e55"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 482.52,
+                        "y": 274.36
+                    },
+                    "uuid": "c27bc0ae-de0f-5925-94cb-b5febd5c38a0"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_LINE_B and SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 491.48,
+                        "y": 103.64
+                    },
+                    "uuid": "6eb498e7-0445-5108-94eb-a610865447e1"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 487.0,
+                        "y": 104.0
+                    },
+                    "uuid": "be55635a-bd58-506f-b3d6-86b9759d87f2"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_LINE_B and SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_LINE_A)",
+            "items": [
+                {
+                    "description": "Segment [SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 490.04,
+                        "y": 177.72
+                    },
+                    "uuid": "8944c42a-57f3-5391-b0cf-c4656cc3c4cc"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 487.0,
+                        "y": 180.0
+                    },
+                    "uuid": "b3a42b91-6fc1-532e-ac1f-2017328aa263"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_LINE_A and SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 487.0,
+                        "y": 294.0
+                    },
+                    "uuid": "2bcf4f42-5b2a-5771-80e4-5458501d33c3"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 483.96,
+                        "y": 314.28
+                    },
+                    "uuid": "b4888561-e2d0-502a-ab0b-6db7c67bf821"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_LINE_A and SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_LINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_LINE_A] on F.Cu",
+                    "pos": {
+                        "x": 487.0,
+                        "y": 66.0
+                    },
+                    "uuid": "072d03c5-14bc-5011-87c5-a1b759ae07c1"
+                },
+                {
+                    "description": "Segment [SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_LINE_B] on F.Cu",
+                    "pos": {
+                        "x": 491.558,
+                        "y": 64.644
+                    },
+                    "uuid": "6708b9b0-faee-59c4-bc66-383690c6c5dd"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_ARC_A and SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 525.0,
+                        "y": 218.0
+                    },
+                    "uuid": "4d923c75-7743-5f89-8e4e-0a82cc30d0df"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 525.330235,
+                        "y": 239.123647
+                    },
+                    "uuid": "db3ce47a-589e-5b8f-a694-44c52894b694"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_ARC_A and SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 525.0,
+                        "y": 332.0
+                    },
+                    "uuid": "00a04b0e-737d-58a2-a917-5fffec4ee3a2"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 526.848235,
+                        "y": 354.047647
+                    },
+                    "uuid": "ae081a5c-3f9b-5361-80a4-3b4677b5d5bf"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_ARC_B and SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 525.408235,
+                        "y": 276.127647
+                    },
+                    "uuid": "94637fa4-4634-53c1-ae12-c11bb4ff823d"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 525.0,
+                        "y": 256.0
+                    },
+                    "uuid": "a29065a9-019e-55e1-a453-e5f08086f2c1"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_ARC_A and SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 525.0,
+                        "y": 142.0
+                    },
+                    "uuid": "4d7d0971-1f62-5d8c-8cbd-16d86f8c9e67"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 523.151765,
+                        "y": 137.952353
+                    },
+                    "uuid": "6b82a916-2d04-5781-8f0b-9cae0ed57d7c"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_ARC_B and SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 526.848235,
+                        "y": 316.047647
+                    },
+                    "uuid": "34725095-c193-52f3-80d8-25cb3de44a24"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 525.0,
+                        "y": 294.0
+                    },
+                    "uuid": "6cba80f2-094d-5248-8f28-0fe37ee12cd2"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_ARC_B and SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 524.591765,
+                        "y": 101.872353
+                    },
+                    "uuid": "017f0343-a782-5bd5-9358-fee61235e9fa"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 525.0,
+                        "y": 104.0
+                    },
+                    "uuid": "5c2b69bb-6b1a-5b54-845f-a8183e376a30"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_ARC_B and SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_ARC_A)",
+            "items": [
+                {
+                    "description": "Arc [SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 523.151765,
+                        "y": 175.952353
+                    },
+                    "uuid": "7788b87d-199b-5185-9a11-03584c857dee"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 525.0,
+                        "y": 180.0
+                    },
+                    "uuid": "c75568db-b34b-5cf0-912a-fc1e4a88ed21"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_ARC_A and SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_ARC_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_ARC_A] on F.Cu",
+                    "pos": {
+                        "x": 525.0,
+                        "y": 66.0
+                    },
+                    "uuid": "3f54a907-ded3-54e3-ad87-bfea10e98902"
+                },
+                {
+                    "description": "Arc [SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_ARC_B] on F.Cu",
+                    "pos": {
+                        "x": 524.669765,
+                        "y": 62.876353
+                    },
+                    "uuid": "b41f543b-4df4-5f24-91c0-af43990f1936"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_SPLINE_B and SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 558.52,
+                        "y": 274.36
+                    },
+                    "uuid": "6481af4b-12d7-5597-8b37-7c6f93c7133d"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_OPEN_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 563.0,
+                        "y": 256.0
+                    },
+                    "uuid": "e6afd934-0f3e-5e6a-b010-b4620b0f2370"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_SPLINE_A and SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 563.0,
+                        "y": 294.0
+                    },
+                    "uuid": "092b2357-0cea-5367-a442-c0ead41c7294"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_SQUARE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 559.96,
+                        "y": 314.28
+                    },
+                    "uuid": "8fa04801-a35d-5c33-a7f4-86e51c309803"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_SPLINE_A and SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 563.0,
+                        "y": 332.0
+                    },
+                    "uuid": "b81d16f7-2f18-5158-aebe-4567a4fa8364"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_CIRCLE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 559.96,
+                        "y": 352.28
+                    },
+                    "uuid": "f08f215c-5edc-5770-afd5-e2e023b6a56d"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_SPLINE_A and SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 563.0,
+                        "y": 218.0
+                    },
+                    "uuid": "0b731d35-facc-5400-ba39-08d1e7a6aaff"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_END_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 558.442,
+                        "y": 237.356
+                    },
+                    "uuid": "d9ae59fc-ce99-5b4a-b4f3-931c2c3f487c"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_SPLINE_A and SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 563.0,
+                        "y": 66.0
+                    },
+                    "uuid": "620b3f3e-b65b-588e-b3fb-f679b9ccdf3d"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 567.558,
+                        "y": 64.644
+                    },
+                    "uuid": "c93a1101-c1fd-570d-b17e-ffccb0c19b11"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_SPLINE_A and SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 563.0,
+                        "y": 180.0
+                    },
+                    "uuid": "06fb9b2f-448f-5d95-ab63-38324aaf590f"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_CIRCLE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 566.04,
+                        "y": 177.72
+                    },
+                    "uuid": "c60cae79-b5ba-5dc2-a5d3-8a030075bbc1"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_SPLINE_A and SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_SPLINE_B)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 563.0,
+                        "y": 142.0
+                    },
+                    "uuid": "3e4c808c-b5a9-54be-92ef-fdcfd2264786"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_SQUARE_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 566.04,
+                        "y": 139.72
+                    },
+                    "uuid": "80235065-979e-5b01-ab95-494df36703f6"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_SPLINE_B and SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_SPLINE_A)",
+            "items": [
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_SPLINE_B] on F.Cu",
+                    "pos": {
+                        "x": 567.48,
+                        "y": 103.64
+                    },
+                    "uuid": "04592a08-1496-5b95-b220-f16d3c32eea5"
+                },
+                {
+                    "description": "Curve [SHOULD_FAIL_SPLINE_START_OPEN_ARROW_GRAPHIC_SPLINE_A] on F.Cu",
+                    "pos": {
+                        "x": 563.0,
+                        "y": 104.0
+                    },
+                    "uuid": "737f13c3-fba4-5bbd-afdf-c5a17d66ce2b"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        }
+    ]
+}

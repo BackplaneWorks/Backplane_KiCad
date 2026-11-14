@@ -1,0 +1,3814 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:36",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "CM5_MINIMA_3.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 88.9,
+                        "y": 36.15
+                    },
+                    "uuid": "11659109-eea0-488c-af3a-a134aa53be7b"
+                },
+                {
+                    "description": "Footprint H102",
+                    "pos": {
+                        "x": 78.15,
+                        "y": 23.35
+                    },
+                    "uuid": "e230c5a8-92bf-4d40-a3da-f37e567e2181"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.3720 mm; actual 0.2164 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 78.37,
+                        "y": 44.033579
+                    },
+                    "uuid": "97061889-34eb-4492-a094-75af3bfc63fc"
+                },
+                {
+                    "description": "Pad 15 [Net-(J1-MP1)] of J1 on F.Cu",
+                    "pos": {
+                        "x": 83.996,
+                        "y": 45.3
+                    },
+                    "uuid": "9b661cca-75f2-462e-a561-17af220ffeac"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.3720 mm; actual 0.1914 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 89.283579,
+                        "y": 28.241421
+                    },
+                    "uuid": "7452d5d8-f08d-4d64-aee4-6d1b2950fa98"
+                },
+                {
+                    "description": "Pad 16 [Net-(J1-MP1)] of J1 on F.Cu",
+                    "pos": {
+                        "x": 83.996,
+                        "y": 27.0
+                    },
+                    "uuid": "49b75ad8-fc3a-49c8-924c-33c13f64f61a"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu, B.Cu and 3 more, priority 0",
+                    "pos": {
+                        "x": 74.99,
+                        "y": 20.22
+                    },
+                    "uuid": "6639aad9-23df-4a45-9cb9-f9efd7cc4ef0"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 78.360637,
+                        "y": 74.706167
+                    },
+                    "uuid": "cb5b11fd-e331-4f68-bea4-3f757e3d4c65"
+                },
+                {
+                    "description": "Segment of USB701 on F.Silkscreen",
+                    "pos": {
+                        "x": 76.1,
+                        "y": 63.85
+                    },
+                    "uuid": "e894dc20-6970-461e-865e-6528eb7b9180"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 78.360637,
+                        "y": 74.706167
+                    },
+                    "uuid": "cb5b11fd-e331-4f68-bea4-3f757e3d4c65"
+                },
+                {
+                    "description": "Segment of USB701 on F.Silkscreen",
+                    "pos": {
+                        "x": 76.1,
+                        "y": 60.65
+                    },
+                    "uuid": "e11a6864-91db-4316-b286-56a3d76071e2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 78.360637,
+                        "y": 74.706167
+                    },
+                    "uuid": "cb5b11fd-e331-4f68-bea4-3f757e3d4c65"
+                },
+                {
+                    "description": "Segment of J101 on F.Silkscreen",
+                    "pos": {
+                        "x": 76.1,
+                        "y": 52.3
+                    },
+                    "uuid": "c3896774-e5dd-4fe6-9d8a-2430cac2b022"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 78.360637,
+                        "y": 74.706167
+                    },
+                    "uuid": "cb5b11fd-e331-4f68-bea4-3f757e3d4c65"
+                },
+                {
+                    "description": "Segment of J101 on F.Silkscreen",
+                    "pos": {
+                        "x": 76.1,
+                        "y": 49.1
+                    },
+                    "uuid": "c7cd0ef7-13de-49de-9548-8ac99feb425c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 89.483579,
+                        "y": 28.441421
+                    },
+                    "uuid": "34ca15aa-c78e-40f4-831e-3592c20f8bae"
+                },
+                {
+                    "description": "Segment of J1 on F.Silkscreen",
+                    "pos": {
+                        "x": 86.156,
+                        "y": 28.4
+                    },
+                    "uuid": "62e7d28e-e92c-422a-b6e7-3302ac4fa6f8"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 89.483579,
+                        "y": 28.441421
+                    },
+                    "uuid": "34ca15aa-c78e-40f4-831e-3592c20f8bae"
+                },
+                {
+                    "description": "Segment of J1 on F.Silkscreen",
+                    "pos": {
+                        "x": 97.497,
+                        "y": 43.9
+                    },
+                    "uuid": "eee6648d-5e5f-44ca-bcfe-9a3ed0f173ae"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 126.424817,
+                        "y": 81.07
+                    },
+                    "uuid": "1dc07690-6e29-4100-b2c1-5bb983a3b7ca"
+                },
+                {
+                    "description": "Segment of J501 on F.Silkscreen",
+                    "pos": {
+                        "x": 90.99,
+                        "y": 81.62
+                    },
+                    "uuid": "2e6b6ea8-9e35-4c56-a0aa-41f1c3494cc5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 126.424817,
+                        "y": 81.07
+                    },
+                    "uuid": "1dc07690-6e29-4100-b2c1-5bb983a3b7ca"
+                },
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 77.6
+                    },
+                    "uuid": "0d2346ea-ca2e-433d-960a-78804ba58649"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 126.424817,
+                        "y": 81.07
+                    },
+                    "uuid": "1dc07690-6e29-4100-b2c1-5bb983a3b7ca"
+                },
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 77.6
+                    },
+                    "uuid": "23b44f45-07c2-43e8-97cc-863774f59ab5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 126.424817,
+                        "y": 81.07
+                    },
+                    "uuid": "1dc07690-6e29-4100-b2c1-5bb983a3b7ca"
+                },
+                {
+                    "description": "Segment of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 81.1
+                    },
+                    "uuid": "c3b5f4aa-b3f4-4adf-893a-9543d0dd2dfb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 126.424817,
+                        "y": 81.07
+                    },
+                    "uuid": "1dc07690-6e29-4100-b2c1-5bb983a3b7ca"
+                },
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 81.1
+                    },
+                    "uuid": "d5cac4ec-7553-456d-87b5-2c2091b77ddb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 85.141566,
+                        "y": 23.93
+                    },
+                    "uuid": "d45d9307-6208-49e5-b514-f1fefec85348"
+                },
+                {
+                    "description": "Circle of J701 on F.Silkscreen",
+                    "pos": {
+                        "x": 104.35,
+                        "y": 23.929
+                    },
+                    "uuid": "392b0154-e4bc-4417-86b4-5432d98f09df"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 126.424817,
+                        "y": 81.07
+                    },
+                    "uuid": "1dc07690-6e29-4100-b2c1-5bb983a3b7ca"
+                },
+                {
+                    "description": "Segment of J501 on F.Silkscreen",
+                    "pos": {
+                        "x": 107.19,
+                        "y": 79.17
+                    },
+                    "uuid": "d6b63a15-7cfe-45ef-8b31-26d00b51f6a8"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 132.901934,
+                        "y": 30.038716
+                    },
+                    "uuid": "5a0417c7-12c3-4f9d-9f41-50fb78807fd9"
+                },
+                {
+                    "description": "Segment of SW501 on F.Silkscreen",
+                    "pos": {
+                        "x": 133.27,
+                        "y": 65.27
+                    },
+                    "uuid": "59353c05-1e85-4e72-9309-d0c9d78e2d07"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 132.901934,
+                        "y": 30.038716
+                    },
+                    "uuid": "5a0417c7-12c3-4f9d-9f41-50fb78807fd9"
+                },
+                {
+                    "description": "Segment of SW501 on F.Silkscreen",
+                    "pos": {
+                        "x": 133.27,
+                        "y": 67.27
+                    },
+                    "uuid": "38251973-d70a-42bd-b068-b0b2bc7d989d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 132.901934,
+                        "y": 30.038716
+                    },
+                    "uuid": "5a0417c7-12c3-4f9d-9f41-50fb78807fd9"
+                },
+                {
+                    "description": "Segment of SW101 on B.Silkscreen",
+                    "pos": {
+                        "x": 133.36,
+                        "y": 72.93
+                    },
+                    "uuid": "2975bc39-1982-4a61-8c3e-c3f5e3bc3df5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 132.901934,
+                        "y": 30.038716
+                    },
+                    "uuid": "5a0417c7-12c3-4f9d-9f41-50fb78807fd9"
+                },
+                {
+                    "description": "Segment of SW101 on B.Silkscreen",
+                    "pos": {
+                        "x": 132.06,
+                        "y": 74.13
+                    },
+                    "uuid": "ff5547d4-c424-457f-aa5e-fd537ed60256"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Drilled holes co-located",
+            "items": [
+                {
+                    "description": "NPTH pad of Module302",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "ac1d12a2-a341-469d-823f-b3bd5cb99bcd"
+                },
+                {
+                    "description": "NPTH pad of Module301",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "f0e3e8a2-0e8b-4871-8046-60013632bac1"
+                }
+            ],
+            "severity": "warning",
+            "type": "holes_co_located"
+        },
+        {
+            "description": "Drilled holes co-located",
+            "items": [
+                {
+                    "description": "NPTH pad of Module301",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "5173c700-7c12-405a-bf07-235b8a520c9b"
+                },
+                {
+                    "description": "NPTH pad of Module302",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "79e4ed43-b7a2-4b37-82e9-812fd8bdff79"
+                }
+            ],
+            "severity": "warning",
+            "type": "holes_co_located"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBD221",
+                    "pos": {
+                        "x": 78.826325,
+                        "y": 79.7
+                    },
+                    "uuid": "e77d3529-2ff1-4cf9-84b8-358373f23ec3"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-675EDCA4",
+                    "pos": {
+                        "x": 81.5,
+                        "y": 61.845681
+                    },
+                    "uuid": "1529f42b-b37f-476e-92ed-7e1c42c77394"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-675EDCB9",
+                    "pos": {
+                        "x": 81.65,
+                        "y": 43.472112
+                    },
+                    "uuid": "420670ce-76ef-412d-87b2-75c1ea31d87d"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBF14E",
+                    "pos": {
+                        "x": 81.65,
+                        "y": 75.88665
+                    },
+                    "uuid": "9ae94624-649e-4cb3-9bd6-b2326e001bd2"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBF015",
+                    "pos": {
+                        "x": 84.185268,
+                        "y": 62.4
+                    },
+                    "uuid": "16f5aaf7-83b0-480c-bc6c-18e7db8397c2"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC6BA6",
+                    "pos": {
+                        "x": 85.293303,
+                        "y": 76.05
+                    },
+                    "uuid": "f5e9823f-aa94-4d83-894c-7c71fe4aae63"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBD21C",
+                    "pos": {
+                        "x": 86.64,
+                        "y": 79.528253
+                    },
+                    "uuid": "b59da7da-931f-4737-9eef-d172de5f747d"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773C2D7",
+                    "pos": {
+                        "x": 86.91,
+                        "y": 52.561747
+                    },
+                    "uuid": "0af89fc8-2609-4c03-bb41-5f0103dee549"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBF0A0",
+                    "pos": {
+                        "x": 88.1,
+                        "y": 74.40284
+                    },
+                    "uuid": "bfe41a69-be1d-458d-8fbd-d620d1dde2ff"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-675DA838",
+                    "pos": {
+                        "x": 90.45,
+                        "y": 41.358152
+                    },
+                    "uuid": "1852b1a8-5abd-4a48-bb70-ca1d1da8f1db"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773C222",
+                    "pos": {
+                        "x": 92.56,
+                        "y": 58.190054
+                    },
+                    "uuid": "b94ff43e-eba0-4836-a3c3-eb03134d9628"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773C376",
+                    "pos": {
+                        "x": 94.51,
+                        "y": 21.157045
+                    },
+                    "uuid": "ad3d0616-b1b5-4de8-bd9b-31b9ebdcae03"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBB9C1",
+                    "pos": {
+                        "x": 95.85,
+                        "y": 46.542677
+                    },
+                    "uuid": "0770c6f5-e6c5-4a59-92ad-86081908f511"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6772D327",
+                    "pos": {
+                        "x": 99.181351,
+                        "y": 49.85
+                    },
+                    "uuid": "4ca87f0a-e1e1-4ffe-8c72-7dcb017fd94e"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-675DA866",
+                    "pos": {
+                        "x": 99.85,
+                        "y": 41.301285
+                    },
+                    "uuid": "feba2559-380e-46d3-9981-aa489972507b"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-675DA850",
+                    "pos": {
+                        "x": 100.57,
+                        "y": 60.195019
+                    },
+                    "uuid": "2a03c8e0-cd31-4582-9928-067b647fcf26"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773B9CA",
+                    "pos": {
+                        "x": 104.0,
+                        "y": 55.881175
+                    },
+                    "uuid": "9efdeba1-3b2d-4bec-b187-17b67ff238ec"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC7445",
+                    "pos": {
+                        "x": 116.82992,
+                        "y": 82.537871
+                    },
+                    "uuid": "ba9c18b7-2acd-4bdb-ae42-8d7aba9b02b7"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBEF55",
+                    "pos": {
+                        "x": 121.45,
+                        "y": 55.839983
+                    },
+                    "uuid": "0b51fd8e-2d7a-4602-9a80-85fb5d7385dd"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC6D9E",
+                    "pos": {
+                        "x": 122.15,
+                        "y": 67.409397
+                    },
+                    "uuid": "2be5959e-9da7-48e2-b931-b145efc8f862"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC6D94",
+                    "pos": {
+                        "x": 122.25,
+                        "y": 66.056536
+                    },
+                    "uuid": "fec06da1-df94-4506-b4e2-e7c0047c7d13"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67795592",
+                    "pos": {
+                        "x": 125.35,
+                        "y": 74.700742
+                    },
+                    "uuid": "81af470a-276f-4ca2-a8b1-3fcbef9f4bc2"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBAC4C",
+                    "pos": {
+                        "x": 126.35,
+                        "y": 78.052888
+                    },
+                    "uuid": "32defa47-b857-4b81-8e8d-a68fb8dd3341"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC6BD3",
+                    "pos": {
+                        "x": 128.05,
+                        "y": 32.040603
+                    },
+                    "uuid": "d111a9e2-3c47-45bf-a7e1-23d4c6af02ca"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773BA89",
+                    "pos": {
+                        "x": 128.16,
+                        "y": 53.085615
+                    },
+                    "uuid": "77f3afe6-e0bc-4cb1-be9e-3c1340721862"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773B9F7",
+                    "pos": {
+                        "x": 128.22,
+                        "y": 58.358476
+                    },
+                    "uuid": "212eb26c-d0c7-44e5-b8bb-8686e5e3de9d"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.0010 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6772DA33",
+                    "pos": {
+                        "x": 129.1,
+                        "y": 33.315376
+                    },
+                    "uuid": "9ebffc53-0a8c-4a5f-906b-6a8a36313b0c"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBD221",
+                    "pos": {
+                        "x": 78.826325,
+                        "y": 79.7
+                    },
+                    "uuid": "e77d3529-2ff1-4cf9-84b8-358373f23ec3"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-675EDCA4",
+                    "pos": {
+                        "x": 81.5,
+                        "y": 61.845681
+                    },
+                    "uuid": "1529f42b-b37f-476e-92ed-7e1c42c77394"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-675EDCB9",
+                    "pos": {
+                        "x": 81.65,
+                        "y": 43.472112
+                    },
+                    "uuid": "420670ce-76ef-412d-87b2-75c1ea31d87d"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBF14E",
+                    "pos": {
+                        "x": 81.65,
+                        "y": 75.88665
+                    },
+                    "uuid": "9ae94624-649e-4cb3-9bd6-b2326e001bd2"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBF015",
+                    "pos": {
+                        "x": 84.185268,
+                        "y": 62.4
+                    },
+                    "uuid": "16f5aaf7-83b0-480c-bc6c-18e7db8397c2"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC6BA6",
+                    "pos": {
+                        "x": 85.293303,
+                        "y": 76.05
+                    },
+                    "uuid": "f5e9823f-aa94-4d83-894c-7c71fe4aae63"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBD21C",
+                    "pos": {
+                        "x": 86.64,
+                        "y": 79.528253
+                    },
+                    "uuid": "b59da7da-931f-4737-9eef-d172de5f747d"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773C2D7",
+                    "pos": {
+                        "x": 86.91,
+                        "y": 52.561747
+                    },
+                    "uuid": "0af89fc8-2609-4c03-bb41-5f0103dee549"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBF0A0",
+                    "pos": {
+                        "x": 88.1,
+                        "y": 74.40284
+                    },
+                    "uuid": "bfe41a69-be1d-458d-8fbd-d620d1dde2ff"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-675DA838",
+                    "pos": {
+                        "x": 90.45,
+                        "y": 41.358152
+                    },
+                    "uuid": "1852b1a8-5abd-4a48-bb70-ca1d1da8f1db"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773C222",
+                    "pos": {
+                        "x": 92.56,
+                        "y": 58.190054
+                    },
+                    "uuid": "b94ff43e-eba0-4836-a3c3-eb03134d9628"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773C376",
+                    "pos": {
+                        "x": 94.51,
+                        "y": 21.157045
+                    },
+                    "uuid": "ad3d0616-b1b5-4de8-bd9b-31b9ebdcae03"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBB9C1",
+                    "pos": {
+                        "x": 95.85,
+                        "y": 46.542677
+                    },
+                    "uuid": "0770c6f5-e6c5-4a59-92ad-86081908f511"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6772D327",
+                    "pos": {
+                        "x": 99.181351,
+                        "y": 49.85
+                    },
+                    "uuid": "4ca87f0a-e1e1-4ffe-8c72-7dcb017fd94e"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-675DA866",
+                    "pos": {
+                        "x": 99.85,
+                        "y": 41.301285
+                    },
+                    "uuid": "feba2559-380e-46d3-9981-aa489972507b"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-675DA850",
+                    "pos": {
+                        "x": 100.57,
+                        "y": 60.195019
+                    },
+                    "uuid": "2a03c8e0-cd31-4582-9928-067b647fcf26"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773B9CA",
+                    "pos": {
+                        "x": 104.0,
+                        "y": 55.881175
+                    },
+                    "uuid": "9efdeba1-3b2d-4bec-b187-17b67ff238ec"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC7445",
+                    "pos": {
+                        "x": 116.82992,
+                        "y": 82.537871
+                    },
+                    "uuid": "ba9c18b7-2acd-4bdb-ae42-8d7aba9b02b7"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBEF55",
+                    "pos": {
+                        "x": 121.45,
+                        "y": 55.839983
+                    },
+                    "uuid": "0b51fd8e-2d7a-4602-9a80-85fb5d7385dd"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC6D9E",
+                    "pos": {
+                        "x": 122.15,
+                        "y": 67.409397
+                    },
+                    "uuid": "2be5959e-9da7-48e2-b931-b145efc8f862"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC6D94",
+                    "pos": {
+                        "x": 122.25,
+                        "y": 66.056536
+                    },
+                    "uuid": "fec06da1-df94-4506-b4e2-e7c0047c7d13"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67795592",
+                    "pos": {
+                        "x": 125.35,
+                        "y": 74.700742
+                    },
+                    "uuid": "81af470a-276f-4ca2-a8b1-3fcbef9f4bc2"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBAC4C",
+                    "pos": {
+                        "x": 126.35,
+                        "y": 78.052888
+                    },
+                    "uuid": "32defa47-b857-4b81-8e8d-a68fb8dd3341"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC6BD3",
+                    "pos": {
+                        "x": 128.05,
+                        "y": 32.040603
+                    },
+                    "uuid": "d111a9e2-3c47-45bf-a7e1-23d4c6af02ca"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773BA89",
+                    "pos": {
+                        "x": 128.16,
+                        "y": 53.085615
+                    },
+                    "uuid": "77f3afe6-e0bc-4cb1-be9e-3c1340721862"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773B9F7",
+                    "pos": {
+                        "x": 128.22,
+                        "y": 58.358476
+                    },
+                    "uuid": "212eb26c-d0c7-44e5-b8bb-8686e5e3de9d"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Text thickness out of range (board setup constraints silk text thickness min thickness 0.0800 mm; actual 0.0003 mm)",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6772DA33",
+                    "pos": {
+                        "x": 129.1,
+                        "y": 33.315376
+                    },
+                    "uuid": "9ebffc53-0a8c-4a5f-906b-6a8a36313b0c"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_thickness"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 5 [unconnected-(J701-PETn3-Pad5)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 105.35,
+                        "y": 25.45
+                    },
+                    "uuid": "77179646-4d37-40c7-bd17-735b4be831ed"
+                },
+                {
+                    "description": "Pad 3 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 104.85,
+                        "y": 25.45
+                    },
+                    "uuid": "86116ceb-dbaf-44c5-bbb1-312b8f19f894"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 6 [unconnected-(J701-NC-Pad6)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 105.6,
+                        "y": 33.0
+                    },
+                    "uuid": "325dee3a-d42e-4e1e-9fc1-2876ff687a4e"
+                },
+                {
+                    "description": "Pad 4 [M2_3V3] of J701 on F.Cu",
+                    "pos": {
+                        "x": 105.1,
+                        "y": 33.0
+                    },
+                    "uuid": "6437c667-237e-4be3-9fde-54c8ddf62cdc"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 7 [unconnected-(J701-PETp3-Pad7)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 105.85,
+                        "y": 25.45
+                    },
+                    "uuid": "3e5a607e-d1b9-4844-be03-7faf364155db"
+                },
+                {
+                    "description": "Pad 5 [unconnected-(J701-PETn3-Pad5)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 105.35,
+                        "y": 25.45
+                    },
+                    "uuid": "77179646-4d37-40c7-bd17-735b4be831ed"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 6 [unconnected-(J701-NC-Pad6)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 105.6,
+                        "y": 33.0
+                    },
+                    "uuid": "325dee3a-d42e-4e1e-9fc1-2876ff687a4e"
+                },
+                {
+                    "description": "Pad 8 [unconnected-(J701-NC-Pad8)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 106.1,
+                        "y": 33.0
+                    },
+                    "uuid": "8bf01879-7cb1-44a2-841c-ec1b19c7d7b5"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 9 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 106.35,
+                        "y": 25.45
+                    },
+                    "uuid": "32a3c066-a620-4110-83ba-9533ac531e54"
+                },
+                {
+                    "description": "Pad 7 [unconnected-(J701-PETp3-Pad7)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 105.85,
+                        "y": 25.45
+                    },
+                    "uuid": "3e5a607e-d1b9-4844-be03-7faf364155db"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 10 [Net-(J701-DAS/~{DSS}/~{LED1})] of J701 on F.Cu",
+                    "pos": {
+                        "x": 106.6,
+                        "y": 33.0
+                    },
+                    "uuid": "5f7bfcf0-f432-41fd-b82d-e8c04705a567"
+                },
+                {
+                    "description": "Pad 8 [unconnected-(J701-NC-Pad8)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 106.1,
+                        "y": 33.0
+                    },
+                    "uuid": "8bf01879-7cb1-44a2-841c-ec1b19c7d7b5"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 9 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 106.35,
+                        "y": 25.45
+                    },
+                    "uuid": "32a3c066-a620-4110-83ba-9533ac531e54"
+                },
+                {
+                    "description": "Pad 11 [unconnected-(J701-PERn3-Pad11)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 106.85,
+                        "y": 25.45
+                    },
+                    "uuid": "d908b88c-50da-4931-87f5-faebdcd64bd0"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 10 [Net-(J701-DAS/~{DSS}/~{LED1})] of J701 on F.Cu",
+                    "pos": {
+                        "x": 106.6,
+                        "y": 33.0
+                    },
+                    "uuid": "5f7bfcf0-f432-41fd-b82d-e8c04705a567"
+                },
+                {
+                    "description": "Pad 12 [M2_3V3] of J701 on F.Cu",
+                    "pos": {
+                        "x": 107.1,
+                        "y": 33.0
+                    },
+                    "uuid": "6e579659-dfb2-421c-a929-df30ec713c91"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 13 [unconnected-(J701-PERp3-Pad13)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 107.35,
+                        "y": 25.45
+                    },
+                    "uuid": "bd7f0fd5-aa3d-4f6f-b651-cc20f80d69d1"
+                },
+                {
+                    "description": "Pad 11 [unconnected-(J701-PERn3-Pad11)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 106.85,
+                        "y": 25.45
+                    },
+                    "uuid": "d908b88c-50da-4931-87f5-faebdcd64bd0"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 15 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 107.85,
+                        "y": 25.45
+                    },
+                    "uuid": "a125eea6-db66-4514-a914-a2d566f34988"
+                },
+                {
+                    "description": "Pad 13 [unconnected-(J701-PERp3-Pad13)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 107.35,
+                        "y": 25.45
+                    },
+                    "uuid": "bd7f0fd5-aa3d-4f6f-b651-cc20f80d69d1"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 15 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 107.85,
+                        "y": 25.45
+                    },
+                    "uuid": "a125eea6-db66-4514-a914-a2d566f34988"
+                },
+                {
+                    "description": "Pad 17 [unconnected-(J701-PETn2-Pad17)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 108.35,
+                        "y": 25.45
+                    },
+                    "uuid": "bccb7ee1-76d1-48a2-bb29-cd37a38116f8"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 19 [unconnected-(J701-PETp2-Pad19)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 108.85,
+                        "y": 25.45
+                    },
+                    "uuid": "558bd10e-086f-4b32-9a46-368eabb1985e"
+                },
+                {
+                    "description": "Pad 17 [unconnected-(J701-PETn2-Pad17)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 108.35,
+                        "y": 25.45
+                    },
+                    "uuid": "bccb7ee1-76d1-48a2-bb29-cd37a38116f8"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 18 [M2_3V3] of J701 on F.Cu",
+                    "pos": {
+                        "x": 108.6,
+                        "y": 33.0
+                    },
+                    "uuid": "05681120-e240-4ecf-85f5-a18450a5749e"
+                },
+                {
+                    "description": "Pad 20 [unconnected-(J701-NC-Pad20)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 109.1,
+                        "y": 33.0
+                    },
+                    "uuid": "bf8abed2-d251-457e-8f9a-a5eae16ebf76"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 19 [unconnected-(J701-PETp2-Pad19)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 108.85,
+                        "y": 25.45
+                    },
+                    "uuid": "558bd10e-086f-4b32-9a46-368eabb1985e"
+                },
+                {
+                    "description": "Pad 21 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 109.35,
+                        "y": 25.45
+                    },
+                    "uuid": "c9753c72-862d-41da-949d-314f4ce4171d"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 22 [unconnected-(J701-NC-Pad22)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 109.6,
+                        "y": 33.0
+                    },
+                    "uuid": "a18cfe0f-a54d-4a8e-a606-a2f210136592"
+                },
+                {
+                    "description": "Pad 20 [unconnected-(J701-NC-Pad20)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 109.1,
+                        "y": 33.0
+                    },
+                    "uuid": "bf8abed2-d251-457e-8f9a-a5eae16ebf76"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 23 [unconnected-(J701-PERn2-Pad23)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 109.85,
+                        "y": 25.45
+                    },
+                    "uuid": "61655d22-612d-4f83-b94a-fae3149a3a74"
+                },
+                {
+                    "description": "Pad 21 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 109.35,
+                        "y": 25.45
+                    },
+                    "uuid": "c9753c72-862d-41da-949d-314f4ce4171d"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 24 [unconnected-(J701-NC-Pad24)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 110.1,
+                        "y": 33.0
+                    },
+                    "uuid": "106f8463-83c9-4e77-b170-e90a646b6abf"
+                },
+                {
+                    "description": "Pad 22 [unconnected-(J701-NC-Pad22)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 109.6,
+                        "y": 33.0
+                    },
+                    "uuid": "a18cfe0f-a54d-4a8e-a606-a2f210136592"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 23 [unconnected-(J701-PERn2-Pad23)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 109.85,
+                        "y": 25.45
+                    },
+                    "uuid": "61655d22-612d-4f83-b94a-fae3149a3a74"
+                },
+                {
+                    "description": "Pad 25 [unconnected-(J701-PERp2-Pad25)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 110.35,
+                        "y": 25.45
+                    },
+                    "uuid": "71d335f1-c492-43c4-9a15-120cdad5ef56"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 24 [unconnected-(J701-NC-Pad24)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 110.1,
+                        "y": 33.0
+                    },
+                    "uuid": "106f8463-83c9-4e77-b170-e90a646b6abf"
+                },
+                {
+                    "description": "Pad 26 [unconnected-(J701-NC-Pad26)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 110.6,
+                        "y": 33.0
+                    },
+                    "uuid": "efbbe058-55de-4e46-8919-5eb1a4a0c5c8"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 25 [unconnected-(J701-PERp2-Pad25)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 110.35,
+                        "y": 25.45
+                    },
+                    "uuid": "71d335f1-c492-43c4-9a15-120cdad5ef56"
+                },
+                {
+                    "description": "Pad 27 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 110.85,
+                        "y": 25.45
+                    },
+                    "uuid": "cf899698-e246-471e-b176-3b91715ce53f"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 28 [unconnected-(J701-NC-Pad28)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 111.1,
+                        "y": 33.0
+                    },
+                    "uuid": "aa56f701-8ebe-4349-a92c-6c62d95358af"
+                },
+                {
+                    "description": "Pad 26 [unconnected-(J701-NC-Pad26)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 110.6,
+                        "y": 33.0
+                    },
+                    "uuid": "efbbe058-55de-4e46-8919-5eb1a4a0c5c8"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 27 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 110.85,
+                        "y": 25.45
+                    },
+                    "uuid": "cf899698-e246-471e-b176-3b91715ce53f"
+                },
+                {
+                    "description": "Pad 29 [unconnected-(J701-PETn1-Pad29)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 111.35,
+                        "y": 25.45
+                    },
+                    "uuid": "db2c6dc0-0871-4de6-b5fb-528911a344b7"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 28 [unconnected-(J701-NC-Pad28)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 111.1,
+                        "y": 33.0
+                    },
+                    "uuid": "aa56f701-8ebe-4349-a92c-6c62d95358af"
+                },
+                {
+                    "description": "Pad 30 [unconnected-(J701-NC-Pad30)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 111.6,
+                        "y": 33.0
+                    },
+                    "uuid": "fda3f9fb-97f8-4c72-8a8d-98304f4e57aa"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 29 [unconnected-(J701-PETn1-Pad29)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 111.35,
+                        "y": 25.45
+                    },
+                    "uuid": "db2c6dc0-0871-4de6-b5fb-528911a344b7"
+                },
+                {
+                    "description": "Pad 31 [unconnected-(J701-PETp1-Pad31)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 111.85,
+                        "y": 25.45
+                    },
+                    "uuid": "ea0b437f-6b77-40f8-9f17-110bfdcdbc1a"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 32 [unconnected-(J701-NC-Pad32)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 112.1,
+                        "y": 33.0
+                    },
+                    "uuid": "f43c2db8-a102-4500-ac87-b45fb1c720c0"
+                },
+                {
+                    "description": "Pad 30 [unconnected-(J701-NC-Pad30)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 111.6,
+                        "y": 33.0
+                    },
+                    "uuid": "fda3f9fb-97f8-4c72-8a8d-98304f4e57aa"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 33 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 112.35,
+                        "y": 25.45
+                    },
+                    "uuid": "6cc560b8-19f9-4fa7-979f-07e602ee661b"
+                },
+                {
+                    "description": "Pad 31 [unconnected-(J701-PETp1-Pad31)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 111.85,
+                        "y": 25.45
+                    },
+                    "uuid": "ea0b437f-6b77-40f8-9f17-110bfdcdbc1a"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 34 [unconnected-(J701-NC-Pad34)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 112.6,
+                        "y": 33.0
+                    },
+                    "uuid": "b4220986-f9de-479a-811b-40f277eacf28"
+                },
+                {
+                    "description": "Pad 32 [unconnected-(J701-NC-Pad32)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 112.1,
+                        "y": 33.0
+                    },
+                    "uuid": "f43c2db8-a102-4500-ac87-b45fb1c720c0"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 35 [unconnected-(J701-PERn1-Pad35)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 112.85,
+                        "y": 25.45
+                    },
+                    "uuid": "311e61f1-4a52-44d5-a2e9-8837c424714f"
+                },
+                {
+                    "description": "Pad 33 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 112.35,
+                        "y": 25.45
+                    },
+                    "uuid": "6cc560b8-19f9-4fa7-979f-07e602ee661b"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 36 [unconnected-(J701-NC-Pad36)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 113.1,
+                        "y": 33.0
+                    },
+                    "uuid": "afdde55f-08ba-4a4e-bf21-ced3728fcaf1"
+                },
+                {
+                    "description": "Pad 34 [unconnected-(J701-NC-Pad34)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 112.6,
+                        "y": 33.0
+                    },
+                    "uuid": "b4220986-f9de-479a-811b-40f277eacf28"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 35 [unconnected-(J701-PERn1-Pad35)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 112.85,
+                        "y": 25.45
+                    },
+                    "uuid": "311e61f1-4a52-44d5-a2e9-8837c424714f"
+                },
+                {
+                    "description": "Pad 37 [unconnected-(J701-PERp1-Pad37)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 113.35,
+                        "y": 25.45
+                    },
+                    "uuid": "7df02fc5-dcf5-457b-aaf2-ff3b9daf8705"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 38 [unconnected-(J701-DEVSLP-Pad38)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 33.0
+                    },
+                    "uuid": "8e9951fb-092b-4bcd-8446-9ddf02def78d"
+                },
+                {
+                    "description": "Pad 36 [unconnected-(J701-NC-Pad36)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 113.1,
+                        "y": 33.0
+                    },
+                    "uuid": "afdde55f-08ba-4a4e-bf21-ced3728fcaf1"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 37 [unconnected-(J701-PERp1-Pad37)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 113.35,
+                        "y": 25.45
+                    },
+                    "uuid": "7df02fc5-dcf5-457b-aaf2-ff3b9daf8705"
+                },
+                {
+                    "description": "Pad 39 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 113.85,
+                        "y": 25.45
+                    },
+                    "uuid": "cb0d4fb2-660b-479d-9672-6860287d007d"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 40 [unconnected-(J701-NC-Pad40)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 114.1,
+                        "y": 33.0
+                    },
+                    "uuid": "59144e4c-44b8-468e-8868-0e97031669e2"
+                },
+                {
+                    "description": "Pad 38 [unconnected-(J701-DEVSLP-Pad38)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 33.0
+                    },
+                    "uuid": "8e9951fb-092b-4bcd-8446-9ddf02def78d"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 41 [/CM5/PCIE_PI.RX_P] of J701 on F.Cu",
+                    "pos": {
+                        "x": 114.35,
+                        "y": 25.45
+                    },
+                    "uuid": "57fa5ced-35c1-46bf-ac23-49a54ca80247"
+                },
+                {
+                    "description": "Pad 39 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 113.85,
+                        "y": 25.45
+                    },
+                    "uuid": "cb0d4fb2-660b-479d-9672-6860287d007d"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 40 [unconnected-(J701-NC-Pad40)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 114.1,
+                        "y": 33.0
+                    },
+                    "uuid": "59144e4c-44b8-468e-8868-0e97031669e2"
+                },
+                {
+                    "description": "Pad 42 [unconnected-(J701-NC-Pad42)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 114.6,
+                        "y": 33.0
+                    },
+                    "uuid": "6be3f713-b378-4b12-89b7-affdde0e3304"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 41 [/CM5/PCIE_PI.RX_P] of J701 on F.Cu",
+                    "pos": {
+                        "x": 114.35,
+                        "y": 25.45
+                    },
+                    "uuid": "57fa5ced-35c1-46bf-ac23-49a54ca80247"
+                },
+                {
+                    "description": "Pad 43 [/CM5/PCIE_PI.RX_N] of J701 on F.Cu",
+                    "pos": {
+                        "x": 114.85,
+                        "y": 25.45
+                    },
+                    "uuid": "c124db7d-7689-44bd-a636-cf6e0bb5d7fa"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 44 [unconnected-(J701-NC-Pad44)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 115.1,
+                        "y": 33.0
+                    },
+                    "uuid": "5bc08bdf-a02d-4b95-82b3-9fb00bb643de"
+                },
+                {
+                    "description": "Pad 42 [unconnected-(J701-NC-Pad42)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 114.6,
+                        "y": 33.0
+                    },
+                    "uuid": "6be3f713-b378-4b12-89b7-affdde0e3304"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 45 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 115.35,
+                        "y": 25.45
+                    },
+                    "uuid": "224181b1-c2a6-481e-8ab7-f6fe6e4c910d"
+                },
+                {
+                    "description": "Pad 43 [/CM5/PCIE_PI.RX_N] of J701 on F.Cu",
+                    "pos": {
+                        "x": 114.85,
+                        "y": 25.45
+                    },
+                    "uuid": "c124db7d-7689-44bd-a636-cf6e0bb5d7fa"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 46 [unconnected-(J701-NC-Pad46)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 115.6,
+                        "y": 33.0
+                    },
+                    "uuid": "4fe78437-ab44-4752-9c18-372ae8c5547e"
+                },
+                {
+                    "description": "Pad 44 [unconnected-(J701-NC-Pad44)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 115.1,
+                        "y": 33.0
+                    },
+                    "uuid": "5bc08bdf-a02d-4b95-82b3-9fb00bb643de"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 45 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 115.35,
+                        "y": 25.45
+                    },
+                    "uuid": "224181b1-c2a6-481e-8ab7-f6fe6e4c910d"
+                },
+                {
+                    "description": "Pad 47 [/CM5/PCIE_PI.TX_P] of J701 on F.Cu",
+                    "pos": {
+                        "x": 115.85,
+                        "y": 25.45
+                    },
+                    "uuid": "37b5557a-36be-4179-b2da-abb425e8026e"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 46 [unconnected-(J701-NC-Pad46)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 115.6,
+                        "y": 33.0
+                    },
+                    "uuid": "4fe78437-ab44-4752-9c18-372ae8c5547e"
+                },
+                {
+                    "description": "Pad 48 [unconnected-(J701-NC-Pad48)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 116.1,
+                        "y": 33.0
+                    },
+                    "uuid": "99efe708-be2f-40fd-865b-6891e9f92440"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 47 [/CM5/PCIE_PI.TX_P] of J701 on F.Cu",
+                    "pos": {
+                        "x": 115.85,
+                        "y": 25.45
+                    },
+                    "uuid": "37b5557a-36be-4179-b2da-abb425e8026e"
+                },
+                {
+                    "description": "Pad 49 [/CM5/PCIE_PI.TX_N] of J701 on F.Cu",
+                    "pos": {
+                        "x": 116.35,
+                        "y": 25.45
+                    },
+                    "uuid": "819b4d80-61a3-4655-96d6-6e53f46f89ac"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 50 [/CM5/PCIE_PI.nRST] of J701 on F.Cu",
+                    "pos": {
+                        "x": 116.6,
+                        "y": 33.0
+                    },
+                    "uuid": "84f22d90-b0c0-480f-9b47-063878fad16f"
+                },
+                {
+                    "description": "Pad 48 [unconnected-(J701-NC-Pad48)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 116.1,
+                        "y": 33.0
+                    },
+                    "uuid": "99efe708-be2f-40fd-865b-6891e9f92440"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 49 [/CM5/PCIE_PI.TX_N] of J701 on F.Cu",
+                    "pos": {
+                        "x": 116.35,
+                        "y": 25.45
+                    },
+                    "uuid": "819b4d80-61a3-4655-96d6-6e53f46f89ac"
+                },
+                {
+                    "description": "Pad 51 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 116.85,
+                        "y": 25.45
+                    },
+                    "uuid": "d00d36da-722d-4f6b-958d-d214dc45ce8e"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 50 [/CM5/PCIE_PI.nRST] of J701 on F.Cu",
+                    "pos": {
+                        "x": 116.6,
+                        "y": 33.0
+                    },
+                    "uuid": "84f22d90-b0c0-480f-9b47-063878fad16f"
+                },
+                {
+                    "description": "Pad 52 [/CM5/PCIE_PI.nCLKREQ] of J701 on F.Cu",
+                    "pos": {
+                        "x": 117.1,
+                        "y": 33.0
+                    },
+                    "uuid": "b914981c-6f9a-499e-b4ed-892420f412bb"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 53 [/CM5/PCIE_PI.CLK_N] of J701 on F.Cu",
+                    "pos": {
+                        "x": 117.35,
+                        "y": 25.45
+                    },
+                    "uuid": "0139c005-c087-43ca-90b5-3dc0b90c5ad2"
+                },
+                {
+                    "description": "Pad 51 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 116.85,
+                        "y": 25.45
+                    },
+                    "uuid": "d00d36da-722d-4f6b-958d-d214dc45ce8e"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 54 [/CM5/PCIE_PI.nWAKE] of J701 on F.Cu",
+                    "pos": {
+                        "x": 117.6,
+                        "y": 33.0
+                    },
+                    "uuid": "b2eed435-e2c5-41d6-8c1b-a478cb4ffd0f"
+                },
+                {
+                    "description": "Pad 52 [/CM5/PCIE_PI.nCLKREQ] of J701 on F.Cu",
+                    "pos": {
+                        "x": 117.1,
+                        "y": 33.0
+                    },
+                    "uuid": "b914981c-6f9a-499e-b4ed-892420f412bb"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 53 [/CM5/PCIE_PI.CLK_N] of J701 on F.Cu",
+                    "pos": {
+                        "x": 117.35,
+                        "y": 25.45
+                    },
+                    "uuid": "0139c005-c087-43ca-90b5-3dc0b90c5ad2"
+                },
+                {
+                    "description": "Pad 55 [/CM5/PCIE_PI.CLK_P] of J701 on F.Cu",
+                    "pos": {
+                        "x": 117.85,
+                        "y": 25.45
+                    },
+                    "uuid": "c7e4e00a-8ede-4b0a-ae4a-febee37fe18d"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 56 [unconnected-(J701-NC-Pad56)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 118.1,
+                        "y": 33.0
+                    },
+                    "uuid": "1c2488be-24c7-4bc5-8902-b5e7bbf8e5e5"
+                },
+                {
+                    "description": "Pad 54 [/CM5/PCIE_PI.nWAKE] of J701 on F.Cu",
+                    "pos": {
+                        "x": 117.6,
+                        "y": 33.0
+                    },
+                    "uuid": "b2eed435-e2c5-41d6-8c1b-a478cb4ffd0f"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 55 [/CM5/PCIE_PI.CLK_P] of J701 on F.Cu",
+                    "pos": {
+                        "x": 117.85,
+                        "y": 25.45
+                    },
+                    "uuid": "c7e4e00a-8ede-4b0a-ae4a-febee37fe18d"
+                },
+                {
+                    "description": "Pad 57 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 118.35,
+                        "y": 25.45
+                    },
+                    "uuid": "d0f04061-a714-4d1e-ad50-3a303553e139"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 56 [unconnected-(J701-NC-Pad56)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 118.1,
+                        "y": 33.0
+                    },
+                    "uuid": "1c2488be-24c7-4bc5-8902-b5e7bbf8e5e5"
+                },
+                {
+                    "description": "Pad 58 [unconnected-(J701-NC-Pad58)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 118.6,
+                        "y": 33.0
+                    },
+                    "uuid": "f9d8b326-46a7-45e1-b0ed-e2f3669a9152"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 69 [unconnected-(J701-PEDET-Pad69)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 121.35,
+                        "y": 25.45
+                    },
+                    "uuid": "2234b2fa-f4e8-4620-bf9f-d7a9541d60b7"
+                },
+                {
+                    "description": "Pad 67 [unconnected-(J701-NC-Pad67)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 120.85,
+                        "y": 25.45
+                    },
+                    "uuid": "e1a6b0f2-1286-47e4-9696-0609cd10b23b"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 70 [M2_3V3] of J701 on F.Cu",
+                    "pos": {
+                        "x": 121.6,
+                        "y": 33.0
+                    },
+                    "uuid": "881d9297-9df3-4cd1-a7cd-5aa9870a8103"
+                },
+                {
+                    "description": "Pad 68 [Net-(J701-SUSCLK)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 121.1,
+                        "y": 33.0
+                    },
+                    "uuid": "c6af0bbe-fb3f-45c1-9aed-0e148f25602d"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 69 [unconnected-(J701-PEDET-Pad69)] of J701 on F.Cu",
+                    "pos": {
+                        "x": 121.35,
+                        "y": 25.45
+                    },
+                    "uuid": "2234b2fa-f4e8-4620-bf9f-d7a9541d60b7"
+                },
+                {
+                    "description": "Pad 71 [GND] of J701 on F.Cu",
+                    "pos": {
+                        "x": 121.85,
+                        "y": 25.45
+                    },
+                    "uuid": "9a3e834f-b719-48b0-926c-f2331b174853"
+                }
+            ],
+            "severity": "warning",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBD221",
+                    "pos": {
+                        "x": 78.826325,
+                        "y": 79.7
+                    },
+                    "uuid": "e77d3529-2ff1-4cf9-84b8-358373f23ec3"
+                },
+                {
+                    "description": "PTH pad 1 [GND] of H105",
+                    "pos": {
+                        "x": 78.15,
+                        "y": 81.35
+                    },
+                    "uuid": "9e3e3e88-dcad-4e11-ac40-1f45a9b7a1cb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of J701 on F.Silkscreen",
+                    "pos": {
+                        "x": 124.6,
+                        "y": 27.92
+                    },
+                    "uuid": "b3feaa66-fb6a-4caf-b879-505e71bac46f"
+                },
+                {
+                    "description": "NPTH pad of Module301",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "f0e3e8a2-0e8b-4871-8046-60013632bac1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of J701 on F.Silkscreen",
+                    "pos": {
+                        "x": 124.6,
+                        "y": 27.92
+                    },
+                    "uuid": "b3feaa66-fb6a-4caf-b879-505e71bac46f"
+                },
+                {
+                    "description": "NPTH pad of Module302",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "ac1d12a2-a341-469d-823f-b3bd5cb99bcd"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of J701 on F.Silkscreen",
+                    "pos": {
+                        "x": 125.1,
+                        "y": 58.975
+                    },
+                    "uuid": "b6458bd2-b8ad-4127-95e5-f7178a252fb0"
+                },
+                {
+                    "description": "NPTH pad of Module302",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "ac1d12a2-a341-469d-823f-b3bd5cb99bcd"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of J701 on F.Silkscreen",
+                    "pos": {
+                        "x": 125.1,
+                        "y": 58.975
+                    },
+                    "uuid": "b6458bd2-b8ad-4127-95e5-f7178a252fb0"
+                },
+                {
+                    "description": "NPTH pad of Module301",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "f0e3e8a2-0e8b-4871-8046-60013632bac1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Polygon of kibuzzard-67EBAC4C on B.Silkscreen",
+                    "pos": {
+                        "x": 123.986783,
+                        "y": 75.004888
+                    },
+                    "uuid": "ee92ab5d-e84d-4027-aeee-0ea26da54e87"
+                },
+                {
+                    "description": "NPTH pad of Module301",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "5173c700-7c12-405a-bf07-235b8a520c9b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBAC4C",
+                    "pos": {
+                        "x": 126.35,
+                        "y": 78.052888
+                    },
+                    "uuid": "32defa47-b857-4b81-8e8d-a68fb8dd3341"
+                },
+                {
+                    "description": "NPTH pad of Module301",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "5173c700-7c12-405a-bf07-235b8a520c9b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67EBAC4C",
+                    "pos": {
+                        "x": 126.35,
+                        "y": 78.052888
+                    },
+                    "uuid": "32defa47-b857-4b81-8e8d-a68fb8dd3341"
+                },
+                {
+                    "description": "NPTH pad of Module302",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "79e4ed43-b7a2-4b37-82e9-812fd8bdff79"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Polygon of kibuzzard-67EBAC4C on B.Silkscreen",
+                    "pos": {
+                        "x": 123.986783,
+                        "y": 75.004888
+                    },
+                    "uuid": "ee92ab5d-e84d-4027-aeee-0ea26da54e87"
+                },
+                {
+                    "description": "NPTH pad of Module302",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "79e4ed43-b7a2-4b37-82e9-812fd8bdff79"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Polygon of kibuzzard-67EBAC4C on B.Silkscreen",
+                    "pos": {
+                        "x": 126.938142,
+                        "y": 73.995351
+                    },
+                    "uuid": "9b8146ab-bd4d-40ce-8612-4ab5a74211f4"
+                },
+                {
+                    "description": "NPTH pad of Module302",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "79e4ed43-b7a2-4b37-82e9-812fd8bdff79"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Polygon of U702 on F.Silkscreen",
+                    "pos": {
+                        "x": 127.655,
+                        "y": 71.02
+                    },
+                    "uuid": "917d9a86-ef9b-4f6f-8da3-97ed98bb1726"
+                },
+                {
+                    "description": "Pad 2 [GND] of R706 on F.Cu",
+                    "pos": {
+                        "x": 128.3,
+                        "y": 70.915
+                    },
+                    "uuid": "0824a4b4-381d-4a98-b72d-edd28b69b6fe"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC6BD3",
+                    "pos": {
+                        "x": 128.05,
+                        "y": 32.040603
+                    },
+                    "uuid": "d111a9e2-3c47-45bf-a7e1-23d4c6af02ca"
+                },
+                {
+                    "description": "NPTH pad of Module302",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "ac1d12a2-a341-469d-823f-b3bd5cb99bcd"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67CC6BD3",
+                    "pos": {
+                        "x": 128.05,
+                        "y": 32.040603
+                    },
+                    "uuid": "d111a9e2-3c47-45bf-a7e1-23d4c6af02ca"
+                },
+                {
+                    "description": "NPTH pad of Module301",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "f0e3e8a2-0e8b-4871-8046-60013632bac1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-6773B9F7",
+                    "pos": {
+                        "x": 128.22,
+                        "y": 58.358476
+                    },
+                    "uuid": "212eb26c-d0c7-44e5-b8bb-8686e5e3de9d"
+                },
+                {
+                    "description": "Pad 2 [Net-(R605-Pad2)] of R605 on F.Cu",
+                    "pos": {
+                        "x": 128.28,
+                        "y": 58.09
+                    },
+                    "uuid": "fd518420-e403-4ed8-9760-b8d4042932b6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of SW101 on B.Silkscreen",
+                    "pos": {
+                        "x": 129.56,
+                        "y": 75.63
+                    },
+                    "uuid": "efb57ae4-a982-45bb-99cc-63c4e2148640"
+                },
+                {
+                    "description": "NPTH pad of Module302",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "79e4ed43-b7a2-4b37-82e9-812fd8bdff79"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of SW101 on B.Silkscreen",
+                    "pos": {
+                        "x": 130.23,
+                        "y": 75.63
+                    },
+                    "uuid": "63d06c65-73d6-43bf-ac85-559e7123657f"
+                },
+                {
+                    "description": "NPTH pad of Module302",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "79e4ed43-b7a2-4b37-82e9-812fd8bdff79"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 130.75,
+                        "y": 77.6
+                    },
+                    "uuid": "d1806b6e-8ed7-48e9-bf05-78a2207721a4"
+                },
+                {
+                    "description": "Pad 4 [GND] of SW501 on F.Cu",
+                    "pos": {
+                        "x": 131.67,
+                        "y": 64.27
+                    },
+                    "uuid": "23616150-7ca8-4c62-9a81-a76026f2f92b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 130.75,
+                        "y": 77.6
+                    },
+                    "uuid": "d1806b6e-8ed7-48e9-bf05-78a2207721a4"
+                },
+                {
+                    "description": "Pad 5 [GND] of SW501 on F.Cu",
+                    "pos": {
+                        "x": 131.67,
+                        "y": 68.27
+                    },
+                    "uuid": "edb35b25-cf43-4f81-b824-fdd152549d14"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 130.75,
+                        "y": 77.6
+                    },
+                    "uuid": "d1806b6e-8ed7-48e9-bf05-78a2207721a4"
+                },
+                {
+                    "description": "Pad 5 [GND] of SW101 on B.Cu",
+                    "pos": {
+                        "x": 130.81,
+                        "y": 69.88
+                    },
+                    "uuid": "ebac18f2-e858-4dbe-b1c6-8ae158422848"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 130.75,
+                        "y": 77.6
+                    },
+                    "uuid": "d1806b6e-8ed7-48e9-bf05-78a2207721a4"
+                },
+                {
+                    "description": "NPTH pad of SW101",
+                    "pos": {
+                        "x": 130.74,
+                        "y": 71.38
+                    },
+                    "uuid": "04e6000a-9fde-4f4b-8055-220079f7654e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 130.75,
+                        "y": 77.6
+                    },
+                    "uuid": "d1806b6e-8ed7-48e9-bf05-78a2207721a4"
+                },
+                {
+                    "description": "NPTH pad of SW101",
+                    "pos": {
+                        "x": 130.74,
+                        "y": 74.38
+                    },
+                    "uuid": "2f8c6cfc-2efc-44b7-b58d-e65b58fa1ada"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 130.75,
+                        "y": 77.6
+                    },
+                    "uuid": "d1806b6e-8ed7-48e9-bf05-78a2207721a4"
+                },
+                {
+                    "description": "Pad 4 [GND] of SW101 on B.Cu",
+                    "pos": {
+                        "x": 130.81,
+                        "y": 75.88
+                    },
+                    "uuid": "db592456-5d1f-4c25-a4d3-f1be13c9d5f8"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of C702 on F.Silkscreen",
+                    "pos": {
+                        "x": 81.04,
+                        "y": 66.3425
+                    },
+                    "uuid": "381a5dfe-11fe-4fdc-bf93-7e73d1eb3c08"
+                },
+                {
+                    "description": "Polygon of kibuzzard-675EDCA4 on F.Silkscreen",
+                    "pos": {
+                        "x": 79.257511,
+                        "y": 64.893681
+                    },
+                    "uuid": "ba96ed31-494e-45a6-8b90-ed515772e961"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of C702 on F.Silkscreen",
+                    "pos": {
+                        "x": 84.06,
+                        "y": 66.3425
+                    },
+                    "uuid": "31e35579-80d1-4db9-b390-548a34fb1ce1"
+                },
+                {
+                    "description": "Polygon of kibuzzard-675EDCA4 on F.Silkscreen",
+                    "pos": {
+                        "x": 79.257511,
+                        "y": 64.893681
+                    },
+                    "uuid": "ba96ed31-494e-45a6-8b90-ed515772e961"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of C702 on F.Silkscreen",
+                    "pos": {
+                        "x": 84.06,
+                        "y": 70.5525
+                    },
+                    "uuid": "8479a072-4a41-44fc-8c08-6bb6223db08b"
+                },
+                {
+                    "description": "Polygon of kibuzzard-675EDCA4 on F.Silkscreen",
+                    "pos": {
+                        "x": 79.257511,
+                        "y": 64.893681
+                    },
+                    "uuid": "ba96ed31-494e-45a6-8b90-ed515772e961"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of kibuzzard-6773C2D7 on F.Silkscreen",
+                    "pos": {
+                        "x": 85.297283,
+                        "y": 55.609747
+                    },
+                    "uuid": "55498041-6a77-494c-8bb8-6e0b7b068ee7"
+                },
+                {
+                    "description": "Circle of TP101 on F.Silkscreen",
+                    "pos": {
+                        "x": 89.43,
+                        "y": 56.07
+                    },
+                    "uuid": "9be93199-abc0-4d87-9136-c6bea75afc8d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 90.75,
+                        "y": 29.6
+                    },
+                    "uuid": "3d4d6bd7-d3dd-4cf6-9659-4888c1402b23"
+                },
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 29.6
+                    },
+                    "uuid": "87317f92-d562-450e-82a6-a54d3e370b53"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 29.6
+                    },
+                    "uuid": "659517a6-ecc6-496b-8ec9-e9507722d67b"
+                },
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 29.6
+                    },
+                    "uuid": "87317f92-d562-450e-82a6-a54d3e370b53"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 29.6
+                    },
+                    "uuid": "659517a6-ecc6-496b-8ec9-e9507722d67b"
+                },
+                {
+                    "description": "Segment of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 90.75,
+                        "y": 29.6
+                    },
+                    "uuid": "d053ec60-937b-47ae-8992-4b9b0670f153"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 90.75,
+                        "y": 29.6
+                    },
+                    "uuid": "3d4d6bd7-d3dd-4cf6-9659-4888c1402b23"
+                },
+                {
+                    "description": "Segment of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 90.75,
+                        "y": 29.6
+                    },
+                    "uuid": "d053ec60-937b-47ae-8992-4b9b0670f153"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 77.6
+                    },
+                    "uuid": "0d2346ea-ca2e-433d-960a-78804ba58649"
+                },
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 90.75,
+                        "y": 29.6
+                    },
+                    "uuid": "3d4d6bd7-d3dd-4cf6-9659-4888c1402b23"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 77.6
+                    },
+                    "uuid": "23b44f45-07c2-43e8-97cc-863774f59ab5"
+                },
+                {
+                    "description": "Segment of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 90.75,
+                        "y": 29.6
+                    },
+                    "uuid": "d053ec60-937b-47ae-8992-4b9b0670f153"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 29.6
+                    },
+                    "uuid": "659517a6-ecc6-496b-8ec9-e9507722d67b"
+                },
+                {
+                    "description": "Segment of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 26.1
+                    },
+                    "uuid": "d33bb03e-9a8e-477c-b146-e064e92a5831"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 29.6
+                    },
+                    "uuid": "87317f92-d562-450e-82a6-a54d3e370b53"
+                },
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 26.1
+                    },
+                    "uuid": "fa04971e-8c49-4c90-b1b0-a872f3b593c5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 77.6
+                    },
+                    "uuid": "0d2346ea-ca2e-433d-960a-78804ba58649"
+                },
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 77.6
+                    },
+                    "uuid": "23b44f45-07c2-43e8-97cc-863774f59ab5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 77.6
+                    },
+                    "uuid": "0d2346ea-ca2e-433d-960a-78804ba58649"
+                },
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 81.1
+                    },
+                    "uuid": "d5cac4ec-7553-456d-87b5-2c2091b77ddb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 77.6
+                    },
+                    "uuid": "23b44f45-07c2-43e8-97cc-863774f59ab5"
+                },
+                {
+                    "description": "Segment of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 81.1
+                    },
+                    "uuid": "c3b5f4aa-b3f4-4adf-893a-9543d0dd2dfb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J701 on F.Silkscreen",
+                    "pos": {
+                        "x": 102.1,
+                        "y": 58.975
+                    },
+                    "uuid": "50f3b8d0-8404-4715-899c-36d12a13ccc4"
+                },
+                {
+                    "description": "Polygon of kibuzzard-6773B9CA on F.Silkscreen",
+                    "pos": {
+                        "x": 102.842664,
+                        "y": 58.929175
+                    },
+                    "uuid": "5a01225c-061a-43f6-9cb3-97aa19d16a09"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 26.1
+                    },
+                    "uuid": "d33bb03e-9a8e-477c-b146-e064e92a5831"
+                },
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 26.1
+                    },
+                    "uuid": "fa04971e-8c49-4c90-b1b0-a872f3b593c5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 81.1
+                    },
+                    "uuid": "c3b5f4aa-b3f4-4adf-893a-9543d0dd2dfb"
+                },
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 81.1
+                    },
+                    "uuid": "d5cac4ec-7553-456d-87b5-2c2091b77ddb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of kibuzzard-67EBEF55 on F.Silkscreen",
+                    "pos": {
+                        "x": 118.213948,
+                        "y": 58.887983
+                    },
+                    "uuid": "8f8f0a3e-5116-4cd7-836e-42a42de09967"
+                },
+                {
+                    "description": "Segment of J701 on F.Silkscreen",
+                    "pos": {
+                        "x": 117.6,
+                        "y": 58.975
+                    },
+                    "uuid": "fcc361a4-9a82-41f9-83e6-e57a5b1bf185"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of kibuzzard-67EBEF55 on F.Silkscreen",
+                    "pos": {
+                        "x": 118.213948,
+                        "y": 58.887983
+                    },
+                    "uuid": "8f8f0a3e-5116-4cd7-836e-42a42de09967"
+                },
+                {
+                    "description": "Segment of J701 on F.Silkscreen",
+                    "pos": {
+                        "x": 125.1,
+                        "y": 58.975
+                    },
+                    "uuid": "b6458bd2-b8ad-4127-95e5-f7178a252fb0"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of kibuzzard-67795592",
+                    "pos": {
+                        "x": 125.35,
+                        "y": 74.700742
+                    },
+                    "uuid": "81af470a-276f-4ca2-a8b1-3fcbef9f4bc2"
+                },
+                {
+                    "description": "Polygon of kibuzzard-67EBAC4C on B.Silkscreen",
+                    "pos": {
+                        "x": 123.986783,
+                        "y": 75.004888
+                    },
+                    "uuid": "ee92ab5d-e84d-4027-aeee-0ea26da54e87"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "0cde438c-aa73-4dac-8a63-66ec1364fe0c"
+                },
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "123575ca-a4b8-484a-be5e-f185a79f41fc"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "0cde438c-aa73-4dac-8a63-66ec1364fe0c"
+                },
+                {
+                    "description": "Segment of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 26.1
+                    },
+                    "uuid": "d33bb03e-9a8e-477c-b146-e064e92a5831"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "123575ca-a4b8-484a-be5e-f185a79f41fc"
+                },
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 26.1
+                    },
+                    "uuid": "fa04971e-8c49-4c90-b1b0-a872f3b593c5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "0f7959ba-0c1e-45ea-824c-45e2e4a3aaf3"
+                },
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 81.1
+                    },
+                    "uuid": "d5cac4ec-7553-456d-87b5-2c2091b77ddb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "a6bc6a5c-f763-4246-90a5-63f3b0f648c6"
+                },
+                {
+                    "description": "Segment of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 94.25,
+                        "y": 81.1
+                    },
+                    "uuid": "c3b5f4aa-b3f4-4adf-893a-9543d0dd2dfb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of kibuzzard-6773B9F7 on F.Silkscreen",
+                    "pos": {
+                        "x": 126.714993,
+                        "y": 61.406476
+                    },
+                    "uuid": "2485d03d-7b02-4ab9-b9eb-88f807bd9c37"
+                },
+                {
+                    "description": "Segment on F.Silkscreen",
+                    "pos": {
+                        "x": 130.13,
+                        "y": 62.07
+                    },
+                    "uuid": "29866215-9913-46fe-9413-b0520322c3bd"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 29.6
+                    },
+                    "uuid": "123575ca-a4b8-484a-be5e-f185a79f41fc"
+                },
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 130.75,
+                        "y": 77.6
+                    },
+                    "uuid": "d1806b6e-8ed7-48e9-bf05-78a2207721a4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "0f7959ba-0c1e-45ea-824c-45e2e4a3aaf3"
+                },
+                {
+                    "description": "Arc of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "a6bc6a5c-f763-4246-90a5-63f3b0f648c6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc of Module301 on B.Silkscreen",
+                    "pos": {
+                        "x": 127.25,
+                        "y": 77.6
+                    },
+                    "uuid": "0f7959ba-0c1e-45ea-824c-45e2e4a3aaf3"
+                },
+                {
+                    "description": "Segment of Module302 on B.Silkscreen",
+                    "pos": {
+                        "x": 130.75,
+                        "y": 77.6
+                    },
+                    "uuid": "d1806b6e-8ed7-48e9-bf05-78a2207721a4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

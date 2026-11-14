@@ -1,0 +1,417 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:11",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue5320.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [/+Vout_WFG] of TP11 on F.Cu",
+                    "pos": {
+                        "x": 21.59,
+                        "y": 48.514
+                    },
+                    "uuid": "ceb80e4b-80b1-4138-aee6-8bed2935bd3f"
+                },
+                {
+                    "description": "Pad 1 [/+Vout_WFG] of TP2 on F.Cu",
+                    "pos": {
+                        "x": 19.304,
+                        "y": 65.786
+                    },
+                    "uuid": "d144727e-d495-4268-b773-768dd2c6f4fc"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [/+Vout_WFG] of R20",
+                    "pos": {
+                        "x": 34.535369,
+                        "y": 11.1506
+                    },
+                    "uuid": "8da3d923-9529-4d33-82b6-04b7c6fc9d79"
+                },
+                {
+                    "description": "Pad 1 [/+Vout_WFG] of TP11 on F.Cu",
+                    "pos": {
+                        "x": 21.59,
+                        "y": 48.514
+                    },
+                    "uuid": "ceb80e4b-80b1-4138-aee6-8bed2935bd3f"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 4 [/+Vout_WFG] of U13",
+                    "pos": {
+                        "x": 51.6839,
+                        "y": 13.232
+                    },
+                    "uuid": "e4b4e846-e010-45f7-92e5-0a3d6896a2d0"
+                },
+                {
+                    "description": "PTH pad 1 [/+Vout_WFG] of R20",
+                    "pos": {
+                        "x": 34.535369,
+                        "y": 11.1506
+                    },
+                    "uuid": "8da3d923-9529-4d33-82b6-04b7c6fc9d79"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "The current configuration does not include the footprint library 'My_Conn'",
+            "items": [
+                {
+                    "description": "Footprint P1",
+                    "pos": {
+                        "x": 9.906,
+                        "y": 55.88
+                    },
+                    "uuid": "f6097054-b222-4c2e-8a82-7af7f8e18357"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'My_SMD'",
+            "items": [
+                {
+                    "description": "Footprint TP2",
+                    "pos": {
+                        "x": 19.304,
+                        "y": 65.786
+                    },
+                    "uuid": "3a7aa341-bf90-4141-97d5-d0f0d4ce7583"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'My_SMD'",
+            "items": [
+                {
+                    "description": "Footprint TP11",
+                    "pos": {
+                        "x": 21.59,
+                        "y": 48.514
+                    },
+                    "uuid": "40b10d37-7c95-405c-ac1e-d882784a9c67"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'SamacSys_Parts'",
+            "items": [
+                {
+                    "description": "Footprint R20",
+                    "pos": {
+                        "x": 34.535369,
+                        "y": 11.1506
+                    },
+                    "uuid": "a2f3a677-25c0-4914-896c-181e8f30715b"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'SamacSys_Parts'",
+            "items": [
+                {
+                    "description": "Footprint R42",
+                    "pos": {
+                        "x": 34.535369,
+                        "y": 21.8186
+                    },
+                    "uuid": "bfda4941-305e-46c1-9841-0bc2cddd879e"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'SamacSys_Parts'",
+            "items": [
+                {
+                    "description": "Footprint U13",
+                    "pos": {
+                        "x": 47.7139,
+                        "y": 11.962
+                    },
+                    "uuid": "7cc114d9-5ee4-4a01-9f7c-64c4a7d22651"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "ca76ba40-aeaa-4e4a-ac1a-edce46517da5"
+                },
+                {
+                    "description": "Segment of P1 on F.Silkscreen",
+                    "pos": {
+                        "x": 8.806,
+                        "y": 51.054
+                    },
+                    "uuid": "261b74ef-e369-483c-a8d1-b483f9da9132"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "ca76ba40-aeaa-4e4a-ac1a-edce46517da5"
+                },
+                {
+                    "description": "Segment of P1 on F.Silkscreen",
+                    "pos": {
+                        "x": 8.806,
+                        "y": 60.706
+                    },
+                    "uuid": "2e70ebae-ef63-400d-abd6-e9cdb83e0f83"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5080 mm)",
+            "items": [
+                {
+                    "description": "Reference field of P1",
+                    "pos": {
+                        "x": 8.382,
+                        "y": 50.038
+                    },
+                    "uuid": "86645fd3-c07e-4a2b-b675-ba26759fffd5"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5080 mm)",
+            "items": [
+                {
+                    "description": "PCB text 'GND\n' on F.Silkscreen",
+                    "pos": {
+                        "x": 9.144,
+                        "y": 62.23
+                    },
+                    "uuid": "b88a12a1-8f12-425b-8245-0d451b200f64"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5080 mm)",
+            "items": [
+                {
+                    "description": "PCB text 'GND\n' on F.Silkscreen",
+                    "pos": {
+                        "x": 11.43,
+                        "y": 62.23
+                    },
+                    "uuid": "9a5a6777-ea4f-4a68-81d4-a6d5750ddf5f"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5080 mm)",
+            "items": [
+                {
+                    "description": "Reference field of TP2",
+                    "pos": {
+                        "x": 19.05,
+                        "y": 67.056
+                    },
+                    "uuid": "05d08ca8-b1be-430d-b871-039d0e450bfd"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5080 mm)",
+            "items": [
+                {
+                    "description": "Reference field of TP11",
+                    "pos": {
+                        "x": 21.6408,
+                        "y": 49.9872
+                    },
+                    "uuid": "58e0d2db-225a-4611-b7d3-4ed182eb7d54"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5080 mm)",
+            "items": [
+                {
+                    "description": "Reference field of R20",
+                    "pos": {
+                        "x": 34.687769,
+                        "y": 3.2258
+                    },
+                    "uuid": "ea663205-08ed-4eb4-b823-319fec6b4a6e"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5080 mm)",
+            "items": [
+                {
+                    "description": "Reference field of R42",
+                    "pos": {
+                        "x": 34.687769,
+                        "y": 13.97
+                    },
+                    "uuid": "68584f28-3fe2-4c8e-b3cc-8d34e30a59b9"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5080 mm)",
+            "items": [
+                {
+                    "description": "Reference field of U13",
+                    "pos": {
+                        "x": 48.0949,
+                        "y": 23.9
+                    },
+                    "uuid": "f02a4abd-77e6-42c6-b1f6-f6579b209595"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of P1 on F.Silkscreen",
+                    "pos": {
+                        "x": 8.806,
+                        "y": 51.054
+                    },
+                    "uuid": "89a7fa83-0450-4a88-85f9-31d5392b751c"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of P1",
+                    "pos": {
+                        "x": 9.906,
+                        "y": 53.7755
+                    },
+                    "uuid": "da6d2de5-6a85-4ed6-95dd-e4e30070c784"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of P1 on F.Silkscreen",
+                    "pos": {
+                        "x": 8.806,
+                        "y": 51.054
+                    },
+                    "uuid": "89a7fa83-0450-4a88-85f9-31d5392b751c"
+                },
+                {
+                    "description": "PTH pad 1 [Net-(P1-Pad1)] of P1",
+                    "pos": {
+                        "x": 9.906,
+                        "y": 57.9665
+                    },
+                    "uuid": "7af37333-48b8-4f2a-96d8-d6cab953b50a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

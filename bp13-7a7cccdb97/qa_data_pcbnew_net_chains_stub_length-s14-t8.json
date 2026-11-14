@@ -1,0 +1,82 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:22",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "stub_length.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/TRUNK_A] on F.Cu, length 2.0000 mm",
+                    "pos": {
+                        "x": 52.5,
+                        "y": 70.5
+                    },
+                    "uuid": "4596a973-ead9-4ed7-8b15-ef335eeeefc9"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/MID_B] on F.Cu, length 30.0000 mm",
+                    "pos": {
+                        "x": 57.5,
+                        "y": 70.5
+                    },
+                    "uuid": "1f6b3686-9b80-4f43-8979-d7e89ce62f06"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/TRUNK_C] on F.Cu, length 2.0000 mm",
+                    "pos": {
+                        "x": 90.5,
+                        "y": 70.5
+                    },
+                    "uuid": "077ff3bc-9e8d-46da-9e46-d47c748ab35a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        }
+    ]
+}

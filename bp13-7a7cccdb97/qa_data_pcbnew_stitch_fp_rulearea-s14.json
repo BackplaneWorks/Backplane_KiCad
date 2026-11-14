@@ -1,0 +1,226 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:32",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "stitch_fp_rulearea.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 4 [GND] of U1 on F.Cu",
+                    "pos": {
+                        "x": 113.31,
+                        "y": 100.6
+                    },
+                    "uuid": "cbd07dfc-c319-47d8-a8a1-ae880ea6d943"
+                },
+                {
+                    "description": "Via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 114.0,
+                        "y": 102.0
+                    },
+                    "uuid": "95240b01-6402-464c-b3ce-b69e20c5dfc4"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Items not allowed (keepout area of U1)",
+            "items": [
+                {
+                    "description": "Pad 8 [Net-(U1Power-V+)] of U1 on F.Cu",
+                    "pos": {
+                        "x": 109.5,
+                        "y": 95.77
+                    },
+                    "uuid": "7c5578fb-20aa-4aad-85bc-3c2fc7666874"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items not allowed (keepout area of U1)",
+            "items": [
+                {
+                    "description": "Pad 1 [unconnected-(U1-Pad1)] of U1 on F.Cu",
+                    "pos": {
+                        "x": 109.5,
+                        "y": 100.6
+                    },
+                    "uuid": "63647738-1d2f-4fe3-80aa-37e22771de88"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items not allowed (keepout area of U1)",
+            "items": [
+                {
+                    "description": "Pad 7 [unconnected-(U1-Pad7)] of U1 on F.Cu",
+                    "pos": {
+                        "x": 110.77,
+                        "y": 95.77
+                    },
+                    "uuid": "6a440434-5916-4e12-b7bf-8d0f544c3373"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items not allowed (keepout area of U1)",
+            "items": [
+                {
+                    "description": "Pad 2 [unconnected-(U1-Pad2)] of U1 on F.Cu",
+                    "pos": {
+                        "x": 110.77,
+                        "y": 100.6
+                    },
+                    "uuid": "6cfd50c4-20d4-47cf-b481-df36c7110a1d"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items not allowed (keepout area of U1)",
+            "items": [
+                {
+                    "description": "Pad 6 [unconnected-(U1-Pad6)] of U1 on F.Cu",
+                    "pos": {
+                        "x": 112.04,
+                        "y": 95.77
+                    },
+                    "uuid": "a807b5d2-190a-41e4-a078-aeb813e21d64"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items not allowed (keepout area of U1)",
+            "items": [
+                {
+                    "description": "Pad 3 [unconnected-(U1-Pad3)] of U1 on F.Cu",
+                    "pos": {
+                        "x": 112.04,
+                        "y": 100.6
+                    },
+                    "uuid": "3f3e0ab9-52bf-4db2-a9b4-e5060a4bfda4"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items not allowed (keepout area of U1)",
+            "items": [
+                {
+                    "description": "Pad 5 [unconnected-(U1-Pad5)] of U1 on F.Cu",
+                    "pos": {
+                        "x": 113.31,
+                        "y": 95.77
+                    },
+                    "uuid": "e8ef8482-82a8-47ea-b8c8-3a64502ec9f9"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items not allowed (keepout area of U1)",
+            "items": [
+                {
+                    "description": "Pad 4 [GND] of U1 on F.Cu",
+                    "pos": {
+                        "x": 113.31,
+                        "y": 100.6
+                    },
+                    "uuid": "cbd07dfc-c319-47d8-a8a1-ae880ea6d943"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone 'stitch_zone_0' [GND] on In1.Cu and In2.Cu, priority 0",
+                    "pos": {
+                        "x": 105.0,
+                        "y": 91.1
+                    },
+                    "uuid": "38763e20-95bd-4561-a831-4f8e2bed0551"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone 'stitch_zone_0' [GND] on In1.Cu and In2.Cu, priority 0",
+                    "pos": {
+                        "x": 105.0,
+                        "y": 91.1
+                    },
+                    "uuid": "38763e20-95bd-4561-a831-4f8e2bed0551"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '04_MVP_SOP_SOIC'",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 111.405,
+                        "y": 98.185
+                    },
+                    "uuid": "bc2c3250-db6a-4654-8053-56557820f136"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

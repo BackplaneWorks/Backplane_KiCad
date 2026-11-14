@@ -1,0 +1,103 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:54",
+    "ignored_checks": [
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "key": "via_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "key": "track_dangling"
+        },
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "key": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "key": "silk_edge_clearance"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue18142.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Drilled hole too close to other hole (board setup constraints min 0.1000 mm; actual 0.0355 mm)",
+            "items": [
+                {
+                    "description": "Micro via [/core/FLASH_QSPI_IO3] on F.Cu - In2.Cu",
+                    "pos": {
+                        "x": 154.375,
+                        "y": 90.35
+                    },
+                    "uuid": "1cffc1d1-fb40-4d2c-9862-4cc74f080ebb"
+                },
+                {
+                    "description": "Blind via [/core/FLASH_QSPI_IO3] on In2.Cu - In3.Cu",
+                    "pos": {
+                        "x": 154.240717,
+                        "y": 90.438
+                    },
+                    "uuid": "2c92c4e6-da90-4131-b404-e5624703e566"
+                }
+            ],
+            "severity": "warning",
+            "type": "hole_to_hole"
+        },
+        {
+            "description": "The stackup gives the dielectric between F.Cu and In2.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [/core/FLASH_QSPI_IO3] on F.Cu - In2.Cu",
+                    "pos": {
+                        "x": 154.375,
+                        "y": 90.35
+                    },
+                    "uuid": "1cffc1d1-fb40-4d2c-9862-4cc74f080ebb"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        }
+    ]
+}

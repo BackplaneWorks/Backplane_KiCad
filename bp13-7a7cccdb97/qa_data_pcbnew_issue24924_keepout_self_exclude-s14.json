@@ -1,0 +1,247 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:06",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "keepout_self_exclude.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 99.86,
+                        "y": 99.65
+                    },
+                    "uuid": "7a0ba74e-a4e6-4459-9ce9-a87413a1c016"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 99.86,
+                        "y": 100.75
+                    },
+                    "uuid": "2aa0c3b9-2be2-4120-afb2-57ba752cd18f"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 100.41,
+                        "y": 99.1
+                    },
+                    "uuid": "ef8ab1c1-2da1-47f6-ac96-63681a8089b8"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 100.41,
+                        "y": 100.2
+                    },
+                    "uuid": "5c60c9ce-c59f-4adf-931f-d53a076090ee"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 100.41,
+                        "y": 101.3
+                    },
+                    "uuid": "3f913f8d-2341-4064-8eb2-e7d0505f439f"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 100.96,
+                        "y": 99.65
+                    },
+                    "uuid": "d2e296a5-64e3-4ca3-8b7f-0e96150d4b08"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 100.96,
+                        "y": 100.75
+                    },
+                    "uuid": "03049112-f8f4-45e9-a28f-a583b089b3ce"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 101.51,
+                        "y": 99.1
+                    },
+                    "uuid": "4a52b9fa-f3bd-42bf-ad80-d8e8ad6f5126"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 101.51,
+                        "y": 100.2
+                    },
+                    "uuid": "297533a1-5795-4e77-bc06-774262d66227"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 101.51,
+                        "y": 101.3
+                    },
+                    "uuid": "5b861db1-566f-43d1-894f-1c7fb4b72aa3"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 102.06,
+                        "y": 99.65
+                    },
+                    "uuid": "bdd067da-31d8-4a5e-a62c-2b9978398e58"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 19 [<no net>] of U1",
+                    "pos": {
+                        "x": 102.06,
+                        "y": 100.75
+                    },
+                    "uuid": "dafd2eec-d7b0-4b9f-8c92-0382ef8b533b"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "6163872a-817b-4108-ac4b-b78749edf6c7"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Footprint 'ESP32-C3-WROOM-02' does not match copy in library 'RF_Module'",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 100.0
+                    },
+                    "uuid": "11111111-1111-1111-1111-111111111111"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

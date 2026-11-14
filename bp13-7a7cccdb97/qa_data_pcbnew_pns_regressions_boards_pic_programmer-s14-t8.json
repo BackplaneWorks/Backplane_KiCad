@@ -1,0 +1,433 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:29",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "pic_programmer.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0005 mm)",
+            "items": [
+                {
+                    "description": "NPTH pad of P106",
+                    "pos": {
+                        "x": 77.47,
+                        "y": 44.45
+                    },
+                    "uuid": "5388c4b3-4065-436b-bb07-872f2a204f27"
+                },
+                {
+                    "description": "Zone [GND] on bottom_layer, priority 0",
+                    "pos": {
+                        "x": 223.52,
+                        "y": 138.43
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b22134f"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0005 mm)",
+            "items": [
+                {
+                    "description": "NPTH pad of U3",
+                    "pos": {
+                        "x": 99.06,
+                        "y": 54.46
+                    },
+                    "uuid": "0b8acc16-5862-44ca-aa75-9791787217b7"
+                },
+                {
+                    "description": "Zone [GND] on bottom_layer, priority 0",
+                    "pos": {
+                        "x": 223.52,
+                        "y": 138.43
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b22134f"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0005 mm)",
+            "items": [
+                {
+                    "description": "NPTH pad of P105",
+                    "pos": {
+                        "x": 158.75,
+                        "y": 44.45
+                    },
+                    "uuid": "e35f68d6-7cb1-43c6-91d5-33651939255f"
+                },
+                {
+                    "description": "Zone [GND] on bottom_layer, priority 0",
+                    "pos": {
+                        "x": 223.52,
+                        "y": 138.43
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b22134f"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0005 mm)",
+            "items": [
+                {
+                    "description": "NPTH pad of P102",
+                    "pos": {
+                        "x": 158.75,
+                        "y": 135.89
+                    },
+                    "uuid": "ebc3575f-5a02-47d2-9401-c933b3fce3d4"
+                },
+                {
+                    "description": "Zone [GND] on bottom_layer, priority 0",
+                    "pos": {
+                        "x": 223.52,
+                        "y": 138.43
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b22134f"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer bottom_layer; zone min spoke count 2; actual 1)",
+            "items": [
+                {
+                    "description": "Zone [GND] on bottom_layer, priority 0",
+                    "pos": {
+                        "x": 223.52,
+                        "y": 138.43
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b22134f"
+                },
+                {
+                    "description": "PTH pad 13 [GND] of U2",
+                    "pos": {
+                        "x": 118.11,
+                        "y": 111.76
+                    },
+                    "uuid": "50160666-9b65-4129-8e24-8a0e2c6ff9b7"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer bottom_layer; 1 spokes connected to isolated island)",
+            "items": [
+                {
+                    "description": "Zone [GND] on bottom_layer, priority 0",
+                    "pos": {
+                        "x": 223.52,
+                        "y": 138.43
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b22134f"
+                },
+                {
+                    "description": "PTH pad 10 [GND] of U2",
+                    "pos": {
+                        "x": 125.73,
+                        "y": 111.76
+                    },
+                    "uuid": "e87d765b-5b8c-4589-8d15-96246dc8529b"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer bottom_layer; 1 spokes connected to isolated island)",
+            "items": [
+                {
+                    "description": "Zone [GND] on bottom_layer, priority 0",
+                    "pos": {
+                        "x": 223.52,
+                        "y": 138.43
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b22134f"
+                },
+                {
+                    "description": "PTH pad 8 [GND] of P3",
+                    "pos": {
+                        "x": 175.26,
+                        "y": 68.58
+                    },
+                    "uuid": "767ba196-18d6-4400-9540-d6d5216a1db6"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer bottom_layer; zone min spoke count 2; actual 1)",
+            "items": [
+                {
+                    "description": "Zone [GND] on bottom_layer, priority 0",
+                    "pos": {
+                        "x": 223.52,
+                        "y": 138.43
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b22134f"
+                },
+                {
+                    "description": "PTH pad 5 [GND] of U5",
+                    "pos": {
+                        "x": 207.899,
+                        "y": 118.11
+                    },
+                    "uuid": "a273b0cf-623c-4d6f-b31c-ff9897866902"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/VPP/MCLR] on bottom_layer, length 4.4450 mm",
+                    "pos": {
+                        "x": 207.645,
+                        "y": 50.8
+                    },
+                    "uuid": "503b8ed3-5448-463e-84d5-e269bf99dfd3"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/DATA-RB7] on bottom_layer, length 4.4450 mm",
+                    "pos": {
+                        "x": 215.265,
+                        "y": 50.8
+                    },
+                    "uuid": "0f78730e-b452-4ce0-85f2-3034d1b80b73"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/CLOCK-RB6] on bottom_layer, length 3.8100 mm",
+                    "pos": {
+                        "x": 211.455,
+                        "y": 53.34
+                    },
+                    "uuid": "1bca740e-d69e-4f26-840b-262ef5e7d92a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 73.66,
+                        "y": 139.7
+                    },
+                    "uuid": "1b9fa3f4-da5c-437a-a33d-636ff8e8feb2"
+                },
+                {
+                    "description": "Segment of J1 on F.Silkscreen",
+                    "pos": {
+                        "x": 72.12,
+                        "y": 99.175
+                    },
+                    "uuid": "14c24855-8a33-4737-8411-06c42cb3722d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 73.66,
+                        "y": 139.7
+                    },
+                    "uuid": "1b9fa3f4-da5c-437a-a33d-636ff8e8feb2"
+                },
+                {
+                    "description": "Segment of J1 on F.Silkscreen",
+                    "pos": {
+                        "x": 84.46,
+                        "y": 130.145
+                    },
+                    "uuid": "99a5cb43-1dc8-4ad4-b4d6-76be7c855eb0"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 73.66,
+                        "y": 40.64
+                    },
+                    "uuid": "4c54b97f-58f4-434a-b5ec-e5a0228da742"
+                },
+                {
+                    "description": "Segment of P3 on F.Silkscreen",
+                    "pos": {
+                        "x": 171.45,
+                        "y": 36.195
+                    },
+                    "uuid": "051c2ad9-259b-47bc-ab5f-bf51663d5181"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 73.66,
+                        "y": 40.64
+                    },
+                    "uuid": "4c54b97f-58f4-434a-b5ec-e5a0228da742"
+                },
+                {
+                    "description": "Segment of P3 on F.Silkscreen",
+                    "pos": {
+                        "x": 172.72,
+                        "y": 36.195
+                    },
+                    "uuid": "62aa1006-7849-4081-b553-f8ddc3ca159a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint RV1",
+                    "pos": {
+                        "x": 127.635,
+                        "y": 90.805
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a29abca"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint Q3",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 97.79
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a228a27"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint Q2",
+                    "pos": {
+                        "x": 148.082,
+                        "y": 60.706
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a228a38"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint Q1",
+                    "pos": {
+                        "x": 146.05,
+                        "y": 69.85
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a228a49"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P3",
+                    "pos": {
+                        "x": 175.26,
+                        "y": 50.8
+                    },
+                    "uuid": "00000000-0000-0000-0000-0000541e1940"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

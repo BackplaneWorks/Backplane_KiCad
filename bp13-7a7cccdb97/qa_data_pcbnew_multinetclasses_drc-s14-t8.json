@@ -1,0 +1,135 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:19",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "multinetclasses_drc.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Track width (rule 'rule_3' max width 0.1270 mm; actual 1.0160 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(R1-Pad2)] on F.Cu, length 10.1650 mm",
+                    "pos": {
+                        "x": 103.105,
+                        "y": 71.88
+                    },
+                    "uuid": "2a7c931b-072e-4000-9dc5-1c4949cffe4f"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (rule 'rule_3' max width 0.1270 mm; actual 0.5080 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(R3-Pad1)] on F.Cu, length 10.3350 mm",
+                    "pos": {
+                        "x": 92.89,
+                        "y": 76.91
+                    },
+                    "uuid": "995d2ce6-a1f6-4315-a31f-e3c626d0a199"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 91.9775,
+                        "y": 76.91
+                    },
+                    "uuid": "6fa361af-8de0-4529-9fe9-c068235509c5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 92.0075,
+                        "y": 71.86
+                    },
+                    "uuid": "95389f3c-85bb-4b8e-812a-9ae273546d13"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 104.0175,
+                        "y": 71.88
+                    },
+                    "uuid": "f5072944-4754-4fee-a3e6-06f374de8f85"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 104.1675,
+                        "y": 76.88
+                    },
+                    "uuid": "ce8ef068-2665-4fa1-8424-68cc42f5e641"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

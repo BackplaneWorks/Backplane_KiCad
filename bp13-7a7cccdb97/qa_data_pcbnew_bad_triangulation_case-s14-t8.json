@@ -1,0 +1,922 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:44",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "bad_triangulation_case.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "9fabef59-9640-434c-bfd0-f53cd763e82b"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 1",
+                    "pos": {
+                        "x": 87.085982,
+                        "y": 78.092368
+                    },
+                    "uuid": "4d212ee0-2c38-4cc2-a730-629acf263e54"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone 'stitch_zone_0' [<no net>] on F.Cu, priority 4",
+                    "pos": {
+                        "x": 99.798982,
+                        "y": 110.245195
+                    },
+                    "uuid": "9fce5386-153b-4fd4-b665-5e070fa75a3f"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 82.684382,
+                        "y": 122.242368
+                    },
+                    "uuid": "3e3d85b2-274f-4f69-9cc0-45592c48bc6d"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 13",
+                    "pos": {
+                        "x": 98.135982,
+                        "y": 122.442368
+                    },
+                    "uuid": "f61693d0-6ad9-4a14-96f7-28d9c7f79a91"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 6",
+                    "pos": {
+                        "x": 82.863482,
+                        "y": 76.468368
+                    },
+                    "uuid": "48148822-0f67-41fb-a2ad-a543f18d8b3c"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 3",
+                    "pos": {
+                        "x": 86.885982,
+                        "y": 118.447968
+                    },
+                    "uuid": "e7969f8b-fa7c-4c14-ba69-e149698e8124"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 88.746482,
+                        "y": 129.940868
+                    },
+                    "uuid": "937828c3-fdc4-4759-887d-9b761783ab56"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone 'stitch_zone_0' [<no net>] on F.Cu, priority 4",
+                    "pos": {
+                        "x": 78.462982,
+                        "y": 85.353195
+                    },
+                    "uuid": "9ff6f2c8-d4bb-4e59-9dea-5197bde936a2"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 10",
+                    "pos": {
+                        "x": 90.883982,
+                        "y": 46.490368
+                    },
+                    "uuid": "3677d437-1e3c-4d38-8a29-20f849f7a765"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 90.346482,
+                        "y": 126.140868
+                    },
+                    "uuid": "0bbdf8fb-3e81-4d91-9a79-752642866286"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 3",
+                    "pos": {
+                        "x": 92.305982,
+                        "y": 109.041868
+                    },
+                    "uuid": "6f210273-5ace-4370-ae7d-06e8b7063463"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 94.114982,
+                        "y": 130.990868
+                    },
+                    "uuid": "1d6417c2-4964-4131-a7d1-83634264ed25"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 94.088382,
+                        "y": 127.957368
+                    },
+                    "uuid": "bc789abb-7bc1-4376-bd1e-7a89bfdf7deb"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 3",
+                    "pos": {
+                        "x": 94.591982,
+                        "y": 108.787868
+                    },
+                    "uuid": "b6cb5734-25a1-4625-a837-3aad771844b6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 97.046482,
+                        "y": 126.890868
+                    },
+                    "uuid": "ce7e5173-39c9-4b5c-8a61-c8c6def32492"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 2",
+                    "pos": {
+                        "x": 92.407982,
+                        "y": 55.253368
+                    },
+                    "uuid": "e9846f5e-fcf9-400a-b8fc-aba4cbd4ef21"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 3",
+                    "pos": {
+                        "x": 93.575982,
+                        "y": 104.850868
+                    },
+                    "uuid": "5dd4df76-d613-46e7-a3b9-966f8a54e4bc"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 7",
+                    "pos": {
+                        "x": 91.518982,
+                        "y": 42.640368
+                    },
+                    "uuid": "f9bf0b18-e3ac-49b4-8c4d-4b1a270ad2dd"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 11",
+                    "pos": {
+                        "x": 99.290982,
+                        "y": 107.456368
+                    },
+                    "uuid": "9b0c256f-c687-4f85-a769-cb715968dd1f"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 15",
+                    "pos": {
+                        "x": 103.354982,
+                        "y": 90.692368
+                    },
+                    "uuid": "a5d98b23-e7d5-4097-8c58-6464bf57ec13"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 2",
+                    "pos": {
+                        "x": 101.830982,
+                        "y": 104.850868
+                    },
+                    "uuid": "f4010f51-734b-44de-a70c-96d0bcfb135a"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 6",
+                    "pos": {
+                        "x": 105.005982,
+                        "y": 76.722368
+                    },
+                    "uuid": "2ddf7607-a3a7-4b48-bbb2-6188879fd786"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 93.575982,
+                        "y": 89.737868
+                    },
+                    "uuid": "1d298ae3-b39b-42b3-b42b-3a6e7c71eeb4"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 105.746482,
+                        "y": 144.290868
+                    },
+                    "uuid": "3c95a09a-ab5c-43dc-9a24-d016d53cb83c"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 105.767982,
+                        "y": 110.946868
+                    },
+                    "uuid": "3f249242-28c7-4bfb-ab15-4f3a38afac16"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 86.463982,
+                        "y": 115.645868
+                    },
+                    "uuid": "97f4cd55-ab70-43ef-b575-258c5131fbf1"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 5",
+                    "pos": {
+                        "x": 110.619382,
+                        "y": 139.612768
+                    },
+                    "uuid": "4ac920ae-c666-4887-9a73-e5242b855e46"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 105.386982,
+                        "y": 98.246868
+                    },
+                    "uuid": "ae66325c-4bd2-43fa-bafb-6ae41ce508d6"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 115.978782,
+                        "y": 141.394368
+                    },
+                    "uuid": "c848f62b-3816-438b-916b-c569af149978"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 105.386982,
+                        "y": 93.166868
+                    },
+                    "uuid": "d2b6c2a7-e107-499a-95e5-48007c7edf7e"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 109.958982,
+                        "y": 98.627868
+                    },
+                    "uuid": "49a5f635-f950-4739-b954-17d2df570b02"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 16",
+                    "pos": {
+                        "x": 118.555541,
+                        "y": 108.065968
+                    },
+                    "uuid": "2e829593-eef1-4a33-be3f-e0c480b9db98"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 8",
+                    "pos": {
+                        "x": 116.054982,
+                        "y": 108.091368
+                    },
+                    "uuid": "fab1b744-4d0e-42d3-b3ad-8f8d538fbca5"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 9",
+                    "pos": {
+                        "x": 101.551982,
+                        "y": 74.176368
+                    },
+                    "uuid": "e42cb409-9710-4507-b08d-9d9478748fe2"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 4",
+                    "pos": {
+                        "x": 84.328482,
+                        "y": 77.819368
+                    },
+                    "uuid": "f907162f-ba80-4d2f-ae4f-fa136a2ddbb7"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 7",
+                    "pos": {
+                        "x": 119.458982,
+                        "y": 42.807368
+                    },
+                    "uuid": "008b576a-82af-48c1-8ee0-69ff2d38b57d"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 121.160982,
+                        "y": 34.892368
+                    },
+                    "uuid": "f5ba6415-7779-4310-bb0c-d77df199361d"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 122.060982,
+                        "y": 34.892368
+                    },
+                    "uuid": "c8911ccc-63cf-4e4f-90bc-07d5a11383bc"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 14",
+                    "pos": {
+                        "x": 123.370182,
+                        "y": 80.583168
+                    },
+                    "uuid": "1b1dc5c8-a8e3-46ba-833b-687d525e6737"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 122.560982,
+                        "y": 34.892368
+                    },
+                    "uuid": "68f40a9b-a151-4251-8264-bb56906bb678"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 123.460982,
+                        "y": 34.892368
+                    },
+                    "uuid": "776fac5a-3e6c-47e6-93f7-ef10f8813a0f"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 124.910982,
+                        "y": 34.892368
+                    },
+                    "uuid": "b473670a-a55b-4f23-98b1-792ba1d84057"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 124.010982,
+                        "y": 34.892368
+                    },
+                    "uuid": "650c3161-5576-40e0-a9f6-6246413fa93d"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 125.210982,
+                        "y": 34.892368
+                    },
+                    "uuid": "3fad2f19-56c5-4ff1-8125-f92fbbb7f9c0"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 126.110982,
+                        "y": 34.892368
+                    },
+                    "uuid": "342f2720-aadf-4959-998a-4681b2f6d816"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 2",
+                    "pos": {
+                        "x": 120.436982,
+                        "y": 55.207368
+                    },
+                    "uuid": "745b9452-4efa-4874-a837-c1b0c87f35e0"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 138.152982,
+                        "y": 77.839968
+                    },
+                    "uuid": "d5e2d001-b419-47de-a53b-1b8b15b5f66a"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 130.360982,
+                        "y": 34.892368
+                    },
+                    "uuid": "28977a34-5038-4352-b6ed-dc5f5fcda0e3"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 132.260982,
+                        "y": 34.892368
+                    },
+                    "uuid": "e7eebeba-30a4-4b62-86a4-a527a4bcfb70"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 132.564982,
+                        "y": 147.602373
+                    },
+                    "uuid": "bb857da1-78f9-409c-a9be-59d512c88990"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 134.160982,
+                        "y": 34.892368
+                    },
+                    "uuid": "117ff758-3f00-40ce-a60b-4dc804729d76"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 14",
+                    "pos": {
+                        "x": 134.609682,
+                        "y": 80.532368
+                    },
+                    "uuid": "fec7b04f-d0fa-47f3-9a83-ae44b007f397"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 135.960982,
+                        "y": 34.892368
+                    },
+                    "uuid": "6d26bc91-0e20-4c9d-8ae6-71173d93168b"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 5",
+                    "pos": {
+                        "x": 138.152982,
+                        "y": 78.093968
+                    },
+                    "uuid": "a2fe4953-7ea4-4f6a-8a09-d2a4d7764919"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 14",
+                    "pos": {
+                        "x": 138.152982,
+                        "y": 77.738368
+                    },
+                    "uuid": "c6acb776-bf71-4903-b049-8219382eed82"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on F.Cu, priority 14",
+                    "pos": {
+                        "x": 138.152982,
+                        "y": 122.442368
+                    },
+                    "uuid": "d66124c8-83b0-450c-b1d6-1700009674f4"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 12",
+                    "pos": {
+                        "x": 138.131982,
+                        "y": 147.641737
+                    },
+                    "uuid": "830136ba-57c1-4d60-a3f0-23316140daca"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 6",
+                    "pos": {
+                        "x": 138.152982,
+                        "y": 120.892368
+                    },
+                    "uuid": "68aab135-5fa4-4435-a3e4-8c1b13307576"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        }
+    ]
+}

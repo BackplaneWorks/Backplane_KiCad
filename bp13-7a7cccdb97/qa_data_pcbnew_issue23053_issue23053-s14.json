@@ -1,0 +1,611 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:59",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "key": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "key": "silk_edge_clearance"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue23053.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [+Vbat] of R17 on B.Cu",
+                    "pos": {
+                        "x": 22.2,
+                        "y": -25.1625
+                    },
+                    "uuid": "e9a387a0-c4dc-4901-9f35-9552236c2b1d"
+                },
+                {
+                    "description": "Track [+Vbat] on B.Cu, length 1.0761 mm",
+                    "pos": {
+                        "x": 23.8,
+                        "y": -22.486444
+                    },
+                    "uuid": "976abe19-6ef4-4829-a14f-55426cf79b54"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [ADC1_IN5] on B.Cu, length 1.2728 mm",
+                    "pos": {
+                        "x": 33.749,
+                        "y": -17.58681
+                    },
+                    "uuid": "90a2a8d3-50d3-4390-96aa-bdb3972eb30e"
+                },
+                {
+                    "description": "Track [ADC1_IN5] on B.Cu, length 1.1000 mm",
+                    "pos": {
+                        "x": 34.1,
+                        "y": -23.1
+                    },
+                    "uuid": "38e4294d-a7e3-4d75-9ac9-982195013707"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Clearance violation (zone clearance 0.3000 mm; actual 0.2907 mm)",
+            "items": [
+                {
+                    "description": "Zone 'GND' [GND] on F.Cu and B.Cu, priority 2",
+                    "pos": {
+                        "x": -3.0,
+                        "y": -53.0
+                    },
+                    "uuid": "d2b0241b-1cd3-49ab-abe3-61ba08e295b0"
+                },
+                {
+                    "description": "Zone [/Leistungsteil_Mosfet/bruecke_mitte] on B.Cu, priority 8",
+                    "pos": {
+                        "x": 6.9,
+                        "y": -16.3
+                    },
+                    "uuid": "61467dc2-436a-468f-8c25-031632d0e822"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1990 mm)",
+            "items": [
+                {
+                    "description": "Zone 'GND' [GND] on F.Cu and B.Cu, priority 2",
+                    "pos": {
+                        "x": -3.0,
+                        "y": -53.0
+                    },
+                    "uuid": "d2b0241b-1cd3-49ab-abe3-61ba08e295b0"
+                },
+                {
+                    "description": "Zone [/Leistungsteil_Mosfet/UZ] on B.Cu, priority 9",
+                    "pos": {
+                        "x": 17.0,
+                        "y": -24.0
+                    },
+                    "uuid": "41bf2c40-a717-4bb4-b72c-c466a295709b"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [+Vbat] on B.Cu, length 1.0761 mm",
+                    "pos": {
+                        "x": 23.8,
+                        "y": -22.486444
+                    },
+                    "uuid": "976abe19-6ef4-4829-a14f-55426cf79b54"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [+Vbat] on F.Cu, length 4.8625 mm",
+                    "pos": {
+                        "x": 29.75,
+                        "y": -16.15
+                    },
+                    "uuid": "0dafc331-cd78-4fe7-ac1a-a24502eaa76f"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [ADC1_IN5] on B.Cu, length 1.2728 mm",
+                    "pos": {
+                        "x": 33.749,
+                        "y": -17.58681
+                    },
+                    "uuid": "90a2a8d3-50d3-4390-96aa-bdb3972eb30e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(D4-K)] on B.Cu, length 4.6750 mm",
+                    "pos": {
+                        "x": 30.85,
+                        "y": -13.2
+                    },
+                    "uuid": "a7badd61-b1d4-4036-9f7a-dffdc6fad9c5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [+5V] on B.Cu, length 2.3500 mm",
+                    "pos": {
+                        "x": 33.35,
+                        "y": -6.15
+                    },
+                    "uuid": "c4c6cb0d-d700-4559-8078-f46eb1fc0113"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [TIM8_CH1] on F.Cu, length 8.4853 mm",
+                    "pos": {
+                        "x": 37.8,
+                        "y": -12.4
+                    },
+                    "uuid": "e08d81e2-e3c6-4bcc-9b7c-a16b95d990d2"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [TIM8_CH1N] on F.Cu, length 7.6125 mm",
+                    "pos": {
+                        "x": 32.582843,
+                        "y": -6.617157
+                    },
+                    "uuid": "5b3b32d5-8e5c-4146-b519-a324f90eca9c"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [+3V3] on F.Cu, length 6.6153 mm",
+                    "pos": {
+                        "x": 31.914325,
+                        "y": -21.329643
+                    },
+                    "uuid": "8c74ba61-b594-4888-aefe-abea70c33a99"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [ADC1_IN5] on F.Cu, length 12.6970 mm",
+                    "pos": {
+                        "x": 33.476497,
+                        "y": -15.526497
+                    },
+                    "uuid": "ead49e97-8151-4a30-aef6-0b595f5e107e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [ADC2_IN3] on B.Cu, length 65.4500 mm",
+                    "pos": {
+                        "x": 7.25,
+                        "y": -0.6
+                    },
+                    "uuid": "229223fd-75da-4638-8275-9bc2e8a6f4c3"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_Mechanik'",
+            "items": [
+                {
+                    "description": "Footprint H4",
+                    "pos": {
+                        "x": 2.54,
+                        "y": -40.9
+                    },
+                    "uuid": "d5baa1ef-802c-4e74-9284-bf2323acd3cb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R16",
+                    "pos": {
+                        "x": 3.8,
+                        "y": -9.6
+                    },
+                    "uuid": "658f63a7-637c-44ee-9927-03d488628260"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_Mechanik'",
+            "items": [
+                {
+                    "description": "Footprint Mark3",
+                    "pos": {
+                        "x": 6.0,
+                        "y": -1.0
+                    },
+                    "uuid": "0a2da391-8bdd-40b2-bae9-7adf4f29c0e7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_Transistoren'",
+            "items": [
+                {
+                    "description": "Footprint T6",
+                    "pos": {
+                        "x": 9.27,
+                        "y": -13.8
+                    },
+                    "uuid": "b4a24941-2188-4a69-b6e0-ab59eb4d7364"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_Mechanik'",
+            "items": [
+                {
+                    "description": "Footprint H5",
+                    "pos": {
+                        "x": 9.2075,
+                        "y": -6.6
+                    },
+                    "uuid": "0eda4049-7241-4d64-a0b2-f29b57cf44f6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R18",
+                    "pos": {
+                        "x": 16.8,
+                        "y": -7.0
+                    },
+                    "uuid": "9606f4d9-943d-4c09-8020-f8182b434fba"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R19",
+                    "pos": {
+                        "x": 16.8,
+                        "y": -4.4
+                    },
+                    "uuid": "826c9b5e-83d3-421f-83b4-db92d65315ad"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_Transistoren'",
+            "items": [
+                {
+                    "description": "Footprint T5",
+                    "pos": {
+                        "x": 17.87,
+                        "y": -13.8
+                    },
+                    "uuid": "49f2c41c-9971-451b-8cf2-521ecea60386"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint C26",
+                    "pos": {
+                        "x": 20.2,
+                        "y": -5.8
+                    },
+                    "uuid": "7bb34bd2-ceb3-4043-8cbe-dd78253e96de"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R17",
+                    "pos": {
+                        "x": 22.2,
+                        "y": -22.2
+                    },
+                    "uuid": "9ef07a05-4ef7-4e58-b9bc-99935e7b8f52"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint C35",
+                    "pos": {
+                        "x": 23.6,
+                        "y": -8.6
+                    },
+                    "uuid": "fddd267f-ad47-48e2-99bf-4dee2d485c27"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_IC_spezial'",
+            "items": [
+                {
+                    "description": "Footprint IC7",
+                    "pos": {
+                        "x": 23.6,
+                        "y": -5.8
+                    },
+                    "uuid": "dc52bf7f-85c5-4a16-a34d-5eb55210fe12"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_IC_spezial'",
+            "items": [
+                {
+                    "description": "Footprint IC8",
+                    "pos": {
+                        "x": 27.35,
+                        "y": -22.45
+                    },
+                    "uuid": "3b75736c-2457-4f2a-81f0-ceab2e0aeca0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R13",
+                    "pos": {
+                        "x": 29.0,
+                        "y": -6.65
+                    },
+                    "uuid": "41cf7faa-6e07-4849-8ce6-1f5f2b1b28d5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R14",
+                    "pos": {
+                        "x": 29.0,
+                        "y": -3.4
+                    },
+                    "uuid": "7c1994e3-47fa-4ab0-a412-b08a17498a44"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_Dioden'",
+            "items": [
+                {
+                    "description": "Footprint D4",
+                    "pos": {
+                        "x": 29.2,
+                        "y": -13.2
+                    },
+                    "uuid": "9c90d8e8-9179-4b60-9966-43af02c384f2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint C36",
+                    "pos": {
+                        "x": 31.35,
+                        "y": -21.65
+                    },
+                    "uuid": "868eb9ae-6d32-4753-b214-5358882bf6ab"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R20",
+                    "pos": {
+                        "x": 33.4,
+                        "y": -21.65
+                    },
+                    "uuid": "393c4ba7-9052-4630-879a-3eb8693c7872"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R11",
+                    "pos": {
+                        "x": 34.4,
+                        "y": -5.6
+                    },
+                    "uuid": "d443a0dd-0c30-4016-8643-0f9adadaff6d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_Mechanik'",
+            "items": [
+                {
+                    "description": "Footprint H2",
+                    "pos": {
+                        "x": 49.53,
+                        "y": -21.59
+                    },
+                    "uuid": "b5537989-a883-44ca-9f7f-768a54c7ef3d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_Mechanik'",
+            "items": [
+                {
+                    "description": "Footprint H3",
+                    "pos": {
+                        "x": 85.09,
+                        "y": -46.6725
+                    },
+                    "uuid": "fe0d2343-0762-4edb-a461-aa1843da5842"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

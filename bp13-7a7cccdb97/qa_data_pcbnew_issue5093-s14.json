@@ -1,0 +1,5230 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:11",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue5093.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1801 mm)",
+            "items": [
+                {
+                    "description": "Pad A1 [/right/GND] of J309 on F.Cu",
+                    "pos": {
+                        "x": 101.88,
+                        "y": 143.13
+                    },
+                    "uuid": "5494e8b7-c269-41e3-a574-26b4fed468d3"
+                },
+                {
+                    "description": "NPTH pad of J309",
+                    "pos": {
+                        "x": 102.19,
+                        "y": 144.19
+                    },
+                    "uuid": "5c975407-7374-4437-9abe-7b1fbe057cd5"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1801 mm)",
+            "items": [
+                {
+                    "description": "Pad B12 [/right/GND] of J309 on F.Cu",
+                    "pos": {
+                        "x": 101.88,
+                        "y": 143.13
+                    },
+                    "uuid": "d4a25359-2de3-44e5-b162-84cb80df3e8d"
+                },
+                {
+                    "description": "NPTH pad of J309",
+                    "pos": {
+                        "x": 102.19,
+                        "y": 144.19
+                    },
+                    "uuid": "5c975407-7374-4437-9abe-7b1fbe057cd5"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2162 mm)",
+            "items": [
+                {
+                    "description": "Pad B9 [/right/VBUS] of J309 on F.Cu",
+                    "pos": {
+                        "x": 102.68,
+                        "y": 143.13
+                    },
+                    "uuid": "05ebc830-a251-4dcc-8665-1480ce3cf5d4"
+                },
+                {
+                    "description": "NPTH pad of J309",
+                    "pos": {
+                        "x": 102.19,
+                        "y": 144.19
+                    },
+                    "uuid": "5c975407-7374-4437-9abe-7b1fbe057cd5"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2162 mm)",
+            "items": [
+                {
+                    "description": "Pad A4 [/right/VBUS] of J309 on F.Cu",
+                    "pos": {
+                        "x": 102.68,
+                        "y": 143.13
+                    },
+                    "uuid": "a27f6e88-dce2-4c08-94fd-77a23e11c679"
+                },
+                {
+                    "description": "NPTH pad of J309",
+                    "pos": {
+                        "x": 102.19,
+                        "y": 144.19
+                    },
+                    "uuid": "5c975407-7374-4437-9abe-7b1fbe057cd5"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2162 mm)",
+            "items": [
+                {
+                    "description": "Pad B4 [/right/VBUS] of J309 on F.Cu",
+                    "pos": {
+                        "x": 107.48,
+                        "y": 143.13
+                    },
+                    "uuid": "a3225a6c-d265-4e8e-8365-dd97d8cc1b8c"
+                },
+                {
+                    "description": "NPTH pad of J309",
+                    "pos": {
+                        "x": 107.97,
+                        "y": 144.19
+                    },
+                    "uuid": "a4ab20cb-51b6-41ec-af83-c0cf9e164a48"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2162 mm)",
+            "items": [
+                {
+                    "description": "Pad A9 [/right/VBUS] of J309 on F.Cu",
+                    "pos": {
+                        "x": 107.48,
+                        "y": 143.13
+                    },
+                    "uuid": "f0f7930a-1025-4166-a891-980db1609535"
+                },
+                {
+                    "description": "NPTH pad of J309",
+                    "pos": {
+                        "x": 107.97,
+                        "y": 144.19
+                    },
+                    "uuid": "a4ab20cb-51b6-41ec-af83-c0cf9e164a48"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1801 mm)",
+            "items": [
+                {
+                    "description": "Pad A12 [/right/GND] of J309 on F.Cu",
+                    "pos": {
+                        "x": 108.28,
+                        "y": 143.13
+                    },
+                    "uuid": "1fb4a908-5fb2-481c-82fd-5ff12b4d3a09"
+                },
+                {
+                    "description": "NPTH pad of J309",
+                    "pos": {
+                        "x": 107.97,
+                        "y": 144.19
+                    },
+                    "uuid": "a4ab20cb-51b6-41ec-af83-c0cf9e164a48"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1801 mm)",
+            "items": [
+                {
+                    "description": "Pad B1 [/right/GND] of J309 on F.Cu",
+                    "pos": {
+                        "x": 108.28,
+                        "y": 143.13
+                    },
+                    "uuid": "9406d99b-3787-4551-9e3f-523584be5641"
+                },
+                {
+                    "description": "NPTH pad of J309",
+                    "pos": {
+                        "x": 107.97,
+                        "y": 144.19
+                    },
+                    "uuid": "a4ab20cb-51b6-41ec-af83-c0cf9e164a48"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2288 mm)",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 0.5600 mm",
+                    "pos": {
+                        "x": 190.17,
+                        "y": 56.23
+                    },
+                    "uuid": "242296a1-1254-41e0-8579-3e8db75e692b"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2288 mm)",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 0.2404 mm",
+                    "pos": {
+                        "x": 190.729999,
+                        "y": 56.23
+                    },
+                    "uuid": "057c7853-423e-49f8-94ab-c34daf9b1917"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1801 mm)",
+            "items": [
+                {
+                    "description": "Pad A12 [/left/GND] of J215 on F.Cu",
+                    "pos": {
+                        "x": 190.9,
+                        "y": 56.81
+                    },
+                    "uuid": "c616a13a-3531-4ccd-9833-ee301bb45154"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1801 mm)",
+            "items": [
+                {
+                    "description": "Pad B1 [/left/GND] of J215 on F.Cu",
+                    "pos": {
+                        "x": 190.9,
+                        "y": 56.81
+                    },
+                    "uuid": "f1bb6462-c88a-4ea1-84e4-3f4119149ca2"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Pad 3 [/left/GND] of J208 on B.Cu",
+                    "pos": {
+                        "x": 192.05,
+                        "y": 55.17
+                    },
+                    "uuid": "067ea154-8deb-475c-870f-4fc3538867be"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0200 mm)",
+            "items": [
+                {
+                    "description": "Pad 1 [/left/+3V3] of J208 on B.Cu",
+                    "pos": {
+                        "x": 192.05,
+                        "y": 56.44
+                    },
+                    "uuid": "e1cd2a9a-bc11-40e6-ba53-d584bf090ad7"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2162 mm)",
+            "items": [
+                {
+                    "description": "Pad A9 [/left/VBUS] of J215 on F.Cu",
+                    "pos": {
+                        "x": 191.7,
+                        "y": 56.81
+                    },
+                    "uuid": "4444aea8-9b46-41d5-9936-d5062994d264"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2162 mm)",
+            "items": [
+                {
+                    "description": "Pad B4 [/left/VBUS] of J215 on F.Cu",
+                    "pos": {
+                        "x": 191.7,
+                        "y": 56.81
+                    },
+                    "uuid": "72e30b07-cead-4a4d-9ac2-998500edb012"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2353 mm)",
+            "items": [
+                {
+                    "description": "Track [/left/VBUS] on F.Cu, length 1.2657 mm",
+                    "pos": {
+                        "x": 191.849999,
+                        "y": 55.994999
+                    },
+                    "uuid": "c2ab9f9f-dec8-4fad-9e0b-0c4b4d6db533"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2353 mm)",
+            "items": [
+                {
+                    "description": "Track [/left/VBUS] on F.Cu, length 0.6650 mm",
+                    "pos": {
+                        "x": 191.849999,
+                        "y": 56.660001
+                    },
+                    "uuid": "e5c20e28-cff3-40da-9b3a-a81c1cbb81f0"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2408 mm)",
+            "items": [
+                {
+                    "description": "Track [/left/VBUS] on F.Cu, length 1.2869 mm",
+                    "pos": {
+                        "x": 195.44,
+                        "y": 55.1
+                    },
+                    "uuid": "4d98ac7c-a013-408f-9440-918ef933056b"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2408 mm)",
+            "items": [
+                {
+                    "description": "Track [/left/VBUS] on F.Cu, length 0.6500 mm",
+                    "pos": {
+                        "x": 196.350001,
+                        "y": 56.010001
+                    },
+                    "uuid": "cd7f6643-df37-4fe3-8606-54107339c982"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2162 mm)",
+            "items": [
+                {
+                    "description": "Pad B9 [/left/VBUS] of J215 on F.Cu",
+                    "pos": {
+                        "x": 196.5,
+                        "y": 56.81
+                    },
+                    "uuid": "84dd8957-ce87-461f-8fb1-81a110789371"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2162 mm)",
+            "items": [
+                {
+                    "description": "Pad A4 [/left/VBUS] of J215 on F.Cu",
+                    "pos": {
+                        "x": 196.5,
+                        "y": 56.81
+                    },
+                    "uuid": "85f40de6-8149-4729-8e88-7316313b1971"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2250 mm)",
+            "items": [
+                {
+                    "description": "Track [/left/SWCLK] on B.Cu, length 1.2950 mm",
+                    "pos": {
+                        "x": 195.995001,
+                        "y": 55.124999
+                    },
+                    "uuid": "43be60da-e1ce-440c-b3ac-9d4b6ba0b743"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Pad 4 [/left/SWCLK] of J208 on B.Cu",
+                    "pos": {
+                        "x": 195.95,
+                        "y": 55.17
+                    },
+                    "uuid": "0515fb3e-2c72-41b6-a56a-6fbdccc89f88"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0200 mm)",
+            "items": [
+                {
+                    "description": "Pad 2 [/left/SWDIO] of J208 on B.Cu",
+                    "pos": {
+                        "x": 195.95,
+                        "y": 56.44
+                    },
+                    "uuid": "e423a2a4-f3d1-4210-b00a-3c1d96d400a5"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1801 mm)",
+            "items": [
+                {
+                    "description": "Pad B12 [/left/GND] of J215 on F.Cu",
+                    "pos": {
+                        "x": 197.3,
+                        "y": 56.81
+                    },
+                    "uuid": "c6d3947e-c755-4d40-b1a8-19cb3171cd7a"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1801 mm)",
+            "items": [
+                {
+                    "description": "Pad A1 [/left/GND] of J215 on F.Cu",
+                    "pos": {
+                        "x": 197.3,
+                        "y": 56.81
+                    },
+                    "uuid": "daddb5e2-4338-48f4-913b-f0bfae6e691d"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2250 mm)",
+            "items": [
+                {
+                    "description": "Track [/left/SWCLK] on B.Cu, length 3.9400 mm",
+                    "pos": {
+                        "x": 197.615001,
+                        "y": 55.449999
+                    },
+                    "uuid": "a61c5b8b-9ff8-4f68-9513-5cad410b9023"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "hole_clearance"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J309",
+                    "pos": {
+                        "x": 105.08,
+                        "y": 145.64
+                    },
+                    "uuid": "bdf8d255-d8b2-4972-a962-2c6e0fab66f0"
+                },
+                {
+                    "description": "Footprint R302",
+                    "pos": {
+                        "x": 106.7925,
+                        "y": 141.19
+                    },
+                    "uuid": "ea9ff902-70ac-4125-8753-4dc26bf59735"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint C310",
+                    "pos": {
+                        "x": 159.402913,
+                        "y": 93.602913
+                    },
+                    "uuid": "6b6e6416-cedf-4bf6-96db-4e97327ba4c7"
+                },
+                {
+                    "description": "Footprint C313",
+                    "pos": {
+                        "x": 159.402913,
+                        "y": 93.602913
+                    },
+                    "uuid": "d3e62203-b56c-496d-9052-a7dc277f9300"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint C309",
+                    "pos": {
+                        "x": 169.948957,
+                        "y": 106.809359
+                    },
+                    "uuid": "4febb4ba-6955-41a2-84b9-0c7559dac307"
+                },
+                {
+                    "description": "Footprint U301",
+                    "pos": {
+                        "x": 162.7,
+                        "y": 102.3
+                    },
+                    "uuid": "a5b9a96f-7381-4653-ad2d-a8b8b24a1ba6"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint U301",
+                    "pos": {
+                        "x": 162.7,
+                        "y": 102.3
+                    },
+                    "uuid": "a5b9a96f-7381-4653-ad2d-a8b8b24a1ba6"
+                },
+                {
+                    "description": "Footprint C314",
+                    "pos": {
+                        "x": 170.7,
+                        "y": 102.5
+                    },
+                    "uuid": "eb7aef24-5829-40dc-8765-5ec0def91e87"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J216",
+                    "pos": {
+                        "x": 172.069712,
+                        "y": 84.518533
+                    },
+                    "uuid": "19ccd503-7958-4364-94eb-5bfbc09b4e87"
+                },
+                {
+                    "description": "Footprint C201",
+                    "pos": {
+                        "x": 170.7,
+                        "y": 86.7
+                    },
+                    "uuid": "abc34cd6-8dbf-444f-9079-0dfd697c1e55"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J216",
+                    "pos": {
+                        "x": 172.069712,
+                        "y": 84.518533
+                    },
+                    "uuid": "19ccd503-7958-4364-94eb-5bfbc09b4e87"
+                },
+                {
+                    "description": "Footprint C204",
+                    "pos": {
+                        "x": 174.25,
+                        "y": 79.5
+                    },
+                    "uuid": "8fc0bf5d-57d9-41ad-a6f7-60d06e79a9b3"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint D301",
+                    "pos": {
+                        "x": 177.05,
+                        "y": 104.17
+                    },
+                    "uuid": "b3abbb32-8aef-4388-854f-7b46f271bad2"
+                },
+                {
+                    "description": "Footprint R303",
+                    "pos": {
+                        "x": 173.500224,
+                        "y": 103.004626
+                    },
+                    "uuid": "bd662625-c8b6-4b36-bf7c-d23f332f5439"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J213",
+                    "pos": {
+                        "x": 183.2,
+                        "y": 51.9
+                    },
+                    "uuid": "6fc4a559-967f-4f8f-b812-30531d53767f"
+                },
+                {
+                    "description": "Footprint SW201",
+                    "pos": {
+                        "x": 180.1,
+                        "y": 55.4
+                    },
+                    "uuid": "f5099aa9-db9f-4aba-bb6a-d2a554b48449"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J216",
+                    "pos": {
+                        "x": 172.069712,
+                        "y": 84.518533
+                    },
+                    "uuid": "19ccd503-7958-4364-94eb-5bfbc09b4e87"
+                },
+                {
+                    "description": "Footprint C203",
+                    "pos": {
+                        "x": 176.9,
+                        "y": 81.1
+                    },
+                    "uuid": "86572a9d-6b5f-44bb-a926-1df92ab2abe1"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J307",
+                    "pos": {
+                        "x": 185.972858,
+                        "y": 104.567571
+                    },
+                    "uuid": "1f17a40f-fc2f-43fa-bdf2-3e22e978e971"
+                },
+                {
+                    "description": "Footprint D301",
+                    "pos": {
+                        "x": 177.05,
+                        "y": 104.17
+                    },
+                    "uuid": "b3abbb32-8aef-4388-854f-7b46f271bad2"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint R201",
+                    "pos": {
+                        "x": 183.7,
+                        "y": 61.725
+                    },
+                    "uuid": "3e4fd70a-ddf9-4a46-86cc-e5800f7f51bf"
+                },
+                {
+                    "description": "Footprint C205",
+                    "pos": {
+                        "x": 185.8513,
+                        "y": 64.022873
+                    },
+                    "uuid": "639ad7ee-8fc6-4b4d-ab81-454ed7159aed"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J203",
+                    "pos": {
+                        "x": 188.45,
+                        "y": 70.25
+                    },
+                    "uuid": "af9ea48e-a699-4491-bc2c-947c517c2dba"
+                },
+                {
+                    "description": "Footprint J207",
+                    "pos": {
+                        "x": 188.05,
+                        "y": 68.5
+                    },
+                    "uuid": "f622fca1-0273-4196-a697-01bfe5ce87b9"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J205",
+                    "pos": {
+                        "x": 189.75,
+                        "y": 69.0
+                    },
+                    "uuid": "e7b9a56c-6ac0-48cb-bf7c-c7b79893b089"
+                },
+                {
+                    "description": "Footprint J207",
+                    "pos": {
+                        "x": 188.05,
+                        "y": 68.5
+                    },
+                    "uuid": "f622fca1-0273-4196-a697-01bfe5ce87b9"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J203",
+                    "pos": {
+                        "x": 188.45,
+                        "y": 70.25
+                    },
+                    "uuid": "af9ea48e-a699-4491-bc2c-947c517c2dba"
+                },
+                {
+                    "description": "Footprint J205",
+                    "pos": {
+                        "x": 189.75,
+                        "y": 69.0
+                    },
+                    "uuid": "e7b9a56c-6ac0-48cb-bf7c-c7b79893b089"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J215",
+                    "pos": {
+                        "x": 194.1,
+                        "y": 54.3
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f11d0af"
+                },
+                {
+                    "description": "Footprint R203",
+                    "pos": {
+                        "x": 191.1625,
+                        "y": 58.6
+                    },
+                    "uuid": "6575ad3d-2f30-4c02-b955-70838e19e72c"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J215",
+                    "pos": {
+                        "x": 194.1,
+                        "y": 54.3
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f11d0af"
+                },
+                {
+                    "description": "Footprint R204",
+                    "pos": {
+                        "x": 196.8,
+                        "y": 58.6
+                    },
+                    "uuid": "7995c8da-edc5-48d9-8913-9e309977b2d0"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "items": [
+                {
+                    "description": "PTH pad S1 [/left/GND] of J215",
+                    "pos": {
+                        "x": 189.78,
+                        "y": 52.06
+                    },
+                    "uuid": "ef8ce411-2762-4bc7-8cde-dec51fbb9ed9"
+                },
+                {
+                    "description": "Footprint J208",
+                    "pos": {
+                        "x": 194.0,
+                        "y": 53.9
+                    },
+                    "uuid": "5555dd5e-3ee7-4c3b-8831-a32c98a3bbf3"
+                }
+            ],
+            "severity": "error",
+            "type": "pth_inside_courtyard"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "items": [
+                {
+                    "description": "PTH pad S1 [/left/GND] of J215",
+                    "pos": {
+                        "x": 189.78,
+                        "y": 56.23
+                    },
+                    "uuid": "ebf241f2-1f64-4034-992c-e630ee190534"
+                },
+                {
+                    "description": "Footprint J208",
+                    "pos": {
+                        "x": 194.0,
+                        "y": 53.9
+                    },
+                    "uuid": "5555dd5e-3ee7-4c3b-8831-a32c98a3bbf3"
+                }
+            ],
+            "severity": "error",
+            "type": "pth_inside_courtyard"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "items": [
+                {
+                    "description": "PTH pad S1 [/left/GND] of J215",
+                    "pos": {
+                        "x": 198.42,
+                        "y": 52.06
+                    },
+                    "uuid": "9b55b8e6-8c39-4ba0-bc21-9c489f652720"
+                },
+                {
+                    "description": "Footprint J208",
+                    "pos": {
+                        "x": 194.0,
+                        "y": 53.9
+                    },
+                    "uuid": "5555dd5e-3ee7-4c3b-8831-a32c98a3bbf3"
+                }
+            ],
+            "severity": "error",
+            "type": "pth_inside_courtyard"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "items": [
+                {
+                    "description": "PTH pad S1 [/left/GND] of J215",
+                    "pos": {
+                        "x": 198.42,
+                        "y": 56.23
+                    },
+                    "uuid": "a62e963d-dbaf-4aa0-8be6-a2842c04204b"
+                },
+                {
+                    "description": "Footprint J208",
+                    "pos": {
+                        "x": 194.0,
+                        "y": 53.9
+                    },
+                    "uuid": "5555dd5e-3ee7-4c3b-8831-a32c98a3bbf3"
+                }
+            ],
+            "severity": "error",
+            "type": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "items": [
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                },
+                {
+                    "description": "Footprint J208",
+                    "pos": {
+                        "x": 194.0,
+                        "y": 53.9
+                    },
+                    "uuid": "5555dd5e-3ee7-4c3b-8831-a32c98a3bbf3"
+                }
+            ],
+            "severity": "error",
+            "type": "npth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "items": [
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                },
+                {
+                    "description": "Footprint J208",
+                    "pos": {
+                        "x": 194.0,
+                        "y": 53.9
+                    },
+                    "uuid": "5555dd5e-3ee7-4c3b-8831-a32c98a3bbf3"
+                }
+            ],
+            "severity": "error",
+            "type": "npth_inside_courtyard"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2500 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "2af2a98f-0200-452c-ad5a-df3f3cb8fa78"
+                },
+                {
+                    "description": "PTH pad 1 [/right/GND] of J306",
+                    "pos": {
+                        "x": 101.1,
+                        "y": 140.9
+                    },
+                    "uuid": "f3800c77-3990-414c-accd-64712e0691d9"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3143 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "2af2a98f-0200-452c-ad5a-df3f3cb8fa78"
+                },
+                {
+                    "description": "Pad 1 [/right/P26] of J305 on F.Cu",
+                    "pos": {
+                        "x": 107.18,
+                        "y": 128.57
+                    },
+                    "uuid": "09f98314-e802-4699-ac31-5fa977021dcc"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3567 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "2af2a98f-0200-452c-ad5a-df3f3cb8fa78"
+                },
+                {
+                    "description": "Pad 15 [/right/P22] of J305 on F.Cu",
+                    "pos": {
+                        "x": 148.18,
+                        "y": 148.07
+                    },
+                    "uuid": "cf90e1d8-257b-4d7b-b3a4-9b4db7358a97"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2250 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.998604,
+                        "y": 57.295318
+                    },
+                    "uuid": "42eb6ac2-5b26-47b8-9f15-3711be077a4e"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 0.0358 mm",
+                    "pos": {
+                        "x": 100.374669,
+                        "y": 97.174669
+                    },
+                    "uuid": "eadc8f59-9627-4cd1-84a4-b763a9b25a8b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2813 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.998604,
+                        "y": 57.295318
+                    },
+                    "uuid": "42eb6ac2-5b26-47b8-9f15-3711be077a4e"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 0.9868 mm",
+                    "pos": {
+                        "x": 100.38,
+                        "y": 62.06
+                    },
+                    "uuid": "1ef7650a-1542-4142-9f67-92b29e694619"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2808 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.998604,
+                        "y": 57.295318
+                    },
+                    "uuid": "42eb6ac2-5b26-47b8-9f15-3711be077a4e"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 46.9648 mm",
+                    "pos": {
+                        "x": 145.82,
+                        "y": 67.45
+                    },
+                    "uuid": "72b5c9c3-c04c-4159-94b7-f6e3853f221d"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2805 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.998604,
+                        "y": 57.295318
+                    },
+                    "uuid": "42eb6ac2-5b26-47b8-9f15-3711be077a4e"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 0.0778 mm",
+                    "pos": {
+                        "x": 100.38,
+                        "y": 90.43
+                    },
+                    "uuid": "e2bc94fd-0845-40e1-aab3-c5a5a72127a3"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3003 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.998604,
+                        "y": 57.295318
+                    },
+                    "uuid": "42eb6ac2-5b26-47b8-9f15-3711be077a4e"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 9.5000 mm",
+                    "pos": {
+                        "x": 100.4,
+                        "y": 97.2
+                    },
+                    "uuid": "b57f43fb-0182-4010-b06d-bd09f247235c"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3355 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.998604,
+                        "y": 57.295318
+                    },
+                    "uuid": "42eb6ac2-5b26-47b8-9f15-3711be077a4e"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 42.9800 mm",
+                    "pos": {
+                        "x": 100.435,
+                        "y": 90.375
+                    },
+                    "uuid": "11ba77ee-9b7b-470d-8792-f50033ac059c"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3100 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "2af2a98f-0200-452c-ad5a-df3f3cb8fa78"
+                },
+                {
+                    "description": "PTH pad S1 [/right/GND] of J309",
+                    "pos": {
+                        "x": 100.76,
+                        "y": 143.71
+                    },
+                    "uuid": "5c00afa3-2872-4a8f-9bf4-4f6e1330621b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3100 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "2af2a98f-0200-452c-ad5a-df3f3cb8fa78"
+                },
+                {
+                    "description": "PTH pad S1 [/right/GND] of J309",
+                    "pos": {
+                        "x": 100.76,
+                        "y": 147.88
+                    },
+                    "uuid": "5a659e33-2f6b-4350-a9d4-ac28d261f244"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Track [/right/VBUS] on F.Cu, length 2.6870 mm",
+                    "pos": {
+                        "x": 103.2,
+                        "y": 147.4
+                    },
+                    "uuid": "48ada909-934c-4199-97c1-87158d4b0fc7"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Track [/right/VBUS] on F.Cu, length 5.9250 mm",
+                    "pos": {
+                        "x": 105.1,
+                        "y": 149.3
+                    },
+                    "uuid": "eccc4e36-8e59-4871-9dbc-1384836308ae"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3000 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 109.9,
+                        "y": 109.6
+                    },
+                    "uuid": "e12fafbb-3891-4a65-be9c-1945c60dee74"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 10.5000 mm",
+                    "pos": {
+                        "x": 109.9,
+                        "y": 97.2
+                    },
+                    "uuid": "cb63ee67-8a8f-4c2c-9060-a9afad5d68ff"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3750 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Pad 2 [/right/VBUS] of TH301 on F.Cu",
+                    "pos": {
+                        "x": 111.3625,
+                        "y": 148.9625
+                    },
+                    "uuid": "86a11ff7-3843-4a17-b537-70584a76cfa6"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Track [/right/VBUS] on F.Cu, length 0.2828 mm",
+                    "pos": {
+                        "x": 111.025,
+                        "y": 149.3
+                    },
+                    "uuid": "dcc58ac8-32c5-4a79-af95-18add665e874"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.1720 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 110.36
+                    },
+                    "uuid": "ec5a72f9-9b16-4e0d-a767-cf407bc6ddae"
+                },
+                {
+                    "description": "Pad 2 [/right/P27] of J305 on F.Cu",
+                    "pos": {
+                        "x": 112.68,
+                        "y": 115.57
+                    },
+                    "uuid": "613d855b-e03d-4273-af4c-73fe7e8fd393"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3700 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Pad 4 [Net-(U302-Pad4)] of U302 on F.Cu",
+                    "pos": {
+                        "x": 113.3125,
+                        "y": 149.1
+                    },
+                    "uuid": "6b1e9097-4ffe-40ec-8d69-5499b0fe5147"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3700 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Pad 5 [/right/+3V3] of U302 on F.Cu",
+                    "pos": {
+                        "x": 115.2125,
+                        "y": 149.1
+                    },
+                    "uuid": "7c0904c4-5fb8-4dc5-9f56-9153fccf6f7d"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3750 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Pad 1 [/right/+3V3] of C316 on F.Cu",
+                    "pos": {
+                        "x": 117.1625,
+                        "y": 149.1375
+                    },
+                    "uuid": "7e97ac2e-44a6-4d8f-ad54-4e3f11af07aa"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3750 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Pad 1 [/right/+3V3] of C315 on F.Cu",
+                    "pos": {
+                        "x": 119.2625,
+                        "y": 149.1375
+                    },
+                    "uuid": "cefee39d-45c3-4f2b-bc1d-feb78202fe5b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 111.4,
+                        "y": 109.6
+                    },
+                    "uuid": "6547ba05-669a-4694-bc37-2d9426174828"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 12.0000 mm",
+                    "pos": {
+                        "x": 122.9,
+                        "y": 97.2
+                    },
+                    "uuid": "9b7d33c7-b66c-49bf-aa54-cdd384b69c4b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.1722 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 110.36
+                    },
+                    "uuid": "ec5a72f9-9b16-4e0d-a767-cf407bc6ddae"
+                },
+                {
+                    "description": "Pad 4 [/right/P28] of J305 on F.Cu",
+                    "pos": {
+                        "x": 129.18,
+                        "y": 118.07
+                    },
+                    "uuid": "1210d296-0f9f-42c5-a24b-4edefb267245"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4800 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 111.4,
+                        "y": 109.6
+                    },
+                    "uuid": "6547ba05-669a-4694-bc37-2d9426174828"
+                },
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 3.4999 mm",
+                    "pos": {
+                        "x": 134.32,
+                        "y": 105.47006
+                    },
+                    "uuid": "4b10c2dc-e653-4dcc-bcef-0d21a4d74370"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4800 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 111.4,
+                        "y": 109.6
+                    },
+                    "uuid": "6547ba05-669a-4694-bc37-2d9426174828"
+                },
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 5.4200 mm",
+                    "pos": {
+                        "x": 134.32,
+                        "y": 108.97
+                    },
+                    "uuid": "75b5af73-fdcc-470b-9db7-be0ec096c317"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3500 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 111.4,
+                        "y": 109.6
+                    },
+                    "uuid": "6547ba05-669a-4694-bc37-2d9426174828"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 1.1000 mm",
+                    "pos": {
+                        "x": 138.5,
+                        "y": 109.1
+                    },
+                    "uuid": "648322ec-5b12-4977-9534-cdc0e6b0e3b3"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 111.4,
+                        "y": 109.6
+                    },
+                    "uuid": "6547ba05-669a-4694-bc37-2d9426174828"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 19.6207 mm",
+                    "pos": {
+                        "x": 122.9,
+                        "y": 97.2
+                    },
+                    "uuid": "c1bc4799-19d1-47f9-b72c-e679d517ea02"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3500 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 111.4,
+                        "y": 109.6
+                    },
+                    "uuid": "6547ba05-669a-4694-bc37-2d9426174828"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 0.2828 mm",
+                    "pos": {
+                        "x": 139.6,
+                        "y": 109.1
+                    },
+                    "uuid": "86071ae1-64d4-4221-98b6-cd394a86d31d"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.1998 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 110.36
+                    },
+                    "uuid": "ec5a72f9-9b16-4e0d-a767-cf407bc6ddae"
+                },
+                {
+                    "description": "Pad 6 [/right/P34] of J305 on F.Cu",
+                    "pos": {
+                        "x": 146.18,
+                        "y": 120.57
+                    },
+                    "uuid": "b85c73b0-e624-4a5b-9772-d5d1b2cc77e5"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2436 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 141.72,
+                        "y": 108.41
+                    },
+                    "uuid": "29240800-9523-40ee-b5d5-c656e88f3b94"
+                },
+                {
+                    "description": "Via [<no net>] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 142.371572,
+                        "y": 107.762742
+                    },
+                    "uuid": "09500121-ab86-4c64-9745-74ca7d65f336"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4793 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 145.6,
+                        "y": 104.0
+                    },
+                    "uuid": "7a8d1231-40bc-4530-9d98-a7a1eff6f4f4"
+                },
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 25.8094 mm",
+                    "pos": {
+                        "x": 139.74,
+                        "y": 108.97
+                    },
+                    "uuid": "e90238d5-0407-4ef6-9ca6-5edc17b98e25"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2687 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 145.865047,
+                        "y": 104.265047
+                    },
+                    "uuid": "e8eff75a-2ecc-4b00-89a5-f876c3dd9695"
+                },
+                {
+                    "description": "Via [<no net>] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 145.2,
+                        "y": 104.934314
+                    },
+                    "uuid": "6674b4fb-c6ba-4d99-b36e-195b056f25cb"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3732 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 145.865047,
+                        "y": 104.265047
+                    },
+                    "uuid": "e8eff75a-2ecc-4b00-89a5-f876c3dd9695"
+                },
+                {
+                    "description": "Track [/right/GND] on B.Cu, length 20.6308 mm",
+                    "pos": {
+                        "x": 144.711846,
+                        "y": 106.688154
+                    },
+                    "uuid": "50092bd8-ae48-47d9-b731-f314cfe0c427"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3096 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 145.865047,
+                        "y": 104.265047
+                    },
+                    "uuid": "e8eff75a-2ecc-4b00-89a5-f876c3dd9695"
+                },
+                {
+                    "description": "Track [/right/GND] on F.Cu, length 10.8091 mm",
+                    "pos": {
+                        "x": 144.711846,
+                        "y": 106.598154
+                    },
+                    "uuid": "7c42cc59-187e-4e17-9777-f35eb70ac485"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2296 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 154.4198,
+                        "y": 96.240191
+                    },
+                    "uuid": "d0e8750d-b803-4058-9478-db96d80e08f4"
+                },
+                {
+                    "description": "Pad 2 [/right/GND] of C312 on F.Cu",
+                    "pos": {
+                        "x": 152.537087,
+                        "y": 99.137087
+                    },
+                    "uuid": "1c58ccb5-e23b-4dcb-9ed3-1b75a3b80443"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3096 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 154.4198,
+                        "y": 96.240191
+                    },
+                    "uuid": "d0e8750d-b803-4058-9478-db96d80e08f4"
+                },
+                {
+                    "description": "Track [/right/GND] on F.Cu, length 2.8284 mm",
+                    "pos": {
+                        "x": 152.355,
+                        "y": 98.955
+                    },
+                    "uuid": "820b2777-14a1-4036-b3bc-ce8598e5ea31"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3096 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 154.4198,
+                        "y": 96.240191
+                    },
+                    "uuid": "d0e8750d-b803-4058-9478-db96d80e08f4"
+                },
+                {
+                    "description": "Track [/right/GND] on F.Cu, length 0.2575 mm",
+                    "pos": {
+                        "x": 152.537087,
+                        "y": 99.137087
+                    },
+                    "uuid": "85eed095-14ee-4f3f-b94c-925d1d150d52"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3096 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 154.4198,
+                        "y": 96.240191
+                    },
+                    "uuid": "d0e8750d-b803-4058-9478-db96d80e08f4"
+                },
+                {
+                    "description": "Track [/right/GND] on F.Cu, length 0.3200 mm",
+                    "pos": {
+                        "x": 153.55,
+                        "y": 97.76
+                    },
+                    "uuid": "efab09f7-52bb-4dc8-bba6-465fea15942b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4359 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 154.4198,
+                        "y": 96.240191
+                    },
+                    "uuid": "d0e8750d-b803-4058-9478-db96d80e08f4"
+                },
+                {
+                    "description": "Track [/right/GND] on F.Cu, length 0.2400 mm",
+                    "pos": {
+                        "x": 153.55,
+                        "y": 98.08
+                    },
+                    "uuid": "00a31745-1ba6-4219-ac8d-47dae75937d4"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2296 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 154.4198,
+                        "y": 96.240191
+                    },
+                    "uuid": "d0e8750d-b803-4058-9478-db96d80e08f4"
+                },
+                {
+                    "description": "Pad 2 [/right/GND] of C311 on F.Cu",
+                    "pos": {
+                        "x": 154.537087,
+                        "y": 97.137087
+                    },
+                    "uuid": "8b576b6f-1b1c-411f-9380-fa949b7ed71e"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2428 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 154.1598,
+                        "y": 95.970192
+                    },
+                    "uuid": "8c9486ae-a47c-4d79-8120-acdf2f471d19"
+                },
+                {
+                    "description": "Via [<no net>] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 154.8,
+                        "y": 95.312742
+                    },
+                    "uuid": "e7f3bd3d-0ea7-4abe-a17f-475e0391f2b0"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.1921 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 158.25,
+                        "y": 91.88
+                    },
+                    "uuid": "3b59114e-84e2-4006-a568-e99d75bdec4f"
+                },
+                {
+                    "description": "Via [<no net>] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 157.628428,
+                        "y": 92.484314
+                    },
+                    "uuid": "da7f0fa3-71cf-4e46-8960-74c5a6bb2adf"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4793 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 159.88,
+                        "y": 89.72
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12cd41"
+                },
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 2.2910 mm",
+                    "pos": {
+                        "x": 157.99,
+                        "y": 90.72
+                    },
+                    "uuid": "b991daf5-0676-49c9-8791-2b5e161929bc"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3293 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 159.88,
+                        "y": 89.72
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12cd41"
+                },
+                {
+                    "description": "Via [/left/GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 157.99,
+                        "y": 90.72
+                    },
+                    "uuid": "b7dc8029-7751-4f58-88c9-59da894c8840"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2375 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 158.25,
+                        "y": 91.88
+                    },
+                    "uuid": "3b59114e-84e2-4006-a568-e99d75bdec4f"
+                },
+                {
+                    "description": "Pad 2 [/right/GND] of C313 on F.Cu",
+                    "pos": {
+                        "x": 158.74,
+                        "y": 92.94
+                    },
+                    "uuid": "431048a2-8c05-4a98-97a5-560146c5e0a5"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2375 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 158.25,
+                        "y": 91.88
+                    },
+                    "uuid": "3b59114e-84e2-4006-a568-e99d75bdec4f"
+                },
+                {
+                    "description": "Pad 2 [/right/GND] of C310 on F.Cu",
+                    "pos": {
+                        "x": 158.74,
+                        "y": 92.94
+                    },
+                    "uuid": "54574f89-81ff-46ef-9757-509827fc6b56"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2712 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 159.88,
+                        "y": 89.72
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12cd41"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 8.0150 mm",
+                    "pos": {
+                        "x": 150.685,
+                        "y": 90.375
+                    },
+                    "uuid": "24aa2108-59f5-4442-b8e2-dca58d498c33"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3733 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 160.3,
+                        "y": 90.36
+                    },
+                    "uuid": "f052cc77-fab2-44da-a639-7b6321269d33"
+                },
+                {
+                    "description": "Track [/right/GND] on B.Cu, length 0.1000 mm",
+                    "pos": {
+                        "x": 159.3,
+                        "y": 92.1
+                    },
+                    "uuid": "6b495854-dc49-40bf-9b45-da8a179aa5ef"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4440 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 160.3,
+                        "y": 90.36
+                    },
+                    "uuid": "f052cc77-fab2-44da-a639-7b6321269d33"
+                },
+                {
+                    "description": "Track [/right/GND] on B.Cu, length 1.1314 mm",
+                    "pos": {
+                        "x": 159.4,
+                        "y": 92.1
+                    },
+                    "uuid": "cde17242-9b59-426a-9de7-2a46518bd4e0"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2501 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 89.6
+                    },
+                    "uuid": "fb391a2a-8107-41ec-9eff-3484f4451b0f"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 34.5275 mm",
+                    "pos": {
+                        "x": 169.1,
+                        "y": 55.9
+                    },
+                    "uuid": "644e3c5f-6fa1-461b-ad49-34f55ca71b1d"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4142 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 90.36
+                    },
+                    "uuid": "802e823a-e94b-4f6c-bf59-67f681e1a8ca"
+                },
+                {
+                    "description": "Pad 2 [/right/GND] of C301 on F.Cu",
+                    "pos": {
+                        "x": 160.195611,
+                        "y": 91.512941
+                    },
+                    "uuid": "c11d5fc5-61d3-45a3-8b42-ac527665a127"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.1850 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "4e72157f-3805-457b-837f-efce02cd794a"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 0.0350 mm",
+                    "pos": {
+                        "x": 175.97,
+                        "y": 50.37
+                    },
+                    "uuid": "b424dc7e-02d3-4d85-86fd-0949be2d4623"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2200 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "4e72157f-3805-457b-837f-efce02cd794a"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 0.0424 mm",
+                    "pos": {
+                        "x": 176.0,
+                        "y": 50.4
+                    },
+                    "uuid": "e1a7412c-09c7-4099-9880-2bfeb6faf0d8"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3400 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "4e72157f-3805-457b-837f-efce02cd794a"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 6.2829 mm",
+                    "pos": {
+                        "x": 174.24,
+                        "y": 56.48
+                    },
+                    "uuid": "0167a1f8-d27b-4849-bfee-12386c987734"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2300 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 89.6
+                    },
+                    "uuid": "fb391a2a-8107-41ec-9eff-3484f4451b0f"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 1.0377 mm",
+                    "pos": {
+                        "x": 176.86,
+                        "y": 88.35
+                    },
+                    "uuid": "6b43b446-0a9f-4b97-a234-605508e804cf"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "4e72157f-3805-457b-837f-efce02cd794a"
+                },
+                {
+                    "description": "Via [/left/NRST] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 176.6,
+                        "y": 50.7
+                    },
+                    "uuid": "1ce82756-c667-452e-bb7e-a87add8c5ddc"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.1907 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 90.36
+                    },
+                    "uuid": "802e823a-e94b-4f6c-bf59-67f681e1a8ca"
+                },
+                {
+                    "description": "Pad 16 [/right/P16] of J305 on F.Cu",
+                    "pos": {
+                        "x": 172.18,
+                        "y": 94.57
+                    },
+                    "uuid": "403531d2-fbc2-4a3b-a640-e97f3e3743d9"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3500 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 89.6
+                    },
+                    "uuid": "fb391a2a-8107-41ec-9eff-3484f4451b0f"
+                },
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 17.9700 mm",
+                    "pos": {
+                        "x": 159.609967,
+                        "y": 89.100033
+                    },
+                    "uuid": "725bde5a-5bc7-4a94-8a02-332cb4a5f672"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3500 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 89.6
+                    },
+                    "uuid": "fb391a2a-8107-41ec-9eff-3484f4451b0f"
+                },
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 11.8853 mm",
+                    "pos": {
+                        "x": 177.579967,
+                        "y": 89.100033
+                    },
+                    "uuid": "df1284a4-4b0c-4753-a725-643db46e8036"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "4e72157f-3805-457b-837f-efce02cd794a"
+                },
+                {
+                    "description": "Via [/left/NRST] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 185.1,
+                        "y": 50.7
+                    },
+                    "uuid": "6434b4d1-0202-40ec-b3ba-b9914b2b756f"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.1907 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 90.36
+                    },
+                    "uuid": "802e823a-e94b-4f6c-bf59-67f681e1a8ca"
+                },
+                {
+                    "description": "Pad 13 [/right/P15] of J305 on F.Cu",
+                    "pos": {
+                        "x": 183.68,
+                        "y": 96.57
+                    },
+                    "uuid": "23d10c64-6ee3-423c-aa7d-d53ce0450717"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4750 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "aac3e39c-51fd-4cbf-9c77-04b9a9038a4a"
+                },
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 1.6263 mm",
+                    "pos": {
+                        "x": 199.375001,
+                        "y": 59.750001
+                    },
+                    "uuid": "c02ef033-83db-4af4-8279-ead8b3fcfd0d"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4750 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "aac3e39c-51fd-4cbf-9c77-04b9a9038a4a"
+                },
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 16.2728 mm",
+                    "pos": {
+                        "x": 187.868371,
+                        "y": 79.9
+                    },
+                    "uuid": "543a1073-ae8b-4cbd-8f97-65a99efc6af9"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4750 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "aac3e39c-51fd-4cbf-9c77-04b9a9038a4a"
+                },
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 8.6434 mm",
+                    "pos": {
+                        "x": 199.375001,
+                        "y": 68.39337
+                    },
+                    "uuid": "fed94efe-ec3b-44fc-bab6-712d4a6a43c9"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3200 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "aac3e39c-51fd-4cbf-9c77-04b9a9038a4a"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 2.8612 mm",
+                    "pos": {
+                        "x": 199.58,
+                        "y": 62.4
+                    },
+                    "uuid": "f6fc80ce-1cf1-427c-8dd4-ac98360b3a4b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "aac3e39c-51fd-4cbf-9c77-04b9a9038a4a"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 2.2984 mm",
+                    "pos": {
+                        "x": 197.33,
+                        "y": 65.85
+                    },
+                    "uuid": "85d4ee80-8cc0-4c6f-ba90-7e9a9a33c5ae"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2800 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "aac3e39c-51fd-4cbf-9c77-04b9a9038a4a"
+                },
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 36.5875 mm",
+                    "pos": {
+                        "x": 165.13,
+                        "y": 70.69
+                    },
+                    "uuid": "aab4d93e-f641-4741-8900-459dd395335c"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3193 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.001396,
+                        "y": 142.704682
+                    },
+                    "uuid": "90801181-9fd6-49bd-b4e9-ff266ebdabdd"
+                },
+                {
+                    "description": "Pad 14 [/right/P14] of J305 on F.Cu",
+                    "pos": {
+                        "x": 195.18,
+                        "y": 97.07
+                    },
+                    "uuid": "8484b6a4-c1ec-45eb-808a-9ab99fbe698f"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3204 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.001396,
+                        "y": 142.704682
+                    },
+                    "uuid": "90801181-9fd6-49bd-b4e9-ff266ebdabdd"
+                },
+                {
+                    "description": "Pad 11 [/right/P56] of J305 on F.Cu",
+                    "pos": {
+                        "x": 194.68,
+                        "y": 132.07
+                    },
+                    "uuid": "b9866a8c-f7b0-4eac-8510-f63f6142f565"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3195 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.001396,
+                        "y": 142.704682
+                    },
+                    "uuid": "90801181-9fd6-49bd-b4e9-ff266ebdabdd"
+                },
+                {
+                    "description": "Pad 12 [/right/P58] of J305 on F.Cu",
+                    "pos": {
+                        "x": 193.18,
+                        "y": 116.07
+                    },
+                    "uuid": "60f9bddc-d7f3-4e8b-b62a-83590c073554"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Unresolved text variable",
+            "items": [
+                {
+                    "description": "Footprint text of REF** (${REF})",
+                    "pos": {
+                        "x": 149.18,
+                        "y": 155.65
+                    },
+                    "uuid": "3d9cb47e-a660-407a-8b90-5500c219e908"
+                }
+            ],
+            "severity": "error",
+            "type": "unresolved_variable"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer F.Cu; zone min spoke count 2; actual 1)",
+            "items": [
+                {
+                    "description": "Zone [/right/GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 150.0
+                    },
+                    "uuid": "8be3bd9e-b17a-4b34-ae13-eba7167d4ebd"
+                },
+                {
+                    "description": "PTH pad S1 [/right/GND] of J309",
+                    "pos": {
+                        "x": 109.4,
+                        "y": 143.71
+                    },
+                    "uuid": "ffae7214-ac2b-438a-a8a4-0079fbed66a8"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer B.Cu; zone min spoke count 2; actual 1)",
+            "items": [
+                {
+                    "description": "Zone [/left/GND] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 201.0,
+                        "y": 62.7
+                    },
+                    "uuid": "8933c6f6-f3c4-4072-940c-8e869f3ad7ac"
+                },
+                {
+                    "description": "Pad 9 [/left/GND] of J208 on B.Cu",
+                    "pos": {
+                        "x": 192.05,
+                        "y": 51.36
+                    },
+                    "uuid": "162c6556-a02e-49d6-94e4-29049d04ac0e"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer B.Cu; 2 spokes connected to isolated island)",
+            "items": [
+                {
+                    "description": "Zone [/left/GND] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 201.0,
+                        "y": 62.7
+                    },
+                    "uuid": "8933c6f6-f3c4-4072-940c-8e869f3ad7ac"
+                },
+                {
+                    "description": "PTH pad S1 [/left/GND] of J215",
+                    "pos": {
+                        "x": 198.42,
+                        "y": 52.06
+                    },
+                    "uuid": "9b55b8e6-8c39-4ba0-bc21-9c489f652720"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 3 [/left/GND] of J208 on B.Cu",
+                    "pos": {
+                        "x": 192.05,
+                        "y": 55.17
+                    },
+                    "uuid": "067ea154-8deb-475c-870f-4fc3538867be"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 191.21,
+                        "y": 55.75
+                    },
+                    "uuid": "8a5eb223-ceb2-4631-a8d0-69c307fecd32"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 4 [/left/SWCLK] of J208 on B.Cu",
+                    "pos": {
+                        "x": 195.95,
+                        "y": 55.17
+                    },
+                    "uuid": "0515fb3e-2c72-41b6-a56a-6fbdccc89f88"
+                },
+                {
+                    "description": "NPTH pad of J215",
+                    "pos": {
+                        "x": 196.99,
+                        "y": 55.75
+                    },
+                    "uuid": "3856aa87-6654-4563-adaa-64230b1154b0"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 0.9868 mm",
+                    "pos": {
+                        "x": 100.38,
+                        "y": 62.06
+                    },
+                    "uuid": "1ef7650a-1542-4142-9f67-92b29e694619"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 46.9648 mm",
+                    "pos": {
+                        "x": 145.82,
+                        "y": 67.45
+                    },
+                    "uuid": "72b5c9c3-c04c-4159-94b7-f6e3853f221d"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 0.0778 mm",
+                    "pos": {
+                        "x": 100.38,
+                        "y": 90.43
+                    },
+                    "uuid": "e2bc94fd-0845-40e1-aab3-c5a5a72127a3"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/+3V3] on F.Cu, length 0.0354 mm",
+                    "pos": {
+                        "x": 105.075,
+                        "y": 59.575
+                    },
+                    "uuid": "5597c1db-227a-4ae5-872b-b51d25628a0b"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 10.5000 mm",
+                    "pos": {
+                        "x": 109.9,
+                        "y": 97.2
+                    },
+                    "uuid": "cb63ee67-8a8f-4c2c-9060-a9afad5d68ff"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 12.0000 mm",
+                    "pos": {
+                        "x": 122.9,
+                        "y": 97.2
+                    },
+                    "uuid": "9b7d33c7-b66c-49bf-aa54-cdd384b69c4b"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on F.Cu, length 0.0900 mm",
+                    "pos": {
+                        "x": 123.59,
+                        "y": 67.1
+                    },
+                    "uuid": "363a6edf-5030-4639-baed-ca4ae493fd38"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 8.0150 mm",
+                    "pos": {
+                        "x": 150.685,
+                        "y": 90.375
+                    },
+                    "uuid": "24aa2108-59f5-4442-b8e2-dca58d498c33"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 34.5275 mm",
+                    "pos": {
+                        "x": 169.1,
+                        "y": 55.9
+                    },
+                    "uuid": "644e3c5f-6fa1-461b-ad49-34f55ca71b1d"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 0.0350 mm",
+                    "pos": {
+                        "x": 175.97,
+                        "y": 50.37
+                    },
+                    "uuid": "b424dc7e-02d3-4d85-86fd-0949be2d4623"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 1.0377 mm",
+                    "pos": {
+                        "x": 176.86,
+                        "y": 88.35
+                    },
+                    "uuid": "6b43b446-0a9f-4b97-a234-605508e804cf"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/+3V3] on F.Cu, length 0.0320 mm",
+                    "pos": {
+                        "x": 181.7,
+                        "y": 68.9
+                    },
+                    "uuid": "0c638a27-2c74-45e7-9090-233880baa874"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 2.8612 mm",
+                    "pos": {
+                        "x": 199.58,
+                        "y": 62.4
+                    },
+                    "uuid": "f6fc80ce-1cf1-427c-8dd4-ac98360b3a4b"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 2.2984 mm",
+                    "pos": {
+                        "x": 197.33,
+                        "y": 65.85
+                    },
+                    "uuid": "85d4ee80-8cc0-4c6f-ba90-7e9a9a33c5ae"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/left/GND] on B.Cu, length 36.5875 mm",
+                    "pos": {
+                        "x": 165.13,
+                        "y": 70.69
+                    },
+                    "uuid": "aab4d93e-f641-4741-8900-459dd395335c"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "2af2a98f-0200-452c-ad5a-df3f3cb8fa78"
+                },
+                {
+                    "description": "Segment of J306 on B.Silkscreen",
+                    "pos": {
+                        "x": 101.1,
+                        "y": 139.57
+                    },
+                    "uuid": "c5abef8c-4f89-4a19-a557-aebe126a267e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Segment of J309 on F.Silkscreen",
+                    "pos": {
+                        "x": 100.61,
+                        "y": 150.48
+                    },
+                    "uuid": "818a0d37-8237-4dc5-9b0f-e72d01cf3561"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Segment of J309 on F.Silkscreen",
+                    "pos": {
+                        "x": 109.55,
+                        "y": 150.48
+                    },
+                    "uuid": "218c4390-1389-41ba-97c0-7306b69a99f3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 109.9,
+                        "y": 109.6
+                    },
+                    "uuid": "e12fafbb-3891-4a65-be9c-1945c60dee74"
+                },
+                {
+                    "description": "Polygon of J211 on B.Silkscreen",
+                    "pos": {
+                        "x": 100.259333,
+                        "y": 97.351333
+                    },
+                    "uuid": "c826b758-df88-4b35-b608-b91c74f9addb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 150.0
+                    },
+                    "uuid": "acd6ff86-f8f5-4945-b759-261e281241e2"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 139.428281,
+                        "y": 150.47932
+                    },
+                    "uuid": "7bc47a0d-10af-4a5b-9c24-4b58fcc16821"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 110.36
+                    },
+                    "uuid": "ec5a72f9-9b16-4e0d-a767-cf407bc6ddae"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 154.226748,
+                        "y": 145.948295
+                    },
+                    "uuid": "677c7a49-8b10-408d-97a6-8401b25b9e0b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 150.0,
+                        "y": 225.0
+                    },
+                    "uuid": "754444ae-c2ad-4582-b39e-2e56bc75fb2f"
+                },
+                {
+                    "description": "Polygon of J211 on B.Silkscreen",
+                    "pos": {
+                        "x": 160.489083,
+                        "y": 49.993084
+                    },
+                    "uuid": "02580d9d-bfe2-406a-a74f-055b678afb17"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 89.6
+                    },
+                    "uuid": "fb391a2a-8107-41ec-9eff-3484f4451b0f"
+                },
+                {
+                    "description": "Polygon of J211 on B.Silkscreen",
+                    "pos": {
+                        "x": 145.690616,
+                        "y": 54.524109
+                    },
+                    "uuid": "5297e944-5286-4e5c-813a-0ab11ea4bc81"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "4e72157f-3805-457b-837f-efce02cd794a"
+                },
+                {
+                    "description": "Segment of J215 on F.Silkscreen",
+                    "pos": {
+                        "x": 189.63,
+                        "y": 49.46
+                    },
+                    "uuid": "c2f583c0-708f-47e4-87b2-4afac4de1d9d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 200.0,
+                        "y": 50.0
+                    },
+                    "uuid": "4e72157f-3805-457b-837f-efce02cd794a"
+                },
+                {
+                    "description": "Segment of J215 on F.Silkscreen",
+                    "pos": {
+                        "x": 198.57,
+                        "y": 49.46
+                    },
+                    "uuid": "9f39d856-7f41-48ff-9f1c-87b74a420229"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Footprint 'Fuse_0805_2012Metric_Castellated' not found in library 'Fuse'",
+            "items": [
+                {
+                    "description": "Footprint TH301",
+                    "pos": {
+                        "x": 111.3625,
+                        "y": 148.0
+                    },
+                    "uuid": "f4cdc560-048a-4309-8655-58cdece24f38"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'waad'",
+            "items": [
+                {
+                    "description": "Footprint REF**",
+                    "pos": {
+                        "x": 148.68,
+                        "y": 125.95
+                    },
+                    "uuid": "749d5e16-409b-4be7-b0bb-c37fe627cc57"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'waad'",
+            "items": [
+                {
+                    "description": "Footprint J305",
+                    "pos": {
+                        "x": 152.68,
+                        "y": 127.07
+                    },
+                    "uuid": "24864bb3-f41d-4caf-b6c8-b7a9c5554e15"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'waad'",
+            "items": [
+                {
+                    "description": "Footprint J211",
+                    "pos": {
+                        "x": 149.88,
+                        "y": 73.26
+                    },
+                    "uuid": "9e43a9f3-5a07-4490-bdd5-840fd1e4ecfb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'Fuse_0805_2012Metric_Castellated' not found in library 'Fuse'",
+            "items": [
+                {
+                    "description": "Footprint TH201",
+                    "pos": {
+                        "x": 183.7,
+                        "y": 55.4
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12bcd2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x02_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J306",
+                    "pos": {
+                        "x": 101.1,
+                        "y": 140.9
+                    },
+                    "uuid": "860727ab-e299-4db0-8e6e-9790b652b2bd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'USB_C_Receptacle_Palconn_UTC16-G' does not match copy in library 'Connector_USB'",
+            "items": [
+                {
+                    "description": "Footprint J309",
+                    "pos": {
+                        "x": 105.08,
+                        "y": 145.64
+                    },
+                    "uuid": "bdf8d255-d8b2-4972-a962-2c6e0fab66f0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R302",
+                    "pos": {
+                        "x": 106.7925,
+                        "y": 141.19
+                    },
+                    "uuid": "ea9ff902-70ac-4125-8753-4dc26bf59735"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C317",
+                    "pos": {
+                        "x": 112.1625,
+                        "y": 145.0
+                    },
+                    "uuid": "e97218a4-706a-4bef-b24a-d9a7e5a21dbb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R301",
+                    "pos": {
+                        "x": 112.2,
+                        "y": 143.0
+                    },
+                    "uuid": "b07a0344-862d-4c02-85d4-60df59bef1d9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'SOT-23-5' does not match copy in library 'Package_TO_SOT_SMD'",
+            "items": [
+                {
+                    "description": "Footprint U302",
+                    "pos": {
+                        "x": 114.2625,
+                        "y": 148.0
+                    },
+                    "uuid": "b26de6dd-ea86-42ea-8f0f-20080d1feaf1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C318",
+                    "pos": {
+                        "x": 115.1,
+                        "y": 144.3
+                    },
+                    "uuid": "742ddf5f-3d6e-4de2-802c-fe5fee86568b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C316",
+                    "pos": {
+                        "x": 117.1625,
+                        "y": 148.2
+                    },
+                    "uuid": "95e93008-3a95-41f3-996b-a1b434a3f533"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C315",
+                    "pos": {
+                        "x": 119.2625,
+                        "y": 148.2
+                    },
+                    "uuid": "662082f6-6c5b-4f57-83ff-53153a89ba39"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x04_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J214",
+                    "pos": {
+                        "x": 148.1,
+                        "y": 96.9
+                    },
+                    "uuid": "2a3af3ef-abb6-43b7-ac65-8fc2fe17aff4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x04_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J308",
+                    "pos": {
+                        "x": 144.711846,
+                        "y": 108.488154
+                    },
+                    "uuid": "757f542f-f0af-421c-9d13-c67ea0d932ea"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R202",
+                    "pos": {
+                        "x": 149.125,
+                        "y": 92.15
+                    },
+                    "uuid": "2b94f698-5381-49d8-badf-9f8105f5688b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C312",
+                    "pos": {
+                        "x": 153.2,
+                        "y": 99.8
+                    },
+                    "uuid": "db543aad-e00b-427f-a2c3-be2cc46f0349"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C311",
+                    "pos": {
+                        "x": 155.2,
+                        "y": 97.8
+                    },
+                    "uuid": "2af73851-fa1b-4aa9-bc84-896ceaaf666f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C305",
+                    "pos": {
+                        "x": 156.6,
+                        "y": 96.4
+                    },
+                    "uuid": "da8d9b42-c53d-4237-a760-18886a128706"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C307",
+                    "pos": {
+                        "x": 156.9,
+                        "y": 108.5
+                    },
+                    "uuid": "9ee8aa20-8d78-4e40-8168-dd7447759dc2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C303",
+                    "pos": {
+                        "x": 158.0,
+                        "y": 95.0
+                    },
+                    "uuid": "4d08da46-523a-40f7-9102-bd6438869f45"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C310",
+                    "pos": {
+                        "x": 159.402913,
+                        "y": 93.602913
+                    },
+                    "uuid": "6b6e6416-cedf-4bf6-96db-4e97327ba4c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C313",
+                    "pos": {
+                        "x": 159.402913,
+                        "y": 93.602913
+                    },
+                    "uuid": "d3e62203-b56c-496d-9052-a7dc277f9300"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C301",
+                    "pos": {
+                        "x": 160.858524,
+                        "y": 92.175854
+                    },
+                    "uuid": "81854570-2041-4121-8c74-0a3a9f1bd460"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C304",
+                    "pos": {
+                        "x": 161.2,
+                        "y": 110.6
+                    },
+                    "uuid": "70fea4ea-76f2-4709-9e59-30f7cd3be52d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C302",
+                    "pos": {
+                        "x": 161.2,
+                        "y": 112.6
+                    },
+                    "uuid": "4f438726-61e2-49eb-84b5-bfde95c95a87"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LQFP-64_10x10mm_P0.5mm' does not match copy in library 'Package_QFP'",
+            "items": [
+                {
+                    "description": "Footprint U301",
+                    "pos": {
+                        "x": 162.7,
+                        "y": 102.3
+                    },
+                    "uuid": "a5b9a96f-7381-4653-ad2d-a8b8b24a1ba6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_RGB_5050-6' does not match copy in library 'LED_SMD'",
+            "items": [
+                {
+                    "description": "Footprint D201",
+                    "pos": {
+                        "x": 163.8,
+                        "y": 73.6
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12e0bb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C308",
+                    "pos": {
+                        "x": 164.66708,
+                        "y": 95.756683
+                    },
+                    "uuid": "6c71935b-cf72-4588-9f56-92c7801aa455"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C306",
+                    "pos": {
+                        "x": 164.672189,
+                        "y": 99.205151
+                    },
+                    "uuid": "4ccace03-672f-4429-a55d-fc88186295db"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C209",
+                    "pos": {
+                        "x": 169.700529,
+                        "y": 72.264549
+                    },
+                    "uuid": "eacaf84b-8b8a-4343-bd34-4f55a0bdb57a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C309",
+                    "pos": {
+                        "x": 169.948957,
+                        "y": 106.809359
+                    },
+                    "uuid": "4febb4ba-6955-41a2-84b9-0c7559dac307"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C201",
+                    "pos": {
+                        "x": 170.7,
+                        "y": 86.7
+                    },
+                    "uuid": "abc34cd6-8dbf-444f-9079-0dfd697c1e55"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C314",
+                    "pos": {
+                        "x": 170.7,
+                        "y": 102.5
+                    },
+                    "uuid": "eb7aef24-5829-40dc-8765-5ec0def91e87"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C212",
+                    "pos": {
+                        "x": 171.645923,
+                        "y": 73.241489
+                    },
+                    "uuid": "dbe70747-c8c8-4a3a-ba90-be79c822d57d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C208",
+                    "pos": {
+                        "x": 171.9375,
+                        "y": 64.1
+                    },
+                    "uuid": "6dee6a5d-7149-46c9-a5a3-85e03baa98a4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x04_P2.54mm_Vertical_SMD_Pin1Left' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J216",
+                    "pos": {
+                        "x": 172.069712,
+                        "y": 84.518533
+                    },
+                    "uuid": "19ccd503-7958-4364-94eb-5bfbc09b4e87"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C206",
+                    "pos": {
+                        "x": 172.75,
+                        "y": 78.0
+                    },
+                    "uuid": "fb96111e-d5dc-41b2-bd76-d0848052fad3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'microSD_HC_Molex_104031-0811' does not match copy in library 'Connector_Card'",
+            "items": [
+                {
+                    "description": "Footprint J301",
+                    "pos": {
+                        "x": 172.9,
+                        "y": 100.6
+                    },
+                    "uuid": "236cc107-14fb-4ba5-a2f9-413e9887c078"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R304",
+                    "pos": {
+                        "x": 173.499038,
+                        "y": 105.089713
+                    },
+                    "uuid": "1c8d46b3-ab0f-49e8-a453-a2fb98c72b70"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R303",
+                    "pos": {
+                        "x": 173.500224,
+                        "y": 103.004626
+                    },
+                    "uuid": "bd662625-c8b6-4b36-bf7c-d23f332f5439"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R305",
+                    "pos": {
+                        "x": 173.501634,
+                        "y": 107.133163
+                    },
+                    "uuid": "18f8eea1-7377-4632-b14a-9b744c52bfa3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C211",
+                    "pos": {
+                        "x": 173.537087,
+                        "y": 67.2
+                    },
+                    "uuid": "02374913-ba1f-4905-960a-14b857da1b7f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C204",
+                    "pos": {
+                        "x": 174.25,
+                        "y": 79.5
+                    },
+                    "uuid": "8fc0bf5d-57d9-41ad-a6f7-60d06e79a9b3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C218",
+                    "pos": {
+                        "x": 175.9,
+                        "y": 55.3
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12cab6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C213",
+                    "pos": {
+                        "x": 176.079002,
+                        "y": 65.509152
+                    },
+                    "uuid": "468a58cf-2189-4c5d-a15e-dff22168193d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C203",
+                    "pos": {
+                        "x": 176.9,
+                        "y": 81.1
+                    },
+                    "uuid": "86572a9d-6b5f-44bb-a926-1df92ab2abe1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C210",
+                    "pos": {
+                        "x": 177.9,
+                        "y": 63.9
+                    },
+                    "uuid": "9ffb3f62-8b9e-4202-af6d-fed81563f106"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C217",
+                    "pos": {
+                        "x": 178.0,
+                        "y": 55.3
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12cb16"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LQFP-64_10x10mm_P0.5mm' does not match copy in library 'Package_QFP'",
+            "items": [
+                {
+                    "description": "Footprint U201",
+                    "pos": {
+                        "x": 180.25,
+                        "y": 73.5
+                    },
+                    "uuid": "7df1ffa5-a38c-40b8-acbf-9ac9a2d877bd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x03_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J213",
+                    "pos": {
+                        "x": 183.2,
+                        "y": 51.9
+                    },
+                    "uuid": "6fc4a559-967f-4f8f-b812-30531d53767f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'SOT-23-5' does not match copy in library 'Package_TO_SOT_SMD'",
+            "items": [
+                {
+                    "description": "Footprint U202",
+                    "pos": {
+                        "x": 180.85,
+                        "y": 55.4
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12ca4e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x03_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J307",
+                    "pos": {
+                        "x": 185.972858,
+                        "y": 104.567571
+                    },
+                    "uuid": "1f17a40f-fc2f-43fa-bdf2-3e22e978e971"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R201",
+                    "pos": {
+                        "x": 183.7,
+                        "y": 61.725
+                    },
+                    "uuid": "3e4fd70a-ddf9-4a46-86cc-e5800f7f51bf"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C207",
+                    "pos": {
+                        "x": 184.437087,
+                        "y": 65.437087
+                    },
+                    "uuid": "6e6ef857-23e3-4411-abd9-1aabc928dfd2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C202",
+                    "pos": {
+                        "x": 185.722913,
+                        "y": 80.032913
+                    },
+                    "uuid": "7613596f-212b-497e-84cf-6fbd0873a9b6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C205",
+                    "pos": {
+                        "x": 185.8513,
+                        "y": 64.022873
+                    },
+                    "uuid": "639ad7ee-8fc6-4b4d-ab81-454ed7159aed"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_2x05_P1.27mm_Vertical_SMD' does not match copy in library 'Connector_PinHeader_1.27mm'",
+            "items": [
+                {
+                    "description": "Footprint J302",
+                    "pos": {
+                        "x": 186.4,
+                        "y": 98.4
+                    },
+                    "uuid": "50600790-9105-4641-84f9-197ab4a05c5c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x02_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J212",
+                    "pos": {
+                        "x": 186.9,
+                        "y": 51.9
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12bcc1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C216",
+                    "pos": {
+                        "x": 187.0,
+                        "y": 57.2
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12cb46"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C215",
+                    "pos": {
+                        "x": 187.0,
+                        "y": 59.2
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f12cae6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C214",
+                    "pos": {
+                        "x": 189.19,
+                        "y": 74.85
+                    },
+                    "uuid": "1d430ba6-f9e2-4f18-b6a9-0d7baed9c7ff"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R203",
+                    "pos": {
+                        "x": 191.1625,
+                        "y": 58.6
+                    },
+                    "uuid": "6575ad3d-2f30-4c02-b955-70838e19e72c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_2x05_P1.27mm_Vertical_SMD' does not match copy in library 'Connector_PinHeader_1.27mm'",
+            "items": [
+                {
+                    "description": "Footprint J208",
+                    "pos": {
+                        "x": 194.0,
+                        "y": 53.9
+                    },
+                    "uuid": "5555dd5e-3ee7-4c3b-8831-a32c98a3bbf3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'USB_C_Receptacle_Palconn_UTC16-G' does not match copy in library 'Connector_USB'",
+            "items": [
+                {
+                    "description": "Footprint J215",
+                    "pos": {
+                        "x": 194.1,
+                        "y": 54.3
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f11d0af"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x04_P2.54mm_Vertical_SMD_Pin1Left' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J310",
+                    "pos": {
+                        "x": 196.1,
+                        "y": 107.9
+                    },
+                    "uuid": "30172895-8e53-41a2-b640-e32bd24ea660"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R204",
+                    "pos": {
+                        "x": 196.8,
+                        "y": 58.6
+                    },
+                    "uuid": "7995c8da-edc5-48d9-8913-9e309977b2d0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 139.428281,
+                        "y": 150.47932
+                    },
+                    "uuid": "7bc47a0d-10af-4a5b-9c24-4b58fcc16821"
+                },
+                {
+                    "description": "Pad 2 [/right/GND] of R302 on F.Cu",
+                    "pos": {
+                        "x": 107.73,
+                        "y": 141.19
+                    },
+                    "uuid": "3bf3c0be-31bc-4f5c-bee4-570c37fffe74"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of TH301",
+                    "pos": {
+                        "x": 112.5,
+                        "y": 147.9
+                    },
+                    "uuid": "ce6fb4f6-8e66-4d40-9178-8fccbe98a4f7"
+                },
+                {
+                    "description": "Pad 1 [Net-(C317-Pad1)] of TH301 on F.Cu",
+                    "pos": {
+                        "x": 111.3625,
+                        "y": 147.0375
+                    },
+                    "uuid": "8607c56f-88f6-48a8-8e0a-6d6310733c74"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of TH301",
+                    "pos": {
+                        "x": 112.5,
+                        "y": 147.9
+                    },
+                    "uuid": "ce6fb4f6-8e66-4d40-9178-8fccbe98a4f7"
+                },
+                {
+                    "description": "Pad 2 [/right/VBUS] of TH301 on F.Cu",
+                    "pos": {
+                        "x": 111.3625,
+                        "y": 148.9625
+                    },
+                    "uuid": "86a11ff7-3843-4a17-b537-70584a76cfa6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 199.658031,
+                        "y": 103.121071
+                    },
+                    "uuid": "f87ae207-f59f-46f8-bcd1-56290df62522"
+                },
+                {
+                    "description": "Pad 2 [/right/GND] of C301 on F.Cu",
+                    "pos": {
+                        "x": 160.195611,
+                        "y": 91.512941
+                    },
+                    "uuid": "c11d5fc5-61d3-45a3-8b42-ac527665a127"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of D301 on F.Silkscreen",
+                    "pos": {
+                        "x": 175.056123,
+                        "y": 103.24024
+                    },
+                    "uuid": "3cdeae1a-e4e3-4e4c-9044-4891094fe29e"
+                },
+                {
+                    "description": "Pad 2 [Net-(D301-Pad1)] of R303 on F.Cu",
+                    "pos": {
+                        "x": 174.437724,
+                        "y": 103.004626
+                    },
+                    "uuid": "f0cda4fb-80c0-4f6d-85fa-a390721760ca"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of C203 on F.Silkscreen",
+                    "pos": {
+                        "x": 176.580796,
+                        "y": 81.784888
+                    },
+                    "uuid": "2da820d0-38f7-4e0b-81d7-7950720ee086"
+                },
+                {
+                    "description": "Pad 4 [/left/+3V3] of J216 on F.Cu",
+                    "pos": {
+                        "x": 175.879712,
+                        "y": 82.863533
+                    },
+                    "uuid": "77eebd4b-b13e-4d7c-a96f-f1d495fd89f2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 139.428281,
+                        "y": 150.47932
+                    },
+                    "uuid": "7bc47a0d-10af-4a5b-9c24-4b58fcc16821"
+                },
+                {
+                    "description": "Reference field of J306",
+                    "pos": {
+                        "x": 101.5,
+                        "y": 139.3
+                    },
+                    "uuid": "e4bb4fc8-83ba-4fb7-b933-386e4de722c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 139.428281,
+                        "y": 150.47932
+                    },
+                    "uuid": "7bc47a0d-10af-4a5b-9c24-4b58fcc16821"
+                },
+                {
+                    "description": "Reference field of R302",
+                    "pos": {
+                        "x": 109.9,
+                        "y": 141.6
+                    },
+                    "uuid": "7fddcdee-ff3f-4bd2-8a67-d37242a80fca"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of TH301 on F.Silkscreen",
+                    "pos": {
+                        "x": 112.0725,
+                        "y": 147.854969
+                    },
+                    "uuid": "61a663c0-a7c3-42fd-8765-fe45b22cb22f"
+                },
+                {
+                    "description": "Reference field of TH301",
+                    "pos": {
+                        "x": 112.5,
+                        "y": 147.9
+                    },
+                    "uuid": "ce6fb4f6-8e66-4d40-9178-8fccbe98a4f7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of TH301",
+                    "pos": {
+                        "x": 112.5,
+                        "y": 147.9
+                    },
+                    "uuid": "ce6fb4f6-8e66-4d40-9178-8fccbe98a4f7"
+                },
+                {
+                    "description": "Segment of U302 on F.Silkscreen",
+                    "pos": {
+                        "x": 112.6525,
+                        "y": 147.1
+                    },
+                    "uuid": "d44a786b-6d53-4f54-9484-37349f31779a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J308 on F.Silkscreen",
+                    "pos": {
+                        "x": 144.711846,
+                        "y": 110.369058
+                    },
+                    "uuid": "2de1cbd6-1c7c-4908-91cd-cada1b809673"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 154.226748,
+                        "y": 145.948295
+                    },
+                    "uuid": "677c7a49-8b10-408d-97a6-8401b25b9e0b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J308 on F.Silkscreen",
+                    "pos": {
+                        "x": 145.652298,
+                        "y": 109.428606
+                    },
+                    "uuid": "0e1a0a91-95b6-43a7-bbcc-efbcd993ed96"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 154.226748,
+                        "y": 145.948295
+                    },
+                    "uuid": "677c7a49-8b10-408d-97a6-8401b25b9e0b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of C310",
+                    "pos": {
+                        "x": 156.16,
+                        "y": 105.96
+                    },
+                    "uuid": "01a60a64-44b6-4e5a-b9db-51f9b7c808d5"
+                },
+                {
+                    "description": "Reference field of C313",
+                    "pos": {
+                        "x": 154.3,
+                        "y": 104.12
+                    },
+                    "uuid": "f8454b89-4b41-4265-b5d2-31c6ec2f275b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of C310 on F.Silkscreen",
+                    "pos": {
+                        "x": 159.083709,
+                        "y": 94.287801
+                    },
+                    "uuid": "4d865549-968f-47d3-a89e-9b5549b922c0"
+                },
+                {
+                    "description": "Segment of C313 on F.Silkscreen",
+                    "pos": {
+                        "x": 159.083709,
+                        "y": 94.287801
+                    },
+                    "uuid": "eacd250b-5ad1-45ca-aec3-d01235994cb7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of C310 on F.Silkscreen",
+                    "pos": {
+                        "x": 160.087801,
+                        "y": 93.283709
+                    },
+                    "uuid": "2a771cd1-ced1-462f-a7ae-0c4e44404066"
+                },
+                {
+                    "description": "Segment of C313 on F.Silkscreen",
+                    "pos": {
+                        "x": 160.087801,
+                        "y": 93.283709
+                    },
+                    "uuid": "e056752c-90d4-4eb4-b253-d6e3def963a7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of C301 on F.Silkscreen",
+                    "pos": {
+                        "x": 161.543412,
+                        "y": 91.85665
+                    },
+                    "uuid": "85b017e0-1e4a-4e7a-b5c2-a5f67821c22d"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 199.658031,
+                        "y": 103.121071
+                    },
+                    "uuid": "f87ae207-f59f-46f8-bcd1-56290df62522"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U301 on F.Silkscreen",
+                    "pos": {
+                        "x": 169.25488000000001,
+                        "y": 102.971751
+                    },
+                    "uuid": "164c7adb-3822-4ccf-b6e2-8d898ba27269"
+                },
+                {
+                    "description": "Segment of C314 on F.Silkscreen",
+                    "pos": {
+                        "x": 169.99,
+                        "y": 102.241422
+                    },
+                    "uuid": "c98a52ce-b94b-4d83-bb07-9daaf4cff377"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of U301 on F.Silkscreen",
+                    "pos": {
+                        "x": 169.926631,
+                        "y": 102.3
+                    },
+                    "uuid": "670c202b-1fb5-459b-a1af-8dc7e56914bb"
+                },
+                {
+                    "description": "Segment of C314 on F.Silkscreen",
+                    "pos": {
+                        "x": 169.99,
+                        "y": 102.241422
+                    },
+                    "uuid": "c98a52ce-b94b-4d83-bb07-9daaf4cff377"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of J211 on B.Silkscreen",
+                    "pos": {
+                        "x": 160.489083,
+                        "y": 49.993084
+                    },
+                    "uuid": "02580d9d-bfe2-406a-a74f-055b678afb17"
+                },
+                {
+                    "description": "Segment of SW201 on B.Silkscreen",
+                    "pos": {
+                        "x": 177.04,
+                        "y": 53.55
+                    },
+                    "uuid": "5d7005ff-48b7-4622-b1d7-6d594625861c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon on F.Silkscreen",
+                    "pos": {
+                        "x": 178.31,
+                        "y": 99.05
+                    },
+                    "uuid": "cdf8e4e1-00d8-491d-a0a8-c83630ad9d09"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 199.658031,
+                        "y": 103.121071
+                    },
+                    "uuid": "f87ae207-f59f-46f8-bcd1-56290df62522"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Arc on F.Silkscreen",
+                    "pos": {
+                        "x": 177.17,
+                        "y": 103.91208
+                    },
+                    "uuid": "e12bb5a4-2ba3-4a65-8642-009224d01baf"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 199.658031,
+                        "y": 103.121071
+                    },
+                    "uuid": "f87ae207-f59f-46f8-bcd1-56290df62522"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of J211 on B.Silkscreen",
+                    "pos": {
+                        "x": 160.489083,
+                        "y": 49.993084
+                    },
+                    "uuid": "02580d9d-bfe2-406a-a74f-055b678afb17"
+                },
+                {
+                    "description": "Segment of SW201 on B.Silkscreen",
+                    "pos": {
+                        "x": 177.04,
+                        "y": 57.25
+                    },
+                    "uuid": "70cdc6c5-9e93-4e1d-bc09-2a01fa1a0ec3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon on F.Silkscreen",
+                    "pos": {
+                        "x": 178.31,
+                        "y": 99.05
+                    },
+                    "uuid": "cdf8e4e1-00d8-491d-a0a8-c83630ad9d09"
+                },
+                {
+                    "description": "Arc of D301 on F.Silkscreen",
+                    "pos": {
+                        "x": 177.155655,
+                        "y": 103.943423
+                    },
+                    "uuid": "fa935148-c8f5-4790-b6a2-7d7faa842292"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 199.658031,
+                        "y": 103.121071
+                    },
+                    "uuid": "f87ae207-f59f-46f8-bcd1-56290df62522"
+                },
+                {
+                    "description": "Arc of D301 on F.Silkscreen",
+                    "pos": {
+                        "x": 177.155655,
+                        "y": 103.943423
+                    },
+                    "uuid": "fa935148-c8f5-4790-b6a2-7d7faa842292"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon on F.Silkscreen",
+                    "pos": {
+                        "x": 178.31,
+                        "y": 99.05
+                    },
+                    "uuid": "cdf8e4e1-00d8-491d-a0a8-c83630ad9d09"
+                },
+                {
+                    "description": "Segment of J307 on F.Silkscreen",
+                    "pos": {
+                        "x": 179.562858,
+                        "y": 103.237571
+                    },
+                    "uuid": "cef829ae-6f87-4904-9380-fb3d05b5d93a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J307 on F.Silkscreen",
+                    "pos": {
+                        "x": 179.562858,
+                        "y": 103.237571
+                    },
+                    "uuid": "cef829ae-6f87-4904-9380-fb3d05b5d93a"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 199.658031,
+                        "y": 103.121071
+                    },
+                    "uuid": "f87ae207-f59f-46f8-bcd1-56290df62522"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J307 on F.Silkscreen",
+                    "pos": {
+                        "x": 184.702858,
+                        "y": 103.237571
+                    },
+                    "uuid": "88e13ae8-0be6-4d7a-85f9-398e523b0d0f"
+                },
+                {
+                    "description": "Polygon on F.Silkscreen",
+                    "pos": {
+                        "x": 178.31,
+                        "y": 99.05
+                    },
+                    "uuid": "cdf8e4e1-00d8-491d-a0a8-c83630ad9d09"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J307 on F.Silkscreen",
+                    "pos": {
+                        "x": 184.702858,
+                        "y": 103.237571
+                    },
+                    "uuid": "88e13ae8-0be6-4d7a-85f9-398e523b0d0f"
+                },
+                {
+                    "description": "Arc on F.Silkscreen",
+                    "pos": {
+                        "x": 177.17,
+                        "y": 103.91208
+                    },
+                    "uuid": "e12bb5a4-2ba3-4a65-8642-009224d01baf"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 154.226748,
+                        "y": 145.948295
+                    },
+                    "uuid": "677c7a49-8b10-408d-97a6-8401b25b9e0b"
+                },
+                {
+                    "description": "Segment of SW301 on F.Silkscreen",
+                    "pos": {
+                        "x": 182.244094,
+                        "y": 110.749435
+                    },
+                    "uuid": "bafaae92-23c4-4024-a5ff-368acd2e10a2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J307 on F.Silkscreen",
+                    "pos": {
+                        "x": 184.702858,
+                        "y": 103.237571
+                    },
+                    "uuid": "88e13ae8-0be6-4d7a-85f9-398e523b0d0f"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 199.658031,
+                        "y": 103.121071
+                    },
+                    "uuid": "f87ae207-f59f-46f8-bcd1-56290df62522"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J307 on F.Silkscreen",
+                    "pos": {
+                        "x": 184.702858,
+                        "y": 103.237571
+                    },
+                    "uuid": "477290e6-84c2-4750-97c4-46b1dfc2985c"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 199.658031,
+                        "y": 103.121071
+                    },
+                    "uuid": "f87ae207-f59f-46f8-bcd1-56290df62522"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J307 on F.Silkscreen",
+                    "pos": {
+                        "x": 185.972858,
+                        "y": 103.237571
+                    },
+                    "uuid": "01e7282d-dd3a-4fac-8363-b4bc29c6bd97"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 199.658031,
+                        "y": 103.121071
+                    },
+                    "uuid": "f87ae207-f59f-46f8-bcd1-56290df62522"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of SW301 on F.Silkscreen",
+                    "pos": {
+                        "x": 188.364094,
+                        "y": 110.749435
+                    },
+                    "uuid": "506a4fb3-b4d5-47ec-9260-fa7865d0af36"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 154.226748,
+                        "y": 145.948295
+                    },
+                    "uuid": "677c7a49-8b10-408d-97a6-8401b25b9e0b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of J307 on F.Silkscreen",
+                    "pos": {
+                        "x": 187.302858,
+                        "y": 103.237571
+                    },
+                    "uuid": "8fa25f0b-903c-4490-966e-714588920c6b"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 199.658031,
+                        "y": 103.121071
+                    },
+                    "uuid": "f87ae207-f59f-46f8-bcd1-56290df62522"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Circle of J202 on F.Silkscreen",
+                    "pos": {
+                        "x": 187.312528,
+                        "y": 66.397028
+                    },
+                    "uuid": "34b58c36-c932-4be7-8bd0-40a1cc3b187e"
+                },
+                {
+                    "description": "PCB text 'spi2_cipo' on F.Silkscreen",
+                    "pos": {
+                        "x": 189.78,
+                        "y": 65.07
+                    },
+                    "uuid": "6831295d-41b9-45be-91f4-47037e49ba12"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of SW301 on F.Silkscreen",
+                    "pos": {
+                        "x": 188.364094,
+                        "y": 107.049435
+                    },
+                    "uuid": "3a2f8307-6695-43e9-90e1-3c1a5f95d5b5"
+                },
+                {
+                    "description": "Polygon of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 154.226748,
+                        "y": 145.948295
+                    },
+                    "uuid": "677c7a49-8b10-408d-97a6-8401b25b9e0b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

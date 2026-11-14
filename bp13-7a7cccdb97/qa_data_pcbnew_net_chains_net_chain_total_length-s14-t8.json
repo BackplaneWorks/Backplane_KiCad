@@ -1,0 +1,266 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:21",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "net_chain_total_length.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 64.325,
+                        "y": 69.0
+                    },
+                    "uuid": "5e6c1cd1-329d-40ce-b7ba-cc46951b3357"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 71.68,
+                        "y": 69.0
+                    },
+                    "uuid": "771a6990-8392-43c4-b7ac-cf779d8cefc1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 76.825,
+                        "y": 69.0
+                    },
+                    "uuid": "3b73f68e-e586-492e-a6bd-daecc68e15d0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of TP2",
+                    "pos": {
+                        "x": 55.5,
+                        "y": 69.0
+                    },
+                    "uuid": "bfa47e6a-8e11-42ea-80fc-b8ca64618c25"
+                },
+                {
+                    "description": "PTH pad 1 [Net-(R1-Pad1)] of TP2",
+                    "pos": {
+                        "x": 55.5,
+                        "y": 69.0
+                    },
+                    "uuid": "14c55962-8a19-457f-88ed-a012a1fef24e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R1",
+                    "pos": {
+                        "x": 64.325,
+                        "y": 69.0
+                    },
+                    "uuid": "ffe921f9-36bc-4aa1-ac17-650323a7c017"
+                },
+                {
+                    "description": "Pad 1 [Net-(R1-Pad1)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 63.5,
+                        "y": 69.0
+                    },
+                    "uuid": "a528946f-0902-4ea1-a4e5-61fb1b414795"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R1",
+                    "pos": {
+                        "x": 64.325,
+                        "y": 69.0
+                    },
+                    "uuid": "ffe921f9-36bc-4aa1-ac17-650323a7c017"
+                },
+                {
+                    "description": "Pad 2 [Net-(R1-Pad2)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 65.15,
+                        "y": 69.0
+                    },
+                    "uuid": "cfc2ee8e-5565-43fd-8689-f99b59297a3e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 71.68,
+                        "y": 69.0
+                    },
+                    "uuid": "89562913-1eac-4eb9-853e-6c6fb5af4b9d"
+                },
+                {
+                    "description": "Pad 1 [Net-(R1-Pad2)] of R2 on F.Cu",
+                    "pos": {
+                        "x": 70.855,
+                        "y": 69.0
+                    },
+                    "uuid": "f2d95619-17fa-40c5-9c78-9697666b8f69"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 71.68,
+                        "y": 69.0
+                    },
+                    "uuid": "89562913-1eac-4eb9-853e-6c6fb5af4b9d"
+                },
+                {
+                    "description": "Pad 2 [Net-(R2-Pad2)] of R2 on F.Cu",
+                    "pos": {
+                        "x": 72.505,
+                        "y": 69.0
+                    },
+                    "uuid": "3789d355-e36c-4dc3-8106-26e5df5a3896"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R3",
+                    "pos": {
+                        "x": 76.825,
+                        "y": 69.0
+                    },
+                    "uuid": "69c89344-4a4b-4f54-a38d-7659ffd62518"
+                },
+                {
+                    "description": "Pad 1 [Net-(R2-Pad2)] of R3 on F.Cu",
+                    "pos": {
+                        "x": 76.0,
+                        "y": 69.0
+                    },
+                    "uuid": "e30bef97-1a53-4826-a794-70cbfe362da6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R3",
+                    "pos": {
+                        "x": 76.825,
+                        "y": 69.0
+                    },
+                    "uuid": "69c89344-4a4b-4f54-a38d-7659ffd62518"
+                },
+                {
+                    "description": "Pad 2 [Net-(R3-Pad2)] of R3 on F.Cu",
+                    "pos": {
+                        "x": 77.65,
+                        "y": 69.0
+                    },
+                    "uuid": "b060937e-01b5-421b-850f-d9418d9da5f4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of TP1",
+                    "pos": {
+                        "x": 85.5,
+                        "y": 69.0
+                    },
+                    "uuid": "889a6d37-52d4-4b22-a562-8647c777a449"
+                },
+                {
+                    "description": "PTH pad 1 [Net-(R3-Pad2)] of TP1",
+                    "pos": {
+                        "x": 85.5,
+                        "y": 69.0
+                    },
+                    "uuid": "3e68362c-9db5-4525-9535-94b8c95fc2aa"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

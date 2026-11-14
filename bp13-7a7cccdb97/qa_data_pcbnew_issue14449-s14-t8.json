@@ -1,0 +1,75 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:52",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue14449.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3607 mm)",
+            "items": [
+                {
+                    "description": "Rectangle on Edge.Cuts",
+                    "pos": {
+                        "x": 70.0,
+                        "y": 85.0
+                    },
+                    "uuid": "9d07ce53-5f7e-43a1-b557-4bcf5c8818ba"
+                },
+                {
+                    "description": "Polygon [<no net>] of LOGO101_TOP0 on F.Cu",
+                    "pos": {
+                        "x": 72.011801,
+                        "y": 85.364386
+                    },
+                    "uuid": "b249901f-c2e9-4c38-852a-e2816130e93a"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'project'",
+            "items": [
+                {
+                    "description": "Footprint LOGO101_TOP0",
+                    "pos": {
+                        "x": 71.0,
+                        "y": 88.0
+                    },
+                    "uuid": "710f0618-ba48-4eda-a0d1-184be345cef5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

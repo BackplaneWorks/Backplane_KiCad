@@ -1,0 +1,113 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:21",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "return_path_zone_bbox.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 24.5,
+                        "y": 59.5
+                    },
+                    "uuid": "5b81387a-3e65-411d-9b4c-520b5ccd4e6f"
+                },
+                {
+                    "description": "Track [/CHAIN_COVERED] on F.Cu, length 30.0000 mm",
+                    "pos": {
+                        "x": 24.5,
+                        "y": 29.5
+                    },
+                    "uuid": "dcc5d744-79fa-45a8-abbc-d27661644fde"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 24.5,
+                        "y": 59.5
+                    },
+                    "uuid": "5b81387a-3e65-411d-9b4c-520b5ccd4e6f"
+                },
+                {
+                    "description": "Track [/CHAIN_UNCOVERED] on F.Cu, length 30.0000 mm",
+                    "pos": {
+                        "x": 24.5,
+                        "y": 49.5
+                    },
+                    "uuid": "123ca306-c5ac-4d58-85d8-d520a59f848d"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/CHAIN_COVERED] on F.Cu, length 30.0000 mm",
+                    "pos": {
+                        "x": 24.5,
+                        "y": 29.5
+                    },
+                    "uuid": "dcc5d744-79fa-45a8-abbc-d27661644fde"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/CHAIN_UNCOVERED] on F.Cu, length 30.0000 mm",
+                    "pos": {
+                        "x": 24.5,
+                        "y": 49.5
+                    },
+                    "uuid": "123ca306-c5ac-4d58-85d8-d520a59f848d"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        }
+    ]
+}

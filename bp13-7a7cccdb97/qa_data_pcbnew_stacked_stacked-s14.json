@@ -1,0 +1,245 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:32",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "stacked.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 10 [Net-(R1-Pad6)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 96.61,
+                        "y": 82.165
+                    },
+                    "uuid": "46e85dda-2b66-4d09-a062-916d33de6a9e"
+                },
+                {
+                    "description": "Pad 1 [Net-(R1-Pad6)] of X1 on F.Cu",
+                    "pos": {
+                        "x": 95.0,
+                        "y": 90.0
+                    },
+                    "uuid": "595baab1-9b66-41dd-838b-67f9f7f008e9"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 96.61,
+                        "y": 83.435
+                    },
+                    "uuid": "0d1d056c-2f36-4152-9a5c-117b6f43d4e3"
+                },
+                {
+                    "description": "Pad 2 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 97.88,
+                        "y": 83.435
+                    },
+                    "uuid": "7835c4d6-293f-470f-9732-986fc9802a90"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 9 [Net-(R1-Pad6)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 97.88,
+                        "y": 82.165
+                    },
+                    "uuid": "1dab4fb0-b39d-4753-ab2a-a5f4f1e8aac1"
+                },
+                {
+                    "description": "Pad 10 [Net-(R1-Pad6)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 96.61,
+                        "y": 82.165
+                    },
+                    "uuid": "46e85dda-2b66-4d09-a062-916d33de6a9e"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 97.88,
+                        "y": 83.435
+                    },
+                    "uuid": "7835c4d6-293f-470f-9732-986fc9802a90"
+                },
+                {
+                    "description": "Pad 3 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 99.15,
+                        "y": 83.435
+                    },
+                    "uuid": "ea592653-d244-4bb8-b4ed-ee92882d3777"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 3 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 99.15,
+                        "y": 83.435
+                    },
+                    "uuid": "ea592653-d244-4bb8-b4ed-ee92882d3777"
+                },
+                {
+                    "description": "Pad 4 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 100.42,
+                        "y": 83.435
+                    },
+                    "uuid": "5e78183f-956b-4f05-a129-15f4e5fe3a0c"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 7 [Net-(R1-Pad6)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 100.42,
+                        "y": 82.165
+                    },
+                    "uuid": "d0255722-889d-41bc-920a-0463b6ac11fc"
+                },
+                {
+                    "description": "Pad 9 [Net-(R1-Pad6)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 97.88,
+                        "y": 82.165
+                    },
+                    "uuid": "1dab4fb0-b39d-4753-ab2a-a5f4f1e8aac1"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 4 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 100.42,
+                        "y": 83.435
+                    },
+                    "uuid": "5e78183f-956b-4f05-a129-15f4e5fe3a0c"
+                },
+                {
+                    "description": "Pad 5 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 101.69,
+                        "y": 83.435
+                    },
+                    "uuid": "6e86d938-6846-476f-83b5-1d8afafe7361"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 6 [Net-(R1-Pad6)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 101.69,
+                        "y": 82.165
+                    },
+                    "uuid": "6b67537c-a5db-4c19-a020-c8fcd9f7acf8"
+                },
+                {
+                    "description": "Pad 7 [Net-(R1-Pad6)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 100.42,
+                        "y": 82.165
+                    },
+                    "uuid": "d0255722-889d-41bc-920a-0463b6ac11fc"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "951bb126-6ffe-4ede-a28a-b0c9f9d9028a"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        }
+    ]
+}

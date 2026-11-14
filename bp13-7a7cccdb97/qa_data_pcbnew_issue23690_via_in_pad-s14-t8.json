@@ -1,0 +1,98 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:02",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue23690_via_in_pad.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1881 mm)",
+            "items": [
+                {
+                    "description": "Via [/ABC] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 100.775,
+                        "y": 100.0
+                    },
+                    "uuid": "2c3ea1eb-631b-41c3-8acb-0428b215a369"
+                },
+                {
+                    "description": "Pad A3 [<no net>] of REF** on F.Cu",
+                    "pos": {
+                        "x": 100.5,
+                        "y": 99.5
+                    },
+                    "uuid": "759d7b0c-6c35-4844-ab87-233cd7690f09"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1765 mm)",
+            "items": [
+                {
+                    "description": "Via [/ABC] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 149.25,
+                        "y": 100.0
+                    },
+                    "uuid": "726789c5-9014-45e0-8351-1c602594ed30"
+                },
+                {
+                    "description": "Pad C1 [<no net>] of REF** on F.Cu",
+                    "pos": {
+                        "x": 149.5,
+                        "y": 100.5
+                    },
+                    "uuid": "ed963814-6b84-41dd-8939-b2964cd72e18"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "d14a17bc-4d69-44fa-ab85-ae021d3e7174"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        }
+    ]
+}

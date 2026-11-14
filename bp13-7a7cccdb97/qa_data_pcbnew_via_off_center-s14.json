@@ -1,0 +1,171 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:36",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "via_off_center.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Track endpoint not centered on via",
+            "items": [
+                {
+                    "description": "Track [/NON_CENTERED_B] on F.Cu, length 4.0000 mm",
+                    "pos": {
+                        "x": 44.0,
+                        "y": 42.6
+                    },
+                    "uuid": "f88fe59d-d2c7-460d-b7e0-4dab9e685354"
+                },
+                {
+                    "description": "Via [/NON_CENTERED_B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 48.010505,
+                        "y": 42.40904
+                    },
+                    "uuid": "69e5644a-761c-4dea-ba4d-65357f172250"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_not_centered_on_via"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "items": [
+                {
+                    "description": "Track [/NON_CENTERED_B] on B.Cu, length 2.0000 mm",
+                    "pos": {
+                        "x": 50.0,
+                        "y": 42.6
+                    },
+                    "uuid": "c467d51f-9a8f-42f7-8625-21fd9dd52b3e"
+                },
+                {
+                    "description": "Via [/NON_CENTERED_B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 48.010505,
+                        "y": 42.40904
+                    },
+                    "uuid": "69e5644a-761c-4dea-ba4d-65357f172250"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_not_centered_on_via"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "items": [
+                {
+                    "description": "Track [/NON_CENTERED_C] on F.Cu, length 4.0000 mm",
+                    "pos": {
+                        "x": 44.0,
+                        "y": 47.2
+                    },
+                    "uuid": "2e079e32-f7d5-4a86-b4cf-583c8a018453"
+                },
+                {
+                    "description": "Via [/NON_CENTERED_C] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 48.034755,
+                        "y": 46.998639
+                    },
+                    "uuid": "f62fec11-2ac0-42b3-8ca5-eaa32e968308"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_not_centered_on_via"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "items": [
+                {
+                    "description": "Track [/NON_CENTERED_A] on F.Cu, length 4.0000 mm",
+                    "pos": {
+                        "x": 50.0,
+                        "y": 38.0
+                    },
+                    "uuid": "35765100-ffa0-490e-8d1a-59ef2eaedc93"
+                },
+                {
+                    "description": "Via [/NON_CENTERED_A] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 50.005311,
+                        "y": 38.199279
+                    },
+                    "uuid": "c852c74f-7d53-4404-9a48-c2e78a7032d5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_not_centered_on_via"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "items": [
+                {
+                    "description": "Track [/NON_CENTERED_A] on B.Cu, length 2.0000 mm",
+                    "pos": {
+                        "x": 50.0,
+                        "y": 38.0
+                    },
+                    "uuid": "5d71c324-181c-4554-a6d0-d8c2183ff3b3"
+                },
+                {
+                    "description": "Via [/NON_CENTERED_A] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 50.005311,
+                        "y": 38.199279
+                    },
+                    "uuid": "c852c74f-7d53-4404-9a48-c2e78a7032d5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_not_centered_on_via"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "items": [
+                {
+                    "description": "Track [/NON_CENTERED_C] on F.Cu, length 4.0000 mm",
+                    "pos": {
+                        "x": 50.0,
+                        "y": 47.2
+                    },
+                    "uuid": "425ae364-8776-4899-b990-7cf8b77e2672"
+                },
+                {
+                    "description": "Via [/NON_CENTERED_C] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 50.034755,
+                        "y": 46.998639
+                    },
+                    "uuid": "3bce0cf5-c4cf-40ee-ae56-3f6dc5585e57"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_not_centered_on_via"
+        }
+    ]
+}

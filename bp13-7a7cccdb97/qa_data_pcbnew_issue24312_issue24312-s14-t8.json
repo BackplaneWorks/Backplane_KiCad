@@ -1,0 +1,288 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:03",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue24312.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 148.5,
+                        "y": 105.0
+                    },
+                    "uuid": "63c3d0fb-2c50-4c99-91d7-c5f0d08432c8"
+                },
+                {
+                    "description": "Footprint C1",
+                    "pos": {
+                        "x": 149.8,
+                        "y": 105.7
+                    },
+                    "uuid": "f2b5fc3c-108e-409e-a0bc-9d05411b975a"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.1000 mm; actual 0.0338 mm) (F.Cu)",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu, priority 6",
+                    "pos": {
+                        "x": 153.0,
+                        "y": 107.0
+                    },
+                    "uuid": "96c21d15-ffb3-4d80-a8cf-1e21a6c08ac0"
+                }
+            ],
+            "severity": "warning",
+            "type": "connection_width"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 140.5,
+                        "y": 103.0
+                    },
+                    "uuid": "4d597908-3a2c-4643-93a1-b2e95148050b"
+                },
+                {
+                    "description": "Segment of X1 on F.Silkscreen",
+                    "pos": {
+                        "x": 146.55,
+                        "y": 103.0
+                    },
+                    "uuid": "38767bef-0a65-437b-8f6e-4a1f3d6a2a8b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 140.5,
+                        "y": 107.0
+                    },
+                    "uuid": "23d3db02-a062-4ca9-93c9-6576d032b571"
+                },
+                {
+                    "description": "Segment of X1 on F.Silkscreen",
+                    "pos": {
+                        "x": 147.15,
+                        "y": 107.0
+                    },
+                    "uuid": "534533ee-4a58-4ab7-8fa3-b0b0645c0880"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 140.5,
+                        "y": 103.0
+                    },
+                    "uuid": "4d597908-3a2c-4643-93a1-b2e95148050b"
+                },
+                {
+                    "description": "Segment of X1 on F.Silkscreen",
+                    "pos": {
+                        "x": 150.45,
+                        "y": 103.0
+                    },
+                    "uuid": "d64e772d-0213-44fa-8adf-bab52e07f0f5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 140.5,
+                        "y": 107.0
+                    },
+                    "uuid": "23d3db02-a062-4ca9-93c9-6576d032b571"
+                },
+                {
+                    "description": "Segment of X1 on F.Silkscreen",
+                    "pos": {
+                        "x": 147.15,
+                        "y": 107.0
+                    },
+                    "uuid": "97242d40-21d2-4266-b1d1-b35853b29da6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 140.5,
+                        "y": 107.0
+                    },
+                    "uuid": "23d3db02-a062-4ca9-93c9-6576d032b571"
+                },
+                {
+                    "description": "Segment of X1 on F.Silkscreen",
+                    "pos": {
+                        "x": 149.85,
+                        "y": 107.0
+                    },
+                    "uuid": "0d8c6ecc-8a14-40ff-93f1-b2c45217c141"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 140.5,
+                        "y": 103.0
+                    },
+                    "uuid": "4d597908-3a2c-4643-93a1-b2e95148050b"
+                },
+                {
+                    "description": "Segment of X1 on F.Silkscreen",
+                    "pos": {
+                        "x": 150.45,
+                        "y": 106.75
+                    },
+                    "uuid": "49ff13f4-9300-44d3-ab29-59b6213d7b34"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'ART-FP-Resistor'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 146.7,
+                        "y": 104.0
+                    },
+                    "uuid": "94747eae-0d0d-45c0-a499-274c10257b48"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'ART-FP-IC'",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 148.5,
+                        "y": 105.0
+                    },
+                    "uuid": "63c3d0fb-2c50-4c99-91d7-c5f0d08432c8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'ART-FP-Connector'",
+            "items": [
+                {
+                    "description": "Footprint X1",
+                    "pos": {
+                        "x": 148.5,
+                        "y": 105.0
+                    },
+                    "uuid": "957201f4-be3f-4ef4-a1ac-26d78504c17e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'ART-FP-Capacitor'",
+            "items": [
+                {
+                    "description": "Footprint C1",
+                    "pos": {
+                        "x": 149.8,
+                        "y": 105.7
+                    },
+                    "uuid": "f2b5fc3c-108e-409e-a0bc-9d05411b975a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'ART-FP-Resistor'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 150.3,
+                        "y": 104.0
+                    },
+                    "uuid": "def043dc-1509-4e8a-a18a-38476af98532"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

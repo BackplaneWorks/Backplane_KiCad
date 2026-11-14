@@ -1,0 +1,2075 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:08",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue25580.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 8 [ISO_5V] of U5 on F.Cu",
+                    "pos": {
+                        "x": 123.702504,
+                        "y": 77.196975
+                    },
+                    "uuid": "2fae7b10-a1db-46a6-a121-78d5840c70f7"
+                },
+                {
+                    "description": "Track [ISO_5V] on PWR, length 1.8738 mm",
+                    "pos": {
+                        "x": 124.2,
+                        "y": 71.175
+                    },
+                    "uuid": "78b2e7ae-809b-4292-8068-2362636dd7e1"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 8 [ISO_5V] of U5 on F.Cu",
+                    "pos": {
+                        "x": 123.702504,
+                        "y": 77.196975
+                    },
+                    "uuid": "2fae7b10-a1db-46a6-a121-78d5840c70f7"
+                },
+                {
+                    "description": "Pad 8 [ISO_5V] of U5 on F.Cu",
+                    "pos": {
+                        "x": 134.694162,
+                        "y": 75.4184
+                    },
+                    "uuid": "bc1e49f5-4fa9-470f-bee9-ebdd8d22fa23"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 7 [Net-(U5-B)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 124.853514,
+                        "y": 76.66025
+                    },
+                    "uuid": "b18a1b8e-2e18-4da2-b1df-8653a1454497"
+                },
+                {
+                    "description": "Pad 7 [Net-(U5-B)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 135.944867,
+                        "y": 75.197868
+                    },
+                    "uuid": "2598d38e-58c4-40d9-af05-92c8c37431b6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/RS-485_Transceiver/ISO_RXD] on F.Cu, length 0.1344 mm",
+                    "pos": {
+                        "x": 125.595,
+                        "y": 69.33
+                    },
+                    "uuid": "23526a26-c251-47de-b63c-aa03d95a3349"
+                },
+                {
+                    "description": "Pad 1 [/RS-485_Transceiver/ISO_RXD] of U5 on F.Cu",
+                    "pos": {
+                        "x": 125.794462,
+                        "y": 81.6832
+                    },
+                    "uuid": "b68486bf-d48c-4652-a70f-7f618ac07293"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [/RS-485_Transceiver/ISO_RXD] of U5 on F.Cu",
+                    "pos": {
+                        "x": 125.794462,
+                        "y": 81.6832
+                    },
+                    "uuid": "b68486bf-d48c-4652-a70f-7f618ac07293"
+                },
+                {
+                    "description": "Pad 1 [/RS-485_Transceiver/ISO_RXD] of U5 on F.Cu",
+                    "pos": {
+                        "x": 135.55372,
+                        "y": 80.293199
+                    },
+                    "uuid": "3ae83843-4025-4856-a451-bdcb76938a9a"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 6 [Net-(U5-A)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 126.004525,
+                        "y": 76.123526
+                    },
+                    "uuid": "2f3cd031-6709-458c-844b-409ef8d1ae0b"
+                },
+                {
+                    "description": "Pad 6 [Net-(U5-A)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 137.195574,
+                        "y": 74.977334
+                    },
+                    "uuid": "738f6044-9afe-4d38-a9f3-7d710f088dc8"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [/RS-485_Transceiver/DE] of U5 on F.Cu",
+                    "pos": {
+                        "x": 126.945475,
+                        "y": 81.146474
+                    },
+                    "uuid": "1c8cef7e-ffb6-472a-8ff3-6b72ff7f20f7"
+                },
+                {
+                    "description": "Pad 3 [/RS-485_Transceiver/DE] of U5 on F.Cu",
+                    "pos": {
+                        "x": 128.096486,
+                        "y": 80.60975
+                    },
+                    "uuid": "97183865-ab35-43f5-9121-9bf94bc97e73"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 5 [ISO_GND] of U5 on F.Cu",
+                    "pos": {
+                        "x": 127.155538,
+                        "y": 75.5868
+                    },
+                    "uuid": "02d4d6c8-7f0b-4971-9d3c-ca2bcdc1ba0f"
+                },
+                {
+                    "description": "Track [ISO_GND] on GND, length 4.8083 mm",
+                    "pos": {
+                        "x": 128.2,
+                        "y": 77.4
+                    },
+                    "uuid": "60bc65ce-e75f-4b39-b8e8-62dd48293abe"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 3 [/RS-485_Transceiver/DE] of U5 on F.Cu",
+                    "pos": {
+                        "x": 128.096486,
+                        "y": 80.60975
+                    },
+                    "uuid": "97183865-ab35-43f5-9121-9bf94bc97e73"
+                },
+                {
+                    "description": "Track [/RS-485_Transceiver/DE] on F.Cu, length 0.8644 mm",
+                    "pos": {
+                        "x": 129.5,
+                        "y": 69.425
+                    },
+                    "uuid": "633d82f8-2a41-464c-99af-5e89f19805b3"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 4 [/RS-485_Transceiver/ISO_TXD] of U5 on F.Cu",
+                    "pos": {
+                        "x": 129.247496,
+                        "y": 80.073025
+                    },
+                    "uuid": "b24b5fd8-6460-44c9-81e1-0e14181a4d77"
+                },
+                {
+                    "description": "Pad 4 [/RS-485_Transceiver/ISO_TXD] of U5 on F.Cu",
+                    "pos": {
+                        "x": 139.305838,
+                        "y": 79.6316
+                    },
+                    "uuid": "7477abff-63a5-4cb7-8c28-b52d7c087e1b"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Teardrop [/RS-485_Transceiver/ISO_TXD] on F.Cu",
+                    "pos": {
+                        "x": 129.86594,
+                        "y": 67.489163
+                    },
+                    "uuid": "93f34f7e-b93f-47a3-bbba-6aca8a8fb020"
+                },
+                {
+                    "description": "Pad 4 [/RS-485_Transceiver/ISO_TXD] of U5 on F.Cu",
+                    "pos": {
+                        "x": 134.525,
+                        "y": 68.905
+                    },
+                    "uuid": "505505c2-4b6c-4c9d-822e-fc61fced63d7"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [/RS-485_Transceiver/ISO_RXD] of U5 on F.Cu",
+                    "pos": {
+                        "x": 134.525,
+                        "y": 65.095
+                    },
+                    "uuid": "189aa2bd-10d6-478e-a03d-d926b66fe3ac"
+                },
+                {
+                    "description": "Track [/RS-485_Transceiver/ISO_RXD] on F.Cu, length 3.1194 mm",
+                    "pos": {
+                        "x": 125.595,
+                        "y": 66.210561
+                    },
+                    "uuid": "fd99a4f0-b0c6-40da-8e8e-a71a0fef4b8f"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 3 [/RS-485_Transceiver/DE] of U5 on F.Cu",
+                    "pos": {
+                        "x": 134.525,
+                        "y": 67.635
+                    },
+                    "uuid": "fa1e4b5f-e9f8-4f5f-b8a7-86de0721da64"
+                },
+                {
+                    "description": "Pad 2 [/RS-485_Transceiver/DE] of U5 on F.Cu",
+                    "pos": {
+                        "x": 134.525,
+                        "y": 66.365
+                    },
+                    "uuid": "17b9047c-dd13-447a-a17d-f7f53e3636ff"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 3 [/RS-485_Transceiver/DE] of U5 on F.Cu",
+                    "pos": {
+                        "x": 134.525,
+                        "y": 67.635
+                    },
+                    "uuid": "fa1e4b5f-e9f8-4f5f-b8a7-86de0721da64"
+                },
+                {
+                    "description": "Track [/RS-485_Transceiver/DE] on F.Cu, length 0.8644 mm",
+                    "pos": {
+                        "x": 129.5,
+                        "y": 69.425
+                    },
+                    "uuid": "633d82f8-2a41-464c-99af-5e89f19805b3"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 8 [ISO_5V] of U5 on F.Cu",
+                    "pos": {
+                        "x": 134.694162,
+                        "y": 75.4184
+                    },
+                    "uuid": "bc1e49f5-4fa9-470f-bee9-ebdd8d22fa23"
+                },
+                {
+                    "description": "Pad 8 [ISO_5V] of U5 on F.Cu",
+                    "pos": {
+                        "x": 139.475,
+                        "y": 65.095
+                    },
+                    "uuid": "4d1fde56-c3c6-4790-b759-6c5bbf732cf5"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 7 [Net-(U5-B)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 135.944867,
+                        "y": 75.197868
+                    },
+                    "uuid": "2598d38e-58c4-40d9-af05-92c8c37431b6"
+                },
+                {
+                    "description": "Pad 7 [Net-(U5-B)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 139.475,
+                        "y": 66.365
+                    },
+                    "uuid": "38793132-5b12-4164-b1b5-5a4795bad300"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [/RS-485_Transceiver/DE] of U5 on F.Cu",
+                    "pos": {
+                        "x": 136.804426,
+                        "y": 80.072666
+                    },
+                    "uuid": "c03b6957-3291-450b-af48-c2d07d74a8b7"
+                },
+                {
+                    "description": "Pad 3 [/RS-485_Transceiver/DE] of U5 on F.Cu",
+                    "pos": {
+                        "x": 138.055133,
+                        "y": 79.852132
+                    },
+                    "uuid": "76a59041-eb21-4c12-afaa-0f32956ca1e3"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [/RS-485_Transceiver/DE] of U5 on F.Cu",
+                    "pos": {
+                        "x": 136.804426,
+                        "y": 80.072666
+                    },
+                    "uuid": "c03b6957-3291-450b-af48-c2d07d74a8b7"
+                },
+                {
+                    "description": "Pad 3 [/RS-485_Transceiver/DE] of U5 on F.Cu",
+                    "pos": {
+                        "x": 128.096486,
+                        "y": 80.60975
+                    },
+                    "uuid": "97183865-ab35-43f5-9121-9bf94bc97e73"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 6 [Net-(U5-A)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 137.195574,
+                        "y": 74.977334
+                    },
+                    "uuid": "738f6044-9afe-4d38-a9f3-7d710f088dc8"
+                },
+                {
+                    "description": "Pad 6 [Net-(U5-A)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 139.475,
+                        "y": 67.635
+                    },
+                    "uuid": "9a262cb3-466c-469a-80ae-a2cb3ffdbc6b"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 5 [ISO_GND] of U5 on F.Cu",
+                    "pos": {
+                        "x": 138.44628,
+                        "y": 74.756801
+                    },
+                    "uuid": "ba04f4bc-421c-4358-8c57-683c79bc6a2a"
+                },
+                {
+                    "description": "Track [ISO_GND] on GND, length 2.0034 mm",
+                    "pos": {
+                        "x": 138.96,
+                        "y": 69.036561
+                    },
+                    "uuid": "67a0cfb3-6299-4fb4-ae15-3240897b44a5"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 4 [/RS-485_Transceiver/ISO_TXD] of U5 on F.Cu",
+                    "pos": {
+                        "x": 139.305838,
+                        "y": 79.6316
+                    },
+                    "uuid": "7477abff-63a5-4cb7-8c28-b52d7c087e1b"
+                },
+                {
+                    "description": "Pad 4 [/RS-485_Transceiver/ISO_TXD] of U5 on F.Cu",
+                    "pos": {
+                        "x": 134.525,
+                        "y": 68.905
+                    },
+                    "uuid": "505505c2-4b6c-4c9d-822e-fc61fced63d7"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 7 [Net-(U5-B)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 139.475,
+                        "y": 66.365
+                    },
+                    "uuid": "38793132-5b12-4164-b1b5-5a4795bad300"
+                },
+                {
+                    "description": "Track [Net-(U5-B)] on F.Cu, length 1.4350 mm",
+                    "pos": {
+                        "x": 126.865,
+                        "y": 59.825561
+                    },
+                    "uuid": "22875724-ff64-46cf-a21a-0d13921ccace"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 6 [Net-(U5-A)] of U5 on F.Cu",
+                    "pos": {
+                        "x": 139.475,
+                        "y": 67.635
+                    },
+                    "uuid": "9a262cb3-466c-469a-80ae-a2cb3ffdbc6b"
+                },
+                {
+                    "description": "Track [Net-(U5-A)] on F.Cu, length 1.4350 mm",
+                    "pos": {
+                        "x": 128.135,
+                        "y": 59.825561
+                    },
+                    "uuid": "252212e8-e958-4c27-8f3d-128fa3632d0b"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 5 [ISO_GND] of U5 on F.Cu",
+                    "pos": {
+                        "x": 139.475,
+                        "y": 68.905
+                    },
+                    "uuid": "a9373894-408f-4785-aa11-66f331ccf7b8"
+                },
+                {
+                    "description": "Track [ISO_GND] on GND, length 2.0034 mm",
+                    "pos": {
+                        "x": 138.96,
+                        "y": 69.036561
+                    },
+                    "uuid": "67a0cfb3-6299-4fb4-ae15-3240897b44a5"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [/RS-485_Transceiver/ISO_TXD] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 130.2,
+                        "y": 68.0
+                    },
+                    "uuid": "21020ac5-a6e2-4030-ace8-1c8ffba6e4f3"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.0354 mm",
+                    "pos": {
+                        "x": 91.0,
+                        "y": 80.935561
+                    },
+                    "uuid": "106374e9-9137-43f2-8c7b-38e5911f3f0a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 2.5000 mm",
+                    "pos": {
+                        "x": 92.0,
+                        "y": 54.560561
+                    },
+                    "uuid": "6bea7e2f-4b19-4259-990e-5beb8acde825"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 2.2000 mm",
+                    "pos": {
+                        "x": 97.6,
+                        "y": 81.960561
+                    },
+                    "uuid": "38ac28af-4225-4e85-a68a-338f1f180987"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.6971 mm",
+                    "pos": {
+                        "x": 100.2,
+                        "y": 69.014674
+                    },
+                    "uuid": "5ec8eaf0-629c-440e-add8-b123308299c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.0179 mm",
+                    "pos": {
+                        "x": 101.012677,
+                        "y": 69.512677
+                    },
+                    "uuid": "15d2bc03-0e70-4b72-b9dd-ea49fd560a07"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.1314 mm",
+                    "pos": {
+                        "x": 102.2,
+                        "y": 61.6
+                    },
+                    "uuid": "d90d7275-d94a-465c-a9c7-04be89aac1cb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 4.3606 mm",
+                    "pos": {
+                        "x": 102.2,
+                        "y": 81.160561
+                    },
+                    "uuid": "44774cae-ef29-4f1e-a0b0-f5f367bf3f36"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.8485 mm",
+                    "pos": {
+                        "x": 102.4,
+                        "y": 57.760561
+                    },
+                    "uuid": "e5e9e5db-7773-443e-a4e5-b8454ffc93d4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 0.2216 mm",
+                    "pos": {
+                        "x": 103.0,
+                        "y": 60.957783
+                    },
+                    "uuid": "8fc58f24-6d90-42b4-bf77-f75ecf4b47e9"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 4.4000 mm",
+                    "pos": {
+                        "x": 107.4,
+                        "y": 53.960561
+                    },
+                    "uuid": "acd0fee0-924a-4f65-8632-c45010fe5192"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 3.3941 mm",
+                    "pos": {
+                        "x": 109.6,
+                        "y": 66.360561
+                    },
+                    "uuid": "b66e39b9-c565-4ab5-8ce3-62faa3e3afd0"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.2000 mm",
+                    "pos": {
+                        "x": 109.8,
+                        "y": 74.160561
+                    },
+                    "uuid": "5b9d6997-a8ba-4f93-bacd-fe8e8395eb02"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.0000 mm",
+                    "pos": {
+                        "x": 110.4,
+                        "y": 55.160561
+                    },
+                    "uuid": "0e462ec2-34d6-4d0e-9ad3-7245a0467063"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.4142 mm",
+                    "pos": {
+                        "x": 109.8,
+                        "y": 58.360561
+                    },
+                    "uuid": "3fe74e26-89de-428c-831e-ffc968ed819b"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [ISO_GND] on GND, length 1.2000 mm",
+                    "pos": {
+                        "x": 117.6,
+                        "y": 57.360561
+                    },
+                    "uuid": "dc7647f5-a9d2-49a0-85aa-355ec0821bcb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [ISO_GND] on GND, length 5.3740 mm",
+                    "pos": {
+                        "x": 118.2,
+                        "y": 75.360561
+                    },
+                    "uuid": "ae272005-a8ee-40d6-9b66-3b9a17c57b55"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [ISO_GND] on GND, length 2.6000 mm",
+                    "pos": {
+                        "x": 123.6,
+                        "y": 52.160561
+                    },
+                    "uuid": "5ebc996b-aad4-4979-a649-93766cd3b1b3"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/RS-485_Transceiver/ISO_RXD] on F.Cu, length 0.1344 mm",
+                    "pos": {
+                        "x": 125.595,
+                        "y": 69.33
+                    },
+                    "uuid": "23526a26-c251-47de-b63c-aa03d95a3349"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(U5-B)] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 126.5,
+                        "y": 59.060561
+                    },
+                    "uuid": "59d1040c-49b5-48f8-9468-a93381ec89b2"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(U5-A)] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 128.5,
+                        "y": 59.060561
+                    },
+                    "uuid": "ff084e7f-d8dd-4050-85ee-cdbf36905b4a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/RS-485_Transceiver/DE] on F.Cu, length 0.8644 mm",
+                    "pos": {
+                        "x": 129.5,
+                        "y": 69.425
+                    },
+                    "uuid": "633d82f8-2a41-464c-99af-5e89f19805b3"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [ISO_GND] on GND, length 4.5606 mm",
+                    "pos": {
+                        "x": 131.6,
+                        "y": 80.8
+                    },
+                    "uuid": "c5bde2fd-b24e-45aa-b87e-a30173fc227d"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [ISO_GND] on GND, length 3.2000 mm",
+                    "pos": {
+                        "x": 138.2,
+                        "y": 53.960561
+                    },
+                    "uuid": "1780b416-e51a-4d85-904e-c577926172af"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [ISO_GND] on GND, length 2.0034 mm",
+                    "pos": {
+                        "x": 138.96,
+                        "y": 69.036561
+                    },
+                    "uuid": "67a0cfb3-6299-4fb4-ae15-3240897b44a5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.4000 mm",
+                    "pos": {
+                        "x": 90.975,
+                        "y": 79.560561
+                    },
+                    "uuid": "a6fa04a5-f340-41ab-a566-81a6358fb296"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.0354 mm",
+                    "pos": {
+                        "x": 91.0,
+                        "y": 80.935561
+                    },
+                    "uuid": "106374e9-9137-43f2-8c7b-38e5911f3f0a"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 2.5000 mm",
+                    "pos": {
+                        "x": 92.0,
+                        "y": 54.560561
+                    },
+                    "uuid": "6bea7e2f-4b19-4259-990e-5beb8acde825"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 0.9394 mm",
+                    "pos": {
+                        "x": 92.0,
+                        "y": 57.060561
+                    },
+                    "uuid": "16d14a14-8ba6-4681-8de0-184c11cd34fb"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.9241 mm",
+                    "pos": {
+                        "x": 92.0,
+                        "y": 58.0
+                    },
+                    "uuid": "146350e0-45c7-4ed2-b2c5-42c65f030654"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 2.4644 mm",
+                    "pos": {
+                        "x": 93.439439,
+                        "y": 79.560561
+                    },
+                    "uuid": "af634990-e894-4f09-b940-5f1880e0b5a7"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 3.0555 mm",
+                    "pos": {
+                        "x": 95.639439,
+                        "y": 73.160561
+                    },
+                    "uuid": "d9f087a8-2c55-4609-9aca-0b88b35fc122"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 3.1113 mm",
+                    "pos": {
+                        "x": 95.639439,
+                        "y": 77.360561
+                    },
+                    "uuid": "164b1af6-798c-484e-8154-8147d5548280"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 4.2000 mm",
+                    "pos": {
+                        "x": 95.639439,
+                        "y": 77.360561
+                    },
+                    "uuid": "99f2c36c-25de-4132-8fc8-fb5ec9502b46"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 2.2000 mm",
+                    "pos": {
+                        "x": 97.6,
+                        "y": 81.960561
+                    },
+                    "uuid": "38ac28af-4225-4e85-a68a-338f1f180987"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.2968 mm",
+                    "pos": {
+                        "x": 97.8,
+                        "y": 68.701444
+                    },
+                    "uuid": "4c6cead2-6621-4e55-ae38-36e36156af55"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.4349 mm",
+                    "pos": {
+                        "x": 97.8,
+                        "y": 70.136296
+                    },
+                    "uuid": "6d59b814-1a72-4488-9304-35c12f50bfc4"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.8637 mm",
+                    "pos": {
+                        "x": 97.8,
+                        "y": 71.0
+                    },
+                    "uuid": "7d8e794a-e022-4f25-bcd2-329224448d35"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.5503 mm",
+                    "pos": {
+                        "x": 98.398941,
+                        "y": 68.102503
+                    },
+                    "uuid": "ca473a82-ad9b-4c70-80de-35aa0c3d012b"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.6149 mm",
+                    "pos": {
+                        "x": 98.658058,
+                        "y": 64.541942
+                    },
+                    "uuid": "5b4f174f-f134-44a8-bd90-fde8c513d5c9"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 3.5606 mm",
+                    "pos": {
+                        "x": 98.658058,
+                        "y": 68.102503
+                    },
+                    "uuid": "0d1c8c0d-7f36-44bd-aab8-ba9bd23b5df9"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.2591 mm",
+                    "pos": {
+                        "x": 98.658058,
+                        "y": 68.102503
+                    },
+                    "uuid": "14c6ac02-be0f-476a-be89-3fd6152536e1"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.1450 mm",
+                    "pos": {
+                        "x": 98.760561,
+                        "y": 68.0
+                    },
+                    "uuid": "cc52a498-f5a9-459d-acc9-4d99fd8697db"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 2.1459 mm",
+                    "pos": {
+                        "x": 99.0,
+                        "y": 70.214674
+                    },
+                    "uuid": "1a2e45ba-fe5c-4707-b6bd-ac14e0d30997"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 3.4000 mm",
+                    "pos": {
+                        "x": 99.0,
+                        "y": 75.760561
+                    },
+                    "uuid": "d3262430-b582-4916-b9cf-783ff4283cee"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 2.6000 mm",
+                    "pos": {
+                        "x": 99.6,
+                        "y": 63.4
+                    },
+                    "uuid": "eb0cb4a3-8ab2-4b26-a8c7-beef20590dea"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.1314 mm",
+                    "pos": {
+                        "x": 99.8,
+                        "y": 81.960561
+                    },
+                    "uuid": "a82b2c61-b009-4017-a1eb-9f94085aae19"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.6971 mm",
+                    "pos": {
+                        "x": 100.2,
+                        "y": 69.014674
+                    },
+                    "uuid": "5ec8eaf0-629c-440e-add8-b123308299c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.5808 mm",
+                    "pos": {
+                        "x": 100.341373,
+                        "y": 68.0
+                    },
+                    "uuid": "85b2009f-dcf9-4d77-9102-ee9bc112fa0c"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 2.2627 mm",
+                    "pos": {
+                        "x": 100.6,
+                        "y": 77.360561
+                    },
+                    "uuid": "1668773b-7f8d-45f2-aec6-4ada1785ce99"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 3.8000 mm",
+                    "pos": {
+                        "x": 100.6,
+                        "y": 81.160561
+                    },
+                    "uuid": "e3a08f22-14c2-47c4-bca6-17d6458643ad"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.9314 mm",
+                    "pos": {
+                        "x": 101.0,
+                        "y": 68.658627
+                    },
+                    "uuid": "13719d0b-471b-449b-99d7-dc3cc14cc138"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.7000 mm",
+                    "pos": {
+                        "x": 101.0,
+                        "y": 69.5
+                    },
+                    "uuid": "140c4ea5-49db-47d2-b56a-12c6d314b713"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.8414 mm",
+                    "pos": {
+                        "x": 101.0,
+                        "y": 69.5
+                    },
+                    "uuid": "d6614d6b-c4de-475b-81a6-553fb3eaf251"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 2.7727 mm",
+                    "pos": {
+                        "x": 101.0,
+                        "y": 71.2
+                    },
+                    "uuid": "08be690e-9a32-446e-ab11-da6718a3049f"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.0179 mm",
+                    "pos": {
+                        "x": 101.012677,
+                        "y": 69.512677
+                    },
+                    "uuid": "15d2bc03-0e70-4b72-b9dd-ea49fd560a07"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.1314 mm",
+                    "pos": {
+                        "x": 102.2,
+                        "y": 61.6
+                    },
+                    "uuid": "d90d7275-d94a-465c-a9c7-04be89aac1cb"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.8000 mm",
+                    "pos": {
+                        "x": 102.2,
+                        "y": 63.4
+                    },
+                    "uuid": "9dd89305-f1ae-4475-8983-b1aa98b32273"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 2.5456 mm",
+                    "pos": {
+                        "x": 102.2,
+                        "y": 76.8
+                    },
+                    "uuid": "1d95c7f5-ec7e-4121-8552-9ffd0ac0d8c5"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 4.3606 mm",
+                    "pos": {
+                        "x": 102.2,
+                        "y": 81.160561
+                    },
+                    "uuid": "44774cae-ef29-4f1e-a0b0-f5f367bf3f36"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.8485 mm",
+                    "pos": {
+                        "x": 102.4,
+                        "y": 57.760561
+                    },
+                    "uuid": "e5e9e5db-7773-443e-a4e5-b8454ffc93d4"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 9.0394 mm",
+                    "pos": {
+                        "x": 102.4,
+                        "y": 59.360561
+                    },
+                    "uuid": "3b24682a-3525-4493-97ce-5cec54d0439e"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 0.6839 mm",
+                    "pos": {
+                        "x": 102.4,
+                        "y": 59.360561
+                    },
+                    "uuid": "d7d92f55-2150-49d7-9b1d-6c71b8c2aee3"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.0701 mm",
+                    "pos": {
+                        "x": 102.4,
+                        "y": 60.044445
+                    },
+                    "uuid": "a06280eb-1521-4f30-bf18-a19309736187"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.0394 mm",
+                    "pos": {
+                        "x": 102.960561,
+                        "y": 73.160561
+                    },
+                    "uuid": "1079fae1-24ba-43e6-b250-36e15014393f"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 4.4000 mm",
+                    "pos": {
+                        "x": 103.0,
+                        "y": 58.360561
+                    },
+                    "uuid": "4e482675-3ebe-44b1-99f4-f8cfd948a542"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 0.2216 mm",
+                    "pos": {
+                        "x": 103.0,
+                        "y": 60.957783
+                    },
+                    "uuid": "8fc58f24-6d90-42b4-bf77-f75ecf4b47e9"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 4.7606 mm",
+                    "pos": {
+                        "x": 103.760561,
+                        "y": 72.360561
+                    },
+                    "uuid": "969de067-2be8-4494-881d-b2d68b245fad"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 4.4106 mm",
+                    "pos": {
+                        "x": 104.0,
+                        "y": 68.75
+                    },
+                    "uuid": "a08692fa-9d3e-42cf-9802-b1478dffcf69"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.8394 mm",
+                    "pos": {
+                        "x": 104.0,
+                        "y": 75.0
+                    },
+                    "uuid": "cd639cc3-d935-41a4-9578-10c12617818d"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.1314 mm",
+                    "pos": {
+                        "x": 104.560561,
+                        "y": 71.560561
+                    },
+                    "uuid": "278f5f01-7254-4a21-8c6c-d3d1450fa0e0"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 2.7711 mm",
+                    "pos": {
+                        "x": 105.116116,
+                        "y": 62.760561
+                    },
+                    "uuid": "7b876b4f-e1b1-4ca8-bfdc-a8c947f4d992"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 2.8000 mm",
+                    "pos": {
+                        "x": 106.8,
+                        "y": 73.160561
+                    },
+                    "uuid": "65b52a9f-8f0e-4402-8ed8-636d6215938d"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 4.0000 mm",
+                    "pos": {
+                        "x": 107.2,
+                        "y": 68.760561
+                    },
+                    "uuid": "ed9c8b6b-b522-47d2-b12d-86d9a769ba55"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 0.5657 mm",
+                    "pos": {
+                        "x": 107.2,
+                        "y": 72.760561
+                    },
+                    "uuid": "0a05acaa-7b9d-47bf-9b3b-59142721d7e1"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.9799 mm",
+                    "pos": {
+                        "x": 107.2,
+                        "y": 72.760561
+                    },
+                    "uuid": "6dba46b8-67b3-4eb2-916b-7cc07f70463e"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 4.4000 mm",
+                    "pos": {
+                        "x": 107.4,
+                        "y": 53.960561
+                    },
+                    "uuid": "acd0fee0-924a-4f65-8632-c45010fe5192"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 3.7606 mm",
+                    "pos": {
+                        "x": 107.4,
+                        "y": 57.8
+                    },
+                    "uuid": "44caf09d-7e97-4334-9108-9e143ea90242"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 2.4000 mm",
+                    "pos": {
+                        "x": 107.4,
+                        "y": 58.360561
+                    },
+                    "uuid": "95e53f23-a149-407d-aaf9-f2147c46d3e3"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 3.7894 mm",
+                    "pos": {
+                        "x": 107.4,
+                        "y": 61.560561
+                    },
+                    "uuid": "3948d1a5-ee58-47a0-9711-e9819d2e8db9"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 4.8083 mm",
+                    "pos": {
+                        "x": 107.4,
+                        "y": 65.35
+                    },
+                    "uuid": "6514adae-8373-400c-aaef-501f21e8ead7"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 3.0000 mm",
+                    "pos": {
+                        "x": 108.6,
+                        "y": 65.8
+                    },
+                    "uuid": "5d8324b7-7f9e-4547-a4d7-22f9dd57785b"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.6971 mm",
+                    "pos": {
+                        "x": 108.6,
+                        "y": 68.8
+                    },
+                    "uuid": "ab507800-c1c3-4f66-9c87-6c2aff925c93"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.2000 mm",
+                    "pos": {
+                        "x": 108.6,
+                        "y": 74.160561
+                    },
+                    "uuid": "ac81564b-fa11-47e0-8f30-8f6b619f0849"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 3.3941 mm",
+                    "pos": {
+                        "x": 109.6,
+                        "y": 66.360561
+                    },
+                    "uuid": "b66e39b9-c565-4ab5-8ce3-62faa3e3afd0"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.4142 mm",
+                    "pos": {
+                        "x": 109.8,
+                        "y": 58.360561
+                    },
+                    "uuid": "3fe74e26-89de-428c-831e-ffc968ed819b"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.5606 mm",
+                    "pos": {
+                        "x": 109.8,
+                        "y": 70.0
+                    },
+                    "uuid": "e5ca9379-74fe-402d-ac83-72e16f928fc2"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 5.2394 mm",
+                    "pos": {
+                        "x": 109.8,
+                        "y": 71.560561
+                    },
+                    "uuid": "c141b754-30a3-4de3-8152-f60865088b2a"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on GND, length 1.2000 mm",
+                    "pos": {
+                        "x": 109.8,
+                        "y": 74.160561
+                    },
+                    "uuid": "5b9d6997-a8ba-4f93-bacd-fe8e8395eb02"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 6.2000 mm",
+                    "pos": {
+                        "x": 110.0,
+                        "y": 56.560561
+                    },
+                    "uuid": "1db9a791-7c72-425c-bc8c-51d6f069fdd4"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 4.8839 mm",
+                    "pos": {
+                        "x": 110.0,
+                        "y": 62.760561
+                    },
+                    "uuid": "149e5a84-466c-45d3-afeb-0dfc9794f1d3"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.6394 mm",
+                    "pos": {
+                        "x": 110.0,
+                        "y": 62.760561
+                    },
+                    "uuid": "ba47e630-73be-4a2c-a57d-6bdd08f3dabe"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.9799 mm",
+                    "pos": {
+                        "x": 110.0,
+                        "y": 64.4
+                    },
+                    "uuid": "bfd75653-0ccf-4c2d-9fe2-79e2a6ff4d2b"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 1.0000 mm",
+                    "pos": {
+                        "x": 110.4,
+                        "y": 55.160561
+                    },
+                    "uuid": "0e462ec2-34d6-4d0e-9ad3-7245a0467063"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Track [<no net>] on PWR, length 0.5657 mm",
+                    "pos": {
+                        "x": 110.4,
+                        "y": 56.160561
+                    },
+                    "uuid": "edb26d6d-5a25-4342-918b-95b133c1fee0"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Rule Area'",
+            "items": [
+                {
+                    "description": "Footprint U5",
+                    "pos": {
+                        "x": 126.475,
+                        "y": 78.635
+                    },
+                    "uuid": "467db2a3-aded-4301-a31d-c4c762bc8533"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Rule Area'",
+            "items": [
+                {
+                    "description": "Footprint U5",
+                    "pos": {
+                        "x": 127.5,
+                        "y": 63.735561
+                    },
+                    "uuid": "97e4d525-8f9d-4fa3-b206-31faf0ff1d82"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Rule Area'",
+            "items": [
+                {
+                    "description": "Footprint U5",
+                    "pos": {
+                        "x": 137.0,
+                        "y": 67.0
+                    },
+                    "uuid": "89505aff-e6ae-4e50-a16e-dafce26bebb4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Rule Area'",
+            "items": [
+                {
+                    "description": "Footprint U5",
+                    "pos": {
+                        "x": 137.0,
+                        "y": 77.525
+                    },
+                    "uuid": "0fa0b8d8-42c1-4612-a7ee-e7177378a7e9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

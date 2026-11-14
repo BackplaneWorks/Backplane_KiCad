@@ -1,0 +1,260 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:41",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue24044.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R3 on F.Cu",
+                    "pos": {
+                        "x": 137.08,
+                        "y": 88.835
+                    },
+                    "uuid": "6538e10e-974d-4730-adb7-3242f509b085"
+                },
+                {
+                    "description": "Pad 2 [GND] of R4 on F.Cu",
+                    "pos": {
+                        "x": 137.08,
+                        "y": 91.345
+                    },
+                    "uuid": "1ef126a4-7174-4efa-9f6a-8bcc06947947"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 143.09,
+                        "y": 88.835
+                    },
+                    "uuid": "ffa0ad76-504d-4c71-8f95-27de38ba2d1a"
+                },
+                {
+                    "description": "Pad 2 [GND] of R3 on F.Cu",
+                    "pos": {
+                        "x": 137.08,
+                        "y": 88.835
+                    },
+                    "uuid": "6538e10e-974d-4730-adb7-3242f509b085"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R2 on F.Cu",
+                    "pos": {
+                        "x": 143.09,
+                        "y": 91.345
+                    },
+                    "uuid": "db3e63a0-9905-4281-8457-147332d833d9"
+                },
+                {
+                    "description": "Pad 2 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 143.09,
+                        "y": 88.835
+                    },
+                    "uuid": "ffa0ad76-504d-4c71-8f95-27de38ba2d1a"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "34ad480d-bf4b-42ce-a95b-10741e6f8887"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R4",
+                    "pos": {
+                        "x": 136.255,
+                        "y": 89.915
+                    },
+                    "uuid": "f6461bdf-2b83-4efe-8671-17ae91394092"
+                },
+                {
+                    "description": "Pad 1 [/Channels 2-3/Ch2] of R3 on F.Cu",
+                    "pos": {
+                        "x": 135.43,
+                        "y": 88.835
+                    },
+                    "uuid": "e73bcd2b-7e78-4b93-9f1e-7c7c6ed6f101"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R4",
+                    "pos": {
+                        "x": 136.255,
+                        "y": 89.915
+                    },
+                    "uuid": "f6461bdf-2b83-4efe-8671-17ae91394092"
+                },
+                {
+                    "description": "Pad 2 [GND] of R3 on F.Cu",
+                    "pos": {
+                        "x": 137.08,
+                        "y": 88.835
+                    },
+                    "uuid": "6538e10e-974d-4730-adb7-3242f509b085"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 142.265,
+                        "y": 89.915
+                    },
+                    "uuid": "7fdf3ce5-71c6-4155-b154-8d9d108646a7"
+                },
+                {
+                    "description": "Pad 1 [/Channels 0-1/Ch0] of R1 on F.Cu",
+                    "pos": {
+                        "x": 141.44,
+                        "y": 88.835
+                    },
+                    "uuid": "32f22cc1-0782-41dc-8f6f-3c07e900eb67"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 142.265,
+                        "y": 89.915
+                    },
+                    "uuid": "7fdf3ce5-71c6-4155-b154-8d9d108646a7"
+                },
+                {
+                    "description": "Pad 2 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 143.09,
+                        "y": 88.835
+                    },
+                    "uuid": "ffa0ad76-504d-4c71-8f95-27de38ba2d1a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R3 on F.Silkscreen",
+                    "pos": {
+                        "x": 136.017742,
+                        "y": 89.3575
+                    },
+                    "uuid": "8fcb16b2-2647-4efb-aed6-577153e938c9"
+                },
+                {
+                    "description": "Reference field of R4",
+                    "pos": {
+                        "x": 136.255,
+                        "y": 89.915
+                    },
+                    "uuid": "f6461bdf-2b83-4efe-8671-17ae91394092"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R1 on F.Silkscreen",
+                    "pos": {
+                        "x": 142.027742,
+                        "y": 89.3575
+                    },
+                    "uuid": "39e45d48-8181-4c9b-acba-cb73a25187c7"
+                },
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 142.265,
+                        "y": 89.915
+                    },
+                    "uuid": "7fdf3ce5-71c6-4155-b154-8d9d108646a7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

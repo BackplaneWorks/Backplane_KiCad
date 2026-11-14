@@ -1,0 +1,121 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:55",
+    "ignored_checks": [
+        {
+            "description": "Board edge clearance violation",
+            "key": "copper_edge_clearance"
+        },
+        {
+            "description": "Drilled hole too close to other hole",
+            "key": "hole_to_hole"
+        },
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "key": "silk_edge_clearance"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue19325.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0200 mm)",
+            "items": [
+                {
+                    "description": "PTH pad MH [<no net>] of REF**",
+                    "pos": {
+                        "x": 54.805,
+                        "y": 142.8
+                    },
+                    "uuid": "4ccbf1d2-81ec-4e07-b4d2-142e278be757"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0200 mm)",
+            "items": [
+                {
+                    "description": "PTH pad MH [<no net>] of REF**",
+                    "pos": {
+                        "x": 55.805,
+                        "y": 144.85
+                    },
+                    "uuid": "906962f6-d763-4538-b561-5883603cce0e"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0484 mm)",
+            "items": [
+                {
+                    "description": "PTH pad MH [<no net>] of REF**",
+                    "pos": {
+                        "x": 58.635186,
+                        "y": 145.229851
+                    },
+                    "uuid": "0e564731-c5c1-4cd7-8927-07c00eab1591"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0121 mm)",
+            "items": [
+                {
+                    "description": "PTH pad MH [<no net>] of REF**",
+                    "pos": {
+                        "x": 59.375,
+                        "y": 146.4
+                    },
+                    "uuid": "3e4f0059-2d3a-432a-a90d-790c645de9b1"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        }
+    ]
+}

@@ -1,0 +1,665 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:00",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue23550.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2957 mm)",
+            "items": [
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 3.5356 mm",
+                    "pos": {
+                        "x": 159.5975,
+                        "y": 69.839528
+                    },
+                    "uuid": "5ca809fb-b7f4-4a3c-b239-272a2b12320f"
+                },
+                {
+                    "description": "Track [/Va_N] on In9.Cu, length 4.5786 mm",
+                    "pos": {
+                        "x": 159.93,
+                        "y": 61.525
+                    },
+                    "uuid": "a06af05d-a93c-4df1-9ef4-f829ed102dd2"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2420 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [/Va_P] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 159.58,
+                        "y": 66.10358
+                    },
+                    "uuid": "458e3bc4-58cf-40eb-ac8f-5f63a6c60fd8"
+                },
+                {
+                    "description": "Track (arc) [/Va_N] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 159.912495,
+                        "y": 66.303919
+                    },
+                    "uuid": "6cc79d02-3bf9-4c57-bc62-3c1a956f4b20"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1693 mm)",
+            "items": [
+                {
+                    "description": "Track [/Va_N] on In9.Cu, length 3.4466 mm",
+                    "pos": {
+                        "x": 159.8125,
+                        "y": 69.750472
+                    },
+                    "uuid": "5bdcd335-ae50-4943-b1b7-6f257eb698e9"
+                },
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 0.0833 mm",
+                    "pos": {
+                        "x": 159.56821,
+                        "y": 66.23321
+                    },
+                    "uuid": "db09cfe7-7272-4e69-9436-402b25391d3b"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2385 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [/Va_N] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 159.912495,
+                        "y": 66.303919
+                    },
+                    "uuid": "6cc79d02-3bf9-4c57-bc62-3c1a956f4b20"
+                },
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 0.0833 mm",
+                    "pos": {
+                        "x": 159.56821,
+                        "y": 66.23321
+                    },
+                    "uuid": "db09cfe7-7272-4e69-9436-402b25391d3b"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2841 mm)",
+            "items": [
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 4.5786 mm",
+                    "pos": {
+                        "x": 159.48,
+                        "y": 61.525
+                    },
+                    "uuid": "3c65da87-2f9a-4b6f-9baa-49ed8157c34b"
+                },
+                {
+                    "description": "Track (arc) [/Va_N] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 159.912495,
+                        "y": 66.303919
+                    },
+                    "uuid": "6cc79d02-3bf9-4c57-bc62-3c1a956f4b20"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2918 mm)",
+            "items": [
+                {
+                    "description": "Track [/Va_N] on In9.Cu, length 0.0833 mm",
+                    "pos": {
+                        "x": 159.84179,
+                        "y": 66.23321
+                    },
+                    "uuid": "2c126690-ccd7-4def-a374-3edcab761d8d"
+                },
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 4.5786 mm",
+                    "pos": {
+                        "x": 159.48,
+                        "y": 61.525
+                    },
+                    "uuid": "3c65da87-2f9a-4b6f-9baa-49ed8157c34b"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 0.4921 mm",
+                    "pos": {
+                        "x": 159.945472,
+                        "y": 70.1875
+                    },
+                    "uuid": "737fa909-2c41-4423-a6b7-060085d4d230"
+                },
+                {
+                    "description": "Track [/Va_N] on In9.Cu, length 0.8730 mm",
+                    "pos": {
+                        "x": 160.9075,
+                        "y": 69.9725
+                    },
+                    "uuid": "7cf27f5d-78ef-4ef3-a08b-955acc963256"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2527 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [/Va_N] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 159.83,
+                        "y": 66.10358
+                    },
+                    "uuid": "d55d8fc8-a4d7-4537-b204-5d7fc01a5bcb"
+                },
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 0.0833 mm",
+                    "pos": {
+                        "x": 159.56821,
+                        "y": 66.23321
+                    },
+                    "uuid": "db09cfe7-7272-4e69-9436-402b25391d3b"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2918 mm)",
+            "items": [
+                {
+                    "description": "Track [/Va_N] on In9.Cu, length 4.5786 mm",
+                    "pos": {
+                        "x": 159.93,
+                        "y": 61.525
+                    },
+                    "uuid": "a06af05d-a93c-4df1-9ef4-f829ed102dd2"
+                },
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 0.0833 mm",
+                    "pos": {
+                        "x": 159.56821,
+                        "y": 66.23321
+                    },
+                    "uuid": "db09cfe7-7272-4e69-9436-402b25391d3b"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Va_N] on In9.Cu, length 0.3140 mm",
+                    "pos": {
+                        "x": 160.034528,
+                        "y": 69.9725
+                    },
+                    "uuid": "65d91693-f57a-4931-a3ba-091e2510482c"
+                },
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 0.4921 mm",
+                    "pos": {
+                        "x": 159.945472,
+                        "y": 70.1875
+                    },
+                    "uuid": "737fa909-2c41-4423-a6b7-060085d4d230"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 0.9620 mm",
+                    "pos": {
+                        "x": 160.9075,
+                        "y": 70.1875
+                    },
+                    "uuid": "131b944d-7241-47ca-b5c2-f6ebb3acee93"
+                },
+                {
+                    "description": "Track [/Va_N] on In9.Cu, length 0.3140 mm",
+                    "pos": {
+                        "x": 160.034528,
+                        "y": 69.9725
+                    },
+                    "uuid": "65d91693-f57a-4931-a3ba-091e2510482c"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Va_N] on In9.Cu, length 0.5692 mm",
+                    "pos": {
+                        "x": 161.31,
+                        "y": 69.57
+                    },
+                    "uuid": "6a15d621-c0af-4543-85b7-08bff9142c1d"
+                },
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 0.5692 mm",
+                    "pos": {
+                        "x": 161.31,
+                        "y": 70.59
+                    },
+                    "uuid": "bf1ac4d9-dd1c-4c59-bcfd-452eebe574d3"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Va_N] on In9.Cu, length 0.8730 mm",
+                    "pos": {
+                        "x": 160.9075,
+                        "y": 69.9725
+                    },
+                    "uuid": "7cf27f5d-78ef-4ef3-a08b-955acc963256"
+                },
+                {
+                    "description": "Track [/Va_P] on In9.Cu, length 0.5692 mm",
+                    "pos": {
+                        "x": 161.31,
+                        "y": 70.59
+                    },
+                    "uuid": "bf1ac4d9-dd1c-4c59-bcfd-452eebe574d3"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2448 mm)",
+            "items": [
+                {
+                    "description": "Track [/Vb_N] on In9.Cu, length 3.4466 mm",
+                    "pos": {
+                        "x": 174.0275,
+                        "y": 66.128921
+                    },
+                    "uuid": "dbfb165b-6da3-462f-9731-f23e3a5dbc26"
+                },
+                {
+                    "description": "Track (arc) [/Vb_P] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 173.795,
+                        "y": 65.92858
+                    },
+                    "uuid": "de563e02-e4c7-4dc4-9f35-f073da9323c1"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2916 mm)",
+            "items": [
+                {
+                    "description": "Track [/Vb_N] on In9.Cu, length 0.0536 mm",
+                    "pos": {
+                        "x": 174.145,
+                        "y": 65.875
+                    },
+                    "uuid": "6b01e62b-7ecc-45f9-af0d-c7afbe26d37f"
+                },
+                {
+                    "description": "Track (arc) [/Vb_P] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 173.712505,
+                        "y": 66.128919
+                    },
+                    "uuid": "fe60824b-548b-40c5-a7c4-47b509237a78"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Vb_P] on In9.Cu, length 3.5356 mm",
+                    "pos": {
+                        "x": 173.8125,
+                        "y": 69.664528
+                    },
+                    "uuid": "d2c3ce61-8b75-4209-b41d-f94ce827441d"
+                },
+                {
+                    "description": "Track [/Vb_N] on In9.Cu, length 3.4466 mm",
+                    "pos": {
+                        "x": 174.0275,
+                        "y": 66.128921
+                    },
+                    "uuid": "dbfb165b-6da3-462f-9731-f23e3a5dbc26"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2385 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [/Vb_N] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 174.045,
+                        "y": 65.92858
+                    },
+                    "uuid": "cb4106ae-9c6e-432c-a596-8a2bdbe8bc9a"
+                },
+                {
+                    "description": "Track (arc) [/Vb_P] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 173.712505,
+                        "y": 66.128919
+                    },
+                    "uuid": "fe60824b-548b-40c5-a7c4-47b509237a78"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Vb_N] on In9.Cu, length 0.3140 mm",
+                    "pos": {
+                        "x": 174.0275,
+                        "y": 69.575472
+                    },
+                    "uuid": "52f86dc5-f2e7-44f3-ba35-b3a4f0418642"
+                },
+                {
+                    "description": "Track [/Vb_P] on In9.Cu, length 3.5356 mm",
+                    "pos": {
+                        "x": 173.8125,
+                        "y": 69.664528
+                    },
+                    "uuid": "d2c3ce61-8b75-4209-b41d-f94ce827441d"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2385 mm)",
+            "items": [
+                {
+                    "description": "Track [/Vb_P] on In9.Cu, length 0.0833 mm",
+                    "pos": {
+                        "x": 173.78321,
+                        "y": 66.05821
+                    },
+                    "uuid": "0259c49b-94c6-45fd-b9fd-9a79435a9b95"
+                },
+                {
+                    "description": "Track (arc) [/Vb_N] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 174.127495,
+                        "y": 66.128919
+                    },
+                    "uuid": "1255bb84-487f-457b-8ec3-058d86c0fc33"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2916 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [/Vb_N] on In9.Cu, length 0.0785 mm",
+                    "pos": {
+                        "x": 174.127495,
+                        "y": 66.128919
+                    },
+                    "uuid": "1255bb84-487f-457b-8ec3-058d86c0fc33"
+                },
+                {
+                    "description": "Track [/Vb_P] on In9.Cu, length 0.0536 mm",
+                    "pos": {
+                        "x": 173.695,
+                        "y": 65.875
+                    },
+                    "uuid": "8fdacebb-a1a2-4002-a554-f8998ef76d26"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.2993 mm)",
+            "items": [
+                {
+                    "description": "Track [/Vb_N] on In9.Cu, length 0.0833 mm",
+                    "pos": {
+                        "x": 174.115711,
+                        "y": 65.999289
+                    },
+                    "uuid": "780c9a47-ab0a-462e-af9c-8a11278ee7eb"
+                },
+                {
+                    "description": "Track [/Vb_P] on In9.Cu, length 0.0536 mm",
+                    "pos": {
+                        "x": 173.695,
+                        "y": 65.875
+                    },
+                    "uuid": "8fdacebb-a1a2-4002-a554-f8998ef76d26"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Vb_N] on In9.Cu, length 0.8730 mm",
+                    "pos": {
+                        "x": 174.249528,
+                        "y": 69.7975
+                    },
+                    "uuid": "cd0f81e7-956e-41e2-b50b-80cb2eb498bc"
+                },
+                {
+                    "description": "Track [/Vb_P] on In9.Cu, length 0.4921 mm",
+                    "pos": {
+                        "x": 174.160472,
+                        "y": 70.0125
+                    },
+                    "uuid": "f2cd1c2b-cea7-4c39-aa3e-bd575dd10444"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Vb_P] on In9.Cu, length 0.9620 mm",
+                    "pos": {
+                        "x": 175.1225,
+                        "y": 70.0125
+                    },
+                    "uuid": "3b0c739b-660c-45e7-b72d-3fa4c9542d85"
+                },
+                {
+                    "description": "Track [/Vb_N] on In9.Cu, length 0.3140 mm",
+                    "pos": {
+                        "x": 174.0275,
+                        "y": 69.575472
+                    },
+                    "uuid": "52f86dc5-f2e7-44f3-ba35-b3a4f0418642"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Vb_N] on In9.Cu, length 0.5692 mm",
+                    "pos": {
+                        "x": 175.1225,
+                        "y": 69.7975
+                    },
+                    "uuid": "7ea1e266-74b0-4244-bfdf-4940817ff6b4"
+                },
+                {
+                    "description": "Track [/Vb_P] on In9.Cu, length 0.5692 mm",
+                    "pos": {
+                        "x": 175.525,
+                        "y": 70.415
+                    },
+                    "uuid": "8b6802ad-acd4-4b4a-9c47-41e02dc0028b"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'DP' clearance 0.3000 mm; actual 0.1300 mm)",
+            "items": [
+                {
+                    "description": "Track [/Vb_P] on In9.Cu, length 0.5692 mm",
+                    "pos": {
+                        "x": 175.525,
+                        "y": 70.415
+                    },
+                    "uuid": "8b6802ad-acd4-4b4a-9c47-41e02dc0028b"
+                },
+                {
+                    "description": "Track [/Vb_N] on In9.Cu, length 0.8730 mm",
+                    "pos": {
+                        "x": 174.249528,
+                        "y": 69.7975
+                    },
+                    "uuid": "cd0f81e7-956e-41e2-b50b-80cb2eb498bc"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "782179a5-30e3-41d6-9b31-3d4d511e1d76"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In9.Cu, length 1.2540 mm",
+                    "pos": {
+                        "x": 345.634999,
+                        "y": 184.254817
+                    },
+                    "uuid": "a5ce981b-98b9-4386-9035-22156c13941b"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [<no net>] on In9.Cu, length 0.2323 mm",
+                    "pos": {
+                        "x": 345.487099,
+                        "y": 185.150616
+                    },
+                    "uuid": "1f063b88-6c67-465d-8479-918faf311cb3"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        }
+    ]
+}

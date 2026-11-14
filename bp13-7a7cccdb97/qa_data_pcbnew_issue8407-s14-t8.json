@@ -1,0 +1,687 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:16",
+    "ignored_checks": [
+        {
+            "description": "Board edge clearance violation",
+            "key": "copper_edge_clearance"
+        },
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "key": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        },
+        {
+            "description": "Footprint not found in libraries",
+            "key": "lib_footprint_issues"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue8407.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 2 [USER1_N] of J4",
+                    "pos": {
+                        "x": 11.146,
+                        "y": -36.524
+                    },
+                    "uuid": "4cac0152-c4a8-4395-b818-45db7ef0c450"
+                },
+                {
+                    "description": "PTH pad 8 [USER1_N] of J11",
+                    "pos": {
+                        "x": 62.896,
+                        "y": -94.202
+                    },
+                    "uuid": "521628a7-b7d5-4c8d-9d63-4582415cbd12"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [USER1_P] of J4",
+                    "pos": {
+                        "x": 12.346,
+                        "y": -36.524
+                    },
+                    "uuid": "122d8a15-f4ba-46e1-93bd-7ab781cb0c8b"
+                },
+                {
+                    "description": "PTH pad 7 [USER1_P] of J11",
+                    "pos": {
+                        "x": 62.896,
+                        "y": -92.202
+                    },
+                    "uuid": "1e624997-6264-40b9-bac0-a1f20aab4daa"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [CLK_P] on B.Cu, length 12.6180 mm",
+                    "pos": {
+                        "x": 30.48,
+                        "y": -92.977
+                    },
+                    "uuid": "47b8d31e-12b7-4c54-8753-7d134df1944f"
+                },
+                {
+                    "description": "Track [CLK_P] on B.Cu, length 21.8520 mm",
+                    "pos": {
+                        "x": 11.971001,
+                        "y": -76.676801
+                    },
+                    "uuid": "5de03374-3f2f-4e90-8bc1-e924136e095d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 4 [TRIG_N] of J11",
+                    "pos": {
+                        "x": 58.896,
+                        "y": -94.202
+                    },
+                    "uuid": "c5ffe5c8-790e-4cbf-827e-59e98c310b0f"
+                },
+                {
+                    "description": "Track [TRIG_N] on B.Cu, length 5.6172 mm",
+                    "pos": {
+                        "x": 30.7678,
+                        "y": -88.363
+                    },
+                    "uuid": "993c9331-3456-466a-a2e7-ab1112b2a0e4"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 3 [TRIG_P] of J11",
+                    "pos": {
+                        "x": 58.896,
+                        "y": -92.202
+                    },
+                    "uuid": "f7b47244-9542-4639-a103-799b8dfaf321"
+                },
+                {
+                    "description": "Track [TRIG_P] on B.Cu, length 5.4308 mm",
+                    "pos": {
+                        "x": 30.9542,
+                        "y": -87.913
+                    },
+                    "uuid": "9629862d-9ad9-4488-bcf9-4fc72975ea93"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 6 [TIMES_N] of J11",
+                    "pos": {
+                        "x": 60.896,
+                        "y": -94.202
+                    },
+                    "uuid": "bd3cf8c3-5b82-4a22-9393-0313dbd1de9a"
+                },
+                {
+                    "description": "Track [TIMES_N] on B.Cu, length 10.6797 mm",
+                    "pos": {
+                        "x": 31.7838,
+                        "y": -84.045
+                    },
+                    "uuid": "7058f4f6-d9b6-4899-b57d-6d196a3155c9"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 5 [TIMES_P] of J11",
+                    "pos": {
+                        "x": 60.896,
+                        "y": -92.202
+                    },
+                    "uuid": "832e4442-f944-4b87-9333-874c45929c10"
+                },
+                {
+                    "description": "Track [TIMES_P] on B.Cu, length 10.4933 mm",
+                    "pos": {
+                        "x": 31.9702,
+                        "y": -83.595
+                    },
+                    "uuid": "52c6b271-df8b-4bf6-84cb-cfeeff8a919d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [CLK_P] on B.Cu, length 21.8520 mm",
+                    "pos": {
+                        "x": 11.971001,
+                        "y": -76.676801
+                    },
+                    "uuid": "5de03374-3f2f-4e90-8bc1-e924136e095d"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [CLK_P] on B.Cu, length 12.6180 mm",
+                    "pos": {
+                        "x": 30.48,
+                        "y": -92.977
+                    },
+                    "uuid": "47b8d31e-12b7-4c54-8753-7d134df1944f"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [TRIG_N] on B.Cu, length 5.6172 mm",
+                    "pos": {
+                        "x": 30.7678,
+                        "y": -88.363
+                    },
+                    "uuid": "993c9331-3456-466a-a2e7-ab1112b2a0e4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [TRIG_P] on B.Cu, length 5.4308 mm",
+                    "pos": {
+                        "x": 30.9542,
+                        "y": -87.913
+                    },
+                    "uuid": "9629862d-9ad9-4488-bcf9-4fc72975ea93"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [TIMES_N] on B.Cu, length 10.6797 mm",
+                    "pos": {
+                        "x": 31.7838,
+                        "y": -84.045
+                    },
+                    "uuid": "7058f4f6-d9b6-4899-b57d-6d196a3155c9"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [TIMES_P] on B.Cu, length 10.4933 mm",
+                    "pos": {
+                        "x": 31.9702,
+                        "y": -83.595
+                    },
+                    "uuid": "52c6b271-df8b-4bf6-84cb-cfeeff8a919d"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J1 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -77.524
+                    },
+                    "uuid": "a42d2d74-34ee-4bd5-ba39-6d072e01fa2f"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J1 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -70.524
+                    },
+                    "uuid": "cd72177b-f155-4793-91af-c83ae130dea1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J2 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -65.024
+                    },
+                    "uuid": "95f8e236-4770-423f-8e7b-d99af1a0636d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J2 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -58.024
+                    },
+                    "uuid": "07b38e37-fef9-49fa-985c-2ae9d0740a9d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J3 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -52.524
+                    },
+                    "uuid": "a60c9efb-1c2e-43c2-8319-75701f86af2d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J3 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -45.524
+                    },
+                    "uuid": "256b9b36-7f73-45da-9824-ca66f7a656b3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -40.024
+                    },
+                    "uuid": "dfdc3d4f-3301-44b5-a354-267de7274450"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -33.024
+                    },
+                    "uuid": "c6926dca-d193-4dc9-84bc-874409b781ec"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J5 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -27.524
+                    },
+                    "uuid": "0006858f-d07c-4061-8355-25b416fd7874"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J5 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -20.524
+                    },
+                    "uuid": "a9ffc10a-8972-4117-ac03-1fc84f89e3e6"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J6 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -15.024
+                    },
+                    "uuid": "9e71733c-ac8c-4f23-9984-d639937799e2"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 0.127,
+                        "y": -81.28
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8f214d"
+                },
+                {
+                    "description": "Segment of J6 on F.Silkscreen",
+                    "pos": {
+                        "x": 15.246,
+                        "y": -8.024
+                    },
+                    "uuid": "44f2052d-4bee-4968-b58c-a34771215427"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 119.38,
+                        "y": -74.93
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f93663b"
+                },
+                {
+                    "description": "Reference field of J10",
+                    "pos": {
+                        "x": 119.748,
+                        "y": -88.495
+                    },
+                    "uuid": "f9150c7f-0cab-4056-a3ad-f0077aeb48bc"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R72",
+                    "pos": {
+                        "x": 8.509,
+                        "y": -91.7195
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8879ec"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R71",
+                    "pos": {
+                        "x": 10.668,
+                        "y": -5.8675
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f8879db"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'WEEE-Logo_4.2x6mm_SilkScreen' does not match copy in library 'Symbol'",
+            "items": [
+                {
+                    "description": "Footprint FID3",
+                    "pos": {
+                        "x": 65.786,
+                        "y": -49.784
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f97fd17"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R73",
+                    "pos": {
+                        "x": 98.298,
+                        "y": -77.597
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f918777"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'SOT-23' does not match copy in library 'Package_TO_SOT_SMD'",
+            "items": [
+                {
+                    "description": "Footprint Q1",
+                    "pos": {
+                        "x": 98.536,
+                        "y": -80.198
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005f9185e6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

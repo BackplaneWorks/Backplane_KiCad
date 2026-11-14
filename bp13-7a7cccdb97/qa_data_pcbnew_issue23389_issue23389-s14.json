@@ -1,0 +1,164 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:59",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "key": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "key": "silk_edge_clearance"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue23389.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Creepage violation (rule 'Hlida povrchovou vzdalenost sitovych spoju mezi sebou' creepage 5.0000 mm; actual 4.4694 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 2 [Net-(U1--V(CAP))] of C4",
+                    "pos": {
+                        "x": 121.52,
+                        "y": 65.637349
+                    },
+                    "uuid": "ce91d3a0-d75d-4f82-b5b8-32a928bb4b12"
+                },
+                {
+                    "description": "PTH pad 1 [Net-(U1-+V(CAP))] of C4",
+                    "pos": {
+                        "x": 121.52,
+                        "y": 62.137349
+                    },
+                    "uuid": "2e81dc4a-dbd6-4765-a6d1-811f6cd2a03e"
+                }
+            ],
+            "severity": "error",
+            "type": "creepage"
+        },
+        {
+            "description": "Creepage violation (rule 'Hlida povrchovou vzdalenost sitovych spoju mezi sebou' creepage 5.0000 mm; actual 3.1429 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(U1--V(CAP))] on B.Cu, length 1.0220 mm",
+                    "pos": {
+                        "x": 123.86,
+                        "y": 66.36
+                    },
+                    "uuid": "8fea2d62-67e0-4057-9343-57cc93afb7c2"
+                },
+                {
+                    "description": "Track [Net-(U1-+V(CAP))] on B.Cu, length 1.1597 mm",
+                    "pos": {
+                        "x": 124.02,
+                        "y": 61.28
+                    },
+                    "uuid": "ce5597d2-96c9-4cbc-8f96-42b60e3d920d"
+                }
+            ],
+            "severity": "error",
+            "type": "creepage"
+        },
+        {
+            "description": "Creepage violation (rule 'Hlida povrchovou vzdalenost sitovych spoju mezi sebou' creepage 5.0000 mm; actual 2.0000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 2 [Net-(J1-Pin_2)] of J1",
+                    "pos": {
+                        "x": 127.8,
+                        "y": 48.0
+                    },
+                    "uuid": "07b14305-0720-4e4b-94f5-9102027f735a"
+                },
+                {
+                    "description": "PTH pad 1 [Net-(J1-Pin_1)] of J1",
+                    "pos": {
+                        "x": 127.8,
+                        "y": 53.0
+                    },
+                    "uuid": "f4afc4c4-8ae2-403a-94f5-6dd0b121ceef"
+                }
+            ],
+            "severity": "error",
+            "type": "creepage"
+        },
+        {
+            "description": "Creepage violation (rule 'Hlida povrchovou vzdalenost sitovych spoju mezi sebou' creepage 5.0000 mm; actual 3.0800 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 5 [Net-(U1-+V(CAP))] of U1",
+                    "pos": {
+                        "x": 135.57,
+                        "y": 61.28
+                    },
+                    "uuid": "d2bcb611-19ff-4fa5-8be9-1d59b549b8b7"
+                },
+                {
+                    "description": "PTH pad 3 [Net-(J1-Pin_1)] of U1",
+                    "pos": {
+                        "x": 135.57,
+                        "y": 56.2
+                    },
+                    "uuid": "588b2311-8e2a-451a-ab8e-47242c556b94"
+                }
+            ],
+            "severity": "error",
+            "type": "creepage"
+        },
+        {
+            "description": "Footprint 'CP_Radial_D8.0mm_P3.50mm' does not match copy in library 'Capacitor_THT'",
+            "items": [
+                {
+                    "description": "Footprint C4",
+                    "pos": {
+                        "x": 121.52,
+                        "y": 62.137349
+                    },
+                    "uuid": "a34a3371-7d2e-4c04-b138-bdb0e8535b1f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

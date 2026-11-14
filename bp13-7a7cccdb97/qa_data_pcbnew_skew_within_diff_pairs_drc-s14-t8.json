@@ -1,0 +1,324 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:31",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "skew_within_diff_pairs_drc.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Skew between tracks out of range (rule 'diff_skew' max skew 0.0762 mm; actual -3.4829 mm; target net length 22.4429 mm (from /NET_3P); actual 18.9600 mm)",
+            "items": [
+                {
+                    "description": "Pad 1 [/NET_3N] of R8 on F.Cu",
+                    "pos": {
+                        "x": 94.48,
+                        "y": 87.89
+                    },
+                    "uuid": "d3d83620-7599-4c55-944a-36f04fd653d7"
+                }
+            ],
+            "severity": "error",
+            "type": "skew_out_of_range"
+        },
+        {
+            "description": "Skew between tracks out of range (rule 'diff_skew' max skew 0.0762 mm; actual -8.4277 mm; target net length 21.3215 mm (from /NET_4-); actual 12.8938 mm)",
+            "items": [
+                {
+                    "description": "Pad 1 [/NET_4+] of R11 on F.Cu",
+                    "pos": {
+                        "x": 88.31,
+                        "y": 92.62
+                    },
+                    "uuid": "b6b80ed6-2599-448b-8b90-8acd42877c3a"
+                }
+            ],
+            "severity": "error",
+            "type": "skew_out_of_range"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 74.56,
+                        "y": 76.56
+                    },
+                    "uuid": "c407e12e-a8f9-4d73-bca8-0e5cde8075fb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 74.77,
+                        "y": 78.59
+                    },
+                    "uuid": "43df1054-f899-44d2-b1e4-db453bde8797"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R5",
+                    "pos": {
+                        "x": 74.97,
+                        "y": 84.86
+                    },
+                    "uuid": "3cb489d0-f8a8-4d0b-88e5-cd05a102d751"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R6",
+                    "pos": {
+                        "x": 75.01,
+                        "y": 87.89
+                    },
+                    "uuid": "c030379f-3198-4c8a-8f00-858affe7ea91"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R9",
+                    "pos": {
+                        "x": 75.04,
+                        "y": 92.67
+                    },
+                    "uuid": "ddb4896f-9b4b-4405-ae5a-df730b8d223d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R10",
+                    "pos": {
+                        "x": 75.04,
+                        "y": 96.7
+                    },
+                    "uuid": "941f0d4d-c135-48e7-9cfd-3a78d3074a17"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R11",
+                    "pos": {
+                        "x": 88.82,
+                        "y": 92.62
+                    },
+                    "uuid": "c1d321a6-0c83-4bfe-ae24-b444a6a39234"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 94.34,
+                        "y": 76.63
+                    },
+                    "uuid": "5668a7dd-961f-494c-8624-88df12064274"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R8",
+                    "pos": {
+                        "x": 94.99,
+                        "y": 87.89
+                    },
+                    "uuid": "3692143b-e392-4d3f-9306-4533d4eeeb19"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R12",
+                    "pos": {
+                        "x": 97.36,
+                        "y": 96.59
+                    },
+                    "uuid": "cc0a12f3-e2c1-4813-a532-d8f495d1053b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 98.25,
+                        "y": 78.66
+                    },
+                    "uuid": "2689e199-a3e3-4f73-b90d-c2bf3493737a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0402_1005Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R7",
+                    "pos": {
+                        "x": 98.43,
+                        "y": 84.9
+                    },
+                    "uuid": "5096cbec-7931-428f-a0e7-b5871b3e0d9e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 74.77,
+                        "y": 77.42
+                    },
+                    "uuid": "c052616e-f433-48e4-989c-8abaf3b77f5f"
+                },
+                {
+                    "description": "Pad 1 [unconnected-(R1-Pad1)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 74.05,
+                        "y": 76.56
+                    },
+                    "uuid": "5fb15c89-c3f1-4c7d-bb8d-3099f8da5cfc"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 74.77,
+                        "y": 77.42
+                    },
+                    "uuid": "c052616e-f433-48e4-989c-8abaf3b77f5f"
+                },
+                {
+                    "description": "Pad 2 [/NET_1] of R1 on F.Cu",
+                    "pos": {
+                        "x": 75.07,
+                        "y": 76.56
+                    },
+                    "uuid": "8accb081-2125-4710-9a24-cdab239b0f6e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R1 on F.Silkscreen",
+                    "pos": {
+                        "x": 74.406359,
+                        "y": 76.94
+                    },
+                    "uuid": "38949ed8-66c5-4186-b682-6b5f0ff4a317"
+                },
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 74.77,
+                        "y": 77.42
+                    },
+                    "uuid": "c052616e-f433-48e4-989c-8abaf3b77f5f"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

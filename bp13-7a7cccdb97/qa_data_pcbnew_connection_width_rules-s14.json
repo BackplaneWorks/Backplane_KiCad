@@ -1,0 +1,114 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:45",
+    "ignored_checks": [
+        {
+            "description": "Track has unconnected end",
+            "key": "track_dangling"
+        },
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "connection_width_rules.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Copper connection too narrow (rule 'high_current_area' minimum connection width 0.1600 mm; actual 0.1454 mm) (F.Cu)",
+            "items": [
+                {
+                    "description": "Track [net_1] on F.Cu, length 6.4262 mm",
+                    "pos": {
+                        "x": 112.5474,
+                        "y": 77.5716
+                    },
+                    "uuid": "07a05dc9-fd0c-4bac-8cfe-73f661e50f58"
+                },
+                {
+                    "description": "Track [net_1] on F.Cu, length 3.9828 mm",
+                    "pos": {
+                        "x": 112.7556,
+                        "y": 77.5716
+                    },
+                    "uuid": "b9c8bd88-3577-41fd-b8a3-f84c3ec54539"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.1200 mm; actual 0.1014 mm) (F.Cu)",
+            "items": [
+                {
+                    "description": "Track [net_3] on F.Cu, length 4.1656 mm",
+                    "pos": {
+                        "x": 108.3818,
+                        "y": 79.3496
+                    },
+                    "uuid": "db40c24a-6762-409a-acaf-cbcefb8e7d40"
+                },
+                {
+                    "description": "Track [net_3] on F.Cu, length 3.6322 mm",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 79.3496
+                    },
+                    "uuid": "e8d7189c-1bf1-4f6c-abd7-bbbd5fd5f896"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (rule 'high_current_netclass' minimum connection width 0.1600 mm; actual 0.1454 mm) (F.Cu)",
+            "items": [
+                {
+                    "description": "Track [net_HC] on F.Cu, length 3.9828 mm",
+                    "pos": {
+                        "x": 112.8064,
+                        "y": 74.2442
+                    },
+                    "uuid": "5fd40a5e-8558-46fc-9321-fcda035db40b"
+                },
+                {
+                    "description": "Track [net_HC] on F.Cu, length 6.4262 mm",
+                    "pos": {
+                        "x": 112.5982,
+                        "y": 74.2442
+                    },
+                    "uuid": "7014ab67-9149-4546-9f6e-d99764e15f97"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        }
+    ]
+}

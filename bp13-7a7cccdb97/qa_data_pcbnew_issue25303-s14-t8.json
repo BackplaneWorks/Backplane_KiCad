@@ -1,0 +1,144 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:08",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue25303.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [Net-(U1Power-V+)] of C1 on F.Cu",
+                    "pos": {
+                        "x": 99.2,
+                        "y": 95.775
+                    },
+                    "uuid": "5de2c693-cccd-4534-973b-20e1020bb9aa"
+                },
+                {
+                    "description": "Pad 8 [Net-(U1Power-V+)] of U1 on F.Cu",
+                    "pos": {
+                        "x": 109.5,
+                        "y": 95.77
+                    },
+                    "uuid": "7c5578fb-20aa-4aad-85bc-3c2fc7666874"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 92.7,
+                        "y": 105.7
+                    },
+                    "uuid": "e20893b9-c21f-4ef3-ac2f-5a0a4f3d694f"
+                },
+                {
+                    "description": "Pad 4 [GND] of U1 on F.Cu",
+                    "pos": {
+                        "x": 113.31,
+                        "y": 100.6
+                    },
+                    "uuid": "cbd07dfc-c319-47d8-a8a1-ae880ea6d943"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone 'stitch_zone_0' [GND] on In1.Cu and In2.Cu, priority 0",
+                    "pos": {
+                        "x": 91.1,
+                        "y": 89.2
+                    },
+                    "uuid": "38763e20-95bd-4561-a831-4f8e2bed0551"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone 'stitch_zone_0' [GND] on In1.Cu and In2.Cu, priority 0",
+                    "pos": {
+                        "x": 91.1,
+                        "y": 89.2
+                    },
+                    "uuid": "38763e20-95bd-4561-a831-4f8e2bed0551"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '01_MVP'",
+            "items": [
+                {
+                    "description": "Footprint C1",
+                    "pos": {
+                        "x": 99.2,
+                        "y": 98.4
+                    },
+                    "uuid": "b7e31409-50cf-46bb-a24a-34157e3b7858"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '04_MVP_SOP_SOIC'",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 111.405,
+                        "y": 98.185
+                    },
+                    "uuid": "bc2c3250-db6a-4654-8053-56557820f136"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

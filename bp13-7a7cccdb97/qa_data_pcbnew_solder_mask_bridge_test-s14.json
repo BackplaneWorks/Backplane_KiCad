@@ -1,0 +1,359 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:32",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint not found in libraries",
+            "key": "lib_footprint_issues"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "solder_mask_bridge_test.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Footprint 'SolderWirePad_1x01_SMD_1x2mm' does not match copy in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint REF**",
+                    "pos": {
+                        "x": 194.73,
+                        "y": 80.19
+                    },
+                    "uuid": "970e0f64-111f-41e3-9f5a-fb0d0f6fa101"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 172.8724,
+                        "y": 97.8408
+                    },
+                    "uuid": "1c42e37e-ccaf-44fa-9e0f-5f7271f40c7d"
+                },
+                {
+                    "description": "PTH pad 2 [<no net>] of REF**",
+                    "pos": {
+                        "x": 154.305,
+                        "y": 80.01
+                    },
+                    "uuid": "a01719d5-72b8-433b-882b-36b730f1b10d"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 13 [<no net>] of REF**",
+                    "pos": {
+                        "x": 161.925,
+                        "y": 77.47
+                    },
+                    "uuid": "30760006-239e-48b2-9ad2-bdc85ca119ed"
+                },
+                {
+                    "description": "PTH pad 14 [<no net>] of REF**",
+                    "pos": {
+                        "x": 161.925,
+                        "y": 74.93
+                    },
+                    "uuid": "fefb1ddf-3d2b-4862-9521-565bc091912b"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 13 [<no net>] of REF**",
+                    "pos": {
+                        "x": 161.925,
+                        "y": 77.47
+                    },
+                    "uuid": "30760006-239e-48b2-9ad2-bdc85ca119ed"
+                },
+                {
+                    "description": "PTH pad 14 [<no net>] of REF**",
+                    "pos": {
+                        "x": 161.925,
+                        "y": 74.93
+                    },
+                    "uuid": "fefb1ddf-3d2b-4862-9521-565bc091912b"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 11 [<no net>] of REF**",
+                    "pos": {
+                        "x": 161.925,
+                        "y": 82.55
+                    },
+                    "uuid": "54ecef87-4bce-44eb-93cf-a1f86ce2bb62"
+                },
+                {
+                    "description": "Track [signal] on F.Cu, length 9.3472 mm",
+                    "pos": {
+                        "x": 158.2928,
+                        "y": 81.28
+                    },
+                    "uuid": "7cc23349-033d-49b3-a705-5330ec1196d6"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "PCB text 'Error ->' on F.Silkscreen",
+                    "pos": {
+                        "x": 150.5712,
+                        "y": 79.9592
+                    },
+                    "uuid": "60b05cd2-1727-4c72-816a-14d2b68852d4"
+                },
+                {
+                    "description": "PTH pad 2 [<no net>] of REF**",
+                    "pos": {
+                        "x": 154.305,
+                        "y": 80.01
+                    },
+                    "uuid": "a01719d5-72b8-433b-882b-36b730f1b10d"
+                }
+            ],
+            "severity": "error",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "PCB text 'No error ->' on F.Silkscreen",
+                    "pos": {
+                        "x": 150.9776,
+                        "y": 78.5876
+                    },
+                    "uuid": "246e9db7-6544-4169-9c7a-178ae76a161a"
+                },
+                {
+                    "description": "PTH pad 2 [<no net>] of REF**",
+                    "pos": {
+                        "x": 154.305,
+                        "y": 77.47
+                    },
+                    "uuid": "4f8caf82-f2fe-4ebb-b03c-0226aa886a96"
+                }
+            ],
+            "severity": "error",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "PCB text 'No error ->' on F.Silkscreen",
+                    "pos": {
+                        "x": 150.9776,
+                        "y": 78.5876
+                    },
+                    "uuid": "246e9db7-6544-4169-9c7a-178ae76a161a"
+                },
+                {
+                    "description": "PTH pad 2 [<no net>] of REF**",
+                    "pos": {
+                        "x": 154.305,
+                        "y": 80.01
+                    },
+                    "uuid": "a01719d5-72b8-433b-882b-36b730f1b10d"
+                }
+            ],
+            "severity": "error",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 154.44,
+                        "y": 72.635
+                    },
+                    "uuid": "fddf502b-35d9-4c79-83ea-e86b1347b469"
+                },
+                {
+                    "description": "PTH pad 1 [signal] of REF**",
+                    "pos": {
+                        "x": 154.305,
+                        "y": 74.93
+                    },
+                    "uuid": "2fe6f3ef-3519-45f5-bd91-8d7847304292"
+                }
+            ],
+            "severity": "error",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 154.44,
+                        "y": 73.905
+                    },
+                    "uuid": "4c82108f-9f12-4804-907e-f81706f9251d"
+                },
+                {
+                    "description": "PTH pad 1 [signal] of REF**",
+                    "pos": {
+                        "x": 154.305,
+                        "y": 74.93
+                    },
+                    "uuid": "2fe6f3ef-3519-45f5-bd91-8d7847304292"
+                }
+            ],
+            "severity": "error",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of REF** on F.Silkscreen",
+                    "pos": {
+                        "x": 161.79,
+                        "y": 72.635
+                    },
+                    "uuid": "47d1c952-cc7e-48d8-8bf3-43e84030b5b6"
+                },
+                {
+                    "description": "PTH pad 14 [<no net>] of REF**",
+                    "pos": {
+                        "x": 161.925,
+                        "y": 74.93
+                    },
+                    "uuid": "fefb1ddf-3d2b-4862-9521-565bc091912b"
+                }
+            ],
+            "severity": "error",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "PCB text '<- Error' on F.Silkscreen",
+                    "pos": {
+                        "x": 164.2364,
+                        "y": 81.3816
+                    },
+                    "uuid": "8aa83fbc-6808-4f31-8b58-3c465cfd1f3b"
+                },
+                {
+                    "description": "PTH pad 11 [<no net>] of REF**",
+                    "pos": {
+                        "x": 161.925,
+                        "y": 82.55
+                    },
+                    "uuid": "54ecef87-4bce-44eb-93cf-a1f86ce2bb62"
+                }
+            ],
+            "severity": "error",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "PCB text '<- Errors (F & B)' on F.Silkscreen",
+                    "pos": {
+                        "x": 166.7764,
+                        "y": 76.0984
+                    },
+                    "uuid": "d8431fbc-8a2a-46ff-b841-c7976a19d81c"
+                },
+                {
+                    "description": "PTH pad 13 [<no net>] of REF**",
+                    "pos": {
+                        "x": 161.925,
+                        "y": 77.47
+                    },
+                    "uuid": "30760006-239e-48b2-9ad2-bdc85ca119ed"
+                }
+            ],
+            "severity": "error",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "PCB text '<- Errors (F & B)' on F.Silkscreen",
+                    "pos": {
+                        "x": 166.7764,
+                        "y": 76.0984
+                    },
+                    "uuid": "d8431fbc-8a2a-46ff-b841-c7976a19d81c"
+                },
+                {
+                    "description": "PTH pad 14 [<no net>] of REF**",
+                    "pos": {
+                        "x": 161.925,
+                        "y": 74.93
+                    },
+                    "uuid": "fefb1ddf-3d2b-4862-9521-565bc091912b"
+                }
+            ],
+            "severity": "error",
+            "type": "silk_over_copper"
+        }
+    ]
+}

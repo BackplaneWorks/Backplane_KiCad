@@ -1,0 +1,136 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:35",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "tracks_arcs_vias.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track (arc) [<no net>] on F.Cu, length 3.9771 mm",
+                    "pos": {
+                        "x": 32.962502,
+                        "y": 38.698821
+                    },
+                    "uuid": "8389b74e-f6e7-4c8a-9824-41098548832a"
+                },
+                {
+                    "description": "Pad 3 [<no net>] of REF** on F.Cu",
+                    "pos": {
+                        "x": 32.9625,
+                        "y": 33.635
+                    },
+                    "uuid": "87a9e845-8d9d-475e-8a7e-258c0e1ddeb1"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 7 [<no net>] of REF** on F.Cu",
+                    "pos": {
+                        "x": 38.0375,
+                        "y": 32.365
+                    },
+                    "uuid": "3a0195b5-271e-4051-aa7a-54237a29500d"
+                },
+                {
+                    "description": "Track [<no net>] on F.Cu, length 2.4025 mm",
+                    "pos": {
+                        "x": 35.635,
+                        "y": 32.365
+                    },
+                    "uuid": "b3d4fe9c-0354-4101-9923-bb4c27387bb8"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [McNetty] on F.Cu, length 0.1836 mm",
+                    "pos": {
+                        "x": 28.131219,
+                        "y": 30.128382
+                    },
+                    "uuid": "c23a80a7-5bfc-4b61-99b8-5197ce24db86"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [McNetty] on F.Cu, length 0.2235 mm",
+                    "pos": {
+                        "x": 42.340283,
+                        "y": 24.843644
+                    },
+                    "uuid": "3548c1d0-b54d-42f8-a856-3a63a6d65fcb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Footprint 'SOP-8_3.76x4.96mm_P1.27mm' does not match copy in library 'Package_SO'",
+            "items": [
+                {
+                    "description": "Footprint REF**",
+                    "pos": {
+                        "x": 35.5,
+                        "y": 33.0
+                    },
+                    "uuid": "58309f6f-ebc9-414d-b266-9e4aa4940358"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

@@ -1,0 +1,272 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:33",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "teardrop_issue_JPC2.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track (arc) [GND] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 65.291294,
+                        "y": 54.581294
+                    },
+                    "uuid": "990688a7-abf7-4f96-b542-8de407f89782"
+                },
+                {
+                    "description": "Track (arc) [GND] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 65.201294,
+                        "y": 56.041294
+                    },
+                    "uuid": "4ea7fd26-3643-46ba-99cd-843380d8010e"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1640 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [GND] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 65.291294,
+                        "y": 54.581294
+                    },
+                    "uuid": "990688a7-abf7-4f96-b542-8de407f89782"
+                },
+                {
+                    "description": "Pad 17 [/SYNC_ZRGB] of J? on F.Cu",
+                    "pos": {
+                        "x": 67.87,
+                        "y": 56.59
+                    },
+                    "uuid": "abe63b8e-98e1-48d8-a5b3-7c0086370ce8"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1970 mm)",
+            "items": [
+                {
+                    "description": "Pad 20 [/OUT_CAM0_SCL] of J? on F.Cu",
+                    "pos": {
+                        "x": 67.87,
+                        "y": 58.09
+                    },
+                    "uuid": "b88ad53d-994a-4c09-bf26-d22298fc993d"
+                },
+                {
+                    "description": "Teardrop [GND] on F.Cu",
+                    "pos": {
+                        "x": 66.395255,
+                        "y": 57.695389
+                    },
+                    "uuid": "547bc73e-9a1c-47c2-a9e5-15eb4c2036ff"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [/SYNC_ZRGB] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 66.988706,
+                        "y": 58.748706
+                    },
+                    "uuid": "b09cc660-826f-4e9f-9ea2-2f312e884cc8"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [GND] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 65.201294,
+                        "y": 56.041294
+                    },
+                    "uuid": "4ea7fd26-3643-46ba-99cd-843380d8010e"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [GND] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 65.291294,
+                        "y": 54.581294
+                    },
+                    "uuid": "990688a7-abf7-4f96-b542-8de407f89782"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [/SYNC_ZRGB] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 68.671294,
+                        "y": 54.531294
+                    },
+                    "uuid": "74be004a-a995-40b2-a8cf-df6c7762b253"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [/OUT_CAM0_SCL] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 68.812373,
+                        "y": 55.998794
+                    },
+                    "uuid": "0363adc7-8077-4556-b969-ea996bb37961"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [GND] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 65.201294,
+                        "y": 56.041294
+                    },
+                    "uuid": "4ea7fd26-3643-46ba-99cd-843380d8010e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [/SYNC_ZRGB] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 66.988706,
+                        "y": 58.748706
+                    },
+                    "uuid": "b09cc660-826f-4e9f-9ea2-2f312e884cc8"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [GND] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 65.291294,
+                        "y": 54.581294
+                    },
+                    "uuid": "990688a7-abf7-4f96-b542-8de407f89782"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [/SYNC_ZRGB] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 68.671294,
+                        "y": 54.531294
+                    },
+                    "uuid": "74be004a-a995-40b2-a8cf-df6c7762b253"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [/OUT_CAM0_SCL] on F.Cu, length 1.6424 mm",
+                    "pos": {
+                        "x": 68.812373,
+                        "y": 55.998794
+                    },
+                    "uuid": "0363adc7-8077-4556-b969-ea996bb37961"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Don-Con'",
+            "items": [
+                {
+                    "description": "Footprint J?",
+                    "pos": {
+                        "x": 66.42,
+                        "y": 53.84
+                    },
+                    "uuid": "0d9c340c-3241-4240-8fc1-5e5cf3bb7293"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

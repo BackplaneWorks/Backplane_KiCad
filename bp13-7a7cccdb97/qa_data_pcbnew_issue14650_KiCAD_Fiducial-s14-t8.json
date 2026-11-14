@@ -1,0 +1,60 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:53",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "KiCAD_Fiducial.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Pad [<no net>] of FID2 on F.Cu",
+                    "pos": {
+                        "x": 150.0,
+                        "y": 72.0
+                    },
+                    "uuid": "6364ee9a-e115-4b4f-90fd-12f2d0b7d658"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        }
+    ]
+}

@@ -1,0 +1,182 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:40",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue18119.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [VCC] of J1",
+                    "pos": {
+                        "x": 160.0,
+                        "y": 90.0
+                    },
+                    "uuid": "e1ec76e4-2fdf-4722-9ca0-f377686ed32f"
+                },
+                {
+                    "description": "PTH pad 2 [VCC] of R1",
+                    "pos": {
+                        "x": 175.0,
+                        "y": 96.38
+                    },
+                    "uuid": "b7b1b548-6e6c-4410-b36d-12b6f5a841d4"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [/BUS0] of J3",
+                    "pos": {
+                        "x": 160.0,
+                        "y": 110.0
+                    },
+                    "uuid": "8b5658e8-0c64-474d-8e46-098db7128d99"
+                },
+                {
+                    "description": "PTH pad 1 [/BUS0] of R1",
+                    "pos": {
+                        "x": 175.0,
+                        "y": 104.0
+                    },
+                    "uuid": "68dcac3c-fe28-46d6-baef-6c0fae2070a8"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "28fc615f-d915-4632-9403-539ec77d4719"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x01_P2.54mm_Horizontal' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 160.0,
+                        "y": 90.0
+                    },
+                    "uuid": "406ff306-2502-473f-b14f-25b4925ba48e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x01_P2.54mm_Horizontal' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 160.0,
+                        "y": 100.0
+                    },
+                    "uuid": "fc103a63-72ef-4a80-9c05-847c1fdf4ae8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x01_P2.54mm_Horizontal' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J3",
+                    "pos": {
+                        "x": 160.0,
+                        "y": 110.0
+                    },
+                    "uuid": "e0774bb5-32ed-40a5-adf3-f6012a3e56a6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x01_P2.54mm_Horizontal' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J4",
+                    "pos": {
+                        "x": 160.0,
+                        "y": 120.0
+                    },
+                    "uuid": "3c87bb2a-e289-42ae-9e32-b6b6846cfc49"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 175.0,
+                        "y": 104.0
+                    },
+                    "uuid": "215d9fe0-d403-404d-9f0c-e7a2c683bc6c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

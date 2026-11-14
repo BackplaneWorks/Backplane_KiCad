@@ -1,0 +1,91 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:41",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue23719.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [P5V_IF_Rtn] of J1",
+                    "pos": {
+                        "x": 140.225,
+                        "y": 96.775
+                    },
+                    "uuid": "141c1837-369b-468d-bc85-08910d9ccdbb"
+                },
+                {
+                    "description": "PTH pad 1 [P5V_IF_Rtn] of TP1",
+                    "pos": {
+                        "x": 139.975,
+                        "y": 105.125
+                    },
+                    "uuid": "162c398a-c5eb-4d2a-b18f-33b7f36694c0"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 2 [P5V_IF_Rtn] of J1",
+                    "pos": {
+                        "x": 142.765,
+                        "y": 96.775
+                    },
+                    "uuid": "632ccece-f689-4bec-ad4f-e12c19e364d8"
+                },
+                {
+                    "description": "PTH pad 1 [P5V_IF_Rtn] of J1",
+                    "pos": {
+                        "x": 140.225,
+                        "y": 96.775
+                    },
+                    "uuid": "141c1837-369b-468d-bc85-08910d9ccdbb"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": []
+}

@@ -1,0 +1,120 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:26",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "padstacks_complex.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0000 mm on Top Layer)",
+            "items": [
+                {
+                    "description": "PTH pad 3 [<no net>] of ",
+                    "pos": {
+                        "x": 141.9606,
+                        "y": 108.3691
+                    },
+                    "uuid": "05e66fff-73b7-4418-9e88-371b772d1746"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0000 mm on Top Layer)",
+            "items": [
+                {
+                    "description": "PTH pad 4 [<no net>] of ",
+                    "pos": {
+                        "x": 151.1046,
+                        "y": 108.6231
+                    },
+                    "uuid": "073fbd1f-fe6f-43a2-b6dd-bb6db17d1841"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0000 mm on Top Layer)",
+            "items": [
+                {
+                    "description": "PTH pad 2 [<no net>] of ",
+                    "pos": {
+                        "x": 152.6286,
+                        "y": 101.8921
+                    },
+                    "uuid": "6761b056-4502-46e7-9140-90350fc3a716"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0635 mm on Bottom Layer)",
+            "items": [
+                {
+                    "description": "PTH pad 2 [<no net>] of ",
+                    "pos": {
+                        "x": 152.6286,
+                        "y": 101.8921
+                    },
+                    "uuid": "6761b056-4502-46e7-9140-90350fc3a716"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Padstack is questionable (PTH pad hole leaves no copper)",
+            "items": [
+                {
+                    "description": "PTH pad 4 [<no net>] of ",
+                    "pos": {
+                        "x": 151.1046,
+                        "y": 108.6231
+                    },
+                    "uuid": "073fbd1f-fe6f-43a2-b6dd-bb6db17d1841"
+                }
+            ],
+            "severity": "warning",
+            "type": "padstack"
+        }
+    ]
+}

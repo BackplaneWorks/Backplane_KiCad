@@ -1,0 +1,117 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:16",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        },
+        {
+            "description": "Footprint not found in libraries",
+            "key": "lib_footprint_issues"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue9081.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "PTH inside courtyard",
+            "items": [
+                {
+                    "description": "PTH pad 3 [Net-(J1-Pad3)] of J1",
+                    "pos": {
+                        "x": 133.87,
+                        "y": 105.475
+                    },
+                    "uuid": "335bf42e-0bd8-4d93-811e-88428674ac40"
+                },
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 133.41,
+                        "y": 106.76
+                    },
+                    "uuid": "ba0edce2-e1c7-4597-861d-911cbd56157e"
+                }
+            ],
+            "severity": "error",
+            "type": "pth_inside_courtyard"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "items": [
+                {
+                    "description": "PTH pad 4 [unconnected-(J1-Pad4)] of J1",
+                    "pos": {
+                        "x": 133.87,
+                        "y": 108.015
+                    },
+                    "uuid": "a86070f5-e288-414d-8ab1-f3c0dd3a7e97"
+                },
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 133.41,
+                        "y": 106.76
+                    },
+                    "uuid": "ba0edce2-e1c7-4597-861d-911cbd56157e"
+                }
+            ],
+            "severity": "error",
+            "type": "pth_inside_courtyard"
+        },
+        {
+            "description": "Footprint 'R_4020_10251Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 133.41,
+                        "y": 106.76
+                    },
+                    "uuid": "ba0edce2-e1c7-4597-861d-911cbd56157e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x08_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 133.87,
+                        "y": 100.395
+                    },
+                    "uuid": "f942499e-6e89-458d-96f7-b17de56e7805"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

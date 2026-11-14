@@ -1,0 +1,114 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:20",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "chain_bridging_4pad.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/NET_A] on F.Cu, length 10.0000 mm",
+                    "pos": {
+                        "x": 78.0,
+                        "y": 78.5
+                    },
+                    "uuid": "bc2774ca-fd04-49b1-a766-72017dd693b7"
+                },
+                {
+                    "description": "PTH pad 2 [/NET_A] of U1",
+                    "pos": {
+                        "x": 90.0,
+                        "y": 78.5
+                    },
+                    "uuid": "df2db49b-c7bf-4204-b92d-97bc58328158"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 3 [/NET_B] of U1",
+                    "pos": {
+                        "x": 92.0,
+                        "y": 78.5
+                    },
+                    "uuid": "2a33842e-ac6a-4d9d-aeeb-8888cae3bbf3"
+                },
+                {
+                    "description": "Track [/NET_B] on F.Cu, length 10.0000 mm",
+                    "pos": {
+                        "x": 94.0,
+                        "y": 78.5
+                    },
+                    "uuid": "1a504fea-bf41-439d-9c2d-92ff2966fea0"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/NET_A] on F.Cu, length 10.0000 mm",
+                    "pos": {
+                        "x": 78.0,
+                        "y": 78.5
+                    },
+                    "uuid": "bc2774ca-fd04-49b1-a766-72017dd693b7"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/NET_B] on F.Cu, length 10.0000 mm",
+                    "pos": {
+                        "x": 94.0,
+                        "y": 78.5
+                    },
+                    "uuid": "1a504fea-bf41-439d-9c2d-92ff2966fea0"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        }
+    ]
+}

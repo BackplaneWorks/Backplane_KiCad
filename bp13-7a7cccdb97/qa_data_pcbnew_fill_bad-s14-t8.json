@@ -1,0 +1,56 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:49",
+    "ignored_checks": [
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint not found in libraries",
+            "key": "lib_footprint_issues"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "fill_bad.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Clearance violation (footprint J2 clearance 1.0000 mm; actual 0.3374 mm)",
+            "items": [
+                {
+                    "description": "Pad 1 [B] of J2 on F.Cu",
+                    "pos": {
+                        "x": 43.415695,
+                        "y": 32.455979
+                    },
+                    "uuid": "01d6b91f-b519-4000-9ea0-db5a3aad940e"
+                },
+                {
+                    "description": "Zone [A] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 32.425429,
+                        "y": 21.365684
+                    },
+                    "uuid": "529fe1ce-df30-480a-99f3-dacacf3a1338"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        }
+    ]
+}

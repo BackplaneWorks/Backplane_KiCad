@@ -1,0 +1,154 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:35",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "two_segment_teardrop.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "Via [/TX] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 131.3,
+                        "y": 85.6
+                    },
+                    "uuid": "85016fb8-dae6-4030-af49-2b0ddc298acf"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "b4bf18d9-11da-4af2-a834-ef91316f56a2"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Unresolved text variable",
+            "items": [],
+            "severity": "error",
+            "type": "unresolved_variable"
+        },
+        {
+            "description": "Unresolved text variable",
+            "items": [],
+            "severity": "error",
+            "type": "unresolved_variable"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/TX] on B.Cu, length 0.3610 mm",
+                    "pos": {
+                        "x": 131.661,
+                        "y": 85.6
+                    },
+                    "uuid": "298df97f-d70b-4d58-a974-3a9f45e95242"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Track [/TX] on B.Cu, length 0.1966 mm",
+                    "pos": {
+                        "x": 131.8,
+                        "y": 85.739
+                    },
+                    "uuid": "4cb4b920-9472-4377-932e-2c0e6a1f0efc"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4500 mm)",
+            "items": [
+                {
+                    "description": "Via [/TX] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 131.3,
+                        "y": 85.6
+                    },
+                    "uuid": "85016fb8-dae6-4030-af49-2b0ddc298acf"
+                }
+            ],
+            "severity": "error",
+            "type": "via_diameter"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [/TX] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 131.3,
+                        "y": 85.6
+                    },
+                    "uuid": "85016fb8-dae6-4030-af49-2b0ddc298acf"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/TX] on B.Cu, length 0.1966 mm",
+                    "pos": {
+                        "x": 131.8,
+                        "y": 85.739
+                    },
+                    "uuid": "4cb4b920-9472-4377-932e-2c0e6a1f0efc"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        }
+    ]
+}

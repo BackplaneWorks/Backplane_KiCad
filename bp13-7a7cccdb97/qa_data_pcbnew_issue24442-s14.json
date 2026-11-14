@@ -1,0 +1,112 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:03",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue24442.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "start_of_text",
+            "items": [
+                {
+                    "description": "PCB text '' on F.Silkscreen",
+                    "pos": {
+                        "x": 60.0,
+                        "y": 60.0
+                    },
+                    "uuid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa01"
+                }
+            ],
+            "severity": "error",
+            "type": "generic_error"
+        },
+        {
+            "description": "text_box_error",
+            "items": [
+                {
+                    "description": "PCB text box 'Note:' on F.Fab",
+                    "pos": {
+                        "x": 60.0,
+                        "y": 100.0
+                    },
+                    "uuid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa05"
+                }
+            ],
+            "severity": "error",
+            "type": "generic_error"
+        },
+        {
+            "description": "placeholder_text",
+            "items": [
+                {
+                    "description": "PCB text 'Fill in: ' on F.Silkscreen",
+                    "pos": {
+                        "x": 90.043,
+                        "y": 61.595
+                    },
+                    "uuid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa02"
+                }
+            ],
+            "severity": "error",
+            "type": "generic_error"
+        },
+        {
+            "description": "this_is_warning",
+            "items": [
+                {
+                    "description": "PCB text ' trailing' on F.Silkscreen",
+                    "pos": {
+                        "x": 93.472,
+                        "y": 72.517
+                    },
+                    "uuid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa03"
+                }
+            ],
+            "severity": "warning",
+            "type": "generic_warning"
+        },
+        {
+            "description": "embedded_warning",
+            "items": [
+                {
+                    "description": "PCB text 'prefix  suffix' on F.Silkscreen",
+                    "pos": {
+                        "x": 93.599,
+                        "y": 81.915
+                    },
+                    "uuid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa04"
+                }
+            ],
+            "severity": "warning",
+            "type": "generic_warning"
+        }
+    ]
+}

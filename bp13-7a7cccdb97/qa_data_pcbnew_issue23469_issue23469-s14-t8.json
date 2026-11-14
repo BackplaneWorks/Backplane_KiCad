@@ -1,0 +1,129 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:00",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue23469.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad SH [unconnected-(J1-SHIELD-PadSH)] of J1",
+                    "pos": {
+                        "x": 146.025,
+                        "y": 119.645
+                    },
+                    "uuid": "4a488d80-883a-411f-a850-48eb08cca060"
+                },
+                {
+                    "description": "PTH pad SH [unconnected-(J1-SHIELD-PadSH)] of J1",
+                    "pos": {
+                        "x": 146.025,
+                        "y": 123.825
+                    },
+                    "uuid": "53e97366-122c-4cc1-b1c8-8e4106b1b739"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad A4 [Net-(J1-VBUS-PadA4)] of J1 on F.Cu",
+                    "pos": {
+                        "x": 147.945,
+                        "y": 119.07
+                    },
+                    "uuid": "93f494cb-13f0-4995-9b3e-a4b8e38b81b8"
+                },
+                {
+                    "description": "Pad A9 [Net-(J1-VBUS-PadA4)] of J1 on F.Cu",
+                    "pos": {
+                        "x": 152.745,
+                        "y": 119.07
+                    },
+                    "uuid": "63f45f0f-f438-443c-84db-1cd14db4cb12"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad SH [unconnected-(J1-SHIELD-PadSH)] of J1",
+                    "pos": {
+                        "x": 154.665,
+                        "y": 119.645
+                    },
+                    "uuid": "93f8b4ea-6cea-49cc-8222-0a3172fb1769"
+                },
+                {
+                    "description": "PTH pad SH [unconnected-(J1-SHIELD-PadSH)] of J1",
+                    "pos": {
+                        "x": 146.025,
+                        "y": 119.645
+                    },
+                    "uuid": "4a488d80-883a-411f-a850-48eb08cca060"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad SH [unconnected-(J1-SHIELD-PadSH)] of J1",
+                    "pos": {
+                        "x": 154.665,
+                        "y": 123.825
+                    },
+                    "uuid": "39cec6f8-8a56-4748-9db0-afb6505808ae"
+                },
+                {
+                    "description": "PTH pad SH [unconnected-(J1-SHIELD-PadSH)] of J1",
+                    "pos": {
+                        "x": 154.665,
+                        "y": 119.645
+                    },
+                    "uuid": "93f8b4ea-6cea-49cc-8222-0a3172fb1769"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": []
+}

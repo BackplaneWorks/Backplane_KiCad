@@ -1,0 +1,184 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:56",
+    "ignored_checks": [
+        {
+            "description": "Thermal relief connection to zone incomplete",
+            "key": "starved_thermal"
+        },
+        {
+            "description": "Annular width",
+            "key": "annular_width"
+        },
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "key": "silk_edge_clearance"
+        },
+        {
+            "description": "Isolated copper fill",
+            "key": "isolated_copper"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue22102.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Arc [/GNDb] on F.Cu",
+                    "pos": {
+                        "x": 69.088,
+                        "y": 52.832
+                    },
+                    "uuid": "8ea68993-38e6-4a1c-8889-2c43e9ced02a"
+                },
+                {
+                    "description": "Pad 1 [/GNDb] of LED61 on F.Cu",
+                    "pos": {
+                        "x": 66.802,
+                        "y": 52.07
+                    },
+                    "uuid": "16afaa25-45b4-4970-9ef5-f1ceeaa69fe8"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Arc [/S52] on F.Cu",
+                    "pos": {
+                        "x": 69.088,
+                        "y": 52.832
+                    },
+                    "uuid": "e1c5b380-a137-4085-b36a-abfc5fa4a996"
+                },
+                {
+                    "description": "Pad 2 [/S52] of LED61 on F.Cu",
+                    "pos": {
+                        "x": 64.802,
+                        "y": 52.07
+                    },
+                    "uuid": "145c2440-eaee-4322-a017-3dfa461d2616"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1111 mm)",
+            "items": [
+                {
+                    "description": "Pad 2 [/S52] of LED61 on F.Cu",
+                    "pos": {
+                        "x": 64.802,
+                        "y": 52.07
+                    },
+                    "uuid": "145c2440-eaee-4322-a017-3dfa461d2616"
+                },
+                {
+                    "description": "Track (arc) [<no net>] on F.Cu, length 1.6776 mm",
+                    "pos": {
+                        "x": 65.00093,
+                        "y": 53.39923
+                    },
+                    "uuid": "66547428-c169-4d94-aee8-ce3105951dc9"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0481 mm)",
+            "items": [
+                {
+                    "description": "Arc [/GNDb] on F.Cu",
+                    "pos": {
+                        "x": 69.088,
+                        "y": 52.832
+                    },
+                    "uuid": "8ea68993-38e6-4a1c-8889-2c43e9ced02a"
+                },
+                {
+                    "description": "Arc [/S52] on F.Cu",
+                    "pos": {
+                        "x": 69.088,
+                        "y": 52.832
+                    },
+                    "uuid": "e1c5b380-a137-4085-b36a-abfc5fa4a996"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [<no net>] on F.Cu, length 1.6776 mm",
+                    "pos": {
+                        "x": 65.00093,
+                        "y": 53.39923
+                    },
+                    "uuid": "66547428-c169-4d94-aee8-ce3105951dc9"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'SamacSys_Parts'",
+            "items": [
+                {
+                    "description": "Footprint LED61",
+                    "pos": {
+                        "x": 66.802,
+                        "y": 52.07
+                    },
+                    "uuid": "7c82178e-9c8e-4910-b5d7-cf2b09da8845"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

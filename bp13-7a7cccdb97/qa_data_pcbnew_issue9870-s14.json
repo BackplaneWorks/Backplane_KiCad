@@ -1,0 +1,582 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:16",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue9870.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 125.299606,
+                        "y": 76.121706
+                    },
+                    "uuid": "f955ff3b-6368-47ac-b9bb-dcbce17cd2cd"
+                },
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 122.705989,
+                        "y": 75.036817
+                    },
+                    "uuid": "6362c510-89e2-442a-9bef-a423f67b5f2a"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Via [Net-(D1-Pad2)] on top_copper - bottom_copper",
+                    "pos": {
+                        "x": 126.4,
+                        "y": 78.5
+                    },
+                    "uuid": "84387f2a-9959-4d79-a875-53244f1f4e68"
+                },
+                {
+                    "description": "Zone [Net-(D1-Pad2)] on bottom_copper, priority 0",
+                    "pos": {
+                        "x": 131.5,
+                        "y": 77.3
+                    },
+                    "uuid": "14c4dfe2-825b-4c9b-962f-b07daede2793"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 127.531503,
+                        "y": 74.6208
+                    },
+                    "uuid": "221799a2-d92f-49a1-94fe-44d3679f5dec"
+                },
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 125.299606,
+                        "y": 76.121706
+                    },
+                    "uuid": "f955ff3b-6368-47ac-b9bb-dcbce17cd2cd"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.1293 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 121.060406,
+                        "y": 75.523254
+                    },
+                    "uuid": "0d2541aa-78dc-4d71-8d09-70964c8b4654"
+                },
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 120.684923,
+                        "y": 73.871209
+                    },
+                    "uuid": "78890dfd-c95e-4f20-85c9-bb0c2e7400d3"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.0679 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 121.060406,
+                        "y": 75.523254
+                    },
+                    "uuid": "0d2541aa-78dc-4d71-8d09-70964c8b4654"
+                },
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 122.705989,
+                        "y": 75.036817
+                    },
+                    "uuid": "6362c510-89e2-442a-9bef-a423f67b5f2a"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.0797 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 122.327576,
+                        "y": 73.37773
+                    },
+                    "uuid": "1cd2361d-d7b8-46c4-b4c3-b2f9ca61d1df"
+                },
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 120.684923,
+                        "y": 73.871209
+                    },
+                    "uuid": "78890dfd-c95e-4f20-85c9-bb0c2e7400d3"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.1024 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 122.327576,
+                        "y": 73.37773
+                    },
+                    "uuid": "1cd2361d-d7b8-46c4-b4c3-b2f9ca61d1df"
+                },
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 122.705989,
+                        "y": 75.036817
+                    },
+                    "uuid": "6362c510-89e2-442a-9bef-a423f67b5f2a"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.0606 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0817 mm",
+                    "pos": {
+                        "x": 125.092037,
+                        "y": 76.719181
+                    },
+                    "uuid": "318fd778-f069-4bd2-88df-2d5d847e84a5"
+                },
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 125.299606,
+                        "y": 76.121706
+                    },
+                    "uuid": "f955ff3b-6368-47ac-b9bb-dcbce17cd2cd"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.1606 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0817 mm",
+                    "pos": {
+                        "x": 125.092037,
+                        "y": 76.719181
+                    },
+                    "uuid": "318fd778-f069-4bd2-88df-2d5d847e84a5"
+                },
+                {
+                    "description": "Via [Net-(D1-Pad2)] on top_copper - bottom_copper",
+                    "pos": {
+                        "x": 126.4,
+                        "y": 78.5
+                    },
+                    "uuid": "84387f2a-9959-4d79-a875-53244f1f4e68"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.1037 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 125.5268,
+                        "y": 73.8632
+                    },
+                    "uuid": "2bf8d6b1-a5d9-4860-b639-a10275827821"
+                },
+                {
+                    "description": "PTH pad 2 [Net-(D1-Pad2)] of D1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 72.39
+                    },
+                    "uuid": "fe2f4a9c-c9df-401c-acfb-1f0a9f7d438a"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.0850 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 126.617499,
+                        "y": 71.234484
+                    },
+                    "uuid": "c0d146af-73e9-4b0c-9981-517c8336104e"
+                },
+                {
+                    "description": "PTH pad 2 [Net-(D1-Pad2)] of D1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 72.39
+                    },
+                    "uuid": "fe2f4a9c-c9df-401c-acfb-1f0a9f7d438a"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.0379 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 127.531503,
+                        "y": 74.6208
+                    },
+                    "uuid": "221799a2-d92f-49a1-94fe-44d3679f5dec"
+                },
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 125.5268,
+                        "y": 73.8632
+                    },
+                    "uuid": "2bf8d6b1-a5d9-4860-b639-a10275827821"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.0853 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 127.531503,
+                        "y": 74.6208
+                    },
+                    "uuid": "221799a2-d92f-49a1-94fe-44d3679f5dec"
+                },
+                {
+                    "description": "PTH pad 2 [Net-(D1-Pad2)] of D1",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 72.39
+                    },
+                    "uuid": "fe2f4a9c-c9df-401c-acfb-1f0a9f7d438a"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.0340 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Zone [Net-(D1-Pad2)] on bottom_copper, priority 0",
+                    "pos": {
+                        "x": 131.5,
+                        "y": 77.3
+                    },
+                    "uuid": "14c4dfe2-825b-4c9b-962f-b07daede2793"
+                },
+                {
+                    "description": "Via [Net-(D1-Pad2)] on top_copper - bottom_copper",
+                    "pos": {
+                        "x": 128.753787,
+                        "y": 79.665232
+                    },
+                    "uuid": "b06ca4b8-22df-4ec6-bf66-cf080ffc53d7"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.0780 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Zone [Net-(D1-Pad2)] on bottom_copper, priority 0",
+                    "pos": {
+                        "x": 131.5,
+                        "y": 77.3
+                    },
+                    "uuid": "14c4dfe2-825b-4c9b-962f-b07daede2793"
+                },
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 130.804351,
+                        "y": 76.175706
+                    },
+                    "uuid": "c3d0bba0-dc16-4de5-8b82-ebcebda9e1dd"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.2010 mm; actual 0.0881 mm) (bottom_copper)",
+            "items": [
+                {
+                    "description": "Zone [Net-(D1-Pad2)] on bottom_copper, priority 0",
+                    "pos": {
+                        "x": 137.09101,
+                        "y": 76.812004
+                    },
+                    "uuid": "3378247d-c173-4772-893a-c2e81018cea2"
+                }
+            ],
+            "severity": "error",
+            "type": "connection_width"
+        },
+        {
+            "description": "Hole size out of range (board setup constraints min hole 0.5080 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "Via [Net-(D1-Pad2)] on top_copper - bottom_copper",
+                    "pos": {
+                        "x": 128.753787,
+                        "y": 79.665232
+                    },
+                    "uuid": "b06ca4b8-22df-4ec6-bf66-cf080ffc53d7"
+                }
+            ],
+            "severity": "error",
+            "type": "drill_out_of_range"
+        },
+        {
+            "description": "Via diameter (board setup constraints min diameter 0.8890 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "Via [Net-(D1-Pad2)] on top_copper - bottom_copper",
+                    "pos": {
+                        "x": 128.753787,
+                        "y": 79.665232
+                    },
+                    "uuid": "b06ca4b8-22df-4ec6-bf66-cf080ffc53d7"
+                }
+            ],
+            "severity": "error",
+            "type": "via_diameter"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [Net-(D1-Pad2)] on bottom_copper, priority 0",
+                    "pos": {
+                        "x": 131.5,
+                        "y": 77.3
+                    },
+                    "uuid": "14c4dfe2-825b-4c9b-962f-b07daede2793"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [Net-(D1-Pad2)] on bottom_copper, priority 0",
+                    "pos": {
+                        "x": 137.09101,
+                        "y": 76.812004
+                    },
+                    "uuid": "3378247d-c173-4772-893a-c2e81018cea2"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [Net-(D1-Pad2)] on top_copper - bottom_copper",
+                    "pos": {
+                        "x": 126.4,
+                        "y": 78.5
+                    },
+                    "uuid": "84387f2a-9959-4d79-a875-53244f1f4e68"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [Net-(D1-Pad2)] on top_copper - bottom_copper",
+                    "pos": {
+                        "x": 128.753787,
+                        "y": 79.665232
+                    },
+                    "uuid": "b06ca4b8-22df-4ec6-bf66-cf080ffc53d7"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 125.5268,
+                        "y": 73.8632
+                    },
+                    "uuid": "2bf8d6b1-a5d9-4860-b639-a10275827821"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 126.617499,
+                        "y": 71.234484
+                    },
+                    "uuid": "c0d146af-73e9-4b0c-9981-517c8336104e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 125.299606,
+                        "y": 76.121706
+                    },
+                    "uuid": "f955ff3b-6368-47ac-b9bb-dcbce17cd2cd"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 127.531503,
+                        "y": 74.6208
+                    },
+                    "uuid": "221799a2-d92f-49a1-94fe-44d3679f5dec"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(D1-Pad2)] on bottom_copper, length 1.0856 mm",
+                    "pos": {
+                        "x": 130.804351,
+                        "y": 76.175706
+                    },
+                    "uuid": "c3d0bba0-dc16-4de5-8b82-ebcebda9e1dd"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Footprint 'D_A-405_P7.62mm_Horizontal' does not match copy in library 'Diode_THT'",
+            "items": [
+                {
+                    "description": "Footprint D1",
+                    "pos": {
+                        "x": 134.62,
+                        "y": 72.39
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a56d054"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

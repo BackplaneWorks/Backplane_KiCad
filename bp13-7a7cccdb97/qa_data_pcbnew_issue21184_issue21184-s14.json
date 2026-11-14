@@ -1,0 +1,114 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:55",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue21184.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [Net-(U2-V+)] on F.Cu, length 1.7250 mm",
+                    "pos": {
+                        "x": 73.8,
+                        "y": 79.2
+                    },
+                    "uuid": "2cd6cf36-1710-4733-86a5-b26a92532375"
+                },
+                {
+                    "description": "Track [Net-(U2-V+)] on F.Cu, length 3.1625 mm",
+                    "pos": {
+                        "x": 76.03749,
+                        "y": 79.25
+                    },
+                    "uuid": "c6bbf6f3-25e4-4480-8fb6-160fc059dd5f"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "d1b0ce06-72cc-4c57-b931-228b5f588acd"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [Net-(U2-V+)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 73.8,
+                        "y": 79.2
+                    },
+                    "uuid": "71d986b9-ddf5-4049-88f1-cec7836e9364"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [Net-(U2-V+)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 75.8,
+                        "y": 77.4
+                    },
+                    "uuid": "18ac47e2-2dac-45fc-966a-e85e1468c06d"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        }
+    ]
+}

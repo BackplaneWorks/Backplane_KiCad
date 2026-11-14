@@ -1,0 +1,425 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:16",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "key": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue8883.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of C27 on F.Cu",
+                    "pos": {
+                        "x": 100.195,
+                        "y": -88.88
+                    },
+                    "uuid": "4ab41e96-3896-429b-845c-c8b841245667"
+                },
+                {
+                    "description": "Pad 2 [GND] of C28 on F.Cu",
+                    "pos": {
+                        "x": 100.195,
+                        "y": -86.38
+                    },
+                    "uuid": "767a6593-1530-48ff-8f15-972e43ca7829"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of C28 on F.Cu",
+                    "pos": {
+                        "x": 100.195,
+                        "y": -86.38
+                    },
+                    "uuid": "767a6593-1530-48ff-8f15-972e43ca7829"
+                },
+                {
+                    "description": "Pad 2 [GND] of C24 on F.Cu",
+                    "pos": {
+                        "x": 102.995,
+                        "y": -82.38
+                    },
+                    "uuid": "297c662b-9710-4f76-b1a4-745eb9b402bc"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 47 [GND] of IC2 on F.Cu",
+                    "pos": {
+                        "x": 113.35,
+                        "y": -89.2625
+                    },
+                    "uuid": "4b9748b3-8ebd-4c02-8852-11697ffb14a2"
+                },
+                {
+                    "description": "Pad 2 [GND] of C24 on F.Cu",
+                    "pos": {
+                        "x": 102.995,
+                        "y": -82.38
+                    },
+                    "uuid": "297c662b-9710-4f76-b1a4-745eb9b402bc"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 23 [GND] of IC2 on F.Cu",
+                    "pos": {
+                        "x": 117.85,
+                        "y": -80.9375
+                    },
+                    "uuid": "e32949db-2489-4c96-9722-3f6a012d5e66"
+                },
+                {
+                    "description": "Pad 35 [GND] of IC2 on F.Cu",
+                    "pos": {
+                        "x": 119.7625,
+                        "y": -87.35
+                    },
+                    "uuid": "a6b20249-42fa-4fb7-a76f-9ebccf646c57"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 24 [+3V3] of IC2 on F.Cu",
+                    "pos": {
+                        "x": 118.35,
+                        "y": -80.9375
+                    },
+                    "uuid": "b594f538-ed79-42cf-9c7f-01fe42485b77"
+                },
+                {
+                    "description": "Pad 36 [+3V3] of IC2 on F.Cu",
+                    "pos": {
+                        "x": 119.7625,
+                        "y": -87.85
+                    },
+                    "uuid": "2427fbc4-dab5-41f3-8c14-a57477041f14"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 36 [+3V3] of IC2 on F.Cu",
+                    "pos": {
+                        "x": 119.7625,
+                        "y": -87.85
+                    },
+                    "uuid": "2427fbc4-dab5-41f3-8c14-a57477041f14"
+                },
+                {
+                    "description": "Track [+3V3] on F.Cu, length 1.9976 mm",
+                    "pos": {
+                        "x": 111.4375,
+                        "y": -87.85
+                    },
+                    "uuid": "17b7dbb2-a831-4dea-b4e7-844bc97220de"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 35 [GND] of IC2 on F.Cu",
+                    "pos": {
+                        "x": 119.7625,
+                        "y": -87.35
+                    },
+                    "uuid": "a6b20249-42fa-4fb7-a76f-9ebccf646c57"
+                },
+                {
+                    "description": "Pad 47 [GND] of IC2 on F.Cu",
+                    "pos": {
+                        "x": 113.35,
+                        "y": -89.2625
+                    },
+                    "uuid": "4b9748b3-8ebd-4c02-8852-11697ffb14a2"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [SPI1_~{SS}] on B.Cu, length 0.0014 mm",
+                    "pos": {
+                        "x": 95.301,
+                        "y": -76.001
+                    },
+                    "uuid": "fad86278-e752-4050-a99e-ae442c50b3d5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [TIM1_CH1N] on B.Cu, length 0.0334 mm",
+                    "pos": {
+                        "x": 96.923624,
+                        "y": -77.676376
+                    },
+                    "uuid": "1e90f58d-6f36-48c2-a7b5-66ef4d8af4cf"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [PB0_OUT_SM_STEP] on B.Cu, length 0.1034 mm",
+                    "pos": {
+                        "x": 97.073124,
+                        "y": -77.126876
+                    },
+                    "uuid": "ed9f6e87-4b74-4372-878a-803ae31e61b7"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [~{RESET}] on F.Cu, length 0.0424 mm",
+                    "pos": {
+                        "x": 104.73,
+                        "y": -82.38
+                    },
+                    "uuid": "0274d653-1f7e-424e-800e-1a11a5d101ef"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [USART2_RX] on F.Cu, length 0.0707 mm",
+                    "pos": {
+                        "x": 109.3,
+                        "y": -72.65
+                    },
+                    "uuid": "bc6118ec-4137-4856-8e1f-93f839210fbb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [+3V3] on F.Cu, length 0.0283 mm",
+                    "pos": {
+                        "x": 112.375,
+                        "y": -93.4
+                    },
+                    "uuid": "4397afb6-b5ea-41b0-b807-1eb5b8bd07e5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [TIM1_CH1] on F.Cu, length 0.0707 mm",
+                    "pos": {
+                        "x": 121.1,
+                        "y": -84.85
+                    },
+                    "uuid": "95a687bf-2ded-45be-ac1d-d34df0df64b4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [ADC2_IN15] on F.Cu, length 0.1563 mm",
+                    "pos": {
+                        "x": 122.821555,
+                        "y": -85.490218
+                    },
+                    "uuid": "acb536a5-b484-4ae7-9fb6-143a115cc3d8"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [USART1_RX] on B.Cu, length 0.1386 mm",
+                    "pos": {
+                        "x": 124.922385,
+                        "y": -86.749012
+                    },
+                    "uuid": "48f019c8-b7f0-47c5-8dc9-063e7878736f"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint C27",
+                    "pos": {
+                        "x": 101.67,
+                        "y": -88.88
+                    },
+                    "uuid": "d9428240-1e44-4605-82f0-03c995fa11d2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint C28",
+                    "pos": {
+                        "x": 101.67,
+                        "y": -86.38
+                    },
+                    "uuid": "e5eb927b-ab9b-4dfa-a350-78194cc42294"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint C24",
+                    "pos": {
+                        "x": 104.47,
+                        "y": -82.38
+                    },
+                    "uuid": "5bf3f5fe-f86e-498f-acd9-70912b60481f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_Crystal'",
+            "items": [
+                {
+                    "description": "Footprint Q1",
+                    "pos": {
+                        "x": 106.07,
+                        "y": -86.88
+                    },
+                    "uuid": "0de9af20-f2c1-4152-8c27-34e4ce4bec78"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'LQFP-48_7x7mm_P0.5mm' does not match copy in library 'Package_QFP'",
+            "items": [
+                {
+                    "description": "Footprint IC2",
+                    "pos": {
+                        "x": 115.6,
+                        "y": -85.1
+                    },
+                    "uuid": "833c05b7-f4dc-44b2-abd8-71e8d4f553c0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

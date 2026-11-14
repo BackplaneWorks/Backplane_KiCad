@@ -1,0 +1,120 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:55",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "test_proj.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Skew between tracks out of range (rule 'Skew' max skew 1.0000 mm; actual -16.1744 mm; target net length 49.1361 mm (from /TEST1_N); actual 32.9617 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 4 [/TEST2_N] of J101",
+                    "pos": {
+                        "x": 88.085,
+                        "y": -705.348
+                    },
+                    "uuid": "f5a44eed-84e7-4e7b-a6c6-9532f3d55527"
+                }
+            ],
+            "severity": "error",
+            "type": "skew_out_of_range"
+        },
+        {
+            "description": "Skew between tracks out of range (rule 'Skew' max skew 1.0000 mm; actual -4.1358 mm; target net length 49.1361 mm (from /TEST1_N); actual 45.0003 mm)",
+            "items": [
+                {
+                    "description": "Track [/TEST1_P] on F.Cu, length 1.6182 mm",
+                    "pos": {
+                        "x": 102.559965,
+                        "y": -710.205878
+                    },
+                    "uuid": "fe7edb26-1f57-4477-b57a-8f3cec0a18cf"
+                }
+            ],
+            "severity": "error",
+            "type": "skew_out_of_range"
+        },
+        {
+            "description": "Skew between tracks out of range (rule 'Skew' max skew 1.0000 mm; actual -16.1744 mm; target net length 49.1361 mm (from /TEST1_N); actual 32.9616 mm)",
+            "items": [
+                {
+                    "description": "Track [/TEST2_P] on F.Cu, length 4.4814 mm",
+                    "pos": {
+                        "x": 108.769603,
+                        "y": -707.068001
+                    },
+                    "uuid": "f23569d2-1aa9-49d1-9cfd-560bac6f1707"
+                }
+            ],
+            "severity": "error",
+            "type": "skew_out_of_range"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x04_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J101",
+                    "pos": {
+                        "x": 88.085,
+                        "y": -712.968
+                    },
+                    "uuid": "919be825-b410-4f3c-872a-44624eeb88b5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinSocket_1x04_P2.54mm_Vertical' does not match copy in library 'Connector_PinSocket_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J102",
+                    "pos": {
+                        "x": 114.071,
+                        "y": -712.968
+                    },
+                    "uuid": "ea45a885-7a7f-4909-bf1c-11859c1ddb32"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

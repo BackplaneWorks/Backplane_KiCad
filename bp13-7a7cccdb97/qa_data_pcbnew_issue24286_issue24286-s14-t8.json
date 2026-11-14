@@ -1,0 +1,208 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:03",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "key": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "key": "silk_edge_clearance"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue24286.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Creepage violation (rule 'Hlida povrchovou vzdalenost sitovych spoju mezi sebou' creepage 5.0000 mm; actual 3.6114 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 2 [unconnected-(C4-Pad2)] of C4",
+                    "pos": {
+                        "x": 121.52,
+                        "y": 65.637349
+                    },
+                    "uuid": "ce91d3a0-d75d-4f82-b5b8-32a928bb4b12"
+                },
+                {
+                    "description": "PTH pad 1 [unconnected-(C4-Pad1)] of C4",
+                    "pos": {
+                        "x": 121.52,
+                        "y": 62.137349
+                    },
+                    "uuid": "2e81dc4a-dbd6-4765-a6d1-811f6cd2a03e"
+                }
+            ],
+            "severity": "error",
+            "type": "creepage"
+        },
+        {
+            "description": "Creepage violation (rule 'Hlida povrchovou vzdalenost sitovych spoju mezi sebou' creepage 5.0000 mm; actual 2.8085 mm)",
+            "items": [
+                {
+                    "description": "Track [unconnected-(C4-Pad2)] on B.Cu, length 1.6173 mm",
+                    "pos": {
+                        "x": 123.137349,
+                        "y": 65.637349
+                    },
+                    "uuid": "a17d3bcf-1471-405a-8131-e5b34d535129"
+                },
+                {
+                    "description": "Track [unconnected-(C4-Pad1)] on B.Cu, length 1.6427 mm",
+                    "pos": {
+                        "x": 123.2,
+                        "y": 62.1
+                    },
+                    "uuid": "bb7a5316-0dc2-48b0-af98-5594cce2e8cb"
+                }
+            ],
+            "severity": "error",
+            "type": "creepage"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [unconnected-(C4-Pad2)] on B.Cu, length 7.4300 mm",
+                    "pos": {
+                        "x": 133.43,
+                        "y": 68.5
+                    },
+                    "uuid": "457c732b-3559-4e97-88cd-6ec2fe4b0e51"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [unconnected-(C4-Pad1)] on B.Cu, length 8.3900 mm",
+                    "pos": {
+                        "x": 133.99,
+                        "y": 59.7
+                    },
+                    "uuid": "22b36c59-081e-4b76-b4de-bc5c9bcefe08"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu, length 1.4867 mm",
+                    "pos": {
+                        "x": 136.621237,
+                        "y": 75.031237
+                    },
+                    "uuid": "ea118d40-5cf4-438e-ad8d-073f1ad5e4dd"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu, length 0.7478 mm",
+                    "pos": {
+                        "x": 136.098763,
+                        "y": 78.531237
+                    },
+                    "uuid": "099af063-209f-40da-80e6-628634a90014"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu, length 5.4918 mm",
+                    "pos": {
+                        "x": 142.113033,
+                        "y": 75.031237
+                    },
+                    "uuid": "a176a8f0-e8c8-46be-95a1-b61b6b3770eb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu, length 6.0143 mm",
+                    "pos": {
+                        "x": 142.113033,
+                        "y": 78.531237
+                    },
+                    "uuid": "39259908-8e2b-486e-b15a-4f8317b0b70a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Footprint 'CP_Radial_D8.0mm_P3.50mm' does not match copy in library 'Capacitor_THT'",
+            "items": [
+                {
+                    "description": "Footprint C4",
+                    "pos": {
+                        "x": 121.52,
+                        "y": 62.137349
+                    },
+                    "uuid": "a34a3371-7d2e-4c04-b138-bdb0e8535b1f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

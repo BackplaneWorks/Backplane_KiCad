@@ -1,0 +1,1054 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:53",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue16182.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [GND] of U103 on F.Cu",
+                    "pos": {
+                        "x": 166.75,
+                        "y": 110.6
+                    },
+                    "uuid": "13ea49f5-c6de-4856-8323-7dc269bc6d40"
+                },
+                {
+                    "description": "Pad 2 [GND] of SW202 on B.Cu",
+                    "pos": {
+                        "x": 172.525,
+                        "y": 113.375
+                    },
+                    "uuid": "b5939446-ab92-4d8a-ad49-ebeba9a512c8"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [+3V3] of U103 on F.Cu",
+                    "pos": {
+                        "x": 166.75,
+                        "y": 112.9
+                    },
+                    "uuid": "1395deb4-902d-42ad-af31-b08906a9c5b2"
+                },
+                {
+                    "description": "Pad 2 [+3V3] of U103 on F.Cu",
+                    "pos": {
+                        "x": 173.05,
+                        "y": 112.9
+                    },
+                    "uuid": "64165286-5205-49d5-a726-484ed01bebd6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/MCU/~{RST}] on F.Cu, length 0.6000 mm",
+                    "pos": {
+                        "x": 170.6,
+                        "y": 108.6
+                    },
+                    "uuid": "53ec9bd3-6fdb-4660-b5ba-1b6b89e89abd"
+                },
+                {
+                    "description": "Track [/MCU/~{RST}] on B.Cu, length 0.9000 mm",
+                    "pos": {
+                        "x": 170.6,
+                        "y": 109.2
+                    },
+                    "uuid": "cec66086-67a4-4b39-b200-8d3ec7724e23"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/MCU/SWCLK/BOOT0] on F.Cu, length 12.9101 mm",
+                    "pos": {
+                        "x": 158.08995,
+                        "y": 106.6
+                    },
+                    "uuid": "55fb0025-65f7-4032-805e-8a1b7ced7852"
+                },
+                {
+                    "description": "Track [/MCU/SWCLK/BOOT0] on B.Cu, length 0.1414 mm",
+                    "pos": {
+                        "x": 171.0,
+                        "y": 106.6
+                    },
+                    "uuid": "35bc2913-3d9a-419c-ba40-847a57de7eb8"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/MCU/~{RST}] on B.Cu, length 1.5556 mm",
+                    "pos": {
+                        "x": 170.6,
+                        "y": 110.1
+                    },
+                    "uuid": "5e4c874c-0ca0-479b-a6d4-d323e0355c46"
+                },
+                {
+                    "description": "Pad 1 [/MCU/~{RST}] of SW202 on B.Cu",
+                    "pos": {
+                        "x": 172.525,
+                        "y": 111.225
+                    },
+                    "uuid": "4de828b4-4a80-4258-a6d1-ed01b17785c5"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [/MCU/~{RST}] of SW202 on B.Cu",
+                    "pos": {
+                        "x": 172.525,
+                        "y": 111.225
+                    },
+                    "uuid": "4de828b4-4a80-4258-a6d1-ed01b17785c5"
+                },
+                {
+                    "description": "Pad 1 [/MCU/~{RST}] of SW202 on B.Cu",
+                    "pos": {
+                        "x": 176.675,
+                        "y": 111.225
+                    },
+                    "uuid": "8fb1d370-ee96-4181-8df5-05be9ea67f37"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of SW202 on B.Cu",
+                    "pos": {
+                        "x": 172.525,
+                        "y": 113.375
+                    },
+                    "uuid": "b5939446-ab92-4d8a-ad49-ebeba9a512c8"
+                },
+                {
+                    "description": "Pad 2 [GND] of SW202 on B.Cu",
+                    "pos": {
+                        "x": 176.675,
+                        "y": 113.375
+                    },
+                    "uuid": "96d72b51-0804-4140-bd1a-55010b75b65e"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [+3V3] of U103 on F.Cu",
+                    "pos": {
+                        "x": 173.05,
+                        "y": 112.9
+                    },
+                    "uuid": "64165286-5205-49d5-a726-484ed01bebd6"
+                },
+                {
+                    "description": "Track [+3V3] on F.Cu, length 5.3740 mm",
+                    "pos": {
+                        "x": 180.0,
+                        "y": 109.0
+                    },
+                    "uuid": "67ba7972-0051-45bb-962f-7bcd1d537aca"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Zone 'outer_pour' [GND] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 189.0,
+                        "y": 130.0
+                    },
+                    "uuid": "93ed6141-d0e6-4281-806c-6cdd736933b2"
+                },
+                {
+                    "description": "Zone 'outer_pour' [GND] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 189.0,
+                        "y": 130.0
+                    },
+                    "uuid": "93ed6141-d0e6-4281-806c-6cdd736933b2"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of SW202 on B.Cu",
+                    "pos": {
+                        "x": 176.675,
+                        "y": 113.375
+                    },
+                    "uuid": "96d72b51-0804-4140-bd1a-55010b75b65e"
+                },
+                {
+                    "description": "Track [GND] on F.Cu, length 1.1750 mm",
+                    "pos": {
+                        "x": 184.325,
+                        "y": 105.5
+                    },
+                    "uuid": "0d2df83d-27dd-48e9-bcde-5ce2833cd25f"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Zone 'outer_pour' [GND] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 189.0,
+                        "y": 130.0
+                    },
+                    "uuid": "93ed6141-d0e6-4281-806c-6cdd736933b2"
+                },
+                {
+                    "description": "Zone 'outer_pour' [GND] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 189.0,
+                        "y": 130.0
+                    },
+                    "uuid": "93ed6141-d0e6-4281-806c-6cdd736933b2"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [Net-(R202-Pad1)] on F.Cu, length 0.9750 mm",
+                    "pos": {
+                        "x": 178.3,
+                        "y": 107.825
+                    },
+                    "uuid": "a586eacb-d0e5-4b95-825e-bd179ca46f24"
+                },
+                {
+                    "description": "Track [Net-(R202-Pad1)] on B.Cu, length 0.1061 mm",
+                    "pos": {
+                        "x": 178.225,
+                        "y": 108.875
+                    },
+                    "uuid": "e28e980c-b1bd-42f5-a233-0df1963d47e5"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [GND] on F.Cu, length 1.9375 mm",
+                    "pos": {
+                        "x": 180.9375,
+                        "y": 98.5
+                    },
+                    "uuid": "3d2b337a-a034-47cc-ab43-b61a14c81a69"
+                },
+                {
+                    "description": "Track [GND] on F.Cu, length 0.5303 mm",
+                    "pos": {
+                        "x": 177.8,
+                        "y": 96.7
+                    },
+                    "uuid": "34bb7c52-1f2b-4d6c-8431-158e1354a171"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/Modbus/CONN_RS485_A] on F.Cu, length 0.0526 mm",
+                    "pos": {
+                        "x": 181.5005,
+                        "y": 99.487174
+                    },
+                    "uuid": "7bdb1093-9c10-4472-9e22-d257212a38a8"
+                },
+                {
+                    "description": "Track [/Modbus/CONN_RS485_A] on B.Cu, length 0.9892 mm",
+                    "pos": {
+                        "x": 181.5005,
+                        "y": 99.487174
+                    },
+                    "uuid": "a2a580ce-44e1-473f-a706-ff5c164f86a7"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/Power/PWR_LED_K] on F.Cu, length 0.9250 mm",
+                    "pos": {
+                        "x": 182.75,
+                        "y": 106.5
+                    },
+                    "uuid": "07437e30-de40-419c-a9c7-5e9e943558b2"
+                },
+                {
+                    "description": "Track [/Power/PWR_LED_K] on B.Cu, length 0.0530 mm",
+                    "pos": {
+                        "x": 182.7125,
+                        "y": 106.5375
+                    },
+                    "uuid": "cfeb9cb9-f3e1-4ebb-9be0-2824a9f4bac2"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [+3V3] on F.Cu, length 4.2500 mm",
+                    "pos": {
+                        "x": 184.25,
+                        "y": 109.0
+                    },
+                    "uuid": "959faf6e-91e1-45f7-afa5-43b50d353dd0"
+                },
+                {
+                    "description": "Track [+3V3] on B.Cu, length 0.0530 mm",
+                    "pos": {
+                        "x": 184.2875,
+                        "y": 109.0375
+                    },
+                    "uuid": "1b32b853-7f33-4e0d-8b3e-1346e82c62ce"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2505 mm)",
+            "items": [
+                {
+                    "description": "Rectangle on Edge.Cuts",
+                    "pos": {
+                        "x": 105.0,
+                        "y": 75.0
+                    },
+                    "uuid": "23f96a5b-b73f-4af7-81e9-fae98791b224"
+                },
+                {
+                    "description": "Zone 'outer_pour' [GND] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 189.0,
+                        "y": 130.0
+                    },
+                    "uuid": "93ed6141-d0e6-4281-806c-6cdd736933b2"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer F.Cu; zone min spoke count 2; actual 1)",
+            "items": [
+                {
+                    "description": "Zone 'outer_pour' [GND] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 189.0,
+                        "y": 130.0
+                    },
+                    "uuid": "93ed6141-d0e6-4281-806c-6cdd736933b2"
+                },
+                {
+                    "description": "Pad 2 [GND] of C401 on F.Cu",
+                    "pos": {
+                        "x": 172.375,
+                        "y": 94.8
+                    },
+                    "uuid": "74e4ee64-c099-41b5-933a-27f1024cd168"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODBUS_TX] on F.Cu, length 9.1924 mm",
+                    "pos": {
+                        "x": 157.5,
+                        "y": 90.4
+                    },
+                    "uuid": "6754b849-93da-40b4-b4e0-aad30ec27a4a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/MCU/SWCLK/BOOT0] on F.Cu, length 12.9101 mm",
+                    "pos": {
+                        "x": 158.08995,
+                        "y": 106.6
+                    },
+                    "uuid": "55fb0025-65f7-4032-805e-8a1b7ced7852"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [+3V3] on F.Cu, length 14.2000 mm",
+                    "pos": {
+                        "x": 158.1,
+                        "y": 105.6
+                    },
+                    "uuid": "a53ac72f-f020-4801-865e-5cdcdd8c1cba"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/MCU/~{RST}] on F.Cu, length 11.4101 mm",
+                    "pos": {
+                        "x": 158.78995,
+                        "y": 108.2
+                    },
+                    "uuid": "c8e88aee-c08a-4f6a-af8b-26464257b8f9"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [+3V3] on F.Cu, length 4.1012 mm",
+                    "pos": {
+                        "x": 164.3,
+                        "y": 86.1
+                    },
+                    "uuid": "52edb161-0f14-4c88-8017-c1649cf56c21"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/MCU/~{RST}] on F.Cu, length 0.6000 mm",
+                    "pos": {
+                        "x": 170.6,
+                        "y": 108.6
+                    },
+                    "uuid": "53ec9bd3-6fdb-4660-b5ba-1b6b89e89abd"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/MCU/~{RST}] on B.Cu, length 0.9000 mm",
+                    "pos": {
+                        "x": 170.6,
+                        "y": 109.2
+                    },
+                    "uuid": "cec66086-67a4-4b39-b200-8d3ec7724e23"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/MCU/SWCLK/BOOT0] on B.Cu, length 0.1414 mm",
+                    "pos": {
+                        "x": 171.0,
+                        "y": 106.6
+                    },
+                    "uuid": "35bc2913-3d9a-419c-ba40-847a57de7eb8"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/MCU/~{RST}] on B.Cu, length 1.5556 mm",
+                    "pos": {
+                        "x": 170.6,
+                        "y": 110.1
+                    },
+                    "uuid": "5e4c874c-0ca0-479b-a6d4-d323e0355c46"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [+3V3] on F.Cu, length 4.0500 mm",
+                    "pos": {
+                        "x": 176.2,
+                        "y": 109.5
+                    },
+                    "uuid": "70250cb2-99cd-408b-9af0-859bb077f559"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [GND] on F.Cu, length 0.5303 mm",
+                    "pos": {
+                        "x": 177.8,
+                        "y": 96.7
+                    },
+                    "uuid": "34bb7c52-1f2b-4d6c-8431-158e1354a171"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(R202-Pad1)] on F.Cu, length 0.9750 mm",
+                    "pos": {
+                        "x": 178.3,
+                        "y": 107.825
+                    },
+                    "uuid": "a586eacb-d0e5-4b95-825e-bd179ca46f24"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(R202-Pad1)] on B.Cu, length 0.1061 mm",
+                    "pos": {
+                        "x": 178.225,
+                        "y": 108.875
+                    },
+                    "uuid": "e28e980c-b1bd-42f5-a233-0df1963d47e5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [GND] on F.Cu, length 1.9375 mm",
+                    "pos": {
+                        "x": 180.9375,
+                        "y": 98.5
+                    },
+                    "uuid": "3d2b337a-a034-47cc-ab43-b61a14c81a69"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Modbus/CONN_RS485_A] on F.Cu, length 0.0526 mm",
+                    "pos": {
+                        "x": 181.5005,
+                        "y": 99.487174
+                    },
+                    "uuid": "7bdb1093-9c10-4472-9e22-d257212a38a8"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Modbus/CONN_RS485_A] on B.Cu, length 0.9892 mm",
+                    "pos": {
+                        "x": 181.5005,
+                        "y": 99.487174
+                    },
+                    "uuid": "a2a580ce-44e1-473f-a706-ff5c164f86a7"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/MCU/LED_K] on B.Cu, length 0.9625 mm",
+                    "pos": {
+                        "x": 182.7125,
+                        "y": 110.5
+                    },
+                    "uuid": "a7a1f3f2-5cb7-40bc-a51b-71356dce4ebd"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Power/PWR_LED_K] on F.Cu, length 0.9250 mm",
+                    "pos": {
+                        "x": 182.75,
+                        "y": 106.5
+                    },
+                    "uuid": "07437e30-de40-419c-a9c7-5e9e943558b2"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/Power/PWR_LED_K] on B.Cu, length 0.0530 mm",
+                    "pos": {
+                        "x": 182.7125,
+                        "y": 106.5375
+                    },
+                    "uuid": "cfeb9cb9-f3e1-4ebb-9be0-2824a9f4bac2"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [+3V3] on F.Cu, length 2.8284 mm",
+                    "pos": {
+                        "x": 188.0,
+                        "y": 111.0
+                    },
+                    "uuid": "9779cc85-70bd-4a55-ac02-92be5e479f59"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'dresco'",
+            "items": [
+                {
+                    "description": "Footprint G***",
+                    "pos": {
+                        "x": 175.7,
+                        "y": 117.9
+                    },
+                    "uuid": "53f8ecb7-c616-40ff-9d25-b654a95b7de8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R402",
+                    "pos": {
+                        "x": 167.4,
+                        "y": 94.8
+                    },
+                    "uuid": "52a9768b-a6f7-4175-81e4-2c8223f7ca82"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R401",
+                    "pos": {
+                        "x": 169.46,
+                        "y": 102.2
+                    },
+                    "uuid": "ae366deb-f8b9-4ceb-aae6-585118f3ccc0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'SOIC-8_3.9x4.9mm_P1.27mm' does not match copy in library 'Package_SO'",
+            "items": [
+                {
+                    "description": "Footprint U401",
+                    "pos": {
+                        "x": 169.5,
+                        "y": 98.5
+                    },
+                    "uuid": "5b205737-a0d6-4bdc-9b7f-f81b83838ea7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'SOT-223-3_TabPin2' does not match copy in library 'Package_TO_SOT_SMD'",
+            "items": [
+                {
+                    "description": "Footprint U103",
+                    "pos": {
+                        "x": 169.9,
+                        "y": 112.9
+                    },
+                    "uuid": "c5b6c4fa-6c9b-4715-8795-9516aca0f565"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C401",
+                    "pos": {
+                        "x": 171.6,
+                        "y": 94.8
+                    },
+                    "uuid": "f292e717-c996-40f8-865d-24ad6d720f94"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R403",
+                    "pos": {
+                        "x": 175.0,
+                        "y": 95.5
+                    },
+                    "uuid": "7b90f0e2-bf4d-465d-881c-98746ce61b56"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x02_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint JP401",
+                    "pos": {
+                        "x": 174.71,
+                        "y": 98.5
+                    },
+                    "uuid": "44f6d973-96e8-4806-b805-a9c2eb195746"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R405",
+                    "pos": {
+                        "x": 176.7,
+                        "y": 95.5
+                    },
+                    "uuid": "6d428dd9-cff7-44f2-9a13-8cc5c826565c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R404",
+                    "pos": {
+                        "x": 176.7,
+                        "y": 101.5
+                    },
+                    "uuid": "622f3622-d8db-43f0-8859-b3671bb65391"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R202",
+                    "pos": {
+                        "x": 178.3,
+                        "y": 107.0
+                    },
+                    "uuid": "03a5680f-1a43-4752-b5bb-6a2b3cff277e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R407",
+                    "pos": {
+                        "x": 180.0,
+                        "y": 95.0
+                    },
+                    "uuid": "69a44f65-aa67-4f6a-a10c-089e8ae2d2ed"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'SOT-23' does not match copy in library 'Package_TO_SOT_SMD'",
+            "items": [
+                {
+                    "description": "Footprint D401",
+                    "pos": {
+                        "x": 180.0,
+                        "y": 98.5
+                    },
+                    "uuid": "d2079c23-1a02-42c0-a23b-b8d3b0ef6783"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1206_3216Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R406",
+                    "pos": {
+                        "x": 180.0,
+                        "y": 102.0
+                    },
+                    "uuid": "6535d353-65c3-4da5-ba70-fbca778cad70"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_0603_1608Metric' does not match copy in library 'LED_SMD'",
+            "items": [
+                {
+                    "description": "Footprint D106",
+                    "pos": {
+                        "x": 183.5,
+                        "y": 107.5
+                    },
+                    "uuid": "2249b586-a90f-4806-bfd0-399dbd7a20bc"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_0603_1608Metric' does not match copy in library 'LED_SMD'",
+            "items": [
+                {
+                    "description": "Footprint D201",
+                    "pos": {
+                        "x": 183.5,
+                        "y": 110.5
+                    },
+                    "uuid": "5d4f7979-f2c1-4eb7-bb10-2f94cd3ba725"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R114",
+                    "pos": {
+                        "x": 183.5,
+                        "y": 105.5
+                    },
+                    "uuid": "5b601c37-1955-4a10-908e-99861adf593f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TerminalBlock_Phoenix_PT-1,5-2-3.5-H_1x02_P3.50mm_Horizontal' does not match copy in library 'TerminalBlock_Phoenix'",
+            "items": [
+                {
+                    "description": "Footprint J401",
+                    "pos": {
+                        "x": 184.0,
+                        "y": 96.75
+                    },
+                    "uuid": "e40066be-dd01-407d-89ff-1282c8be4104"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Copper sliver (F.Cu)",
+            "items": [],
+            "severity": "warning",
+            "type": "copper_sliver"
+        },
+        {
+            "description": "Copper sliver (F.Cu)",
+            "items": [],
+            "severity": "warning",
+            "type": "copper_sliver"
+        },
+        {
+            "description": "Copper sliver (F.Cu)",
+            "items": [],
+            "severity": "warning",
+            "type": "copper_sliver"
+        },
+        {
+            "description": "Copper sliver (F.Cu)",
+            "items": [],
+            "severity": "warning",
+            "type": "copper_sliver"
+        }
+    ]
+}

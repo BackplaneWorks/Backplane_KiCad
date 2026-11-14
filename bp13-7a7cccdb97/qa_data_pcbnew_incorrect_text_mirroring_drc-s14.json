@@ -1,0 +1,169 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:49",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Copper connection too narrow",
+            "key": "connection_width"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "incorrect_text_mirroring_drc.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Mirrored text on front layer",
+            "items": [
+                {
+                    "description": "PCB text 'simple text 1' on F.Silkscreen",
+                    "pos": {
+                        "x": 89.0,
+                        "y": -16.0
+                    },
+                    "uuid": "ec347ae7-892c-45b9-a6fe-fe03f0d9c93a"
+                }
+            ],
+            "severity": "warning",
+            "type": "mirrored_text_on_front_layer"
+        },
+        {
+            "description": "Mirrored text on front layer",
+            "items": [
+                {
+                    "description": "PCB text 'simple text 2' on F.Cu",
+                    "pos": {
+                        "x": 89.0,
+                        "y": -13.0
+                    },
+                    "uuid": "ff95eb0d-ff5f-4a8d-a925-d60a05d1fff2"
+                }
+            ],
+            "severity": "warning",
+            "type": "mirrored_text_on_front_layer"
+        },
+        {
+            "description": "Mirrored text on front layer",
+            "items": [
+                {
+                    "description": "PCB text box 'textbox 1' on F.Silkscreen",
+                    "pos": {
+                        "x": 92.0,
+                        "y": -17.0
+                    },
+                    "uuid": "2d1d2f60-3886-4d23-962a-ce37b181b02f"
+                }
+            ],
+            "severity": "warning",
+            "type": "mirrored_text_on_front_layer"
+        },
+        {
+            "description": "Mirrored text on front layer",
+            "items": [
+                {
+                    "description": "PCB text box 'textbox 2\nmultiline' on F.Cu",
+                    "pos": {
+                        "x": 92.0,
+                        "y": -10.0
+                    },
+                    "uuid": "d129d2f4-9499-48b6-a0e8-0edf3c1f7c7f"
+                }
+            ],
+            "severity": "warning",
+            "type": "mirrored_text_on_front_layer"
+        },
+        {
+            "description": "Non-Mirrored text on back layer",
+            "items": [
+                {
+                    "description": "PCB text 'simple text 1' on B.Silkscreen",
+                    "pos": {
+                        "x": 71.0,
+                        "y": 28.0
+                    },
+                    "uuid": "8cb8f7df-4caa-483a-b7a1-d40d95e631c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "nonmirrored_text_on_back_layer"
+        },
+        {
+            "description": "Non-Mirrored text on back layer",
+            "items": [
+                {
+                    "description": "PCB text 'simple text 2' on B.Cu",
+                    "pos": {
+                        "x": 71.0,
+                        "y": 31.0
+                    },
+                    "uuid": "18ca425a-3b7e-4cc7-8440-480d3042a171"
+                }
+            ],
+            "severity": "warning",
+            "type": "nonmirrored_text_on_back_layer"
+        },
+        {
+            "description": "Non-Mirrored text on back layer",
+            "items": [
+                {
+                    "description": "PCB text box 'textbox 1' on B.Silkscreen",
+                    "pos": {
+                        "x": 90.0,
+                        "y": 26.0
+                    },
+                    "uuid": "fc05ddb3-8177-4e58-b8c6-b0abc62afc22"
+                }
+            ],
+            "severity": "warning",
+            "type": "nonmirrored_text_on_back_layer"
+        },
+        {
+            "description": "Non-Mirrored text on back layer",
+            "items": [
+                {
+                    "description": "PCB text box 'textbox 2\nmultiline' on B.Cu",
+                    "pos": {
+                        "x": 90.0,
+                        "y": 33.0
+                    },
+                    "uuid": "df9e4d96-b3a4-4674-9dba-7893ca08029d"
+                }
+            ],
+            "severity": "warning",
+            "type": "nonmirrored_text_on_back_layer"
+        }
+    ]
+}

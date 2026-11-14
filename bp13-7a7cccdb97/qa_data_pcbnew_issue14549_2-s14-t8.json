@@ -1,0 +1,303 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:53",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue14549_2.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0534 mm)",
+            "items": [
+                {
+                    "description": "Rectangle [<no net>] on F.Cu",
+                    "pos": {
+                        "x": 80.5,
+                        "y": 74.5
+                    },
+                    "uuid": "2645319d-1bd9-48ff-bd97-9fefc229e1cd"
+                },
+                {
+                    "description": "PCB text '1' on F.Cu",
+                    "pos": {
+                        "x": 81.5,
+                        "y": 76.4
+                    },
+                    "uuid": "d1e958de-b380-4af2-9f9a-da46dc7497e3"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0534 mm)",
+            "items": [
+                {
+                    "description": "PCB text '2' on In1.Cu",
+                    "pos": {
+                        "x": 84.5,
+                        "y": 76.4
+                    },
+                    "uuid": "88f09913-65e4-429e-8c4d-d295eaafda80"
+                },
+                {
+                    "description": "Rectangle [<no net>] on In1.Cu",
+                    "pos": {
+                        "x": 83.5,
+                        "y": 74.5
+                    },
+                    "uuid": "df3abb4a-ad5e-453a-97b9-8119030c557c"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0534 mm)",
+            "items": [
+                {
+                    "description": "PCB text '3' on In2.Cu",
+                    "pos": {
+                        "x": 87.5,
+                        "y": 76.4
+                    },
+                    "uuid": "ad0fb1e7-f355-49e4-baa0-6eefb1d5183f"
+                },
+                {
+                    "description": "Rectangle [<no net>] on In2.Cu",
+                    "pos": {
+                        "x": 86.5,
+                        "y": 74.5
+                    },
+                    "uuid": "ef92d8a1-3b08-4d28-ad5a-e6d30524aa46"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0534 mm)",
+            "items": [
+                {
+                    "description": "PCB text '4' on B.Cu",
+                    "pos": {
+                        "x": 90.5,
+                        "y": 76.4
+                    },
+                    "uuid": "311a98c4-d7fa-4072-9bcd-14e6b20d64dd"
+                },
+                {
+                    "description": "Rectangle [<no net>] on B.Cu",
+                    "pos": {
+                        "x": 89.5,
+                        "y": 74.5
+                    },
+                    "uuid": "f3b4303f-98d6-4dbf-b578-62e5f99afc0c"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Unresolved text variable",
+            "items": [],
+            "severity": "error",
+            "type": "unresolved_variable"
+        },
+        {
+            "description": "Unresolved text variable",
+            "items": [],
+            "severity": "error",
+            "type": "unresolved_variable"
+        },
+        {
+            "description": "Unresolved text variable",
+            "items": [],
+            "severity": "error",
+            "type": "unresolved_variable"
+        },
+        {
+            "description": "Unresolved text variable",
+            "items": [],
+            "severity": "error",
+            "type": "unresolved_variable"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Rectangle [<no net>] on F.Cu",
+                    "pos": {
+                        "x": 80.5,
+                        "y": 74.5
+                    },
+                    "uuid": "2645319d-1bd9-48ff-bd97-9fefc229e1cd"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "PCB text '1' on F.Cu",
+                    "pos": {
+                        "x": 81.5,
+                        "y": 76.4
+                    },
+                    "uuid": "d1e958de-b380-4af2-9f9a-da46dc7497e3"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Rectangle [<no net>] on In1.Cu",
+                    "pos": {
+                        "x": 83.5,
+                        "y": 74.5
+                    },
+                    "uuid": "df3abb4a-ad5e-453a-97b9-8119030c557c"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "PCB text '2' on In1.Cu",
+                    "pos": {
+                        "x": 84.5,
+                        "y": 76.4
+                    },
+                    "uuid": "88f09913-65e4-429e-8c4d-d295eaafda80"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Rectangle [<no net>] on In2.Cu",
+                    "pos": {
+                        "x": 86.5,
+                        "y": 74.5
+                    },
+                    "uuid": "ef92d8a1-3b08-4d28-ad5a-e6d30524aa46"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "PCB text '3' on In2.Cu",
+                    "pos": {
+                        "x": 87.5,
+                        "y": 76.4
+                    },
+                    "uuid": "ad0fb1e7-f355-49e4-baa0-6eefb1d5183f"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "Rectangle [<no net>] on B.Cu",
+                    "pos": {
+                        "x": 89.5,
+                        "y": 74.5
+                    },
+                    "uuid": "f3b4303f-98d6-4dbf-b578-62e5f99afc0c"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "Copper outside board outline",
+            "items": [
+                {
+                    "description": "PCB text '4' on B.Cu",
+                    "pos": {
+                        "x": 90.5,
+                        "y": 76.4
+                    },
+                    "uuid": "311a98c4-d7fa-4072-9bcd-14e6b20d64dd"
+                }
+            ],
+            "severity": "warning",
+            "type": "copper_outside_board"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '_PCB_Graphics'",
+            "items": [
+                {
+                    "description": "Footprint Logo1",
+                    "pos": {
+                        "x": 95.0,
+                        "y": 64.0
+                    },
+                    "uuid": "2806c32b-c664-4361-9959-f47863e42b64"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '_PCB_Graphics'",
+            "items": [
+                {
+                    "description": "Footprint Logo2",
+                    "pos": {
+                        "x": 110.0,
+                        "y": 64.0
+                    },
+                    "uuid": "bb501736-d8db-4aae-b9a2-1f0213caf929"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

@@ -1,0 +1,600 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:12",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue6260.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Footprint 'DSUB-9_Female_Horizontal_P2.77x2.84mm_EdgePinOffset7.70mm_Housed_MountingHolesOffset9.12mm' not found in library 'Connector_Dsub'",
+            "items": [
+                {
+                    "description": "Footprint J13",
+                    "pos": {
+                        "x": 111.0,
+                        "y": 80.54
+                    },
+                    "uuid": "ba635da7-bb95-4348-988c-133f4c92af97"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_Drill1.5mm' not found in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 52.5
+                    },
+                    "uuid": "39e517ef-4124-4f73-bfb5-ebf1dbe8cf59"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_Drill1.5mm' not found in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 57.5
+                    },
+                    "uuid": "fd9076c6-cdc3-40ce-839a-26e46ec7f556"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_Drill1.5mm' not found in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint J3",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 62.5
+                    },
+                    "uuid": "9659f0ec-beca-4948-aa97-e3144adc8e6d"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_Drill1.5mm' not found in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint J4",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 67.5
+                    },
+                    "uuid": "7741a29b-4bb9-4903-af2b-447e9c588323"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_Drill1.5mm' not found in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint J5",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 72.5
+                    },
+                    "uuid": "7eef5cea-a30d-407f-bcb2-17c9fbbf6498"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_Drill1.5mm' not found in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint J6",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 77.5
+                    },
+                    "uuid": "1ee0c2f7-f004-45b8-9dbe-091f2d69fd0e"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_Drill1.5mm' not found in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint J7",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 82.5
+                    },
+                    "uuid": "e98eec66-198f-47ad-93ee-28f2b8f54936"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_Drill1.5mm' not found in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint J8",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 87.5
+                    },
+                    "uuid": "5d764442-9455-4272-af76-8fb8002a0d0e"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_Drill1.5mm' not found in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint J9",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 92.5
+                    },
+                    "uuid": "738583a1-46a6-43a7-b22f-1099bacdbfd8"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_Drill1.5mm' not found in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint J10",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 97.5
+                    },
+                    "uuid": "fa2a72db-7eed-4823-adff-a55236d546fb"
+                }
+            ],
+            "severity": "error",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x03_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J11",
+                    "pos": {
+                        "x": 105.5,
+                        "y": 53.5
+                    },
+                    "uuid": "d5a41cb7-bc5c-4109-9c94-ac8fda5bfc4e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'PinHeader_1x03_P2.54mm_Vertical' does not match copy in library 'Connector_PinHeader_2.54mm'",
+            "items": [
+                {
+                    "description": "Footprint J12",
+                    "pos": {
+                        "x": 105.5,
+                        "y": 96.5
+                    },
+                    "uuid": "c746596c-f7a3-42a2-b450-0b55c909b203"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 124.6,
+                        "y": 57.5
+                    },
+                    "uuid": "fbc70731-1103-4e75-add0-462de2727630"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 124.6,
+                        "y": 62.5
+                    },
+                    "uuid": "6e11b57c-c7e6-4008-b5f6-528a5ea86f3c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 124.6,
+                        "y": 67.5
+                    },
+                    "uuid": "7f517fc8-5fec-4fcd-82a8-289022f401b0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 124.6,
+                        "y": 72.5
+                    },
+                    "uuid": "929f6a75-0573-4bb3-9c18-0eb81a7d45c8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R5",
+                    "pos": {
+                        "x": 124.6,
+                        "y": 77.5
+                    },
+                    "uuid": "e7299771-ca19-4ee5-adf4-0637671559f9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R6",
+                    "pos": {
+                        "x": 124.6,
+                        "y": 82.5
+                    },
+                    "uuid": "11c48902-98f4-4bd6-8eed-a15f8b137394"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R7",
+                    "pos": {
+                        "x": 124.6,
+                        "y": 87.5
+                    },
+                    "uuid": "bea08447-beff-41e0-9c23-dbe36f389c9b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal' does not match copy in library 'Resistor_THT'",
+            "items": [
+                {
+                    "description": "Footprint R8",
+                    "pos": {
+                        "x": 124.6,
+                        "y": 92.5
+                    },
+                    "uuid": "60235c2a-7187-4276-8147-d1baf50409a1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D1",
+                    "pos": {
+                        "x": 127.9144,
+                        "y": 56.2356
+                    },
+                    "uuid": "b7eb3d3a-6922-4555-bc18-24dfc6c9c648"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D2",
+                    "pos": {
+                        "x": 127.9144,
+                        "y": 61.2648
+                    },
+                    "uuid": "e9b97e8e-b9a6-4923-9896-dd1611cf5e94"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D3",
+                    "pos": {
+                        "x": 127.9144,
+                        "y": 66.2432
+                    },
+                    "uuid": "6c4c4ec7-0e9a-4d19-bb42-94313ddc1927"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D4",
+                    "pos": {
+                        "x": 127.9144,
+                        "y": 71.2216
+                    },
+                    "uuid": "4e79b18d-6762-4c11-a610-c9f07a51aa18"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D5",
+                    "pos": {
+                        "x": 127.9144,
+                        "y": 76.2
+                    },
+                    "uuid": "b3cc2597-faeb-4eff-a53b-8499d1342624"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D6",
+                    "pos": {
+                        "x": 127.9144,
+                        "y": 81.2292
+                    },
+                    "uuid": "99d9525e-61f5-41f9-a437-ae90eeef3e23"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D7",
+                    "pos": {
+                        "x": 127.9144,
+                        "y": 86.2076
+                    },
+                    "uuid": "82ee9600-9d00-4a8e-ab2a-24336ae10c65"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D8",
+                    "pos": {
+                        "x": 127.9144,
+                        "y": 91.2368
+                    },
+                    "uuid": "3e86b699-06e6-4317-93ef-db7aed2f27bd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D9",
+                    "pos": {
+                        "x": 132.588,
+                        "y": 58.7756
+                    },
+                    "uuid": "0d0f25d0-8a53-4faa-810c-3647b5cb1096"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D10",
+                    "pos": {
+                        "x": 132.588,
+                        "y": 63.8048
+                    },
+                    "uuid": "aa2a873e-c2f4-431c-b465-a9d8757375a1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D11",
+                    "pos": {
+                        "x": 132.588,
+                        "y": 68.7832
+                    },
+                    "uuid": "ccb2754f-d84f-496a-81d6-0767ee30e3df"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D12",
+                    "pos": {
+                        "x": 132.588,
+                        "y": 73.7616
+                    },
+                    "uuid": "43a296da-9651-4a8c-925c-f2bbdd186717"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D13",
+                    "pos": {
+                        "x": 132.588,
+                        "y": 78.74
+                    },
+                    "uuid": "67b987b7-51d5-4feb-b966-87ef873b09c5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D14",
+                    "pos": {
+                        "x": 132.588,
+                        "y": 83.7692
+                    },
+                    "uuid": "24bb9115-5315-4e30-9844-b19ceead282c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D15",
+                    "pos": {
+                        "x": 132.588,
+                        "y": 88.7476
+                    },
+                    "uuid": "c4572398-1017-47b5-94e0-0d53b0151acd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_D3.0mm' does not match copy in library 'LED_THT'",
+            "items": [
+                {
+                    "description": "Footprint D16",
+                    "pos": {
+                        "x": 132.588,
+                        "y": 93.7768
+                    },
+                    "uuid": "c46b6a69-9098-4ff5-ae05-e75fac0cb78a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

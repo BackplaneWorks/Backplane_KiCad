@@ -1,0 +1,202 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:36",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "via_stacks.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on In1.Cu - In2.Cu",
+                    "pos": {
+                        "x": 20.0,
+                        "y": 20.0
+                    },
+                    "uuid": "3489aebc-fcb5-43a2-8a7d-fa4869f8f90b"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on F.Cu - In1.Cu",
+                    "pos": {
+                        "x": 20.0,
+                        "y": 20.0
+                    },
+                    "uuid": "e64e83bb-b9fd-40a4-82a1-4e2680099f9c"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on In1.Cu - In2.Cu",
+                    "pos": {
+                        "x": 40.0,
+                        "y": 20.0
+                    },
+                    "uuid": "5f37f62b-46be-4bf1-b36d-1180d87d62cc"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on In2.Cu - In3.Cu",
+                    "pos": {
+                        "x": 40.45,
+                        "y": 20.0
+                    },
+                    "uuid": "cef5bd56-1e2a-48d1-8676-f66068d03504"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "b710a2c3-0d91-4a99-bb72-5a1269688be8"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on F.Cu - In1.Cu",
+                    "pos": {
+                        "x": 20.0,
+                        "y": 20.0
+                    },
+                    "uuid": "e64e83bb-b9fd-40a4-82a1-4e2680099f9c"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on In1.Cu - In2.Cu",
+                    "pos": {
+                        "x": 20.0,
+                        "y": 20.0
+                    },
+                    "uuid": "3489aebc-fcb5-43a2-8a7d-fa4869f8f90b"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on In1.Cu - In2.Cu",
+                    "pos": {
+                        "x": 40.0,
+                        "y": 20.0
+                    },
+                    "uuid": "5f37f62b-46be-4bf1-b36d-1180d87d62cc"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on In2.Cu - In3.Cu",
+                    "pos": {
+                        "x": 40.45,
+                        "y": 20.0
+                    },
+                    "uuid": "cef5bd56-1e2a-48d1-8676-f66068d03504"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "The stackup gives the dielectric between In1.Cu and In2.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on In1.Cu - In2.Cu",
+                    "pos": {
+                        "x": 20.0,
+                        "y": 20.0
+                    },
+                    "uuid": "3489aebc-fcb5-43a2-8a7d-fa4869f8f90b"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        },
+        {
+            "description": "The stackup gives the dielectric between In1.Cu and In2.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [<no net>] on In1.Cu - In2.Cu",
+                    "pos": {
+                        "x": 40.0,
+                        "y": 20.0
+                    },
+                    "uuid": "5f37f62b-46be-4bf1-b36d-1180d87d62cc"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        }
+    ]
+}

@@ -1,0 +1,98 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:30",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Copper connection too narrow",
+            "key": "connection_width"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "reverse_via.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 8.605691,
+                        "y": -10.934309
+                    },
+                    "uuid": "5102eaa9-d649-41a2-a365-d32be881c5cb"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/EM_VBUS] on In2.Cu, length 11.3024 mm",
+                    "pos": {
+                        "x": 1.908001,
+                        "y": -3.608001
+                    },
+                    "uuid": "11086087-1a97-4ea0-b83a-d7f0d0467d7e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Hole clearance violation (board setup constraints hole clearance 0.2540 mm; actual 0.2195 mm)",
+            "items": [
+                {
+                    "description": "Track [/EM_VBUS] on In2.Cu, length 11.3024 mm",
+                    "pos": {
+                        "x": 1.908001,
+                        "y": -3.608001
+                    },
+                    "uuid": "11086087-1a97-4ea0-b83a-d7f0d0467d7e"
+                },
+                {
+                    "description": "Via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 8.605691,
+                        "y": -10.934309
+                    },
+                    "uuid": "5102eaa9-d649-41a2-a365-d32be881c5cb"
+                }
+            ],
+            "severity": "warning",
+            "type": "hole_clearance"
+        }
+    ]
+}

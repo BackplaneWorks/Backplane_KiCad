@@ -1,0 +1,121 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:49",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "hatch_thermal_connectivity.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [A] of REF**",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 63.246
+                    },
+                    "uuid": "258e6759-37ae-4f2e-8ce0-885d27cfd61c"
+                },
+                {
+                    "description": "Zone 'A' [A] on F.Cu and B.Cu, priority 0",
+                    "pos": {
+                        "x": 104.394,
+                        "y": 59.182
+                    },
+                    "uuid": "31d94ad4-3cd0-4e85-b769-d93fc6482911"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone 'A' [A] on F.Cu and B.Cu, priority 0",
+                    "pos": {
+                        "x": 104.394,
+                        "y": 59.182
+                    },
+                    "uuid": "31d94ad4-3cd0-4e85-b769-d93fc6482911"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone 'A' [A] on F.Cu and B.Cu, priority 0",
+                    "pos": {
+                        "x": 104.394,
+                        "y": 59.182
+                    },
+                    "uuid": "31d94ad4-3cd0-4e85-b769-d93fc6482911"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [A] on F.Cu, length 1.3000 mm",
+                    "pos": {
+                        "x": 116.1,
+                        "y": 64.3
+                    },
+                    "uuid": "82951e2f-390c-447b-ae46-026d3f7bd380"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Library'",
+            "items": [
+                {
+                    "description": "Footprint REF**",
+                    "pos": {
+                        "x": 112.776,
+                        "y": 63.246
+                    },
+                    "uuid": "447d7d22-858b-4f90-8bd9-017cd1cebfa8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

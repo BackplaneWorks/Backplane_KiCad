@@ -1,0 +1,978 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:43",
+    "ignored_checks": [
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "key": "silk_edge_clearance"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "variants.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 82.6,
+                        "y": 120.2
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a222dbd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint P106",
+                    "pos": {
+                        "x": 77.47,
+                        "y": 44.45
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005403302b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint P101",
+                    "pos": {
+                        "x": 77.47,
+                        "y": 135.89
+                    },
+                    "uuid": "00000000-0000-0000-0000-000054033012"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D1",
+                    "pos": {
+                        "x": 78.3,
+                        "y": 89.7
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005ca9c655"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint P1",
+                    "pos": {
+                        "x": 81.8,
+                        "y": 60.0
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a29e47a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 87.63,
+                        "y": 107.823
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ac65"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 87.63,
+                        "y": 111.125
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ac4f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 87.63,
+                        "y": 114.554
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ac39"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 87.63,
+                        "y": 118.11
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ac23"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R6",
+                    "pos": {
+                        "x": 87.757,
+                        "y": 121.92
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22aca7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R5",
+                    "pos": {
+                        "x": 87.757,
+                        "y": 125.476
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ac7b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint C2",
+                    "pos": {
+                        "x": 84.582,
+                        "y": 90.17
+                    },
+                    "uuid": "00000000-0000-0000-0000-000054032b95"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint C1",
+                    "pos": {
+                        "x": 110.49,
+                        "y": 78.867
+                    },
+                    "uuid": "00000000-0000-0000-0000-000054032b86"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint U3",
+                    "pos": {
+                        "x": 96.52,
+                        "y": 71.12
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a2a01d8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D5",
+                    "pos": {
+                        "x": 107.95,
+                        "y": 108.585
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a217a88"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D4",
+                    "pos": {
+                        "x": 107.95,
+                        "y": 111.887
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a217a6a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D7",
+                    "pos": {
+                        "x": 107.95,
+                        "y": 115.316
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a217ac4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D2",
+                    "pos": {
+                        "x": 107.95,
+                        "y": 118.237
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a217a2e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D3",
+                    "pos": {
+                        "x": 107.95,
+                        "y": 121.92
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a217a4c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D6",
+                    "pos": {
+                        "x": 107.95,
+                        "y": 125.095
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a217ae2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint U4",
+                    "pos": {
+                        "x": 110.49,
+                        "y": 57.15
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a212a55"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint C4",
+                    "pos": {
+                        "x": 114.3,
+                        "y": 52.07
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a250be4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R10",
+                    "pos": {
+                        "x": 114.3,
+                        "y": 48.26
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22abf7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint RV1",
+                    "pos": {
+                        "x": 127.635,
+                        "y": 90.805
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a29abca"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R16",
+                    "pos": {
+                        "x": 118.11,
+                        "y": 75.184
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ad15"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R15",
+                    "pos": {
+                        "x": 118.11,
+                        "y": 78.74
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ad2b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint U2",
+                    "pos": {
+                        "x": 115.57,
+                        "y": 119.38
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a212ad4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint L1",
+                    "pos": {
+                        "x": 125.73,
+                        "y": 62.23
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005af1d586"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D10",
+                    "pos": {
+                        "x": 137.16,
+                        "y": 57.15
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a286264"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint C5",
+                    "pos": {
+                        "x": 129.54,
+                        "y": 49.53
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a250bf8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint C3",
+                    "pos": {
+                        "x": 134.112,
+                        "y": 62.23
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a2a02a0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R12",
+                    "pos": {
+                        "x": 135.255,
+                        "y": 121.92
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ad83"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R20",
+                    "pos": {
+                        "x": 144.78,
+                        "y": 102.235
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22acd3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R11",
+                    "pos": {
+                        "x": 140.081,
+                        "y": 70.993
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a2a0231"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R13",
+                    "pos": {
+                        "x": 140.335,
+                        "y": 111.76
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ad57"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D11",
+                    "pos": {
+                        "x": 139.065,
+                        "y": 80.645
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a217aa6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint Q3",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 97.79
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a228a27"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R9",
+                    "pos": {
+                        "x": 139.065,
+                        "y": 77.47
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ac0d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R19",
+                    "pos": {
+                        "x": 149.225,
+                        "y": 83.82
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ace9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R14",
+                    "pos": {
+                        "x": 139.065,
+                        "y": 87.63
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ad41"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R8",
+                    "pos": {
+                        "x": 139.065,
+                        "y": 91.059
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ad6d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R7",
+                    "pos": {
+                        "x": 139.7,
+                        "y": 54.61
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22ac91"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint C9",
+                    "pos": {
+                        "x": 143.002,
+                        "y": 49.784
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a250c34"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint Q2",
+                    "pos": {
+                        "x": 148.082,
+                        "y": 60.706
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a228a38"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint Q1",
+                    "pos": {
+                        "x": 146.05,
+                        "y": 69.85
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a228a49"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint JP1",
+                    "pos": {
+                        "x": 148.082,
+                        "y": 97.79
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a295fb8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R18",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 68.58
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22abe1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R21",
+                    "pos": {
+                        "x": 158.115,
+                        "y": 102.235
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22acbd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D8",
+                    "pos": {
+                        "x": 156.21,
+                        "y": 77.47
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22f49f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D9",
+                    "pos": {
+                        "x": 156.21,
+                        "y": 87.63
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22f4ad"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint D12",
+                    "pos": {
+                        "x": 156.21,
+                        "y": 97.155
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22f4bb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint R17",
+                    "pos": {
+                        "x": 156.21,
+                        "y": 68.58
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a22acff"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint P105",
+                    "pos": {
+                        "x": 158.75,
+                        "y": 44.45
+                    },
+                    "uuid": "00000000-0000-0000-0000-000054033026"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint P102",
+                    "pos": {
+                        "x": 158.75,
+                        "y": 135.89
+                    },
+                    "uuid": "00000000-0000-0000-0000-000054033017"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 179.07,
+                        "y": 109.22
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a212a32"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint U6",
+                    "pos": {
+                        "x": 179.07,
+                        "y": 120.65
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a212a0f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint P3",
+                    "pos": {
+                        "x": 175.26,
+                        "y": 50.8
+                    },
+                    "uuid": "00000000-0000-0000-0000-0000541e1940"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint C6",
+                    "pos": {
+                        "x": 196.85,
+                        "y": 112.395
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a250cc6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint C7",
+                    "pos": {
+                        "x": 198.755,
+                        "y": 71.12
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a250c20"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint P2",
+                    "pos": {
+                        "x": 207.645,
+                        "y": 50.8
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a212a70"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint U5",
+                    "pos": {
+                        "x": 207.899,
+                        "y": 107.95
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005a212aa7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint P104",
+                    "pos": {
+                        "x": 229.87,
+                        "y": 44.45
+                    },
+                    "uuid": "00000000-0000-0000-0000-000054033021"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The footprint library 'footprints' is not enabled in the current configuration",
+            "items": [
+                {
+                    "description": "Footprint P103",
+                    "pos": {
+                        "x": 229.87,
+                        "y": 135.89
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005403301c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

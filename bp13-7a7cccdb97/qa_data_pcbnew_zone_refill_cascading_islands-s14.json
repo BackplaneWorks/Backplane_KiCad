@@ -1,0 +1,197 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:36",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "zone_refill_cascading_islands.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [/net2] of U2 on F.Cu",
+                    "pos": {
+                        "x": 104.5,
+                        "y": 60.0
+                    },
+                    "uuid": "57883afe-25fd-464f-b976-992d8d81614f"
+                },
+                {
+                    "description": "Pad 3 [/net2] of U2 on F.Cu",
+                    "pos": {
+                        "x": 104.5,
+                        "y": 60.5
+                    },
+                    "uuid": "73af1da9-5564-49c3-baa4-c102d0369667"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 5 [Net-(U2-Coupled)] of U2 on F.Cu",
+                    "pos": {
+                        "x": 105.95,
+                        "y": 60.0
+                    },
+                    "uuid": "8285e017-de72-4eb5-894b-ad8e33f434da"
+                },
+                {
+                    "description": "Zone 'background' [Net-(U2-Coupled)] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 119.5,
+                        "y": 56.0
+                    },
+                    "uuid": "495ee411-762a-4701-9780-6cd2c5079387"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/net2] on F.Cu, length 2.4500 mm",
+                    "pos": {
+                        "x": 105.95,
+                        "y": 60.5
+                    },
+                    "uuid": "293a49a3-f72e-4ec0-8326-2cec05aa5647"
+                },
+                {
+                    "description": "Pad 3 [/net2] of U2 on F.Cu",
+                    "pos": {
+                        "x": 104.5,
+                        "y": 60.5
+                    },
+                    "uuid": "73af1da9-5564-49c3-baa4-c102d0369667"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/net2] on F.Cu, length 24.5000 mm",
+                    "pos": {
+                        "x": 107.5,
+                        "y": 64.5
+                    },
+                    "uuid": "dc4fb009-a833-42c4-83fa-b7ca7e4469c4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/net1] on F.Cu, length 26.0000 mm",
+                    "pos": {
+                        "x": 108.5,
+                        "y": 63.0
+                    },
+                    "uuid": "d2204fb9-bf76-4379-be74-44bc6709f8a8"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(U2-Coupled)] on B.Cu, length 0.5000 mm",
+                    "pos": {
+                        "x": 109.5,
+                        "y": 72.5
+                    },
+                    "uuid": "d1b104ae-a663-4f49-af30-cc0e0533d79a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/net2] on F.Cu, length 24.5000 mm",
+                    "pos": {
+                        "x": 115.0,
+                        "y": 64.5
+                    },
+                    "uuid": "71b8a9dd-ce53-422a-ba3d-ae6846d02237"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/net1] on F.Cu, length 1.5000 mm",
+                    "pos": {
+                        "x": 116.0,
+                        "y": 69.0
+                    },
+                    "uuid": "fa18ab7c-7a7f-44b6-82b5-740ada5a66b6"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/net1] on F.Cu, length 21.5000 mm",
+                    "pos": {
+                        "x": 116.0,
+                        "y": 67.5
+                    },
+                    "uuid": "c4eb4e66-5b2f-40e8-9836-388dd7481482"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        }
+    ]
+}

@@ -1,0 +1,157 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:34",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "teardrop_multi_inside_via.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "4f9d3804-4b9c-4953-ade2-a1af4408bb22"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 159.6,
+                        "y": 89.0
+                    },
+                    "uuid": "42ca7ed2-2695-49f3-9597-568216411567"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on F.Cu, length 1.2021 mm",
+                    "pos": {
+                        "x": 159.05,
+                        "y": 89.0
+                    },
+                    "uuid": "92dbf38e-ff8d-42ff-ba43-5aad47e7ac80"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on F.Cu, length 1.2021 mm",
+                    "pos": {
+                        "x": 159.05,
+                        "y": 89.0
+                    },
+                    "uuid": "dd3a6901-f216-40c4-80d3-546e02c366b1"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on F.Cu, length 1.0607 mm",
+                    "pos": {
+                        "x": 159.6,
+                        "y": 89.7
+                    },
+                    "uuid": "9d787be0-1327-4be8-bdf0-0b9c6daa09b6"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on F.Cu, length 1.1314 mm",
+                    "pos": {
+                        "x": 159.6,
+                        "y": 88.3
+                    },
+                    "uuid": "a000d97b-2752-437c-b190-89c1030112de"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on F.Cu, length 1.2500 mm",
+                    "pos": {
+                        "x": 160.1,
+                        "y": 89.5
+                    },
+                    "uuid": "b91d0375-8bf5-46da-a922-a0a4207b82fc"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on F.Cu, length 1.7678 mm",
+                    "pos": {
+                        "x": 160.2,
+                        "y": 89.0
+                    },
+                    "uuid": "c142426a-daa6-48e7-ac32-5cb827bd5c69"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        }
+    ]
+}

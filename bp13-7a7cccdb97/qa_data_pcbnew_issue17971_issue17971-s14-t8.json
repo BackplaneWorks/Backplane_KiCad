@@ -1,0 +1,313 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:54",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue17971.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad S1 [unconnected-(P1-SHIELD-PadS1)] of P1",
+                    "pos": {
+                        "x": 160.71,
+                        "y": 63.07
+                    },
+                    "uuid": "7facd5ed-e775-4453-b78d-f41e1f2227f7"
+                },
+                {
+                    "description": "PTH pad S1 [unconnected-(P1-SHIELD-PadS1)] of P1",
+                    "pos": {
+                        "x": 160.71,
+                        "y": 67.25
+                    },
+                    "uuid": "9217b937-e166-4bf4-a55e-6e5e73e9eb8d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad S1 [unconnected-(P2-SHIELD-PadS1)] of P2",
+                    "pos": {
+                        "x": 160.71,
+                        "y": 80.44
+                    },
+                    "uuid": "e426d8a9-436d-40e6-95cf-2ae269fd55b9"
+                },
+                {
+                    "description": "PTH pad S1 [unconnected-(P2-SHIELD-PadS1)] of P2",
+                    "pos": {
+                        "x": 160.71,
+                        "y": 84.62
+                    },
+                    "uuid": "b639fd19-10ff-4479-a6cd-4f3d1bcaed42"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad A1 [Net-(P1-GND-PadA1)] of P1 on F.Cu",
+                    "pos": {
+                        "x": 161.78,
+                        "y": 62.155
+                    },
+                    "uuid": "ad0fe592-9b6a-42f8-a270-5d58ed0e872c"
+                },
+                {
+                    "description": "Pad A12 [Net-(P1-GND-PadA1)] of P1 on F.Cu",
+                    "pos": {
+                        "x": 168.28,
+                        "y": 62.155
+                    },
+                    "uuid": "cdf5acac-798c-40ac-b848-524dd63028ad"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad A1 [Net-(P2-GND-PadA1)] of P2 on F.Cu",
+                    "pos": {
+                        "x": 161.78,
+                        "y": 79.525
+                    },
+                    "uuid": "198951f6-ba36-47d5-8c0f-cbcf10080931"
+                },
+                {
+                    "description": "Pad A12 [Net-(P2-GND-PadA1)] of P2 on F.Cu",
+                    "pos": {
+                        "x": 168.28,
+                        "y": 79.525
+                    },
+                    "uuid": "aa36507c-1835-4c26-8797-c8e4d9552b7c"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad A4 [Net-(P1-VBUS-PadA4)] of P1 on F.Cu",
+                    "pos": {
+                        "x": 162.58,
+                        "y": 62.155
+                    },
+                    "uuid": "efd4f6ea-364d-41b5-938f-52c59788cf99"
+                },
+                {
+                    "description": "Pad A9 [Net-(P1-VBUS-PadA4)] of P1 on F.Cu",
+                    "pos": {
+                        "x": 167.48,
+                        "y": 62.155
+                    },
+                    "uuid": "2b4c3e7d-ae07-4efc-aa1a-6c5da08f2153"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad A4 [Net-(P2-VBUS-PadA4)] of P2 on F.Cu",
+                    "pos": {
+                        "x": 162.58,
+                        "y": 79.525
+                    },
+                    "uuid": "e10077a0-4990-41d4-b012-906208bd9b6b"
+                },
+                {
+                    "description": "Pad A9 [Net-(P2-VBUS-PadA4)] of P2 on F.Cu",
+                    "pos": {
+                        "x": 167.48,
+                        "y": 79.525
+                    },
+                    "uuid": "bd723e83-8e0c-4e75-aaf9-bbe56c221b61"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad S1 [unconnected-(P1-SHIELD-PadS1)] of P1",
+                    "pos": {
+                        "x": 169.35,
+                        "y": 63.07
+                    },
+                    "uuid": "650c3b1d-c326-41ed-8e5c-825d825fd9ad"
+                },
+                {
+                    "description": "PTH pad S1 [unconnected-(P1-SHIELD-PadS1)] of P1",
+                    "pos": {
+                        "x": 160.71,
+                        "y": 63.07
+                    },
+                    "uuid": "7facd5ed-e775-4453-b78d-f41e1f2227f7"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad S1 [unconnected-(P1-SHIELD-PadS1)] of P1",
+                    "pos": {
+                        "x": 169.35,
+                        "y": 67.25
+                    },
+                    "uuid": "7eefb2da-505a-48e7-9438-6afd389c6109"
+                },
+                {
+                    "description": "PTH pad S1 [unconnected-(P1-SHIELD-PadS1)] of P1",
+                    "pos": {
+                        "x": 169.35,
+                        "y": 63.07
+                    },
+                    "uuid": "650c3b1d-c326-41ed-8e5c-825d825fd9ad"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad S1 [unconnected-(P2-SHIELD-PadS1)] of P2",
+                    "pos": {
+                        "x": 169.35,
+                        "y": 80.44
+                    },
+                    "uuid": "ec7d1e72-7542-4c0c-b71a-da51d6c8688d"
+                },
+                {
+                    "description": "PTH pad S1 [unconnected-(P2-SHIELD-PadS1)] of P2",
+                    "pos": {
+                        "x": 160.71,
+                        "y": 80.44
+                    },
+                    "uuid": "e426d8a9-436d-40e6-95cf-2ae269fd55b9"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad S1 [unconnected-(P2-SHIELD-PadS1)] of P2",
+                    "pos": {
+                        "x": 169.35,
+                        "y": 84.62
+                    },
+                    "uuid": "6bea37f8-0a1d-4fd8-8db0-6dc8ada7b355"
+                },
+                {
+                    "description": "PTH pad S1 [unconnected-(P2-SHIELD-PadS1)] of P2",
+                    "pos": {
+                        "x": 169.35,
+                        "y": 80.44
+                    },
+                    "uuid": "ec7d1e72-7542-4c0c-b71a-da51d6c8688d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "398b61dd-e1e8-4eca-8379-f483b240deb6"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Footprint 'USB_C_Receptacle_HRO_TYPE-C-31-M-12' does not match copy in library 'Connector_USB'",
+            "items": [
+                {
+                    "description": "Footprint P1",
+                    "pos": {
+                        "x": 165.03,
+                        "y": 66.2
+                    },
+                    "uuid": "12201b7a-291e-4cd4-9546-2b8191665606"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'USB_C_Receptacle_HRO_TYPE-C-31-M-12' does not match copy in library 'Connector_USB'",
+            "items": [
+                {
+                    "description": "Footprint P2",
+                    "pos": {
+                        "x": 165.03,
+                        "y": 83.57
+                    },
+                    "uuid": "6c817113-2109-41a3-a804-93eee28e6834"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

@@ -1,0 +1,195 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:44",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "component_classes_drc.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Assertion failure (rule 'Rule2')",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 95.0,
+                        "y": 70.0
+                    },
+                    "uuid": "4bc5e5de-57df-4365-88c3-46134594e0c1"
+                }
+            ],
+            "severity": "error",
+            "type": "assertion_failure"
+        },
+        {
+            "description": "Assertion failure (rule 'Rule5')",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 101.0,
+                        "y": 70.0
+                    },
+                    "uuid": "1592fdd4-fb11-495e-9939-50648af3aa9d"
+                }
+            ],
+            "severity": "error",
+            "type": "assertion_failure"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on F.Cu, length 2.5000 mm",
+                    "pos": {
+                        "x": 94.0,
+                        "y": 64.0
+                    },
+                    "uuid": "b4a3e735-48c3-4d46-ac8d-eca8ad4c71d4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on F.Cu, length 3.0000 mm",
+                    "pos": {
+                        "x": 96.5,
+                        "y": 72.5
+                    },
+                    "uuid": "88cd11e0-647a-4de0-981f-a0e4f60be542"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on F.Cu, length 3.0000 mm",
+                    "pos": {
+                        "x": 99.5,
+                        "y": 64.0
+                    },
+                    "uuid": "cc25001e-41e3-4bbc-bd53-be13cbe7aedb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on F.Cu, length 3.0000 mm",
+                    "pos": {
+                        "x": 99.5,
+                        "y": 72.5
+                    },
+                    "uuid": "0bcf9545-bb79-4669-af07-4e5ce9766240"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 95.0,
+                        "y": 70.0
+                    },
+                    "uuid": "4bc5e5de-57df-4365-88c3-46134594e0c1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 95.175,
+                        "y": 61.48
+                    },
+                    "uuid": "6ac155b5-21bf-4316-a4c1-8d559b15f642"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 101.0,
+                        "y": 61.5
+                    },
+                    "uuid": "a4bd7689-8f13-45af-af8c-2299384b67cd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 101.0,
+                        "y": 70.0
+                    },
+                    "uuid": "1592fdd4-fb11-495e-9939-50648af3aa9d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

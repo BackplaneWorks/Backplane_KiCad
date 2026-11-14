@@ -1,0 +1,197 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:34",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "test_copper_graphics.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Items shorting two nets (nets Test2 and Test3)",
+            "items": [
+                {
+                    "description": "PCB text 'Otherwise' on B.Cu",
+                    "pos": {
+                        "x": 155.194,
+                        "y": 89.281
+                    },
+                    "uuid": "6c4f9b12-5489-4923-9fc0-4f8130f1cb8b"
+                },
+                {
+                    "description": "Zone [Test3] on B.Cu, priority 1",
+                    "pos": {
+                        "x": 159.385,
+                        "y": 89.154
+                    },
+                    "uuid": "e7fb42af-8060-4e89-b56c-5293c80f1b68"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets Test2 and Test3)",
+            "items": [
+                {
+                    "description": "PCB text 'Otherwise' on B.Cu",
+                    "pos": {
+                        "x": 155.194,
+                        "y": 89.281
+                    },
+                    "uuid": "6c4f9b12-5489-4923-9fc0-4f8130f1cb8b"
+                },
+                {
+                    "description": "Zone [Test3] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 157.4,
+                        "y": 82.05
+                    },
+                    "uuid": "d8faf083-2cf6-4659-b189-791fef968e17"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Polygon [<no net>] of NT2 on B.Cu",
+                    "pos": {
+                        "x": 155.1,
+                        "y": 85.25
+                    },
+                    "uuid": "4e729321-142d-4160-a36b-2f04a38006f8"
+                },
+                {
+                    "description": "Zone [Test3] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 157.4,
+                        "y": 82.05
+                    },
+                    "uuid": "d8faf083-2cf6-4659-b189-791fef968e17"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.1270 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "PCB text 'What' on B.Cu",
+                    "pos": {
+                        "x": 156.718,
+                        "y": 84.455
+                    },
+                    "uuid": "7cdcf930-f446-408b-862f-6846f278bce8"
+                },
+                {
+                    "description": "Zone [Test3] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 157.4,
+                        "y": 82.05
+                    },
+                    "uuid": "d8faf083-2cf6-4659-b189-791fef968e17"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [Test2] on B.Cu, priority 2",
+                    "pos": {
+                        "x": 143.637,
+                        "y": 84.582
+                    },
+                    "uuid": "a78787ef-dd0d-4073-9547-f9e19d46d566"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [Test3] on B.Cu, priority 1",
+                    "pos": {
+                        "x": 159.385,
+                        "y": 89.154
+                    },
+                    "uuid": "e7fb42af-8060-4e89-b56c-5293c80f1b68"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Footprint 'SolderWirePad_1x01_SMD_1x2mm' does not match copy in library 'Connector_Wire'",
+            "items": [
+                {
+                    "description": "Footprint REF**",
+                    "pos": {
+                        "x": 153.75,
+                        "y": 83.55
+                    },
+                    "uuid": "ca5993ae-dd71-48b4-90b5-80f8f75da987"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Non-Mirrored text on back layer",
+            "items": [
+                {
+                    "description": "PCB text 'What' on B.Cu",
+                    "pos": {
+                        "x": 156.718,
+                        "y": 84.455
+                    },
+                    "uuid": "7cdcf930-f446-408b-862f-6846f278bce8"
+                }
+            ],
+            "severity": "warning",
+            "type": "nonmirrored_text_on_back_layer"
+        }
+    ]
+}

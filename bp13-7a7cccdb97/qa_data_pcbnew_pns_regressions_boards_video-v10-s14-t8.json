@@ -1,0 +1,4229 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:31",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "video-v10.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0105 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 56.515
+                    },
+                    "uuid": "4fc01e47-e8f1-496b-bb44-2bad29f47574"
+                },
+                {
+                    "description": "Zone [+5V] on In2.Cu, priority 0",
+                    "pos": {
+                        "x": 185.674,
+                        "y": 154.305
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005bd1d89d"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4480 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 68.58,
+                        "y": 154.94
+                    },
+                    "uuid": "6bf3545d-3611-4884-8e79-06910cc730ee"
+                },
+                {
+                    "description": "Zone [GND] on In1.Cu, priority 0",
+                    "pos": {
+                        "x": 55.0,
+                        "y": 57.2
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005bd1d89a"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4306 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 56.515
+                    },
+                    "uuid": "4fc01e47-e8f1-496b-bb44-2bad29f47574"
+                },
+                {
+                    "description": "Track [/BT812_RD-] on In2.Cu, length 58.6601 mm",
+                    "pos": {
+                        "x": 100.688389,
+                        "y": 57.045611
+                    },
+                    "uuid": "64ce0f7b-4a4c-43a3-8077-c669acfbc617"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4306 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 56.515
+                    },
+                    "uuid": "4fc01e47-e8f1-496b-bb44-2bad29f47574"
+                },
+                {
+                    "description": "Track [/BT812_RD-] on In2.Cu, length 1.7641 mm",
+                    "pos": {
+                        "x": 99.441,
+                        "y": 58.293
+                    },
+                    "uuid": "c48209ea-c095-4693-8e0e-bf09b6a988e6"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4306 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 56.515
+                    },
+                    "uuid": "4fc01e47-e8f1-496b-bb44-2bad29f47574"
+                },
+                {
+                    "description": "Track [/CSYNC-OUT] on B.Cu, length 0.1476 mm",
+                    "pos": {
+                        "x": 158.633723,
+                        "y": 57.045611
+                    },
+                    "uuid": "9869e4bb-0782-4b5d-a428-cbe45bf6f066"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4306 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 56.515
+                    },
+                    "uuid": "4fc01e47-e8f1-496b-bb44-2bad29f47574"
+                },
+                {
+                    "description": "Track [/CSYNC-OUT] on B.Cu, length 0.7147 mm",
+                    "pos": {
+                        "x": 159.348445,
+                        "y": 57.045611
+                    },
+                    "uuid": "17aec4ac-39a0-4b91-93d0-055bcc6024f0"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4306 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 56.515
+                    },
+                    "uuid": "4fc01e47-e8f1-496b-bb44-2bad29f47574"
+                },
+                {
+                    "description": "Track [/CSYNC-OUT] on B.Cu, length 0.1476 mm",
+                    "pos": {
+                        "x": 159.452834,
+                        "y": 57.15
+                    },
+                    "uuid": "9e612adc-8126-4bc1-80ce-a5ca5a040bf9"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4306 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 56.515
+                    },
+                    "uuid": "4fc01e47-e8f1-496b-bb44-2bad29f47574"
+                },
+                {
+                    "description": "Track [/BT812_RD-] on In2.Cu, length 0.1476 mm",
+                    "pos": {
+                        "x": 159.348445,
+                        "y": 57.045611
+                    },
+                    "uuid": "f3030273-8412-4c2c-8bbf-49a4e8ee8c18"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 56.515
+                    },
+                    "uuid": "4fc01e47-e8f1-496b-bb44-2bad29f47574"
+                },
+                {
+                    "description": "Track [/VD_PAL-] on top_copper, length 2.6941 mm",
+                    "pos": {
+                        "x": 161.163,
+                        "y": 57.023
+                    },
+                    "uuid": "543ea196-e63d-45b0-af08-d0477dd5583a"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 56.515
+                    },
+                    "uuid": "4fc01e47-e8f1-496b-bb44-2bad29f47574"
+                },
+                {
+                    "description": "Track [/VD_PAL-] on top_copper, length 165.2270 mm",
+                    "pos": {
+                        "x": 326.39,
+                        "y": 57.023
+                    },
+                    "uuid": "93569d38-6b5f-4b5d-908d-590f3f1f4fc7"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 204.851,
+                        "y": 145.542
+                    },
+                    "uuid": "63e35b16-8875-42e5-921f-250d260df82a"
+                },
+                {
+                    "description": "Track [/GREEN_IN] on B.Cu, length 0.2540 mm",
+                    "pos": {
+                        "x": 204.343,
+                        "y": 134.366
+                    },
+                    "uuid": "070b0ddd-cc30-4ce6-abb6-07d8d12c93eb"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 204.851,
+                        "y": 145.542
+                    },
+                    "uuid": "63e35b16-8875-42e5-921f-250d260df82a"
+                },
+                {
+                    "description": "Track [/GREEN_IN] on B.Cu, length 0.5388 mm",
+                    "pos": {
+                        "x": 203.962,
+                        "y": 134.747
+                    },
+                    "uuid": "dfec4d7a-4e98-4e59-a750-0fd90cf10567"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4388 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 204.851,
+                        "y": 145.542
+                    },
+                    "uuid": "63e35b16-8875-42e5-921f-250d260df82a"
+                },
+                {
+                    "description": "Track [/GREEN_IN] on B.Cu, length 0.3592 mm",
+                    "pos": {
+                        "x": 204.343,
+                        "y": 134.112
+                    },
+                    "uuid": "51d3e791-3922-42da-bd52-d8dc849ff335"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 204.851,
+                        "y": 145.542
+                    },
+                    "uuid": "63e35b16-8875-42e5-921f-250d260df82a"
+                },
+                {
+                    "description": "Track [/GREEN_IN] on B.Cu, length 110.9980 mm",
+                    "pos": {
+                        "x": 315.595,
+                        "y": 133.858
+                    },
+                    "uuid": "6b308a7a-8b1d-4a9f-83fc-d2b014b3b455"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 204.851,
+                        "y": 145.542
+                    },
+                    "uuid": "63e35b16-8875-42e5-921f-250d260df82a"
+                },
+                {
+                    "description": "Track [/BLUE_OUT] on top_copper, length 144.1450 mm",
+                    "pos": {
+                        "x": 348.361,
+                        "y": 133.858
+                    },
+                    "uuid": "f7a24c05-e56b-4796-b2ea-6fa92f257df2"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3016 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 204.851,
+                        "y": 145.542
+                    },
+                    "uuid": "63e35b16-8875-42e5-921f-250d260df82a"
+                },
+                {
+                    "description": "Via [/BLUE_OUT] on top_copper - B.Cu",
+                    "pos": {
+                        "x": 204.10488,
+                        "y": 144.018
+                    },
+                    "uuid": "17c551ad-8276-495a-8123-384b0e99a111"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 224.155,
+                        "y": 56.515
+                    },
+                    "uuid": "6fb7f645-0cba-40d3-986c-a171c72ebce7"
+                },
+                {
+                    "description": "Track [/BLANK-] on In1.Cu, length 32.5120 mm",
+                    "pos": {
+                        "x": 299.72,
+                        "y": 57.023
+                    },
+                    "uuid": "d2f92da6-d420-48c4-9590-96aaaefbb628"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 224.155,
+                        "y": 56.515
+                    },
+                    "uuid": "6fb7f645-0cba-40d3-986c-a171c72ebce7"
+                },
+                {
+                    "description": "Track [/BLANK-] on In1.Cu, length 0.4579 mm",
+                    "pos": {
+                        "x": 299.72,
+                        "y": 57.023
+                    },
+                    "uuid": "e1b85956-8ffa-4360-bb6a-2c72162acec2"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 224.155,
+                        "y": 56.515
+                    },
+                    "uuid": "6fb7f645-0cba-40d3-986c-a171c72ebce7"
+                },
+                {
+                    "description": "Track [/BT812_RD-] on In2.Cu, length 28.8290 mm",
+                    "pos": {
+                        "x": 300.228,
+                        "y": 57.023
+                    },
+                    "uuid": "c57a5858-6bdd-4880-9d44-23c070f06b00"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 224.155,
+                        "y": 56.515
+                    },
+                    "uuid": "6fb7f645-0cba-40d3-986c-a171c72ebce7"
+                },
+                {
+                    "description": "Track [/BT812_RD-] on In2.Cu, length 0.1796 mm",
+                    "pos": {
+                        "x": 300.101,
+                        "y": 57.15
+                    },
+                    "uuid": "eb2c65f1-76c0-4da8-80c6-f5d0d1045bee"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 290.957,
+                        "y": 134.366
+                    },
+                    "uuid": "ffef352f-e047-41bb-98ac-e3e957303d10"
+                },
+                {
+                    "description": "Track [/GREEN_IN] on B.Cu, length 1.1430 mm",
+                    "pos": {
+                        "x": 315.595,
+                        "y": 133.858
+                    },
+                    "uuid": "310212e3-8e47-4f71-a70b-8db78f2040fe"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 224.155,
+                        "y": 56.515
+                    },
+                    "uuid": "6fb7f645-0cba-40d3-986c-a171c72ebce7"
+                },
+                {
+                    "description": "Track [/VD_PAL-] on top_copper, length 0.3951 mm",
+                    "pos": {
+                        "x": 326.6694,
+                        "y": 57.3024
+                    },
+                    "uuid": "8272a46b-f9fe-41cb-9984-cd5514f86b3b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 224.155,
+                        "y": 56.515
+                    },
+                    "uuid": "6fb7f645-0cba-40d3-986c-a171c72ebce7"
+                },
+                {
+                    "description": "Track [/BT812_RD-] on In2.Cu, length 3.5921 mm",
+                    "pos": {
+                        "x": 329.057,
+                        "y": 57.023
+                    },
+                    "uuid": "0fdc6bcf-64d1-43cb-90b5-5a9ad8fe72ac"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 224.155,
+                        "y": 56.515
+                    },
+                    "uuid": "6fb7f645-0cba-40d3-986c-a171c72ebce7"
+                },
+                {
+                    "description": "Track [/BLANK-] on In1.Cu, length 2.1553 mm",
+                    "pos": {
+                        "x": 332.232,
+                        "y": 57.023
+                    },
+                    "uuid": "1b08cec4-0f07-4927-a221-eadcdd0cd8f0"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 290.957,
+                        "y": 134.366
+                    },
+                    "uuid": "ffef352f-e047-41bb-98ac-e3e957303d10"
+                },
+                {
+                    "description": "Track [/BLUE_OUT] on top_copper, length 0.3592 mm",
+                    "pos": {
+                        "x": 348.615,
+                        "y": 133.604
+                    },
+                    "uuid": "c87c4dc1-3c7d-4534-ae78-07c46b7a3edb"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 290.957,
+                        "y": 134.366
+                    },
+                    "uuid": "ffef352f-e047-41bb-98ac-e3e957303d10"
+                },
+                {
+                    "description": "Track [/GREEN_IN] on B.Cu, length 1.2572 mm",
+                    "pos": {
+                        "x": 358.394,
+                        "y": 132.969
+                    },
+                    "uuid": "1aed5580-fa6d-4d9c-884c-43fec5d81924"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4080 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 290.957,
+                        "y": 134.366
+                    },
+                    "uuid": "ffef352f-e047-41bb-98ac-e3e957303d10"
+                },
+                {
+                    "description": "Track [/GREEN_IN] on B.Cu, length 41.9100 mm",
+                    "pos": {
+                        "x": 357.505,
+                        "y": 133.858
+                    },
+                    "uuid": "9994b787-a2e6-4ce7-a4d3-84b66c4c0042"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 163.195
+                    },
+                    "uuid": "10f3984c-e89c-4673-8e3f-7dd8a43e3f1e"
+                },
+                {
+                    "description": "Segment of P8 on F.Silkscreen",
+                    "pos": {
+                        "x": 45.212,
+                        "y": 79.375
+                    },
+                    "uuid": "dc78efa8-7be2-4d31-a592-7d702a0846e5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 163.195
+                    },
+                    "uuid": "10f3984c-e89c-4673-8e3f-7dd8a43e3f1e"
+                },
+                {
+                    "description": "Segment of P8 on F.Silkscreen",
+                    "pos": {
+                        "x": 54.229,
+                        "y": 84.455
+                    },
+                    "uuid": "04162c5f-7656-49c4-86c5-ea67a85cc297"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 163.195
+                    },
+                    "uuid": "10f3984c-e89c-4673-8e3f-7dd8a43e3f1e"
+                },
+                {
+                    "description": "Segment of P3 on F.Silkscreen",
+                    "pos": {
+                        "x": 45.212,
+                        "y": 90.805
+                    },
+                    "uuid": "2e4adad2-9c77-494f-bedb-58fafbe33d64"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 163.195
+                    },
+                    "uuid": "10f3984c-e89c-4673-8e3f-7dd8a43e3f1e"
+                },
+                {
+                    "description": "Segment of P3 on F.Silkscreen",
+                    "pos": {
+                        "x": 54.229,
+                        "y": 95.885
+                    },
+                    "uuid": "965d08c0-1b56-443d-b31d-13832ec0ed3c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 163.195
+                    },
+                    "uuid": "10f3984c-e89c-4673-8e3f-7dd8a43e3f1e"
+                },
+                {
+                    "description": "Segment of P1 on F.Silkscreen",
+                    "pos": {
+                        "x": 45.212,
+                        "y": 102.235
+                    },
+                    "uuid": "88c36b72-1f5e-4f03-a886-ace38e4f7e39"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 163.195
+                    },
+                    "uuid": "10f3984c-e89c-4673-8e3f-7dd8a43e3f1e"
+                },
+                {
+                    "description": "Segment of P1 on F.Silkscreen",
+                    "pos": {
+                        "x": 54.229,
+                        "y": 107.315
+                    },
+                    "uuid": "4d18b384-f69b-4e1a-b997-71eecb0f090f"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 163.195
+                    },
+                    "uuid": "10f3984c-e89c-4673-8e3f-7dd8a43e3f1e"
+                },
+                {
+                    "description": "Segment of P2 on F.Silkscreen",
+                    "pos": {
+                        "x": 45.212,
+                        "y": 113.665
+                    },
+                    "uuid": "2dc830a8-269e-4b51-a79f-8e8481310e30"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 163.195
+                    },
+                    "uuid": "10f3984c-e89c-4673-8e3f-7dd8a43e3f1e"
+                },
+                {
+                    "description": "Segment of P2 on F.Silkscreen",
+                    "pos": {
+                        "x": 54.229,
+                        "y": 118.745
+                    },
+                    "uuid": "77b04b3a-dcef-4ea7-9866-dd8d6c008aae"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 163.195
+                    },
+                    "uuid": "10f3984c-e89c-4673-8e3f-7dd8a43e3f1e"
+                },
+                {
+                    "description": "Segment of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 53.399,
+                        "y": 123.12
+                    },
+                    "uuid": "df1935eb-26c0-44bc-8430-a4237f92770b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 53.594,
+                        "y": 163.195
+                    },
+                    "uuid": "10f3984c-e89c-4673-8e3f-7dd8a43e3f1e"
+                },
+                {
+                    "description": "Segment of J4 on F.Silkscreen",
+                    "pos": {
+                        "x": 72.599,
+                        "y": 154.09
+                    },
+                    "uuid": "bafad818-54d0-46b3-b582-e27cbdc2fa69"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 68.58,
+                        "y": 154.94
+                    },
+                    "uuid": "6bf3545d-3611-4884-8e79-06910cc730ee"
+                },
+                {
+                    "description": "Segment of BUS1 on F.Silkscreen",
+                    "pos": {
+                        "x": 94.361,
+                        "y": 154.94
+                    },
+                    "uuid": "f6225a52-2eb1-4e07-b3ea-843fe56f6268"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 94.361,
+                        "y": 163.195
+                    },
+                    "uuid": "e9ebdc67-da4c-4d44-860a-9041d755be4c"
+                },
+                {
+                    "description": "Segment of BUS1 on F.Silkscreen",
+                    "pos": {
+                        "x": 157.226,
+                        "y": 163.195
+                    },
+                    "uuid": "5e9d932f-08fc-47e8-8d6b-eed9bcb0239f"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 159.004,
+                        "y": 154.94
+                    },
+                    "uuid": "d79a2fd1-117e-4932-a4a9-ed2450ffa44a"
+                },
+                {
+                    "description": "Segment of BUS1 on F.Silkscreen",
+                    "pos": {
+                        "x": 157.226,
+                        "y": 154.94
+                    },
+                    "uuid": "0e40b9e0-728c-411e-bbda-02caac100b3a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 159.004,
+                        "y": 154.94
+                    },
+                    "uuid": "d79a2fd1-117e-4932-a4a9-ed2450ffa44a"
+                },
+                {
+                    "description": "Segment of BUS1 on F.Silkscreen",
+                    "pos": {
+                        "x": 159.004,
+                        "y": 154.94
+                    },
+                    "uuid": "7d8c9004-dd88-4073-b98c-9dc735dcbfb8"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 173.609,
+                        "y": 163.195
+                    },
+                    "uuid": "2abb5675-c099-46be-b6b8-0fdd874595f4"
+                },
+                {
+                    "description": "Segment of BUS1 on F.Silkscreen",
+                    "pos": {
+                        "x": 173.609,
+                        "y": 163.195
+                    },
+                    "uuid": "532fe773-b645-49ff-b28a-2a0d41f1945e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 290.957,
+                        "y": 134.366
+                    },
+                    "uuid": "ffef352f-e047-41bb-98ac-e3e957303d10"
+                },
+                {
+                    "description": "Reference field of C41",
+                    "pos": {
+                        "x": 300.355,
+                        "y": 133.852
+                    },
+                    "uuid": "de28da56-8224-48e5-9bce-6f323f1265bd"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 290.957,
+                        "y": 134.366
+                    },
+                    "uuid": "ffef352f-e047-41bb-98ac-e3e957303d10"
+                },
+                {
+                    "description": "Reference field of R23",
+                    "pos": {
+                        "x": 313.69,
+                        "y": 133.9
+                    },
+                    "uuid": "abdd7b6f-e57f-4ef1-a75b-aced105d29eb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 290.957,
+                        "y": 134.366
+                    },
+                    "uuid": "ffef352f-e047-41bb-98ac-e3e957303d10"
+                },
+                {
+                    "description": "Reference field of L5",
+                    "pos": {
+                        "x": 326.009,
+                        "y": 134.222
+                    },
+                    "uuid": "0e44ebfe-424f-4fff-90f8-5e3e0ff9436d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 224.155,
+                        "y": 56.515
+                    },
+                    "uuid": "6fb7f645-0cba-40d3-986c-a171c72ebce7"
+                },
+                {
+                    "description": "Reference field of C8",
+                    "pos": {
+                        "x": 349.123,
+                        "y": 56.219
+                    },
+                    "uuid": "927119e5-0f1d-4f9f-96db-fe7344a8710f"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 224.155,
+                        "y": 56.515
+                    },
+                    "uuid": "6fb7f645-0cba-40d3-986c-a171c72ebce7"
+                },
+                {
+                    "description": "Reference field of C1",
+                    "pos": {
+                        "x": 358.521,
+                        "y": 56.473
+                    },
+                    "uuid": "d6914936-5225-4aa7-a90c-8592e6c0ad19"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P8",
+                    "pos": {
+                        "x": 59.055,
+                        "y": 81.915
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cec1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P3",
+                    "pos": {
+                        "x": 59.055,
+                        "y": 93.345
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce96"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P1",
+                    "pos": {
+                        "x": 59.055,
+                        "y": 104.775
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce6a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P2",
+                    "pos": {
+                        "x": 59.055,
+                        "y": 116.205
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce80"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint J4",
+                    "pos": {
+                        "x": 70.739,
+                        "y": 144.145
+                    },
+                    "uuid": "00000000-0000-0000-0000-00007fffffff"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R46",
+                    "pos": {
+                        "x": 66.548,
+                        "y": 107.696
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d10d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R9",
+                    "pos": {
+                        "x": 67.945,
+                        "y": 85.217
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf76"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 67.945,
+                        "y": 111.887
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf3f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R47",
+                    "pos": {
+                        "x": 67.945,
+                        "y": 114.046
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d118"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R45",
+                    "pos": {
+                        "x": 67.945,
+                        "y": 116.205
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d102"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R41",
+                    "pos": {
+                        "x": 68.707,
+                        "y": 95.631
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d0d6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R34",
+                    "pos": {
+                        "x": 68.707,
+                        "y": 98.933
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d089"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C61",
+                    "pos": {
+                        "x": 68.707,
+                        "y": 102.235
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd41"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R10",
+                    "pos": {
+                        "x": 70.739,
+                        "y": 76.835
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf81"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R18",
+                    "pos": {
+                        "x": 70.739,
+                        "y": 85.217
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cfd9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint L3",
+                    "pos": {
+                        "x": 70.866,
+                        "y": 106.934
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce37"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint X3",
+                    "pos": {
+                        "x": 75.565,
+                        "y": 73.025
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d920"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U20",
+                    "pos": {
+                        "x": 73.914,
+                        "y": 85.09
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d71e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C44",
+                    "pos": {
+                        "x": 74.041,
+                        "y": 85.344
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc84"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint Q3",
+                    "pos": {
+                        "x": 75.057,
+                        "y": 94.615
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf14"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint Q2",
+                    "pos": {
+                        "x": 75.057,
+                        "y": 128.397
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf0a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R40",
+                    "pos": {
+                        "x": 75.057,
+                        "y": 133.731
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d0cb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R39",
+                    "pos": {
+                        "x": 75.057,
+                        "y": 136.779
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d0c0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R44",
+                    "pos": {
+                        "x": 75.057,
+                        "y": 139.827
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d0f7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R43",
+                    "pos": {
+                        "x": 75.057,
+                        "y": 142.875
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d0ec"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R42",
+                    "pos": {
+                        "x": 75.057,
+                        "y": 145.923
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d0e1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R17",
+                    "pos": {
+                        "x": 75.565,
+                        "y": 122.555
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cfce"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C55",
+                    "pos": {
+                        "x": 75.946,
+                        "y": 100.457
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ccfc"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R11",
+                    "pos": {
+                        "x": 77.343,
+                        "y": 76.835
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf8c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint L6",
+                    "pos": {
+                        "x": 72.873768,
+                        "y": 109.506012
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce5b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C54",
+                    "pos": {
+                        "x": 78.613,
+                        "y": 66.04
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ccf1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C48",
+                    "pos": {
+                        "x": 79.121,
+                        "y": 82.931
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ccb0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C45",
+                    "pos": {
+                        "x": 79.121,
+                        "y": 85.471
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc8f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C43",
+                    "pos": {
+                        "x": 79.121,
+                        "y": 88.011
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc79"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint Q1",
+                    "pos": {
+                        "x": 79.629,
+                        "y": 128.397
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf00"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R16",
+                    "pos": {
+                        "x": 79.883,
+                        "y": 122.555
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cfc3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint L1",
+                    "pos": {
+                        "x": 80.137,
+                        "y": 107.061
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce1f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C53",
+                    "pos": {
+                        "x": 80.391,
+                        "y": 111.887
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cce6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C46",
+                    "pos": {
+                        "x": 80.391,
+                        "y": 114.935
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc9a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R33",
+                    "pos": {
+                        "x": 80.391,
+                        "y": 133.731
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d07e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R32",
+                    "pos": {
+                        "x": 80.391,
+                        "y": 136.779
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d073"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R30",
+                    "pos": {
+                        "x": 81.407,
+                        "y": 99.441
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d05d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R31",
+                    "pos": {
+                        "x": 81.407,
+                        "y": 102.743
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d068"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C60",
+                    "pos": {
+                        "x": 81.432003,
+                        "y": 100.609389
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd36"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C58",
+                    "pos": {
+                        "x": 82.169,
+                        "y": 92.71
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd20"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C59",
+                    "pos": {
+                        "x": 82.169,
+                        "y": 96.647
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd2b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P12",
+                    "pos": {
+                        "x": 82.423,
+                        "y": 57.912
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cee6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C64",
+                    "pos": {
+                        "x": 84.201,
+                        "y": 88.519
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd64"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint L2",
+                    "pos": {
+                        "x": 84.455,
+                        "y": 61.976
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce2b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint CV1",
+                    "pos": {
+                        "x": 84.455,
+                        "y": 69.215
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cdd3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint POT1",
+                    "pos": {
+                        "x": 84.539957,
+                        "y": 82.042
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cef3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R13",
+                    "pos": {
+                        "x": 85.895255,
+                        "y": 75.541162
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cfa2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint RR8",
+                    "pos": {
+                        "x": 88.773,
+                        "y": 79.375
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d1a5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P10",
+                    "pos": {
+                        "x": 89.535,
+                        "y": 59.055
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cedc"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P11",
+                    "pos": {
+                        "x": 89.535,
+                        "y": 63.5
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cee1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint W5",
+                    "pos": {
+                        "x": 88.9,
+                        "y": 147.955
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d8fd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint D6",
+                    "pos": {
+                        "x": 89.535,
+                        "y": 75.565
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce16"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint RR7",
+                    "pos": {
+                        "x": 92.075,
+                        "y": 120.015
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d194"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C73",
+                    "pos": {
+                        "x": 94.615,
+                        "y": 94.615
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cdc8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint RR6",
+                    "pos": {
+                        "x": 84.8,
+                        "y": 127.0
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d183"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint RR5",
+                    "pos": {
+                        "x": 85.09,
+                        "y": 135.89
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d172"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint RR4",
+                    "pos": {
+                        "x": 85.09,
+                        "y": 142.875
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d161"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C70",
+                    "pos": {
+                        "x": 97.536,
+                        "y": 85.09
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cda7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U21",
+                    "pos": {
+                        "x": 94.615,
+                        "y": 73.025
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d740"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P5",
+                    "pos": {
+                        "x": 93.345,
+                        "y": 61.595
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ceb5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C67",
+                    "pos": {
+                        "x": 99.441,
+                        "y": 149.733
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd86"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U23",
+                    "pos": {
+                        "x": 103.505,
+                        "y": 86.868
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d7c2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P4",
+                    "pos": {
+                        "x": 105.664,
+                        "y": 70.358
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ceac"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C71",
+                    "pos": {
+                        "x": 106.426,
+                        "y": 83.185
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cdb2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R48",
+                    "pos": {
+                        "x": 108.331,
+                        "y": 86.741
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d123"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C50",
+                    "pos": {
+                        "x": 107.569,
+                        "y": 64.643
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ccc5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint W4",
+                    "pos": {
+                        "x": 109.22,
+                        "y": 142.875
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005bd17697"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R21",
+                    "pos": {
+                        "x": 109.855,
+                        "y": 67.564
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cffa"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C72",
+                    "pos": {
+                        "x": 110.236,
+                        "y": 90.805
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cdbd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R28",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 114.935
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d047"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R26",
+                    "pos": {
+                        "x": 111.887,
+                        "y": 62.103
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d031"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint X1",
+                    "pos": {
+                        "x": 114.427,
+                        "y": 59.69
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d906"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 108.585,
+                        "y": 125.73
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d1b6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint P9",
+                    "pos": {
+                        "x": 114.3,
+                        "y": 74.93
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ced7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R29",
+                    "pos": {
+                        "x": 114.3,
+                        "y": 111.76
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d052"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R6",
+                    "pos": {
+                        "x": 114.935,
+                        "y": 123.19
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf55"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C49",
+                    "pos": {
+                        "x": 116.459,
+                        "y": 64.643
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ccbb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C68",
+                    "pos": {
+                        "x": 117.983,
+                        "y": 148.463
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd91"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R7",
+                    "pos": {
+                        "x": 118.745,
+                        "y": 120.65
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf60"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint W2",
+                    "pos": {
+                        "x": 119.4,
+                        "y": 125.2
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d8e2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint W3",
+                    "pos": {
+                        "x": 122.3,
+                        "y": 125.2
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d8eb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C63",
+                    "pos": {
+                        "x": 123.825,
+                        "y": 60.092628
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd58"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 123.825,
+                        "y": 63.119
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf1e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C21",
+                    "pos": {
+                        "x": 124.714,
+                        "y": 90.805
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb82"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C56",
+                    "pos": {
+                        "x": 125.73,
+                        "y": 85.09
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005bd21865"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C22",
+                    "pos": {
+                        "x": 127.0,
+                        "y": 104.14
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb8d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U7",
+                    "pos": {
+                        "x": 130.175,
+                        "y": 61.595
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d267"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C23",
+                    "pos": {
+                        "x": 130.175,
+                        "y": 61.595
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb98"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C20",
+                    "pos": {
+                        "x": 130.81,
+                        "y": 73.025
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb77"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C27",
+                    "pos": {
+                        "x": 132.334,
+                        "y": 123.19
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cbc4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C31",
+                    "pos": {
+                        "x": 132.334,
+                        "y": 136.525
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005bd1f59a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint BUS1",
+                    "pos": {
+                        "x": 158.115,
+                        "y": 158.75
+                    },
+                    "uuid": "00000000-0000-0000-0000-0000269c6109"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C30",
+                    "pos": {
+                        "x": 136.779,
+                        "y": 139.7
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cbe5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C24",
+                    "pos": {
+                        "x": 138.049,
+                        "y": 116.84
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cba3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C19",
+                    "pos": {
+                        "x": 140.97,
+                        "y": 73.66
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb6c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U24",
+                    "pos": {
+                        "x": 141.605,
+                        "y": 88.165
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d82f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U11",
+                    "pos": {
+                        "x": 141.605,
+                        "y": 129.44
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d3d4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C25",
+                    "pos": {
+                        "x": 146.431,
+                        "y": 114.935
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cbae"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C29",
+                    "pos": {
+                        "x": 147.066,
+                        "y": 139.7
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cbda"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C57",
+                    "pos": {
+                        "x": 148.59,
+                        "y": 61.341
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005bd17772"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U2",
+                    "pos": {
+                        "x": 148.717,
+                        "y": 63.246
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d1c8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C38",
+                    "pos": {
+                        "x": 150.241,
+                        "y": 132.08
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc3d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C28",
+                    "pos": {
+                        "x": 150.241,
+                        "y": 135.89
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cbcf"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C26",
+                    "pos": {
+                        "x": 150.622,
+                        "y": 122.936
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cbb9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C69",
+                    "pos": {
+                        "x": 151.638,
+                        "y": 148.463
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd9c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C17",
+                    "pos": {
+                        "x": 155.194,
+                        "y": 85.344
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb56"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C18",
+                    "pos": {
+                        "x": 157.48,
+                        "y": 74.295
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb61"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint W1",
+                    "pos": {
+                        "x": 162.687,
+                        "y": 132.08
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d8d9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R5",
+                    "pos": {
+                        "x": 163.449,
+                        "y": 134.62
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf4a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U4",
+                    "pos": {
+                        "x": 168.783,
+                        "y": 91.567
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d20d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U3",
+                    "pos": {
+                        "x": 168.783,
+                        "y": 106.553
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d1ef"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U5",
+                    "pos": {
+                        "x": 168.783,
+                        "y": 121.031
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d22b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint RR3",
+                    "pos": {
+                        "x": 188.595,
+                        "y": 134.112
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d150"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint RR2",
+                    "pos": {
+                        "x": 188.595,
+                        "y": 137.795
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d13f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint RR1",
+                    "pos": {
+                        "x": 188.595,
+                        "y": 142.621
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d12e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U6",
+                    "pos": {
+                        "x": 197.739,
+                        "y": 138.811
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d249"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U19",
+                    "pos": {
+                        "x": 234.315,
+                        "y": 64.135
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d6ca"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U18",
+                    "pos": {
+                        "x": 234.315,
+                        "y": 73.025
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d676"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U17",
+                    "pos": {
+                        "x": 234.315,
+                        "y": 81.915
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d622"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U15",
+                    "pos": {
+                        "x": 234.315,
+                        "y": 90.805
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d57a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U16",
+                    "pos": {
+                        "x": 234.315,
+                        "y": 99.695
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d5ce"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U12",
+                    "pos": {
+                        "x": 234.315,
+                        "y": 108.585
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d47e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U14",
+                    "pos": {
+                        "x": 234.315,
+                        "y": 117.475
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d526"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U13",
+                    "pos": {
+                        "x": 234.315,
+                        "y": 126.365
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d4d2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R22",
+                    "pos": {
+                        "x": 294.767,
+                        "y": 131.572
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d005"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C41",
+                    "pos": {
+                        "x": 300.355,
+                        "y": 131.572
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc61"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R38",
+                    "pos": {
+                        "x": 304.165,
+                        "y": 117.729
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d0b5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U22",
+                    "pos": {
+                        "x": 304.927,
+                        "y": 74.422
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d752"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C40",
+                    "pos": {
+                        "x": 307.086,
+                        "y": 131.699
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc55"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R37",
+                    "pos": {
+                        "x": 309.372,
+                        "y": 121.285
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d0aa"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C52",
+                    "pos": {
+                        "x": 310.261,
+                        "y": 117.729
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ccdb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U8",
+                    "pos": {
+                        "x": 311.277,
+                        "y": 112.649
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d27a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R23",
+                    "pos": {
+                        "x": 313.69,
+                        "y": 132.08
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d010"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C36",
+                    "pos": {
+                        "x": 313.944,
+                        "y": 120.015
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc27"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint D1",
+                    "pos": {
+                        "x": 310.300142,
+                        "y": 61.039361
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cdda"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint D2",
+                    "pos": {
+                        "x": 311.023,
+                        "y": 58.801
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cde9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R36",
+                    "pos": {
+                        "x": 316.357,
+                        "y": 120.015
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d09f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C37",
+                    "pos": {
+                        "x": 318.9,
+                        "y": 120.015
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc32"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C11",
+                    "pos": {
+                        "x": 319.278,
+                        "y": 69.977
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb14"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R15",
+                    "pos": {
+                        "x": 321.437,
+                        "y": 120.015
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cfb8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C14",
+                    "pos": {
+                        "x": 324.231,
+                        "y": 81.915
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb35"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C15",
+                    "pos": {
+                        "x": 325.755,
+                        "y": 87.249
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb40"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C13",
+                    "pos": {
+                        "x": 326.009,
+                        "y": 64.643
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb2a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint L5",
+                    "pos": {
+                        "x": 326.009,
+                        "y": 131.572
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce4f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C39",
+                    "pos": {
+                        "x": 333.248,
+                        "y": 131.699
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc49"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C9",
+                    "pos": {
+                        "x": 333.883,
+                        "y": 64.897
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cafe"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U10",
+                    "pos": {
+                        "x": 335.407,
+                        "y": 76.327
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d32a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C16",
+                    "pos": {
+                        "x": 338.201,
+                        "y": 84.709
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb4b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C7",
+                    "pos": {
+                        "x": 338.201,
+                        "y": 87.757
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cae8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R24",
+                    "pos": {
+                        "x": 339.598,
+                        "y": 131.318
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d01b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R20",
+                    "pos": {
+                        "x": 343.027,
+                        "y": 58.039
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cfef"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R19",
+                    "pos": {
+                        "x": 343.408,
+                        "y": 97.282
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cfe4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint U9",
+                    "pos": {
+                        "x": 343.535,
+                        "y": 114.935
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d2da"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C34",
+                    "pos": {
+                        "x": 343.789,
+                        "y": 117.602
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc11"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C42",
+                    "pos": {
+                        "x": 343.916,
+                        "y": 120.396
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc6d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R27",
+                    "pos": {
+                        "x": 344.297,
+                        "y": 84.709
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d03c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C10",
+                    "pos": {
+                        "x": 344.297,
+                        "y": 87.757
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb09"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint L4",
+                    "pos": {
+                        "x": 345.313,
+                        "y": 97.155
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce43"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C33",
+                    "pos": {
+                        "x": 345.313,
+                        "y": 111.76
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc06"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C51",
+                    "pos": {
+                        "x": 345.44,
+                        "y": 108.585
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cccf"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C2",
+                    "pos": {
+                        "x": 345.567,
+                        "y": 67.437
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cab1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C6",
+                    "pos": {
+                        "x": 345.567,
+                        "y": 73.279
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cadd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C12",
+                    "pos": {
+                        "x": 345.567,
+                        "y": 80.391
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cb1f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C5",
+                    "pos": {
+                        "x": 346.202,
+                        "y": 97.282
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cad2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R8",
+                    "pos": {
+                        "x": 348.234,
+                        "y": 131.699
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf6b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C8",
+                    "pos": {
+                        "x": 349.123,
+                        "y": 58.039
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402caf3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C65",
+                    "pos": {
+                        "x": 351.409,
+                        "y": 93.091
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd70"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C66",
+                    "pos": {
+                        "x": 351.409,
+                        "y": 95.885
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd7b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R35",
+                    "pos": {
+                        "x": 353.5,
+                        "y": 59.2925
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005b22196e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C35",
+                    "pos": {
+                        "x": 353.949,
+                        "y": 131.699
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cc1c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R25",
+                    "pos": {
+                        "x": 355.346,
+                        "y": 94.615
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d026"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R12",
+                    "pos": {
+                        "x": 355.727,
+                        "y": 72.263
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf97"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C4",
+                    "pos": {
+                        "x": 355.981,
+                        "y": 78.105
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cac7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 355.981,
+                        "y": 81.153
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf29"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C62",
+                    "pos": {
+                        "x": 356.235,
+                        "y": 66.167
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cd4c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint X2",
+                    "pos": {
+                        "x": 357.632,
+                        "y": 91.948
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402d913"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C32",
+                    "pos": {
+                        "x": 357.759,
+                        "y": 127.635
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cbfb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint D3",
+                    "pos": {
+                        "x": 353.949,
+                        "y": 84.455
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cdf8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint D4",
+                    "pos": {
+                        "x": 353.949,
+                        "y": 86.719165
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402ce07"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 358.14,
+                        "y": 72.263
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cf34"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C3",
+                    "pos": {
+                        "x": 358.14,
+                        "y": 73.787
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cabc"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C1",
+                    "pos": {
+                        "x": 358.521,
+                        "y": 58.293
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402caa6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint C47",
+                    "pos": {
+                        "x": 358.521,
+                        "y": 60.833
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cca5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'footprints'",
+            "items": [
+                {
+                    "description": "Footprint R14",
+                    "pos": {
+                        "x": 358.521,
+                        "y": 63.627
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005402cfad"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of C55",
+                    "pos": {
+                        "x": 73.666,
+                        "y": 100.457
+                    },
+                    "uuid": "7483e266-6cf5-4ac0-a500-2e19e7465d98"
+                },
+                {
+                    "description": "PTH pad 3 [GND] of L6",
+                    "pos": {
+                        "x": 72.873768,
+                        "y": 99.346012
+                    },
+                    "uuid": "4c550747-9fa5-4a11-a55a-e376e1959b1b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of C58",
+                    "pos": {
+                        "x": 82.169,
+                        "y": 90.89
+                    },
+                    "uuid": "06556221-c9d9-43b6-8fc0-69bf7377745b"
+                },
+                {
+                    "description": "Pad 12 [Net-(U20-VOFF)] of U20 on top_copper",
+                    "pos": {
+                        "x": 80.899,
+                        "y": 89.74
+                    },
+                    "uuid": "7f4ec900-c773-4b43-8b29-9064a0767bb5"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of C64",
+                    "pos": {
+                        "x": 81.921,
+                        "y": 88.519
+                    },
+                    "uuid": "c4dce498-0992-4d38-94ce-da1edd04e6f1"
+                },
+                {
+                    "description": "Pad 2 [GND] of C43 on B.Cu",
+                    "pos": {
+                        "x": 80.671,
+                        "y": 88.011
+                    },
+                    "uuid": "60882814-c5e0-4b69-8371-b0994af800d4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R21",
+                    "pos": {
+                        "x": 109.855,
+                        "y": 65.744
+                    },
+                    "uuid": "3d9bfc5e-ecea-458c-8bc3-f846561366bf"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C50",
+                    "pos": {
+                        "x": 110.069,
+                        "y": 64.643
+                    },
+                    "uuid": "0797966c-3909-40df-b793-6f5faef25cb3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R26",
+                    "pos": {
+                        "x": 111.887,
+                        "y": 63.923
+                    },
+                    "uuid": "a84727fd-2bdb-4a5f-8f4e-588dd2c32b88"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of C50",
+                    "pos": {
+                        "x": 110.069,
+                        "y": 64.643
+                    },
+                    "uuid": "0797966c-3909-40df-b793-6f5faef25cb3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R28",
+                    "pos": {
+                        "x": 111.76,
+                        "y": 113.115
+                    },
+                    "uuid": "40c013d8-0b89-4aeb-b4de-c1e229bd66f7"
+                },
+                {
+                    "description": "Pad 1 [+5V] of R29 on top_copper",
+                    "pos": {
+                        "x": 112.75,
+                        "y": 111.76
+                    },
+                    "uuid": "7cfea44c-53b7-4b34-9904-da9ba6c6f0bc"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of D3",
+                    "pos": {
+                        "x": 351.917,
+                        "y": 83.439
+                    },
+                    "uuid": "4420c1e6-73c9-454d-8569-800f7278af3c"
+                },
+                {
+                    "description": "Pad 130 [GND] of U10 on top_copper",
+                    "pos": {
+                        "x": 350.532,
+                        "y": 83.152
+                    },
+                    "uuid": "f1d99ee3-65f2-4bac-8d37-9ab30ebd5655"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of D3",
+                    "pos": {
+                        "x": 351.917,
+                        "y": 83.439
+                    },
+                    "uuid": "4420c1e6-73c9-454d-8569-800f7278af3c"
+                },
+                {
+                    "description": "Pad 129 [unconnected-(U10-VID2_C-Pad129)] of U10 on top_copper",
+                    "pos": {
+                        "x": 350.532,
+                        "y": 83.802
+                    },
+                    "uuid": "595d1227-55ba-42e5-b124-4195b0dfa1f1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of D4",
+                    "pos": {
+                        "x": 351.917,
+                        "y": 85.703165
+                    },
+                    "uuid": "1095bc33-6757-485b-af67-362d80fd396f"
+                },
+                {
+                    "description": "Pad 126 [GND] of U10 on top_copper",
+                    "pos": {
+                        "x": 350.532,
+                        "y": 85.752
+                    },
+                    "uuid": "6cfce73e-618f-4044-b0d0-4b19b0e08bc0"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of D4",
+                    "pos": {
+                        "x": 351.917,
+                        "y": 85.703165
+                    },
+                    "uuid": "1095bc33-6757-485b-af67-362d80fd396f"
+                },
+                {
+                    "description": "Pad 125 [/pal-ntsc.sch/C-VIDEO] of U10 on top_copper",
+                    "pos": {
+                        "x": 350.532,
+                        "y": 86.402
+                    },
+                    "uuid": "5876d9ce-1d76-48a2-9f33-2fc54edcd42c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of D4",
+                    "pos": {
+                        "x": 351.917,
+                        "y": 85.703165
+                    },
+                    "uuid": "1095bc33-6757-485b-af67-362d80fd396f"
+                },
+                {
+                    "description": "Pad 127 [unconnected-(U10-VID1_C-Pad127)] of U10 on top_copper",
+                    "pos": {
+                        "x": 350.532,
+                        "y": 85.102
+                    },
+                    "uuid": "3234a7aa-17e2-4f1c-9f14-fa36cdad8bce"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of C32",
+                    "pos": {
+                        "x": 357.759,
+                        "y": 125.815
+                    },
+                    "uuid": "cef09791-628c-4e24-b757-114589fe8f74"
+                },
+                {
+                    "description": "PTH pad 44 [Net-(U9-VREF)] of U9",
+                    "pos": {
+                        "x": 356.235,
+                        "y": 125.095
+                    },
+                    "uuid": "001d5576-91b7-463f-9d09-e40117e9535e"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

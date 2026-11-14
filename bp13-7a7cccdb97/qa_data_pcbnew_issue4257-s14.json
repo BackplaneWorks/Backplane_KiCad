@@ -1,0 +1,250 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:09",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue4257.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "86bb462c-03ef-40e7-8676-85e66e43bcab"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Blind via [<no net>] on F.Cu - In1.Cu",
+                    "pos": {
+                        "x": 147.955,
+                        "y": 86.995
+                    },
+                    "uuid": "645cc3b2-3724-4b57-962a-a7d28e4f84a5"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 156.845,
+                        "y": 86.995
+                    },
+                    "uuid": "9f3db980-ce93-4ae6-813a-9832a6affc36"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 156.84754,
+                        "y": 86.995
+                    },
+                    "uuid": "19ccc761-ed00-4cfc-bfdb-96decfd7b640"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Drilled hole too close to other hole (board setup constraints min 0.2500 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 156.84754,
+                        "y": 86.995
+                    },
+                    "uuid": "19ccc761-ed00-4cfc-bfdb-96decfd7b640"
+                },
+                {
+                    "description": "Via [<no net>] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 156.845,
+                        "y": 86.995
+                    },
+                    "uuid": "9f3db980-ce93-4ae6-813a-9832a6affc36"
+                }
+            ],
+            "severity": "warning",
+            "type": "hole_to_hole"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Housings_DIP'",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 164.719,
+                        "y": 77.597
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005e384273"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 164.854,
+                        "y": 76.572
+                    },
+                    "uuid": "5f87560d-c2dd-4988-93e2-e7a433c3671c"
+                },
+                {
+                    "description": "PTH pad 1 [<no net>] of U1",
+                    "pos": {
+                        "x": 164.719,
+                        "y": 77.597
+                    },
+                    "uuid": "02483e4d-3ab1-489c-951b-83a16cc9b30a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 164.854,
+                        "y": 75.302
+                    },
+                    "uuid": "e308227f-4540-45cb-8f89-ecd876ca1442"
+                },
+                {
+                    "description": "PTH pad 1 [<no net>] of U1",
+                    "pos": {
+                        "x": 164.719,
+                        "y": 77.597
+                    },
+                    "uuid": "02483e4d-3ab1-489c-951b-83a16cc9b30a"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 164.854,
+                        "y": 128.152
+                    },
+                    "uuid": "78b4e0c1-5416-423b-9b6a-33c25d680bac"
+                },
+                {
+                    "description": "PTH pad 20 [<no net>] of U1",
+                    "pos": {
+                        "x": 164.719,
+                        "y": 125.857
+                    },
+                    "uuid": "e876604e-ed53-40dd-9e3d-8ae62c69ec6f"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 179.824,
+                        "y": 75.302
+                    },
+                    "uuid": "0c83747d-42d9-4847-b483-05c3ae7b0529"
+                },
+                {
+                    "description": "PTH pad 40 [<no net>] of U1",
+                    "pos": {
+                        "x": 179.959,
+                        "y": 77.597
+                    },
+                    "uuid": "3c03b006-992b-4656-8d8b-1a40717bad9b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of U1 on F.SilkS",
+                    "pos": {
+                        "x": 179.824,
+                        "y": 128.152
+                    },
+                    "uuid": "795f70dc-ca2a-43ab-a648-ef3974787a73"
+                },
+                {
+                    "description": "PTH pad 21 [<no net>] of U1",
+                    "pos": {
+                        "x": 179.959,
+                        "y": 125.857
+                    },
+                    "uuid": "32fe534f-83ab-48c1-bece-80fc1226c6d7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

@@ -1,0 +1,106 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:59",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue23123_minimal.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Items shorting two nets (nets GND and Signal)",
+            "items": [
+                {
+                    "description": "PTH pad 1 [GND] of ",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 100.0
+                    },
+                    "uuid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+                },
+                {
+                    "description": "PTH pad 1 [Signal] of ",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 100.0
+                    },
+                    "uuid": "dddddddd-dddd-dddd-dddd-dddddddddddd"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets GND and Signal)",
+            "items": [
+                {
+                    "description": "PTH pad 1 [GND] of ",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 100.0
+                    },
+                    "uuid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+                },
+                {
+                    "description": "PTH pad 1 [Signal] of ",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 100.0
+                    },
+                    "uuid": "dddddddd-dddd-dddd-dddd-dddddddddddd"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Drilled holes co-located",
+            "items": [
+                {
+                    "description": "PTH pad 1 [GND] of ",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 100.0
+                    },
+                    "uuid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+                },
+                {
+                    "description": "PTH pad 1 [Signal] of ",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 100.0
+                    },
+                    "uuid": "dddddddd-dddd-dddd-dddd-dddddddddddd"
+                }
+            ],
+            "severity": "warning",
+            "type": "holes_co_located"
+        }
+    ]
+}

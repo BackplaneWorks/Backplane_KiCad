@@ -1,0 +1,187 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:05",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "key": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "key": "silk_edge_clearance"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue24875_fullround.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [unconnected-(C4-Pad2)] of C4 on F.Cu",
+                    "pos": {
+                        "x": 121.431434,
+                        "y": 65.47016
+                    },
+                    "uuid": "ce91d3a0-d75d-4f82-b5b8-32a928bb4b12"
+                },
+                {
+                    "description": "Track [unconnected-(C4-Pad2)] on B.Cu, length 1.6829 mm",
+                    "pos": {
+                        "x": 122.3,
+                        "y": 66.41
+                    },
+                    "uuid": "4fd1c86c-696b-4c34-be1e-f2d322b8bd4e"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Creepage violation (rule 'Check creepage distance between mains nets' creepage 5.0000 mm; actual 3.8979 mm)",
+            "items": [
+                {
+                    "description": "Track [unconnected-(C4-Pad2)] on B.Cu, length 1.6829 mm",
+                    "pos": {
+                        "x": 122.3,
+                        "y": 66.41
+                    },
+                    "uuid": "4fd1c86c-696b-4c34-be1e-f2d322b8bd4e"
+                },
+                {
+                    "description": "Pad 1 [unconnected-(C4-Pad1)] of C4 on B.Cu",
+                    "pos": {
+                        "x": 121.52,
+                        "y": 61.971281
+                    },
+                    "uuid": "2e81dc4a-dbd6-4765-a6d1-811f6cd2a03e"
+                }
+            ],
+            "severity": "error",
+            "type": "creepage"
+        },
+        {
+            "description": "Board has malformed outline (self-intersecting)",
+            "items": [
+                {
+                    "description": "Rectangle on Edge.Cuts",
+                    "pos": {
+                        "x": 120.24,
+                        "y": 63.25
+                    },
+                    "uuid": "5941557a-333d-4833-a5e0-1e55150be146"
+                },
+                {
+                    "description": "Rectangle on Edge.Cuts",
+                    "pos": {
+                        "x": 130.31,
+                        "y": 62.6
+                    },
+                    "uuid": "0e37a07e-0f19-45a1-83c4-c89298a74b95"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [unconnected-(C4-Pad2)] on B.Cu, length 1.6829 mm",
+                    "pos": {
+                        "x": 122.3,
+                        "y": 66.41
+                    },
+                    "uuid": "4fd1c86c-696b-4c34-be1e-f2d322b8bd4e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [unconnected-(C4-Pad1)] on B.Cu, length 0.0990 mm",
+                    "pos": {
+                        "x": 135.5,
+                        "y": 61.35
+                    },
+                    "uuid": "bf2b39d3-9079-499e-90ee-0c56a0056bf5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [unconnected-(C4-Pad2)] on B.Cu, length 1.6476 mm",
+                    "pos": {
+                        "x": 134.405,
+                        "y": 65.195
+                    },
+                    "uuid": "83023967-9035-4036-ba91-37c40585d4c2"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Footprint 'CP_Radial_D8.0mm_P3.50mm' does not match copy in library 'Capacitor_THT'",
+            "items": [
+                {
+                    "description": "Footprint C4",
+                    "pos": {
+                        "x": 121.52,
+                        "y": 61.971281
+                    },
+                    "uuid": "a34a3371-7d2e-4c04-b138-bdb0e8535b1f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

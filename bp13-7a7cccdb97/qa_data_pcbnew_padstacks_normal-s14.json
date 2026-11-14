@@ -1,0 +1,151 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:26",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "padstacks_normal.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0500 mm)",
+            "items": [
+                {
+                    "description": "PTH pad b5 [<no net>] of J2",
+                    "pos": {
+                        "x": 154.0,
+                        "y": 91.0
+                    },
+                    "uuid": "e2d39975-c95f-4512-8375-223d4718decd"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "aaac231b-305b-4228-8208-d46268205a3a"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Footprint 'Samtec_LSHM-105-xx.x-x-DV-S_2x05-1SH_P0.50mm_Vertical' does not match copy in library 'Connector_Samtec'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 139.0,
+                        "y": 91.0
+                    },
+                    "uuid": "766e01eb-6552-46e3-8465-091bc54046bf"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'JAE_LY20-18P-DLT1_2x09_P2.00mm_Horizontal' does not match copy in library 'Connector_JAE'",
+            "items": [
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 152.0,
+                        "y": 83.0
+                    },
+                    "uuid": "316b7e5b-da3f-4b6c-be32-9ae354514af7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of J2 on F.Silkscreen",
+                    "pos": {
+                        "x": 151.29,
+                        "y": 89.485283
+                    },
+                    "uuid": "6c98ba2e-3c3a-464f-ad12-878f26ada9c7"
+                },
+                {
+                    "description": "PTH pad a5 [<no net>] of J2",
+                    "pos": {
+                        "x": 152.0,
+                        "y": 91.0
+                    },
+                    "uuid": "65454bd0-a765-4b31-9de0-9572d5dc6ab9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of J2 on F.Silkscreen",
+                    "pos": {
+                        "x": 151.29,
+                        "y": 91.485283
+                    },
+                    "uuid": "fa761da3-ce86-45d1-93cc-df978248a956"
+                },
+                {
+                    "description": "PTH pad a5 [<no net>] of J2",
+                    "pos": {
+                        "x": 152.0,
+                        "y": 91.0
+                    },
+                    "uuid": "65454bd0-a765-4b31-9de0-9572d5dc6ab9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

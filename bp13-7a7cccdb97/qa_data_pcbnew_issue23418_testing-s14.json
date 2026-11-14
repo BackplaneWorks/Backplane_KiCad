@@ -1,0 +1,127 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:59",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "testing.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "ca9552c9-307e-4259-8216-678eb2dd4561"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [gnd] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 172.0,
+                        "y": 63.0
+                    },
+                    "uuid": "9eb6ae47-15bc-4f3f-a1e7-a9f9b3e06a59"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [gnd] on F.Cu, priority 2",
+                    "pos": {
+                        "x": 166.0,
+                        "y": 62.0
+                    },
+                    "uuid": "3cad1630-7895-4782-9aa9-bac95a675d65"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [gnd] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 167.0,
+                        "y": 61.0
+                    },
+                    "uuid": "5f7ef07c-d4b1-4a82-9670-8596bc872d09"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [gnd] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 167.0,
+                        "y": 61.0
+                    },
+                    "uuid": "5f7ef07c-d4b1-4a82-9670-8596bc872d09"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [gnd] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 172.0,
+                        "y": 63.0
+                    },
+                    "uuid": "9eb6ae47-15bc-4f3f-a1e7-a9f9b3e06a59"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        }
+    ]
+}

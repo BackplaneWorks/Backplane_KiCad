@@ -1,0 +1,4332 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:53",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue17429.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 90 [MODULE0_INPUT1_BIAS_REF] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 154.2
+                    },
+                    "uuid": "80860991-2745-45db-8655-f32b727e3944"
+                },
+                {
+                    "description": "Track [MODULE0_INPUT1_BIAS_REF] on F.Cu - hs signal, length 2.0600 mm",
+                    "pos": {
+                        "x": 120.6,
+                        "y": 154.2
+                    },
+                    "uuid": "c8452d66-016f-4017-a48d-4aad4fbcedbe"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN1P] on F.Cu - hs signal, length 1.3600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 155.8
+                    },
+                    "uuid": "221e4293-1dad-4f91-a869-d39634ca7647"
+                },
+                {
+                    "description": "Pad 81 [MODULE0_INPUT1_IN1P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 155.8
+                    },
+                    "uuid": "74f57098-b83f-40bf-9a16-2adad8dcb50b"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 80 [MODULE0_INPUT1_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 156.2
+                    },
+                    "uuid": "efd7949e-2aac-4dd9-a8ad-1f75d2d2b6ef"
+                },
+                {
+                    "description": "Pad 79 [MODULE0_INPUT1_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 156.2
+                    },
+                    "uuid": "31219264-7ac4-4ff1-b301-c675e3ddbf4b"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 76 [MODULE0_INPUT1_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.0
+                    },
+                    "uuid": "c90a3bcd-a0a8-4c9b-a6db-352093285022"
+                },
+                {
+                    "description": "Pad 75 [MODULE0_INPUT1_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.0
+                    },
+                    "uuid": "b47d319c-9f8a-446a-aff9-d30efe9b1dd3"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN3P] on F.Cu - hs signal, length 1.3600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.4
+                    },
+                    "uuid": "d72a2a83-720c-40a2-b7f4-6e2bf77c23fd"
+                },
+                {
+                    "description": "Pad 73 [MODULE0_INPUT1_IN3P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.4
+                    },
+                    "uuid": "4c1e0f56-dab6-4dcb-b04a-2018d7be1580"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 72 [MODULE0_INPUT1_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.8
+                    },
+                    "uuid": "b3a96f29-7750-4145-a994-dc4d3e682de0"
+                },
+                {
+                    "description": "Pad 71 [MODULE0_INPUT1_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.8
+                    },
+                    "uuid": "c8f26bbf-44c4-4eb7-9dec-72237fe02576"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 68 [MODULE0_INPUT1_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 158.6
+                    },
+                    "uuid": "71b0c46d-f3da-4663-92a0-b03e0813d42c"
+                },
+                {
+                    "description": "Pad 67 [MODULE0_INPUT1_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 158.6
+                    },
+                    "uuid": "cca3f844-c5b4-452d-81dd-d76de703bca3"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 64 [MODULE0_INPUT1_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 159.4
+                    },
+                    "uuid": "f8ea2cca-fe69-4d05-bfb2-3602c81ed291"
+                },
+                {
+                    "description": "Pad 63 [MODULE0_INPUT1_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 159.4
+                    },
+                    "uuid": "be2d4a8d-792f-4454-b8c9-9ade9ce89a17"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN6P] on F.Cu - hs signal, length 2.3600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 159.8
+                    },
+                    "uuid": "5f161e2c-504b-4418-a601-f1c850a31caa"
+                },
+                {
+                    "description": "Pad 61 [MODULE0_INPUT1_IN6P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 159.8
+                    },
+                    "uuid": "dbe0baee-011f-4cd6-950b-a0f145be5f24"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 60 [MODULE0_INPUT1_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 160.2
+                    },
+                    "uuid": "fe6c1429-b7ca-4adb-b021-610a1c5840a6"
+                },
+                {
+                    "description": "Pad 59 [MODULE0_INPUT1_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 160.2
+                    },
+                    "uuid": "681beab5-bc9f-46e3-9d7d-2de257a8f889"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 56 [MODULE0_INPUT1_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 161.0
+                    },
+                    "uuid": "9cd66941-a46d-4248-99f7-29ba96115520"
+                },
+                {
+                    "description": "Pad 55 [MODULE0_INPUT1_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.0
+                    },
+                    "uuid": "267b9ca4-78ec-4a67-9aaa-deb73eb73966"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN8P] on F.Cu - hs signal, length 2.3600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 161.4
+                    },
+                    "uuid": "cff4aed3-271d-45c0-a3c4-046e16b7f260"
+                },
+                {
+                    "description": "Pad 53 [MODULE0_INPUT1_IN8P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.4
+                    },
+                    "uuid": "d384076d-8217-4237-8a13-86ece3667b99"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 48 [MODULE0_INPUT0_IN8N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 162.6
+                    },
+                    "uuid": "b487fe7b-30b1-4025-b012-4151b7bfd1fe"
+                },
+                {
+                    "description": "Pad 47 [MODULE0_INPUT0_IN8N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 162.6
+                    },
+                    "uuid": "980253e8-c84f-42af-bf37-becbf1700dfd"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN8P] on F.Cu - hs signal, length 1.2600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 163.0
+                    },
+                    "uuid": "b8c6340c-56a3-43fe-9e74-f738658189f6"
+                },
+                {
+                    "description": "Pad 45 [MODULE0_INPUT0_IN8P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 163.0
+                    },
+                    "uuid": "df3d1f8e-6559-45c1-8020-6620d011e034"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 44 [MODULE0_INPUT0_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 163.4
+                    },
+                    "uuid": "26e27b13-02da-4b4b-b805-9688664b31a3"
+                },
+                {
+                    "description": "Pad 43 [MODULE0_INPUT0_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 163.4
+                    },
+                    "uuid": "8bdd119c-e35d-407e-9a87-776b0b20de20"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN7P] on F.Cu - hs signal, length 2.3600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 163.8
+                    },
+                    "uuid": "cd82f6fa-ed67-404f-a649-87e29048d872"
+                },
+                {
+                    "description": "Pad 41 [MODULE0_INPUT0_IN7P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 163.8
+                    },
+                    "uuid": "f897a142-99c8-4546-aad6-8d4964c3e4d0"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 40 [MODULE0_INPUT0_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 164.2
+                    },
+                    "uuid": "c973eb7f-3498-45b0-84e1-da1b38c122b9"
+                },
+                {
+                    "description": "Pad 39 [MODULE0_INPUT0_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 164.2
+                    },
+                    "uuid": "d72c6674-0cab-4190-9c66-eeb124ae40d0"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN6P] on F.Cu - hs signal, length 1.2600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 164.6
+                    },
+                    "uuid": "57b563f2-3251-4f29-9c57-b7e6b9c7bacb"
+                },
+                {
+                    "description": "Pad 37 [MODULE0_INPUT0_IN6P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 164.6
+                    },
+                    "uuid": "dc545f9f-3759-4bb5-a90b-07896e54c289"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 36 [MODULE0_INPUT0_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.0
+                    },
+                    "uuid": "d1b18364-9a1b-4b54-bdcc-b71a4cb28eb2"
+                },
+                {
+                    "description": "Pad 35 [MODULE0_INPUT0_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.0
+                    },
+                    "uuid": "69cdea53-e9ed-4d41-9cf0-27a2ec65a7d8"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN5P] on F.Cu - hs signal, length 2.3600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.4
+                    },
+                    "uuid": "74da9126-9d2f-4c1d-b8a1-021e27bcafbe"
+                },
+                {
+                    "description": "Pad 33 [MODULE0_INPUT0_IN5P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.4
+                    },
+                    "uuid": "519972f5-567a-42f1-a038-c4960d508559"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 32 [MODULE0_INPUT0_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.8
+                    },
+                    "uuid": "278889a0-8211-462d-96b5-dd63d9778096"
+                },
+                {
+                    "description": "Pad 31 [MODULE0_INPUT0_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.8
+                    },
+                    "uuid": "cff77d8e-35cb-4b2f-b0b5-f4f5614dc0e0"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN4P] on F.Cu - hs signal, length 1.2600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 166.2
+                    },
+                    "uuid": "3f4da512-b026-405d-a045-87c506a3ef63"
+                },
+                {
+                    "description": "Pad 29 [MODULE0_INPUT0_IN4P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 166.2
+                    },
+                    "uuid": "87b98e0c-3614-42af-8982-59c036259cc8"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 28 [MODULE0_INPUT0_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 166.6
+                    },
+                    "uuid": "ead4b4cc-fc45-4dd8-a87f-80766c87f645"
+                },
+                {
+                    "description": "Pad 27 [MODULE0_INPUT0_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 166.6
+                    },
+                    "uuid": "c1c302bf-1f96-42af-b13b-06c23f7e5560"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN3P] on F.Cu - hs signal, length 2.3600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 167.0
+                    },
+                    "uuid": "d03170ae-ca2b-4cec-b484-c0fadc3ad204"
+                },
+                {
+                    "description": "Pad 25 [MODULE0_INPUT0_IN3P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 167.0
+                    },
+                    "uuid": "5f0ff478-4889-4241-940d-6fe2d4c5aa06"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 24 [MODULE0_INPUT0_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 167.4
+                    },
+                    "uuid": "f6794aa7-7895-4c09-ad75-880ae15db473"
+                },
+                {
+                    "description": "Pad 23 [MODULE0_INPUT0_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 167.4
+                    },
+                    "uuid": "7182a1fd-c02e-4630-97df-f40b76db10a6"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 20 [MODULE0_INPUT0_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 168.2
+                    },
+                    "uuid": "40218084-6e02-4946-8b4d-b32a578c0a68"
+                },
+                {
+                    "description": "Pad 19 [MODULE0_INPUT0_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 168.2
+                    },
+                    "uuid": "327b6bc9-f77c-4714-be1c-86b01543d49d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN1P] on F.Cu - hs signal, length 2.4600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 168.6
+                    },
+                    "uuid": "742ed10c-8c85-48f3-b92b-a749b92a3c8c"
+                },
+                {
+                    "description": "Pad 17 [MODULE0_INPUT0_IN1P] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 168.6
+                    },
+                    "uuid": "c7b6b524-0fb3-41c8-9654-229fe7bd19e7"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 51 [MODULE0_INPUT1_IN8N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.8
+                    },
+                    "uuid": "143e54ef-8756-4ed7-8fc7-290820f42b13"
+                },
+                {
+                    "description": "Track [MODULE0_INPUT1_IN8N] on B.Cu - signal, length 1.8400 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.4
+                    },
+                    "uuid": "98cbc0eb-525e-4d25-a36b-48ca938216e4"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT0_IN1P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.0,
+                        "y": 168.6
+                    },
+                    "uuid": "4188aecc-c140-4ecd-a6f1-2cd6d41d76b4"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT1_IN4P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.077446,
+                        "y": 158.231359
+                    },
+                    "uuid": "e19adb01-0dde-4ba2-9aeb-f8b3cc22fbb6"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT1_IN2P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.1,
+                        "y": 156.6
+                    },
+                    "uuid": "fa6b26f9-1160-44bd-ba82-39da3fadffc5"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT1_IN6P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.1,
+                        "y": 159.8
+                    },
+                    "uuid": "364414a6-e6b0-47f0-96be-fab08e067fde"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT1_IN8P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.1,
+                        "y": 161.4
+                    },
+                    "uuid": "81242139-847f-4729-a0ac-57f99dad7e35"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT0_IN7P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.1,
+                        "y": 163.8
+                    },
+                    "uuid": "3b7997a0-27d8-43a4-872f-acc4c00741b8"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT0_IN5P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.1,
+                        "y": 165.4
+                    },
+                    "uuid": "89b75b71-1e7e-465c-9496-be050e900a7b"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT0_IN3P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.1,
+                        "y": 167.0
+                    },
+                    "uuid": "33cb1b5a-01d5-4798-bdbb-2134ed432472"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.5,
+                        "y": 155.4
+                    },
+                    "uuid": "efb1deb5-0bbd-42fe-9102-3751a0a84028"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.5,
+                        "y": 156.2
+                    },
+                    "uuid": "379280d2-51b5-4667-8a97-dbfbc79de168"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.5,
+                        "y": 156.9818
+                    },
+                    "uuid": "a160c280-9b51-40aa-b357-1f38b380d40c"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.537864,
+                        "y": 157.8182
+                    },
+                    "uuid": "7cbae654-d963-42d9-bf6d-8d8a1549718a"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.541667,
+                        "y": 158.5818
+                    },
+                    "uuid": "3f846c0f-95f5-4004-921c-6e355a23cc0f"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.585458,
+                        "y": 159.375815
+                    },
+                    "uuid": "64410725-14c6-4b98-b434-53943a7bba07"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 161.0
+                    },
+                    "uuid": "3711d442-051e-4a94-8c85-f29f0e67dd69"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 163.409341
+                    },
+                    "uuid": "b7f1bdf6-d7d5-42c1-bce2-760741e53240"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 164.2
+                    },
+                    "uuid": "d47b89d9-b222-4b0d-8ea1-bae30f150999"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 165.0
+                    },
+                    "uuid": "e651f968-4665-4cfa-9299-55b908583c74"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 165.8
+                    },
+                    "uuid": "83d3417a-205e-459d-81b0-6f972724b4c2"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 166.6
+                    },
+                    "uuid": "a2fe4563-0076-43b6-8f45-86166943885f"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 168.2
+                    },
+                    "uuid": "47efd7a2-f90a-48f5-9e70-f50d107df74c"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT1_IN1P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 114.1,
+                        "y": 155.8
+                    },
+                    "uuid": "b214031d-57c4-4db1-8e8e-2915dd8e49b7"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT1_IN3P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 114.1,
+                        "y": 157.4
+                    },
+                    "uuid": "f461467c-9bba-4f6d-81af-6e9ae7a2c363"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT1_IN5P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 114.1,
+                        "y": 159.0
+                    },
+                    "uuid": "e0488147-7518-44f7-9938-48f1390fa0e4"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT1_IN7P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 114.1,
+                        "y": 160.6
+                    },
+                    "uuid": "bc6fbde3-5300-43aa-8607-7852680c82d4"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT0_IN8P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 114.2,
+                        "y": 163.0
+                    },
+                    "uuid": "0e819ed4-d7cf-4f11-a082-93c17a61f369"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT0_IN6P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 114.2,
+                        "y": 164.6
+                    },
+                    "uuid": "77698a60-3fce-4280-95fe-af3126fa107a"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT0_IN4P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 114.2,
+                        "y": 166.2
+                    },
+                    "uuid": "79424771-feee-40e8-ae0e-804f933c5dd9"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1016 mm; actual 0.0508 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT0_IN2P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 114.2,
+                        "y": 167.8
+                    },
+                    "uuid": "fa1bab4e-7010-4c41-b509-59332037be56"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT1_IN1N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 156.2
+                    },
+                    "uuid": "ed801a06-2da1-4987-a1c8-1235d652ea98"
+                },
+                {
+                    "description": "Pad 80 [MODULE0_INPUT1_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 156.2
+                    },
+                    "uuid": "efd7949e-2aac-4dd9-a8ad-1f75d2d2b6ef"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT1_IN2N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.0
+                    },
+                    "uuid": "a6076cdd-56c1-4c98-b988-7598e17cdbc8"
+                },
+                {
+                    "description": "Pad 76 [MODULE0_INPUT1_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.0
+                    },
+                    "uuid": "c90a3bcd-a0a8-4c9b-a6db-352093285022"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT0_IN8N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 48 [MODULE0_INPUT0_IN8N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 162.6
+                    },
+                    "uuid": "b487fe7b-30b1-4025-b012-4151b7bfd1fe"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 1.5400 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 162.6
+                    },
+                    "uuid": "fb763fe4-ba13-4ce2-ae8e-0adb01bd3cb5"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT0_IN7N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 44 [MODULE0_INPUT0_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 163.4
+                    },
+                    "uuid": "26e27b13-02da-4b4b-b805-9688664b31a3"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 163.4
+                    },
+                    "uuid": "9fdc1cf4-e69e-42d6-b833-084012d34d25"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT0_IN6N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 164.2
+                    },
+                    "uuid": "155c280a-b016-423b-b1c1-1d6f77222d65"
+                },
+                {
+                    "description": "Pad 40 [MODULE0_INPUT0_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 164.2
+                    },
+                    "uuid": "c973eb7f-3498-45b0-84e1-da1b38c122b9"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT0_IN5N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.0
+                    },
+                    "uuid": "57527cf2-789e-4038-908f-a93d4b9c204a"
+                },
+                {
+                    "description": "Pad 36 [MODULE0_INPUT0_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.0
+                    },
+                    "uuid": "d1b18364-9a1b-4b54-bdcc-b71a4cb28eb2"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT0_IN4N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 32 [MODULE0_INPUT0_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.8
+                    },
+                    "uuid": "278889a0-8211-462d-96b5-dd63d9778096"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.8
+                    },
+                    "uuid": "d86fbaad-55ec-4284-a0c3-0effdfed314e"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT0_IN3N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 166.6
+                    },
+                    "uuid": "d8447960-cc06-49ef-a505-2363a6b8b7f0"
+                },
+                {
+                    "description": "Pad 28 [MODULE0_INPUT0_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 166.6
+                    },
+                    "uuid": "ead4b4cc-fc45-4dd8-a87f-80766c87f645"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT0_IN2N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 167.4
+                    },
+                    "uuid": "2b13dd3f-bdd6-4cda-b002-3fdf29ba9157"
+                },
+                {
+                    "description": "Pad 24 [MODULE0_INPUT0_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 167.4
+                    },
+                    "uuid": "f6794aa7-7895-4c09-ad75-880ae15db473"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT0_IN1N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 20 [MODULE0_INPUT0_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 168.2
+                    },
+                    "uuid": "40218084-6e02-4946-8b4d-b32a578c0a68"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 168.2
+                    },
+                    "uuid": "fee0b69a-8579-4f63-943c-49fdc53e2c03"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT1_IN1N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 79 [MODULE0_INPUT1_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 156.2
+                    },
+                    "uuid": "31219264-7ac4-4ff1-b301-c675e3ddbf4b"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.8600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 156.2
+                    },
+                    "uuid": "95494fb6-4af5-443b-bc91-3ff7138afa54"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT1_IN2N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 75 [MODULE0_INPUT1_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.0
+                    },
+                    "uuid": "b47d319c-9f8a-446a-aff9-d30efe9b1dd3"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.0
+                    },
+                    "uuid": "ba7c5e2c-d6b6-4bcd-bc6a-59e6461a3d53"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT1_IN3N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.8
+                    },
+                    "uuid": "0e2937a2-3a1d-4500-820f-66413c730b12"
+                },
+                {
+                    "description": "Pad 71 [MODULE0_INPUT1_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.8
+                    },
+                    "uuid": "c8f26bbf-44c4-4eb7-9dec-72237fe02576"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT1_IN3N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.8
+                    },
+                    "uuid": "96163b9b-1a21-440e-8d5c-061727e3ce96"
+                },
+                {
+                    "description": "Pad 71 [MODULE0_INPUT1_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.8
+                    },
+                    "uuid": "c8f26bbf-44c4-4eb7-9dec-72237fe02576"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT1_IN4N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 158.6
+                    },
+                    "uuid": "1f38d2f8-f390-4a6e-9ad9-61a116dc9d58"
+                },
+                {
+                    "description": "Pad 67 [MODULE0_INPUT1_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 158.6
+                    },
+                    "uuid": "cca3f844-c5b4-452d-81dd-d76de703bca3"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT1_IN4N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 67 [MODULE0_INPUT1_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 158.6
+                    },
+                    "uuid": "cca3f844-c5b4-452d-81dd-d76de703bca3"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 158.6
+                    },
+                    "uuid": "d07297b8-1511-4fbf-b3ff-c1b394f509f7"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT1_IN5N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.5600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 159.4
+                    },
+                    "uuid": "26ca139f-a76a-46af-b850-b5d331262538"
+                },
+                {
+                    "description": "Pad 63 [MODULE0_INPUT1_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 159.4
+                    },
+                    "uuid": "be2d4a8d-792f-4454-b8c9-9ade9ce89a17"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT1_IN5N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 159.4
+                    },
+                    "uuid": "b43572b0-ec56-46b9-8edd-0e2f91af5ce6"
+                },
+                {
+                    "description": "Pad 63 [MODULE0_INPUT1_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 159.4
+                    },
+                    "uuid": "be2d4a8d-792f-4454-b8c9-9ade9ce89a17"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT1_IN6N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 160.2
+                    },
+                    "uuid": "339deb59-d0b9-45f7-85ca-25caa1ee7704"
+                },
+                {
+                    "description": "Pad 59 [MODULE0_INPUT1_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 160.2
+                    },
+                    "uuid": "681beab5-bc9f-46e3-9d7d-2de257a8f889"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT1_IN6N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 59 [MODULE0_INPUT1_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 160.2
+                    },
+                    "uuid": "681beab5-bc9f-46e3-9d7d-2de257a8f889"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 160.2
+                    },
+                    "uuid": "aeac40b7-81ee-442d-b669-92708cb6fa01"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT1_IN7N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 55 [MODULE0_INPUT1_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.0
+                    },
+                    "uuid": "267b9ca4-78ec-4a67-9aaa-deb73eb73966"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.5600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.0
+                    },
+                    "uuid": "8d19f8c7-321a-4cda-ab1b-4d5d882378e1"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT1_IN7N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 55 [MODULE0_INPUT1_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.0
+                    },
+                    "uuid": "267b9ca4-78ec-4a67-9aaa-deb73eb73966"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 161.0
+                    },
+                    "uuid": "e0aff91a-9540-41af-8ffc-09f818636993"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT1_IN8N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 51 [MODULE0_INPUT1_IN8N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.8
+                    },
+                    "uuid": "143e54ef-8756-4ed7-8fc7-290820f42b13"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7400 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.8
+                    },
+                    "uuid": "82f0e210-47b7-4621-a2fd-20e382ba3860"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT0_IN8N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 47 [MODULE0_INPUT0_IN8N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 162.6
+                    },
+                    "uuid": "980253e8-c84f-42af-bf37-becbf1700dfd"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7400 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 162.6
+                    },
+                    "uuid": "9d8157a6-aa19-44aa-9956-3f2eff1a3fa3"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT0_IN7N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 43 [MODULE0_INPUT0_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 163.4
+                    },
+                    "uuid": "8bdd119c-e35d-407e-9a87-776b0b20de20"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 163.4
+                    },
+                    "uuid": "c5a39dfb-4058-46dd-a935-77caac147d62"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT0_IN6N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.5600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 164.2
+                    },
+                    "uuid": "6d16c92c-4711-44c2-b991-bbe6f3ed4e84"
+                },
+                {
+                    "description": "Pad 39 [MODULE0_INPUT0_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 164.2
+                    },
+                    "uuid": "d72c6674-0cab-4190-9c66-eeb124ae40d0"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT0_IN5N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 35 [MODULE0_INPUT0_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.0
+                    },
+                    "uuid": "69cdea53-e9ed-4d41-9cf0-27a2ec65a7d8"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.6600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.0
+                    },
+                    "uuid": "81a6c826-e741-4351-b203-ab0e7182d89f"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT0_IN4N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.6600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.8
+                    },
+                    "uuid": "27157348-566f-4732-8e71-7540af87a2be"
+                },
+                {
+                    "description": "Pad 31 [MODULE0_INPUT0_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.8
+                    },
+                    "uuid": "cff77d8e-35cb-4b2f-b0b5-f4f5614dc0e0"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets AGND and MODULE0_INPUT0_IN3N)",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.6600 mm",
+                    "pos": {
+                        "x": 119.2,
+                        "y": 166.6
+                    },
+                    "uuid": "429e1582-ca9b-473d-b45b-73c6dfd196a5"
+                },
+                {
+                    "description": "Pad 27 [MODULE0_INPUT0_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 166.6
+                    },
+                    "uuid": "c1c302bf-1f96-42af-b13b-06c23f7e5560"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT0_IN2N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 23 [MODULE0_INPUT0_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 167.4
+                    },
+                    "uuid": "7182a1fd-c02e-4630-97df-f40b76db10a6"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.6600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 167.4
+                    },
+                    "uuid": "b756b2ec-0a8b-4341-b7ce-6d5c89244dac"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Items shorting two nets (nets MODULE0_INPUT0_IN1N and AGND)",
+            "items": [
+                {
+                    "description": "Pad 19 [MODULE0_INPUT0_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 168.2
+                    },
+                    "uuid": "327b6bc9-f77c-4714-be1c-86b01543d49d"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.6926 mm",
+                    "pos": {
+                        "x": 119.2326,
+                        "y": 168.2
+                    },
+                    "uuid": "d58e56cf-c9b5-47cf-998f-0c1259ac2394"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.1270 mm; actual 0.0944 mm)",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT1_IN8N] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 116.7,
+                        "y": 161.4
+                    },
+                    "uuid": "75ed2b64-0a47-4f32-a353-ad22afca5eb5"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 161.0
+                    },
+                    "uuid": "e0aff91a-9540-41af-8ffc-09f818636993"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 156.2
+                    },
+                    "uuid": "ed801a06-2da1-4987-a1c8-1235d652ea98"
+                },
+                {
+                    "description": "Pad 80 [MODULE0_INPUT1_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 156.2
+                    },
+                    "uuid": "efd7949e-2aac-4dd9-a8ad-1f75d2d2b6ef"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.0
+                    },
+                    "uuid": "a6076cdd-56c1-4c98-b988-7598e17cdbc8"
+                },
+                {
+                    "description": "Pad 76 [MODULE0_INPUT1_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.0
+                    },
+                    "uuid": "c90a3bcd-a0a8-4c9b-a6db-352093285022"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.8
+                    },
+                    "uuid": "0e2937a2-3a1d-4500-820f-66413c730b12"
+                },
+                {
+                    "description": "Pad 72 [MODULE0_INPUT1_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.8
+                    },
+                    "uuid": "b3a96f29-7750-4145-a994-dc4d3e682de0"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 68 [MODULE0_INPUT1_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 158.6
+                    },
+                    "uuid": "71b0c46d-f3da-4663-92a0-b03e0813d42c"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 158.6
+                    },
+                    "uuid": "d07297b8-1511-4fbf-b3ff-c1b394f509f7"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 159.4
+                    },
+                    "uuid": "b43572b0-ec56-46b9-8edd-0e2f91af5ce6"
+                },
+                {
+                    "description": "Pad 64 [MODULE0_INPUT1_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 159.4
+                    },
+                    "uuid": "f8ea2cca-fe69-4d05-bfb2-3602c81ed291"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 160.2
+                    },
+                    "uuid": "aeac40b7-81ee-442d-b669-92708cb6fa01"
+                },
+                {
+                    "description": "Pad 60 [MODULE0_INPUT1_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 160.2
+                    },
+                    "uuid": "fe6c1429-b7ca-4adb-b021-610a1c5840a6"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 56 [MODULE0_INPUT1_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 161.0
+                    },
+                    "uuid": "9cd66941-a46d-4248-99f7-29ba96115520"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 161.0
+                    },
+                    "uuid": "e0aff91a-9540-41af-8ffc-09f818636993"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 48 [MODULE0_INPUT0_IN8N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 162.6
+                    },
+                    "uuid": "b487fe7b-30b1-4025-b012-4151b7bfd1fe"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 1.5400 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 162.6
+                    },
+                    "uuid": "fb763fe4-ba13-4ce2-ae8e-0adb01bd3cb5"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 44 [MODULE0_INPUT0_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 163.4
+                    },
+                    "uuid": "26e27b13-02da-4b4b-b805-9688664b31a3"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 163.4
+                    },
+                    "uuid": "9fdc1cf4-e69e-42d6-b833-084012d34d25"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 164.2
+                    },
+                    "uuid": "155c280a-b016-423b-b1c1-1d6f77222d65"
+                },
+                {
+                    "description": "Pad 40 [MODULE0_INPUT0_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 164.2
+                    },
+                    "uuid": "c973eb7f-3498-45b0-84e1-da1b38c122b9"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.0
+                    },
+                    "uuid": "57527cf2-789e-4038-908f-a93d4b9c204a"
+                },
+                {
+                    "description": "Pad 36 [MODULE0_INPUT0_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.0
+                    },
+                    "uuid": "d1b18364-9a1b-4b54-bdcc-b71a4cb28eb2"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 32 [MODULE0_INPUT0_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.8
+                    },
+                    "uuid": "278889a0-8211-462d-96b5-dd63d9778096"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.8
+                    },
+                    "uuid": "d86fbaad-55ec-4284-a0c3-0effdfed314e"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 166.6
+                    },
+                    "uuid": "d8447960-cc06-49ef-a505-2363a6b8b7f0"
+                },
+                {
+                    "description": "Pad 28 [MODULE0_INPUT0_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 166.6
+                    },
+                    "uuid": "ead4b4cc-fc45-4dd8-a87f-80766c87f645"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 167.4
+                    },
+                    "uuid": "2b13dd3f-bdd6-4cda-b002-3fdf29ba9157"
+                },
+                {
+                    "description": "Pad 24 [MODULE0_INPUT0_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 167.4
+                    },
+                    "uuid": "f6794aa7-7895-4c09-ad75-880ae15db473"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 20 [MODULE0_INPUT0_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 168.2
+                    },
+                    "uuid": "40218084-6e02-4946-8b4d-b32a578c0a68"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 168.2
+                    },
+                    "uuid": "fee0b69a-8579-4f63-943c-49fdc53e2c03"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 79 [MODULE0_INPUT1_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 156.2
+                    },
+                    "uuid": "31219264-7ac4-4ff1-b301-c675e3ddbf4b"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 156.2
+                    },
+                    "uuid": "ed801a06-2da1-4987-a1c8-1235d652ea98"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.0
+                    },
+                    "uuid": "a6076cdd-56c1-4c98-b988-7598e17cdbc8"
+                },
+                {
+                    "description": "Pad 75 [MODULE0_INPUT1_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.0
+                    },
+                    "uuid": "b47d319c-9f8a-446a-aff9-d30efe9b1dd3"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.8
+                    },
+                    "uuid": "0e2937a2-3a1d-4500-820f-66413c730b12"
+                },
+                {
+                    "description": "Pad 71 [MODULE0_INPUT1_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.8
+                    },
+                    "uuid": "c8f26bbf-44c4-4eb7-9dec-72237fe02576"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 67 [MODULE0_INPUT1_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 158.6
+                    },
+                    "uuid": "cca3f844-c5b4-452d-81dd-d76de703bca3"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 158.6
+                    },
+                    "uuid": "d07297b8-1511-4fbf-b3ff-c1b394f509f7"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 159.4
+                    },
+                    "uuid": "b43572b0-ec56-46b9-8edd-0e2f91af5ce6"
+                },
+                {
+                    "description": "Pad 63 [MODULE0_INPUT1_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 159.4
+                    },
+                    "uuid": "be2d4a8d-792f-4454-b8c9-9ade9ce89a17"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 59 [MODULE0_INPUT1_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 160.2
+                    },
+                    "uuid": "681beab5-bc9f-46e3-9d7d-2de257a8f889"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 160.2
+                    },
+                    "uuid": "aeac40b7-81ee-442d-b669-92708cb6fa01"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 55 [MODULE0_INPUT1_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.0
+                    },
+                    "uuid": "267b9ca4-78ec-4a67-9aaa-deb73eb73966"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 161.0
+                    },
+                    "uuid": "e0aff91a-9540-41af-8ffc-09f818636993"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 51 [MODULE0_INPUT1_IN8N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.8
+                    },
+                    "uuid": "143e54ef-8756-4ed7-8fc7-290820f42b13"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7400 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.8
+                    },
+                    "uuid": "82f0e210-47b7-4621-a2fd-20e382ba3860"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 47 [MODULE0_INPUT0_IN8N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 162.6
+                    },
+                    "uuid": "980253e8-c84f-42af-bf37-becbf1700dfd"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7400 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 162.6
+                    },
+                    "uuid": "9d8157a6-aa19-44aa-9956-3f2eff1a3fa3"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 43 [MODULE0_INPUT0_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 163.4
+                    },
+                    "uuid": "8bdd119c-e35d-407e-9a87-776b0b20de20"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 163.4
+                    },
+                    "uuid": "9fdc1cf4-e69e-42d6-b833-084012d34d25"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 164.2
+                    },
+                    "uuid": "155c280a-b016-423b-b1c1-1d6f77222d65"
+                },
+                {
+                    "description": "Pad 39 [MODULE0_INPUT0_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 164.2
+                    },
+                    "uuid": "d72c6674-0cab-4190-9c66-eeb124ae40d0"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.0
+                    },
+                    "uuid": "57527cf2-789e-4038-908f-a93d4b9c204a"
+                },
+                {
+                    "description": "Pad 35 [MODULE0_INPUT0_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.0
+                    },
+                    "uuid": "69cdea53-e9ed-4d41-9cf0-27a2ec65a7d8"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 31 [MODULE0_INPUT0_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.8
+                    },
+                    "uuid": "cff77d8e-35cb-4b2f-b0b5-f4f5614dc0e0"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.8
+                    },
+                    "uuid": "d86fbaad-55ec-4284-a0c3-0effdfed314e"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 27 [MODULE0_INPUT0_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 166.6
+                    },
+                    "uuid": "c1c302bf-1f96-42af-b13b-06c23f7e5560"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 166.6
+                    },
+                    "uuid": "d8447960-cc06-49ef-a505-2363a6b8b7f0"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 167.4
+                    },
+                    "uuid": "2b13dd3f-bdd6-4cda-b002-3fdf29ba9157"
+                },
+                {
+                    "description": "Pad 23 [MODULE0_INPUT0_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 167.4
+                    },
+                    "uuid": "7182a1fd-c02e-4630-97df-f40b76db10a6"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 19 [MODULE0_INPUT0_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 168.2
+                    },
+                    "uuid": "327b6bc9-f77c-4714-be1c-86b01543d49d"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 168.2
+                    },
+                    "uuid": "fee0b69a-8579-4f63-943c-49fdc53e2c03"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 79 [MODULE0_INPUT1_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 156.2
+                    },
+                    "uuid": "31219264-7ac4-4ff1-b301-c675e3ddbf4b"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.8600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 156.2
+                    },
+                    "uuid": "95494fb6-4af5-443b-bc91-3ff7138afa54"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 75 [MODULE0_INPUT1_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.0
+                    },
+                    "uuid": "b47d319c-9f8a-446a-aff9-d30efe9b1dd3"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.0
+                    },
+                    "uuid": "ba7c5e2c-d6b6-4bcd-bc6a-59e6461a3d53"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.8
+                    },
+                    "uuid": "96163b9b-1a21-440e-8d5c-061727e3ce96"
+                },
+                {
+                    "description": "Pad 71 [MODULE0_INPUT1_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 157.8
+                    },
+                    "uuid": "c8f26bbf-44c4-4eb7-9dec-72237fe02576"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 158.6
+                    },
+                    "uuid": "1f38d2f8-f390-4a6e-9ad9-61a116dc9d58"
+                },
+                {
+                    "description": "Pad 67 [MODULE0_INPUT1_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 158.6
+                    },
+                    "uuid": "cca3f844-c5b4-452d-81dd-d76de703bca3"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.5600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 159.4
+                    },
+                    "uuid": "26ca139f-a76a-46af-b850-b5d331262538"
+                },
+                {
+                    "description": "Pad 63 [MODULE0_INPUT1_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 159.4
+                    },
+                    "uuid": "be2d4a8d-792f-4454-b8c9-9ade9ce89a17"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 160.2
+                    },
+                    "uuid": "339deb59-d0b9-45f7-85ca-25caa1ee7704"
+                },
+                {
+                    "description": "Pad 59 [MODULE0_INPUT1_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 160.2
+                    },
+                    "uuid": "681beab5-bc9f-46e3-9d7d-2de257a8f889"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 55 [MODULE0_INPUT1_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.0
+                    },
+                    "uuid": "267b9ca4-78ec-4a67-9aaa-deb73eb73966"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.5600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.0
+                    },
+                    "uuid": "8d19f8c7-321a-4cda-ab1b-4d5d882378e1"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 43 [MODULE0_INPUT0_IN7N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 163.4
+                    },
+                    "uuid": "8bdd119c-e35d-407e-9a87-776b0b20de20"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.7600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 163.4
+                    },
+                    "uuid": "c5a39dfb-4058-46dd-a935-77caac147d62"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.5600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 164.2
+                    },
+                    "uuid": "6d16c92c-4711-44c2-b991-bbe6f3ed4e84"
+                },
+                {
+                    "description": "Pad 39 [MODULE0_INPUT0_IN6N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 164.2
+                    },
+                    "uuid": "d72c6674-0cab-4190-9c66-eeb124ae40d0"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 35 [MODULE0_INPUT0_IN5N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.0
+                    },
+                    "uuid": "69cdea53-e9ed-4d41-9cf0-27a2ec65a7d8"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.6600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.0
+                    },
+                    "uuid": "81a6c826-e741-4351-b203-ab0e7182d89f"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.6600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.8
+                    },
+                    "uuid": "27157348-566f-4732-8e71-7540af87a2be"
+                },
+                {
+                    "description": "Pad 31 [MODULE0_INPUT0_IN4N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 165.8
+                    },
+                    "uuid": "cff77d8e-35cb-4b2f-b0b5-f4f5614dc0e0"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.6600 mm",
+                    "pos": {
+                        "x": 119.2,
+                        "y": 166.6
+                    },
+                    "uuid": "429e1582-ca9b-473d-b45b-73c6dfd196a5"
+                },
+                {
+                    "description": "Pad 27 [MODULE0_INPUT0_IN3N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 166.6
+                    },
+                    "uuid": "c1c302bf-1f96-42af-b13b-06c23f7e5560"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 23 [MODULE0_INPUT0_IN2N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 167.4
+                    },
+                    "uuid": "7182a1fd-c02e-4630-97df-f40b76db10a6"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.6600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 167.4
+                    },
+                    "uuid": "b756b2ec-0a8b-4341-b7ce-6d5c89244dac"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 19 [MODULE0_INPUT0_IN1N] of J1 on F.Cu - hs signal",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 168.2
+                    },
+                    "uuid": "327b6bc9-f77c-4714-be1c-86b01543d49d"
+                },
+                {
+                    "description": "Track [AGND] on F.Cu - hs signal, length 0.6926 mm",
+                    "pos": {
+                        "x": 119.2326,
+                        "y": 168.2
+                    },
+                    "uuid": "d58e56cf-c9b5-47cf-998f-0c1259ac2394"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone 'VCC_3V3' [<no net>] on In2.Cu - VCC_3V3, priority 40",
+                    "pos": {
+                        "x": 30.494256,
+                        "y": 224.390818
+                    },
+                    "uuid": "f0f3a7bd-319d-479e-98f0-84cb59b4f62a"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on In5.Cu - VCC_5V, priority 0",
+                    "pos": {
+                        "x": 45.776927,
+                        "y": 208.024996
+                    },
+                    "uuid": "e98d252e-224e-4d3c-988a-79c3e9ffcf70"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [MODULE0_INPUT0_IN1P] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.0,
+                        "y": 168.6
+                    },
+                    "uuid": "4188aecc-c140-4ecd-a6f1-2cd6d41d76b4"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [<no net>] on F.Cu - hs signal - B.Cu - signal",
+                    "pos": {
+                        "x": 113.537864,
+                        "y": 157.8182
+                    },
+                    "uuid": "7cbae654-d963-42d9-bf6d-8d8a1549718a"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In6.Cu - x signal, length 4.7357 mm",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 164.2
+                    },
+                    "uuid": "ed7f2b48-5efc-40be-8471-ebaee65c5fe5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN4P] on In6.Cu - x signal, length 3.8461 mm",
+                    "pos": {
+                        "x": 109.231359,
+                        "y": 158.231359
+                    },
+                    "uuid": "2e3339e1-2926-4c06-86cc-5fa311ebd809"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN5P] on In3.Cu - h signal, length 3.5340 mm",
+                    "pos": {
+                        "x": 109.565979,
+                        "y": 165.4
+                    },
+                    "uuid": "b2cacd9a-4c50-4977-9edc-5dd243b5f068"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In6.Cu - x signal, length 4.0300 mm",
+                    "pos": {
+                        "x": 109.570044,
+                        "y": 163.409341
+                    },
+                    "uuid": "06175ac9-5f2c-4124-977b-a3c13e7f3fd4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In4.Cu - v signal, length 3.7757 mm",
+                    "pos": {
+                        "x": 109.824299,
+                        "y": 165.8
+                    },
+                    "uuid": "13148d25-33c6-4659-833b-6527ddc5ec54"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In4.Cu - v signal, length 3.4742 mm",
+                    "pos": {
+                        "x": 113.5,
+                        "y": 156.9818
+                    },
+                    "uuid": "11aea342-5bc3-47dd-acfb-0e79dcdd1ca2"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In6.Cu - x signal, length 3.5565 mm",
+                    "pos": {
+                        "x": 113.6,
+                        "y": 165.0
+                    },
+                    "uuid": "18599bef-c7a8-4e6a-97fd-3a6a6e4efcc6"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In6.Cu - x signal, length 3.3373 mm",
+                    "pos": {
+                        "x": 110.26267,
+                        "y": 162.6
+                    },
+                    "uuid": "cf1dbb20-ba92-418e-85e7-0f53fbeeefc7"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN6P] on In3.Cu - h signal, length 3.9339 mm",
+                    "pos": {
+                        "x": 110.266101,
+                        "y": 164.6
+                    },
+                    "uuid": "9b91faa8-f71d-494b-bceb-cfff0a2de0bb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN3P] on In6.Cu - x signal, length 3.7331 mm",
+                    "pos": {
+                        "x": 110.366883,
+                        "y": 157.4
+                    },
+                    "uuid": "e9e9556e-99f1-4e6a-ad3e-fa0f1bd899eb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In4.Cu - v signal, length 3.0238 mm",
+                    "pos": {
+                        "x": 113.510308,
+                        "y": 158.613159
+                    },
+                    "uuid": "63e65cdb-1c54-447f-a5d6-4075bd6040b6"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In4.Cu - v signal, length 2.5949 mm",
+                    "pos": {
+                        "x": 110.905096,
+                        "y": 156.2
+                    },
+                    "uuid": "e5e4fd1d-7345-4a96-8f25-46412d2d08ca"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN4P] on In3.Cu - h signal, length 3.1010 mm",
+                    "pos": {
+                        "x": 111.099011,
+                        "y": 166.2
+                    },
+                    "uuid": "4d755bc0-f5f8-42c6-b903-9e8343aef30a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In4.Cu - v signal, length 2.4725 mm",
+                    "pos": {
+                        "x": 111.112981,
+                        "y": 159.375815
+                    },
+                    "uuid": "8e91b825-e142-4e4d-af95-5fb141e20b95"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [<no net>] on In4.Cu - v signal, length 1.8771 mm",
+                    "pos": {
+                        "x": 112.88995,
+                        "y": 170.58995
+                    },
+                    "uuid": "0ca86f4e-e37d-4fc0-9d3d-b0b4da10d85a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN2P] on In6.Cu - x signal, length 1.7458 mm",
+                    "pos": {
+                        "x": 111.354214,
+                        "y": 156.6
+                    },
+                    "uuid": "164a7ce8-3488-4288-a9de-f0717c53ee94"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In4.Cu - v signal, length 2.1060 mm",
+                    "pos": {
+                        "x": 111.494005,
+                        "y": 166.6
+                    },
+                    "uuid": "65fa57d6-44ff-4dcf-b03e-c2e06fc0a094"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [MODULE0_INPUT1_IN6P] on In3.Cu - h signal, length 1.2537 mm",
+                    "pos": {
+                        "x": 112.661171,
+                        "y": 158.203791
+                    },
+                    "uuid": "c69e6f93-1eae-4ae2-b038-f7503a609d5f"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN8P] on In3.Cu - h signal, length 1.4234 mm",
+                    "pos": {
+                        "x": 111.676647,
+                        "y": 161.4
+                    },
+                    "uuid": "9db3bca7-1c5f-4126-bcff-435a214aa411"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [MODULE0_INPUT0_REF_ELEC] on F.Cu - hs signal, length 1.3676 mm",
+                    "pos": {
+                        "x": 112.92125,
+                        "y": 171.14125
+                    },
+                    "uuid": "daf43ec9-c9f2-423a-9a1e-01946dd082f1"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN7P] on In3.Cu - h signal, length 1.3840 mm",
+                    "pos": {
+                        "x": 111.716006,
+                        "y": 163.8
+                    },
+                    "uuid": "c77dd0a2-e12f-4544-bfd6-c6b84630fabd"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In4.Cu - v signal, length 1.6398 mm",
+                    "pos": {
+                        "x": 111.860243,
+                        "y": 155.4
+                    },
+                    "uuid": "e8e122b8-8d26-4a6e-bb54-47ad1d368643"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In4.Cu - v signal, length 1.7009 mm",
+                    "pos": {
+                        "x": 111.895517,
+                        "y": 160.1818
+                    },
+                    "uuid": "5baa9caa-5e35-4993-a731-23a18fa6d41c"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN1P] on In6.Cu - x signal, length 2.1988 mm",
+                    "pos": {
+                        "x": 111.901238,
+                        "y": 155.8
+                    },
+                    "uuid": "bebffc54-20eb-4373-acce-0802b51dbfcd"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [MODULE0_INPUT0_IN2P] on In3.Cu - h signal, length 0.9538 mm",
+                    "pos": {
+                        "x": 112.803017,
+                        "y": 169.014391
+                    },
+                    "uuid": "0e07fdad-96e3-4ddc-a344-5883cb0a4b96"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN3P] on In3.Cu - h signal, length 0.9994 mm",
+                    "pos": {
+                        "x": 112.100649,
+                        "y": 167.0
+                    },
+                    "uuid": "5a66069c-1d71-4b7b-a188-2f756ff606df"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In4.Cu - v signal, length 1.3005 mm",
+                    "pos": {
+                        "x": 112.299451,
+                        "y": 167.3818
+                    },
+                    "uuid": "ba11ca31-baa1-4b4f-9b1d-17bdec3be94d"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN7P] on In3.Cu - h signal, length 1.7419 mm",
+                    "pos": {
+                        "x": 112.321701,
+                        "y": 160.5636
+                    },
+                    "uuid": "eed5e4e5-4534-4c29-a7fc-67d1f9ca4deb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_IN8P] on In3.Cu - h signal, length 1.8322 mm",
+                    "pos": {
+                        "x": 112.367843,
+                        "y": 163.0
+                    },
+                    "uuid": "28aecd87-25ce-4ce4-984e-2e3fb2d84ea4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on In4.Cu - v signal, length 1.1616 mm",
+                    "pos": {
+                        "x": 112.438441,
+                        "y": 161.0
+                    },
+                    "uuid": "f175aa5e-4a68-4279-afd6-0671d3f367fc"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [MODULE0_INPUT1_IN5P] on In3.Cu - h signal, length 0.6371 mm",
+                    "pos": {
+                        "x": 113.130004,
+                        "y": 158.182865
+                    },
+                    "uuid": "27194a1b-120d-47ec-87e0-e3efd83a2659"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [MODULE0_INPUT0_BIAS_ELEC] on F.Cu - hs signal, length 1.0726 mm",
+                    "pos": {
+                        "x": 113.855687,
+                        "y": 171.165689
+                    },
+                    "uuid": "80537ab6-e601-4816-8811-9b5d0fa9695c"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track (arc) [MODULE0_INPUT0_BIAS_REF] on F.Cu - hs signal, length 0.9653 mm",
+                    "pos": {
+                        "x": 114.419092,
+                        "y": 171.429058
+                    },
+                    "uuid": "39acf03b-5b25-4e8a-96a3-7fd45cca148f"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 0.0461 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 156.2
+                    },
+                    "uuid": "2fda03f3-7384-493e-b271-7a4ee608e411"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 155.0
+                    },
+                    "uuid": "07f549b2-2074-4e8b-924f-37fe729a5b4e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 0.0461 mm",
+                    "pos": {
+                        "x": 115.4274,
+                        "y": 155.3674
+                    },
+                    "uuid": "4552d030-d79e-4b2c-8f22-b8cf4f5fc0b8"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 155.8
+                    },
+                    "uuid": "656f388b-fb85-49d5-9422-851d8d5969f1"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 156.6
+                    },
+                    "uuid": "bd4f0fd4-8099-4e60-a509-eaf24782f0c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.9418 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.0
+                    },
+                    "uuid": "e874ac23-3251-4032-87eb-6bd8231e9706"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 157.4
+                    },
+                    "uuid": "80f505f3-6a1d-47fc-b8fe-7724b2ca269b"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.9039 mm",
+                    "pos": {
+                        "x": 113.556064,
+                        "y": 157.8
+                    },
+                    "uuid": "b9196857-af4c-4310-a891-b60662d643fa"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 158.2
+                    },
+                    "uuid": "b18d2206-d68c-43b6-a456-6b62a0368956"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.9001 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 158.6
+                    },
+                    "uuid": "bf5822d2-7f7c-447d-b922-efb8b1732983"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 159.0
+                    },
+                    "uuid": "e97ecb6c-f1cd-4bf4-ab72-e6b33ff59ea5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8504 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 159.4
+                    },
+                    "uuid": "d305898c-295d-45a0-b00f-248bfc913c87"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 159.8
+                    },
+                    "uuid": "18ae1528-103c-48fa-b9ec-712bef612ff4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8454 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 160.2
+                    },
+                    "uuid": "7040cccb-c25e-41df-84f2-e41a6811fcb4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 160.6
+                    },
+                    "uuid": "0e9a576a-0bf1-413c-98db-fbb8a50d5b0a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 161.0
+                    },
+                    "uuid": "81532829-c8f1-4ad5-bb7c-0f1d3f1c5686"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN8N] on B.Cu - signal, length 1.2400 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 161.4
+                    },
+                    "uuid": "d7e57e66-0a0a-45b8-8b93-e0c84b54c33c"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN8N] on B.Cu - signal, length 0.8400 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 161.8
+                    },
+                    "uuid": "a782d17c-7f60-4f97-8553-e04e79612208"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 1.9400 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 162.2
+                    },
+                    "uuid": "12dba63d-b9f8-4001-9a37-a816cd93310f"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 162.6
+                    },
+                    "uuid": "31ff49d7-b67b-455e-9b95-3b51d30b9ccb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 163.0
+                    },
+                    "uuid": "87fd9a94-4bab-4d73-b76d-9631d8221d64"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8507 mm",
+                    "pos": {
+                        "x": 113.609341,
+                        "y": 163.4
+                    },
+                    "uuid": "2f934a61-01fe-4737-a3cd-ca06330e24d5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 163.8
+                    },
+                    "uuid": "fdd0221b-392e-4fe6-9655-e2c977e3ffbd"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 164.2
+                    },
+                    "uuid": "2978078e-8902-42da-a992-6e814598bb45"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 164.6
+                    },
+                    "uuid": "6273bce7-0b47-456c-9f85-fccb123273c4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.0
+                    },
+                    "uuid": "d494ce89-700a-474b-829d-22b08b9372df"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.4
+                    },
+                    "uuid": "7b089bca-5482-4031-861a-8eba41df2277"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 165.8
+                    },
+                    "uuid": "a3913715-ae60-4e0f-ae1c-f7472a6e9f04"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 166.2
+                    },
+                    "uuid": "09fac097-e280-4070-b694-b5b91998989b"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 166.6
+                    },
+                    "uuid": "7d095f89-2f64-41f2-98cc-f7ad14a62f42"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 167.0
+                    },
+                    "uuid": "656ff102-c3d9-4c0e-98b0-f9ffc2da5ee9"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8418 mm",
+                    "pos": {
+                        "x": 113.6182,
+                        "y": 167.4
+                    },
+                    "uuid": "cb79099e-9481-4f0b-b590-1cb203aea267"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 167.8
+                    },
+                    "uuid": "7d2e7a13-6704-467e-a7a4-39b98c34f98c"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.8600 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 168.2
+                    },
+                    "uuid": "d254b8b6-f5c7-4bfc-91b7-be5a5e51e603"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 168.6
+                    },
+                    "uuid": "efe61c9d-a709-4b1c-a02d-2d3e80c1b17a"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 169.0
+                    },
+                    "uuid": "c5072068-4ff5-4373-9d23-4e6a86d6644f"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 169.4
+                    },
+                    "uuid": "6da9bb01-be2c-43dd-9f18-dbb110ece8e3"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 3.0800 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 169.8
+                    },
+                    "uuid": "c169525d-e156-4f24-baba-823d8eb5614f"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 0.4400 mm",
+                    "pos": {
+                        "x": 115.46,
+                        "y": 170.2
+                    },
+                    "uuid": "ef98fe82-f12e-402e-8b6e-eabb8479f5de"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 1.2400 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 153.4
+                    },
+                    "uuid": "15adac3b-68d8-4dfa-a55a-46db17dffd5e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.1600 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 153.8
+                    },
+                    "uuid": "1c188f43-7302-4b22-b042-e1dc6a828728"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 3.6600 mm",
+                    "pos": {
+                        "x": 122.2,
+                        "y": 154.2
+                    },
+                    "uuid": "4238e8f9-8cce-42d9-b846-99994144930d"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 0.9500 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 154.6
+                    },
+                    "uuid": "1dd1217d-6408-457e-94f6-60df57cf14d8"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_IN8N] on B.Cu - signal, length 1.8400 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.4
+                    },
+                    "uuid": "98cbc0eb-525e-4d25-a36b-48ca938216e4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 0.7400 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 161.8
+                    },
+                    "uuid": "8e59c9ad-58a7-4e7d-8d37-6b5a018babbb"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [AGND] on B.Cu - signal, length 0.5400 mm",
+                    "pos": {
+                        "x": 118.54,
+                        "y": 170.2
+                    },
+                    "uuid": "351fffb6-4e6b-4f9c-82a3-73316fa892fa"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 0.0954 mm",
+                    "pos": {
+                        "x": 125.03,
+                        "y": 154.64371
+                    },
+                    "uuid": "cf79be5f-57de-46f4-b6f2-b1f43bd8d1c9"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 2.1000 mm",
+                    "pos": {
+                        "x": 125.1,
+                        "y": 166.2
+                    },
+                    "uuid": "8270dffb-fef3-4fd6-8cba-6e799f327698"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_BIAS_ELEC] on B.Cu - signal, length 1.0000 mm",
+                    "pos": {
+                        "x": 125.1,
+                        "y": 169.7
+                    },
+                    "uuid": "7b99b5c2-61a2-4a11-b2f8-f8000a1c36dc"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_REF_ELEC] on B.Cu - signal, length 1.3000 mm",
+                    "pos": {
+                        "x": 125.11,
+                        "y": 163.2
+                    },
+                    "uuid": "88de8b61-1d29-45fd-8441-955a06d9768b"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_BIAS_REF] on B.Cu - signal, length 1.1900 mm",
+                    "pos": {
+                        "x": 125.12,
+                        "y": 157.1
+                    },
+                    "uuid": "9ac0dfe8-fcaa-4b4f-89a8-441910ae5e81"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.2300 mm",
+                    "pos": {
+                        "x": 125.13,
+                        "y": 160.7
+                    },
+                    "uuid": "5f3913c2-119a-4f21-9174-dea4e8a6d02e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.2900 mm",
+                    "pos": {
+                        "x": 126.11,
+                        "y": 167.5
+                    },
+                    "uuid": "d7909680-1573-4f34-8ace-efc56abdbd92"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT1_BIAS_ELEC] on B.Cu - signal, length 0.1008 mm",
+                    "pos": {
+                        "x": 126.12,
+                        "y": 168.7
+                    },
+                    "uuid": "e63a4aed-7d83-4d80-91cf-16e85018d400"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.1763 mm",
+                    "pos": {
+                        "x": 126.13,
+                        "y": 155.9
+                    },
+                    "uuid": "f85bf7aa-9ecc-4350-84e8-6f971fbcdcdc"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [<no net>] on B.Cu - signal, length 1.1800 mm",
+                    "pos": {
+                        "x": 126.13,
+                        "y": 161.9
+                    },
+                    "uuid": "07247735-a01a-4a29-8de5-530c848033e2"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_REF_ELEC] on B.Cu - signal, length 0.0849 mm",
+                    "pos": {
+                        "x": 126.19,
+                        "y": 163.26
+                    },
+                    "uuid": "b8f0fab1-2332-400f-907f-385965940018"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [MODULE0_INPUT0_BIAS_REF] on B.Cu - signal, length 0.8400 mm",
+                    "pos": {
+                        "x": 126.14,
+                        "y": 157.94
+                    },
+                    "uuid": "57d5edf7-5dee-4893-88a5-a3872e2605e8"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'mi32-main-footprints'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 117.0,
+                        "y": 162.0
+                    },
+                    "uuid": "3667731d-085a-4286-bf93-efac8c5e108a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

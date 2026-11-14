@@ -1,0 +1,682 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:22",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "custom_pad_mask_split.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Via [A] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 120.0,
+                        "y": 80.0
+                    },
+                    "uuid": "2ff08d6b-d2fa-498c-aa0a-437903b48438"
+                },
+                {
+                    "description": "Via [A] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 124.0,
+                        "y": 80.0
+                    },
+                    "uuid": "b86ba856-d576-4a99-a8e8-6d1c7f1f8e54"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 79.1
+                    },
+                    "uuid": "993f27ea-49bf-4980-b2ed-b2764a799bb9"
+                },
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 80.0
+                    },
+                    "uuid": "4da21d74-ca51-4030-841d-9fa4271dd639"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 80.0
+                    },
+                    "uuid": "4da21d74-ca51-4030-841d-9fa4271dd639"
+                },
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 81.0
+                    },
+                    "uuid": "d8a5911f-c1d6-4713-912d-d31101496061"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 81.0
+                    },
+                    "uuid": "d8a5911f-c1d6-4713-912d-d31101496061"
+                },
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 82.0
+                    },
+                    "uuid": "c37863ac-f1db-49d4-876a-be127599ff62"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 82.0
+                    },
+                    "uuid": "c37863ac-f1db-49d4-876a-be127599ff62"
+                },
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 83.0
+                    },
+                    "uuid": "13ce42b0-06c2-44cb-9836-26127897dd66"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 83.0
+                    },
+                    "uuid": "13ce42b0-06c2-44cb-9836-26127897dd66"
+                },
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 123.0,
+                        "y": 83.0
+                    },
+                    "uuid": "aff7cd99-a442-4592-b93d-20bb191ac90d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 123.0,
+                        "y": 83.0
+                    },
+                    "uuid": "aff7cd99-a442-4592-b93d-20bb191ac90d"
+                },
+                {
+                    "description": "Micro via [B] on In3.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 83.0
+                    },
+                    "uuid": "878e8a3b-77d9-402e-9019-c139f6ee7548"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Micro via [B] on F.Cu - In4.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 81.0
+                    },
+                    "uuid": "dd040225-30f9-4c79-ad3e-e43383b2fb35"
+                },
+                {
+                    "description": "Micro via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 80.0
+                    },
+                    "uuid": "dab5afb6-716e-4443-b91e-13650cfba71f"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Micro via [B] on In4.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 82.0
+                    },
+                    "uuid": "c5a1f081-1841-48f2-858c-598a487445a0"
+                },
+                {
+                    "description": "Micro via [B] on F.Cu - In4.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 81.0
+                    },
+                    "uuid": "dd040225-30f9-4c79-ad3e-e43383b2fb35"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Micro via [B] on In3.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 83.0
+                    },
+                    "uuid": "878e8a3b-77d9-402e-9019-c139f6ee7548"
+                },
+                {
+                    "description": "Micro via [B] on In4.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 82.0
+                    },
+                    "uuid": "c5a1f081-1841-48f2-858c-598a487445a0"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0500 mm)",
+            "items": [
+                {
+                    "description": "Micro via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 80.0
+                    },
+                    "uuid": "dab5afb6-716e-4443-b91e-13650cfba71f"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0500 mm)",
+            "items": [
+                {
+                    "description": "Micro via [B] on F.Cu - In4.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 81.0
+                    },
+                    "uuid": "dd040225-30f9-4c79-ad3e-e43383b2fb35"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0500 mm)",
+            "items": [
+                {
+                    "description": "Micro via [B] on In4.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 82.0
+                    },
+                    "uuid": "c5a1f081-1841-48f2-858c-598a487445a0"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [A] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 120.0,
+                        "y": 80.0
+                    },
+                    "uuid": "2ff08d6b-d2fa-498c-aa0a-437903b48438"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 79.1
+                    },
+                    "uuid": "993f27ea-49bf-4980-b2ed-b2764a799bb9"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 80.0
+                    },
+                    "uuid": "4da21d74-ca51-4030-841d-9fa4271dd639"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 81.0
+                    },
+                    "uuid": "d8a5911f-c1d6-4713-912d-d31101496061"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 82.0
+                    },
+                    "uuid": "c37863ac-f1db-49d4-876a-be127599ff62"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 83.0
+                    },
+                    "uuid": "13ce42b0-06c2-44cb-9836-26127897dd66"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 123.0,
+                        "y": 83.0
+                    },
+                    "uuid": "aff7cd99-a442-4592-b93d-20bb191ac90d"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [A] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 124.0,
+                        "y": 80.0
+                    },
+                    "uuid": "b86ba856-d576-4a99-a8e8-6d1c7f1f8e54"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Micro via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 80.0
+                    },
+                    "uuid": "dab5afb6-716e-4443-b91e-13650cfba71f"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Micro via [B] on F.Cu - In4.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 81.0
+                    },
+                    "uuid": "dd040225-30f9-4c79-ad3e-e43383b2fb35"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Micro via [B] on In4.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 82.0
+                    },
+                    "uuid": "c5a1f081-1841-48f2-858c-598a487445a0"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Micro via [B] on In3.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 83.0
+                    },
+                    "uuid": "878e8a3b-77d9-402e-9019-c139f6ee7548"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Footprint 'SolderJumper-2_P1.3mm_Open_TrianglePad1.0x1.5mm' does not match copy in library 'Jumper'",
+            "items": [
+                {
+                    "description": "Footprint SB1",
+                    "pos": {
+                        "x": 121.0,
+                        "y": 93.6
+                    },
+                    "uuid": "994d43d5-3164-48e7-8130-92441f7fe4c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TestPoint_Pad_D2.0mm' does not match copy in library 'TestPoint'",
+            "items": [
+                {
+                    "description": "Footprint P3",
+                    "pos": {
+                        "x": 129.0,
+                        "y": 89.0
+                    },
+                    "uuid": "ecc0fb0f-74be-4cd5-a2b5-2009c7f9f73c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TestPoint_Pad_D2.0mm' does not match copy in library 'TestPoint'",
+            "items": [
+                {
+                    "description": "Footprint P6",
+                    "pos": {
+                        "x": 129.6,
+                        "y": 97.05
+                    },
+                    "uuid": "d7793912-5b37-41ea-981f-8b3485a419dd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TestPoint_Pad_D2.0mm' does not match copy in library 'TestPoint'",
+            "items": [
+                {
+                    "description": "Footprint P4",
+                    "pos": {
+                        "x": 133.0,
+                        "y": 89.0
+                    },
+                    "uuid": "72233f75-c54b-4983-a966-c01867960037"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TestPoint_Pad_D2.0mm' does not match copy in library 'TestPoint'",
+            "items": [
+                {
+                    "description": "Footprint P5",
+                    "pos": {
+                        "x": 137.0,
+                        "y": 89.0
+                    },
+                    "uuid": "516f904c-b21d-49d3-bbc4-a9b97f897bb1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "The stackup gives the dielectric between F.Cu and B.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 80.0
+                    },
+                    "uuid": "dab5afb6-716e-4443-b91e-13650cfba71f"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        },
+        {
+            "description": "The stackup gives the dielectric between F.Cu and In4.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [B] on F.Cu - In4.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 81.0
+                    },
+                    "uuid": "dd040225-30f9-4c79-ad3e-e43383b2fb35"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        },
+        {
+            "description": "The stackup gives the dielectric between In3.Cu and B.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [B] on In3.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.0,
+                        "y": 83.0
+                    },
+                    "uuid": "878e8a3b-77d9-402e-9019-c139f6ee7548"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Circle of P2 on F.Silkscreen",
+                    "pos": {
+                        "x": 125.0,
+                        "y": 89.0
+                    },
+                    "uuid": "c03d6f26-7038-4706-b2fb-d9a9feae2ab3"
+                },
+                {
+                    "description": "Pad 1 [<no net>] of P2 on F.Cu",
+                    "pos": {
+                        "x": 125.0,
+                        "y": 89.0
+                    },
+                    "uuid": "d37584cd-2e2f-40b5-822b-12791118953d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Circle of P6 on F.Silkscreen",
+                    "pos": {
+                        "x": 129.6,
+                        "y": 97.05
+                    },
+                    "uuid": "0a03171d-f929-46b5-94e5-fa9fb1b8b846"
+                },
+                {
+                    "description": "Pad 1 [<no net>] of P6 on F.Cu",
+                    "pos": {
+                        "x": 129.6,
+                        "y": 97.05
+                    },
+                    "uuid": "c263801a-e853-41ee-84f4-0bb4b91a2d15"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Circle of P4 on F.Silkscreen",
+                    "pos": {
+                        "x": 133.0,
+                        "y": 89.0
+                    },
+                    "uuid": "92f6ddd2-345a-488f-826f-c01d36d10578"
+                },
+                {
+                    "description": "Pad Pad [<no net>] of P4 on F.Cu",
+                    "pos": {
+                        "x": 133.0,
+                        "y": 89.0
+                    },
+                    "uuid": "1ad1d3ed-e8f5-4c7f-b0f6-095051a53b11"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

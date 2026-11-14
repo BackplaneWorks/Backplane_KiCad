@@ -1,0 +1,75 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:36",
+    "ignored_checks": [
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "ecc83-pp.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.285,
+                        "y": 136.525
+                    },
+                    "uuid": "9b19456e-3ad1-4dde-92c4-23451559e1ba"
+                },
+                {
+                    "description": "Segment of P4 on F.Silkscreen",
+                    "pos": {
+                        "x": 142.922,
+                        "y": 125.071
+                    },
+                    "uuid": "a4d1deb0-9296-4d9f-8b45-b343befbe2e3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 121.285,
+                        "y": 136.525
+                    },
+                    "uuid": "9b19456e-3ad1-4dde-92c4-23451559e1ba"
+                },
+                {
+                    "description": "Segment of P4 on F.Silkscreen",
+                    "pos": {
+                        "x": 153.162,
+                        "y": 125.071
+                    },
+                    "uuid": "fa4e4619-2310-496a-9c63-4fb385cf27a0"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        }
+    ]
+}

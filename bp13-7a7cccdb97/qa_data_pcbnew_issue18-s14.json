@@ -1,0 +1,538 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:55",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue18.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "b0ca0bb2-65c9-43ce-a267-8d211943299a"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1270 mm)",
+            "items": [
+                {
+                    "description": "Track [/hdmi_conn/HDMI_D1_N] on F.Cu, length 1.5624 mm",
+                    "pos": {
+                        "x": 23.141499,
+                        "y": 18.433671
+                    },
+                    "uuid": "64d73793-52cb-4d93-bf48-160eec6e3b3e"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1270 mm)",
+            "items": [
+                {
+                    "description": "Track [/hdmi_conn/HDMI_D1_N] on F.Cu, length 0.2242 mm",
+                    "pos": {
+                        "x": 23.3,
+                        "y": 18.27517
+                    },
+                    "uuid": "23d61a4f-a007-4eb7-929a-4b98504e6315"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1270 mm)",
+            "items": [
+                {
+                    "description": "Track [/hdmi_conn/HDMI_D1_N] on F.Cu, length 0.8552 mm",
+                    "pos": {
+                        "x": 23.3,
+                        "y": 17.42
+                    },
+                    "uuid": "5e38723d-7cf4-435b-a7dc-fdc196742765"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1270 mm)",
+            "items": [
+                {
+                    "description": "Track [/hdmi_conn/HDMI_D1_P] on F.Cu, length 0.8800 mm",
+                    "pos": {
+                        "x": 23.8,
+                        "y": 17.42
+                    },
+                    "uuid": "2d8444e6-65d2-4304-a55b-32edaa9d78fd"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1270 mm)",
+            "items": [
+                {
+                    "description": "Track [/hdmi_conn/HDMI_D1_P] on F.Cu, length 0.2242 mm",
+                    "pos": {
+                        "x": 23.8,
+                        "y": 18.3
+                    },
+                    "uuid": "1725a297-d3d6-44a9-b273-3793db649997"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.1270 mm)",
+            "items": [
+                {
+                    "description": "Track [/hdmi_conn/HDMI_D1_P] on F.Cu, length 1.5830 mm",
+                    "pos": {
+                        "x": 23.958501,
+                        "y": 18.458501
+                    },
+                    "uuid": "f8a3a6b9-b310-4f44-b853-cfee1bb98bed"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer F.Cu; zone min spoke count 2; actual 1)",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 19.5,
+                        "y": 16.0
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005c7f0764"
+                },
+                {
+                    "description": "Pad 14 [GND] of U13 on F.Cu",
+                    "pos": {
+                        "x": 22.05,
+                        "y": 18.72
+                    },
+                    "uuid": "5b65598d-1180-4296-8d9a-cf0776458d86"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer F.Cu; zone min spoke count 2; actual 1)",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 19.5,
+                        "y": 16.0
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005c7f0764"
+                },
+                {
+                    "description": "Pad 16 [GND] of U13 on F.Cu",
+                    "pos": {
+                        "x": 23.55,
+                        "y": 18.72
+                    },
+                    "uuid": "8cea36a9-26d5-49b0-927f-0f87020eea5d"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 10 [/rasp_cm/HDMI_CK_P] of U13 on F.Cu",
+                    "pos": {
+                        "x": 20.8,
+                        "y": 17.42
+                    },
+                    "uuid": "06dc5a21-59fb-4b8a-9199-4f6df459b13f"
+                },
+                {
+                    "description": "Pad 11 [/rasp_cm/HDMI_CK_N] of U13 on F.Cu",
+                    "pos": {
+                        "x": 20.3,
+                        "y": 17.42
+                    },
+                    "uuid": "31c0e2bb-f940-41c7-9ff1-b23529833911"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 10 [/rasp_cm/HDMI_CK_P] of U13 on F.Cu",
+                    "pos": {
+                        "x": 20.8,
+                        "y": 17.42
+                    },
+                    "uuid": "06dc5a21-59fb-4b8a-9199-4f6df459b13f"
+                },
+                {
+                    "description": "Pad 9 [/hdmi_conn/HDMI_HPD] of U13 on F.Cu",
+                    "pos": {
+                        "x": 21.3,
+                        "y": 17.42
+                    },
+                    "uuid": "4fb29416-4ae0-40b0-a815-2656bdd793ce"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 9 [/hdmi_conn/HDMI_HPD] of U13 on F.Cu",
+                    "pos": {
+                        "x": 21.3,
+                        "y": 17.42
+                    },
+                    "uuid": "4fb29416-4ae0-40b0-a815-2656bdd793ce"
+                },
+                {
+                    "description": "Pad 8 [/hdmi_conn/HDMI_D0_N] of U13 on F.Cu",
+                    "pos": {
+                        "x": 21.8,
+                        "y": 17.42
+                    },
+                    "uuid": "dd770e80-e4c9-4c2e-8269-034bf1fd1226"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 8 [/hdmi_conn/HDMI_D0_N] of U13 on F.Cu",
+                    "pos": {
+                        "x": 21.8,
+                        "y": 17.42
+                    },
+                    "uuid": "dd770e80-e4c9-4c2e-8269-034bf1fd1226"
+                },
+                {
+                    "description": "Pad 7 [/hdmi_conn/HDMI_D0_P] of U13 on F.Cu",
+                    "pos": {
+                        "x": 22.3,
+                        "y": 17.42
+                    },
+                    "uuid": "f9a76f8a-69cb-41e2-bf23-bf19d1dce7c0"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 6 [/hdmi_conn/HDMI_SCL] of U13 on F.Cu",
+                    "pos": {
+                        "x": 22.8,
+                        "y": 17.42
+                    },
+                    "uuid": "b9579944-11f9-429e-9381-263860cb439f"
+                },
+                {
+                    "description": "Pad 7 [/hdmi_conn/HDMI_D0_P] of U13 on F.Cu",
+                    "pos": {
+                        "x": 22.3,
+                        "y": 17.42
+                    },
+                    "uuid": "f9a76f8a-69cb-41e2-bf23-bf19d1dce7c0"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 5 [/hdmi_conn/HDMI_D1_N] of U13 on F.Cu",
+                    "pos": {
+                        "x": 23.3,
+                        "y": 17.42
+                    },
+                    "uuid": "ac5b460c-36ef-4c85-abda-f25358bf84c2"
+                },
+                {
+                    "description": "Pad 6 [/hdmi_conn/HDMI_SCL] of U13 on F.Cu",
+                    "pos": {
+                        "x": 22.8,
+                        "y": 17.42
+                    },
+                    "uuid": "b9579944-11f9-429e-9381-263860cb439f"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 4 [/hdmi_conn/HDMI_D1_P] of U13 on F.Cu",
+                    "pos": {
+                        "x": 23.8,
+                        "y": 17.42
+                    },
+                    "uuid": "00262117-d9ac-428f-8d0c-88b8f844c450"
+                },
+                {
+                    "description": "Pad 5 [/hdmi_conn/HDMI_D1_N] of U13 on F.Cu",
+                    "pos": {
+                        "x": 23.3,
+                        "y": 17.42
+                    },
+                    "uuid": "ac5b460c-36ef-4c85-abda-f25358bf84c2"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 4 [/hdmi_conn/HDMI_D1_P] of U13 on F.Cu",
+                    "pos": {
+                        "x": 23.8,
+                        "y": 17.42
+                    },
+                    "uuid": "00262117-d9ac-428f-8d0c-88b8f844c450"
+                },
+                {
+                    "description": "Pad 3 [<no net>] of U13 on F.Cu",
+                    "pos": {
+                        "x": 24.3,
+                        "y": 17.42
+                    },
+                    "uuid": "08617e77-162b-48db-a2da-266d41220a49"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 3 [<no net>] of U13 on F.Cu",
+                    "pos": {
+                        "x": 24.3,
+                        "y": 17.42
+                    },
+                    "uuid": "08617e77-162b-48db-a2da-266d41220a49"
+                },
+                {
+                    "description": "Pad 2 [/hdmi_conn/HDMI_D2_N] of U13 on F.Cu",
+                    "pos": {
+                        "x": 24.8,
+                        "y": 17.42
+                    },
+                    "uuid": "53872fd4-9949-4e86-8bfc-219fce7aab86"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Pad 1 [/hdmi_conn/HDMI_D2_P] of U13 on F.Cu",
+                    "pos": {
+                        "x": 25.375,
+                        "y": 17.42
+                    },
+                    "uuid": "4a4188e4-80d5-41d5-869c-474cbf63526c"
+                },
+                {
+                    "description": "Pad 2 [/hdmi_conn/HDMI_D2_N] of U13 on F.Cu",
+                    "pos": {
+                        "x": 24.8,
+                        "y": 17.42
+                    },
+                    "uuid": "53872fd4-9949-4e86-8bfc-219fce7aab86"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/hdmi_conn/HDMI_D1_N] on F.Cu, length 1.5624 mm",
+                    "pos": {
+                        "x": 23.141499,
+                        "y": 18.433671
+                    },
+                    "uuid": "64d73793-52cb-4d93-bf48-160eec6e3b3e"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/hdmi_conn/HDMI_D1_P] on F.Cu, length 1.5830 mm",
+                    "pos": {
+                        "x": 23.958501,
+                        "y": 18.458501
+                    },
+                    "uuid": "f8a3a6b9-b310-4f44-b853-cfee1bb98bed"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'FS-Diode'",
+            "items": [
+                {
+                    "description": "Footprint U13",
+                    "pos": {
+                        "x": 22.8,
+                        "y": 18.07
+                    },
+                    "uuid": "00000000-0000-0000-0000-00005c7ef524"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5000 mm)",
+            "items": [
+                {
+                    "description": "Reference field of U13",
+                    "pos": {
+                        "x": 22.8,
+                        "y": 16.27
+                    },
+                    "uuid": "c57e23e6-d20f-4149-9c94-a2858becd11d"
+                }
+            ],
+            "severity": "warning",
+            "type": "text_height"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of U13 on F.Silkscreen",
+                    "pos": {
+                        "x": 20.05,
+                        "y": 17.17
+                    },
+                    "uuid": "fe478fed-b995-4782-85ec-17390d7efd5b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of U13 on F.Silkscreen",
+                    "pos": {
+                        "x": 19.9,
+                        "y": 18.97
+                    },
+                    "uuid": "0bacd9b1-a372-4358-b512-94645718b49c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of U13 on F.Silkscreen",
+                    "pos": {
+                        "x": 25.3,
+                        "y": 18.97
+                    },
+                    "uuid": "8035f879-ca2b-4ab3-83a5-6d88513e95f7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of U13 on F.Silkscreen",
+                    "pos": {
+                        "x": 25.7,
+                        "y": 18.97
+                    },
+                    "uuid": "6db3935f-9095-4033-acc4-139c668a4050"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

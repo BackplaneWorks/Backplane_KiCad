@@ -1,0 +1,358 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:25",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "variant_field_textvar.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [unconnected-(R2-Pad1)] of R2 on F.Cu",
+                    "pos": {
+                        "x": 7.235949,
+                        "y": -5.412247
+                    },
+                    "uuid": "c9c9ce62-7e6a-4d48-abe2-a39ff1dd1747"
+                },
+                {
+                    "description": "Pad 1 [unconnected-(R2-Pad1)] of R2 on F.Cu",
+                    "pos": {
+                        "x": 12.959916,
+                        "y": 1.779948
+                    },
+                    "uuid": "6d717a7a-9e85-4217-979e-ec55ea9bfa3a"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [unconnected-(R2-Pad2)] of R2 on F.Cu",
+                    "pos": {
+                        "x": 15.585949,
+                        "y": -5.412247
+                    },
+                    "uuid": "cbe40c96-8d44-4264-9e48-dcdad994537d"
+                },
+                {
+                    "description": "Pad 2 [unconnected-(R2-Pad2)] of R2 on F.Cu",
+                    "pos": {
+                        "x": 15.909916,
+                        "y": 1.779948
+                    },
+                    "uuid": "9303f78f-807f-4867-9767-a0c37fb3383d"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Board has malformed outline (no edges found on Edge.Cuts layer)",
+            "items": [
+                {
+                    "description": "PCB",
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0
+                    },
+                    "uuid": "5488618f-119a-43f5-ae26-252598685942"
+                }
+            ],
+            "severity": "error",
+            "type": "invalid_outline"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 4.063679,
+                        "y": 4.135344
+                    },
+                    "uuid": "aee40491-deb7-4bf2-9925-bc1b6c986a39"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 4.063679,
+                        "y": 7.085344
+                    },
+                    "uuid": "4fe55dc3-bd98-4f5e-b058-cf7f096ea631"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 4.063679,
+                        "y": 10.035344
+                    },
+                    "uuid": "d65078f1-267e-405d-9ac6-16c146dfd199"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_3640_9110Metric_Pad2.10x10.45mm_HandSolder' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 11.410949,
+                        "y": -5.412247
+                    },
+                    "uuid": "81521adc-eb53-4f1b-925b-f2b0c3df0889"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_1210_3225Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 14.434916,
+                        "y": 1.779948
+                    },
+                    "uuid": "0f12dc80-e35e-41e4-84f6-30b0ce9fabef"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R3",
+                    "pos": {
+                        "x": 4.063679,
+                        "y": 5.435344
+                    },
+                    "uuid": "8a54f265-b371-41a2-8d7d-a756a918e322"
+                },
+                {
+                    "description": "Pad 1 [unconnected-(R1-Pad1)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 3.151179,
+                        "y": 4.135344
+                    },
+                    "uuid": "2383f5c4-8b99-47b9-9cff-8b935543cffd"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R4",
+                    "pos": {
+                        "x": 4.063679,
+                        "y": 8.385344
+                    },
+                    "uuid": "2d8da2a2-e08b-46f0-946b-c01774c773e2"
+                },
+                {
+                    "description": "Pad 1 [unconnected-(R3-Pad1)] of R3 on F.Cu",
+                    "pos": {
+                        "x": 3.151179,
+                        "y": 7.085344
+                    },
+                    "uuid": "d54e4264-b0d3-462b-aaa3-5abd46ec171f"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R4",
+                    "pos": {
+                        "x": 4.063679,
+                        "y": 8.385344
+                    },
+                    "uuid": "2d8da2a2-e08b-46f0-946b-c01774c773e2"
+                },
+                {
+                    "description": "Pad 2 [unconnected-(R3-Pad2)] of R3 on F.Cu",
+                    "pos": {
+                        "x": 4.976179,
+                        "y": 7.085344
+                    },
+                    "uuid": "26420452-d8ad-41b3-8780-c853341f6e14"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R3",
+                    "pos": {
+                        "x": 4.063679,
+                        "y": 5.435344
+                    },
+                    "uuid": "8a54f265-b371-41a2-8d7d-a756a918e322"
+                },
+                {
+                    "description": "Pad 2 [unconnected-(R1-Pad2)] of R1 on F.Cu",
+                    "pos": {
+                        "x": 4.976179,
+                        "y": 4.135344
+                    },
+                    "uuid": "c79653db-e2ab-447c-adcc-980ea98d4828"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 14.434916,
+                        "y": -0.520052
+                    },
+                    "uuid": "85b5ba23-68ce-4c37-8989-ea909a31bdcf"
+                },
+                {
+                    "description": "Pad 2 [unconnected-(R2-Pad2)] of R2 on F.Cu",
+                    "pos": {
+                        "x": 15.585949,
+                        "y": -5.412247
+                    },
+                    "uuid": "cbe40c96-8d44-4264-9e48-dcdad994537d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of R4",
+                    "pos": {
+                        "x": 4.063679,
+                        "y": 8.385344
+                    },
+                    "uuid": "2d8da2a2-e08b-46f0-946b-c01774c773e2"
+                },
+                {
+                    "description": "Segment of R3 on F.Silkscreen",
+                    "pos": {
+                        "x": 3.836615,
+                        "y": 7.820344
+                    },
+                    "uuid": "471ee649-91db-4f89-8ca0-5025b867fcdb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R1 on F.Silkscreen",
+                    "pos": {
+                        "x": 3.836615,
+                        "y": 4.870344
+                    },
+                    "uuid": "668a3e04-5452-4670-8b5e-ea33223bd9e6"
+                },
+                {
+                    "description": "Reference field of R3",
+                    "pos": {
+                        "x": 4.063679,
+                        "y": 5.435344
+                    },
+                    "uuid": "8a54f265-b371-41a2-8d7d-a756a918e322"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Segment of R2 on F.Silkscreen",
+                    "pos": {
+                        "x": 8.48858,
+                        "y": -0.202247
+                    },
+                    "uuid": "5847a783-c810-49d5-b2db-549d66d0438d"
+                },
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 14.434916,
+                        "y": -0.520052
+                    },
+                    "uuid": "85b5ba23-68ce-4c37-8989-ea909a31bdcf"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

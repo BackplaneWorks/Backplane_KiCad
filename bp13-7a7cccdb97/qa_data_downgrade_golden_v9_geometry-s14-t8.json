@@ -1,0 +1,402 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:40",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "geometry.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 65.0,
+                        "y": 43.0
+                    },
+                    "uuid": "5ae6ef77-9a63-4544-8ac8-88dc5d3f69ef"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of J1",
+                    "pos": {
+                        "x": 43.0,
+                        "y": 40.0
+                    },
+                    "uuid": "9fa04945-613b-47ac-b73e-cab53d3db2b7"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [SIGNAL] of R1 on F.Cu",
+                    "pos": {
+                        "x": 65.0,
+                        "y": 47.0
+                    },
+                    "uuid": "9ba00b73-e71b-411b-98bf-a3cba34735b4"
+                },
+                {
+                    "description": "Track [SIGNAL] on F.Cu, length 10.0000 mm",
+                    "pos": {
+                        "x": 40.0,
+                        "y": 40.0
+                    },
+                    "uuid": "16d38533-e13d-47df-a83e-e6d1d0f93da8"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 1 [SIGNAL] of U1 on B.Cu",
+                    "pos": {
+                        "x": 101.866025,
+                        "y": 101.232051
+                    },
+                    "uuid": "54142bf5-919e-41aa-9052-b6c86bf28ab1"
+                },
+                {
+                    "description": "Pad 1 [SIGNAL] of R1 on F.Cu",
+                    "pos": {
+                        "x": 65.0,
+                        "y": 47.0
+                    },
+                    "uuid": "9ba00b73-e71b-411b-98bf-a3cba34735b4"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of U1 on B.Cu",
+                    "pos": {
+                        "x": 105.964102,
+                        "y": 102.330127
+                    },
+                    "uuid": "510103f4-a4b0-476b-a5ce-27592c586231"
+                },
+                {
+                    "description": "Pad 2 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 65.0,
+                        "y": 43.0
+                    },
+                    "uuid": "5ae6ef77-9a63-4544-8ac8-88dc5d3f69ef"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Items not allowed",
+            "items": [
+                {
+                    "description": "Track [SIGNAL] on F.Cu, length 10.0000 mm",
+                    "pos": {
+                        "x": 40.0,
+                        "y": 40.0
+                    },
+                    "uuid": "16d38533-e13d-47df-a83e-e6d1d0f93da8"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items not allowed (keepout area of R1)",
+            "items": [
+                {
+                    "description": "Pad 2 [GND] of R1 on F.Cu",
+                    "pos": {
+                        "x": 65.0,
+                        "y": 43.0
+                    },
+                    "uuid": "5ae6ef77-9a63-4544-8ac8-88dc5d3f69ef"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items not allowed (keepout area of R1)",
+            "items": [
+                {
+                    "description": "Pad 1 [SIGNAL] of R1 on F.Cu",
+                    "pos": {
+                        "x": 65.0,
+                        "y": 47.0
+                    },
+                    "uuid": "9ba00b73-e71b-411b-98bf-a3cba34735b4"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items not allowed (keepout area of U1)",
+            "items": [
+                {
+                    "description": "Pad 1 [SIGNAL] of U1 on B.Cu",
+                    "pos": {
+                        "x": 101.866025,
+                        "y": 101.232051
+                    },
+                    "uuid": "54142bf5-919e-41aa-9052-b6c86bf28ab1"
+                }
+            ],
+            "severity": "error",
+            "type": "items_not_allowed"
+        },
+        {
+            "description": "Items shorting two nets (nets SIGNAL and GND)",
+            "items": [
+                {
+                    "description": "Track [SIGNAL] on F.Cu, length 10.0000 mm",
+                    "pos": {
+                        "x": 40.0,
+                        "y": 40.0
+                    },
+                    "uuid": "16d38533-e13d-47df-a83e-e6d1d0f93da8"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of J1",
+                    "pos": {
+                        "x": 43.0,
+                        "y": 40.0
+                    },
+                    "uuid": "9fa04945-613b-47ac-b73e-cab53d3db2b7"
+                }
+            ],
+            "severity": "error",
+            "type": "shorting_items"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [SIGNAL] on F.Cu, length 10.0000 mm",
+                    "pos": {
+                        "x": 40.0,
+                        "y": 40.0
+                    },
+                    "uuid": "16d38533-e13d-47df-a83e-e6d1d0f93da8"
+                },
+                {
+                    "description": "PTH pad 2 [GND] of J1",
+                    "pos": {
+                        "x": 43.0,
+                        "y": 40.0
+                    },
+                    "uuid": "9fa04945-613b-47ac-b73e-cab53d3db2b7"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [SIGNAL] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 50.0,
+                        "y": 40.0
+                    },
+                    "uuid": "14c281fe-bf7f-4688-bac6-1c69660a95fb"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'golden'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 40.0,
+                        "y": 40.0
+                    },
+                    "uuid": "0c75f0ab-e212-4c9a-b353-b36e143213e3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'golden'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 65.0,
+                        "y": 45.0
+                    },
+                    "uuid": "1fa55d63-f194-4d0e-9db1-a0a92ceaa622"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'golden'",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 100.0,
+                        "y": 100.0
+                    },
+                    "uuid": "d84e4a4f-5e72-4b4e-aefa-55a51812639b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of R1 on F.Silkscreen",
+                    "pos": {
+                        "x": 64.0,
+                        "y": 47.0
+                    },
+                    "uuid": "5bad7a1c-6cdb-4786-861a-651cac70f5bb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Segment of U1 on B.Silkscreen",
+                    "pos": {
+                        "x": 101.866025,
+                        "y": 101.232051
+                    },
+                    "uuid": "edafc90c-9339-4d48-9919-7c562324b5e9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Value field of U1 (Back)",
+                    "pos": {
+                        "x": 101.5,
+                        "y": 102.598075
+                    },
+                    "uuid": "31beebcc-0477-4469-8579-3c37607eabf7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Footprint text of U1 (Back side)",
+                    "pos": {
+                        "x": 102.500001,
+                        "y": 104.330127
+                    },
+                    "uuid": "88983acb-5f55-485c-9f17-f97077218d8b"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Value field of U1 (Back)",
+                    "pos": {
+                        "x": 101.5,
+                        "y": 102.598075
+                    },
+                    "uuid": "31beebcc-0477-4469-8579-3c37607eabf7"
+                },
+                {
+                    "description": "Segment of U1 on B.Silkscreen",
+                    "pos": {
+                        "x": 101.866025,
+                        "y": 101.232051
+                    },
+                    "uuid": "edafc90c-9339-4d48-9919-7c562324b5e9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Footprint text of U1 (Back side)",
+                    "pos": {
+                        "x": 102.500001,
+                        "y": 104.330127
+                    },
+                    "uuid": "88983acb-5f55-485c-9f17-f97077218d8b"
+                },
+                {
+                    "description": "Segment of U1 on B.Silkscreen",
+                    "pos": {
+                        "x": 101.866025,
+                        "y": 101.232051
+                    },
+                    "uuid": "edafc90c-9339-4d48-9919-7c562324b5e9"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

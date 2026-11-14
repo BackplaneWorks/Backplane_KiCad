@@ -1,0 +1,401 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:50",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "netted_unnumbered.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0550 mm)",
+            "items": [
+                {
+                    "description": "Micro via [AVDD] on M1 - M2",
+                    "pos": {
+                        "x": 101.35,
+                        "y": 63.9
+                    },
+                    "uuid": "39600d0c-96a3-4d92-82e0-f39d22689d76"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0550 mm)",
+            "items": [
+                {
+                    "description": "Micro via [GND] on M1 - M2",
+                    "pos": {
+                        "x": 101.85,
+                        "y": 63.9
+                    },
+                    "uuid": "2bf8f27f-387e-4641-a40e-aaa00de72ea0"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Pad [AVDD] of SMD1 on M1",
+                    "pos": {
+                        "x": 101.35,
+                        "y": 63.1
+                    },
+                    "uuid": "424d569d-8a5e-4c53-a4c1-13a7df4fce4c"
+                },
+                {
+                    "description": "Pad 2 [GND] of SMD1 on M1",
+                    "pos": {
+                        "x": 101.85,
+                        "y": 63.1
+                    },
+                    "uuid": "f856e58f-ed6a-400f-8cf7-7cf72027a0d9"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1000 mm)",
+            "items": [
+                {
+                    "description": "Pad 2 [AVDD] of SMD2 on M2",
+                    "pos": {
+                        "x": 101.35,
+                        "y": 63.9
+                    },
+                    "uuid": "56605a7a-86dd-4c0d-847f-cbc087af0ed6"
+                },
+                {
+                    "description": "Pad 1 [GND] of SMD2 on M2",
+                    "pos": {
+                        "x": 101.85,
+                        "y": 63.9
+                    },
+                    "uuid": "6a4528df-3b62-4330-a2b4-b73510256b02"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4500 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.6,
+                        "y": 64.5
+                    },
+                    "uuid": "20dbc510-e9fb-44e2-a081-68553874d157"
+                },
+                {
+                    "description": "Pad 2 [AVDD] of SMD2 on M2",
+                    "pos": {
+                        "x": 101.35,
+                        "y": 63.9
+                    },
+                    "uuid": "56605a7a-86dd-4c0d-847f-cbc087af0ed6"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4500 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.6,
+                        "y": 62.5
+                    },
+                    "uuid": "46fee1de-9b33-45d5-a16e-79ea4cbb6771"
+                },
+                {
+                    "description": "Pad [AVDD] of SMD1 on M1",
+                    "pos": {
+                        "x": 101.35,
+                        "y": 63.1
+                    },
+                    "uuid": "424d569d-8a5e-4c53-a4c1-13a7df4fce4c"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4500 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.6,
+                        "y": 64.5
+                    },
+                    "uuid": "20dbc510-e9fb-44e2-a081-68553874d157"
+                },
+                {
+                    "description": "Pad 1 [GND] of SMD2 on M2",
+                    "pos": {
+                        "x": 101.85,
+                        "y": 63.9
+                    },
+                    "uuid": "6a4528df-3b62-4330-a2b4-b73510256b02"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4500 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.6,
+                        "y": 62.5
+                    },
+                    "uuid": "46fee1de-9b33-45d5-a16e-79ea4cbb6771"
+                },
+                {
+                    "description": "Pad 2 [GND] of SMD1 on M1",
+                    "pos": {
+                        "x": 101.85,
+                        "y": 63.1
+                    },
+                    "uuid": "f856e58f-ed6a-400f-8cf7-7cf72027a0d9"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Micro via hole size out of range (board setup constraints min hole 0.1000 mm; actual 0.0700 mm)",
+            "items": [
+                {
+                    "description": "Micro via [AVDD] on M1 - M2",
+                    "pos": {
+                        "x": 101.35,
+                        "y": 63.9
+                    },
+                    "uuid": "39600d0c-96a3-4d92-82e0-f39d22689d76"
+                }
+            ],
+            "severity": "error",
+            "type": "microvia_drill_out_of_range"
+        },
+        {
+            "description": "Micro via hole size out of range (board setup constraints min hole 0.1000 mm; actual 0.0700 mm)",
+            "items": [
+                {
+                    "description": "Micro via [GND] on M1 - M2",
+                    "pos": {
+                        "x": 101.85,
+                        "y": 63.9
+                    },
+                    "uuid": "2bf8f27f-387e-4641-a40e-aaa00de72ea0"
+                }
+            ],
+            "severity": "error",
+            "type": "microvia_drill_out_of_range"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.0400 mm)",
+            "items": [
+                {
+                    "description": "Track [AVDD] on M1, length 0.8000 mm",
+                    "pos": {
+                        "x": 101.35,
+                        "y": 63.1
+                    },
+                    "uuid": "b4ee8b68-46c0-43f0-9302-f369539d0083"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.0400 mm)",
+            "items": [
+                {
+                    "description": "Track [GND] on M1, length 0.8000 mm",
+                    "pos": {
+                        "x": 101.85,
+                        "y": 63.1
+                    },
+                    "uuid": "0e50517b-93f9-472d-a86a-47f3b1386395"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Via diameter (board setup constraints min diameter 0.2000 mm; actual 0.1800 mm)",
+            "items": [
+                {
+                    "description": "Micro via [AVDD] on M1 - M2",
+                    "pos": {
+                        "x": 101.35,
+                        "y": 63.9
+                    },
+                    "uuid": "39600d0c-96a3-4d92-82e0-f39d22689d76"
+                }
+            ],
+            "severity": "error",
+            "type": "via_diameter"
+        },
+        {
+            "description": "Via diameter (board setup constraints min diameter 0.2000 mm; actual 0.1800 mm)",
+            "items": [
+                {
+                    "description": "Micro via [GND] on M1 - M2",
+                    "pos": {
+                        "x": 101.85,
+                        "y": 63.9
+                    },
+                    "uuid": "2bf8f27f-387e-4641-a40e-aaa00de72ea0"
+                }
+            ],
+            "severity": "error",
+            "type": "via_diameter"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.6,
+                        "y": 62.5
+                    },
+                    "uuid": "46fee1de-9b33-45d5-a16e-79ea4cbb6771"
+                },
+                {
+                    "description": "Reference field of SMD1",
+                    "pos": {
+                        "x": 101.6,
+                        "y": 62.1
+                    },
+                    "uuid": "13ea010d-564e-4b00-8d1f-738e0ea687ab"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.6,
+                        "y": 62.5
+                    },
+                    "uuid": "46fee1de-9b33-45d5-a16e-79ea4cbb6771"
+                },
+                {
+                    "description": "Reference field of SMD2",
+                    "pos": {
+                        "x": 101.6,
+                        "y": 62.9
+                    },
+                    "uuid": "b0c8d3e2-03eb-4ca5-a23f-ed5cc9926efd"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Footprint 'C_01005_0402Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint SMD1",
+                    "pos": {
+                        "x": 101.6,
+                        "y": 63.1
+                    },
+                    "uuid": "522f7986-de81-4aa7-a936-333ccfc57994"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_01005_0402Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint SMD2",
+                    "pos": {
+                        "x": 101.6,
+                        "y": 63.9
+                    },
+                    "uuid": "4783115f-3575-449c-a750-ddd9174e02b1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "The stackup gives the dielectric between F.Cu and B.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [AVDD] on M1 - M2",
+                    "pos": {
+                        "x": 101.35,
+                        "y": 63.9
+                    },
+                    "uuid": "39600d0c-96a3-4d92-82e0-f39d22689d76"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        },
+        {
+            "description": "The stackup gives the dielectric between F.Cu and B.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [GND] on M1 - M2",
+                    "pos": {
+                        "x": 101.85,
+                        "y": 63.9
+                    },
+                    "uuid": "2bf8f27f-387e-4641-a40e-aaa00de72ea0"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        }
+    ]
+}

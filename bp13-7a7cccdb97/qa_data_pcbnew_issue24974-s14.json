@@ -1,0 +1,113 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:06",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue24974.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Rectangle on Edge.Cuts",
+                    "pos": {
+                        "x": 138.0,
+                        "y": 91.0
+                    },
+                    "uuid": "207be7aa-ecaf-4fc0-becc-d44353c022f5"
+                },
+                {
+                    "description": "Reference field of NT1",
+                    "pos": {
+                        "x": 144.5,
+                        "y": 91.5
+                    },
+                    "uuid": "d3d62e71-4ed4-4015-a1d4-62ddd2d83deb"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'repro'",
+            "items": [
+                {
+                    "description": "Footprint NT1",
+                    "pos": {
+                        "x": 139.5,
+                        "y": 93.5
+                    },
+                    "uuid": "c737bba1-ce3d-4433-bf8a-7901d7a9b86a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'repro'",
+            "items": [
+                {
+                    "description": "Footprint NT2",
+                    "pos": {
+                        "x": 139.5,
+                        "y": 95.5
+                    },
+                    "uuid": "c1465365-6ba7-4ce2-a4e4-e13c34b6a334"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of NT2",
+                    "pos": {
+                        "x": 144.5,
+                        "y": 93.5
+                    },
+                    "uuid": "83d8d2f1-0b16-413e-a705-5b0f88f186ee"
+                },
+                {
+                    "description": "Pad 3 [unconnected-(NT1-MID-Pad3)] of NT1 on F.Cu",
+                    "pos": {
+                        "x": 144.5,
+                        "y": 93.5
+                    },
+                    "uuid": "46c006a4-35af-470a-adb4-854bfc208697"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        }
+    ]
+}

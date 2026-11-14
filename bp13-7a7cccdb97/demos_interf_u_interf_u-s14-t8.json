@@ -1,0 +1,114 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:36",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Copper connection too narrow",
+            "key": "connection_width"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "interf_u.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Board edge clearance violation",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 90.805,
+                        "y": 133.35
+                    },
+                    "uuid": "e8599bea-2038-4dc6-ae86-2c5bdb883801"
+                },
+                {
+                    "description": "Zone [GND] on bottom_copper, priority 0",
+                    "pos": {
+                        "x": 193.675,
+                        "y": 133.35
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004cdec22b"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer bottom_copper; zone min spoke count 2; actual 1)",
+            "items": [
+                {
+                    "description": "Zone [GND] on bottom_copper, priority 0",
+                    "pos": {
+                        "x": 193.675,
+                        "y": 133.35
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004cdec22b"
+                },
+                {
+                    "description": "PTH pad 16 [GND] of U5",
+                    "pos": {
+                        "x": 125.095,
+                        "y": 76.2
+                    },
+                    "uuid": "363a9f9a-0b01-4ef4-a972-9e6d1eab7c5a"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        },
+        {
+            "description": "Thermal relief connection to zone incomplete (layer bottom_copper; 1 spokes connected to isolated island)",
+            "items": [
+                {
+                    "description": "Zone [GND] on bottom_copper, priority 0",
+                    "pos": {
+                        "x": 193.675,
+                        "y": 133.35
+                    },
+                    "uuid": "00000000-0000-0000-0000-00004cdec22b"
+                },
+                {
+                    "description": "PTH pad G2 [GND] of U9",
+                    "pos": {
+                        "x": 145.415,
+                        "y": 82.55
+                    },
+                    "uuid": "7cc25ef2-8581-477e-8ad4-e0906ba743c8"
+                }
+            ],
+            "severity": "error",
+            "type": "starved_thermal"
+        }
+    ]
+}

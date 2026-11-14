@@ -1,0 +1,91 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:08",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue25521_zone_names.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "PTH pad 1 [/VCC] of C1",
+                    "pos": {
+                        "x": 122.0,
+                        "y": 100.0
+                    },
+                    "uuid": "a6c7be33-148a-4ded-b593-a941ac42ebed"
+                },
+                {
+                    "description": "PTH pad 1 [/VCC] of C2",
+                    "pos": {
+                        "x": 132.0,
+                        "y": 100.0
+                    },
+                    "uuid": "32c8c367-5617-4bae-b204-889ddbefafe1"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "The current configuration does not include the footprint library 'New_Library'",
+            "items": [
+                {
+                    "description": "Footprint C1",
+                    "pos": {
+                        "x": 120.0,
+                        "y": 100.0
+                    },
+                    "uuid": "d9cb66c1-ef94-476e-bea2-75ff8bab97eb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'New_Library'",
+            "items": [
+                {
+                    "description": "Footprint C2",
+                    "pos": {
+                        "x": 130.0,
+                        "y": 100.0
+                    },
+                    "uuid": "089effef-08a7-40f1-9011-fde5e3cdd368"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

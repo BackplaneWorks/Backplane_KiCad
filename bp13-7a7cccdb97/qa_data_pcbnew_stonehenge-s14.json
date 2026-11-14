@@ -1,0 +1,1972 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:32",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "stonehenge.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0500 mm on F.Cu)",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C160a1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 146.18,
+                        "y": 100.32
+                    },
+                    "uuid": "95ec29ed-b551-4f2a-978e-f9efac19b050"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0500 mm on F.Cu)",
+            "items": [
+                {
+                    "description": "Via [/PA6] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 147.4,
+                        "y": 101.2
+                    },
+                    "uuid": "68232f73-5717-4eaa-9e3d-108cc9f8c1cf"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0500 mm on F.Cu)",
+            "items": [
+                {
+                    "description": "Via [/PA7] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 147.4,
+                        "y": 102.0
+                    },
+                    "uuid": "3c885e8f-2751-4a47-aff2-a11e100f3907"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Annular width (board setup constraints min annular width 0.1000 mm; actual 0.0500 mm on F.Cu)",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C160c1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 148.925,
+                        "y": 103.825
+                    },
+                    "uuid": "e36c8dc5-6e11-48b0-bcaa-a5b41746e63f"
+                }
+            ],
+            "severity": "error",
+            "type": "annular_width"
+        },
+        {
+            "description": "Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm on F.Cu)",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C160a1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 146.18,
+                        "y": 100.32
+                    },
+                    "uuid": "95ec29ed-b551-4f2a-978e-f9efac19b050"
+                }
+            ],
+            "severity": "error",
+            "type": "via_diameter"
+        },
+        {
+            "description": "Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm on F.Cu)",
+            "items": [
+                {
+                    "description": "Via [/PA6] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 147.4,
+                        "y": 101.2
+                    },
+                    "uuid": "68232f73-5717-4eaa-9e3d-108cc9f8c1cf"
+                }
+            ],
+            "severity": "error",
+            "type": "via_diameter"
+        },
+        {
+            "description": "Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm on F.Cu)",
+            "items": [
+                {
+                    "description": "Via [/PA7] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 147.4,
+                        "y": 102.0
+                    },
+                    "uuid": "3c885e8f-2751-4a47-aff2-a11e100f3907"
+                }
+            ],
+            "severity": "error",
+            "type": "via_diameter"
+        },
+        {
+            "description": "Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm on F.Cu)",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C160c1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 148.925,
+                        "y": 103.825
+                    },
+                    "uuid": "e36c8dc5-6e11-48b0-bcaa-a5b41746e63f"
+                }
+            ],
+            "severity": "error",
+            "type": "via_diameter"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [<no net>] on B.Cu, priority 0",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 72.5
+                    },
+                    "uuid": "0f9c68f4-a08a-45ad-b6ed-5f76ef85a5e1"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C19-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.1,
+                        "y": 104.4
+                    },
+                    "uuid": "a06aa14a-2221-4646-8f5c-7e9cacf12f6f"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C120-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 126.55,
+                        "y": 102.8
+                    },
+                    "uuid": "1505ddb8-866c-45be-93d1-7ab9b3fe098d"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C19-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.5,
+                        "y": 105.1
+                    },
+                    "uuid": "06b327a1-c57b-4d07-a9b5-ae436cdf986d"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C120-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 127.85,
+                        "y": 102.8
+                    },
+                    "uuid": "f67f944f-7da1-43f1-988c-028a53891b36"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(L16-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 132.0,
+                        "y": 114.0
+                    },
+                    "uuid": "50ed6511-11a4-4532-bbb8-03f2e59fbb29"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(L23-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 135.3,
+                        "y": 93.8
+                    },
+                    "uuid": "ecfb0985-6eb7-4a4b-9e2d-284771383434"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C15-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 136.1,
+                        "y": 113.1
+                    },
+                    "uuid": "73d7bce9-d80f-4a7f-a1fe-ace0537380fa"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C15-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 137.1,
+                        "y": 114.0
+                    },
+                    "uuid": "13eca51b-83cd-49dd-b8ce-7e1cbadb7b61"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(L56-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 137.4,
+                        "y": 109.3
+                    },
+                    "uuid": "e75fe7ac-a12c-4b67-82f6-ac9dbc94de9e"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C14-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 137.8,
+                        "y": 117.4
+                    },
+                    "uuid": "f2783e0c-65cc-4c3d-b02d-464207e03696"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C55b1-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 138.6,
+                        "y": 112.5
+                    },
+                    "uuid": "6873df85-95cf-431b-a681-a88ae01b46b0"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C14-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 139.0,
+                        "y": 115.4
+                    },
+                    "uuid": "ba4a7653-ed7b-4d91-a476-e0f4a433d197"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C55b1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 140.3,
+                        "y": 110.8
+                    },
+                    "uuid": "f5849ac3-0892-4f19-8c79-1fb94a24c8d8"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C156b1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 140.675,
+                        "y": 107.525
+                    },
+                    "uuid": "11399588-f7ef-4d2e-b3ea-f0951c775e71"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [Net-(C156a1-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 141.15,
+                        "y": 106.275
+                    },
+                    "uuid": "76ee6d41-03aa-4834-88fa-10e13f31db9c"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [Net-(C156a1-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 141.375,
+                        "y": 105.625
+                    },
+                    "uuid": "fce5c4c4-9ece-4223-9097-4c4ce65f3ac0"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C55a1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 141.4,
+                        "y": 109.4
+                    },
+                    "uuid": "50b006de-c537-4d79-a55f-478a2bfdf497"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C156a1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 141.825,
+                        "y": 104.375
+                    },
+                    "uuid": "27f3289a-e645-48a9-9646-64783de34009"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C26-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 142.6,
+                        "y": 90.4
+                    },
+                    "uuid": "f5244555-caa2-45e5-8b47-a3aace954c8b"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C12-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 142.8,
+                        "y": 121.1
+                    },
+                    "uuid": "898d3aa1-d502-49b6-afe0-94981045d46b"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C59a1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 143.1,
+                        "y": 100.25
+                    },
+                    "uuid": "383502f7-797b-4079-955b-377c2b54d2f9"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C12-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 143.3,
+                        "y": 123.3
+                    },
+                    "uuid": "d98dbd75-44fb-4d2a-87ba-201c92ee18df"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C59b1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 143.8,
+                        "y": 101.7
+                    },
+                    "uuid": "b7128ffb-612e-451c-a3a8-ffbf0ef06401"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C26-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 143.9,
+                        "y": 90.2
+                    },
+                    "uuid": "7cdcff81-1038-4f5f-bca3-e54031eb903e"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C59c1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 144.55,
+                        "y": 102.9
+                    },
+                    "uuid": "171eec0e-8aae-457a-b313-edf91e12ca6e"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C127-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 88.925
+                    },
+                    "uuid": "a7b1d0c0-b439-4b2c-bff9-8d2454a4e842"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C127-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 90.25
+                    },
+                    "uuid": "ed7f780f-9934-4484-91c8-f372cafe9e80"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C59c1-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 145.65,
+                        "y": 102.25
+                    },
+                    "uuid": "d3ac171a-1bd8-404e-b918-89025259947a"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C160a1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 146.18,
+                        "y": 100.32
+                    },
+                    "uuid": "95ec29ed-b551-4f2a-978e-f9efac19b050"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(L11-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 146.2,
+                        "y": 120.6
+                    },
+                    "uuid": "e07f9c10-b275-445c-9d96-ee03003e2c1e"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C160c1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 148.925,
+                        "y": 103.825
+                    },
+                    "uuid": "e36c8dc5-6e11-48b0-bcaa-a5b41746e63f"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(L10-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 149.3,
+                        "y": 119.8
+                    },
+                    "uuid": "b2965826-586a-440a-9e8f-1d1927830d0a"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C9a1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 152.0,
+                        "y": 119.7
+                    },
+                    "uuid": "100ebf6e-e2f5-4421-a490-287cf0c09811"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C9a1-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 153.2,
+                        "y": 119.1
+                    },
+                    "uuid": "a2c2b4cd-a117-45f2-9d41-689bfc6ac783"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C9b1-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 153.2,
+                        "y": 120.6
+                    },
+                    "uuid": "5e4d4cb8-82bd-4dbb-a483-d4be58902661"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C9b1-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 154.4,
+                        "y": 121.8
+                    },
+                    "uuid": "32523d6b-a2f1-4201-a243-61729c21c200"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C8-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 156.0,
+                        "y": 118.2
+                    },
+                    "uuid": "ef128653-433a-458e-a3e7-0edbfec30e40"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(C8-Pad2)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 157.1,
+                        "y": 119.4
+                    },
+                    "uuid": "af54baf1-a37e-465e-87c2-249e37363857"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "Via is not connected or connected on only one layer",
+            "items": [
+                {
+                    "description": "Via [unconnected-(L3-Pad1)] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 159.6,
+                        "y": 102.1
+                    },
+                    "uuid": "baadcf18-7b45-4713-b3d2-25979cb0fc4b"
+                }
+            ],
+            "severity": "warning",
+            "type": "via_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint H2",
+                    "pos": {
+                        "x": 113.0,
+                        "y": 105.0
+                    },
+                    "uuid": "18200a1a-4443-473e-a22c-16eb7cab5123"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C19",
+                    "pos": {
+                        "x": 126.8,
+                        "y": 104.8
+                    },
+                    "uuid": "8b467051-2961-49a2-b646-06aee650ac8a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C120",
+                    "pos": {
+                        "x": 127.2,
+                        "y": 102.8
+                    },
+                    "uuid": "8cff3a6a-a715-48d5-b069-45e1562788a6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L21",
+                    "pos": {
+                        "x": 131.0,
+                        "y": 98.8
+                    },
+                    "uuid": "370e8e2b-7723-41aa-b178-28662f0292a6"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D122",
+                    "pos": {
+                        "x": 131.8,
+                        "y": 97.4
+                    },
+                    "uuid": "1d021e4d-f660-4907-bd80-1e6f047a22a1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L16",
+                    "pos": {
+                        "x": 132.0,
+                        "y": 114.0
+                    },
+                    "uuid": "aaf63bf7-81bf-4b86-b027-28182e911c6c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L22",
+                    "pos": {
+                        "x": 132.6,
+                        "y": 96.2
+                    },
+                    "uuid": "01302d28-70d0-42f4-9340-f2332967eec0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint J2",
+                    "pos": {
+                        "x": 132.050002,
+                        "y": 89.35
+                    },
+                    "uuid": "4f3b21f1-4304-499b-b951-9ff49f68d67a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L23",
+                    "pos": {
+                        "x": 134.8,
+                        "y": 94.0
+                    },
+                    "uuid": "6dca8295-a126-4519-b4d8-81d9e7909771"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L57",
+                    "pos": {
+                        "x": 136.6,
+                        "y": 104.6
+                    },
+                    "uuid": "380332ed-6ee1-477d-872a-7a1345a69731"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C15",
+                    "pos": {
+                        "x": 136.6,
+                        "y": 113.6
+                    },
+                    "uuid": "f77536b4-bd5e-4b13-baea-44e3ee79f04e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L56",
+                    "pos": {
+                        "x": 137.4,
+                        "y": 109.4
+                    },
+                    "uuid": "dca1cccc-c797-4873-bc48-accd63f2ebf7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D158",
+                    "pos": {
+                        "x": 137.4,
+                        "y": 103.2
+                    },
+                    "uuid": "2900c0ef-2ee3-441d-9308-d1bc6a6e0d9b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L58",
+                    "pos": {
+                        "x": 138.2,
+                        "y": 101.6
+                    },
+                    "uuid": "bb242789-7e74-4c10-9d63-d8182345b577"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C25",
+                    "pos": {
+                        "x": 138.4,
+                        "y": 90.2
+                    },
+                    "uuid": "99f093a5-0e67-4cfc-81b8-5fd922550a69"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C14",
+                    "pos": {
+                        "x": 138.4,
+                        "y": 116.4
+                    },
+                    "uuid": "7608c9f0-cc8c-4e5e-b56e-80ade4d42a5d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C55b1",
+                    "pos": {
+                        "x": 139.4,
+                        "y": 111.6
+                    },
+                    "uuid": "070e0785-3dfa-4c3c-a854-24277f34189f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C156b1",
+                    "pos": {
+                        "x": 140.9,
+                        "y": 106.9
+                    },
+                    "uuid": "c7df08fe-8b33-48b9-9450-388c51a4376b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C156a1",
+                    "pos": {
+                        "x": 141.6,
+                        "y": 105.0
+                    },
+                    "uuid": "642df6b2-8537-4cac-93f4-c80217789e44"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C55a1",
+                    "pos": {
+                        "x": 142.25,
+                        "y": 108.5
+                    },
+                    "uuid": "8650734b-bc72-4a30-a19b-f4d6553d4250"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C59a1",
+                    "pos": {
+                        "x": 142.4,
+                        "y": 99.2
+                    },
+                    "uuid": "051992b3-c4ae-4e00-a6b3-fa95685b85dd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D1",
+                    "pos": {
+                        "x": 143.0,
+                        "y": 107.5
+                    },
+                    "uuid": "1411cbd9-9504-4903-b72c-662e6e76c95e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C12",
+                    "pos": {
+                        "x": 143.0,
+                        "y": 122.2
+                    },
+                    "uuid": "a63b9a19-cfa2-443e-9628-0ca0a4a60ef3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C26",
+                    "pos": {
+                        "x": 143.2,
+                        "y": 90.2
+                    },
+                    "uuid": "954b931a-9b1c-4bf1-b15f-cb72f98acda5"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L60",
+                    "pos": {
+                        "x": 143.8,
+                        "y": 96.4
+                    },
+                    "uuid": "c1f563a0-a6e7-45af-b733-20ab16adae09"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C59b1",
+                    "pos": {
+                        "x": 144.4,
+                        "y": 101.4
+                    },
+                    "uuid": "4dea1aee-e556-4961-aa31-bef20c978d7e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L54",
+                    "pos": {
+                        "x": 144.4,
+                        "y": 113.6
+                    },
+                    "uuid": "43522bc8-0ccf-499f-ac87-778700154ddc"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint H1",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 78.5
+                    },
+                    "uuid": "b72bc621-315f-45af-b880-335398b7a609"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C127",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 89.6
+                    },
+                    "uuid": "6d5b1187-3cb0-46e1-8b85-465b2cfcfa47"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint H4",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 131.25
+                    },
+                    "uuid": "3de01289-74aa-416e-af5c-cbe04b431d69"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C59c1",
+                    "pos": {
+                        "x": 145.1,
+                        "y": 102.6
+                    },
+                    "uuid": "d4c19c66-a876-42d1-b84b-4bcfc747d821"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint SW1",
+                    "pos": {
+                        "x": 145.5,
+                        "y": 88.5
+                    },
+                    "uuid": "daea845f-79de-42b5-b13e-f76842e3dbcc"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D154",
+                    "pos": {
+                        "x": 145.6,
+                        "y": 113.0
+                    },
+                    "uuid": "078ba611-8980-465a-bec8-cb1b9920d1c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C160a1",
+                    "pos": {
+                        "x": 145.8,
+                        "y": 100.2
+                    },
+                    "uuid": "099d1ecf-3943-42e2-8870-ce2017acef96"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L11",
+                    "pos": {
+                        "x": 146.2,
+                        "y": 120.6
+                    },
+                    "uuid": "ac9b1418-5a8c-406a-be4e-4ed6c54ec332"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L27",
+                    "pos": {
+                        "x": 146.8,
+                        "y": 90.4
+                    },
+                    "uuid": "47adac69-a486-40d6-90ea-427b770447ce"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L53",
+                    "pos": {
+                        "x": 147.2,
+                        "y": 112.2
+                    },
+                    "uuid": "5884c827-1e6e-4cc0-bc74-57d1105b29cb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C160b1",
+                    "pos": {
+                        "x": 147.4,
+                        "y": 101.6
+                    },
+                    "uuid": "14a7122d-7152-4fa3-b32c-37742b0ea1c4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C160c1",
+                    "pos": {
+                        "x": 148.6,
+                        "y": 103.6
+                    },
+                    "uuid": "69e0f2d4-7364-4aa7-9441-6cc175a38bf2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L10",
+                    "pos": {
+                        "x": 149.2,
+                        "y": 119.8
+                    },
+                    "uuid": "d18b5b49-db0d-416e-966c-ea7e0caa9b2a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L28",
+                    "pos": {
+                        "x": 149.8,
+                        "y": 91.0
+                    },
+                    "uuid": "abc39039-e514-45bc-85bb-ecd6d7d856bb"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint SW2",
+                    "pos": {
+                        "x": 151.25,
+                        "y": 88.5
+                    },
+                    "uuid": "155470f5-120e-4c5c-abfa-88495f0a516a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L52",
+                    "pos": {
+                        "x": 151.4,
+                        "y": 109.8
+                    },
+                    "uuid": "6cdbfe6f-88a8-41b5-8cac-897377d579c4"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D152",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 108.554594
+                    },
+                    "uuid": "b04a9417-e5f1-444f-8ab1-e6c38f17a8fc"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C9a1",
+                    "pos": {
+                        "x": 152.6,
+                        "y": 119.4
+                    },
+                    "uuid": "73dd3129-e3fe-441e-a0d0-c7911706965b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L29",
+                    "pos": {
+                        "x": 152.8,
+                        "y": 92.4
+                    },
+                    "uuid": "4f1a804c-5b87-45c6-bda2-a907450b4259"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L51",
+                    "pos": {
+                        "x": 153.6,
+                        "y": 107.4
+                    },
+                    "uuid": "924c6ad2-9fdd-4c88-920a-6f62c796f0d1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C9b1",
+                    "pos": {
+                        "x": 153.8,
+                        "y": 121.2
+                    },
+                    "uuid": "74f9fbde-4bd2-4510-97b5-8802efcbca58"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D130",
+                    "pos": {
+                        "x": 154.0,
+                        "y": 93.0
+                    },
+                    "uuid": "6cc98074-f65e-46a1-9449-d7f39b10fedd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L30",
+                    "pos": {
+                        "x": 155.4,
+                        "y": 94.2
+                    },
+                    "uuid": "a0f5227e-470f-42f4-a835-bbd45a485289"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D101",
+                    "pos": {
+                        "x": 156.4,
+                        "y": 95.4
+                    },
+                    "uuid": "e2f513d8-7bf4-46fe-a0e7-2ea53b671f10"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint C8",
+                    "pos": {
+                        "x": 156.6,
+                        "y": 118.8
+                    },
+                    "uuid": "93db3107-c271-4520-8391-a4b7b25305e0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L7",
+                    "pos": {
+                        "x": 157.0,
+                        "y": 114.6
+                    },
+                    "uuid": "9403f8e3-aa90-4f33-ac32-d1966e0879f9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L1",
+                    "pos": {
+                        "x": 157.6,
+                        "y": 96.8
+                    },
+                    "uuid": "8f86014a-e082-4eea-8894-dc095e0b3cee"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D107",
+                    "pos": {
+                        "x": 157.8,
+                        "y": 113.4
+                    },
+                    "uuid": "cca87f7f-8154-4c51-a7be-a68a6c3d28a9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D102",
+                    "pos": {
+                        "x": 158.4,
+                        "y": 98.4
+                    },
+                    "uuid": "8fc0d27e-52bd-4cc1-9173-fa14cae99c55"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L6",
+                    "pos": {
+                        "x": 158.6,
+                        "y": 112.0
+                    },
+                    "uuid": "e117edfb-007b-4ac1-b27b-1a835749c018"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L2",
+                    "pos": {
+                        "x": 159.0,
+                        "y": 99.6
+                    },
+                    "uuid": "1d329fb3-81bf-44d3-a80e-ca981eae7dc9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L5",
+                    "pos": {
+                        "x": 159.8,
+                        "y": 108.6
+                    },
+                    "uuid": "a8bdb1cc-9c8b-4e9c-a9b1-3c8879f2f71f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L3",
+                    "pos": {
+                        "x": 160.0,
+                        "y": 102.6
+                    },
+                    "uuid": "2e99d92a-57e0-4b5f-97a8-6f92f2dad6b7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D105",
+                    "pos": {
+                        "x": 160.0,
+                        "y": 107.0
+                    },
+                    "uuid": "08200b2a-d11b-4ad6-a7fe-862b3d8ee45c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint L4",
+                    "pos": {
+                        "x": 160.2,
+                        "y": 105.6
+                    },
+                    "uuid": "f79bfc88-c9cc-4306-9d2e-c0404ee7f12a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint D2",
+                    "pos": {
+                        "x": 163.0,
+                        "y": 89.75
+                    },
+                    "uuid": "4d3abb58-b603-48f6-bfb4-b337aa5d233e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'stones'",
+            "items": [
+                {
+                    "description": "Footprint H3",
+                    "pos": {
+                        "x": 177.0,
+                        "y": 105.0
+                    },
+                    "uuid": "c7fcd020-5485-4c49-8c50-a9909181d3f2"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 136.549998,
+                        "y": 95.350001
+                    },
+                    "uuid": "44a7c7ad-44fe-4777-8f7d-a5cb3c3fee9b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C1",
+                    "pos": {
+                        "x": 138.05,
+                        "y": 95.35
+                    },
+                    "uuid": "fb21a8fd-b693-4e8e-81b6-f8feda16e773"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 139.800003,
+                        "y": 90.849994
+                    },
+                    "uuid": "1ae55deb-c31b-4deb-a1d1-b1f868ad0271"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'SOT-23-5' does not match copy in library 'Package_TO_SOT_SMD'",
+            "items": [
+                {
+                    "description": "Footprint U2",
+                    "pos": {
+                        "x": 140.550001,
+                        "y": 95.849998
+                    },
+                    "uuid": "87248cc4-2407-4c37-8d73-2f9953060a69"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R7",
+                    "pos": {
+                        "x": 140.825,
+                        "y": 101.25
+                    },
+                    "uuid": "af31039c-7af4-40be-80eb-94ed6113a1d0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R11",
+                    "pos": {
+                        "x": 140.825,
+                        "y": 102.75
+                    },
+                    "uuid": "58b64584-6137-4314-88a3-18144c2e74fa"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C2",
+                    "pos": {
+                        "x": 143.050001,
+                        "y": 95.35
+                    },
+                    "uuid": "aa7100a2-1687-4a62-b2e1-e12332cceef1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 143.050002,
+                        "y": 98.35
+                    },
+                    "uuid": "c1287f7f-781f-47e7-9b58-5f249bfaeaf8"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'LED_0805_2012Metric' does not match copy in library 'LED_SMD'",
+            "items": [
+                {
+                    "description": "Footprint D3",
+                    "pos": {
+                        "x": 144.9,
+                        "y": 99.512498
+                    },
+                    "uuid": "98efc00e-5e1a-44bd-8725-706ed7eb1123"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R5",
+                    "pos": {
+                        "x": 147.5,
+                        "y": 85.8
+                    },
+                    "uuid": "f34f4829-1bef-40fc-896f-f54d1f66c4fe"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TSSOP-20_4.4x6.5mm_P0.65mm' does not match copy in library 'Package_SO'",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 148.5,
+                        "y": 94.35
+                    },
+                    "uuid": "58413617-079e-436f-869c-e6250d8c4c69"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R9",
+                    "pos": {
+                        "x": 149.5,
+                        "y": 100.575
+                    },
+                    "uuid": "71dbd6ae-da58-4d11-aa87-6601472fa1f9"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 150.8,
+                        "y": 85.8
+                    },
+                    "uuid": "9c99b145-741b-4e47-930d-541325daf3f0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R8",
+                    "pos": {
+                        "x": 155.925,
+                        "y": 97.25
+                    },
+                    "uuid": "e02cd37b-aaf8-40fa-8da3-cbb98784dc45"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R10",
+                    "pos": {
+                        "x": 155.925,
+                        "y": 98.75
+                    },
+                    "uuid": "aa4d4dcd-5e0e-498a-b98f-a6bb7bd2d532"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C4",
+                    "pos": {
+                        "x": 156.7,
+                        "y": 87.1
+                    },
+                    "uuid": "8901dd60-2c9b-4a88-b68f-b9bcedc5d343"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C3",
+                    "pos": {
+                        "x": 158.2,
+                        "y": 87.1
+                    },
+                    "uuid": "c9edb185-f94b-4421-a2c0-e43940879d3f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

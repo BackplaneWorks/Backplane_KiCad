@@ -1,0 +1,511 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:36",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "multichannel_mixer.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(IC5B-IN-)] on B.Cu, length 4.0000 mm",
+                    "pos": {
+                        "x": 104.85,
+                        "y": 94.85
+                    },
+                    "uuid": "d71ff7ac-699f-40cb-a02c-76b813f8eac5"
+                },
+                {
+                    "description": "PTH pad 3 [Net-(C35-Pad1)] of RV14",
+                    "pos": {
+                        "x": 103.5,
+                        "y": 97.4
+                    },
+                    "uuid": "e1268511-38a2-4617-acaf-78b41eeb61dd"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2296 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(IC5B-IN-)] on B.Cu, length 3.1820 mm",
+                    "pos": {
+                        "x": 102.8,
+                        "y": 112.790811
+                    },
+                    "uuid": "514ea747-a87c-4c1b-b13f-9bc09cdb41c3"
+                },
+                {
+                    "description": "Pad 1 [GND] of C38 on B.Cu",
+                    "pos": {
+                        "x": 106.4,
+                        "y": 114.3
+                    },
+                    "uuid": "d0484e9e-30b1-4e13-9b17-4520fb4cfa0d"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2296 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(IC5B-IN-)] on B.Cu, length 4.4592 mm",
+                    "pos": {
+                        "x": 105.05,
+                        "y": 115.040811
+                    },
+                    "uuid": "5d5e3e33-529d-4437-a2f8-7a6e454e480d"
+                },
+                {
+                    "description": "Pad 1 [GND] of C38 on B.Cu",
+                    "pos": {
+                        "x": 106.4,
+                        "y": 114.3
+                    },
+                    "uuid": "d0484e9e-30b1-4e13-9b17-4520fb4cfa0d"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 3 [Net-(C16-Pad1)] of RV5",
+                    "pos": {
+                        "x": 125.5,
+                        "y": 115.4
+                    },
+                    "uuid": "008930d5-7b48-42bf-b13f-311d1e280276"
+                },
+                {
+                    "description": "Track [Net-(IC3B-IN-)] on B.Cu, length 3.1820 mm",
+                    "pos": {
+                        "x": 124.8,
+                        "y": 112.790811
+                    },
+                    "uuid": "e83b3677-58bd-4085-9636-415bcf65c5ea"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 3 [Net-(C17-Pad1)] of RV6",
+                    "pos": {
+                        "x": 125.5,
+                        "y": 97.4
+                    },
+                    "uuid": "6e42a5c3-10ba-418f-a1b2-467ad3485314"
+                },
+                {
+                    "description": "Track [Net-(IC3B-IN-)] on B.Cu, length 4.0000 mm",
+                    "pos": {
+                        "x": 126.85,
+                        "y": 94.85
+                    },
+                    "uuid": "f357e3fe-11b1-4925-af36-2f83412c2bfb"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(IC3B-IN-)] on B.Cu, length 4.4592 mm",
+                    "pos": {
+                        "x": 127.05,
+                        "y": 115.040811
+                    },
+                    "uuid": "548c31ee-5151-4b2d-89b3-be2a4de72795"
+                },
+                {
+                    "description": "Pad 2 [Net-(C20-Pad2)] of C20 on B.Cu",
+                    "pos": {
+                        "x": 128.4,
+                        "y": 117.3
+                    },
+                    "uuid": "f7272283-74a9-460d-859e-20c04aec99cc"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 3 [Net-(C8-Pad1)] of RV2",
+                    "pos": {
+                        "x": 147.5,
+                        "y": 97.4
+                    },
+                    "uuid": "e4e5d5bd-087d-4f10-b611-cdc157b4ed34"
+                },
+                {
+                    "description": "Track [Net-(IC2B-IN-)] on B.Cu, length 4.0000 mm",
+                    "pos": {
+                        "x": 148.85,
+                        "y": 94.85
+                    },
+                    "uuid": "fac33179-5cf1-4305-9537-1f9ff224022b"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2296 mm)",
+            "items": [
+                {
+                    "description": "Pad 1 [GND] of C11 on B.Cu",
+                    "pos": {
+                        "x": 150.4,
+                        "y": 114.3
+                    },
+                    "uuid": "40967179-725d-4b9f-85c4-a62d4bfc9e2a"
+                },
+                {
+                    "description": "Track [Net-(IC2B-IN-)] on B.Cu, length 3.1820 mm",
+                    "pos": {
+                        "x": 146.8,
+                        "y": 112.790811
+                    },
+                    "uuid": "4e9d4b3d-9d86-404b-bcec-dda2bc8a2ede"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2296 mm)",
+            "items": [
+                {
+                    "description": "Pad 1 [GND] of C11 on B.Cu",
+                    "pos": {
+                        "x": 150.4,
+                        "y": 114.3
+                    },
+                    "uuid": "40967179-725d-4b9f-85c4-a62d4bfc9e2a"
+                },
+                {
+                    "description": "Track [Net-(IC2B-IN-)] on B.Cu, length 4.4592 mm",
+                    "pos": {
+                        "x": 149.05,
+                        "y": 115.040811
+                    },
+                    "uuid": "5c1225c8-8457-4dda-847b-ddd28aeb8ba5"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 3 [Net-(C25-Pad1)] of RV9",
+                    "pos": {
+                        "x": 169.5,
+                        "y": 115.4
+                    },
+                    "uuid": "36231006-0636-47a4-ae91-cccda7a91290"
+                },
+                {
+                    "description": "Track [Net-(IC4B-IN-)] on B.Cu, length 3.1820 mm",
+                    "pos": {
+                        "x": 168.8,
+                        "y": 112.790811
+                    },
+                    "uuid": "505639db-b499-4543-81ee-373c6f290e28"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2250 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(IC4B-IN-)] on B.Cu, length 4.4592 mm",
+                    "pos": {
+                        "x": 171.05,
+                        "y": 115.040811
+                    },
+                    "uuid": "836554a5-8efa-4d18-8b92-bf428c726335"
+                },
+                {
+                    "description": "Pad 1 [Net-(C25-Pad1)] of C25 on B.Cu",
+                    "pos": {
+                        "x": 170.0,
+                        "y": 117.9
+                    },
+                    "uuid": "c0fbdbd0-0902-4755-8934-d7f711452a21"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (board minimum clearance 0.3000 mm; actual 0.2000 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 3 [Net-(C26-Pad1)] of RV10",
+                    "pos": {
+                        "x": 169.5,
+                        "y": 97.4
+                    },
+                    "uuid": "85ad2ea7-fef4-476d-8b15-a1af46ae8cb5"
+                },
+                {
+                    "description": "Track [Net-(IC4B-IN-)] on B.Cu, length 4.0000 mm",
+                    "pos": {
+                        "x": 170.85,
+                        "y": 94.85
+                    },
+                    "uuid": "e45a3336-bddc-4417-9324-8ee309a130a2"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.3000 mm; actual 0.2490 mm) (B.Cu)",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu and B.Cu, priority 1",
+                    "pos": {
+                        "x": 199.46,
+                        "y": 154.66
+                    },
+                    "uuid": "2a2e83ed-a77d-476f-8432-6de9bc7f83ed"
+                }
+            ],
+            "severity": "warning",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.3000 mm; actual 0.2490 mm) (B.Cu)",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu and B.Cu, priority 1",
+                    "pos": {
+                        "x": 199.46,
+                        "y": 154.66
+                    },
+                    "uuid": "2a2e83ed-a77d-476f-8432-6de9bc7f83ed"
+                }
+            ],
+            "severity": "warning",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.3000 mm; actual 0.2490 mm) (B.Cu)",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu and B.Cu, priority 1",
+                    "pos": {
+                        "x": 199.46,
+                        "y": 154.66
+                    },
+                    "uuid": "2a2e83ed-a77d-476f-8432-6de9bc7f83ed"
+                }
+            ],
+            "severity": "warning",
+            "type": "connection_width"
+        },
+        {
+            "description": "Copper connection too narrow (board setup constraints minimum connection width 0.3000 mm; actual 0.2490 mm) (B.Cu)",
+            "items": [
+                {
+                    "description": "Zone [GND] on F.Cu and B.Cu, priority 1",
+                    "pos": {
+                        "x": 199.46,
+                        "y": 154.66
+                    },
+                    "uuid": "2a2e83ed-a77d-476f-8432-6de9bc7f83ed"
+                }
+            ],
+            "severity": "warning",
+            "type": "connection_width"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 89.46,
+                        "y": 154.66
+                    },
+                    "uuid": "934dde10-2d04-4cc1-8a7d-b02236d5b3e7"
+                },
+                {
+                    "description": "Reference field of J9",
+                    "pos": {
+                        "x": 89.785,
+                        "y": 59.285
+                    },
+                    "uuid": "ab7ba046-f239-4f75-b208-08d8f747ca88"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of IC5",
+                    "pos": {
+                        "x": 98.359,
+                        "y": 84.1
+                    },
+                    "uuid": "8720a952-c5fc-4caa-b673-006377c6ab25"
+                },
+                {
+                    "description": "Pad 2 [+12V] of C39 on B.Cu",
+                    "pos": {
+                        "x": 97.5,
+                        "y": 84.4
+                    },
+                    "uuid": "c6d97c51-38e3-4b00-a640-106a38baad50"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of IC3",
+                    "pos": {
+                        "x": 120.359,
+                        "y": 84.1
+                    },
+                    "uuid": "28520b16-c5fa-4c24-bc71-6965d0761a5e"
+                },
+                {
+                    "description": "Pad 2 [+12V] of C21 on B.Cu",
+                    "pos": {
+                        "x": 119.5,
+                        "y": 84.4
+                    },
+                    "uuid": "88e58f92-c2a4-468b-acf1-7e0e78a26bc3"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of IC2",
+                    "pos": {
+                        "x": 142.359,
+                        "y": 84.1
+                    },
+                    "uuid": "7fa181e1-69d9-464a-ae81-9bced51542f0"
+                },
+                {
+                    "description": "Pad 2 [+12V] of C12 on B.Cu",
+                    "pos": {
+                        "x": 141.5,
+                        "y": 84.4
+                    },
+                    "uuid": "b350806d-e28e-4fb1-beba-6501898e83b7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "items": [
+                {
+                    "description": "Reference field of IC4",
+                    "pos": {
+                        "x": 164.359,
+                        "y": 84.1
+                    },
+                    "uuid": "1e456e2e-f3a0-4432-8014-887b72a52c34"
+                },
+                {
+                    "description": "Pad 2 [+12V] of C30 on B.Cu",
+                    "pos": {
+                        "x": 163.5,
+                        "y": 84.4
+                    },
+                    "uuid": "0e483a8e-b18c-4eeb-8e8c-760f6b306309"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_over_copper"
+        },
+        {
+            "description": "Non-Mirrored text on back layer",
+            "items": [
+                {
+                    "description": "Reference field of R3",
+                    "pos": {
+                        "x": 195.65,
+                        "y": 111.06
+                    },
+                    "uuid": "4cbe1a4d-c11a-4c56-b91c-c730a4af03f8"
+                }
+            ],
+            "severity": "warning",
+            "type": "nonmirrored_text_on_back_layer"
+        }
+    ]
+}

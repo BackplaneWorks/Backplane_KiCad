@@ -1,0 +1,2658 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:36",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "zone_filler.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 140.905,
+                        "y": 64.275
+                    },
+                    "uuid": "1b5b749b-0019-42e0-bc03-d75d6c9af364"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 140.905,
+                        "y": 65.475
+                    },
+                    "uuid": "421d0a6c-685f-4d39-a7be-11b211e87c3c"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 141.605,
+                        "y": 64.575
+                    },
+                    "uuid": "b00db92c-77d2-435a-a14c-5c32bb5fa59c"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1533 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 140.905,
+                        "y": 65.175
+                    },
+                    "uuid": "79ff9a5f-945e-4a97-a27c-e8073ec82999"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1325 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 140.905,
+                        "y": 64.275
+                    },
+                    "uuid": "38f65a45-47f2-4348-abe5-f9d5ed6a23c6"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1325 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 140.905,
+                        "y": 65.475
+                    },
+                    "uuid": "baadebc5-6a3d-4815-85d9-cbdb3f244b6b"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 140.905,
+                        "y": 63.975
+                    },
+                    "uuid": "0dac9e83-3099-4ccc-a744-1507e3f664a2"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.5271 mm",
+                    "pos": {
+                        "x": 141.605,
+                        "y": 63.075
+                    },
+                    "uuid": "fb174c4c-45e3-4cab-9db6-7454ab3a9fc3"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.3179 mm",
+                    "pos": {
+                        "x": 141.605,
+                        "y": 62.547884
+                    },
+                    "uuid": "3a4c20e8-2d24-44e5-a87e-6bce90039c51"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.6350 mm",
+                    "pos": {
+                        "x": 141.605,
+                        "y": 67.31
+                    },
+                    "uuid": "adb07059-ceed-4321-b3e0-f14cf7e09e20"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 141.605,
+                        "y": 63.975
+                    },
+                    "uuid": "6dc79ccb-3978-4934-81a3-9bfdb929d43b"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 1.0000 mm",
+                    "pos": {
+                        "x": 141.905,
+                        "y": 65.775
+                    },
+                    "uuid": "bc3d8106-f31f-44f4-b631-11383344c717"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1324 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 141.905,
+                        "y": 63.075
+                    },
+                    "uuid": "68d8f390-7d5c-4943-8e66-387d3f0c2720"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1324 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 141.905,
+                        "y": 66.675
+                    },
+                    "uuid": "b698b3f0-d01c-4a6d-ab6a-f648de91c1e7"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 142.305,
+                        "y": 63.375
+                    },
+                    "uuid": "b12e8074-0cbb-42c0-9e23-11c1338a832d"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 141.905,
+                        "y": 66.375
+                    },
+                    "uuid": "43123af7-66e9-43c1-8baf-f0f2d3babce5"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.8980 mm",
+                    "pos": {
+                        "x": 141.605,
+                        "y": 62.23
+                    },
+                    "uuid": "c2701586-279b-47fc-a0f7-f76e8b148bb5"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 2.2800 mm",
+                    "pos": {
+                        "x": 142.24,
+                        "y": 61.595
+                    },
+                    "uuid": "e87f6d42-519a-488e-881c-063407d640fa"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1325 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 142.305,
+                        "y": 63.675
+                    },
+                    "uuid": "653cbb6f-9d49-4095-b2c0-a4ebe3d328a7"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1325 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 142.305,
+                        "y": 66.075
+                    },
+                    "uuid": "5e1a9dbe-24bd-43e2-926d-6558bdfec732"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1533 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 141.605,
+                        "y": 65.175
+                    },
+                    "uuid": "7e38794d-74de-4445-a816-390ddcb9a172"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 142.305,
+                        "y": 64.575
+                    },
+                    "uuid": "d27830a4-d986-4789-8b8b-c614d367c6e9"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 142.305,
+                        "y": 65.775
+                    },
+                    "uuid": "240dfdad-8c88-430c-b3f7-381dceda49f3"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 142.305,
+                        "y": 63.675
+                    },
+                    "uuid": "a3ab3956-a1ec-4a22-b186-4667d5714956"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 142.305,
+                        "y": 64.875
+                    },
+                    "uuid": "2dd0951f-c2f3-4f8c-b55e-bc55ddd14963"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 142.305,
+                        "y": 64.875
+                    },
+                    "uuid": "0cc67e85-2ef8-43e9-9208-e93bb4461436"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 142.305,
+                        "y": 66.075
+                    },
+                    "uuid": "9a2efdbb-9278-4695-918d-f4d71a37fba5"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 1.9163 mm",
+                    "pos": {
+                        "x": 144.52,
+                        "y": 61.595
+                    },
+                    "uuid": "e1c30bb2-d47d-4a08-a262-b0826be4f687"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 3 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 50.08
+                    },
+                    "uuid": "00905ef4-d55c-4cca-b2c9-b3551fb21fa3"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 2 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 47.54
+                    },
+                    "uuid": "471643ae-c8d6-4bff-bb28-5d2e2f2ab82b"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 1 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 45.0
+                    },
+                    "uuid": "06b63880-018f-4cdb-a253-fd127ce5d414"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 5 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 55.16
+                    },
+                    "uuid": "f501ab57-023b-4ef7-b611-f5c107782534"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 4 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 52.62
+                    },
+                    "uuid": "93f964c1-cd79-4b18-9ae4-a2344ae0de4a"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 6 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 57.7
+                    },
+                    "uuid": "b5e3f647-86d9-4e3e-a88b-41e379b8ee1c"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 7 [signal] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 60.24
+                    },
+                    "uuid": "7d4c5846-fb68-4f1e-86dc-0f568856d458"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 5.2099 mm",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 66.04
+                    },
+                    "uuid": "f5d9e3d5-6ff4-48a5-a8a5-75eb41632775"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 2.0435 mm",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 60.24
+                    },
+                    "uuid": "31ced76c-8019-4631-90f5-39ac4e154162"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 4.3550 mm",
+                    "pos": {
+                        "x": 147.32,
+                        "y": 61.685
+                    },
+                    "uuid": "d094b062-edbe-418a-af09-3f1c1cb9a0b9"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 10 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 55.16
+                    },
+                    "uuid": "8a748fe1-4d96-4518-a4a0-2f77a4606701"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 152.7,
+                        "y": 66.34
+                    },
+                    "uuid": "77669f93-2f9c-47e0-821d-91417ffba942"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1278 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.0536 mm",
+                    "pos": {
+                        "x": 152.698661,
+                        "y": 66.286391
+                    },
+                    "uuid": "d7a5adc1-6921-4e9a-8b65-95941d1c0d77"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1325 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 153.0,
+                        "y": 66.74
+                    },
+                    "uuid": "9c919e5b-6d5c-46a2-ad21-407026162687"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.0900 mm",
+                    "pos": {
+                        "x": 152.529906,
+                        "y": 66.04
+                    },
+                    "uuid": "d164342d-12fc-4f38-833b-d3f6e35ebcdf"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.1072 mm",
+                    "pos": {
+                        "x": 152.593518,
+                        "y": 66.103612
+                    },
+                    "uuid": "c5cff07b-f0d3-4e01-a177-99b9122450c6"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 14 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 45.0
+                    },
+                    "uuid": "be6f2c4f-90f2-4bba-b459-fc4c0021dfa5"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.1072 mm",
+                    "pos": {
+                        "x": 152.662691,
+                        "y": 66.185451
+                    },
+                    "uuid": "3491e753-b9a3-4d56-996c-25259561f6fa"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 153.0,
+                        "y": 66.74
+                    },
+                    "uuid": "de819322-9731-4992-999a-f6eab4873e49"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 1.0000 mm",
+                    "pos": {
+                        "x": 153.3,
+                        "y": 66.34
+                    },
+                    "uuid": "6752c456-2804-4dcb-93bb-379d49612c75"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "PTH pad 13 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 47.54
+                    },
+                    "uuid": "8991cd2b-748a-42b8-8cc4-32de3a4d61b5"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1325 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 153.6,
+                        "y": 65.34
+                    },
+                    "uuid": "1b41b0cd-ba29-4e58-8ad4-842b2882f212"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 153.3,
+                        "y": 66.74
+                    },
+                    "uuid": "0ce870de-f180-4f6a-9823-a8043476dc3d"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 153.6,
+                        "y": 65.34
+                    },
+                    "uuid": "cf78bcbb-d011-4691-9a3b-9fa623071ae1"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1533 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 153.9,
+                        "y": 66.04
+                    },
+                    "uuid": "d5fbf483-ab95-4cac-b362-eec63682127b"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1533 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 153.9,
+                        "y": 65.34
+                    },
+                    "uuid": "1f79e225-f9ae-473f-957e-a3591b52146e"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 154.2,
+                        "y": 66.74
+                    },
+                    "uuid": "0ac26e42-9812-4555-9b7c-35334d9ac1ad"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 154.2,
+                        "y": 66.74
+                    },
+                    "uuid": "0b2fd857-1a27-44a6-ad85-0f8352f0b8ca"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 154.5,
+                        "y": 66.04
+                    },
+                    "uuid": "a41b62c9-ca0a-471a-bbcc-42865dcbb1c5"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 154.5,
+                        "y": 66.74
+                    },
+                    "uuid": "678767b4-0a0a-4fc2-82f0-9b91fc8800d9"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 154.8,
+                        "y": 65.34
+                    },
+                    "uuid": "f581e1f7-e26b-4844-8de1-072651e83edf"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 154.8,
+                        "y": 65.34
+                    },
+                    "uuid": "d63fdd4d-2401-47cc-ab06-7de54f4df17b"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1533 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 155.1,
+                        "y": 66.04
+                    },
+                    "uuid": "43d9d2dc-ee42-4389-89e3-0ef84bd4d6cd"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1533 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 155.1,
+                        "y": 65.34
+                    },
+                    "uuid": "6ec95e47-bb44-45e4-bc2c-b8488e1ab6b4"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 155.4,
+                        "y": 66.74
+                    },
+                    "uuid": "c678d477-d4a9-4875-b59c-54565fedacae"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 155.4,
+                        "y": 66.74
+                    },
+                    "uuid": "0df9ff13-60dc-4ee5-a5b7-0bceca723027"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 155.7,
+                        "y": 66.04
+                    },
+                    "uuid": "d9dcc54e-4bab-49cb-ab02-f7fe5408cb3c"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 155.7,
+                        "y": 66.74
+                    },
+                    "uuid": "59ba0976-4364-4a12-9d06-0adc4d0b0cc0"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 156.0,
+                        "y": 65.34
+                    },
+                    "uuid": "1575d12f-b711-4c05-9cbb-9419add2b0ad"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 156.0,
+                        "y": 65.34
+                    },
+                    "uuid": "321d9adb-2c11-4a23-96f2-c9ccf35ee37b"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1533 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 156.3,
+                        "y": 66.04
+                    },
+                    "uuid": "444c1ad7-481e-4b22-ba90-9b0044411eab"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1533 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 156.3,
+                        "y": 65.34
+                    },
+                    "uuid": "d5462f3a-c14f-434d-ae13-aaa90360098e"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 156.6,
+                        "y": 66.74
+                    },
+                    "uuid": "d7edea65-5643-4e5c-955f-2a878b1cd6dc"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 156.6,
+                        "y": 66.74
+                    },
+                    "uuid": "e49ebef3-f5f5-4e65-a5e9-40486faec7c2"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 156.9,
+                        "y": 66.04
+                    },
+                    "uuid": "d5c37f02-8e41-4e90-8925-030c12e6c226"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 156.9,
+                        "y": 66.74
+                    },
+                    "uuid": "d71b5133-396d-4e8b-94f0-80665032a021"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 157.2,
+                        "y": 65.34
+                    },
+                    "uuid": "e09e6cad-2fb0-4559-83b9-35b254331a79"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 157.2,
+                        "y": 65.34
+                    },
+                    "uuid": "e6b30bc7-0256-428e-833d-d462cc163aaf"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1533 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 157.5,
+                        "y": 66.04
+                    },
+                    "uuid": "79070209-847c-4544-a2b6-3289ee3cc2fc"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1533 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 157.5,
+                        "y": 65.34
+                    },
+                    "uuid": "53ad9a1e-8a52-4d7f-80ac-40ef068a8bb4"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 157.8,
+                        "y": 66.74
+                    },
+                    "uuid": "53318da4-2843-4471-be7b-c6d73d02a111"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 157.8,
+                        "y": 66.74
+                    },
+                    "uuid": "03a8445d-bb25-4f6c-90be-5e05f909812d"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 158.1,
+                        "y": 66.04
+                    },
+                    "uuid": "5800af01-e867-4b69-83f0-bad4f7898551"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1541 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 158.1,
+                        "y": 66.74
+                    },
+                    "uuid": "5c1041b9-9a46-4f65-81fc-cd57f469b985"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 158.4,
+                        "y": 65.34
+                    },
+                    "uuid": "d95af45c-23f6-4427-a0ec-5ac933f09162"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1325 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 158.4,
+                        "y": 65.34
+                    },
+                    "uuid": "c8e799b3-a3b1-4397-a252-bdb3bf47c096"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 158.7,
+                        "y": 65.34
+                    },
+                    "uuid": "faf8bee3-213d-4890-bbca-9cb60b5be637"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.7000 mm",
+                    "pos": {
+                        "x": 158.7,
+                        "y": 66.04
+                    },
+                    "uuid": "59ce9253-dafd-448e-bc37-96486b784c4f"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1340 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 159.0,
+                        "y": 66.74
+                    },
+                    "uuid": "2e2f761e-f730-409f-be38-29fe780d43fd"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1325 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 159.0,
+                        "y": 66.74
+                    },
+                    "uuid": "a3c9ecf4-a6fd-41ff-aefc-376226ee9d0f"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1324 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [signal] on F.Cu, length 0.4712 mm",
+                    "pos": {
+                        "x": 159.6,
+                        "y": 66.34
+                    },
+                    "uuid": "f9c09be1-c264-48cc-9ca4-168502d83c2f"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.4000 mm",
+                    "pos": {
+                        "x": 159.3,
+                        "y": 66.74
+                    },
+                    "uuid": "b320bbce-9fc3-47ca-b111-aaabd8a5d552"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.6645 mm",
+                    "pos": {
+                        "x": 159.6,
+                        "y": 66.04
+                    },
+                    "uuid": "377ea43b-9fff-4ce5-9dde-c79218f61b80"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1274 mm)",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 7.3755 mm",
+                    "pos": {
+                        "x": 160.264532,
+                        "y": 66.04
+                    },
+                    "uuid": "033af7de-85e8-467f-a25c-6dbb863e7bc9"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 162.56,
+                        "y": 71.12
+                    },
+                    "uuid": "285e8aa9-5580-4471-9ce0-dda7031cad5f"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 3 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 50.08
+                    },
+                    "uuid": "00905ef4-d55c-4cca-b2c9-b3551fb21fa3"
+                },
+                {
+                    "description": "PTH pad 2 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 47.54
+                    },
+                    "uuid": "471643ae-c8d6-4bff-bb28-5d2e2f2ab82b"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 3 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 50.08
+                    },
+                    "uuid": "00905ef4-d55c-4cca-b2c9-b3551fb21fa3"
+                },
+                {
+                    "description": "PTH pad 2 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 47.54
+                    },
+                    "uuid": "471643ae-c8d6-4bff-bb28-5d2e2f2ab82b"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 4 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 52.62
+                    },
+                    "uuid": "93f964c1-cd79-4b18-9ae4-a2344ae0de4a"
+                },
+                {
+                    "description": "PTH pad 5 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 55.16
+                    },
+                    "uuid": "f501ab57-023b-4ef7-b611-f5c107782534"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 4 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 52.62
+                    },
+                    "uuid": "93f964c1-cd79-4b18-9ae4-a2344ae0de4a"
+                },
+                {
+                    "description": "PTH pad 5 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 55.16
+                    },
+                    "uuid": "f501ab57-023b-4ef7-b611-f5c107782534"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 6 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 57.7
+                    },
+                    "uuid": "b5e3f647-86d9-4e3e-a88b-41e379b8ee1c"
+                },
+                {
+                    "description": "PTH pad 5 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 55.16
+                    },
+                    "uuid": "f501ab57-023b-4ef7-b611-f5c107782534"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 6 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 57.7
+                    },
+                    "uuid": "b5e3f647-86d9-4e3e-a88b-41e379b8ee1c"
+                },
+                {
+                    "description": "PTH pad 5 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 55.16
+                    },
+                    "uuid": "f501ab57-023b-4ef7-b611-f5c107782534"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 7 [signal] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 60.24
+                    },
+                    "uuid": "7d4c5846-fb68-4f1e-86dc-0f568856d458"
+                },
+                {
+                    "description": "PTH pad 6 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 57.7
+                    },
+                    "uuid": "b5e3f647-86d9-4e3e-a88b-41e379b8ee1c"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 7 [signal] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 60.24
+                    },
+                    "uuid": "7d4c5846-fb68-4f1e-86dc-0f568856d458"
+                },
+                {
+                    "description": "PTH pad 6 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 57.7
+                    },
+                    "uuid": "b5e3f647-86d9-4e3e-a88b-41e379b8ee1c"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 1 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 45.0
+                    },
+                    "uuid": "06b63880-018f-4cdb-a253-fd127ce5d414"
+                },
+                {
+                    "description": "PTH pad 2 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 47.54
+                    },
+                    "uuid": "471643ae-c8d6-4bff-bb28-5d2e2f2ab82b"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 1 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 45.0
+                    },
+                    "uuid": "06b63880-018f-4cdb-a253-fd127ce5d414"
+                },
+                {
+                    "description": "PTH pad 2 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 47.54
+                    },
+                    "uuid": "471643ae-c8d6-4bff-bb28-5d2e2f2ab82b"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 3 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 50.08
+                    },
+                    "uuid": "00905ef4-d55c-4cca-b2c9-b3551fb21fa3"
+                },
+                {
+                    "description": "PTH pad 4 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 52.62
+                    },
+                    "uuid": "93f964c1-cd79-4b18-9ae4-a2344ae0de4a"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 3 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 50.08
+                    },
+                    "uuid": "00905ef4-d55c-4cca-b2c9-b3551fb21fa3"
+                },
+                {
+                    "description": "PTH pad 4 [<no net>] of REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 52.62
+                    },
+                    "uuid": "93f964c1-cd79-4b18-9ae4-a2344ae0de4a"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 13 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 47.54
+                    },
+                    "uuid": "8991cd2b-748a-42b8-8cc4-32de3a4d61b5"
+                },
+                {
+                    "description": "PTH pad 14 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 45.0
+                    },
+                    "uuid": "be6f2c4f-90f2-4bba-b459-fc4c0021dfa5"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 13 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 47.54
+                    },
+                    "uuid": "8991cd2b-748a-42b8-8cc4-32de3a4d61b5"
+                },
+                {
+                    "description": "PTH pad 14 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 45.0
+                    },
+                    "uuid": "be6f2c4f-90f2-4bba-b459-fc4c0021dfa5"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 12 [GND] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 50.08
+                    },
+                    "uuid": "1f41108e-c0ae-4d67-b486-878bbb7d2a1d"
+                },
+                {
+                    "description": "PTH pad 13 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 47.54
+                    },
+                    "uuid": "8991cd2b-748a-42b8-8cc4-32de3a4d61b5"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 12 [GND] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 50.08
+                    },
+                    "uuid": "1f41108e-c0ae-4d67-b486-878bbb7d2a1d"
+                },
+                {
+                    "description": "PTH pad 13 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 47.54
+                    },
+                    "uuid": "8991cd2b-748a-42b8-8cc4-32de3a4d61b5"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 10 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 55.16
+                    },
+                    "uuid": "8a748fe1-4d96-4518-a4a0-2f77a4606701"
+                },
+                {
+                    "description": "PTH pad 11 [GND] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 52.62
+                    },
+                    "uuid": "f3baa09c-4083-4322-8909-8d79d5477379"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 10 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 55.16
+                    },
+                    "uuid": "8a748fe1-4d96-4518-a4a0-2f77a4606701"
+                },
+                {
+                    "description": "PTH pad 11 [GND] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 52.62
+                    },
+                    "uuid": "f3baa09c-4083-4322-8909-8d79d5477379"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 10 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 55.16
+                    },
+                    "uuid": "8a748fe1-4d96-4518-a4a0-2f77a4606701"
+                },
+                {
+                    "description": "PTH pad 9 [GND] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 57.7
+                    },
+                    "uuid": "eb42fb25-dac9-44d6-97d7-f1963e02662d"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Rear solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "PTH pad 10 [<no net>] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 55.16
+                    },
+                    "uuid": "8a748fe1-4d96-4518-a4a0-2f77a4606701"
+                },
+                {
+                    "description": "PTH pad 9 [GND] of REF**",
+                    "pos": {
+                        "x": 153.495,
+                        "y": 57.7
+                    },
+                    "uuid": "eb42fb25-dac9-44d6-97d7-f1963e02662d"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 0.6350 mm",
+                    "pos": {
+                        "x": 141.605,
+                        "y": 67.31
+                    },
+                    "uuid": "adb07059-ceed-4321-b3e0-f14cf7e09e20"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [signal] on F.Cu, length 7.3755 mm",
+                    "pos": {
+                        "x": 160.264532,
+                        "y": 66.04
+                    },
+                    "uuid": "033af7de-85e8-467f-a25c-6dbb863e7bc9"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'Housings_DIP'",
+            "items": [
+                {
+                    "description": "Footprint REF**",
+                    "pos": {
+                        "x": 145.875,
+                        "y": 45.0
+                    },
+                    "uuid": "1b0184f2-b6d8-4f97-809c-4108921bce3b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        }
+    ]
+}

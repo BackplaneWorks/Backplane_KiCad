@@ -1,0 +1,151 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:53",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue16658.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.6,
+                        "y": 62.5
+                    },
+                    "uuid": "46fee1de-9b33-45d5-a16e-79ea4cbb6771"
+                },
+                {
+                    "description": "Reference field of SMD1",
+                    "pos": {
+                        "x": 101.6,
+                        "y": 62.1
+                    },
+                    "uuid": "13ea010d-564e-4b00-8d1f-738e0ea687ab"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 99.6,
+                        "y": 62.5
+                    },
+                    "uuid": "46fee1de-9b33-45d5-a16e-79ea4cbb6771"
+                },
+                {
+                    "description": "Reference field of SMD2",
+                    "pos": {
+                        "x": 101.6,
+                        "y": 62.9
+                    },
+                    "uuid": "b0c8d3e2-03eb-4ca5-a23f-ed5cc9926efd"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Footprint 'C_01005_0402Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint SMD1",
+                    "pos": {
+                        "x": 101.6,
+                        "y": 63.1
+                    },
+                    "uuid": "522f7986-de81-4aa7-a936-333ccfc57994"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_01005_0402Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint SMD2",
+                    "pos": {
+                        "x": 101.6,
+                        "y": 63.9
+                    },
+                    "uuid": "4783115f-3575-449c-a750-ddd9174e02b1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "The stackup gives the dielectric between F.Cu and B.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [AVDD] on M1 - M2",
+                    "pos": {
+                        "x": 101.35,
+                        "y": 63.9
+                    },
+                    "uuid": "39600d0c-96a3-4d92-82e0-f39d22689d76"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        },
+        {
+            "description": "The stackup gives the dielectric between F.Cu and B.Cu as core",
+            "items": [
+                {
+                    "description": "Micro via [GND] on M1 - M2",
+                    "pos": {
+                        "x": 101.85,
+                        "y": 63.9
+                    },
+                    "uuid": "2bf8f27f-387e-4641-a40e-aaa00de72ea0"
+                }
+            ],
+            "severity": "warning",
+            "type": "microvia_crosses_core"
+        }
+    ]
+}

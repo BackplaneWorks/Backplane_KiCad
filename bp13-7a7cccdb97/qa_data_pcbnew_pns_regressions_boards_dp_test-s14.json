@@ -1,0 +1,479 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:27",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "dp_test.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/D-] on F.Cu, length 0.1000 mm",
+                    "pos": {
+                        "x": 117.95,
+                        "y": 94.75
+                    },
+                    "uuid": "0593d24e-7ac2-4326-af6e-ff7a595866a9"
+                },
+                {
+                    "description": "Track [/D-] on F.Cu, length 3.1932 mm",
+                    "pos": {
+                        "x": 122.143198,
+                        "y": 94.625
+                    },
+                    "uuid": "39e964cd-fd8e-4dc6-aad2-65428e129bf4"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        },
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Track [/D+] on F.Cu, length 3.0068 mm",
+                    "pos": {
+                        "x": 121.956802,
+                        "y": 95.075
+                    },
+                    "uuid": "171e0c6a-2cbf-499f-9bd5-dcc9676df500"
+                },
+                {
+                    "description": "Track [/D+] on F.Cu, length 0.1500 mm",
+                    "pos": {
+                        "x": 117.9,
+                        "y": 95.3
+                    },
+                    "uuid": "0299fa19-3efe-4290-98bb-12accf909ac4"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0755 mm)",
+            "items": [
+                {
+                    "description": "Pad C8 [/D+] of U1 on F.Cu",
+                    "pos": {
+                        "x": 116.35,
+                        "y": 94.9
+                    },
+                    "uuid": "26ddcc7c-da76-48d3-b599-dcaf392a0217"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 80.0,
+                        "y": 75.0
+                    },
+                    "uuid": "5fc90bd6-b88a-4abf-8454-68f30aa65e34"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0755 mm)",
+            "items": [
+                {
+                    "description": "Track [/D+] on F.Cu, length 1.1500 mm",
+                    "pos": {
+                        "x": 116.65,
+                        "y": 95.2
+                    },
+                    "uuid": "96856e31-07ca-4513-a68b-cba2c43bfde5"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 80.0,
+                        "y": 75.0
+                    },
+                    "uuid": "5fc90bd6-b88a-4abf-8454-68f30aa65e34"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0755 mm)",
+            "items": [
+                {
+                    "description": "Track [/D+] on F.Cu, length 0.4243 mm",
+                    "pos": {
+                        "x": 116.35,
+                        "y": 94.9
+                    },
+                    "uuid": "bdbaeb35-0143-4c8f-86e6-649922c55de4"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 80.0,
+                        "y": 75.0
+                    },
+                    "uuid": "5fc90bd6-b88a-4abf-8454-68f30aa65e34"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0755 mm)",
+            "items": [
+                {
+                    "description": "Pad C9 [/D-] of U1 on F.Cu",
+                    "pos": {
+                        "x": 117.0,
+                        "y": 94.9
+                    },
+                    "uuid": "048889f3-f0c7-4ecb-8ad9-22a98f6ff76e"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 80.0,
+                        "y": 75.0
+                    },
+                    "uuid": "5fc90bd6-b88a-4abf-8454-68f30aa65e34"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1125 mm)",
+            "items": [
+                {
+                    "description": "Pad C9 [/D-] of U1 on F.Cu",
+                    "pos": {
+                        "x": 117.0,
+                        "y": 94.9
+                    },
+                    "uuid": "048889f3-f0c7-4ecb-8ad9-22a98f6ff76e"
+                },
+                {
+                    "description": "Track [/D+] on F.Cu, length 1.1500 mm",
+                    "pos": {
+                        "x": 116.65,
+                        "y": 95.2
+                    },
+                    "uuid": "96856e31-07ca-4513-a68b-cba2c43bfde5"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0755 mm)",
+            "items": [
+                {
+                    "description": "Track [/D-] on F.Cu, length 0.8000 mm",
+                    "pos": {
+                        "x": 117.0,
+                        "y": 94.9
+                    },
+                    "uuid": "618dd1e7-0f67-46e3-9782-85886e4fce15"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 80.0,
+                        "y": 75.0
+                    },
+                    "uuid": "5fc90bd6-b88a-4abf-8454-68f30aa65e34"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Track [/D+] on F.Cu, length 0.1500 mm",
+                    "pos": {
+                        "x": 117.9,
+                        "y": 95.3
+                    },
+                    "uuid": "0299fa19-3efe-4290-98bb-12accf909ac4"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 80.0,
+                        "y": 75.0
+                    },
+                    "uuid": "5fc90bd6-b88a-4abf-8454-68f30aa65e34"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Track [/D+] on F.Cu, length 0.1414 mm",
+                    "pos": {
+                        "x": 117.8,
+                        "y": 95.2
+                    },
+                    "uuid": "e12cdbec-f3d9-4cd9-8131-ad2388ea9f0b"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 80.0,
+                        "y": 75.0
+                    },
+                    "uuid": "5fc90bd6-b88a-4abf-8454-68f30aa65e34"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Track [/D-] on F.Cu, length 0.2121 mm",
+                    "pos": {
+                        "x": 117.8,
+                        "y": 94.9
+                    },
+                    "uuid": "2de9f7f5-2c05-445c-9ab6-07a854a98921"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 80.0,
+                        "y": 75.0
+                    },
+                    "uuid": "5fc90bd6-b88a-4abf-8454-68f30aa65e34"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.0000 mm)",
+            "items": [
+                {
+                    "description": "Track [/D-] on F.Cu, length 0.1000 mm",
+                    "pos": {
+                        "x": 117.95,
+                        "y": 94.75
+                    },
+                    "uuid": "0593d24e-7ac2-4326-af6e-ff7a595866a9"
+                },
+                {
+                    "description": "Zone [GND] on F.Cu, priority 0",
+                    "pos": {
+                        "x": 80.0,
+                        "y": 75.0
+                    },
+                    "uuid": "5fc90bd6-b88a-4abf-8454-68f30aa65e34"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Track [/D+] on F.Cu, length 0.4243 mm",
+                    "pos": {
+                        "x": 116.35,
+                        "y": 94.9
+                    },
+                    "uuid": "bdbaeb35-0143-4c8f-86e6-649922c55de4"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Track [/D+] on F.Cu, length 1.1500 mm",
+                    "pos": {
+                        "x": 116.65,
+                        "y": 95.2
+                    },
+                    "uuid": "96856e31-07ca-4513-a68b-cba2c43bfde5"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Track [/D-] on F.Cu, length 0.8000 mm",
+                    "pos": {
+                        "x": 117.0,
+                        "y": 94.9
+                    },
+                    "uuid": "618dd1e7-0f67-46e3-9782-85886e4fce15"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Track [/D+] on F.Cu, length 0.1414 mm",
+                    "pos": {
+                        "x": 117.8,
+                        "y": 95.2
+                    },
+                    "uuid": "e12cdbec-f3d9-4cd9-8131-ad2388ea9f0b"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Track [/D-] on F.Cu, length 0.2121 mm",
+                    "pos": {
+                        "x": 117.8,
+                        "y": 94.9
+                    },
+                    "uuid": "2de9f7f5-2c05-445c-9ab6-07a854a98921"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Track [/D+] on F.Cu, length 0.1500 mm",
+                    "pos": {
+                        "x": 117.9,
+                        "y": 95.3
+                    },
+                    "uuid": "0299fa19-3efe-4290-98bb-12accf909ac4"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track width (board setup constraints min width 0.2000 mm; actual 0.0750 mm)",
+            "items": [
+                {
+                    "description": "Track [/D-] on F.Cu, length 0.1000 mm",
+                    "pos": {
+                        "x": 117.95,
+                        "y": 94.75
+                    },
+                    "uuid": "0593d24e-7ac2-4326-af6e-ff7a595866a9"
+                }
+            ],
+            "severity": "error",
+            "type": "track_width"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/D-] on F.Cu, length 3.1932 mm",
+                    "pos": {
+                        "x": 122.143198,
+                        "y": 94.625
+                    },
+                    "uuid": "39e964cd-fd8e-4dc6-aad2-65428e129bf4"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [/D+] on F.Cu, length 3.0068 mm",
+                    "pos": {
+                        "x": 121.956802,
+                        "y": 95.075
+                    },
+                    "uuid": "171e0c6a-2cbf-499f-9bd5-dcc9676df500"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'XYZ'",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 114.4,
+                        "y": 96.2
+                    },
+                    "uuid": "e454f9c8-c7cb-4526-90bc-cce72634ac38"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'PinSocket_1x02_P1.27mm_Vertical' does not match copy in library 'Connector_PinSocket_1.27mm'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 124.7,
+                        "y": 95.9
+                    },
+                    "uuid": "d69e7df1-cc1e-42fe-b576-83d7ac9ba6c1"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

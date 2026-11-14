@@ -1,0 +1,395 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:21:55",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "key": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clipped by solder mask",
+            "key": "silk_over_copper"
+        },
+        {
+            "description": "PTH inside courtyard",
+            "key": "pth_inside_courtyard"
+        },
+        {
+            "description": "NPTH inside courtyard",
+            "key": "npth_inside_courtyard"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue18878.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Rectangle on F.Mask",
+                    "pos": {
+                        "x": 29.9,
+                        "y": -88.6
+                    },
+                    "uuid": "83b6c85a-c5f3-48d2-8eef-1ee1c4315305"
+                },
+                {
+                    "description": "Track [SPI1_SSEL] on F.Cu, length 6.2933 mm",
+                    "pos": {
+                        "x": 37.8,
+                        "y": -91.8
+                    },
+                    "uuid": "a806a94e-e634-4002-83ce-c14ea5e612dc"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [SPI1_MOSI] on F.Cu, length 31.8357 mm",
+                    "pos": {
+                        "x": 32.249511,
+                        "y": -85.850489
+                    },
+                    "uuid": "73164767-27fd-4165-938e-cf3357547ea8"
+                },
+                {
+                    "description": "Track [SPI1_MISO] on F.Cu, length 36.3700 mm",
+                    "pos": {
+                        "x": 32.65,
+                        "y": -54.879988
+                    },
+                    "uuid": "c42cf3aa-f5a9-4968-a5f2-9f2affadfe4d"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [SPI1_MOSI] on F.Cu, length 31.8357 mm",
+                    "pos": {
+                        "x": 32.249511,
+                        "y": -85.850489
+                    },
+                    "uuid": "73164767-27fd-4165-938e-cf3357547ea8"
+                },
+                {
+                    "description": "Track [SPI1_MISO] on F.Cu, length 1.4135 mm",
+                    "pos": {
+                        "x": 33.64952,
+                        "y": -53.880468
+                    },
+                    "uuid": "baf2bd1c-15fb-4a65-9f82-7fdfd93724ea"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [SPI1_SCK] on F.Cu, length 1.4135 mm",
+                    "pos": {
+                        "x": 33.0,
+                        "y": -55.024962
+                    },
+                    "uuid": "56013564-3569-491b-a7d7-0c60263fe8e2"
+                },
+                {
+                    "description": "Track [SPI1_MOSI] on F.Cu, length 31.8357 mm",
+                    "pos": {
+                        "x": 32.249511,
+                        "y": -85.850489
+                    },
+                    "uuid": "73164767-27fd-4165-938e-cf3357547ea8"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [SPI1_MOSI] on F.Cu, length 31.8357 mm",
+                    "pos": {
+                        "x": 32.249511,
+                        "y": -85.850489
+                    },
+                    "uuid": "73164767-27fd-4165-938e-cf3357547ea8"
+                },
+                {
+                    "description": "Track [SPI1_SCK] on F.Cu, length 34.1750 mm",
+                    "pos": {
+                        "x": 33.0,
+                        "y": -89.2
+                    },
+                    "uuid": "a9594e18-c696-42fd-9ae5-aaf63169c6b3"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [SPI1_SSEL] on F.Cu, length 32.1801 mm",
+                    "pos": {
+                        "x": 33.35,
+                        "y": -87.35
+                    },
+                    "uuid": "4c136e60-77d8-46a5-9a89-bc2a3458e78a"
+                },
+                {
+                    "description": "Track [SPI1_MOSI] on F.Cu, length 31.8357 mm",
+                    "pos": {
+                        "x": 32.249511,
+                        "y": -85.850489
+                    },
+                    "uuid": "73164767-27fd-4165-938e-cf3357547ea8"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Track [SPI1_MOSI] on F.Cu, length 31.8357 mm",
+                    "pos": {
+                        "x": 32.249511,
+                        "y": -85.850489
+                    },
+                    "uuid": "73164767-27fd-4165-938e-cf3357547ea8"
+                },
+                {
+                    "description": "Track [SPI1_SSEL] on F.Cu, length 1.4135 mm",
+                    "pos": {
+                        "x": 33.35,
+                        "y": -55.169936
+                    },
+                    "uuid": "8bb5b8a5-72c2-4d45-82ee-0d75c0709f20"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Rectangle on F.Mask",
+                    "pos": {
+                        "x": 29.9,
+                        "y": -88.6
+                    },
+                    "uuid": "83b6c85a-c5f3-48d2-8eef-1ee1c4315305"
+                },
+                {
+                    "description": "Track [SPI1_SSEL] on F.Cu, length 6.2933 mm",
+                    "pos": {
+                        "x": 37.8,
+                        "y": -91.8
+                    },
+                    "uuid": "a806a94e-e634-4002-83ce-c14ea5e612dc"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "Front solder mask aperture bridges items with different nets",
+            "items": [
+                {
+                    "description": "Rectangle on F.Mask",
+                    "pos": {
+                        "x": 29.9,
+                        "y": -88.6
+                    },
+                    "uuid": "83b6c85a-c5f3-48d2-8eef-1ee1c4315305"
+                },
+                {
+                    "description": "Track [SPI1_SSEL] on F.Cu, length 6.2933 mm",
+                    "pos": {
+                        "x": 37.8,
+                        "y": -91.8
+                    },
+                    "uuid": "a806a94e-e634-4002-83ce-c14ea5e612dc"
+                }
+            ],
+            "severity": "error",
+            "type": "solder_mask_bridge"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R15",
+                    "pos": {
+                        "x": 21.2,
+                        "y": -93.2
+                    },
+                    "uuid": "41dec4b5-f734-4ef6-b347-e250d20563d0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R19",
+                    "pos": {
+                        "x": 23.6,
+                        "y": -93.2625
+                    },
+                    "uuid": "a9946817-b435-4dfa-bfdb-f351ec0330ea"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R18",
+                    "pos": {
+                        "x": 26.0,
+                        "y": -93.2625
+                    },
+                    "uuid": "9037c242-9237-4ae2-9742-21c93629445a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R14",
+                    "pos": {
+                        "x": 28.4,
+                        "y": -93.2625
+                    },
+                    "uuid": "597ddff9-d225-4089-adc7-54a2ff5bdba3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R13",
+                    "pos": {
+                        "x": 30.8,
+                        "y": -93.2625
+                    },
+                    "uuid": "88eaa09b-0408-4f54-86f3-776984c5951b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R12",
+                    "pos": {
+                        "x": 33.2,
+                        "y": -93.2625
+                    },
+                    "uuid": "56571ab6-5af4-46fe-b119-cbfb5dbd0032"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R11",
+                    "pos": {
+                        "x": 35.6,
+                        "y": -93.2625
+                    },
+                    "uuid": "586d733b-3c2b-48bb-9d91-b1bbf5017697"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library '0IBF_RCL'",
+            "items": [
+                {
+                    "description": "Footprint R10",
+                    "pos": {
+                        "x": 37.8,
+                        "y": -93.2625
+                    },
+                    "uuid": "8fe439a0-b1d6-4c7c-be9a-7ad67691526a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'TQFP-44_10x10mm_P0.8mm' does not match copy in library 'Package_QFP'",
+            "items": [
+                {
+                    "description": "Footprint IC4",
+                    "pos": {
+                        "x": 52.2,
+                        "y": -39.4
+                    },
+                    "uuid": "17b9161c-f8af-49f4-8506-4d87213fa758"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

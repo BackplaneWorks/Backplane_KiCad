@@ -1,0 +1,958 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:24",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "net_name_collision.kicad_pcb",
+    "unconnected_items": [
+        {
+            "description": "Missing connection between items",
+            "items": [
+                {
+                    "description": "Pad 2 [Net-(Q2-C)] of TW2 on F.Cu",
+                    "pos": {
+                        "x": 156.3,
+                        "y": 111.4
+                    },
+                    "uuid": "65e9b25f-4bfc-413e-bcad-cc32e9f956db"
+                },
+                {
+                    "description": "Track [Net-(Q2-C)] on F.Cu, length 16.2000 mm",
+                    "pos": {
+                        "x": 155.9,
+                        "y": 91.7
+                    },
+                    "uuid": "04a851f6-67ec-4578-a038-25e3e5111ab5"
+                }
+            ],
+            "severity": "error",
+            "type": "unconnected_items"
+        }
+    ],
+    "violations": [
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1730 mm)",
+            "items": [
+                {
+                    "description": "Via [Q_B] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 142.5,
+                        "y": 88.8
+                    },
+                    "uuid": "384ed920-3619-49d3-ba10-623bfbfe17fa"
+                },
+                {
+                    "description": "Track (arc) [Q B] on F.Cu, length 4.8695 mm",
+                    "pos": {
+                        "x": 145.0,
+                        "y": 88.9
+                    },
+                    "uuid": "c41d5ed3-5846-417f-b882-20559e572f4c"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1958 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(Q2-C)] on F.Cu, length 16.7000 mm",
+                    "pos": {
+                        "x": 145.9,
+                        "y": 107.9
+                    },
+                    "uuid": "3b65e88e-f819-476a-80be-91d5d641155d"
+                },
+                {
+                    "description": "Track (arc) [Net-(Q1-C)] on F.Cu, length 2.8274 mm",
+                    "pos": {
+                        "x": 147.1,
+                        "y": 107.8
+                    },
+                    "uuid": "a191034e-c30d-4b20-bee1-094df80323f1"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1586 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [Net-(Q2-C)] on F.Cu, length 1.7279 mm",
+                    "pos": {
+                        "x": 147.0,
+                        "y": 107.9
+                    },
+                    "uuid": "0e8dbd1e-cb67-4cbd-8dd9-61fd30c04190"
+                },
+                {
+                    "description": "Track (arc) [Net-(Q1-C)] on F.Cu, length 2.8274 mm",
+                    "pos": {
+                        "x": 147.1,
+                        "y": 107.8
+                    },
+                    "uuid": "a191034e-c30d-4b20-bee1-094df80323f1"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1958 mm)",
+            "items": [
+                {
+                    "description": "Track (arc) [Net-(Q1-C)] on F.Cu, length 2.8274 mm",
+                    "pos": {
+                        "x": 147.1,
+                        "y": 107.8
+                    },
+                    "uuid": "a191034e-c30d-4b20-bee1-094df80323f1"
+                },
+                {
+                    "description": "Track [Net-(Q2-C)] on F.Cu, length 2.4000 mm",
+                    "pos": {
+                        "x": 149.4,
+                        "y": 109.0
+                    },
+                    "uuid": "d336d45f-dcae-49ef-9d0b-8f0f3e619cd5"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1750 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(Q1-C)] on F.Cu, length 1.5000 mm",
+                    "pos": {
+                        "x": 149.1,
+                        "y": 110.8
+                    },
+                    "uuid": "51b594e7-1b4b-4c05-8b9d-389651795cfa"
+                },
+                {
+                    "description": "Via [+12V] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 149.6,
+                        "y": 111.4
+                    },
+                    "uuid": "d1e3cd00-87cd-4241-8aec-f94537271196"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1750 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(Q1-C)] on F.Cu, length 1.4000 mm",
+                    "pos": {
+                        "x": 149.0,
+                        "y": 112.0
+                    },
+                    "uuid": "42b7aac5-8363-4e69-8f85-bb0f884287df"
+                },
+                {
+                    "description": "Via [+12V] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 149.6,
+                        "y": 111.4
+                    },
+                    "uuid": "d1e3cd00-87cd-4241-8aec-f94537271196"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1750 mm)",
+            "items": [
+                {
+                    "description": "Via [+12V] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 150.8,
+                        "y": 109.6
+                    },
+                    "uuid": "635b9b2d-b885-4f4e-912a-98f201750517"
+                },
+                {
+                    "description": "Track [Net-(Q2-C)] on F.Cu, length 2.2000 mm",
+                    "pos": {
+                        "x": 149.4,
+                        "y": 109.0
+                    },
+                    "uuid": "7926a626-7bf4-4df3-8160-eb914bc6da69"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1750 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(Q2-C)] on F.Cu, length 2.3000 mm",
+                    "pos": {
+                        "x": 149.3,
+                        "y": 110.2
+                    },
+                    "uuid": "02cae455-84b2-4fe6-a865-cde409649ef8"
+                },
+                {
+                    "description": "Via [+12V] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 150.8,
+                        "y": 109.6
+                    },
+                    "uuid": "635b9b2d-b885-4f4e-912a-98f201750517"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1750 mm)",
+            "items": [
+                {
+                    "description": "Track [Net-(Q3-G)] on In2.Cu, length 8.3509 mm",
+                    "pos": {
+                        "x": 151.42937,
+                        "y": 83.0
+                    },
+                    "uuid": "0fb403cf-80d3-4c4b-b95e-270d25dfa446"
+                },
+                {
+                    "description": "Via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 151.4,
+                        "y": 83.6
+                    },
+                    "uuid": "255ad1bf-78e9-4539-88a2-ed5b24b8c36d"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Clearance violation (netclass 'Default' clearance 0.2000 mm; actual 0.1757 mm)",
+            "items": [
+                {
+                    "description": "Via [GND] on F.Cu - B.Cu",
+                    "pos": {
+                        "x": 151.4,
+                        "y": 83.6
+                    },
+                    "uuid": "255ad1bf-78e9-4539-88a2-ed5b24b8c36d"
+                },
+                {
+                    "description": "Track (arc) [Net-(Q3-G)] on In2.Cu, length 1.0371 mm",
+                    "pos": {
+                        "x": 151.42937,
+                        "y": 84.0
+                    },
+                    "uuid": "afee015e-cb83-4459-ac32-b259997b1d7b"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Courtyards overlap",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 141.25,
+                        "y": 76.025
+                    },
+                    "uuid": "9972d263-1d90-429d-b8fa-27efc4a87258"
+                },
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 156.5,
+                        "y": 81.1
+                    },
+                    "uuid": "ff13b34e-f2dd-464a-8eab-fcfac643f59c"
+                }
+            ],
+            "severity": "error",
+            "type": "courtyards_overlap"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2505 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 134.6,
+                        "y": 76.1
+                    },
+                    "uuid": "85847bc8-6218-4bd4-825b-56d4397d55df"
+                },
+                {
+                    "description": "Zone [GND] on In1.Cu, priority 0",
+                    "pos": {
+                        "x": 167.5,
+                        "y": 113.5
+                    },
+                    "uuid": "06f7470f-025c-4658-a456-66fabbc4a1cf"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2505 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 134.6,
+                        "y": 76.1
+                    },
+                    "uuid": "85847bc8-6218-4bd4-825b-56d4397d55df"
+                },
+                {
+                    "description": "Zone [+12V] on In2.Cu, priority 0",
+                    "pos": {
+                        "x": 167.5,
+                        "y": 113.5
+                    },
+                    "uuid": "a3413c1d-8a1b-44e0-8059-27085646a1a3"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2518 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 134.6,
+                        "y": 76.1
+                    },
+                    "uuid": "85847bc8-6218-4bd4-825b-56d4397d55df"
+                },
+                {
+                    "description": "Zone [/RoyerReg] on F.Cu, priority 1",
+                    "pos": {
+                        "x": 147.0,
+                        "y": 80.0
+                    },
+                    "uuid": "1a89285e-41df-413d-bd6f-1d7fbf726a0a"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4750 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 147.5,
+                        "y": 108.4
+                    },
+                    "uuid": "9f2e3b44-9d33-4b66-8ff2-4381572235c9"
+                },
+                {
+                    "description": "Track [Net-(Q2-C)] on F.Cu, length 2.2000 mm",
+                    "pos": {
+                        "x": 149.4,
+                        "y": 109.0
+                    },
+                    "uuid": "7926a626-7bf4-4df3-8160-eb914bc6da69"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 147.5,
+                        "y": 108.4
+                    },
+                    "uuid": "9f2e3b44-9d33-4b66-8ff2-4381572235c9"
+                },
+                {
+                    "description": "Track [Net-(Q2-C)] on F.Cu, length 2.4000 mm",
+                    "pos": {
+                        "x": 149.4,
+                        "y": 109.0
+                    },
+                    "uuid": "d336d45f-dcae-49ef-9d0b-8f0f3e619cd5"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4000 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 147.5,
+                        "y": 108.4
+                    },
+                    "uuid": "9f2e3b44-9d33-4b66-8ff2-4381572235c9"
+                },
+                {
+                    "description": "Track [Net-(Q2-C)] on F.Cu, length 1.4000 mm",
+                    "pos": {
+                        "x": 153.0,
+                        "y": 109.0
+                    },
+                    "uuid": "a05202ad-0569-42a9-ae68-871bce236ae1"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4912 mm)",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 160.9,
+                        "y": 92.1
+                    },
+                    "uuid": "70b343b8-00a0-4b36-8a52-5f418cb9d5ed"
+                },
+                {
+                    "description": "Pad 2 [/RoyerReg] of C3 on B.Cu",
+                    "pos": {
+                        "x": 162.6,
+                        "y": 91.65
+                    },
+                    "uuid": "0ba18c72-11b8-4534-84d2-b96374beabad"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3500 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 161.4,
+                        "y": 102.0
+                    },
+                    "uuid": "43a64b80-a542-4ce3-a02a-dda7cf02db4a"
+                },
+                {
+                    "description": "Zone [/RoyerReg] on B.Cu, priority 1",
+                    "pos": {
+                        "x": 167.0,
+                        "y": 107.75
+                    },
+                    "uuid": "d22567e6-ad94-4235-8087-ccfbade863b0"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4750 mm)",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 161.4,
+                        "y": 92.1
+                    },
+                    "uuid": "d1894594-bb88-45bf-81f4-b95ad98a84ae"
+                },
+                {
+                    "description": "Pad 1 [+12V] of C3 on B.Cu",
+                    "pos": {
+                        "x": 162.6,
+                        "y": 93.55
+                    },
+                    "uuid": "5a417b4b-4e87-4e96-adc3-907b5efc07eb"
+                }
+            ],
+            "severity": "error",
+            "type": "copper_edge_clearance"
+        },
+        {
+            "description": "Isolated copper fill",
+            "items": [
+                {
+                    "description": "Zone [+12V] on In2.Cu, priority 0",
+                    "pos": {
+                        "x": 167.5,
+                        "y": 113.5
+                    },
+                    "uuid": "a3413c1d-8a1b-44e0-8059-27085646a1a3"
+                }
+            ],
+            "severity": "warning",
+            "type": "isolated_copper"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [Net-(Q2-C)] on F.Cu, length 1.1000 mm",
+                    "pos": {
+                        "x": 152.4,
+                        "y": 111.4
+                    },
+                    "uuid": "ae601a3f-751b-4446-8f57-bf0915e6d696"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 138.95,
+                        "y": 74.0
+                    },
+                    "uuid": "02b7a299-b3e9-444f-a8dc-5246f9e5512b"
+                },
+                {
+                    "description": "Segment of J1 on B.Silkscreen",
+                    "pos": {
+                        "x": 138.69,
+                        "y": 78.485
+                    },
+                    "uuid": "13b1cb13-0504-4f05-8933-2a4b225826b1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Arc on Edge.Cuts",
+                    "pos": {
+                        "x": 139.65,
+                        "y": 74.0
+                    },
+                    "uuid": "9fd0d7b8-fa96-4673-adb8-d3d3374beec2"
+                },
+                {
+                    "description": "Segment of J1 on B.Silkscreen",
+                    "pos": {
+                        "x": 139.45,
+                        "y": 76.225
+                    },
+                    "uuid": "327f5377-3771-4447-9b3e-dd3f89ae8059"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 140.35,
+                        "y": 74.0
+                    },
+                    "uuid": "a9409e8b-da97-4ff6-b2ac-b63649435f1a"
+                },
+                {
+                    "description": "Segment of J1 on B.Silkscreen",
+                    "pos": {
+                        "x": 160.55,
+                        "y": 76.225
+                    },
+                    "uuid": "4a97913b-6fd2-4c2d-a8f4-a42863423008"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 140.35,
+                        "y": 74.0
+                    },
+                    "uuid": "a9409e8b-da97-4ff6-b2ac-b63649435f1a"
+                },
+                {
+                    "description": "Segment of J1 on B.Silkscreen",
+                    "pos": {
+                        "x": 161.31,
+                        "y": 72.515
+                    },
+                    "uuid": "730c1cd3-7638-4e0b-ba66-9eda32bffe23"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'alexisvl'",
+            "items": [
+                {
+                    "description": "Footprint TW3",
+                    "pos": {
+                        "x": 142.9,
+                        "y": 91.0
+                    },
+                    "uuid": "ba64376b-a960-4112-94f9-ab01d67e7e4c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'alexisvl'",
+            "items": [
+                {
+                    "description": "Footprint Q2",
+                    "pos": {
+                        "x": 144.5,
+                        "y": 89.25
+                    },
+                    "uuid": "a067fcd7-e1c0-41fc-a5ce-d60efecb7579"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'alexisvl'",
+            "items": [
+                {
+                    "description": "Footprint Q1",
+                    "pos": {
+                        "x": 148.0,
+                        "y": 89.25
+                    },
+                    "uuid": "7513169f-dc72-4832-9716-6828e16a4813"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'alexisvl'",
+            "items": [
+                {
+                    "description": "Footprint TW1",
+                    "pos": {
+                        "x": 149.6,
+                        "y": 109.6
+                    },
+                    "uuid": "429b17f3-c6c7-4950-b2e6-8bd6be3a53fd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "The current configuration does not include the footprint library 'alexisvl'",
+            "items": [
+                {
+                    "description": "Footprint TW2",
+                    "pos": {
+                        "x": 150.8,
+                        "y": 111.4
+                    },
+                    "uuid": "263586db-7bba-4a4c-926e-d0a7d7a8c67d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R2",
+                    "pos": {
+                        "x": 136.25,
+                        "y": 80.75
+                    },
+                    "uuid": "8ccc9273-c423-46c0-b5f2-c47c970a2938"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C4",
+                    "pos": {
+                        "x": 136.25,
+                        "y": 89.5
+                    },
+                    "uuid": "53423fc8-4fe3-4333-8319-50778ae31ee0"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0805_2012Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R7",
+                    "pos": {
+                        "x": 136.25,
+                        "y": 93.4
+                    },
+                    "uuid": "91a3a6c1-70ac-4299-96ac-bdd8ec22a29d"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R3",
+                    "pos": {
+                        "x": 137.0,
+                        "y": 83.5
+                    },
+                    "uuid": "7af91261-9952-4da0-a43c-ee526cd0983a"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'SOT-23-5' does not match copy in library 'Package_TO_SOT_SMD'",
+            "items": [
+                {
+                    "description": "Footprint U1",
+                    "pos": {
+                        "x": 137.5,
+                        "y": 86.0
+                    },
+                    "uuid": "f4929942-f47f-4ab2-bb91-aa6aa8aeac1f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R6",
+                    "pos": {
+                        "x": 138.0,
+                        "y": 89.5
+                    },
+                    "uuid": "1b27ba4c-fca7-4448-8d2b-4471bc1d7894"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R5",
+                    "pos": {
+                        "x": 139.75,
+                        "y": 89.5
+                    },
+                    "uuid": "b5aa305d-0a35-4d73-b4d0-f1e15c68b7fe"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_0603_1608Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R4",
+                    "pos": {
+                        "x": 140.25,
+                        "y": 83.5
+                    },
+                    "uuid": "b6f26ee6-0adf-4f97-abcc-663ca301487e"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0603_1608Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C5",
+                    "pos": {
+                        "x": 141.5,
+                        "y": 89.5
+                    },
+                    "uuid": "129c31b8-84d8-4121-992a-0a8ef67866f7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C2",
+                    "pos": {
+                        "x": 144.7,
+                        "y": 79.925
+                    },
+                    "uuid": "50497918-2cae-43fc-9ab8-6d55dcbf7948"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'JST_XH_B8B-XH-A_1x08_P2.50mm_Vertical' does not match copy in library 'Connector_JST'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 141.25,
+                        "y": 76.025
+                    },
+                    "uuid": "9972d263-1d90-429d-b8fa-27efc4a87258"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_1210_3225Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R8",
+                    "pos": {
+                        "x": 151.0,
+                        "y": 83.9
+                    },
+                    "uuid": "4c316973-d9c3-40b2-917f-be1df6e1bd39"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_1206_3216Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C1",
+                    "pos": {
+                        "x": 151.25,
+                        "y": 88.5
+                    },
+                    "uuid": "eff28d9a-003b-4b4b-92f4-834253c7ae9b"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'R_2010_5025Metric' does not match copy in library 'Resistor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint R1",
+                    "pos": {
+                        "x": 156.5,
+                        "y": 81.1
+                    },
+                    "uuid": "ff13b34e-f2dd-464a-8eab-fcfac643f59c"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'TO-252-2' does not match copy in library 'Package_TO_SOT_SMD'",
+            "items": [
+                {
+                    "description": "Footprint Q3",
+                    "pos": {
+                        "x": 158.15,
+                        "y": 87.35
+                    },
+                    "uuid": "ba1dfe52-4400-4beb-8f1a-e084da237caf"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'C_0805_2012Metric' does not match copy in library 'Capacitor_SMD'",
+            "items": [
+                {
+                    "description": "Footprint C3",
+                    "pos": {
+                        "x": 162.6,
+                        "y": 92.6
+                    },
+                    "uuid": "77d111ed-0314-4c71-b7b7-bbb924ba43c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

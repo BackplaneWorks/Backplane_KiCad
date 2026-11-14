@@ -1,0 +1,113 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-14T10:22:05",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "issue24853.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Creepage violation (rule 'creep' creepage 25.0000 mm; actual 9.8000 mm)",
+            "items": [
+                {
+                    "description": "Track [b] on F.Cu, length 88.0000 mm",
+                    "pos": {
+                        "x": 94.0,
+                        "y": 86.0
+                    },
+                    "uuid": "09f4a07e-d55e-41dc-8613-53763df266e5"
+                },
+                {
+                    "description": "Track [a] on F.Cu, length 88.0000 mm",
+                    "pos": {
+                        "x": 93.0,
+                        "y": 76.0
+                    },
+                    "uuid": "0ff8b226-3a37-4b7e-a876-2d6cb1d5acf9"
+                }
+            ],
+            "severity": "error",
+            "type": "creepage"
+        },
+        {
+            "description": "Clearance violation (rule 'creep' clearance 20.0000 mm; actual 9.8000 mm)",
+            "items": [
+                {
+                    "description": "Track [b] on F.Cu, length 88.0000 mm",
+                    "pos": {
+                        "x": 94.0,
+                        "y": 86.0
+                    },
+                    "uuid": "09f4a07e-d55e-41dc-8613-53763df266e5"
+                },
+                {
+                    "description": "Track [a] on F.Cu, length 88.0000 mm",
+                    "pos": {
+                        "x": 93.0,
+                        "y": 76.0
+                    },
+                    "uuid": "0ff8b226-3a37-4b7e-a876-2d6cb1d5acf9"
+                }
+            ],
+            "severity": "error",
+            "type": "clearance"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [a] on F.Cu, length 88.0000 mm",
+                    "pos": {
+                        "x": 93.0,
+                        "y": 76.0
+                    },
+                    "uuid": "0ff8b226-3a37-4b7e-a876-2d6cb1d5acf9"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        },
+        {
+            "description": "Track has unconnected end",
+            "items": [
+                {
+                    "description": "Track [b] on F.Cu, length 88.0000 mm",
+                    "pos": {
+                        "x": 94.0,
+                        "y": 86.0
+                    },
+                    "uuid": "09f4a07e-d55e-41dc-8613-53763df266e5"
+                }
+            ],
+            "severity": "warning",
+            "type": "track_dangling"
+        }
+    ]
+}
