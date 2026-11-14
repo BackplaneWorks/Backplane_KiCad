@@ -58,6 +58,16 @@ wxDECLARE_EVENT( API_REQUEST_EVENT, KICAD_API_REQUEST_EVENT );
 class KICOMMON_API KICAD_API_SERVER : public wxEvtHandler
 {
 public:
+    /// True when requests are queued for the main thread and not handled yet (a running task serves
+    /// them with ProcessPendingEvents; wxEvtHandler has no public accessor for its queue).
+    bool HasQueuedRequests()
+    {
+#if wxUSE_THREADS
+        wxCriticalSectionLocker lock( m_pendingEventsLock );
+#endif
+        return m_pendingEvents && !m_pendingEvents->IsEmpty();
+    }
+
     KICAD_API_SERVER( bool aAutoStart = true );
 
     ~KICAD_API_SERVER();
