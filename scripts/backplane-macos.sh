@@ -102,5 +102,19 @@ for formula in "$prefix/Cellar"/*; do
   find "$formula" -type f \( -iname '*license*' -o -iname '*copying*' -o -path '*/.brew/*.rb' \) -exec cp {} "$root/licenses/homebrew/$name/" \;
 done
 archive="$(basename "$root").tar.gz"
+# The manifest the release checks: this version, this exact source, this platform
+python - "$root/manifest.json" "$version" "$(git rev-parse HEAD)" "darwin-$(uname -m)" <<'CHECK'
+import json, sys
+m = json.load(open(sys.argv[1])); version, commit, platform = sys.argv[2:]
+problems = [f"{k}: {m.get(k)!r}, want {v!r}" for k, v in (("version", version), ("sourceCommit", commit), ("platform", platform)) if m.get(k) != v]
+if "BackplaneWorks" not in str(m.get("sourceRepository", "")): problems.append(f"sourceRepository: {m.get('sourceRepository')!r}")
+if not m.get("capabilities"): problems.append("no capabilities")
+if problems: sys.exit("manifest.json: " + "; ".join(problems))
+print("manifest.json: version, sourceCommit, sourceRepository, platform and %d capabilities" % len(m["capabilities"]))
+CHECK
 tar -C "$release" -czf "$release/$archive" "$(basename "$root")"
-(cd "$release" && shasum -a 256 "$archive" > SHA256SUMS)
+# The matching source, as the Linux and Windows releases attach it
+git archive --format=tar.gz --prefix="$(basename "$root")-source/" HEAD > "$release/$(basename "$root")-source.tar.gz"
+# LF only, "<sha256>  <name>": the integrator merges these lines into the release's SHA256SUMS
+(cd "$release" && shasum -a 256 "$archive" "$(basename "$root")-source.tar.gz" > SHA256SUMS)
+du -h "$release/$archive" "$release/$(basename "$root")-source.tar.gz"
