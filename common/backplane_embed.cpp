@@ -212,6 +212,34 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
                 PushEvent( EMBED_EVENT_TYPE::ATTACHED, {}, std::to_string( aParent ) );
             };
 
+    hooks.focusBlocked =
+            [this]( uint64_t aWindow, std::string& aWhy ) -> bool
+            {
+                if( !m_enabled )
+                    return false;
+
+                for( const FRAME_ENTRY& e : m_frames )
+                {
+                    if( e.window != aWindow )
+                        continue;
+
+                    if( m_prewarming.count( e.frame ) )
+                    {
+                        aWhy = "prewarming";
+                        return true;
+                    }
+
+                    if( !KIPLATFORM::EMBED::IsMapped( e.frame ) )
+                    {
+                        aWhy = "not on screen";
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                return false;
+            };
     hooks.popupKey =
             [this]( int aKeyCode, int aModifiers, const std::function<void()>& aClosePopup ) -> bool
             {
