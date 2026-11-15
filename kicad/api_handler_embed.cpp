@@ -319,8 +319,16 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
 
                         wxFrame* f = e.FindFrame( kind );
 
-                        if( !f && openFrame( kind, false ) )
-                            f = e.FindFrame( kind );
+                        if( !f )
+                        {
+                            // ShowPlayer gives the frame it opens no focus while this is set
+                            e.SetPrewarmOpening( kind, true );
+
+                            if( openFrame( kind, false ) )
+                                f = e.FindFrame( kind );
+
+                            e.SetPrewarmOpening( kind, false );
+                        }
 
                         if( f && !f->IsShown() )
                             e.Prewarm( f, w, h );

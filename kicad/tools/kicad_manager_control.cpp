@@ -1079,10 +1079,10 @@ int KICAD_MANAGER_CONTROL::ShowPlayer( const TOOL_EVENT& aEvent )
     player->Raise();
 
     // Raising the window does not set the focus on Linux.  This should work on
-    // any platform.  Embedded, the host owns the keyboard and hands it in with ShowFrame{focus}:
-    // here the player may be a prewarm or a frame the host has not shown, and this SetFocus gave
-    // the person's keys to a frame they could not see (Carbon's bp-win run 19)
-    if( wxWindow::FindFocus() != player && !BACKPLANE_EMBED::Get().Enabled() )
+    // any platform.  Not for a frame a prewarm is opening (embedded): the person cannot see it,
+    // and this SetFocus gave their keys to it (Carbon's bp-win run 19).  A frame the host asked
+    // to show keeps this focus, on every platform.
+    if( wxWindow::FindFocus() != player && !BACKPLANE_EMBED::Get().PrewarmOpening( playerType ) )
         player->SetFocus();
 
     // Save window state to disk now.  Don't wait around for a crash.
