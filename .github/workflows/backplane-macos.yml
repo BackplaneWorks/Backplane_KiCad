@@ -92,3 +92,22 @@ jobs:
             release/macos/*.tar.gz
             release/macos/SHA256SUMS
           if-no-files-found: error
+
+      # `kicad --embedded` over a stand-in host on the runner's logged-in desktop (BACKPLANE_EMBED.md,
+      # "macOS"): placement, stacking, Cmd+Z/S/C/V without a visible menu bar, reserved chords,
+      # prewarm, first click, host hide and host death.  After the archive is uploaded, so a failure
+      # here can be reproduced from it.
+      - name: Embedded GUI check on the macOS desktop
+        if: always() && hashFiles('release/macos/*.tar.gz') != ''
+        run: |
+          python -m pip install pyobjc-framework-Quartz pillow
+          export PATH="$(brew --prefix protobuf@29)/bin:$PATH"
+          root=$(ls -d release/macos/backplane-kicad-darwin-arm64-*/ | head -1)
+          python scripts/backplane-embed-macos-check.py "${root}bin/kicad" "${root}bin/kicad-cli" --out "$RUNNER_TEMP/embed-macos"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: embed-macos-check
+          retention-days: 7
+          path: ${{ runner.temp }}/embed-macos
+          if-no-files-found: ignore
