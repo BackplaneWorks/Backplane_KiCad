@@ -126,7 +126,9 @@ long xModifiersFor( int aWxModifiers )
 }
 
 
-const int CHORD_MODIFIERS = wxMOD_CONTROL | wxMOD_SHIFT | wxMOD_ALT | wxMOD_META;
+// wxMOD_RAW_CONTROL is the Control key itself: on macOS a separate bit (wxMOD_CONTROL is Cmd
+// there), elsewhere the same as wxMOD_CONTROL
+const int CHORD_MODIFIERS = wxMOD_CONTROL | wxMOD_RAW_CONTROL | wxMOD_SHIFT | wxMOD_ALT | wxMOD_META;
 } // namespace
 
 
@@ -1014,6 +1016,8 @@ bool BACKPLANE_EMBED::ParseChord( const std::string& aChord, int& aModifiers, in
 
         if( mod == "ctrl" || mod == "control" || mod == "cmd" )
             aModifiers |= wxMOD_CONTROL;
+        else if( mod == "rawctrl" )
+            aModifiers |= wxMOD_RAW_CONTROL;   // macOS: the Control key, not Cmd (embed-raw-ctrl)
         else if( mod == "shift" )
             aModifiers |= wxMOD_SHIFT;
         else if( mod == "alt" || mod == "option" )

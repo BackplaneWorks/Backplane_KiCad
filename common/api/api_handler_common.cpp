@@ -142,6 +142,8 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 reply.add_capabilities( "embed-macos" );
                 reply.add_capabilities( "embed-host-geometry" );
                 reply.add_capabilities( "embed-reserved-key-event" );
+                // SetReservedKeys takes "RawCtrl+" for the Control key itself (Ctrl is Cmd here)
+                reply.add_capabilities( "embed-raw-ctrl" );
 #endif
                 // FrameInfo.canvas_input_ago_ms / tool_busy / tool_name and
                 // RunChecks.min_canvas_idle_ms (bp.13 batch 8)
