@@ -44,6 +44,10 @@ HWND                     s_holder = nullptr;
 HWND                     s_parent = nullptr;   ///< the container the holder belongs in, or null
 
 constexpr UINT_PTR HOLDER_TIMER = 1;
+/// Embed trace only: after a prewarm show, foreground / active / focus sampled every 20 ms for
+/// 2 s, a line each time one of them changes
+constexpr UINT_PTR FOCUS_SAMPLE_TIMER = 2;
+int                s_focusSamplesLeft = 0;
 
 
 /// BACKPLANE_KICAD_EMBED_TRACE: "1" (a log in %TEMP%) or a file path.  Each line also goes to
@@ -197,6 +201,32 @@ HWND blockedFrameOf( HWND aWindow, std::string& aWhy );
 
 LRESULT CALLBACK holderProc( HWND aHwnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam )
 {
+    if( aMsg == WM_TIMER && aWParam == FOCUS_SAMPLE_TIMER && aHwnd == s_holder )
+    {
+        static HWND lastFg = nullptr, lastActive = nullptr, lastFocus = nullptr;
+        GUITHREADINFO info = { sizeof( info ) };
+        HWND fg = GetForegroundWindow();
+        GetGUIThreadInfo( fg ? GetWindowThreadProcessId( fg, nullptr ) : 0, &info );
+
+        if( fg != lastFg || info.hwndActive != lastActive || info.hwndFocus != lastFocus )
+        {
+            lastFg = fg;
+            lastActive = info.hwndActive;
+            lastFocus = info.hwndFocus;
+            trace( "sample: fg %s, its queue's active %s, focus %s; this thread's active %s, focus %s",
+                   describe( fg ).c_str(), describe( info.hwndActive ).c_str(), describe( info.hwndFocus ).c_str(),
+                   describe( GetActiveWindow() ).c_str(), describe( GetFocus() ).c_str() );
+        }
+
+        if( --s_focusSamplesLeft <= 0 )
+        {
+            KillTimer( aHwnd, FOCUS_SAMPLE_TIMER );
+            trace( "sample: end" );
+        }
+
+        return 0;
+    }
+
     if( aMsg == MSG_GIVE_BACK_ACTIVATION )
     {
         HWND        fg = GetForegroundWindow();
@@ -400,6 +430,32 @@ LRESULT CALLBACK activateWndProc( int aCode, WPARAM aWParam, LPARAM aLParam )
                         || ( msg->message == WM_NCACTIVATE && msg->wParam );
         bool focus = msg->message == WM_SETFOCUS;
 
+        // Embed trace: every activation and focus message any window of this thread receives,
+        // blocked or not, with its sender (a focus moved from the host's thread of the attached
+        // queue reaches no CBT hook here)
+        if( traceFile()
+            && ( msg->message == WM_ACTIVATE || msg->message == WM_NCACTIVATE || msg->message == WM_SETFOCUS
+                 || msg->message == WM_KILLFOCUS || msg->message == WM_ACTIVATEAPP
+                 || msg->message == WM_CHILDACTIVATE ) )
+        {
+            std::string why;
+            HWND        frame = blockedFrame( msg->hwnd, why );
+            DWORD       sendFlags = InSendMessageEx( nullptr );
+            const char* name = msg->message == WM_ACTIVATE      ? "WM_ACTIVATE"
+                               : msg->message == WM_NCACTIVATE  ? "WM_NCACTIVATE"
+                               : msg->message == WM_SETFOCUS    ? "WM_SETFOCUS"
+                               : msg->message == WM_KILLFOCUS   ? "WM_KILLFOCUS"
+                               : msg->message == WM_ACTIVATEAPP ? "WM_ACTIVATEAPP"
+                                                                : "WM_CHILDACTIVATE";
+            trace( "msg %s 0x%llx to %s (root %s%s%s); %s; other 0x%llx; fg %s",
+                   name, (unsigned long long) msg->wParam, describe( msg->hwnd ).c_str(),
+                   describe( GetAncestor( msg->hwnd, GA_ROOT ) ).c_str(), frame ? ", blocked: " : "",
+                   frame ? why.c_str() : "",
+                   sendFlags == ISMEX_NOSEND ? "from this thread"
+                   : ( sendFlags & ISMEX_SEND ) ? "sent from another thread" : "sent (notify/callback)",
+                   (unsigned long long) msg->lParam, describe( GetForegroundWindow() ).c_str() );
+        }
+
         if( activate || focus )
         {
             std::string why;
@@ -447,6 +503,9 @@ LRESULT CALLBACK focusCbtProc( int aCode, WPARAM aWParam, LPARAM aLParam )
                    traceFile() ? ownStack( 2, 24 ).c_str() : "" );
             return 1;
         }
+
+        if( aCode == HCBT_ACTIVATE && target && traceFile() )
+            trace( "activation of %s (CBT, this thread)", describe( target ).c_str() );
 
         if( aCode == HCBT_SETFOCUS && target && traceFile() )
         {
@@ -1014,7 +1073,11 @@ void KIPLATFORM::EMBED::EnsureMapped( wxWindow* aFrame )
 void KIPLATFORM::EMBED::UnmapNative( wxWindow* aFrame )
 {
     if( aFrame )
+    {
         ShowWindow( static_cast<HWND>( aFrame->GetHWND() ), SW_HIDE );
+        trace( "unmapped %s; fg %s, focus %s", describe( static_cast<HWND>( aFrame->GetHWND() ) ).c_str(),
+               describe( GetForegroundWindow() ).c_str(), describe( GetFocus() ).c_str() );
+    }
 }
 
 
@@ -1035,6 +1098,12 @@ void KIPLATFORM::EMBED::ShowInactive( wxWindow* aFrame )
     trace( "prewarm show %s without activating: active %s, focus %s, fg %s", describe( frame ).c_str(),
            describe( GetActiveWindow() ).c_str(), describe( GetFocus() ).c_str(),
            describe( GetForegroundWindow() ).c_str() );
+
+    if( traceFile() && s_holder )
+    {
+        s_focusSamplesLeft = 100;
+        SetTimer( s_holder, FOCUS_SAMPLE_TIMER, 20, nullptr );
+    }
 }
 
 
