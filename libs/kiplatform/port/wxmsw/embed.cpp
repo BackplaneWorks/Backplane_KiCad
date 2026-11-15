@@ -291,9 +291,117 @@ bool KIPLATFORM::EMBED::Supported()
 }
 
 
+namespace
+{
+/// The calling thread's own stack, "module+0xoffset" per frame (symbolise with the shipped pdbs)
+std::string ownStack( int aSkip, int aDepth )
+{
+    void*  frames[32] = {};
+    USHORT count = RtlCaptureStackBackTrace( aSkip, std::min( aDepth, 32 ), frames, nullptr );
+    std::string out;
+
+    for( USHORT ii = 0; ii < count; ++ii )
+    {
+        HMODULE module = nullptr;
+        char    name[MAX_PATH] = "?";
+
+        if( GetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS
+                                        | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                reinterpret_cast<LPCSTR>( frames[ii] ), &module )
+            && module )
+        {
+            GetModuleFileNameA( module, name, sizeof( name ) );
+        }
+
+        const char* base = strrchr( name, '\\' );
+        char        entry[MAX_PATH + 32];
+        snprintf( entry, sizeof( entry ), "%s%s+0x%llx", out.empty() ? "" : " | ", base ? base + 1 : name,
+                  (unsigned long long) ( reinterpret_cast<uintptr_t>( frames[ii] )
+                                         - reinterpret_cast<uintptr_t>( module ) ) );
+        out += entry;
+    }
+
+    return out;
+}
+
+
+/// The embedded frame aWindow is in (itself or an ancestor that the hooks call a frame) when it
+/// may not take focus now; aWhy says why
+HWND blockedFrame( HWND aWindow, std::string& aWhy )
+{
+    if( !s_hooks.focusBlocked )
+        return nullptr;
+
+    for( HWND w = aWindow; w; w = GetParent( w ) )
+    {
+        DWORD pid = 0;
+        GetWindowThreadProcessId( w, &pid );
+
+        if( pid != GetCurrentProcessId() )
+            return nullptr;   // reached the host's windows: not inside one of our frames
+
+        if( s_hooks.focusBlocked( reinterpret_cast<uint64_t>( w ), aWhy ) )
+            return w;
+
+        // Only up the child chain: GetParent of a popup is its owner, and a dialog over a hidden
+        // frame (a message box during a prewarm) must still take the keyboard
+        if( !( GetWindowLongPtrW( w, GWL_STYLE ) & WS_CHILD ) )
+            break;
+    }
+
+    return nullptr;
+}
+
+
+HHOOK s_focusHook = nullptr;
+
+
+/// A frame not on screen (a prewarm, a hidden tab) never takes the keyboard or the activation:
+/// its window is a child of the host's, so a SetFocus in it (wx restoring its last focus, a
+/// control taking focus as it is built or first painted) moved the person's keys to a frame they
+/// cannot see.  Refused here whoever asks, and traced with the caller's stack.
+LRESULT CALLBACK focusCbtProc( int aCode, WPARAM aWParam, LPARAM aLParam )
+{
+    if( aCode == HCBT_SETFOCUS || aCode == HCBT_ACTIVATE )
+    {
+        HWND        target = reinterpret_cast<HWND>( aWParam );
+        std::string why;
+
+        if( HWND frame = target ? blockedFrame( target, why ) : nullptr )
+        {
+            HWND from = aCode == HCBT_SETFOCUS ? reinterpret_cast<HWND>( aLParam ) : GetFocus();
+            trace( "%s to %s refused: its frame %s is %s; focus stays %s; from %s",
+                   aCode == HCBT_SETFOCUS ? "focus" : "activation", describe( target ).c_str(),
+                   describe( frame ).c_str(), why.c_str(), describe( from ).c_str(),
+                   traceFile() ? ownStack( 2, 24 ).c_str() : "" );
+            return 1;
+        }
+
+        if( aCode == HCBT_SETFOCUS && target && traceFile() )
+        {
+            DWORD pid = 0;
+            GetWindowThreadProcessId( target, &pid );
+
+            if( pid == GetCurrentProcessId() )
+            {
+                trace( "focus to %s from %s; from %s", describe( target ).c_str(),
+                       describe( reinterpret_cast<HWND>( aLParam ) ).c_str(), ownStack( 2, 16 ).c_str() );
+            }
+        }
+    }
+
+    return CallNextHookEx( s_focusHook, aCode, aWParam, aLParam );
+}
+} // namespace
+
+
 void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 {
     s_hooks = aHooks;
+
+    // Installed from the UI thread (BACKPLANE_EMBED::Enable): this thread's windows only
+    if( !s_focusHook )
+        s_focusHook = SetWindowsHookExW( WH_CBT, focusCbtProc, nullptr, GetCurrentThreadId() );
 }
 
 

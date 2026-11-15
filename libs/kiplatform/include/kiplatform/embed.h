@@ -63,6 +63,12 @@ namespace EMBED
         /// handing the key elsewhere, or the popup keeps the keyboard).  X11 only.
         std::function<bool( int aKeyCode, int aModifiers, const std::function<void()>& aClosePopup )>
                 popupKey;
+
+        /// Whether aWindow is an embedded frame that may not take the keyboard or activation now
+        /// (a prewarm in progress, or a frame not on screen); aWhy says which.  Windows: a hook
+        /// on the UI thread refuses any focus or activation change into such a frame, whoever
+        /// asks (wx restoring its last focus, a control taking focus as it is built).
+        std::function<bool( uint64_t aWindow, std::string& aWhy )> focusBlocked;
     };
 
     /// A line for the platform's embed trace (Windows: BACKPLANE_KICAD_EMBED_TRACE's log and
