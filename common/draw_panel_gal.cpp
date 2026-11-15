@@ -20,6 +20,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+#include <api/api_task_scheduler.h>
 #include <backplane_embed.h>
 #include <wx/dcclient.h>
 
@@ -1322,6 +1323,18 @@ void EDA_DRAW_PANEL_GAL::Refresh( bool aEraseBackground, const wxRect* aRect )
         minPeriodMs = 1000 / refreshHz;
     }
 
+    // While an API task (a check run) holds the main thread, a full repaint (a committed fill on a
+    // large board) is time no request is answered: paint once the task is done
+    if( API_TASK_SCHEDULER::Instance().AnyTaskRunning() )
+    {
+        m_refreshDeferred = true;
+
+        if( !m_refreshTimer.IsRunning() )
+            m_refreshTimer.StartOnce( 100 );
+
+        return;
+    }
+
     if( delta >= minPeriodMs )
     {
         if( !DoRePaint() && IsShownOnScreen() )
@@ -1841,6 +1854,13 @@ void EDA_DRAW_PANEL_GAL::onRefreshTimer( wxTimerEvent& aEvent )
         BACKPLANE_EMBED::Get().TraceNote( "refresh_timer" );
 
     REDRAW_CAUSE cause( "timer" );
+
+    // Progress updates inside an API task also run timers: keep a deferred paint for after it
+    if( m_refreshDeferred && API_TASK_SCHEDULER::Instance().AnyTaskRunning() )
+    {
+        m_refreshTimer.StartOnce( 100 );
+        return;
+    }
 
     const bool deferred = m_refreshDeferred;
 

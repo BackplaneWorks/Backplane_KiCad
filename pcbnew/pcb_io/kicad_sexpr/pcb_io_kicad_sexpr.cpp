@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <api/api_server.h>
 #include <wx/dir.h>
 #include <wx/ffile.h>
 #include <wx/log.h>
@@ -164,6 +165,10 @@ void FP_CACHE::Load()
         do
         {
             fn.SetFullName( fullName );
+
+            // A check run's parity netlist loads whole libraries for pad numbers: between files,
+            // answer what the API has queued (no-op off the main thread or outside an API task)
+            KICAD_API_SERVER::ServeDuringTask();
 
             // Queue I/O errors so only files that fail to parse don't get loaded.
             try
@@ -4323,6 +4328,15 @@ void PCB_IO_KICAD_SEXPR::ClearCachedFootprints( const wxString& aLibraryPath )
 {
     if( m_cache && m_cache->IsPath( aLibraryPath ) )
     {
+        // Freed one footprint at a time so a large library's teardown can answer the API too
+        auto& footprints = m_cache->GetFootprints();
+
+        while( !footprints.empty() )
+        {
+            footprints.erase( footprints.begin() );
+            KICAD_API_SERVER::ServeDuringTask();
+        }
+
         delete m_cache;
         m_cache = nullptr;
     }

@@ -17,6 +17,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <thread_pool.h>
+#include <memory>
 #include <functional>
 #include <optional>
 #include <shared_mutex>
@@ -96,8 +98,11 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
     if( !reportPhase( _( "Checking silkscreen for overlapping items..." ) ) )
         return false;   // DRC cancelled
 
-    DRC_RTREE silkTree;
-    DRC_RTREE targetTree;
+    // On the heap so that, once done, they can be freed on a worker (see the end of Run())
+    auto       silkTreeOwner = std::make_unique<DRC_RTREE>();
+    auto       targetTreeOwner = std::make_unique<DRC_RTREE>();
+    DRC_RTREE& silkTree = *silkTreeOwner;
+    DRC_RTREE& targetTree = *targetTreeOwner;
     int       ii = 0;
     int       items = 0;
     LSET      silkLayers = LSET( { F_SilkS, B_SilkS } );
@@ -416,6 +421,18 @@ bool DRC_TEST_PROVIDER_SILK_CLEARANCE::Run()
             {
                 return m_drcEngine->IsCancelled();
             } );
+
+    // Freeing every silk and copper item's shapes takes a noticeable time on a large board, all of it
+    // on the main thread, where a check run answers the API: free them on a worker instead.  The
+    // trees own only their items and shapes (shared ones just drop a reference); nothing on the board
+    // is touched.
+    std::shared_ptr<DRC_RTREE> silkDone( silkTreeOwner.release() );
+    std::shared_ptr<DRC_RTREE> targetDone( targetTreeOwner.release() );
+    GetKiCadThreadPool().detach_task( [silkDone, targetDone]() mutable
+                                      {
+                                          silkDone.reset();
+                                          targetDone.reset();
+                                      } );
 
     return !m_drcEngine->IsCancelled();
 }

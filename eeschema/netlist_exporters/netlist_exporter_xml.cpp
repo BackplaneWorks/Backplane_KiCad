@@ -19,6 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <api/api_server.h>
 #include "netlist_exporter_xml.h"
 
 #include <algorithm>
@@ -1103,6 +1104,8 @@ XNODE* NETLIST_EXPORTER_XML::makeLibParts()
 
     for( LIB_SYMBOL* lcomp : m_libParts )
     {
+        KICAD_API_SERVER::ServeDuringTask();   // a board's parity check waits on this export
+
         wxString libNickname = lcomp->GetLibId().GetLibNickname();;
 
         // The library nickname will be empty if the cache library is used.
@@ -1274,6 +1277,8 @@ XNODE* NETLIST_EXPORTER_XML::makeListOfNets( unsigned aCtl )
 
     for( const EXPORT_NET& net : m_exportNets )
     {
+        KICAD_API_SERVER::ServeDuringTask();   // a board's parity check waits on this export
+
         wxString netName = ( aCtl & GNL_OPT_KICAD ) ? net.name : UnescapeString( net.name );
         nets.emplace_back( new NET_RECORD( netName ) );
         NET_RECORD* net_record = nets.back();

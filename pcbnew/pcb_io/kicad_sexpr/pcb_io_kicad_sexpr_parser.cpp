@@ -23,6 +23,7 @@
  * @brief Pcbnew s-expression file format parser implementation.
  */
 
+#include <api/api_server.h>
 #include "layer_ids.h"
 #include "pcb_lexer.h"
 #include <cerrno>
@@ -1184,6 +1185,9 @@ void PCB_IO_KICAD_SEXPR_PARSER::ParseFootprintLib(
             WX_FILENAME fn( wxEmptyString, fpName );
             aFootprints.insert( fpName, new FP_CACHE_ENTRY( footprint.release(), fn ) );
         }
+
+        // Between footprints of a library file: answer what the API has queued (see FP_CACHE::Load)
+        KICAD_API_SERVER::ServeDuringTask();
     };
 
     for( token = CurTok(); token != T_RIGHT; token = NextTok() )
