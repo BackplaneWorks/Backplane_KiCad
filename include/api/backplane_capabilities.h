@@ -52,6 +52,12 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     "no-load-migration", // embedded: opening a document changes nothing (no load-time 3D migration;
                          // KiCad's own load fixes are actor "kicad"); SaveDocument of an unmodified
                          // document in an open editor writes nothing
+#ifdef _WIN32
+    // embedded: a prewarm never takes the keyboard or the activation (shown with SW_SHOWNA; a focus
+    // it takes while built goes back).  Windows only: verified there; the host gates its
+    // self-started prewarm on it
+    "prewarm-keeps-focus",
+#endif
 } );
 
 } // namespace BACKPLANE
