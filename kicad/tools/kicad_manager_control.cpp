@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <wildcards_and_files_ext.h>
 #include <common.h>
 #include <env_vars.h>
@@ -1078,8 +1079,10 @@ int KICAD_MANAGER_CONTROL::ShowPlayer( const TOOL_EVENT& aEvent )
     player->Raise();
 
     // Raising the window does not set the focus on Linux.  This should work on
-    // any platform.
-    if( wxWindow::FindFocus() != player )
+    // any platform.  Embedded, the host owns the keyboard and hands it in with ShowFrame{focus}:
+    // here the player may be a prewarm or a frame the host has not shown, and this SetFocus gave
+    // the person's keys to a frame they could not see (Carbon's bp-win run 19)
+    if( wxWindow::FindFocus() != player && !BACKPLANE_EMBED::Get().Enabled() )
         player->SetFocus();
 
     // Save window state to disk now.  Don't wait around for a crash.
