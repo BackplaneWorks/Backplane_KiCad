@@ -17,6 +17,8 @@
 
 #include <kiplatform/embed.h>
 
+#include <wx/window.h>
+
 // macOS cannot parent an NSView across processes; embedding is not supported (a host keeps
 // KiCad as a separate window over the same IPC).
 
