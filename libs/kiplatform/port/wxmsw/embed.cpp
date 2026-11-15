@@ -406,7 +406,17 @@ HWND blockedFrame( HWND aWindow, std::string& aWhy )
         // Only up the child chain: GetParent of a popup is its owner, and a dialog over a hidden
         // frame (a message box during a prewarm) must still take the keyboard
         if( !( GetWindowLongPtrW( w, GWL_STYLE ) & WS_CHILD ) )
+        {
+            // A frame still being built for a prewarm is a top-level of its own until it is
+            // registered: a SetFocus in it (SCH_DRAW_PANEL's constructor) activated it
+            if( s_hooks.buildingForPrewarm && s_hooks.buildingForPrewarm( reinterpret_cast<uint64_t>( w ) ) )
+            {
+                aWhy = "being built for a prewarm";
+                return w;
+            }
+
             break;
+        }
     }
 
     return nullptr;

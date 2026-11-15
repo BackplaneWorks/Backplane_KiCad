@@ -240,6 +240,30 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
 
                 return false;
             };
+    hooks.buildingForPrewarm =
+            [this]( uint64_t aWindow ) -> bool
+            {
+                if( !m_enabled || m_prewarmOpening.empty() )
+                    return false;
+
+                for( const FRAME_ENTRY& e : m_frames )
+                {
+                    if( e.window == aWindow )
+                        return false;   // registered: focusBlocked decides
+                }
+
+                for( wxWindow* top : wxTopLevelWindows )
+                {
+                    if( KIPLATFORM::EMBED::WindowId( top ) != aWindow )
+                        continue;
+
+                    // A frame (not a dialog, not the project manager) that no one has seen yet
+                    return wxDynamicCast( top, wxFrame ) && !wxDynamicCast( top, wxDialog )
+                           && top != m_manager;
+                }
+
+                return false;
+            };
     hooks.popupKey =
             [this]( int aKeyCode, int aModifiers, const std::function<void()>& aClosePopup ) -> bool
             {

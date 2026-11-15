@@ -69,6 +69,11 @@ namespace EMBED
         /// on the UI thread refuses any focus or activation change into such a frame, whoever
         /// asks (wx restoring its last focus, a control taking focus as it is built).
         std::function<bool( uint64_t aWindow, std::string& aWhy )> focusBlocked;
+
+        /// Whether aWindow is a top-level frame being built for a prewarm (created while one is
+        /// opening, not registered yet): still a captioned top-level, so a SetFocus in it (a
+        /// draw panel's constructor) activated it.  Windows: refused like focusBlocked.
+        std::function<bool( uint64_t aWindow )> buildingForPrewarm;
     };
 
     /// A line for the platform's embed trace (Windows: BACKPLANE_KICAD_EMBED_TRACE's log and

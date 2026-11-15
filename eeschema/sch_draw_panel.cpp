@@ -20,6 +20,7 @@
  */
 
 
+#include <backplane_embed.h>
 #include <sch_draw_panel.h>
 
 #include <wx/debug.h>
@@ -88,7 +89,12 @@ SCH_DRAW_PANEL::SCH_DRAW_PANEL( wxWindow* aParentWindow, wxWindowID aWindowId,
     m_viewControls = new KIGFX::WX_VIEW_CONTROLS( m_view, this );
 
     SetEvtHandlerEnabled( true );
-    SetFocus();
+
+    // Not for a frame a prewarm is building (embedded): the frame is still a top-level then, and
+    // this SetFocus activated it, taking the person's keys (Carbon's bp-win trace, 00cba49eb5)
+    if( !BACKPLANE_EMBED::Get().PrewarmOpeningAny() )
+        SetFocus();
+
     Show( true );
     Raise();
     StartDrawing();

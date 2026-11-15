@@ -19,6 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <wx/filename.h>
 #include <wx/msgdlg.h>
 #include <wx/string.h>
@@ -217,8 +218,10 @@ EDA_3D_VIEWER_FRAME::EDA_3D_VIEWER_FRAME( KIWAY* aKiway, PCB_BASE_FRAME* aParent
 
     // Fixes bug in Windows (XP and possibly others) where the canvas requires the focus
     // in order to receive mouse events.  Otherwise, the user has to click somewhere on
-    // the canvas before it will respond to mouse wheel events.
-    m_canvas->SetFocus();
+    // the canvas before it will respond to mouse wheel events.  Not while a prewarm builds it
+    // (embedded): it is still a top-level, and the focus would activate it.
+    if( !BACKPLANE_EMBED::Get().PrewarmOpeningAny() )
+        m_canvas->SetFocus();
 }
 
 

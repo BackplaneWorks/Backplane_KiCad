@@ -338,6 +338,8 @@ public:
     /// person cannot see it.  A frame the host asked to show keeps KiCad's own focus.
     void SetPrewarmOpening( EMBED_FRAME_KIND aKind, bool aOpening );
     bool PrewarmOpening( FRAME_T aType ) const;
+    /// A prewarm is opening a frame of any kind (see SetPrewarmOpening)
+    bool PrewarmOpeningAny() const { return m_enabled && !m_prewarmOpening.empty(); }
     void EndPrewarm( wxFrame* aFrame );
     bool Prewarming() const;
 
