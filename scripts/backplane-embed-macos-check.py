@@ -133,8 +133,10 @@ def main():
         path = work / directory
         path.mkdir(parents=True, exist_ok=True, mode=0o700)
         env[variable] = str(path)
-    for version in ("", "10.0", "10.99"):
-        config = work / "config" / version
+    # KiCad on macOS keeps its settings in ~/Library/Preferences/kicad (KICAD_CONFIG_HOME aside):
+    # empty tables in both, so no first-run library dialog stops the UI thread
+    for version in [d / v for d in (Path("config"), Path("home/Library/Preferences/kicad")) for v in ("", "10.0", "10.99")]:
+        config = work / version
         config.mkdir(parents=True, exist_ok=True)
         (config / "sym-lib-table").write_text("(sym_lib_table\n  (version 7)\n)\n")
         (config / "fp-lib-table").write_text("(fp_lib_table\n  (version 7)\n)\n")
@@ -361,6 +363,19 @@ def main():
             final = api.request(embed.Close(mode=embed.CM_DISCARD), embed.CloseResponse)
             check(final.exiting, "Close discard answers exiting")
             check(wait_for(lambda: kicad.poll() is not None, 30), f"KiCad exited (status {kicad.poll()})")
+    except BaseException:
+        # Evidence of a hang: what is on screen, KiCad's stacks, every window's owner and title
+        shot("zz-failure")
+        if kicad is not None and kicad.poll() is None:
+            subprocess.run(["sample", str(kicad.pid), "3", "-file", str(args.out / "kicad-sample.txt")],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        listing = [{k: w.get(k) for k in ("kCGWindowNumber", "kCGWindowOwnerName", "kCGWindowName", "kCGWindowLayer",
+                                           "kCGWindowIsOnscreen")} | {"bounds": dict(w["kCGWindowBounds"])}
+                   for w in Quartz.CGWindowListCopyWindowInfo(Quartz.kCGWindowListOptionAll, Quartz.kCGNullWindowID)
+                   if w.get("kCGWindowOwnerPID") in {p.pid for p in (kicad, host) if p is not None}]
+        (args.out / "windows.json").write_text(json.dumps(listing, indent=2, default=str))
+        print(json.dumps(listing, indent=1, default=str)[:4000], flush=True)
+        raise
     finally:
         for process in (kicad, host):
             if process is not None and process.poll() is None:
