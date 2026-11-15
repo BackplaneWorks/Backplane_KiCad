@@ -561,6 +561,13 @@ std::optional<std::string> BACKPLANE_EMBED::CanvasInUse( wxFrame* aFrame, uint64
 }
 
 
+wxWindow* BACKPLANE_EMBED::Canvas( wxFrame* aFrame ) const
+{
+    const FRAME_ENTRY* e = aFrame ? entry( aFrame ) : nullptr;
+    return e && e->ops.canvas ? e->ops.canvas() : nullptr;
+}
+
+
 EMBED_FRAME_INFO BACKPLANE_EMBED::Info( wxFrame* aFrame ) const
 {
     if( const FRAME_ENTRY* e = entry( aFrame ) )
