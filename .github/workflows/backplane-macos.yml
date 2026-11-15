@@ -1,8 +1,9 @@
 name: Backplane KiCad macOS
 on:
   push:
-    branches: ['impl/macos-glb-bp6']
-    paths: ['.github/workflows/backplane-macos.yml', 'scripts/backplane-macos*', 'scripts/backplane-glb-concurrency-test.py', 'pcbnew/exporters/step/step_pcb_model.cpp']
+    # a release tag builds the macOS package beside the Linux and Windows ones (the integrator
+    # attaches it from this run's artifact)
+    tags: ['backplane-kicad-v*']
   workflow_dispatch:
 permissions:
   contents: read
