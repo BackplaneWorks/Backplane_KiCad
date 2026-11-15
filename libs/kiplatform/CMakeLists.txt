@@ -3,7 +3,7 @@ set( PLATFORM_COMPILE_DEFS "" )
 # Add port-specific files and definitions
 if( KICAD_WX_PORT STREQUAL osx )
     set( PLATFORM_SRCS
-        port/wxosx/embed.cpp
+        port/wxosx/embed.mm
         port/wxosx/touchpad.mm
         port/wxosx/ui.mm
         port/wxosx/webview.mm
@@ -63,6 +63,7 @@ if( APPLE )
         "-framework PDFKit"
         "-framework WebKit"
         "-framework CFNetwork"
+        "-framework QuartzCore"
         )
 elseif( WIN32 )
     list( APPEND PLATFORM_SRCS
