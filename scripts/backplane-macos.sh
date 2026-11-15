@@ -41,7 +41,8 @@ grep -Fqx "KICAD_VERSION_EXTRA:STRING=$version_extra" "$build/CMakeCache.txt" ||
 }
 # Verify generated/native protocol bindings before the expensive compile.
 python scripts/backplane-ipc-smoke.py --check-bindings
-cmake --build "$build" --parallel 3
+# -k 0: one CI round reports every compile error, not the first
+cmake --build "$build" --parallel 3 -- -k 0
 cmake --install "$build"
 bundle="$stage/KiCad.app"
 # Upstream installs the GUI bundle; explicitly retain its matched CLI as well.
