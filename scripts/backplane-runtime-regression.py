@@ -25,7 +25,7 @@ CAPABILITIES = {"api-server", "headless-pcb", "headless-sch", "export-v10", "par
                 "capabilities", "sketch-route", "board-structure", "assembly", "idle-exit",
                 "shutdown", "api-descriptor", "symbol-from-libid", "footprint-partial-update",
                 "drc-zone-guard", "rules-insert-position", "plan-keys", "runaction-frame", "task-gate-reads",
-                "no-load-migration"}
+                "no-load-migration", "api-handler-order"}
 
 
 def check_describe(cli, env):

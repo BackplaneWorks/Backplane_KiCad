@@ -53,6 +53,8 @@ class SCH_SHEET_PATH;
 class API_HANDLER_SCH : public API_HANDLER_EDITOR
 {
 public:
+    int DispatchRank() const override { return RANK_SCH_EDITOR; }
+
     API_HANDLER_SCH( SCH_EDIT_FRAME* aFrame );
     API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext, SCH_EDIT_FRAME* aFrame = nullptr );
     ~API_HANDLER_SCH() override;

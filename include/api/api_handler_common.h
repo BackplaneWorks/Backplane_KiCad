@@ -38,6 +38,8 @@ using google::protobuf::Empty;
 class API_HANDLER_COMMON : public API_HANDLER
 {
 public:
+    int DispatchRank() const override { return RANK_COMMON; }
+
     using OPEN_DOCUMENT_HANDLER = std::function<HANDLER_RESULT<commands::OpenDocumentResponse>(
             const commands::OpenDocument& )>;
     using CREATE_DOCUMENT_HANDLER = std::function<HANDLER_RESULT<commands::OpenDocumentResponse>(

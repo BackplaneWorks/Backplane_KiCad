@@ -108,6 +108,9 @@ public:
      */
     void RegisterHandler( API_HANDLER* aHandler );
 
+    /// The registered handlers in the order a request is offered to them (api-handler-order)
+    const std::vector<API_HANDLER*>& Handlers() const { return m_handlers; }
+
     void DeregisterHandler( API_HANDLER* aHandler );
 
     void SetReadyToReply( bool aReady = true );
@@ -199,7 +202,8 @@ private:
 
     std::unique_ptr<KINNG_REQUEST_SERVER> m_server;
 
-    std::set<API_HANDLER*> m_handlers;
+    /// In dispatch order: by API_HANDLER::DispatchRank, then by registration (api-handler-order)
+    std::vector<API_HANDLER*> m_handlers;
 
     std::string m_token;
 
