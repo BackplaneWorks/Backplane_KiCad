@@ -53,6 +53,11 @@ python scripts/backplane-macos-relocate.py "$bundle" | tee "$release/relocation.
 root="$release/backplane-kicad-darwin-$(uname -m)-$version"
 mkdir -p "$root/bin" "$root/share/backplane" "$root/licenses"
 cp -R "$bundle" "$root/KiCad.app"
+# Relocation re-signed each Mach-O it changed, which left the bundles' own signatures stale
+# ("nested code is modified or invalid"): sign the whole bundle again, ad hoc, inside out, and
+# verify it (Gatekeeper is not involved: the hub's download is never quarantined)
+codesign --force --deep --sign - "$root/KiCad.app"
+codesign --verify --deep --strict "$root/KiCad.app"
 # Backplane's packaged IPC helper loads the runtime's nng from root/lib.
 # Alias the whole directory so dependent @loader_path names keep working.
 ln -s KiCad.app/Contents/Frameworks "$root/lib"
@@ -67,6 +72,24 @@ export DYLD_FALLBACK_LIBRARY_PATH="$root/KiCad.app/Contents/Frameworks${DYLD_FAL
 exec "$root/KiCad.app/Contents/MacOS/kicad-cli" "$@"
 LAUNCHER
 chmod +x "$root/bin/kicad-cli"
+# The GUI programs, for the hub's Open in KiCad (program beside the CLI) and its embedded KiCad
+for tool in kicad pcbnew eeschema; do
+  for rel in "KiCad.app/Contents/MacOS/$tool" "KiCad.app/Contents/Applications/$tool.app/Contents/MacOS/$tool"; do
+    [ -x "$root/$rel" ] || continue
+    cat > "$root/bin/$tool" <<LAUNCHER
+#!/bin/sh
+set -eu
+root=\$(CDPATH= cd -- "\$(dirname -- "\$0")/.." && pwd)
+export KICAD_KIFACE_HOME="\$root/KiCad.app/Contents/PlugIns"
+export KICAD_STOCK_PLUGIN_HOME="\$root/KiCad.app/Contents/PlugIns"
+export DYLD_FALLBACK_LIBRARY_PATH="\$root/KiCad.app/Contents/Frameworks\${DYLD_FALLBACK_LIBRARY_PATH:+:\$DYLD_FALLBACK_LIBRARY_PATH}"
+exec "\$root/$rel" "\$@"
+LAUNCHER
+    chmod +x "$root/bin/$tool"
+    break
+  done
+  [ -x "$root/bin/$tool" ] || { echo "no $tool in the bundle" >&2; exit 2; }
+done
 cp LICENSE* COPYING* AUTHORS* "$root/licenses/" 2>/dev/null || true
 mkdir -p "$root/licenses/nng"
 cp "$nng_source/LICENSE.txt" "$root/licenses/nng/"
