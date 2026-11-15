@@ -371,6 +371,52 @@ BOOST_FIXTURE_TEST_CASE( SetBoardDesignRules, API_SERVER_E2E_FIXTURE )
 }
 
 
+// The headless api-server never discards unsaved work unasked: CloseAllDocuments without force is
+// refused while a document has unsaved changes, and closes with force (the hub relies on this to
+// keep an agent's edit when it retires or evicts a server)
+BOOST_FIXTURE_TEST_CASE( CloseAllDocumentsKeepsUnsavedWorkUnlessForced, API_SERVER_E2E_FIXTURE )
+{
+    BOOST_REQUIRE_MESSAGE( Start(), LastError() );
+
+    TEMP_KITCHEN_SINK_COPY fixtureCopy;
+    wxString               copyError;
+
+    BOOST_REQUIRE_MESSAGE( fixtureCopy.Create( &copyError ), copyError );
+
+    kiapi::common::types::DocumentSpecifier document;
+
+    BOOST_REQUIRE_MESSAGE( Client().OpenDocument( fixtureCopy.BoardPath(), &document ),
+                           "OpenDocument failed: " + Client().LastError() );
+
+    kiapi::board::commands::BoardDesignRulesResponse getResponse;
+
+    BOOST_REQUIRE_MESSAGE( SendGetBoardDesignRules( Client(), document, &getResponse, &copyError ),
+                           "GetBoardDesignRules failed: " + copyError );
+
+    kiapi::board::commands::SetBoardDesignRules setRequest;
+    *setRequest.mutable_board() = document;
+    *setRequest.mutable_rules()->mutable_constraints() = getResponse.rules().constraints();
+    setRequest.mutable_rules()->mutable_constraints()->mutable_min_track_width()->set_value_nm(
+            getResponse.rules().constraints().min_track_width().value_nm() + 1000 );
+
+    kiapi::common::ApiResponse setApiResponse;
+
+    BOOST_REQUIRE_MESSAGE( Client().SendCommand( setRequest, &setApiResponse ),
+                           "SetBoardDesignRules failed to send: " + Client().LastError() );
+    BOOST_REQUIRE( setApiResponse.status().status() == kiapi::common::AS_OK );
+
+    kiapi::common::ApiStatusCode status = kiapi::common::AS_UNKNOWN;
+
+    BOOST_CHECK( !Client().CloseAllDocuments( false, &status ) );
+    BOOST_CHECK( status == kiapi::common::AS_BAD_REQUEST );
+    BOOST_CHECK_EQUAL( Client().LastError(), wxString( wxS( "unsaved changes; save first or pass force" ) ) );
+
+    BOOST_CHECK_MESSAGE( Client().CloseAllDocuments( true, &status ),
+                         "CloseAllDocuments with force failed: " + Client().LastError() );
+    BOOST_CHECK( status == kiapi::common::AS_OK );
+}
+
+
 BOOST_FIXTURE_TEST_CASE( SetBoardDesignRules_ValidationFailure, API_SERVER_E2E_FIXTURE )
 {
     BOOST_REQUIRE_MESSAGE( Start(), LastError() );

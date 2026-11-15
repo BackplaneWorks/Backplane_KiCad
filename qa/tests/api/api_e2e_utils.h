@@ -400,13 +400,19 @@ public:
         return true;
     }
 
-    bool CloseAllDocuments()
+    /// aForce: discard unsaved changes (without it the headless api-server refuses while any
+    /// document has them, as CloseAllDocuments.force documents)
+    bool CloseAllDocuments( bool aForce = false, kiapi::common::ApiStatusCode* aStatus = nullptr )
     {
         kiapi::common::commands::CloseAllDocuments request;
         kiapi::common::ApiResponse                 response;
+        request.set_force( aForce );
 
         if( !send( request, response ) )
             return false;
+
+        if( aStatus )
+            *aStatus = response.status().status();
 
         if( response.status().status() != kiapi::common::AS_OK )
         {
@@ -495,8 +501,9 @@ public:
         {
             if( isProcessAlive() )
             {
-                // A new testcase is starting up, make sure old things are closed
-                Client().CloseAllDocuments();
+                // A new testcase is starting up, make sure old things are closed, unsaved changes
+                // a previous case left included (cleanup discards them)
+                Client().CloseAllDocuments( true );
                 return true;
             }
 
@@ -764,7 +771,9 @@ public:
 
     ~API_SERVER_E2E_FIXTURE()
     {
-        API_SERVER_MANAGER::Instance().Client().CloseAllDocuments();
+        // Cleanup discards whatever the case changed: without force the server keeps a modified
+        // document open, and every later case's open is refused
+        API_SERVER_MANAGER::Instance().Client().CloseAllDocuments( true );
     }
 
     /// Starts the API server if not already running.  If running, closes any open documents.
