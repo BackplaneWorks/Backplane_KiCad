@@ -55,6 +55,10 @@ void fillFrame( FrameInfo* aOut, const EMBED_FRAME_INFO& aIn )
 
     for( const wxString& file : aIn.files )
         aOut->add_files( file.ToStdString( wxConvUTF8 ) );
+
+    aOut->set_canvas_input_ago_ms( aIn.canvasInputAgoMs );
+    aOut->set_tool_busy( aIn.toolBusy );
+    aOut->set_tool_name( aIn.toolName );
 }
 
 
