@@ -1,0 +1,10 @@
+{
+  "jetson-agx-thor-baseboard": {
+    "max_silence_ms": 853,
+    "measured_ms": 742
+  },
+  "video": {
+    "max_silence_ms": 246,
+    "measured_ms": 214
+  }
+}
