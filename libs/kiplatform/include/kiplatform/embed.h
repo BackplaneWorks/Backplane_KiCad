@@ -176,6 +176,17 @@ namespace EMBED
     /// Move aWindow (a frame inside the holder) to the given holder-relative rectangle.
     void SetFrameGeometry( wxWindow* aFrame, int aX, int aY, int aWidth, int aHeight );
 
+    /// Place aFrame where a prewarm lays it out and paints it unseen, at aWidth x aHeight.  X11
+    /// and Windows: off the container at (-30000, -30000).  macOS: ordered in transparent, behind
+    /// everything, ignoring the mouse, never key.
+    void ParkForPrewarm( wxWindow* aFrame, int aWidth, int aHeight );
+
+    /// macOS: the host's container rect in screen points (top-left origin of the primary
+    /// display); visible false orders every frame out (they stay shown to KiCad), raise orders
+    /// the shown frames just above the host window.  Elsewhere nothing (frames are children of
+    /// the container).
+    void SetHostRect( int aX, int aY, int aWidth, int aHeight, bool aVisible, bool aRaise );
+
     /**
      * True if the toolkit shows a modal window that wx does not track (for example a native
      * message box run by the toolkit's own loop); aTitle gets its title.

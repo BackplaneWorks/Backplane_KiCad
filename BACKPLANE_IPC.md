@@ -109,6 +109,9 @@ The other bp.13 embed features have one capability each in the embedded GUI's `G
 | `embed-checks` | DRC and ERC in the open editor | `RunChecks`, `GetMarkers`, `SelectItems` by id or place, `ET_CHECKS_DONE` |
 | `embed-host-markers` | the host's own markers on the canvas | `SetHostMarkers`, `ET_MARKER_CLICKED` |
 | `embed-request-actor` | who caused a show request | `Event.detail` of `ET_SHOW_REQUESTED` and `ET_EDITOR_REQUESTED` is the API client whose request made KiCad ask (an agent's or the host's own `RunAction`, ...), empty for the person and KiCad on its own; without the capability it is always empty. DRC parity loads the schematic hidden and asks for nothing |
+| `embed-macos` | embedding on macOS | frames are borderless top-level windows placed in screen points over the host's pane and ordered just above the host window (`--parent-window` is the host's CGWindowID); KiCad runs as an accessory app. The host sends `SetHostGeometry` and reads `ET_RESERVED_KEY` |
+| `embed-host-geometry` | `SetHostGeometry` | `{x, y, width, height, visible, raise}`: the container's rect in screen points; `visible` false orders every frame out without changing `shown`/`realized`; `raise` orders the shown frames above the host. Also served on the events socket |
+| `embed-reserved-key-event` | reserved chords as events | `ET_RESERVED_KEY` with `Event.reserved_key {index, key_code, modifiers, window, chord}`; index 63 is the comment key. On macOS `Ctrl` in `SetReservedKeys` is Cmd |
 | `canvas-idle` | the person's input on each canvas | `FrameInfo.canvas_input_ago_ms` (ms since the last button, drag, wheel or key on that frame's canvas; max uint64 for none; hovering does not count), `tool_busy` (an interactive tool mid-operation: a move, a track started, a shape after its first point), `tool_name`. `RunChecks.min_canvas_idle_ms`: when non-zero, refused at once with `AS_BUSY` "canvas in use: <frame>, input N ms ago / tool T busy" while the checked frame's canvas had input within it or its tool is busy (DRC with parity: also a busy schematic tool). KiCad never waits or queues: it refuses or runs |
 | `click-marker` | a marker click by id | `ClickMarker{kind, marker \| host{set,id}, zoom}` does what a left click on that marker does, by the same code: a DRC/ERC marker becomes the selection (message panel, the DRC/ERC dialog's row) and one `ET_MARKER_CLICKED` is posted with the fields a real click gives; reply `event_seq`. No view change unless `zoom`; an ERC marker on another sheet shows that sheet. Unknown id: `AS_BAD_REQUEST` "ClickMarker: no marker ..."; frame not open: `AS_UNHANDLED`; during a task: `AS_BUSY` |
 | `runaction-frame` | which editor runs a `RunAction` | `RunAction.frame` (field 100) names it (`FT_PCB_EDITOR`, `FT_SCHEMATIC_EDITOR`); a named frame that cannot run it is refused at once with `AS_BAD_REQUEST` and the error message `RunAction: <FrameType> is not open`, `... does not accept actions` (only the PCB and schematic editors take actions) or `... has no action <name>`. With no frame, an `eeschema.*` action goes to the schematic editor and any other (`pcbnew.*`, and shared ones such as `common.Interactive.undo`) to the PCB editor while one is open, else to the schematic editor. Before it, with both editors open, a shared action could reach either |
@@ -124,9 +127,12 @@ it here in the same change):
 | 26 | `ET_MARKER_CLICKED` (host and DRC/ERC marker clicks) | bp.13 |
 | 27 | `ET_CHECKS_DONE` (RunChecks) | bp.13 |
 | 28 | `ET_FRAME_DRAWN` (cold start) | bp.13 |
+| 29 | `ET_NOTICE` (reserved by fix/win-dialog-events, not merged yet) | bp.13 |
+| 30 | `ET_RESERVED_KEY` (macOS reserved chords and comment key) | bp.13 |
 
 Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `files`; `Event` 8
-`marker`, 9 `checks`, 10 `drc_marker` (all landed in bp.13).
+`marker`, 9 `checks`, 10 `drc_marker`, 11 `reserved_key` (bp.13); messages `ReservedKey`,
+`SetHostGeometry` (macOS, bp.13).
 
 ## Files
 

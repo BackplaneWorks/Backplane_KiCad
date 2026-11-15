@@ -90,7 +90,8 @@ enum class EMBED_EVENT_TYPE : int
     EDITOR_REQUESTED = 25,
     MARKER_CLICKED = 26,
     CHECKS_DONE = 27,
-    FRAME_DRAWN = 28
+    FRAME_DRAWN = 28,
+    RESERVED_KEY = 30
 };
 
 /// Values match kiapi.backplane.embed.ThemeMode.
@@ -257,6 +258,12 @@ struct EMBED_EVENT
     std::string      markerId;
     std::string      drcMarker;       ///< MARKER_CLICKED on a DRC/ERC marker: a serialized
                                       ///< kiapi.backplane.embed.Marker
+    /// RESERVED_KEY only (macOS)
+    int              keyIndex = -1;
+    int              keyCode = 0;
+    int              keyModifiers = 0;
+    uint64_t         keyWindow = 0;
+    std::string      keyChord;
 };
 
 
@@ -332,6 +339,10 @@ public:
 
     /// Lay out and paint a hidden frame once off-screen, then hide it again (ShowFrame.prewarm).
     void Prewarm( wxFrame* aFrame, int aWidth, int aHeight );
+
+    /// SetHostGeometry from any thread: the newest rect is applied on the UI thread
+    /// (KIPLATFORM::EMBED::SetHostRect).  macOS only does anything with it.
+    void SetHostGeometryLater( int aX, int aY, int aWidth, int aHeight, bool aVisible, bool aRaise );
 
     /// A prewarm is opening a frame of this kind (from the request until Prewarm() takes it, or
     /// the open fails): the project manager's ShowPlayer gives such a frame no focus, as the
@@ -446,6 +457,10 @@ public:
     // Events (thread-safe)
     void PushEvent( EMBED_EVENT_TYPE aType, const EMBED_FRAME_INFO& aFrame,
                     const std::string& aDetail = std::string() );
+
+    /// RESERVED_KEY (macOS: no container window to post _BACKPLANE_KEY to).  UI thread.
+    void PushReservedKey( uint64_t aWindow, int aIndex, int aKeyCode, int aModifiers,
+                          const std::string& aChord );
 
     /// Events with seq > aSince, waiting up to aWaitMs for the first.  aLost is set when some
     /// were dropped.  Returns the seq to pass next time.
@@ -700,6 +715,16 @@ private:
     void traceLoop( double aStartMs, double aDurMs );
     std::map<wxFrame*, wxString>   m_conflicts;   ///< frame -> file with a pending conflict
     std::set<wxFrame*>             m_prewarming;  ///< frames being painted off-screen
+
+    struct HOST_RECT
+    {
+        int  x = 0, y = 0, width = 0, height = 0;
+        bool visible = true, raise = false;
+    };
+
+    std::mutex m_hostRectMutex;
+    HOST_RECT  m_hostRect;
+    bool       m_hostRectPending = false;
     std::set<EMBED_FRAME_KIND>     m_prewarmOpening;  ///< kinds a prewarm is opening
 
     wxTimer m_pollTimer;

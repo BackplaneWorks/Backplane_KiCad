@@ -112,6 +112,7 @@ API_HANDLER_EMBED::API_HANDLER_EMBED( KIWAY& aKiway ) :
     registerHandler<ShowFrame, ShowFrameResponse>( &API_HANDLER_EMBED::handleShowFrame );
     registerHandler<OpenGerbers, OpenGerbersResponse>( &API_HANDLER_EMBED::handleOpenGerbers );
     registerHandler<HideFrame, HideFrameResponse>( &API_HANDLER_EMBED::handleHideFrame, true );
+    registerHandler<SetHostGeometry, SetHostGeometryResponse>( &API_HANDLER_EMBED::handleSetHostGeometry, true );
     registerHandler<GetFrames, GetFramesResponse>( &API_HANDLER_EMBED::handleGetFrames, true );
     registerHandler<NextEvents, NextEventsResponse>( &API_HANDLER_EMBED::handleNextEvents, true );
     registerHandler<SetChrome, SetChromeResponse>( &API_HANDLER_EMBED::handleSetChrome, true );
@@ -434,6 +435,16 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
     fillFrame( response.mutable_frame(), embed.Info( frame ) );
     fillAllFrames( response.mutable_frames() );
     return response;
+}
+
+
+HANDLER_RESULT<SetHostGeometryResponse> API_HANDLER_EMBED::handleSetHostGeometry(
+        const HANDLER_CONTEXT<SetHostGeometry>& aCtx )
+{
+    // On the UI thread already: applied now (the events socket's copy defers to here)
+    KIPLATFORM::EMBED::SetHostRect( aCtx.Request.x(), aCtx.Request.y(), aCtx.Request.width(),
+                                    aCtx.Request.height(), aCtx.Request.visible(), aCtx.Request.raise() );
+    return SetHostGeometryResponse();
 }
 
 

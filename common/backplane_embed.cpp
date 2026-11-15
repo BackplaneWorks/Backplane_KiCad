@@ -1087,8 +1087,14 @@ bool BACKPLANE_EMBED::SendCommentKey( const wxFrame* aFrame )
         return false;
 
     const FRAME_ENTRY* e = entry( aFrame );
+
+#ifdef __WXOSX__
+    // No container window to post to: an event (embed-reserved-key-event)
+    PushReservedKey( e ? e->window : 0, static_cast<int>( COMMENT_KEY_INDEX ), ';', 0, std::string() );
+#else
     long data[5] = { static_cast<long>( e ? e->window : 0 ), keysymFor( ';' ), 0, COMMENT_KEY_INDEX, 1 };
     KIPLATFORM::EMBED::SendHostMessage( m_parent, KEY_ATOM, KEY_WM_APP_OFFSET, data );
+#endif
     return true;
 }
 
@@ -1106,6 +1112,12 @@ std::vector<std::string> BACKPLANE_EMBED::ReservedKeys() const
 
 void BACKPLANE_EMBED::postReservedKey( uint64_t aWindow, size_t aIndex, int aKeyCode, int aModifiers )
 {
+#ifdef __WXOSX__
+    PushReservedKey( aWindow, static_cast<int>( aIndex ), aKeyCode, aModifiers,
+                     aIndex < m_reserved.size() ? m_reserved[aIndex].text : std::string() );
+    return;
+#endif
+
     long data[5] = { static_cast<long>( aWindow ), keysymFor( aKeyCode ), xModifiersFor( aModifiers ),
                      static_cast<long>( aIndex ), 1 };
     KIPLATFORM::EMBED::SendHostMessage( m_parent, KEY_ATOM, KEY_WM_APP_OFFSET, data );
@@ -1114,6 +1126,11 @@ void BACKPLANE_EMBED::postReservedKey( uint64_t aWindow, size_t aIndex, int aKey
 
 void BACKPLANE_EMBED::sendFocusMessage( wxFrame* aFrame )
 {
+#ifdef __WXOSX__
+    // No container window to post _BACKPLANE_FOCUS to: ET_FOCUS_IN covers it
+    return;
+#endif
+
     const FRAME_ENTRY* e = entry( aFrame );
 
     if( !e )
@@ -1410,6 +1427,37 @@ void BACKPLANE_EMBED::PushEvent( EMBED_EVENT_TYPE aType, const EMBED_FRAME_INFO&
 }
 
 
+void BACKPLANE_EMBED::PushReservedKey( uint64_t aWindow, int aIndex, int aKeyCode, int aModifiers,
+                                       const std::string& aChord )
+{
+    {
+        std::lock_guard<std::mutex> lock( m_eventMutex );
+
+        EMBED_EVENT event;
+        event.seq = m_nextSeq++;
+        event.type = EMBED_EVENT_TYPE::RESERVED_KEY;
+        event.keyIndex = aIndex;
+        event.keyCode = aKeyCode;
+        event.keyModifiers = aModifiers;
+        event.keyWindow = aWindow;
+        event.keyChord = aChord;
+
+        for( const FRAME_ENTRY& e : m_frames )
+        {
+            if( e.window == aWindow )
+                event.frame = info( e );
+        }
+
+        m_events.push_back( event );
+
+        while( m_events.size() > MAX_EVENTS )
+            m_events.pop_front();
+    }
+
+    m_eventCv.notify_all();
+}
+
+
 uint64_t BACKPLANE_EMBED::NextEvents( uint64_t aSince, int aWaitMs, size_t aMax,
                                       std::vector<EMBED_EVENT>& aEvents, bool& aLost )
 {
@@ -1532,8 +1580,9 @@ void BACKPLANE_EMBED::eventServerThread()
         ApiResponse response;
         response.mutable_header()->set_kicad_token( s_eventToken );
 
-        kiapi::backplane::embed::NextEvents     poll;
-        kiapi::backplane::embed::CancelProgress cancel;
+        kiapi::backplane::embed::NextEvents      poll;
+        kiapi::backplane::embed::CancelProgress  cancel;
+        kiapi::backplane::embed::SetHostGeometry geometry;
 
         if( !parsed )
         {
@@ -1558,11 +1607,21 @@ void BACKPLANE_EMBED::eventServerThread()
                         "no running cancellable job with that id" );
             }
         }
+        else if( request.message().UnpackTo( &geometry ) )
+        {
+            // Not on this thread: windows are the UI thread's.  Replied at once; the move runs at
+            // the UI thread's next event (a busy UI thread still delays it)
+            SetHostGeometryLater( geometry.x(), geometry.y(), geometry.width(), geometry.height(),
+                                  geometry.visible(), geometry.raise() );
+            response.mutable_status()->set_status( ApiStatusCode::AS_OK );
+            response.mutable_message()->PackFrom( kiapi::backplane::embed::SetHostGeometryResponse() );
+        }
         else if( !request.message().UnpackTo( &poll ) )
         {
             response.mutable_status()->set_status( ApiStatusCode::AS_UNHANDLED );
             response.mutable_status()->set_error_message(
-                    "this socket serves only kiapi.backplane.embed.NextEvents and CancelProgress" );
+                    "this socket serves only kiapi.backplane.embed.NextEvents, CancelProgress and "
+                    "SetHostGeometry" );
         }
         else
         {
@@ -2264,6 +2323,40 @@ bool BACKPLANE_EMBED::PrewarmOpening( FRAME_T aType ) const
 }
 
 
+void BACKPLANE_EMBED::SetHostGeometryLater( int aX, int aY, int aWidth, int aHeight, bool aVisible,
+                                            bool aRaise )
+{
+    // Coalesced: during a drag only the newest rect matters
+    {
+        std::lock_guard<std::mutex> lock( m_hostRectMutex );
+        bool pending = m_hostRectPending;
+        m_hostRect = { aX, aY, aWidth, aHeight, aVisible, aRaise };
+        m_hostRectPending = true;
+
+        if( pending )
+            return;
+    }
+
+    if( !wxTheApp )
+        return;
+
+    wxTheApp->CallAfter(
+            [this]()
+            {
+                HOST_RECT rect;
+
+                {
+                    std::lock_guard<std::mutex> lock( m_hostRectMutex );
+                    rect = m_hostRect;
+                    m_hostRectPending = false;
+                }
+
+                KIPLATFORM::EMBED::SetHostRect( rect.x, rect.y, rect.width, rect.height, rect.visible,
+                                                rect.raise );
+            } );
+}
+
+
 void BACKPLANE_EMBED::Prewarm( wxFrame* aFrame, int aWidth, int aHeight )
 {
     if( !IsEmbedded( aFrame ) || aFrame->IsShown() || m_prewarming.count( aFrame ) )
@@ -2273,7 +2366,7 @@ void BACKPLANE_EMBED::Prewarm( wxFrame* aFrame, int aWidth, int aHeight )
     // which builds its layout, its canvas's GL context and its first view; then hide it again.
     m_prewarming.insert( aFrame );
     TRACE_SCOPE trace( "embed:prewarm@" + aFrame->GetName().ToStdString( wxConvUTF8 ) );
-    KIPLATFORM::EMBED::SetFrameGeometry( aFrame, -30000, -30000, std::max( aWidth, 400 ), std::max( aHeight, 300 ) );
+    KIPLATFORM::EMBED::ParkForPrewarm( aFrame, std::max( aWidth, 400 ), std::max( aHeight, 300 ) );
 
     // Never activated: on Windows an activated prewarm kept the activation while hidden, and the
     // next click on an editor tab gave the person's keys to it.  A focus it takes anyway (a

@@ -221,6 +221,10 @@ enum EventType
                              // ShowFrame of a hidden frame; not for a prewarm.  detail = JSON
                              // {ms (since the ShowFrame), canvas: [width, height]} (bp.13).  A
                              // frame with no drawing canvas never posts it: cap the wait
+  ET_RESERVED_KEY      = 30; // macOS (embed-reserved-key-event): a host-reserved chord or the
+                             // comment key pressed in KiCad; Event.reserved_key.  Where the host
+                             // has a container window the chord arrives as _BACKPLANE_KEY / WM_APP
+                             // instead (bp.13)
 }
 
 message Event
@@ -235,6 +239,39 @@ message Event
   MarkerRef marker     = 8;  // ET_MARKER_CLICKED on a host marker (bp.13)
   Checks    checks     = 9;  // ET_CHECKS_DONE only (bp.13)
   Marker    drc_marker = 10; // ET_MARKER_CLICKED on a DRC/ERC marker (bp.13)
+  ReservedKey reserved_key = 11; // ET_RESERVED_KEY only (bp.13)
+}
+
+// A reserved chord pressed in an embedded frame (ET_RESERVED_KEY).
+message ReservedKey
+{
+  int32  index     = 1;  // the chord's index in SetReservedKeys, or 63 for the comment key
+  int32  key_code  = 2;  // wx key code (letters upper case)
+  int32  modifiers = 3;  // wx modifier bits: 1 Alt, 2 Ctrl (Cmd on macOS), 4 Shift, 8 Meta
+                         // (Control on macOS)
+  uint64 window    = 4;  // FrameInfo.window of the frame it was pressed in, 0 for none
+  string chord     = 5;  // the chord as given to SetReservedKeys ("Ctrl+K"), "" for the comment key
+}
+
+// macOS (embed-host-geometry): where the host's container is, so KiCad places its frames there.
+// Frames are their own borderless windows, positioned in screen points over the container (top-
+// left origin of the primary display); ShowFrame's x, y stay container-relative.  visible = false
+// orders every frame out without changing what is shown (FrameInfo.shown, realized); true orders
+// the shown ones back.  raise orders the shown frames just above the host window.  Served on the
+// events socket too, so a move never waits behind a request on the main socket.  Elsewhere a
+// no-op.
+message SetHostGeometry
+{
+  int32 x       = 1;
+  int32 y       = 2;
+  int32 width   = 3;
+  int32 height  = 4;
+  bool  visible = 5;
+  bool  raise   = 6;
+}
+
+message SetHostGeometryResponse
+{
 }
 
 // Long poll.  Returns the events with seq > since, waiting up to wait_ms (at most 60000)

@@ -147,6 +147,16 @@ void FillEmbedEvent( kiapi::backplane::embed::Event* aOut, const EMBED_EVENT& aI
 
     if( !aIn.drcMarker.empty() )
         aOut->mutable_drc_marker()->ParseFromString( aIn.drcMarker );
+
+    if( aIn.type == EMBED_EVENT_TYPE::RESERVED_KEY )
+    {
+        kiapi::backplane::embed::ReservedKey* key = aOut->mutable_reserved_key();
+        key->set_index( aIn.keyIndex );
+        key->set_key_code( aIn.keyCode );
+        key->set_modifiers( aIn.keyModifiers );
+        key->set_window( aIn.keyWindow );
+        key->set_chord( aIn.keyChord );
+    }
 }
 
 

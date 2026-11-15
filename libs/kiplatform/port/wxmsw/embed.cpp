@@ -1176,3 +1176,14 @@ void KIPLATFORM::EMBED::MakeTransientFor( wxWindow* aDialog, uint64_t aToplevel 
         SetWindowPos( dialog, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE );
     }
 }
+
+
+void KIPLATFORM::EMBED::ParkForPrewarm( wxWindow* aFrame, int aWidth, int aHeight )
+{
+    SetFrameGeometry( aFrame, -30000, -30000, aWidth, aHeight );
+}
+
+
+void KIPLATFORM::EMBED::SetHostRect( int, int, int, int, bool, bool )
+{
+}
