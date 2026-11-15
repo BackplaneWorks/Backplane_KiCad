@@ -61,6 +61,23 @@ Get-ChildItem $stageRoot -Recurse -File -Filter '*.pdb' | ForEach-Object {
     Move-Item $_.FullName $destination
 }
 if (!(Get-ChildItem $symbols -Recurse -Filter 'kicad.pdb')) { Write-Warning 'WINDOWS_SYMBOLS_MISSING: kicad.pdb is not in the symbols archive' }
+# Not every target installs its PDB (kicommon.dll did not), so a stall stack through it could not be
+# resolved: every KiCad DLL and EXE in the stage whose PDB is not in the archive yet gets it from the
+# build tree, beside where the binary sits in the runtime
+$binRoot = Join-Path $stageRoot 'bin'
+Get-ChildItem $binRoot -File | Where-Object { $_.Extension -in '.dll', '.exe', '.kiface' } | ForEach-Object {
+    $pdbName = [IO.Path]::GetFileNameWithoutExtension($_.Name) + '.pdb'
+    $target = Join-Path (Join-Path $symbols 'bin') $pdbName
+    if (!(Test-Path $target)) {
+        $found = Get-ChildItem $build -Recurse -File -Filter $pdbName -ErrorAction SilentlyContinue |
+                 Where-Object { $_.FullName -notmatch '\\vcpkg_installed\\' } | Select-Object -First 1
+        if ($found) {
+            New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
+            Copy-Item $found.FullName $target
+        }
+    }
+}
+if (!(Get-ChildItem $symbols -Recurse -Filter 'kicommon.pdb')) { Write-Warning 'WINDOWS_SYMBOLS_MISSING: kicommon.pdb is not in the symbols archive' }
 $installed = Join-Path $build 'vcpkg_installed\x64-windows'
 $bin = Join-Path $stage 'bin'
 # vcpkg's app-local copies are in the build tree; the relocated runtime needs
