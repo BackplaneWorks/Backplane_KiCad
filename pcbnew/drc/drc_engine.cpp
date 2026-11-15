@@ -88,6 +88,88 @@ void drcPrintDebugMessage( int level, const wxString& msg, const char *function,
 }
 
 
+// Defined before the constructor: libc++ needs the element type of m_pending complete where the
+// vector members are instantiated (macOS; libstdc++ and MSVC accept it later).
+namespace
+{
+/// Captures the path a provider's path generator sets on a marker, so it can be replayed onto
+/// the real marker after the violation has been buffered.
+class PATH_CAPTURE_MARKER : public PCB_MARKER
+{
+public:
+    using PCB_MARKER::PCB_MARKER;
+
+    const VECTOR2I& PathStart() const { return m_pathStart; }
+    const VECTOR2I& PathEnd() const { return m_pathEnd; }
+};
+
+
+int compareKiids( const std::vector<KIID>& a, const std::vector<KIID>& b )
+{
+    for( size_t ii = 0; ii < std::min( a.size(), b.size() ); ++ii )
+    {
+        if( a[ii] < b[ii] )
+            return -1;
+
+        if( b[ii] < a[ii] )
+            return 1;
+    }
+
+    return a.size() < b.size() ? -1 : ( a.size() > b.size() ? 1 : 0 );
+}
+} // namespace
+
+
+struct DRC_ENGINE::PENDING_VIOLATION
+{
+    std::shared_ptr<DRC_ITEM>            item;
+    VECTOR2I                             pos;
+    int                                  layer = UNDEFINED_LAYER;
+    std::shared_ptr<PATH_CAPTURE_MARKER> path;     // set when the provider gave a path generator
+
+    // Canonical order: everything the report shows about the violation, so that two violations
+    // which compare equal are indistinguishable in the report.
+    std::vector<KIID>                    ids;
+    wxString                             message;
+    wxString                             rule;
+
+    bool operator<( const PENDING_VIOLATION& aOther ) const
+    {
+        if( item->GetErrorCode() != aOther.item->GetErrorCode() )
+            return item->GetErrorCode() < aOther.item->GetErrorCode();
+
+        if( pos.x != aOther.pos.x )
+            return pos.x < aOther.pos.x;
+
+        if( pos.y != aOther.pos.y )
+            return pos.y < aOther.pos.y;
+
+        if( layer != aOther.layer )
+            return layer < aOther.layer;
+
+        if( int cmp = compareKiids( ids, aOther.ids ) )
+            return cmp < 0;
+
+        if( int cmp = message.Cmp( aOther.message ) )
+            return cmp < 0;
+
+        if( int cmp = rule.Cmp( aOther.rule ) )
+            return cmp < 0;
+
+        if( !path || !aOther.path )
+            return !path && aOther.path;
+
+        if( path->PathStart() != aOther.path->PathStart() )
+            return path->PathStart() < aOther.path->PathStart();
+
+        if( path->PathEnd() != aOther.path->PathEnd() )
+            return path->PathEnd() < aOther.path->PathEnd();
+
+        return path->GetPath().size() < aOther.path->GetPath().size();
+    }
+};
+
+
 DRC_ENGINE::DRC_ENGINE( BOARD* aBoard, BOARD_DESIGN_SETTINGS *aSettings ) :
         UNITS_PROVIDER( pcbIUScale, EDA_UNITS::MM ),
         m_designSettings ( aSettings ),
@@ -2406,84 +2488,6 @@ int DRC_ENGINE::GetErrorLimit( int error_code )
 }
 
 
-namespace
-{
-/// Captures the path a provider's path generator sets on a marker, so it can be replayed onto
-/// the real marker after the violation has been buffered.
-class PATH_CAPTURE_MARKER : public PCB_MARKER
-{
-public:
-    using PCB_MARKER::PCB_MARKER;
-
-    const VECTOR2I& PathStart() const { return m_pathStart; }
-    const VECTOR2I& PathEnd() const { return m_pathEnd; }
-};
-
-
-int compareKiids( const std::vector<KIID>& a, const std::vector<KIID>& b )
-{
-    for( size_t ii = 0; ii < std::min( a.size(), b.size() ); ++ii )
-    {
-        if( a[ii] < b[ii] )
-            return -1;
-
-        if( b[ii] < a[ii] )
-            return 1;
-    }
-
-    return a.size() < b.size() ? -1 : ( a.size() > b.size() ? 1 : 0 );
-}
-} // namespace
-
-
-struct DRC_ENGINE::PENDING_VIOLATION
-{
-    std::shared_ptr<DRC_ITEM>            item;
-    VECTOR2I                             pos;
-    int                                  layer = UNDEFINED_LAYER;
-    std::shared_ptr<PATH_CAPTURE_MARKER> path;     // set when the provider gave a path generator
-
-    // Canonical order: everything the report shows about the violation, so that two violations
-    // which compare equal are indistinguishable in the report.
-    std::vector<KIID>                    ids;
-    wxString                             message;
-    wxString                             rule;
-
-    bool operator<( const PENDING_VIOLATION& aOther ) const
-    {
-        if( item->GetErrorCode() != aOther.item->GetErrorCode() )
-            return item->GetErrorCode() < aOther.item->GetErrorCode();
-
-        if( pos.x != aOther.pos.x )
-            return pos.x < aOther.pos.x;
-
-        if( pos.y != aOther.pos.y )
-            return pos.y < aOther.pos.y;
-
-        if( layer != aOther.layer )
-            return layer < aOther.layer;
-
-        if( int cmp = compareKiids( ids, aOther.ids ) )
-            return cmp < 0;
-
-        if( int cmp = message.Cmp( aOther.message ) )
-            return cmp < 0;
-
-        if( int cmp = rule.Cmp( aOther.rule ) )
-            return cmp < 0;
-
-        if( !path || !aOther.path )
-            return !path && aOther.path;
-
-        if( path->PathStart() != aOther.path->PathStart() )
-            return path->PathStart() < aOther.path->PathStart();
-
-        if( path->PathEnd() != aOther.path->PathEnd() )
-            return path->PathEnd() < aOther.path->PathEnd();
-
-        return path->GetPath().size() < aOther.path->GetPath().size();
-    }
-};
 
 
 void DRC_ENGINE::ReportViolation( const std::shared_ptr<DRC_ITEM>& aItem, const VECTOR2I& aPos,
