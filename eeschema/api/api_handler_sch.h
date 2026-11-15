@@ -217,6 +217,9 @@ private:
     /// A click in the canvas (embedded): on a host or ERC marker, ET_MARKER_CLICKED.
     void onCanvasClick();
 
+    HANDLER_RESULT<kiapi::backplane::embed::ClickMarkerResponse>
+    handleClickMarker( const HANDLER_CONTEXT<kiapi::backplane::embed::ClickMarker>& aCtx );
+
     /// The host's markers (HOST_MARKERS_TOOL keeps them in the view), or null
     HOST_MARKERS_ITEM* hostMarkers( bool aCreate ) const;
 

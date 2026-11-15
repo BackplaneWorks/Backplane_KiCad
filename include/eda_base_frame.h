@@ -162,6 +162,10 @@ public:
     /// none; EDA_DRAW_FRAME returns its GAL canvas.
     virtual wxWindow* EmbedCanvas() const { return nullptr; }
 
+    /// canvas-idle: true while an interactive tool is mid-operation (Escape would cancel
+    /// something); aToolName gets the current tool.  Default: never busy.
+    virtual bool EmbedToolBusy( std::string& aToolName ) const { return false; }
+
     /// Library editors: the "Lib:Name" on screen, for an embedding host's tab.  Default: none.
     virtual wxString EmbedLibId() const { return wxEmptyString; }
 

@@ -431,7 +431,105 @@ EMBED_FRAME_INFO BACKPLANE_EMBED::info( const FRAME_ENTRY& aEntry ) const
     if( aEntry.ops.files )
         result.files = aEntry.ops.files();
 
+    if( aEntry.canvasInput.time_since_epoch().count() != 0 )
+    {
+        result.canvasInputAgoMs = static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - aEntry.canvasInput ).count() );
+    }
+
+    if( aEntry.ops.toolBusy )
+        result.toolBusy = aEntry.ops.toolBusy( result.toolName );
+
     return result;
+}
+
+
+void BACKPLANE_EMBED::noteCanvasInput( wxEvent& aEvent, wxEventType aType )
+{
+    bool button = aType == wxEVT_LEFT_DOWN || aType == wxEVT_LEFT_UP || aType == wxEVT_RIGHT_DOWN
+                  || aType == wxEVT_RIGHT_UP || aType == wxEVT_MIDDLE_DOWN || aType == wxEVT_MIDDLE_UP
+                  || aType == wxEVT_AUX1_DOWN || aType == wxEVT_AUX1_UP || aType == wxEVT_AUX2_DOWN
+                  || aType == wxEVT_AUX2_UP || aType == wxEVT_LEFT_DCLICK || aType == wxEVT_MIDDLE_DCLICK
+                  || aType == wxEVT_RIGHT_DCLICK;
+    bool wheel = aType == wxEVT_MOUSEWHEEL;
+    bool drag = aType == wxEVT_MOTION && static_cast<wxMouseEvent&>( aEvent ).ButtonIsDown( wxMOUSE_BTN_ANY );
+    bool key = aType == wxEVT_KEY_DOWN || aType == wxEVT_CHAR_HOOK;
+
+    // Hovering is not input: it must not hold the host's checks back forever
+    if( !button && !wheel && !drag && !key )
+        return;
+
+    wxWindow* window = wxDynamicCast( aEvent.GetEventObject(), wxWindow );
+
+    if( !window )
+        return;
+
+    wxFrame* frame = wxDynamicCast( wxGetTopLevelParent( window ), wxFrame );
+
+    if( !frame )
+        return;
+
+    FRAME_ENTRY* e = entry( frame );
+    wxWindow*    canvas = e && e->ops.canvas ? e->ops.canvas() : nullptr;
+
+    if( !canvas )
+        return;
+
+    for( wxWindow* w = window; w && w != frame; w = w->GetParent() )
+    {
+        if( w == canvas )
+        {
+            e->canvasInput = std::chrono::steady_clock::now();
+            return;
+        }
+    }
+}
+
+
+std::optional<std::string> BACKPLANE_EMBED::CanvasInUse( wxFrame* aFrame, uint64_t aMinIdleMs,
+                                                         wxFrame* aAlsoTool ) const
+{
+    if( !m_enabled || aMinIdleMs == 0 )
+        return std::nullopt;
+
+    auto describe = []( const FRAME_ENTRY& aEntry ) -> std::string
+                    {
+                        switch( aEntry.kind )
+                        {
+                        case EMBED_FRAME_KIND::PCB: return "the PCB editor";
+                        case EMBED_FRAME_KIND::SCH: return "the schematic editor";
+                        default: return aEntry.frame->GetName().ToStdString( wxConvUTF8 );
+                        }
+                    };
+
+    if( const FRAME_ENTRY* e = aFrame ? entry( aFrame ) : nullptr )
+    {
+        EMBED_FRAME_INFO state = info( *e );
+
+        if( state.canvasInputAgoMs < aMinIdleMs || state.toolBusy )
+        {
+            std::string why = "canvas in use: " + describe( *e );
+
+            if( state.canvasInputAgoMs < aMinIdleMs )
+                why += ", input " + std::to_string( state.canvasInputAgoMs ) + " ms ago";
+
+            if( state.toolBusy )
+                why += ", tool " + ( state.toolName.empty() ? std::string( "?" ) : state.toolName ) + " busy";
+
+            return why;
+        }
+    }
+
+    if( const FRAME_ENTRY* e = aAlsoTool ? entry( aAlsoTool ) : nullptr )
+    {
+        std::string name;
+
+        if( e->ops.toolBusy && e->ops.toolBusy( name ) )
+            return "canvas in use: " + describe( *e ) + ", tool " + ( name.empty() ? "?" : name ) + " busy";
+    }
+
+    return std::nullopt;
 }
 
 
@@ -1029,6 +1127,8 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
 
     if( !m_enabled )
         return -1;
+
+    noteCanvasInput( aEvent, type );
 
     bool buttonDown = type == wxEVT_LEFT_DOWN || type == wxEVT_RIGHT_DOWN
                       || type == wxEVT_MIDDLE_DOWN || type == wxEVT_AUX1_DOWN

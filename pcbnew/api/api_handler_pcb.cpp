@@ -340,6 +340,8 @@ API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDI
             &API_HANDLER_PCB::handleGetMarkers, true );
     registerHandler<kiapi::backplane::embed::SetHostMarkers, kiapi::backplane::embed::SetHostMarkersResponse>(
             &API_HANDLER_PCB::handleSetHostMarkers );
+    registerHandler<kiapi::backplane::embed::ClickMarker, kiapi::backplane::embed::ClickMarkerResponse>(
+            &API_HANDLER_PCB::handleClickMarker );
     registerHandler<kiapi::backplane::embed::CommentSelection,
                     kiapi::backplane::embed::CommentSelectionResponse>(
             &API_HANDLER_PCB::handleCommentSelection );
@@ -3684,12 +3686,103 @@ void API_HANDLER_PCB::onCanvasClick()
     {
         if( view->IsVisible( marker ) && marker->HitTest( at, radius ) )
         {
-            kiapi::backplane::embed::Marker out;
-            FillEmbedMarker( &out, marker, board() );
-            BACKPLANE_EMBED::Get().MarkerClicked( editor, std::string(), std::string(), out.SerializeAsString() );
+            drcMarkerClicked( marker );
             return;
         }
     }
+}
+
+
+uint64_t API_HANDLER_PCB::drcMarkerClicked( PCB_MARKER* aMarker )
+{
+    kiapi::backplane::embed::Marker out;
+    FillEmbedMarker( &out, aMarker, board() );
+    return BACKPLANE_EMBED::Get().MarkerClicked( frame(), std::string(), std::string(),
+                                                 out.SerializeAsString() );
+}
+
+
+HANDLER_RESULT<kiapi::backplane::embed::ClickMarkerResponse>
+API_HANDLER_PCB::handleClickMarker( const HANDLER_CONTEXT<kiapi::backplane::embed::ClickMarker>& aCtx )
+{
+    namespace embed = kiapi::backplane::embed;
+
+    // Routed by frame kind: the schematic editor's handler serves FK_SCH.
+    if( aCtx.Request.kind() != embed::FK_PCB )
+    {
+        ApiResponseStatus e;
+        e.set_status( ApiStatusCode::AS_UNHANDLED );
+        return tl::unexpected( e );
+    }
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "ClickMarker" ) )
+        return tl::unexpected( *headless );
+
+    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+        return tl::unexpected( *busy );
+
+    auto notFound = []( const std::string& aWhat ) -> HANDLER_RESULT<embed::ClickMarkerResponse>
+                    {
+                        ApiResponseStatus e;
+                        e.set_status( ApiStatusCode::AS_BAD_REQUEST );
+                        e.set_error_message( fmt::format( "ClickMarker: no marker {} in the PCB editor", aWhat ) );
+                        return tl::unexpected( e );
+                    };
+
+    embed::ClickMarkerResponse response;
+
+    if( aCtx.Request.has_host() && !aCtx.Request.host().id().empty() )
+    {
+        const std::string& set = aCtx.Request.host().set();
+        const std::string& id = aCtx.Request.host().id();
+
+        if( HOST_MARKERS_ITEM* hostItem = hostMarkers( false ) )
+        {
+            for( const HOST_MARKER* host : hostItem->All() )
+            {
+                if( host->set == set && host->id == id )
+                {
+                    if( aCtx.Request.zoom() )
+                        frame()->FocusOnLocation( host->pos );
+
+                    response.set_event_seq( BACKPLANE_EMBED::Get().MarkerClicked( frame(), set, id, std::string() ) );
+                    return response;
+                }
+            }
+        }
+
+        return notFound( set + "/" + id );
+    }
+
+    KIID        id( aCtx.Request.marker().value() );
+    PCB_MARKER* marker = nullptr;
+
+    for( PCB_MARKER* candidate : board()->Markers() )
+    {
+        if( candidate->m_Uuid == id )
+        {
+            marker = candidate;
+            break;
+        }
+    }
+
+    if( !marker )
+        return notFound( aCtx.Request.marker().value() );
+
+    // As the selection tool's click: the marker alone becomes the selection, which updates the
+    // message panel and, through DRC_TOOL's cross-probe, the DRC dialog's row
+    if( PCB_SELECTION_TOOL* selTool = toolManager()->GetTool<PCB_SELECTION_TOOL>() )
+    {
+        selTool->ClearSelection( true );
+        selTool->AddItemToSel( marker );
+    }
+
+    if( aCtx.Request.zoom() )
+        frame()->FocusOnLocation( marker->GetPosition() );
+
+    frame()->GetCanvas()->Refresh();
+    response.set_event_seq( drcMarkerClicked( marker ) );
+    return response;
 }
 
 
