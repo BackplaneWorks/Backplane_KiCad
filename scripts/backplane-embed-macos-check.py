@@ -307,11 +307,8 @@ def main():
                         ids.add(track.id.value)
                 return ids
 
-            # Cmd+Z: the menu bar's key equivalent in an accessory app with no visible menu bar
-            kiid = add_track()
-            check(kiid in track_ids(), "an agent's track is on the board")
-            key("z")
-            check(wait_for(lambda: kiid not in track_ids(), 5), "Cmd+Z undoes it (no visible menu bar)")
+            # (Cmd+Z is checked after the paste below: the person's Cmd+Z skips agent changes,
+            # docs/backplane/coedit.md "Per-actor undo")
 
             # Cmd+S
             original = hashlib.sha256(board_file.read_bytes()).hexdigest()
@@ -335,6 +332,11 @@ def main():
             time.sleep(0.5)
             check(wait_for(lambda: len(track_ids()) == before + 1, 5), "Cmd+V pastes it (placed with a click)")
             key("escape", command=False)
+            time.sleep(0.3)
+            # Cmd+Z: the person's own change (the paste) goes back; the agent's tracks stay
+            key("z")
+            check(wait_for(lambda: len(track_ids()) == before, 5), "Cmd+Z undoes the person's paste (no visible menu bar)")
+            check(kiid in track_ids(), "and leaves the agent's track")
 
             # A reserved chord comes back as ET_RESERVED_KEY
             api.request(embed.SetReservedKeys(chords=["Ctrl+K"]), embed.SetReservedKeysResponse)
@@ -359,8 +361,12 @@ def main():
             api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=pw, height=ph), embed.ShowFrameResponse)
             drawn = wait_event(embed.ET_FRAME_DRAWN, 30)
             RESULTS["sch_after_prewarm_drawn_ms"] = round((drawn - t0) * 1000) if drawn else None
-            check(drawn is not None and drawn - t0 < 1.0,
-                  f"the prewarmed schematic's first show draws within 1 s ({RESULTS['sch_after_prewarm_drawn_ms']} ms)")
+            # Prewarming must pay off on macOS too (a transparent window behind everything could be
+            # counted occluded and never painted): well under the board's cold first show
+            cold = RESULTS["pcb_first_show_drawn_ms"] or 0
+            check(drawn is not None and RESULTS["sch_after_prewarm_drawn_ms"] < cold / 2,
+                  f"the prewarmed schematic's first show draws in under half a cold show "
+                  f"({RESULTS['sch_after_prewarm_drawn_ms']} ms vs {cold} ms)")
             shot("02-sch-after-prewarm")
             api.request(embed.HideFrame(kind=embed.FK_SCH), embed.HideFrameResponse)
             api.request(embed.ShowFrame(kind=embed.FK_PCB, x=0, y=0, width=pw, height=ph), embed.ShowFrameResponse)
@@ -375,7 +381,8 @@ def main():
             api.request(editor.AddToSelection(header=header, items=[types.KIID(value=kiid)]), editor.SelectionResponse)
             selected = lambda: len(api.request(editor.GetSelection(header=header), editor.SelectionResponse).items)
             wait_for(lambda: selected() > 0, 3)
-            click(hx + px + pw - 30, hy + py + ph - 60)
+            # Empty canvas below the board (the right side of the pane is KiCad's Appearance panel)
+            click(hx + px + pw * 0.1, hy + py + ph * 0.86)
             check(wait_for(lambda: selected() == 0, 3), "the first click on an inactive KiCad's canvas acts (selection cleared)")
             check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "and gives KiCad the keyboard")
 
