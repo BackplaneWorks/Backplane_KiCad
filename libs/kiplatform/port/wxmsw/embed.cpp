@@ -783,6 +783,16 @@ void KIPLATFORM::EMBED::TakeFocus( wxWindow* aFrame )
 
     HWND frame = static_cast<HWND>( aFrame->GetHWND() );
     HWND before = GetFocus();
+
+    // Already inside the frame (its canvas, a side panel's field): a SetFocus on the frame would
+    // take it off the canvas, and KiCad's hotkeys with it (F2 did nothing, Carbon's run 14)
+    if( before && IsChild( frame, before ) )
+    {
+        trace( "TakeFocus %s: focus already inside it, on %s; left there", describe( frame ).c_str(),
+               describe( before ).c_str() );
+        return;
+    }
+
     HWND result = SetFocus( frame );
     trace( "TakeFocus %s: focus was %s, SetFocus -> %s (error %lu), focus now %s, fg %s",
            describe( frame ).c_str(), describe( before ).c_str(), describe( result ).c_str(),

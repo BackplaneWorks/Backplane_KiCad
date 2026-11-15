@@ -340,6 +340,8 @@ public:
     std::vector<wxFrame*> Frames() const;
     wxFrame*              FindFrame( EMBED_FRAME_KIND aKind, uint64_t aWindow = 0 ) const;
     EMBED_FRAME_INFO      Info( wxFrame* aFrame ) const;
+    /// The frame's drawing canvas (EMBED_FRAME_OPS::canvas), or null
+    wxWindow*             Canvas( wxFrame* aFrame ) const;
     std::vector<EMBED_FRAME_INFO> AllInfo() const;
     const EMBED_FRAME_OPS* Ops( wxFrame* aFrame ) const;
 

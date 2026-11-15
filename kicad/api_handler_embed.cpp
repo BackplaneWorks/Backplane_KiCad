@@ -413,8 +413,10 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
         }
     }
 
-    if( aCtx.Request.focus() )
-        KIPLATFORM::EMBED::TakeFocus( frame );
+    // The keyboard to the canvas, where KiCad's hotkeys are served; left where it is when it is
+    // already inside the frame (a click got there first, or the person is in a side panel)
+    if( aCtx.Request.focus() && !KIPLATFORM::EMBED::HasFocus( frame ) )
+        KIPLATFORM::EMBED::TakeFocusForClick( frame, embed.Canvas( frame ) );
 
     ShowFrameResponse response;
     fillFrame( response.mutable_frame(), embed.Info( frame ) );
