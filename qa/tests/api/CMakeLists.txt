@@ -38,6 +38,8 @@ add_executable( qa_api
 add_dependencies( qa_api
     pcbnew
     kicad-cli
+    # The e2e and job cases open schematics in the headless api-server, which loads _eeschema.kiface
+    eeschema_kiface
     )
 
 target_link_libraries( qa_api
