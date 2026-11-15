@@ -84,7 +84,17 @@ int main(int argc, char **argv) { @autoreleasepool {
       NSString *v = @(verb);
       dispatch_async(dispatch_get_main_queue(), ^{
         NSRunningApplication *app = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
-        if ([v isEqual:@"yield"]) { if (@available(macOS 14.0, *)) [NSApp yieldActivationToApplication:app]; }
+        NSWindow *w = NSApp.windows.firstObject;
+        for (NSWindow *x in NSApp.windows) if ([x.title isEqual:@"Embed host"]) w = x;
+        if ([v isEqual:@"mini"]) [w miniaturize:nil];
+        else if ([v isEqual:@"demini"]) { [w deminiaturize:nil]; [NSApp activateIgnoringOtherApps:YES]; }
+        else if ([v isEqual:@"full"]) [w toggleFullScreen:nil];
+        else if ([v isEqual:@"front"]) { [NSApp activateIgnoringOtherApps:YES]; [w makeKeyAndOrderFront:nil]; }
+        else if ([v isEqual:@"rect"]) {
+          double H = NSScreen.screens[0].frame.size.height; NSRect c = [w contentRectForFrameRect:w.frame];
+          printf("rect %.0f %.0f %.0f %.0f %d\n", c.origin.x, H - (c.origin.y + c.size.height), c.size.width, c.size.height,
+                 (int)((w.styleMask & NSWindowStyleMaskFullScreen) != 0)); fflush(stdout); return; }
+        else if ([v isEqual:@"yield"]) { if (@available(macOS 14.0, *)) [NSApp yieldActivationToApplication:app]; }
         else if ([v isEqual:@"activate"]) {
           if (@available(macOS 14.0, *)) [app activateWithOptions:0];
           else [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
@@ -178,6 +188,20 @@ def main():
             x, y, w, h = (int(v * scale) for v in box)
             return path, ImageStat.Stat(image.convert("L").crop((x + w // 4, y + h // 4, x + 3 * w // 4, y + 3 * h // 4))).stddev[0]
         return path, None
+
+    # The runtime's minimum macOS: the highest minos of KiCad's binary and its bundled libraries
+    bundle = (args.kicad.resolve().parent.parent / "KiCad.app").resolve()
+    minos = {}
+    for binary in [bundle / "Contents/MacOS/kicad", *sorted((bundle / "Contents/Frameworks").glob("*.dylib"))]:
+        out = subprocess.run(["vtool", "-show-build", str(binary)], text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout
+        for line in out.splitlines():
+            if line.strip().startswith("minos"):
+                minos[binary.name] = line.split()[1]
+    if minos:
+        top = max(minos.values(), key=lambda v: tuple(int(p) for p in v.split(".")))
+        RESULTS["runtime_min_macos"] = top
+        RESULTS["runtime_min_macos_from"] = sorted(n for n, v in minos.items() if v == top)[:8]
+        print(f"runtime minimum macOS: {top} (from {RESULTS['runtime_min_macos_from']})", flush=True)
 
     host_app = work / "host"
     subprocess.run(["clang", "-fobjc-arc", "-O2", "-mmacosx-version-min=14.0", "-framework", "Cocoa", "-x", "objective-c", "-o", str(host_app), "-"],
@@ -393,6 +417,96 @@ def main():
             check(not any(e.type == embed.ET_FRAME_HIDDEN for e in pump(300)), "no ET_FRAME_HIDDEN for a host hide")
             host_geometry(visible=True)
             check(wait_for(lambda: on_screen(pcb) and directly_above(pcb, hid), 2), "visible=true puts it back above the host")
+
+            # The hide rules on real KiCad, as the client drives them
+            def host_say(verb, arg=0):
+                host.stdin.write(f"{verb} {arg}\n")
+                host.stdin.flush()
+
+            def host_rect():
+                host_say("rect")
+                while True:
+                    line = host.stdout.readline()
+                    if not line:
+                        return None
+                    if line.startswith("rect "):
+                        x, y, w, h, full = (int(float(v)) for v in line.split()[1:])
+                        return x, y, w, h, full
+
+            def push(visible=True, raise_=False):
+                nonlocal hx, hy, hw, hh, pw, ph
+                r = host_rect()
+                if r:
+                    hx, hy, hw, hh, _ = r
+                    pw, ph = hw - px, hh - py
+                host_geometry(visible=visible, raise_=raise_)
+
+            # minimised and back
+            host_say("mini")
+            push(visible=False)
+            check(wait_for(lambda: not on_screen(pcb), 3), "host minimised: the frame leaves the screen")
+            time.sleep(1.0)
+            host_say("demini")
+            time.sleep(1.0)
+            push(visible=True, raise_=True)
+            check(wait_for(lambda: on_screen(pcb) and directly_above(pcb, hid), 3), "host back from the Dock: the frame is back above it")
+
+            # full screen: hidden (another app's window cannot join our full-screen Space), and after
+            # the transition out the client pushes again and the frame is back in place
+            host_say("full")
+            push(visible=False)
+            time.sleep(2.5)
+            check(not on_screen(pcb), "host full screen: the frame is hidden")
+            host_say("full")
+            time.sleep(2.5)
+            push(visible=True, raise_=True)
+            r = host_rect()
+            expected = (r[0] + px, r[1] + py, r[2] - px, r[3] - py) if r else None
+            placed = wait_for(lambda: on_screen(pcb), 3)
+            check(placed and expected and all(abs(a - b) <= 2 for a, b in zip(placed[2], expected))
+                  and directly_above(pcb, hid), f"out of full screen: the re-push puts the frame back ({placed and placed[2]} vs {expected})")
+
+            # the pane is not the visible tab: the host hides the frame (HideFrame), then shows it again
+            api.request(embed.HideFrame(kind=embed.FK_PCB), embed.HideFrameResponse)
+            check(wait_for(lambda: not on_screen(pcb), 3) and not frames()[embed.FK_PCB].shown, "another tab: HideFrame takes it off screen")
+            api.request(embed.ShowFrame(kind=embed.FK_PCB, x=0, y=0, width=pw, height=ph), embed.ShowFrameResponse)
+            check(wait_for(lambda: on_screen(pcb) and directly_above(pcb, hid), 3), "back to the tab: ShowFrame puts it back above the host")
+
+            # a modal dialog (Board Setup) stays above the host, centred on it, and is reported
+            def kicad_windows_above_host():
+                order = windows()
+                at = next((i for i, w in enumerate(order) if w[0] == hid), len(order))
+                return [w for w in order[:at] if w[1] == kicad.pid and w[0] != pcb]
+
+            host_say("yield", kicad.pid)
+            pump(0)
+            runner = threading.Thread(target=lambda: api.request_raw(editor.RunAction(action="pcbnew.EditorControl.boardSetup")), daemon=True)
+            runner.start()
+            dialog = wait_for(lambda: kicad_windows_above_host(), 10, 0.2)
+            path, _ = shot("03-board-setup")
+            check(bool(dialog), f"a KiCad dialog opens above the host ({dialog and dialog[0][2]}, {path.name})")
+            if dialog:
+                dx, dy, dw, dh = dialog[0][2]
+                cx, cy = dx + dw / 2, dy + dh / 2
+                check(r is not None and r[0] <= cx <= r[0] + r[2] and r[1] <= cy <= r[1] + r[3], "the dialog is centred over the host")
+            check(any(e.type == embed.ET_DIALOG_OPENED for e in pump(500)), "ET_DIALOG_OPENED reported")
+            key("escape", command=False)
+            runner.join(10)
+            check(wait_for(lambda: not kicad_windows_above_host(), 5), "Escape closes the dialog")
+
+            # a popup menu (right click on the canvas) shows above the host
+            def popups():
+                return [w for w in Quartz.CGWindowListCopyWindowInfo(Quartz.kCGWindowListOptionOnScreenOnly, Quartz.kCGNullWindowID)
+                        if w.get("kCGWindowOwnerPID") == kicad.pid and w.get("kCGWindowLayer", 0) > 0]
+            point = Quartz.CGPointMake(hx + px + pw * 0.1, hy + py + ph * 0.86)
+            for kind in (Quartz.kCGEventRightMouseDown, Quartz.kCGEventRightMouseUp):
+                Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, kind, point, Quartz.kCGMouseButtonRight))
+                time.sleep(0.1)
+            menu = wait_for(popups, 3, 0.1)
+            shot("04-context-menu")
+            check(bool(menu), f"a right click opens KiCad's context menu above everything (layer {menu and menu[0].get('kCGWindowLayer')})")
+            key("escape", command=False)
+            check(wait_for(lambda: not popups(), 3), "Escape closes it")
 
             # The host's process ends: every frame leaves the screen at once
             t0 = time.monotonic()
