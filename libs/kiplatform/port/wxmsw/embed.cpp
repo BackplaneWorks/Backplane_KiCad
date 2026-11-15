@@ -188,8 +188,38 @@ void park( HWND aHolder )
 }
 
 
+/// Posted to the holder when a frame not on screen was activated anyway: hand the activation
+/// back to the host's top-level (allowed: KiCad's thread is the foreground one at that moment)
+constexpr UINT MSG_GIVE_BACK_ACTIVATION = WM_APP + 0x104;
+
+HWND blockedFrameOf( HWND aWindow, std::string& aWhy );
+
+
 LRESULT CALLBACK holderProc( HWND aHwnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam )
 {
+    if( aMsg == MSG_GIVE_BACK_ACTIVATION )
+    {
+        HWND        fg = GetForegroundWindow();
+        std::string why;
+        HWND        frame = fg ? blockedFrameOf( fg, why ) : nullptr;
+        HWND        root = s_parent ? GetAncestor( s_parent, GA_ROOT ) : nullptr;
+
+        if( frame && root )
+        {
+            BOOL done = SetForegroundWindow( root );
+            trace( "activation of %s (%s) given back to %s: %s (error %lu); fg now %s, focus %s",
+                   describe( frame ).c_str(), why.c_str(), describe( root ).c_str(), done ? "done" : "refused",
+                   done ? 0 : GetLastError(), describe( GetForegroundWindow() ).c_str(),
+                   describe( GetFocus() ).c_str() );
+        }
+        else
+        {
+            trace( "activation give-back: nothing to do (fg %s)", describe( fg ).c_str() );
+        }
+
+        return 0;
+    }
+
     if( aMsg == WM_MOUSEACTIVATE && s_parent )
     {
         // A click inside activates the host's window as a click on its own child would.  Not
@@ -354,6 +384,47 @@ HWND blockedFrame( HWND aWindow, std::string& aWhy )
 
 
 HHOOK s_focusHook = nullptr;
+HHOOK s_activateHook = nullptr;
+
+
+/// Every activation and focus a window of a frame not on screen receives, whoever sent it (the
+/// CBT hook only sees SetFocus/activation asked on this thread: another thread of the attached
+/// input queue, the host's, does not pass through it).  Traced with the sender, and an
+/// activation is handed back to the host at once.
+LRESULT CALLBACK activateWndProc( int aCode, WPARAM aWParam, LPARAM aLParam )
+{
+    if( aCode == HC_ACTION )
+    {
+        const CWPSTRUCT* msg = reinterpret_cast<const CWPSTRUCT*>( aLParam );
+        bool activate = ( msg->message == WM_ACTIVATE && LOWORD( msg->wParam ) != WA_INACTIVE )
+                        || ( msg->message == WM_NCACTIVATE && msg->wParam );
+        bool focus = msg->message == WM_SETFOCUS;
+
+        if( activate || focus )
+        {
+            std::string why;
+
+            if( HWND frame = blockedFrame( msg->hwnd, why ) )
+            {
+                DWORD sendFlags = InSendMessageEx( nullptr );
+                trace( "%s received by %s in %s (%s); %s; other %s; fg %s; %s",
+                       msg->message == WM_ACTIVATE ? "WM_ACTIVATE"
+                       : msg->message == WM_NCACTIVATE ? "WM_NCACTIVATE" : "WM_SETFOCUS",
+                       describe( msg->hwnd ).c_str(), describe( frame ).c_str(), why.c_str(),
+                       sendFlags == ISMEX_NOSEND ? "from this thread"
+                       : ( sendFlags & ISMEX_SEND ) ? "sent from another thread" : "sent (notify/callback)",
+                       describe( reinterpret_cast<HWND>( msg->lParam ) ).c_str(),
+                       describe( GetForegroundWindow() ).c_str(),
+                       traceFile() ? ownStack( 2, 16 ).c_str() : "" );
+
+                if( activate && s_holder )
+                    PostMessageW( s_holder, MSG_GIVE_BACK_ACTIVATION, 0, 0 );
+            }
+        }
+    }
+
+    return CallNextHookEx( s_activateHook, aCode, aWParam, aLParam );
+}
 
 
 /// A frame not on screen (a prewarm, a hidden tab) never takes the keyboard or the activation:
@@ -395,6 +466,15 @@ LRESULT CALLBACK focusCbtProc( int aCode, WPARAM aWParam, LPARAM aLParam )
 } // namespace
 
 
+namespace
+{
+HWND blockedFrameOf( HWND aWindow, std::string& aWhy )
+{
+    return blockedFrame( aWindow, aWhy );
+}
+} // namespace
+
+
 void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 {
     s_hooks = aHooks;
@@ -402,6 +482,9 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
     // Installed from the UI thread (BACKPLANE_EMBED::Enable): this thread's windows only
     if( !s_focusHook )
         s_focusHook = SetWindowsHookExW( WH_CBT, focusCbtProc, nullptr, GetCurrentThreadId() );
+
+    if( !s_activateHook )
+        s_activateHook = SetWindowsHookExW( WH_CALLWNDPROC, activateWndProc, nullptr, GetCurrentThreadId() );
 }
 
 
