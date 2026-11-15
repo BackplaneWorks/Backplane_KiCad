@@ -1,8 +1,9 @@
 name: Backplane KiCad macOS
 on:
   push:
-    # a release tag builds the macOS package beside the Linux and Windows ones (the integrator
-    # attaches it from this run's artifact)
+    # every batch on the release line and ci/** (a macOS break fails the batch like Linux and
+    # Windows), and every release tag (the integrator attaches the package from this run)
+    branches: ['release/bp.13', 'ci/**']
     tags: ['backplane-kicad-v*']
   workflow_dispatch:
 permissions:
