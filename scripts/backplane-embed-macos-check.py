@@ -73,6 +73,25 @@ int main(int argc, char **argv) { @autoreleasepool {
     printf("%ld %.0f %.0f %.0f %.0f\n", (long)w.windowNumber, c.origin.x, H - (c.origin.y + c.size.height),
            c.size.width, c.size.height);
     fflush(stdout); });
+  // Commands on stdin, as the client would do them: "yield <pid>" hands activation to that app
+  // (macOS 14+ cooperative activation: a background app's own activate is ignored otherwise),
+  // "activate <pid>" activates it from here
+  [NSThread detachNewThreadWithBlock:^{
+    char line[128];
+    while (fgets(line, sizeof line, stdin)) {
+      char verb[32]; int pid = 0;
+      if (sscanf(line, "%31s %d", verb, &pid) != 2) continue;
+      NSString *v = @(verb);
+      dispatch_async(dispatch_get_main_queue(), ^{
+        NSRunningApplication *app = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
+        if ([v isEqual:@"yield"]) { if (@available(macOS 14.0, *)) [NSApp yieldActivationToApplication:app]; }
+        else if ([v isEqual:@"activate"]) {
+          if (@available(macOS 14.0, *)) [app activateWithOptions:0];
+          else [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+        }
+        printf("did %s %d\n", v.UTF8String, pid); fflush(stdout); });
+    }
+  }];
   [NSApp run];
 }}
 """
@@ -128,6 +147,7 @@ def main():
     # Short: a Unix socket path is at most 104 bytes on macOS, and $TMPDIR (/var/folders/...) plus
     # "api.sock.events" went past it
     work = Path(tempfile.mkdtemp(prefix="bpem-", dir="/tmp"))
+    started = time.time()
     env = dict(os.environ)
     for variable, directory in (("HOME", "home"), ("KICAD_CONFIG_HOME", "config"), ("TMPDIR", "tmp")):
         path = work / directory
@@ -160,12 +180,12 @@ def main():
         return path, None
 
     host_app = work / "host"
-    subprocess.run(["clang", "-fobjc-arc", "-O2", "-framework", "Cocoa", "-x", "objective-c", "-o", str(host_app), "-"],
+    subprocess.run(["clang", "-fobjc-arc", "-O2", "-mmacosx-version-min=14.0", "-framework", "Cocoa", "-x", "objective-c", "-o", str(host_app), "-"],
                    input=HOST_SOURCE, text=True, check=True)
 
     host = kicad = None
     try:
-        host = subprocess.Popen([str(host_app)], stdout=subprocess.PIPE, text=True)
+        host = subprocess.Popen([str(host_app)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
         hid, hx, hy, hw, hh = (int(float(v)) for v in host.stdout.readline().split())
         print(f"host window {hid}, content at {hx},{hy} {hw}x{hh}", flush=True)
         # The pane: the host's content less a 200 pt column on the left (the host's own area, for clicks)
@@ -232,7 +252,13 @@ def main():
                                                   **{"raise": raise_}),
                             embed.SetHostGeometryResponse)
 
+            def tell_host(verb):
+                host.stdin.write(f"{verb} {kicad.pid}\n")
+                host.stdin.flush()
+                time.sleep(0.3)
+
             host_geometry()
+            tell_host("yield")   # the client hands activation to KiCad before a focused show
             t0 = time.monotonic()
             shown = api.request(embed.ShowFrame(kind=embed.FK_PCB, focus=True, x=0, y=0, width=pw, height=ph), embed.ShowFrameResponse)
             pcb = shown.frame.window
@@ -247,7 +273,15 @@ def main():
             time.sleep(1.5)
             path, spread = shot("01-pcb", expected)
             check(spread is not None and spread > 4, f"the PCB canvas is painted ({path.name}, spread {spread and round(spread, 1)})")
-            check(wait_for(lambda: frames()[embed.FK_PCB].focused, 5), "ShowFrame{focus} gives the PCB frame the keyboard")
+            focused = wait_for(lambda: frames()[embed.FK_PCB].focused, 5)
+            RESULTS["focus_after_yield"] = bool(focused)
+            if not focused:
+                # The other way: the client activates KiCad itself, then asks for focus again
+                tell_host("activate")
+                api.request(embed.ShowFrame(kind=embed.FK_PCB, focus=True, x=0, y=0, width=pw, height=ph), embed.ShowFrameResponse)
+                focused = wait_for(lambda: frames()[embed.FK_PCB].focused, 5)
+                RESULTS["focus_after_host_activates_kicad"] = bool(focused)
+            check(focused, f"ShowFrame{{focus}} gives the PCB frame the keyboard ({RESULTS})")
 
             documents = api.request(editor.GetOpenDocuments(type=types.DOCTYPE_PCB), editor.GetOpenDocumentsResponse)
             header = types.ItemHeader(document=documents.documents[0])
@@ -366,6 +400,12 @@ def main():
     except BaseException:
         # Evidence of a hang: what is on screen, KiCad's stacks, every window's owner and title
         shot("zz-failure")
+        print(f"KiCad exit status: {kicad.poll() if kicad is not None else None}", flush=True)
+        reports = Path.home() / "Library/Logs/DiagnosticReports"
+        for report in sorted(reports.glob("*")) if reports.exists() else []:
+            if "kicad" in report.name.lower() and report.stat().st_mtime > started:
+                shutil.copy(report, args.out / report.name)
+                print(f"crash report {report.name}:\n" + report.read_text(errors="replace")[:6000], flush=True)
         if kicad is not None and kicad.poll() is None:
             subprocess.run(["sample", str(kicad.pid), "3", "-file", str(args.out / "kicad-sample.txt")],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
