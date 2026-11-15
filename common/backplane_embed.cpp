@@ -2124,6 +2124,21 @@ BACKPLANE_EMBED::TRACE_SCOPE::~TRACE_SCOPE()
 
 // ---- Prewarm --------------------------------------------------------------------------------
 
+void BACKPLANE_EMBED::SetPrewarmOpening( EMBED_FRAME_KIND aKind, bool aOpening )
+{
+    if( aOpening )
+        m_prewarmOpening.insert( aKind );
+    else
+        m_prewarmOpening.erase( aKind );
+}
+
+
+bool BACKPLANE_EMBED::PrewarmOpening( FRAME_T aType ) const
+{
+    return m_enabled && m_prewarmOpening.count( KindOf( aType ) ) > 0;
+}
+
+
 void BACKPLANE_EMBED::Prewarm( wxFrame* aFrame, int aWidth, int aHeight )
 {
     if( !IsEmbedded( aFrame ) || aFrame->IsShown() || m_prewarming.count( aFrame ) )

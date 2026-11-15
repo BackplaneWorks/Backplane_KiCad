@@ -327,6 +327,12 @@ public:
 
     /// Lay out and paint a hidden frame once off-screen, then hide it again (ShowFrame.prewarm).
     void Prewarm( wxFrame* aFrame, int aWidth, int aHeight );
+
+    /// A prewarm is opening a frame of this kind (from the request until Prewarm() takes it, or
+    /// the open fails): the project manager's ShowPlayer gives such a frame no focus, as the
+    /// person cannot see it.  A frame the host asked to show keeps KiCad's own focus.
+    void SetPrewarmOpening( EMBED_FRAME_KIND aKind, bool aOpening );
+    bool PrewarmOpening( FRAME_T aType ) const;
     void EndPrewarm( wxFrame* aFrame );
     bool Prewarming() const;
 
@@ -674,6 +680,7 @@ private:
     void traceLoop( double aStartMs, double aDurMs );
     std::map<wxFrame*, wxString>   m_conflicts;   ///< frame -> file with a pending conflict
     std::set<wxFrame*>             m_prewarming;  ///< frames being painted off-screen
+    std::set<EMBED_FRAME_KIND>     m_prewarmOpening;  ///< kinds a prewarm is opening
 
     wxTimer m_pollTimer;
     wxTimer m_parentTimer;
