@@ -1718,7 +1718,8 @@ std::string fileSignature( const wxString& aPath )
     if( ec )
         return std::string();
 
-    return std::to_string( time.time_since_epoch().count() ) + ":" + std::to_string( size );
+    // libc++'s file_clock counts in __int128, which std::to_string has no overload for
+    return std::to_string( static_cast<long long>( time.time_since_epoch().count() ) ) + ":" + std::to_string( size );
 }
 
 
