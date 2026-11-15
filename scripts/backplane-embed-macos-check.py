@@ -407,7 +407,13 @@ def main():
             wait_for(lambda: selected() > 0, 3)
             # Empty canvas below the board (the right side of the pane is KiCad's Appearance panel)
             click(hx + px + pw * 0.1, hy + py + ph * 0.86)
-            check(wait_for(lambda: selected() == 0, 3), "the first click on an inactive KiCad's canvas acts (selection cleared)")
+            first = wait_for(lambda: selected() == 0, 3)
+            RESULTS["first_click_acted"] = bool(first)
+            if not first:
+                # which is it: the first click only activated, or a click there does not clear an agent's selection at all
+                click(hx + px + pw * 0.1, hy + py + ph * 0.86)
+                RESULTS["second_click_acted"] = bool(wait_for(lambda: selected() == 0, 3))
+            check(first, f"the first click on an inactive KiCad's canvas acts (selection cleared; {RESULTS})")
             check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "and gives KiCad the keyboard")
 
             # The host's own visibility is an overlay: the frame leaves the screen, FrameInfo.shown stays
