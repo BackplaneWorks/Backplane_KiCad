@@ -66,8 +66,9 @@ struct FRAME
     bool parked = false;   ///< laid out for a prewarm: alpha 0, behind everything, never key
 };
 
-std::map<wxWindow*, FRAME> s_frames;
-std::set<NSInteger>        s_numbers;   ///< windowNumbers of embedded frames
+std::map<wxWindow*, FRAME>     s_frames;
+std::map<NSWindow*, wxWindow*> s_byWindow;  ///< the same frames by their NSWindow (built once, at PrepareFrame)
+std::set<NSInteger>            s_numbers;   ///< windowNumbers of embedded frames
 
 dispatch_source_t s_ownerWatch = nullptr;
 pid_t             s_owner = 0;
@@ -91,13 +92,14 @@ NSWindow* nsWindowOf( wxWindow* aWindow )
 
 FRAME* frameOf( NSWindow* aWindow )
 {
-    for( auto& [frame, state] : s_frames )
-    {
-        if( nsWindowOf( frame ) == aWindow )
-            return &state;
-    }
+    // Never through the wxWindow pointers: a frame may be gone (wxEVT_DESTROY drops it here)
+    auto it = s_byWindow.find( aWindow );
 
-    return nullptr;
+    if( it == s_byWindow.end() )
+        return nullptr;
+
+    auto f = s_frames.find( it->second );
+    return f == s_frames.end() ? nullptr : &f->second;
 }
 
 
@@ -228,16 +230,14 @@ void bpOrderFront( id self, SEL _cmd, id aSender )
 {
     NSWindow* w = (NSWindow*) self;
 
-    for( auto& [frame, state] : s_frames )
+    if( auto it = s_byWindow.find( w ); it != s_byWindow.end() )
     {
-        if( nsWindowOf( frame ) == w )
-        {
-            // wx's Show(): an embedded frame goes just above the host, never to the front of
-            // everything (KiCad never orders its own frames while embedded)
-            state.mapped = true;
-            orderIn( frame, state );
-            return;
-        }
+        // wx's Show(): an embedded frame goes just above the host, never to the front of
+        // everything (KiCad never orders its own frames while embedded)
+        FRAME& state = s_frames[it->second];
+        state.mapped = true;
+        orderIn( it->second, state );
+        return;
     }
 
     IMP imp = original( s_orderFront, self );
@@ -251,18 +251,16 @@ void bpMakeKeyAndOrderFront( id self, SEL _cmd, id aSender )
 {
     NSWindow* w = (NSWindow*) self;
 
-    for( auto& [frame, state] : s_frames )
+    if( auto it = s_byWindow.find( w ); it != s_byWindow.end() )
     {
-        if( nsWindowOf( frame ) == w )
-        {
-            state.mapped = true;
-            orderIn( frame, state );
+        FRAME& state = s_frames[it->second];
+        state.mapped = true;
+        orderIn( it->second, state );
 
-            if( keyAllowed( w, "makeKeyAndOrderFront" ) && !state.parked && s_hostVisible )
-                [w makeKeyWindow];
+        if( keyAllowed( w, "makeKeyAndOrderFront" ) && !state.parked && s_hostVisible )
+            [w makeKeyWindow];
 
-            return;
-        }
+        return;
     }
 
     // Not registered yet but being built for a prewarm: ordered, never made key.  Anything that
@@ -518,7 +516,27 @@ uint64_t KIPLATFORM::EMBED::PrepareFrame( wxWindow* aFrame, uint64_t )
                            | NSWindowCollectionBehaviorFullScreenNone;
     w.releasedWhenClosed = NO;
 
+    if( !s_frames.count( aFrame ) )
+    {
+        NSInteger number = w.windowNumber;
+
+        // A destroyed frame leaves every table here, so nothing reaches a dead wxWindow
+        aFrame->Bind( wxEVT_DESTROY,
+                      [aFrame, w, number]( wxWindowDestroyEvent& aEvent )
+                      {
+                          if( aEvent.GetEventObject() == aFrame )
+                          {
+                              s_frames.erase( aFrame );
+                              s_byWindow.erase( w );
+                              s_numbers.erase( number );
+                          }
+
+                          aEvent.Skip();
+                      } );
+    }
+
     s_frames[aFrame];
+    s_byWindow[w] = aFrame;
     s_numbers.insert( w.windowNumber );
     interposeViews( w.contentView );
 
