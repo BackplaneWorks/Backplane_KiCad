@@ -125,7 +125,9 @@ def main():
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
-    work = Path(tempfile.mkdtemp(prefix="backplane-embed-macos-"))
+    # Short: a Unix socket path is at most 104 bytes on macOS, and $TMPDIR (/var/folders/...) plus
+    # "api.sock.events" went past it
+    work = Path(tempfile.mkdtemp(prefix="bpem-", dir="/tmp"))
     env = dict(os.environ)
     for variable, directory in (("HOME", "home"), ("KICAD_CONFIG_HOME", "config"), ("TMPDIR", "tmp")):
         path = work / directory
