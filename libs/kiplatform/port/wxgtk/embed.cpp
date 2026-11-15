@@ -1050,3 +1050,14 @@ std::string KIPLATFORM::EMBED::WriteMiniDump( const std::string& )
 {
     return {};
 }
+
+
+void KIPLATFORM::EMBED::ParkForPrewarm( wxWindow* aFrame, int aWidth, int aHeight )
+{
+    SetFrameGeometry( aFrame, -30000, -30000, aWidth, aHeight );
+}
+
+
+void KIPLATFORM::EMBED::SetHostRect( int, int, int, int, bool, bool )
+{
+}

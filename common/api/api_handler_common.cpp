@@ -135,6 +135,14 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 // Event.detail of ET_SHOW_REQUESTED / ET_EDITOR_REQUESTED names the API client
                 // that caused it ("" = the person or KiCad itself); DRC parity is quiet (bp.13)
                 reply.add_capabilities( "embed-request-actor" );
+#ifdef __WXOSX__
+                // Frames are borderless top-levels placed over the host's pane: --parent-window
+                // is the host's CGWindowID, the host sends SetHostGeometry, and reserved chords
+                // and the comment key arrive as ET_RESERVED_KEY (bp.13)
+                reply.add_capabilities( "embed-macos" );
+                reply.add_capabilities( "embed-host-geometry" );
+                reply.add_capabilities( "embed-reserved-key-event" );
+#endif
                 // FrameInfo.canvas_input_ago_ms / tool_busy / tool_name and
                 // RunChecks.min_canvas_idle_ms (bp.13 batch 8)
                 reply.add_capabilities( "canvas-idle" );

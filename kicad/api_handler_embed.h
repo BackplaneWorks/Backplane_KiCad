@@ -44,6 +44,9 @@ private:
     HANDLER_RESULT<kiapi::backplane::embed::ShowFrameResponse> handleShowFrame(
             const HANDLER_CONTEXT<kiapi::backplane::embed::ShowFrame>& aCtx );
 
+    HANDLER_RESULT<kiapi::backplane::embed::SetHostGeometryResponse> handleSetHostGeometry(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::SetHostGeometry>& aCtx );
+
     HANDLER_RESULT<kiapi::backplane::embed::HideFrameResponse> handleHideFrame(
             const HANDLER_CONTEXT<kiapi::backplane::embed::HideFrame>& aCtx );
 
