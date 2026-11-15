@@ -174,11 +174,25 @@ IMP original( std::map<Class, IMP>& aMap, id aSelf )
 }
 
 
+/// An embedded frame, registered or still being built for a prewarm.  Every interposed method
+/// passes any other window (dialogs, file panels, popups, tooltips, menus) through untouched.
+bool isOurs( NSWindow* aWindow )
+{
+    uint64_t number = (uint64_t) aWindow.windowNumber;
+    return s_numbers.count( aWindow.windowNumber )
+           || ( s_hooks.buildingForPrewarm && s_hooks.buildingForPrewarm( number ) );
+}
+
+
 /// Whether this window may take the keyboard or activation now (traced when it may not).
+/// Always true for a window that is not ours.
 bool keyAllowed( NSWindow* aWindow, const char* aWhat )
 {
     std::string why;
     uint64_t    number = (uint64_t) aWindow.windowNumber;
+
+    if( !isOurs( aWindow ) )
+        return true;
 
     if( s_hooks.buildingForPrewarm && s_hooks.buildingForPrewarm( number ) )
         why = "built for a prewarm";
@@ -251,6 +265,8 @@ void bpMakeKeyAndOrderFront( id self, SEL _cmd, id aSender )
         }
     }
 
+    // Not registered yet but being built for a prewarm: ordered, never made key.  Anything that
+    // is not ours falls through to its own behaviour (keyAllowed is true for it).
     if( !keyAllowed( w, "makeKeyAndOrderFront" ) )
     {
         IMP imp = original( s_orderFront, self );
