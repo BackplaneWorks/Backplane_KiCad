@@ -528,6 +528,19 @@ public:
 
     size_t GetUnresolvedERCExclusionCount() const { return m_unresolvedErcExclusions.size(); }
 
+    /// A stored ERC exclusion that names a sheet not in this hierarchy (the sheet was removed or
+    /// re-keyed): kept in the project as it is, and reported as an excluded row with no items
+    struct UNRESOLVED_ERC_EXCLUSION
+    {
+        int      errorCode = 0;
+        wxString sheetPath;      ///< the stored sheet path, "/uuid/uuid"
+        wxString comment;
+        VECTOR2I position;       ///< as stored, schematic units
+    };
+
+    /// The unresolved exclusions after the last ResolveERCExclusions(), in a fixed order
+    std::vector<UNRESOLVED_ERC_EXCLUSION> UnresolvedERCExclusions() const;
+
     void ClearUnresolvedERCExclusions( int aErrorCode = -1 );
 
     /**

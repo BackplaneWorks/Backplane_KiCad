@@ -468,6 +468,9 @@ message Marker
   string                           group      = 13; // "violation" | "unconnected" | "parity":
                                                     // the CLI report's list it is in
   string                           comment    = 14; // an exclusion's reason, as the person wrote it
+  // bp.13 batch 8: an exclusion stored for a sheet that is not in this schematic (removed or
+  // re-keyed) has no items; this is the path it was stored under ("/uuid/uuid"), sheet_path is "/"
+  string                           unresolved_sheet_path = 15;
 }
 
 message MarkerItem

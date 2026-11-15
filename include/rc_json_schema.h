@@ -60,6 +60,8 @@ struct VIOLATION
     std::vector<AFFECTED_ITEM> items;
     bool                       excluded;
     wxString                   comment;     // exclusion comment; if any
+    wxString                   unresolved_sheet_path;  // an exclusion whose sheet is not in the
+                                                       // schematic: its stored path; written only then
 };
 
 inline void to_json( nlohmann::json& aJson, const VIOLATION& aViolation )
@@ -74,6 +76,9 @@ inline void to_json( nlohmann::json& aJson, const VIOLATION& aViolation )
         aJson["excluded"] = aViolation.excluded;
         aJson["comment"] = aViolation.comment;
     }
+
+    if( !aViolation.unresolved_sheet_path.IsEmpty() )
+        aJson["unresolved_sheet_path"] = aViolation.unresolved_sheet_path;
 }
 
 inline void from_json( const nlohmann::json& aJson, VIOLATION& aViolation )
@@ -84,6 +89,9 @@ inline void from_json( const nlohmann::json& aJson, VIOLATION& aViolation )
     aJson.at( "items" ).get_to( aViolation.items );
     aJson.at( "excluded" ).get_to( aViolation.excluded );
     aJson.at( "comment" ).get_to( aViolation.comment );
+
+    if( aJson.contains( "unresolved_sheet_path" ) )
+        aJson.at( "unresolved_sheet_path" ).get_to( aViolation.unresolved_sheet_path );
 }
 
 
