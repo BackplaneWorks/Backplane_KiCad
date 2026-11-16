@@ -705,7 +705,12 @@ void KIWAY::ProjectChanged()
 
 wxWindow* KIWAY::GetBlockingDialog()
 {
-    return wxWindow::FindWindowById( m_blockingDialog );
+    // Every DIALOG_SHIM names itself here when it is built and only clears it when destroyed, so a
+    // modeless dialog closed by hiding it (ERC, DRC) stayed the "blocking" dialog: showing another
+    // editor raised it, and the raise showed it again (bp.13, lane B).  Only a dialog on screen
+    // blocks anything.
+    wxWindow* dialog = wxWindow::FindWindowById( m_blockingDialog );
+    return dialog && dialog->IsShown() ? dialog : nullptr;
 }
 
 
