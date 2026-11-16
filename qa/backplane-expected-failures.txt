@@ -2,15 +2,5 @@
 # The QA workflow fails on any failure not listed here, and on a listed case that now passes
 # (remove it then). Each entry names why and what removes it.
 #
-# qa_pcbnew: stale tests, fixed by fix/qa-pcbnew-stale (batch 7 list); remove when it lands.
-qa_pcbnew BackplaneAssemblyBoardOps/ElectricalSnapshotResolvesLinkedNativePads
-qa_pcbnew DrillChart/CellFormattingFollowsItsGroupWhenAGroupIsAdded
-qa_pcbnew DrillChart/CellFormattingFollowsItsGroupWhenAGroupIsRemoved
-qa_pcbnew PadRoundTrip/CopperOnlyPad
-qa_pcbnew PcbItem/FlipLeftRight
-qa_pcbnew PcbItem/FlipUpDown
-qa_pcbnew PcbItem/Move
-qa_pcbnew PcbItem/Rotate
-qa_pcbnew PcbItem/Type
-qa_pcbnew PcbViaHoleRecolour/BackdrilledPadKeepsIndicatorColours
-qa_pcbnew PcbViaHoleRecolour/BackdrilledViaKeepsIndicatorColours
+#
+# (empty since batch 12: the 11 stale qa_pcbnew tests were fixed by fix/qa-pcbnew-stale)
