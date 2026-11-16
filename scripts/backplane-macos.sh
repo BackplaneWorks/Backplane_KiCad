@@ -49,6 +49,14 @@ bundle="$stage/KiCad.app"
 cli=$(find "$build" -type f -name kicad-cli -perm -111 | head -n 1)
 [ -n "$cli" ]
 cp "$cli" "$bundle/Contents/MacOS/kicad-cli"
+# The pinned KiCad libraries and the Backplane library (scripts/backplane-libraries.sh; no 3D models
+# yet) go where KiCad.app looks for its stock data, Contents/SharedSupport: symbols/, footprints/,
+# template/ (with the libraries' sym-lib-table and fp-lib-table), the three default global tables
+# and backplane-library/.  Before the whole-bundle re-sign below, which seals them.
+libraries="$PWD/build/backplane-libraries"
+rm -rf "$libraries"
+bash scripts/backplane-libraries.sh "$libraries"
+cp -R "$libraries/share/kicad/." "$bundle/Contents/SharedSupport/"
 python scripts/backplane-macos-relocate.py "$bundle" | tee "$release/relocation.log"
 root="$release/backplane-kicad-darwin-$(uname -m)-$version"
 mkdir -p "$root/bin" "$root/share/backplane" "$root/licenses"
@@ -91,6 +99,8 @@ LAUNCHER
   [ -x "$root/bin/$tool" ] || { echo "no $tool in the bundle" >&2; exit 2; }
 done
 cp LICENSE* COPYING* AUTHORS* "$root/licenses/" 2>/dev/null || true
+cp -R "$libraries/licenses/kicad-libraries" "$root/licenses/"
+cp "$libraries/KICAD_LIBRARY_SOURCES.txt" "$root/"
 mkdir -p "$root/licenses/nng"
 cp "$nng_source/LICENSE.txt" "$root/licenses/nng/"
 git -C "$nng_source" rev-parse HEAD > "$root/licenses/nng/SOURCE_COMMIT"
@@ -104,13 +114,14 @@ export XDG_CONFIG_HOME="$HOME/config" XDG_CACHE_HOME="$HOME/cache" KICAD_CONFIG_
 mkdir -p "$HOME"
 "$root/bin/kicad-cli" --version | tee "$release/version.log"
 "$root/bin/kicad-cli" api-server --describe | tee "$root/share/backplane/runtime.json" "$release/runtime.json"
-python - "$root" "$(uname -m)" <<'MANIFEST'
+python - "$root" "$(uname -m)" "$libraries/BACKPLANE_LIBRARY.json" <<'MANIFEST'
 import json
 from pathlib import Path
 import sys
 root = Path(sys.argv[1])
 manifest = json.loads((root / 'share/backplane/runtime.json').read_text())
 manifest['platform'] = 'darwin-' + sys.argv[2]
+manifest['backplaneLibrary'] = json.loads(Path(sys.argv[3]).read_text())
 (root / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
 MANIFEST
 python scripts/backplane-ipc-smoke.py "$root/bin/kicad-cli" --expected-version "$version" | tee "$release/ipc.log"
@@ -136,6 +147,17 @@ if problems: sys.exit("manifest.json: " + "; ".join(problems))
 print("manifest.json: version, sourceCommit, sourceRepository, platform and %d capabilities" % len(m["capabilities"]))
 CHECK
 tar -C "$release" -czf "$release/$archive" "$(basename "$root")"
+# The libraries gate, on the archive as a person unpacks it: the files, tables, licences and
+# sources are inside, the bundle's signature still verifies, and the global tables resolve Device:C,
+# Capacitor_SMD and Backplane_Passives_Nominal C_0805_2012Metric (and its model) from an empty
+# config home.
+unpacked="$RUNNER_TEMP/libraries-gate"
+rm -rf "$unpacked" && mkdir -p "$unpacked"
+tar -C "$unpacked" -xzf "$release/$archive"
+codesign --verify --deep --strict "$unpacked/$(basename "$root")/KiCad.app"
+python scripts/backplane-library-package-check.py "$unpacked/$(basename "$root")" | tee "$release/libraries.log"
+python scripts/backplane-global-tables-regression.py "$unpacked/$(basename "$root")/bin/kicad-cli" | tee -a "$release/libraries.log"
+rm -rf "$unpacked" "$libraries"
 # The matching source, as the Linux and Windows releases attach it
 git archive --format=tar.gz --prefix="$(basename "$root")-source/" HEAD > "$release/$(basename "$root")-source.tar.gz"
 # LF only, "<sha256>  <name>": the integrator merges these lines into the release's SHA256SUMS
