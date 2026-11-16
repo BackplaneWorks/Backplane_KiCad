@@ -216,70 +216,30 @@ void centreOn( GtkWindow* aWindow, Window aOn )
 
 
 /// A dialog shown over the host is the person's next step (the host asked for it, or KiCad needs
-/// them): give it the keyboard as it appears.  A dialog mapped in answer to an API request has no
-/// recent user time in KiCad's process (GTK leaves its _NET_WM_USER_TIME stale), so a window
-/// manager with focus-stealing prevention (mutter) showed it on top but unfocused whenever the
-/// person's last input was in the host: Escape did not reach it until they clicked it.  i3 focuses
-/// it anyway.  gtk_window_present_with_time sends the activation as an application request (source
-/// 1), which mutter judged against the host's newer user time and dropped without a log line
-/// (Climb B, 9863817b83).  So the activation is sent as the pager does (source 2, honoured), after
-/// the WM has managed the window, and once more a little later in case it had not yet.
-struct DIALOG_ACTIVATION
+/// them): it should take the keyboard as it appears.  A dialog mapped in answer to an API request
+/// carried KiCad's stale user time (GTK sets _NET_WM_USER_TIME from the last input KiCad saw), so a
+/// window manager with focus-stealing prevention (mutter) refused it focus on map whenever the
+/// person's last input was in the host (Climb B; with no input in the host first, mutter did focus
+/// it).  Activation requests sent after the map, application or pager, were dropped by mutter under
+/// Xwayland without a log line.  So the time is fixed before the map: the map emission hook runs
+/// before GtkWindow's own map, and gdk_x11_window_set_user_time also moves the display's user
+/// time, which GDK writes on the window as it shows it.
+void stampUserTime( GtkWindow* aWindow )
 {
-    GtkWindow* window;
-    int        attempt;
-};
+    GdkWindow* gdkWindow = gtk_widget_get_window( GTK_WIDGET( aWindow ) );
 
+    if( !gdkWindow || !GDK_IS_X11_WINDOW( gdkWindow ) )
+        return;
 
-gboolean activateDialog( gpointer aData )
-{
-    DIALOG_ACTIVATION* activation = static_cast<DIALOG_ACTIVATION*>( aData );
-    GtkWindow*         window = activation->window;
-    Display*           display = xDisplay();
-    GdkWindow*         gdkWindow = gtk_widget_get_window( GTK_WIDGET( window ) );
-    bool               again = false;
+    guint32 now = gdk_x11_get_server_time( gdkWindow );
+    gdk_x11_window_set_user_time( gdkWindow, now );
 
-    if( display && gdkWindow && GDK_IS_X11_WINDOW( gdkWindow ) && gtk_widget_get_mapped( GTK_WIDGET( window ) ) )
+    if( getenv( "BACKPLANE_KICAD_EMBED_TRACE" ) )
     {
-        Window  xid = GDK_WINDOW_XID( gdkWindow );
-        guint32 now = gdk_x11_get_server_time( gdkWindow );
-        gdk_x11_window_set_user_time( gdkWindow, now );
-
-        XEvent event = {};
-        event.xclient.type = ClientMessage;
-        event.xclient.window = xid;
-        event.xclient.message_type = XInternAtom( display, "_NET_ACTIVE_WINDOW", False );
-        event.xclient.format = 32;
-        event.xclient.data.l[0] = 2;      // source indication: pager (the host asked for it)
-        event.xclient.data.l[1] = now;
-        event.xclient.data.l[2] = 0;
-
-        trapped( [&]()
-                 {
-                     XSendEvent( display, DefaultRootWindow( display ), False,
-                                 SubstructureRedirectMask | SubstructureNotifyMask, &event );
-                     XFlush( display );
-                 } );
-
-        if( getenv( "BACKPLANE_KICAD_EMBED_TRACE" ) )
-        {
-            fprintf( stderr, "kicad embed: dialog 0x%lx \"%s\" activation sent (source 2, time %u, try %d)\n",
-                     (unsigned long) xid, gtk_window_get_title( window ) ? gtk_window_get_title( window ) : "",
-                     now, activation->attempt );
-        }
-
-        again = activation->attempt == 1;
+        fprintf( stderr, "kicad embed: dialog 0x%lx \"%s\" user time %u before map\n",
+                 (unsigned long) GDK_WINDOW_XID( gdkWindow ),
+                 gtk_window_get_title( aWindow ) ? gtk_window_get_title( aWindow ) : "", now );
     }
-
-    if( again )
-    {
-        activation->attempt = 2;
-        return G_SOURCE_CONTINUE;   // once more, 120 ms later
-    }
-
-    g_object_unref( window );
-    delete activation;
-    return G_SOURCE_REMOVE;
 }
 
 
@@ -323,9 +283,7 @@ gboolean mapHook( GSignalInvocationHint*, guint aCount, const GValue* aParams, g
                 trapped( [&]() { XSetTransientForHint( display, xid, (Window) top ); } );
                 centreOn( window, (Window) top );
 
-                // After the WM has managed it (not inside the map emission), and once more 120 ms later
-                g_timeout_add( 120, activateDialog,
-                               new DIALOG_ACTIVATION{ GTK_WINDOW( g_object_ref( window ) ), 1 } );
+                stampUserTime( window );
             }
         }
     }
