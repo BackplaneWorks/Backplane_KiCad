@@ -19,7 +19,8 @@ scenario runs twice on a copy of pic_programmer, lazy then full, and the results
 - ERC and DRC with schematic parity (in-editor tasks): the same findings, as sets.
 - GetCapabilities lists embed-lazy-libraries lazy, and not with the full preload;
 - right after start, before anything loads them all: DRC with schematic parity loads only the
-  board's footprint libraries, and PlaceSymbolFromLibrary and CreateItems of a library symbol, each
+  board's footprint libraries, ERC only the libraries the schematic names (the same findings as
+  with the full preload), and PlaceSymbolFromLibrary and CreateItems of a library symbol, each
   from a global library the schematic does not use, load that library alone (both succeed, the
   rest stay unloaded).
 
@@ -238,6 +239,16 @@ def run_mode(args, mode):
                      boardtasks.GetDrcTaskResult, boardtasks.DrcTaskResult)
             result["fp_loaded_after_early_parity"] = count_loaded(libtypes.LT_FOOTPRINT)
 
+            # ERC right after start, as Backplane's hub runs it once the schematic is open: the
+            # libraries its checks read (the symbols' own, their footprints'), not every library
+            if sch_docs:
+                print(f"  [{mode}] early ERC", flush=True)
+                erc0 = run_task(schtasks.StartErcTask(document=sch_docs[0]),
+                                schtasks.GetErcTaskResult, schtasks.ErcTaskResult)
+                result["early_erc"] = sorted({(int(v.error_type), v.description) for v in erc0.violations})
+                result["sym_loaded_after_early_erc"] = count_loaded(libtypes.LT_SYMBOL)
+                result["fp_loaded_after_early_erc"] = count_loaded(libtypes.LT_FOOTPRINT)
+
             print(f"  [{mode}] symbols by library id", flush=True)
             # A symbol from a library the schematic does not use, placed and created by library id
             if sch_docs:
@@ -429,6 +440,12 @@ def main():
     check(lazy["fp_loaded_after_early_parity"] < full["fp_loaded_at_start"],
           f"DRC with parity right after start loads only the board's footprint libraries "
           f"({lazy['fp_loaded_after_early_parity']} loaded lazy, {full['fp_loaded_at_start']} full)")
+    check(lazy.get("early_erc") == full.get("early_erc"),
+          f"ERC right after start: the same findings lazy and full ({len(lazy.get('early_erc') or [])})")
+    check(lazy.get("sym_loaded_after_early_erc", 999) < lazy["sym_libraries"] // 2
+          and lazy.get("fp_loaded_after_early_erc", 999) < full["fp_loaded_at_start"],
+          f"and it loads only the libraries the schematic names ({lazy.get('sym_loaded_after_early_erc')} of "
+          f"{lazy['sym_libraries']} symbol, {lazy.get('fp_loaded_after_early_erc')} of {full['fp_libraries']} footprint)")
     check(all(r.get(k) for r in (lazy, full) for k in ("place_symbol_unused_library",
                                                         "create_symbol_unused_library")),
           "PlaceSymbolFromLibrary and CreateItems of a library symbol from an unused library, in both modes")

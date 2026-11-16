@@ -3113,7 +3113,29 @@ int ERC_TESTER::TestFootprintLinkIssues( KIFACE* aCvPcb, PROJECT* aProject )
     if( std::optional<LIBRARY_MANAGER_ADAPTER*> adapter =
                 Pgm().GetLibraryManager().Adapter( LIBRARY_TABLE_TYPE::FOOTPRINT ) )
     {
-        ( *adapter )->BlockUntilLoaded();
+        if( ( *adapter )->FullLoadDeferred() )
+        {
+            // An embedded KiCad's deferred full load (DeferFullLoad) is not needed here: only the
+            // libraries the symbols' footprints name are read
+            std::set<wxString> used;
+
+            for( const auto& source : collectFootprints( *m_schematic ) )
+            {
+                LIB_ID fpID;
+
+                if( !source.footprint.IsEmpty() && fpID.Parse( source.footprint, true ) < 0
+                        && !fpID.GetLibNickname().empty() )
+                {
+                    used.insert( wxString( fpID.GetLibNickname() ) );
+                }
+            }
+
+            ( *adapter )->LoadLibrariesNow( used );
+        }
+        else
+        {
+            ( *adapter )->BlockUntilLoaded();
+        }
     }
 
     KIFACE_TEST_FOOTPRINT_LINK_SERVICE::Type linkTester =
