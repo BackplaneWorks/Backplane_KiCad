@@ -22,6 +22,8 @@
 #include <confirm.h>
 #include <eda_base_frame.h>
 #include <kiface_base.h>
+#include <libraries/library_manager.h>
+#include <paths.h>
 #include <pgm_base.h>
 #include <wx/display.h>
 #include <wx/log.h>
@@ -159,6 +161,10 @@ STARTWIZARD_PROVIDER* STARTWIZARD::GetProvider( const wxString& aName )
 
 void STARTWIZARD::CheckAndRun( wxWindow* aParent )
 {
+    // Backplane (global-tables-seeded): the runtime's default tables reach a person who has none
+    // before the wizard asks about them, so its library page only shows when there is no default
+    LIBRARY_MANAGER::SeedGlobalTables( PATHS::GetUserSettingsPath(), PATHS::GetStockDataPath( false ) );
+
     m_providers.clear();
 
     m_providers.push_back( std::make_unique<STARTWIZARD_PROVIDER_SETTINGS>() );

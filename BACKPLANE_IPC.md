@@ -170,6 +170,15 @@ library is fetched by it); `version` is the bundle's label (e.g. `2026.11.13`), 
 `sha256` is over `<stock data>/backplane-library/SHA256SUMS`, which lists every file of the
 library with its sha256 (hash that file, then `sha256sum -c SHA256SUMS` in the folder).
 
+`global-tables-seeded` (headless manifest and `GetCapabilities`): at its first start, KiCad copies
+`<stock data>/<table>` into the person's settings folder for this version
+(`<config>/10.99/<table>`) for each global table that file does not exist for, and logs
+`Backplane: seeded global <table> from <default>` on stderr. A table that exists (readable or not,
+valid or not) is never touched, nor is any other version's folder; adding entries to an existing
+table stays the host's job. `${BACKPLANE_KICAD_LIBRARY}` defaults to
+`<stock data>/backplane-library` when neither the environment nor `kicad_common.json` sets it (a
+default is never saved). Without the capability only the Linux launcher seeds and sets it.
+
 ## Changes from the 10.0.6-based runtime
 
 - `RuleCheckerMarker*` → upstream `DrcMarker` / `ErcMarker`; design-rule types are in

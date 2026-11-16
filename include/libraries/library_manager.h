@@ -425,6 +425,20 @@ public:
 
     static bool CreateGlobalTable( LIBRARY_TABLE_TYPE aType, bool aPopulateDefaultLibraries );
 
+    /**
+     * Backplane (capability global-tables-seeded): give a person who has no global table of a type
+     * the runtime's default one, as the Linux launcher does at first launch.
+     *
+     * For each type in @p aTypes whose table file is missing from @p aConfigDir, copies
+     * @p aStockDataDir/<table> there when that file exists.  A table that exists (readable or
+     * not, valid or not) is never touched, and nothing outside @p aConfigDir is written.
+     *
+     * @return the full paths of the tables written.
+     */
+    static std::vector<wxString> SeedGlobalTables( const wxString& aConfigDir,
+                                                   const wxString& aStockDataDir,
+                                                   std::vector<LIBRARY_TABLE_TYPE> aTypes = {} );
+
     /// (Re)loads the global library tables in the given list, or all tables if no list is given
     void LoadGlobalTables( std::initializer_list<LIBRARY_TABLE_TYPE> aTablesToLoad = {} );
 

@@ -21,11 +21,13 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <optional>
 #include <utility>
 #include <vector>
 
 #include <wx/ffile.h>
+#include <wx/utils.h>
 
 #include <mock_pgm_base.h>
 #include <richio.h>
@@ -810,6 +812,97 @@ BOOST_AUTO_TEST_CASE( QuotedTextRoundTripsEscapes )
 
     if( reparsed.has_value() && !reparsed->rows.empty() )
         BOOST_CHECK_EQUAL( reparsed->rows[0].description, row.Description() );
+}
+
+
+// Backplane (global-tables-seeded): the runtime's default tables reach an empty config home;
+// an existing table (valid, invalid or the person's own), and another KiCad version's folder,
+// stay byte-identical.
+namespace
+{
+std::string slurp( const std::filesystem::path& aPath )
+{
+    std::ifstream in( aPath, std::ios::binary );
+    return std::string( std::istreambuf_iterator<char>( in ), std::istreambuf_iterator<char>() );
+}
+
+void spill( const std::filesystem::path& aPath, const std::string& aText )
+{
+    std::filesystem::create_directories( aPath.parent_path() );
+    std::ofstream out( aPath, std::ios::binary );
+    out << aText;
+}
+} // namespace
+
+
+BOOST_AUTO_TEST_CASE( SeedGlobalTables_EmptyHomeGetsDefaultsOthersUntouched )
+{
+    std::filesystem::path root = std::filesystem::temp_directory_path()
+                                 / ( "bp-seed-" + std::to_string( wxGetProcessId() ) );
+    std::filesystem::remove_all( root );
+
+    const std::filesystem::path stock = root / "share" / "kicad";
+    const std::string symDefault = "(sym_lib_table\n  (version 7)\n  (lib (name \"KiCad\")(type \"Table\")"
+                                   "(uri \"${KICAD10_TEMPLATE_DIR}/sym-lib-table\")(options \"\")(descr \"\"))\n)\n";
+    const std::string fpDefault = "(fp_lib_table\n  (version 7)\n  (lib (name \"KiCad\")(type \"Table\")"
+                                  "(uri \"${KICAD10_TEMPLATE_DIR}/fp-lib-table\")(options \"\")(descr \"\"))\n"
+                                  "  (lib (name \"Backplane_Logo\")(type \"KiCad\")(uri \"${BACKPLANE_KICAD_LIBRARY}"
+                                  "/libraries/Backplane_Logo.pretty\")(options \"\")(descr \"\"))\n)\n";
+    const std::string dbDefault = "(design_block_lib_table\n  (version 7)\n)\n";
+    spill( stock / "sym-lib-table", symDefault );
+    spill( stock / "fp-lib-table", fpDefault );
+    spill( stock / "design-block-lib-table", dbDefault );
+
+    // A stock KiCad 10.0 folder beside the fork's
+    const std::filesystem::path stock10 = root / "config" / "kicad" / "10.0";
+    const std::string stockSym = "(sym_lib_table\n\t(version 7)\n\t(lib (name \"Mine\")(type \"KiCad\")(uri \"/a.kicad_sym\")(options \"\")(descr \"\"))\n)\n";
+    const std::string stockFp = "(fp_lib_table\n\t(version 7)\n)\n";
+    spill( stock10 / "sym-lib-table", stockSym );
+    spill( stock10 / "fp-lib-table", stockFp );
+
+    // 1. An empty (not even created) config home gets all three, byte for byte
+    const std::filesystem::path fresh = root / "config" / "kicad" / "10.99";
+    std::vector<wxString> seeded = LIBRARY_MANAGER::SeedGlobalTables( wxString( fresh.string() ),
+                                                                      wxString( stock.string() ) );
+    BOOST_CHECK_EQUAL( seeded.size(), 3u );
+    BOOST_CHECK_EQUAL( slurp( fresh / "sym-lib-table" ), symDefault );
+    BOOST_CHECK_EQUAL( slurp( fresh / "fp-lib-table" ), fpDefault );
+    BOOST_CHECK_EQUAL( slurp( fresh / "design-block-lib-table" ), dbDefault );
+    BOOST_CHECK( LIBRARY_MANAGER::IsTableValid( wxString( ( fresh / "fp-lib-table" ).string() ) ) );
+
+    // A second run writes nothing
+    BOOST_CHECK( LIBRARY_MANAGER::SeedGlobalTables( wxString( fresh.string() ), wxString( stock.string() ) ).empty() );
+
+    // 2. Existing tables (the person's own without KiCad's entry, and an invalid one) stay
+    //    byte-identical; only the missing one is seeded
+    const std::filesystem::path mine = root / "config" / "kicad" / "mine";
+    const std::string ownFp = "(fp_lib_table\n\t(version 7)\n\t(lib (name \"amemb\")(type \"KiCad\")(uri \"/x.pretty\")(options \"\")(descr \"\"))\n)\n";
+    const std::string brokenSym = "(sym_lib_table (version 7) (lib (name";
+    spill( mine / "fp-lib-table", ownFp );
+    spill( mine / "sym-lib-table", brokenSym );
+    seeded = LIBRARY_MANAGER::SeedGlobalTables( wxString( mine.string() ), wxString( stock.string() ) );
+    BOOST_REQUIRE_EQUAL( seeded.size(), 1u );
+    BOOST_CHECK( seeded[0].EndsWith( wxS( "design-block-lib-table" ) ) );
+    BOOST_CHECK_EQUAL( slurp( mine / "fp-lib-table" ), ownFp );
+    BOOST_CHECK_EQUAL( slurp( mine / "sym-lib-table" ), brokenSym );
+
+    // 3. The other version's folder is untouched and gained nothing
+    BOOST_CHECK_EQUAL( slurp( stock10 / "sym-lib-table" ), stockSym );
+    BOOST_CHECK_EQUAL( slurp( stock10 / "fp-lib-table" ), stockFp );
+    BOOST_CHECK( !std::filesystem::exists( stock10 / "design-block-lib-table" ) );
+
+    // 4. No runtime default: nothing is written
+    const std::filesystem::path none = root / "config" / "kicad" / "none";
+    BOOST_CHECK( LIBRARY_MANAGER::SeedGlobalTables( wxString( none.string() ),
+                                                    wxString( ( root / "absent" ).string() ) ).empty() );
+    BOOST_CHECK( !std::filesystem::exists( none ) );
+
+    // No temporary file is left behind
+    for( const auto& entry : std::filesystem::recursive_directory_iterator( root ) )
+        BOOST_CHECK_MESSAGE( entry.path().filename().string().find( ".seed-" ) == std::string::npos,
+                             entry.path().string() );
+
+    std::filesystem::remove_all( root );
 }
 
 

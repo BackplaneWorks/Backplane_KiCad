@@ -36,6 +36,7 @@
 #include <systemdirsappend.h>
 #include <trace_helpers.h>
 #include <wx/config.h>
+#include <wx/filename.h>
 #include <wx/log.h>
 #include <wx/regex.h>
 #include <wx/tokenzr.h>
@@ -948,6 +949,16 @@ void COMMON_SETTINGS::InitializeEnvironment()
     addVar( ENV_VAR::GetVersionedEnvVarName( wxS( "3RD_PARTY" ) ), PATHS::GetDefault3rdPartyPath() );
     addVar( ENV_VAR::GetVersionedEnvVarName( wxS( "SYMBOL_DIR" ) ), PATHS::GetStockSymbolsPath() );
     addVar( ENV_VAR::GetVersionedEnvVarName( wxS( "DESIGN_BLOCK_DIR" ) ), PATHS::GetStockDesignBlocksPath() );
+
+    // Backplane (global-tables-seeded): the runtime's bundled Backplane library, which its default
+    // footprint table names through ${BACKPLANE_KICAD_LIBRARY}.  A built-in default only: the
+    // environment and kicad_common.json (Configure Paths) both win, and a default is never saved.
+    wxFileName backplaneLibrary;
+    backplaneLibrary.AssignDir( PATHS::GetStockDataPath( false ) );
+    backplaneLibrary.AppendDir( wxS( "backplane-library" ) );
+
+    if( backplaneLibrary.DirExists() )
+        addVar( wxS( "BACKPLANE_KICAD_LIBRARY" ), backplaneLibrary.GetPath() );
 }
 
 

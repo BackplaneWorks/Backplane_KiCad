@@ -66,6 +66,9 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     "plan-select",     // kiapi.backplane.plan.SelectPlanItems selects plan items as a click does (entering
                        // plan view, the first item's layer active, zoom); embed SelectItems in plan view
                        // zooms to the board items without selecting them and keeps plan view on
+    "global-tables-seeded", // a config home with no global library table gets the runtime's default
+                            // (<stock data>/<table>) at first start, never over an existing one;
+                            // ${BACKPLANE_KICAD_LIBRARY} defaults to <stock data>/backplane-library
 #ifdef _WIN32
     // embedded: a prewarm never takes the keyboard or the activation (shown with SW_SHOWNA; a focus
     // it takes while built goes back).  Windows only: verified there; the host gates its

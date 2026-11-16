@@ -19,6 +19,7 @@
  */
 
 #include <chrono>
+#include <cstdio>
 #include <common.h>
 #include <env_vars.h>
 #include <list>
@@ -44,6 +45,8 @@ using namespace std::chrono_literals;
 #include <settings/kicad_settings.h>
 #include <settings/settings_manager.h>
 #include <wx/dir.h>
+#include <wx/filefn.h>
+#include <wx/utils.h>
 #include <wx/log.h>
 
 struct LIBRARY_MANAGER_INTERNALS
@@ -586,8 +589,66 @@ bool LIBRARY_MANAGER::CreateGlobalTable( LIBRARY_TABLE_TYPE aType, bool aPopulat
 }
 
 
+std::vector<wxString> LIBRARY_MANAGER::SeedGlobalTables( const wxString& aConfigDir,
+                                                        const wxString& aStockDataDir,
+                                                        std::vector<LIBRARY_TABLE_TYPE> aTypes )
+{
+    std::vector<wxString> seeded;
+
+    if( aTypes.empty() )
+        aTypes = { LIBRARY_TABLE_TYPE::SYMBOL, LIBRARY_TABLE_TYPE::FOOTPRINT, LIBRARY_TABLE_TYPE::DESIGN_BLOCK };
+
+    if( aConfigDir.IsEmpty() || aStockDataDir.IsEmpty() )
+        return seeded;
+
+    for( LIBRARY_TABLE_TYPE type : aTypes )
+    {
+        wxFileName target( aConfigDir, tableFileName( type ) );
+        wxFileName source( aStockDataDir, tableFileName( type ) );
+
+        // Exists in any form (even unreadable or invalid): the person's, never touched
+        if( target.Exists() || !source.IsFileReadable() )
+            continue;
+
+        if( !wxFileName::DirExists( aConfigDir ) && !wxFileName::Mkdir( aConfigDir, wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL ) )
+            return seeded;
+
+        // Copy beside it, then rename without overwriting: a table another process made
+        // meanwhile wins and this copy is dropped
+        wxString temporary = target.GetFullPath() + wxS( ".seed-" ) + wxString::Format( wxS( "%lu" ),
+                                                                         wxGetProcessId() );
+
+        if( !wxCopyFile( source.GetFullPath(), temporary, true ) )
+        {
+            wxRemoveFile( temporary );
+            continue;
+        }
+
+        if( target.Exists() || !wxRenameFile( temporary, target.GetFullPath(), false ) )
+        {
+            wxRemoveFile( temporary );
+            continue;
+        }
+
+        wxString line = wxString::Format( wxS( "Backplane: seeded global %s from %s" ),
+                                          target.GetFullPath(), source.GetFullPath() );
+        wxLogTrace( traceLibraries, line );
+        std::fprintf( stderr, "%s\n", line.utf8_string().c_str() );
+        seeded.push_back( target.GetFullPath() );
+    }
+
+    return seeded;
+}
+
+
 void LIBRARY_MANAGER::LoadGlobalTables( std::initializer_list<LIBRARY_TABLE_TYPE> aTablesToLoad )
 {
+    // Backplane (global-tables-seeded): a person with no global table gets the runtime's default,
+    // in this version's settings folder only.  Never for a project-scoped (passive) manager.
+    if( !IsProjectScoped() )
+        SeedGlobalTables( PATHS::GetUserSettingsPath(), PATHS::GetStockDataPath( false ),
+                          std::vector<LIBRARY_TABLE_TYPE>( aTablesToLoad ) );
+
     // Cancel any in-progress load
     {
         std::scoped_lock lock( m_adaptersMutex );
