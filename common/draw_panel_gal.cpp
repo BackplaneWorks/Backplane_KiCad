@@ -513,6 +513,7 @@ bool EDA_DRAW_PANEL_GAL::recoverFromGalError( const std::exception& aError )
                 // Some drivers refuse new framebuffers to a process for the rest of its life after a reset
                 m_rebuiltAfterReset = false;
                 EDA_DRAW_FRAME::SetCanvasFailed( GAL_TYPE_OPENGL );
+                BACKPLANE_EMBED::Get().SetOpenGLFailed();
                 showMessageLater( _( "The graphics driver was reset and OpenGL could not be restored" ),
                                   _( "Restart KiCad to use accelerated graphics again." ), false );
             }
@@ -586,6 +587,7 @@ bool EDA_DRAW_PANEL_GAL::handleContextLoss()
 
         wxLogTrace( traceGalContext, wxS( "Canvas %p falling back to software rendering" ), this );
         EDA_DRAW_FRAME::SetCanvasFailed( GAL_TYPE_OPENGL );
+        BACKPLANE_EMBED::Get().SetOpenGLFailed();
         SwitchBackend( GAL_FALLBACK );
 
         if( loss == KIGFX::GAL_CONTEXT_LOSS::REPEATED && !s_notified )
@@ -1509,7 +1511,7 @@ bool EDA_DRAW_PANEL_GAL::SwitchBackend( GAL_TYPE aGalType )
             // Embedded, OpenGL that failed once is not tried again by the next frame (and its
             // notice not said again): this process stays on the fallback canvas
             if( GAL_FALLBACK_AVAILABLE && BACKPLANE_EMBED::Get().Enabled()
-                && EDA_DRAW_FRAME::CanvasFailed( GAL_TYPE_OPENGL ) )
+                && ( EDA_DRAW_FRAME::CanvasFailed( GAL_TYPE_OPENGL ) || BACKPLANE_EMBED::Get().OpenGLFailed() ) )
             {
                 wxLogTrace( traceGalContext, wxS( "Canvas %p: OpenGL failed before, using the fallback" ), this );
                 aGalType = GAL_FALLBACK;
@@ -1530,7 +1532,10 @@ bool EDA_DRAW_PANEL_GAL::SwitchBackend( GAL_TYPE aGalType )
                     aGalType = GAL_FALLBACK;
 
                     if( BACKPLANE_EMBED::Get().Enabled() )
+                    {
                         EDA_DRAW_FRAME::SetCanvasFailed( GAL_TYPE_OPENGL );
+                        BACKPLANE_EMBED::Get().SetOpenGLFailed();
+                    }
 
                     showMessageLater( _( "Could not use OpenGL, falling back to software rendering" ), errormsg,
                                       false );
@@ -1643,6 +1648,7 @@ bool EDA_DRAW_PANEL_GAL::SwitchBackend( GAL_TYPE aGalType )
                 new_gal = new KIGFX::CAIRO_GAL( m_options, this, this, this );
                 aGalType = GAL_FALLBACK;
                 EDA_DRAW_FRAME::SetCanvasFailed( GAL_TYPE_OPENGL );
+                BACKPLANE_EMBED::Get().SetOpenGLFailed();
                 showMessageLater( _( "Could not use OpenGL, falling back to software rendering" ),
                                   wxString( err.what() ), false );
             }
