@@ -878,7 +878,11 @@ BOOST_AUTO_TEST_CASE( PartialFootprintValueUpdateKeepsTheField )
 
     API_HANDLER_PCB handler( m_context );
     kiapi::common::ApiRequest beginRequest = makeBeginCommitRequest();
-    BOOST_REQUIRE( handler.Handle( beginRequest ).has_value() );
+    API_RESULT                begun = handler.Handle( beginRequest );
+    BOOST_REQUIRE( begun.has_value() );
+
+    kiapi::common::commands::BeginCommitResponse commit;
+    BOOST_REQUIRE( begun->message().UnpackTo( &commit ) );
 
     kiapi::common::commands::UpdateItems command;
     *command.mutable_header()->mutable_document() = makeBoardDocument( *board );
@@ -899,6 +903,15 @@ BOOST_AUTO_TEST_CASE( PartialFootprintValueUpdateKeepsTheField )
     BOOST_REQUIRE( result->message().UnpackTo( &response ) );
     BOOST_REQUIRE_EQUAL( response.updated_items_size(), 1 );
     BOOST_CHECK_EQUAL( response.updated_items( 0 ).status().code(), kiapi::common::commands::ISC_OK );
+
+    // The change lands on the board when the commit is pushed
+    kiapi::common::commands::EndCommit end;
+    *end.mutable_id() = commit.id();
+    end.set_action( kiapi::common::commands::CMA_COMMIT );
+    kiapi::common::ApiRequest endRequest;
+    endRequest.mutable_header()->set_client_name( "kicad.qa" );
+    BOOST_REQUIRE( endRequest.mutable_message()->PackFrom( end ) );
+    BOOST_REQUIRE_MESSAGE( handler.Handle( endRequest ).has_value(), "EndCommit failed" );
 
     FOOTPRINT* after = nullptr;
 
