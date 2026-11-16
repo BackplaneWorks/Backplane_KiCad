@@ -402,18 +402,23 @@ def main():
             time.sleep(0.5)
             host_geometry(raise_=True)   # the client re-orders after a click in its window
             check(wait_for(lambda: directly_above(pcb, hid), 3), "after a click in the host the frame is above it again")
-            api.request(editor.AddToSelection(header=header, items=[types.KIID(value=kiid)]), editor.SelectionResponse)
-            selected = lambda: len(api.request(editor.GetSelection(header=header), editor.SelectionResponse).items)
-            wait_for(lambda: selected() > 0, 3)
-            # Empty canvas below the board (the right side of the pane is KiCad's Appearance panel)
-            click(hx + px + pw * 0.1, hy + py + ph * 0.86)
-            first = wait_for(lambda: selected() == 0, 3)
-            RESULTS["first_click_acted"] = bool(first)
-            if not first:
-                # which is it: the first click only activated, or a click there does not clear an agent's selection at all
-                click(hx + px + pw * 0.1, hy + py + ph * 0.86)
-                RESULTS["second_click_acted"] = bool(wait_for(lambda: selected() == 0, 3))
-            check(first, f"the first click on an inactive KiCad's canvas acts (selection cleared; {RESULTS})")
+            # one click on the board (its parts: the middle of the board's area) must select there: ET_SELECTION_CHANGED, the person's
+            # selection the hub cross-probes from (an agent's own selection is its own under co-edit, so clearing that proves nothing)
+            pump(0)
+            click(hx + px + pw * 0.35, hy + py + ph * 0.45)
+            got = None
+            deadline = time.monotonic() + 3
+            while time.monotonic() < deadline and not got:
+                got = next((e for e in pump(200) if e.type == embed.ET_SELECTION_CHANGED), None)
+            RESULTS["first_click_acted"] = got is not None
+            if got is None:
+                click(hx + px + pw * 0.35, hy + py + ph * 0.45)
+                deadline = time.monotonic() + 3
+                while time.monotonic() < deadline and not got:
+                    got = next((e for e in pump(200) if e.type == embed.ET_SELECTION_CHANGED), None)
+                RESULTS["second_click_acted"] = got is not None
+            shot("02b-first-click")
+            check(RESULTS["first_click_acted"], f"the first click on an inactive KiCad's board selects there (ET_SELECTION_CHANGED; {RESULTS.get('second_click_acted')})")
             check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "and gives KiCad the keyboard")
 
             # The host's own visibility is an overlay: the frame leaves the screen, FrameInfo.shown stays
@@ -499,14 +504,14 @@ def main():
                 cx, cy = dx + dw / 2, dy + dh / 2
                 check(r is not None and r[0] <= cx <= r[0] + r[2] and r[1] <= cy <= r[1] + r[3], "the dialog is centred over the host")
             check(any(e.type == embed.ET_DIALOG_OPENED for e in pump(500)), "ET_DIALOG_OPENED reported")
-            # an agent's RunAction opened it, so KiCad is not the active app: the person's click on it would activate it
+            # the person closes it: its Cancel button (bottom right; an agent's RunAction opened it, so KiCad was not the active app)
             if dialog:
                 dx, dy, dw, dh = dialog[0][2]
-                click(dx + dw / 2, dy + 12)
-                time.sleep(0.4)
-            key("escape", command=False)
+                click(dx + dw - 150, dy + dh - 24)
+                time.sleep(0.5)
             runner.join(10)
-            check(wait_for(lambda: not kicad_windows_above_host(), 5), "Escape closes the dialog")
+            check(wait_for(lambda: not kicad_windows_above_host(), 5), "its Cancel button closes the dialog")
+            check(any(e.type == embed.ET_DIALOG_CLOSED for e in pump(500)), "ET_DIALOG_CLOSED reported")
 
             # a popup menu (right click on the canvas) shows above the host
             def popups():
