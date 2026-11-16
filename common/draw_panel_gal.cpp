@@ -608,6 +608,15 @@ void EDA_DRAW_PANEL_GAL::showMessageLater( const wxString& aTitle, const wxStrin
     CallAfter(
             [parent, aTitle, aDetail, aError]()
             {
+                // Embedded, a box here is a modal over a frame the host may not have shown yet
+                // (no GPU: "Could not use OpenGL, falling back to software rendering") and holds
+                // the editor up until clicked.  The canvas already switched: the host is told
+                if( BACKPLANE_EMBED::Get().Enabled() )
+                {
+                    BACKPLANE_EMBED::Get().Notice( parent, "graphics", aTitle, aDetail, aError );
+                    return;
+                }
+
                 if( aError )
                     DisplayErrorMessage( parent, aTitle, aDetail );
                 else
@@ -1497,6 +1506,17 @@ bool EDA_DRAW_PANEL_GAL::SwitchBackend( GAL_TYPE aGalType )
         {
         case GAL_TYPE_OPENGL:
         {
+            // Embedded, OpenGL that failed once is not tried again by the next frame (and its
+            // notice not said again): this process stays on the fallback canvas
+            if( GAL_FALLBACK_AVAILABLE && BACKPLANE_EMBED::Get().Enabled()
+                && EDA_DRAW_FRAME::CanvasFailed( GAL_TYPE_OPENGL ) )
+            {
+                wxLogTrace( traceGalContext, wxS( "Canvas %p: OpenGL failed before, using the fallback" ), this );
+                aGalType = GAL_FALLBACK;
+                new_gal = new KIGFX::CAIRO_GAL( m_options, this, this, this );
+                break;
+            }
+
             wxString errormsg = KIGFX::OPENGL_GAL::CheckFeatures( m_options );
 
             if( errormsg.empty() )
@@ -1508,6 +1528,10 @@ bool EDA_DRAW_PANEL_GAL::SwitchBackend( GAL_TYPE aGalType )
                 if( GAL_FALLBACK != aGalType )
                 {
                     aGalType = GAL_FALLBACK;
+
+                    if( BACKPLANE_EMBED::Get().Enabled() )
+                        EDA_DRAW_FRAME::SetCanvasFailed( GAL_TYPE_OPENGL );
+
                     showMessageLater( _( "Could not use OpenGL, falling back to software rendering" ), errormsg,
                                       false );
                     new_gal = new KIGFX::CAIRO_GAL( m_options, this, this, this );

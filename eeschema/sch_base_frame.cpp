@@ -18,6 +18,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <optional>
+#include <backplane_embed.h>
 #include <algorithm>
 #include <advanced_config.h>
 #include <base_units.h>
@@ -868,13 +870,32 @@ void SCH_BASE_FRAME::setSymWatcher( const LIB_ID* aID )
     }
 
     Bind( wxEVT_FSWATCHER, &SCH_BASE_FRAME::OnSymChange, this );
-    m_watcher = std::make_unique<wxFileSystemWatcher>();
+    {
+        // Embedded, wx's "Unable to create inotify instance" (fs.inotify.max_user_instances used
+        // up) would be a box over the frame: it is not shown, and the frame goes on unwatched
+        std::optional<wxLogNull> quiet;
+
+        if( BACKPLANE_EMBED::Get().Enabled() )
+            quiet.emplace();
+
+        m_watcher = std::make_unique<wxFileSystemWatcher>();
+    }
+
     m_watcher->SetOwner( this );
+
+    bool watching;
 
     {
         // Silence OS errors that come from the watcher
         wxLogNull silence;
-        m_watcher->Add( fn );
+        watching = m_watcher->Add( fn );
+    }
+
+    if( !watching && BACKPLANE_EMBED::Get().Enabled() )
+    {
+        BACKPLANE_EMBED::Get().Notice( this, "file-watch-unavailable",
+                                       _( "Library changes made outside KiCad will not be reloaded" ),
+                                       fn.GetPath(), false );
     }
 }
 

@@ -91,6 +91,7 @@ enum class EMBED_EVENT_TYPE : int
     MARKER_CLICKED = 26,
     CHECKS_DONE = 27,
     FRAME_DRAWN = 28,
+    NOTICE = 29,
     RESERVED_KEY = 30
 };
 
@@ -301,6 +302,15 @@ public:
      * ET_FRAME_DRAWN: the frame is on screen, laid out at its size and painted.
      */
     void CanvasDrawn( wxWindow* aCanvas );
+
+    /**
+     * Tell the host what KiCad would otherwise put in a message box over an embedded frame (the
+     * graphics fallbacks, a file watcher that could not start).  Logged to stderr and the trace,
+     * and posted once per kind and title as ET_NOTICE for the frame aWindow belongs to; detail =
+     * JSON {kind, title, detail, error}.  UI thread.
+     */
+    void Notice( wxWindow* aWindow, const std::string& aKind, const wxString& aTitle,
+                 const wxString& aDetail, bool aError );
 
     bool Enabled() const { return m_enabled; }
 
@@ -710,6 +720,8 @@ private:
 
     FILE*                    m_traceFile = nullptr;
     double                   m_traceThreshold = 8.0;
+    /// Notice() kinds and titles already posted
+    std::set<std::string> m_noticesSent;
     std::vector<std::pair<std::string, int>> m_traceNotes;
     std::mutex               m_traceMutex;
 

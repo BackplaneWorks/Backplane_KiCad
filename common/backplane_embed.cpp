@@ -2468,6 +2468,28 @@ void BACKPLANE_EMBED::CanvasDrawn( wxWindow* aCanvas )
 }
 
 
+void BACKPLANE_EMBED::Notice( wxWindow* aWindow, const std::string& aKind, const wxString& aTitle,
+                              const wxString& aDetail, bool aError )
+{
+    std::string title = aTitle.ToStdString( wxConvUTF8 );
+    std::string detail = aDetail.ToStdString( wxConvUTF8 );
+
+    fprintf( stderr, "kicad embed: notice %s: %s%s%s\n", aKind.c_str(), title.c_str(),
+             detail.empty() ? "" : ": ", detail.c_str() );
+    TraceNote( "notice:" + aKind + ":" + title );
+
+    // Every frame that hits the same failure would say it again: the host hears it once
+    if( !m_noticesSent.insert( aKind + "\n" + title ).second )
+        return;
+
+    wxFrame* frame = aWindow ? wxDynamicCast( wxGetTopLevelParent( aWindow ), wxFrame ) : nullptr;
+
+    nlohmann::json j = { { "kind", aKind }, { "title", title }, { "detail", detail }, { "error", aError } };
+
+    PushEvent( EMBED_EVENT_TYPE::NOTICE, frame ? Info( frame ) : EMBED_FRAME_INFO(), j.dump() );
+}
+
+
 bool BACKPLANE_EMBED::Prewarming() const
 {
     return !m_prewarming.empty() || m_quietShowRequests > 0;

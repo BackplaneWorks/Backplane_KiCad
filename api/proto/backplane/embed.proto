@@ -221,6 +221,16 @@ enum EventType
                              // ShowFrame of a hidden frame; not for a prewarm.  detail = JSON
                              // {ms (since the ShowFrame), canvas: [width, height]} (bp.13).  A
                              // frame with no drawing canvas never posts it: cap the wait
+  ET_NOTICE            = 29; // embedded, KiCad would have shown a message box over a frame the host
+                             // may not have shown (holding up its start): it is not shown, the
+                             // host is told, once per kind and title.  Event.frame is the frame it
+                             // concerns (unset if none); detail = JSON {kind, title, detail,
+                             // error}.  kind "graphics": the drawing fallbacks ("Could not use
+                             // OpenGL, falling back to software rendering", a driver reset; every
+                             // later frame starts on the fallback canvas); kind
+                             // "file-watch-unavailable": a library file watcher could not start
+                             // (inotify instances used up), so that frame does not reload the
+                             // library on an outside change.  Capability embed-notice (bp.13)
   ET_RESERVED_KEY      = 30; // macOS (embed-reserved-key-event): a host-reserved chord or the
                              // comment key pressed in KiCad; Event.reserved_key.  Where the host
                              // has a container window the chord arrives as _BACKPLANE_KEY / WM_APP

@@ -135,6 +135,10 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 // Event.detail of ET_SHOW_REQUESTED / ET_EDITOR_REQUESTED names the API client
                 // that caused it ("" = the person or KiCad itself); DRC parity is quiet (bp.13)
                 reply.add_capabilities( "embed-request-actor" );
+                // ET_NOTICE: a message box KiCad would put over an embedded frame (the graphics
+                // fallbacks, "Could not use OpenGL..."; a file watcher that could not start)
+                // reaches the host instead, and the OpenGL failure sticks for the process (bp.13)
+                reply.add_capabilities( "embed-notice" );
 #ifdef __WXOSX__
                 // Frames are borderless top-levels placed over the host's pane: --parent-window
                 // is the host's CGWindowID, the host sends SetHostGeometry, and reserved chords

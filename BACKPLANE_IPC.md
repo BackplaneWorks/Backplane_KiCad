@@ -110,6 +110,7 @@ The other bp.13 embed features have one capability each in the embedded GUI's `G
 | `embed-checks` | DRC and ERC in the open editor | `RunChecks`, `GetMarkers`, `SelectItems` by id or place, `ET_CHECKS_DONE` |
 | `embed-host-markers` | the host's own markers on the canvas | `SetHostMarkers`, `ET_MARKER_CLICKED` |
 | `embed-request-actor` | who caused a show request | `Event.detail` of `ET_SHOW_REQUESTED` and `ET_EDITOR_REQUESTED` is the API client whose request made KiCad ask (an agent's or the host's own `RunAction`, ...), empty for the person and KiCad on its own; without the capability it is always empty. DRC parity loads the schematic hidden and asks for nothing |
+| `embed-notice` | no message box over an embedded frame | `ET_NOTICE` (once per kind and title), detail `{kind, title, detail, error}`, also on stderr. Kind `graphics`: the drawing fallbacks ("Could not use OpenGL, falling back to software rendering", a driver reset); KiCad switches to the fallback canvas itself and every later frame starts on it. Kind `file-watch-unavailable`: a library file watcher could not start (inotify instances used up); that frame does not reload the library on an outside change |
 | `api-field-fixes` | API field handling (bp.13) | a `FootprintInstance` mandatory field sent with only its text changes only the text (layer, place, size, visibility kept); `CreateItems` of a library symbol places a field given without a position as the library places it (text kept) and autoplaces when `fields_autoplaced`; a derived symbol is written flattened; a user field named Footprint, Reference, Value, Datasheet or Description fills that mandatory field (create and update) |
 | `sketch-route-width` | SketchRoute widths and failures (bp.13) | routes at each net's class width (net classes set in the same server included) or `track_width`; `SketchRouteResponse.failures` names each unrouted connection (net, ends, reason); a message with no `board` is `AS_BAD_REQUEST` |
 | `plan-view-api` | The API in plan view (bp.13) | plan view (the plan tool's edit mode) is passive like the selection tool: `RunAction` (including `pcbnew.Plan.togglePlanView`), `SetActiveLayer` and the other gated requests are served in it; `AS_BUSY` only while plan items are dragged or a corridor or plane is being drawn. Without it, every gated request in plan view is `AS_BUSY`. Over the board view the plan overlay draws a small "view only" tag, never plan view's header. `GetPlan` answers `PlanResponse.in_plan_view`: true while plan view is on, false in the board view (plan overlay shown or not) and headless |
@@ -132,7 +133,7 @@ it here in the same change):
 | 26 | `ET_MARKER_CLICKED` (host and DRC/ERC marker clicks) | bp.13 |
 | 27 | `ET_CHECKS_DONE` (RunChecks) | bp.13 |
 | 28 | `ET_FRAME_DRAWN` (cold start) | bp.13 |
-| 29 | `ET_NOTICE` (reserved by fix/win-dialog-events, not merged yet) | bp.13 |
+| 29 | `ET_NOTICE` (a message box embedded KiCad would show, sent to the host instead) | bp.13 |
 | 30 | `ET_RESERVED_KEY` (macOS reserved chords and comment key) | bp.13 |
 
 Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `files`; `Event` 8
