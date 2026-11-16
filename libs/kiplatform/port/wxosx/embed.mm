@@ -39,6 +39,7 @@
 #include <string>
 
 #include <wx/app.h>
+#include <wx/event.h>
 #include <wx/nonownedwnd.h>
 #include <wx/toplevel.h>
 #include <wx/window.h>
@@ -563,6 +564,41 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 
     // Dialogs: a window ordered in or out changes its occlusion state; one closed says so first
     NSNotificationCenter* centre = [NSNotificationCenter defaultCenter];
+
+    // AppKit keeps the physical Ctrl+Tab, Ctrl+Shift+Tab and Ctrl+` for its own keyboard navigation:
+    // wx never sees them, so the host's reserved chords on those keys (RawCtrl+Tab...) never matched.
+    // Seen first here, in an embedded frame they become the key event wx would have made, which the
+    // shared FilterEvent matches as on every other platform; anything it does not take goes on as it was.
+    [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
+                                          handler:^NSEvent*( NSEvent* aEvent ) {
+                                              NSEventModifierFlags m = aEvent.modifierFlags;
+                                              unsigned short       code = aEvent.keyCode;   // 48 Tab, 50 `
+
+                                              if( !( m & NSEventModifierFlagControl ) || ( code != 48 && code != 50 ) )
+                                                  return aEvent;
+
+                                              NSWindow* key = NSApp.keyWindow;
+
+                                              if( !key || !s_numbers.count( key.windowNumber ) )
+                                                  return aEvent;
+
+                                              wxWindow* focus = wxWindow::FindFocus();
+
+                                              if( !focus )
+                                                  return aEvent;
+
+                                              wxKeyEvent ke( wxEVT_CHAR_HOOK );
+                                              ke.m_keyCode = code == 48 ? WXK_TAB : '`';
+                                              ke.m_rawControlDown = true;
+                                              ke.m_shiftDown = ( m & NSEventModifierFlagShift ) != 0;
+                                              ke.m_altDown = ( m & NSEventModifierFlagOption ) != 0;
+                                              ke.m_controlDown = ( m & NSEventModifierFlagCommand ) != 0;
+                                              ke.SetEventObject( focus );
+                                              ke.SetId( focus->GetId() );
+
+                                              trace( std::string( "macos: raw Ctrl+" ) + ( code == 48 ? "Tab" : "`" ) + " handed to wx" );
+                                              return focus->GetEventHandler()->ProcessEvent( ke ) ? nil : aEvent;
+                                          }];
 
     // macOS 14+ activation is cooperative: the active app must consent before another may activate
     // itself. Each time KiCad becomes active, it consents for the host's app, so the host can take the
