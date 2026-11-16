@@ -106,7 +106,7 @@ int main(int argc, char **argv) { @autoreleasepool {
 }}
 """
 
-KEY = {"s": 1, "z": 6, "c": 8, "v": 9, "k": 40, "escape": 53}
+KEY = {"a": 0, "s": 1, "z": 6, "c": 8, "v": 9, "k": 40, "escape": 53}
 
 
 def key(name, command=True):
@@ -306,6 +306,22 @@ def main():
                 focused = wait_for(lambda: frames()[embed.FK_PCB].focused, 5)
                 RESULTS["focus_after_host_activates_kicad"] = bool(focused)
             check(focused, f"ShowFrame{{focus}} gives the PCB frame the keyboard ({RESULTS})")
+
+            # the keyboard is on the canvas, where KiCad's hotkeys are served (not a toolbar field): Cmd+A selects everything, then a
+            # plain Escape (no modifier) clears it; each is the person's selection change. No click before: ShowFrame{focus} alone.
+            def selection_event(seconds=3):
+                deadline = time.monotonic() + seconds
+                while time.monotonic() < deadline:
+                    if any(e.type == embed.ET_SELECTION_CHANGED for e in pump(200)):
+                        return True
+                return False
+
+            pump(0)
+            key("a")
+            all_selected = selection_event()
+            key("escape", command=False)
+            cleared = selection_event()
+            check(all_selected and cleared, f"after ShowFrame{{focus}} the canvas has the keyboard: Cmd+A and a plain Escape act ({all_selected}, {cleared})")
 
             documents = api.request(editor.GetOpenDocuments(type=types.DOCTYPE_PCB), editor.GetOpenDocumentsResponse)
             header = types.ItemHeader(document=documents.documents[0])

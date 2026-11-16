@@ -770,10 +770,27 @@ bool KIPLATFORM::EMBED::HasFocus( wxWindow* aFrame )
 
 void KIPLATFORM::EMBED::TakeFocus( wxWindow* aFrame )
 {
+    TakeFocusForClick( aFrame, nullptr );
+}
+
+
+void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked )
+{
     NSWindow* w = nsWindowOf( aFrame );
 
     if( !w || !keyAllowed( w, "TakeFocus" ) )
         return;
+
+    // Only a frame the person can see: a ShowFrame{focus} while the host's window is minimised, in
+    // full screen or parked would otherwise activate KiCad over whatever they are doing, with no
+    // KiCad window on screen
+    auto it = s_frames.find( aFrame );
+
+    if( it == s_frames.end() || !onShow( aFrame, it->second ) || !s_hostVisible || !s_parent )
+    {
+        trace( "macos: TakeFocus skipped: the frame is not on show" );
+        return;
+    }
 
     // An accessory app may become active; the host's window then shows as inactive, as it does
     // when any other window takes the keyboard
@@ -783,12 +800,21 @@ void KIPLATFORM::EMBED::TakeFocus( wxWindow* aFrame )
         [NSApp activateIgnoringOtherApps:YES];
 
     [w makeKeyWindow];
-}
 
-
-void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* )
-{
-    TakeFocus( aFrame );
+    // The keyboard to what was clicked (ShowFrame{focus} passes the canvas, where KiCad's hotkeys
+    // are served): makeKeyWindow alone gives back the frame's last focus, which can be a toolbar
+    // field, and then F2 does nothing
+    if( aClicked && aClicked->AcceptsFocus() )
+    {
+        for( wxWindow* p = aClicked; p; p = p->GetParent() )
+        {
+            if( p == aFrame )
+            {
+                aClicked->SetFocus();
+                break;
+            }
+        }
+    }
 }
 
 

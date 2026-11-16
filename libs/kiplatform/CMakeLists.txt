@@ -2,6 +2,8 @@ set( PLATFORM_COMPILE_DEFS "" )
 
 # Add port-specific files and definitions
 if( KICAD_WX_PORT STREQUAL osx )
+    # embed.mm retains and releases by hand (dispatch sources, the saved appearance): never ARC
+    set_source_files_properties( port/wxosx/embed.mm PROPERTIES COMPILE_OPTIONS "-fno-objc-arc" )
     set( PLATFORM_SRCS
         port/wxosx/embed.mm
         port/wxosx/touchpad.mm
