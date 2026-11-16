@@ -68,6 +68,23 @@ message SketchRoute
 
   // Time limit for the whole operation, in milliseconds; 0 for the router's default.
   uint32 time_limit_ms = 7;
+
+  // Track width for every route.  Unset (or 0): each net's own width, from its net class and
+  // the design rules, as the interactive router takes it (net classes changed in the same server
+  // are honoured).
+  kiapi.common.types.Distance track_width = 8;
+}
+
+
+// A connection left unrouted.
+message SketchRouteFailure
+{
+  string                      net       = 1;
+  kiapi.common.types.KIID     start     = 2;  // the pad, via or track the connection starts on
+  kiapi.common.types.KIID     end       = 3;
+  kiapi.common.types.Vector2  start_pos = 4;
+  kiapi.common.types.Vector2  end_pos   = 5;
+  string                      reason    = 6;
 }
 
 
@@ -96,4 +113,7 @@ message SketchRouteResponse
 
   // Tracks, arcs and vias created.
   repeated kiapi.common.types.KIID created_items = 8;
+
+  // One per connection that could not be routed (failed of them).
+  repeated SketchRouteFailure failures = 9;
 }

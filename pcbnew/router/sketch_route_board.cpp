@@ -66,6 +66,22 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
 
         bds.m_DRCEngine = drcEngine;
     }
+    else
+    {
+        // Net classes and rules may have changed since the engine was built (a net class set
+        // over the API in the same server): widths and clearances come from it, so rebuild it.
+        // A track routed at the Default class's width where the net's class asked for more was
+        // the token benchmark's repro 8.
+        aBoard->SynchronizeNetsAndNetClasses( false );
+
+        try
+        {
+            bds.m_DRCEngine->InitEngine( wxFileName( aBoard->GetDesignRulesPath() ) );
+        }
+        catch( ... )
+        {
+        }
+    }
 
     // Nor the ratsnest, which is where the unrouted connections come from
     aBoard->BuildConnectivity();
@@ -88,6 +104,7 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
     options.m_boundary = aBoard->GetBoardEdgesBoundingBox();
     options.m_guide = aRequest.m_guide;
     options.m_allowVias = aRequest.m_allowVias;
+    options.m_trackWidth = aRequest.m_trackWidth;
 
     if( aRequest.m_timeLimitMs > 0 )
         options.m_timeLimitMs = aRequest.m_timeLimitMs;
@@ -111,6 +128,34 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
 
     std::unique_ptr<PNS::NODE> branch( sketch.Route( router.GetWorld(), connections ) );
     result.m_stats = sketch.Stats();
+
+    for( int index : result.m_stats.m_failed )
+    {
+        if( index < 0 || index >= (int) connections.size() )
+            continue;
+
+        const PNS::SKETCH_CONNECTION& conn = connections[index];
+        SKETCH_ROUTE_RESULT::FAILURE  failure;
+
+        if( NETINFO_ITEM* net = static_cast<NETINFO_ITEM*>( conn.m_net ) )
+            failure.m_net = net->GetNetname();
+
+        failure.m_start = conn.m_start ? conn.m_start->Parent() : nullptr;
+        failure.m_end = conn.m_end ? conn.m_end->Parent() : nullptr;
+        failure.m_startPos = conn.m_startPos;
+        failure.m_endPos = conn.m_endPos;
+
+        if( result.m_stats.m_cancelled )
+            failure.m_reason = wxS( "cancelled before it was routed" );
+        else if( result.m_stats.m_timedOut )
+            failure.m_reason = wxS( "the time limit ran out before a route was found" );
+        else if( !aRequest.m_allowVias )
+            failure.m_reason = wxS( "no path keeps every clearance on one layer (vias not allowed)" );
+        else
+            failure.m_reason = wxS( "no path keeps every clearance, after rip-up and retry" );
+
+        result.m_failures.push_back( failure );
+    }
 
     if( !branch )
         return result;

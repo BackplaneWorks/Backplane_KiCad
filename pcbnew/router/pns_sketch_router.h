@@ -92,6 +92,9 @@ struct SKETCH_ROUTER_OPTIONS
 
     bool m_allowVias = true;
 
+    ///< Track width for every route (nm); 0 takes each net's own (its net class or rules).
+    int m_trackWidth = 0;
+
     ///< Cost of a via, as an equivalent length of track (nm).
     double m_viaCost = 3000000.0;
 
