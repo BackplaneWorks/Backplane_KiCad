@@ -37,6 +37,9 @@
 #include <settings/settings_manager.h>
 #include <zone.h>
 #include <zone_filler.h>
+#include <footprint.h>
+#include <pcb_field.h>
+#include <api/board/board_types.pb.h>
 
 #include <api/api_handler_pcb.h>
 #include <api/api_task_scheduler.h>
@@ -836,6 +839,74 @@ BOOST_AUTO_TEST_CASE( DrcExclusionDropsMarkerReportFields )
     BOOST_CHECK( roundTrippedMsg.violating_rule().empty() );
     BOOST_CHECK( roundTrippedMsg.description().empty() );
     BOOST_CHECK( !roundTrippedMsg.excluded() );
+}
+
+
+// A partial FootprintInstance update that sends only the Value text keeps the field's layer, place,
+// size and visibility (repro 5 of the token benchmark: it reset them to F.SilkS, the origin and
+// hidden); a whole field, as GetItems gives it, still replaces it.
+BOOST_AUTO_TEST_CASE( PartialFootprintValueUpdateKeepsTheField )
+{
+    BOARD* board = loadBoard( wxS( "api_kitchen_sink" ) );
+
+    FOOTPRINT* target = nullptr;
+
+    for( FOOTPRINT* fp : board->Footprints() )
+    {
+        if( fp->GetField( FIELD_T::VALUE )->GetLayer() != F_SilkS && fp->GetField( FIELD_T::VALUE )->IsVisible() )
+        {
+            target = fp;
+            break;
+        }
+    }
+
+    BOOST_REQUIRE_MESSAGE( target, "the board has a footprint with its Value off F.SilkS and shown" );
+
+    const PCB_FIELD* before = target->GetField( FIELD_T::VALUE );
+    PCB_LAYER_ID     layer = before->GetLayer();
+    VECTOR2I         position = before->GetPosition();
+    VECTOR2I         size = before->GetTextSize();
+    KIID             id = target->m_Uuid;
+
+    API_HANDLER_PCB handler( m_context );
+    BOOST_REQUIRE( handler.Handle( makeBeginCommitRequest() ).has_value() );
+
+    kiapi::common::commands::UpdateItems command;
+    *command.mutable_header()->mutable_document() = makeBoardDocument( *board );
+
+    kiapi::board::types::FootprintInstance partial;
+    partial.mutable_id()->set_value( id.AsStdString() );
+    partial.mutable_value_field()->mutable_text()->mutable_text()->set_text( "10k1" );
+    command.add_items()->PackFrom( partial );
+
+    kiapi::common::ApiRequest request;
+    request.mutable_header()->set_client_name( "kicad.qa" );
+    BOOST_REQUIRE( request.mutable_message()->PackFrom( command ) );
+
+    API_RESULT result = handler.Handle( request );
+    BOOST_REQUIRE_MESSAGE( result.has_value(), "UpdateItems failed" );
+
+    kiapi::common::commands::UpdateItemsResponse response;
+    BOOST_REQUIRE( result->message().UnpackTo( &response ) );
+    BOOST_REQUIRE_EQUAL( response.updated_items_size(), 1 );
+    BOOST_CHECK_EQUAL( response.updated_items( 0 ).status().code(), kiapi::common::commands::ISC_OK );
+
+    FOOTPRINT* after = nullptr;
+
+    for( FOOTPRINT* fp : board->Footprints() )
+    {
+        if( fp->m_Uuid == id )
+            after = fp;
+    }
+
+    BOOST_REQUIRE( after );
+    const PCB_FIELD* value = after->GetField( FIELD_T::VALUE );
+
+    BOOST_CHECK_EQUAL( value->GetText(), wxString( wxS( "10k1" ) ) );
+    BOOST_CHECK_EQUAL( value->GetLayer(), layer );
+    BOOST_CHECK( value->GetPosition() == position );
+    BOOST_CHECK( value->GetTextSize() == size );
+    BOOST_CHECK( value->IsVisible() );
 }
 
 
