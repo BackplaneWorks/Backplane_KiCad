@@ -210,6 +210,7 @@ def run_mode(args, mode):
             pcb_doc = docs(base.DOCTYPE_PCB)[0]
             sch_docs = docs(base.DOCTYPE_SCHEMATIC)
 
+            print(f"  [{mode}] save at start", flush=True)
             # Save right away: the bytes must not depend on how the libraries loaded
             api.request_raw(projectcmd.SaveDocument(document=pcb_doc))
             if sch_docs:
@@ -231,11 +232,13 @@ def run_mode(args, mode):
             def count_loaded(kind):
                 return sum(1 for v in loaded(kind).values() if v == libtypes.LLS_LOADED)
 
+            print(f"  [{mode}] early parity DRC", flush=True)
             # Before anything loads every library: DRC with parity loads only the board's own
             run_task(boardtasks.StartDrcTask(board=pcb_doc, test_schematic_parity=True),
                      boardtasks.GetDrcTaskResult, boardtasks.DrcTaskResult)
             result["fp_loaded_after_early_parity"] = count_loaded(libtypes.LT_FOOTPRINT)
 
+            print(f"  [{mode}] symbols by library id", flush=True)
             # A symbol from a library the schematic does not use, placed and created by library id
             if sch_docs:
                 schcmd = api.module("schematic.schematic_commands")
@@ -245,6 +248,13 @@ def run_mode(args, mode):
                         header=sch_header, lib_id=base.LibraryIdentifier(library_nickname="Device", entry_name="R"),
                         position=base.Vector2(x_nm=25_400_000, y_nm=25_400_000)))
                 result["place_symbol_unused_library"] = r.status.status == api.envelope.AS_OK
+                placed_id = None
+                if r.status.status == api.envelope.AS_OK:
+                    reply = api.module("common.commands.library_commands").PlaceFromLibraryResponse()
+                    r.message.Unpack(reply)
+                    placed = schtypes.SchematicSymbolInstance()
+                    if reply.item.Unpack(placed):
+                        placed_id = placed.id
                 symbol = schtypes.SchematicSymbolInstance()
                 symbol.id.value = "00000000-0000-4000-8000-00000000c0de"
                 symbol.position.x_nm = 50_800_000
@@ -259,12 +269,17 @@ def run_mode(args, mode):
                     made = schtypes.SchematicSymbolInstance()
                     ok = created.created_items[0].item.Unpack(made) and any(
                         c.item.type_url.endswith("SchematicPin") for c in made.definition.items)
-                api.request(editor.EndCommit(header=sch_header, id=commit.id,
-                                             action=editor.CMA_COMMIT if ok else editor.CMA_DROP,
-                                             message="lazylibs: a library symbol by id"), editor.EndCommitResponse)
+                # Dropped, and the placed one deleted: an unannotated symbol would stop Update PCB from
+                # Schematic at its annotation question (the library stays loaded either way)
+                api.request(editor.EndCommit(header=sch_header, id=commit.id, action=editor.CMA_DROP),
+                            editor.EndCommitResponse)
+                if placed_id is not None:
+                    api.request(editor.DeleteItems(header=sch_header, item_ids=[placed_id]),
+                                editor.DeleteItemsResponse)
                 result["create_symbol_unused_library"] = ok
                 result["sym_loaded_after_by_id"] = count_loaded(libtypes.LT_SYMBOL)
 
+            print(f"  [{mode}] override placement", flush=True)
             # The project's override wins at start
             header = base.ItemHeader(document=pcb_doc)
 
@@ -277,6 +292,7 @@ def run_mode(args, mode):
             result["override_only_at_start"] = place("Diode_THT", "OVERRIDE_ONLY")
             result["global_diode_at_start"] = place("Diode_THT", "D_DO-35_SOD27_P7.62mm_Horizontal")
 
+            print(f"  [{mode}] update dialogs", flush=True)
             # Update PCB from Schematic and Update Footprints from Library, right after start, applied
             # from their dialogs, then saved
             result["update_pcb_applied"] = apply_dialog(s, api, editor, "common.Control.updatePcbFromSchematic",
@@ -295,6 +311,7 @@ def run_mode(args, mode):
             shutil.copy(board_file, out / "after-updates.kicad_pcb")   # kept for a diff
             result["r0603_on_board"] = board_file.read_text().count('(footprint "Resistor_SMD:R_0603_1608Metric"')
 
+            print(f"  [{mode}] choosers", flush=True)
             # The choosers (and with them every full-load path): open, wait, close
             # The person's own way, as for the symbol chooser: click the canvas, then 'A'
             s.xdotool("mousemove", str(w // 2), str(h // 2), "click", "1")
@@ -341,6 +358,7 @@ def run_mode(args, mode):
             result["override_only_after_full"] = place("Diode_THT", "OVERRIDE_ONLY")
             result["global_diode_after_full"] = place("Diode_THT", "D_DO-35_SOD27_P7.62mm_Horizontal")
 
+            print(f"  [{mode}] DRC and ERC", flush=True)
             # (Both modes placed the same footprints, so the checks below compare like with like)
             drc = run_task(boardtasks.StartDrcTask(board=pcb_doc, test_schematic_parity=True),
                            boardtasks.GetDrcTaskResult, boardtasks.DrcTaskResult)

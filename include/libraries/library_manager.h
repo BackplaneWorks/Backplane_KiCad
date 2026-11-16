@@ -209,6 +209,10 @@ public:
     /// Not from a thread-pool worker.
     void LoadLibrariesNow( const std::set<wxString>& aNicknames );
 
+    /// Wait for the loads already running, without starting a deferred full load (DeferFullLoad):
+    /// for a caller about to load one library itself (LoadOne).  Not from a thread-pool worker.
+    void WaitForLoadsInFlight();
+
     /// Aborts any async load in progress; blocks until fully done aborting.
     /// This is the public interface to allow LIBRARY_MANAGER to abort loads before project changes.
     /// Only a caller that discards the libraries, or leaves them to RestartAsyncLoad(), passes true to end the

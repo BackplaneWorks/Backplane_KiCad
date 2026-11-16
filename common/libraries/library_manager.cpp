@@ -2100,6 +2100,15 @@ void LIBRARY_MANAGER_ADAPTER::loadNowDeferred( const wxString& aNickname )
 }
 
 
+void LIBRARY_MANAGER_ADAPTER::WaitForLoadsInFlight()
+{
+    std::unique_lock<std::mutex> asyncLock( m_loadMutex );
+
+    for( const std::future<void>& future : m_futures )
+        future.wait();
+}
+
+
 void LIBRARY_MANAGER_ADAPTER::LoadLibrariesNow( const std::set<wxString>& aNicknames )
 {
     auto allLoaded =
@@ -2126,12 +2135,7 @@ void LIBRARY_MANAGER_ADAPTER::LoadLibrariesNow( const std::set<wxString>& aNickn
             asyncLoadLocked( &aNicknames );
         }
 
-        {
-            std::unique_lock<std::mutex> asyncLock( m_loadMutex );
-
-            for( const std::future<void>& future : m_futures )
-                future.wait();
-        }
+        WaitForLoadsInFlight();
     }
 }
 
