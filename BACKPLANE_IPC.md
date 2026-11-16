@@ -151,6 +151,25 @@ Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `f
   `kicad-cli project downgrade --target 10.0 -o <dir> <project>.kicad_pro --report-json <file>`.
   Companions are copied and reported; stock KiCad ignores them.
 
+## Libraries
+
+Every runtime (Linux, Windows, macOS) carries the same pinned libraries, staged by
+`scripts/backplane-libraries.sh`: KiCad's symbols, footprints and templates at tag 10.0.6 (3D models
+on Linux only, for now) and the Backplane KiCad library (footprints and their STEP models), in the
+stock data folder (`share/kicad`; on macOS `KiCad.app/Contents/SharedSupport`):
+`symbols/`, `footprints/`, `template/` (with the libraries' `sym-lib-table` and `fp-lib-table`),
+`backplane-library/`, and the default global `sym-lib-table`, `fp-lib-table` and
+`design-block-lib-table`, which nest `${KICAD10_TEMPLATE_DIR}/<table>`; `fp-lib-table` also names
+the Backplane library's six footprint libraries through `${BACKPLANE_KICAD_LIBRARY}/libraries/`.
+`licenses/kicad-libraries/<name>/` holds each library's notices and `BACKPLANE_SOURCE.txt`;
+`KICAD_LIBRARY_SOURCES.txt` lists them all.
+
+`manifest.json` pins the Backplane library:
+`"backplaneLibrary": {"repository", "version", "commit", "sha256"}`. `commit` is the pin (the
+library is fetched by it); `version` is the bundle's label (e.g. `2026.11.13`), not a git ref;
+`sha256` is over `<stock data>/backplane-library/SHA256SUMS`, which lists every file of the
+library with its sha256 (hash that file, then `sha256sum -c SHA256SUMS` in the folder).
+
 ## Changes from the 10.0.6-based runtime
 
 - `RuleCheckerMarker*` → upstream `DrcMarker` / `ErcMarker`; design-rule types are in

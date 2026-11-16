@@ -45,6 +45,13 @@ jobs:
           path: C:\bp\vcpkg-cache
           key: kicad-windows-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'tools/custom_vcpkg_triplets/**') }}
           restore-keys: kicad-windows-vcpkg-
+      - name: Stage the pinned KiCad libraries (no 3D models)
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage="$RUNNER_TEMP/kicad-library-stage"
+          bash scripts/backplane-libraries.sh "$stage"
+          echo "BACKPLANE_LIBRARY_STAGE=$(cygpath -w "$stage")" >> "$GITHUB_ENV"
       - name: Build, relocate, test and package
         shell: pwsh
         run: ./scripts/backplane-windows.ps1
