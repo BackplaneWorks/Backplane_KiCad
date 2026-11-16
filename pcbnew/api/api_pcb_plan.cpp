@@ -22,6 +22,7 @@
 #include <api/api_handler_pcb.h>
 #include <backplane/board_plan.h>
 #include <backplane/plan_tool.h>
+#include <backplane/plan_view_item.h>
 #include <backplane_coedit.h>
 #include <board.h>
 #include <board_commit.h>
@@ -183,6 +184,13 @@ HANDLER_RESULT<PlanResponse> API_HANDLER_PCB::handleGetPlan( const HANDLER_CONTE
     PlanResponse response;
     response.set_json( out.dump() );
     response.set_revision( plan.revision );
+
+    if( PCB_EDIT_FRAME* f = frame(); f && f->GetCanvas() )
+    {
+        if( PLAN_VIEW_ITEM* item = f->GetCanvas()->GetPlanView() )
+            response.set_in_plan_view( item->IsPlanView() );
+    }
+
     return response;
 }
 

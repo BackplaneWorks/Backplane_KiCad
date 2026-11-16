@@ -9,7 +9,8 @@ With plan view on (its key, Ctrl+Shift+R), the active layer becomes In1.Cu by:
   minus     the - key from In2.Cu
   api-layer SetActiveLayer over the API, which must be served in plan view (not AS_BUSY)
 then a real left click on corridor c-1 (In1.Cu) where plan view draws it, and W (Wider): GetPlan
-must show c-1 wider, i.e. the click was the plan tool's.
+must show c-1 wider, i.e. the click was the plan tool's.  At every step GetPlan's in_plan_view
+must say which mode KiCad is in (true in plan view, false in the board view with the overlay).
   api-toggle  RunAction pcbnew.Plan.togglePlanView in plan view must be served and leave plan
             view: there a click on the overlay and W leave c-1 alone (the selection tool's
             canvas); the same RunAction enters plan view again, where click + W widen it.
@@ -140,6 +141,13 @@ def run(args, project):
         def get_plan():
             return json.loads(api.request(plan_pb.GetPlan(board=doc), plan_pb.PlanResponse).json or "{}")
 
+        def in_plan_view():
+            return api.request(plan_pb.GetPlan(board=doc), plan_pb.PlanResponse).in_plan_view
+
+        def mode(tag, want):
+            got = in_plan_view()
+            check(got == want, f"[{tag}] GetPlan in_plan_view is {want} (got {got})")
+
         def corridor(cid):
             return next(c for c in get_plan()["corridors"] if c["id"] == cid)
 
@@ -223,12 +231,15 @@ def run(args, project):
         def start(layer):
             """Board view, LAYER active, then plan view on."""
             check(not set_active(layer), f"SetActiveLayer is served in the board view")
+            mode("board view", False)
             plan_view_key()
+            mode("plan view on by its key", True)
 
         def finish():
             """Back to the board view with no plan selection (an empty click clears it)."""
             if state["plan"]:
                 plan_view_key()
+            mode("plan view off by its key", False)
 
         for case in args.cases.split(","):
             if case in ("plus", "plus2", "minus"):
@@ -240,7 +251,9 @@ def run(args, project):
                     key("minus" if case == "minus" else "plus")
                 layer = active()
                 check(layer == board_types.BL_In1_Cu, f"[{case}] the active layer is In1.Cu (got {layer})")
+                mode(case, True)
                 before, after = click_and_widen(case)
+                mode(case + " after the click and W", True)
                 check(after > before, f"[{case}] after the layer change in plan view, a click on {cid} "
                                       f"and W widen it ({before} -> {after})")
                 finish()
@@ -252,7 +265,9 @@ def run(args, project):
                 check(not refused, f"[{case}] SetActiveLayer is served in plan view ({refused or 'ok'})")
                 layer = active()
                 check(layer == board_types.BL_In1_Cu, f"[{case}] the active layer is In1.Cu (got {layer})")
+                mode(case, True)
                 before, after = click_and_widen(case)
+                mode(case + " after the click and W", True)
                 check(after > before, f"[{case}] after SetActiveLayer in plan view, a click on {cid} "
                                       f"and W widen it ({before} -> {after})")
                 finish()
@@ -265,15 +280,18 @@ def run(args, project):
                                    f"({refused or 'ok'})")
                 if not refused:
                     state["plan"] = False
+                    mode(case + " off by RunAction (the plan overlay shown)", False)
                     # the board view with the plan shown over it: a click there is not the plan's
                     before, after = click_and_widen(case + "-board-view")
                     check(after == before, f"[{case}] in the board view a click on the plan overlay and W "
                                            f"leave {cid} alone ({before} -> {after})")
+                    mode(case + " board view after the click and W", False)
                     key("Escape")
                     refused = run_action("pcbnew.Plan.togglePlanView")
                     check(not refused, f"[{case}] RunAction togglePlanView enters plan view ({refused or 'ok'})")
                     if not refused:
                         state["plan"] = True
+                        mode(case + " on by RunAction", True)
                         before, after = click_and_widen(case)
                         check(after > before, f"[{case}] back in plan view a click on {cid} and W widen it "
                                               f"({before} -> {after})")

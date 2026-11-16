@@ -41,6 +41,10 @@ message PlanResponse
 {
   string json     = 1;
   uint64 revision = 2;
+  // GetPlan (plan-view-api): the PCB editor is in plan view (Routing Plan View, the plan tool's
+  // edit mode) right now.  False in the board view, whether or not the plan is shown over it,
+  // and headless.  Only GetPlan sets it.
+  bool   in_plan_view = 3;
 }
 
 enum ProposeMode
