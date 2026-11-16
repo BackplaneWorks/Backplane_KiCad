@@ -4,6 +4,7 @@
 #include <assembly/assembly_model.h>
 #include <board.h>
 #include <footprint.h>
+#include <netinfo.h>
 #include <pad.h>
 #include <pcb_io/pcb_io_mgr.h>
 
@@ -132,15 +133,23 @@ BOOST_AUTO_TEST_CASE( ElectricalSnapshotResolvesLinkedNativePads )
     BOOST_REQUIRE( board );
     FOOTPRINT* footprint = nullptr;
     const PAD* pad = nullptr;
-    const PAD* differentPad = nullptr;
+    PAD* differentPad = nullptr;
     for( FOOTPRINT* candidate : board->Footprints() )
         for( const PAD* candidatePad : candidate->Pads() )
-            if( candidatePad->GetNetCode() > 0 )
-            {
-                if( !pad ) { footprint = candidate; pad = candidatePad; }
-                else if( candidatePad->GetNetCode() != pad->GetNetCode() ) differentPad = candidatePad;
-            }
-    BOOST_REQUIRE( footprint && pad && differentPad );
+            if( !pad && candidatePad->GetNetCode() > 0 ) { footprint = candidate; pad = candidatePad; }
+    BOOST_REQUIRE( footprint && pad );
+    // The kitchen sink has a single named net, so the link needs a second native net to join:
+    // give the netless pad beside the first one a net "B" of its own, on disk, where the sync
+    // reads each instance's board from.
+    for( PAD* candidatePad : footprint->Pads() )
+        if( !differentPad && candidatePad->GetNetCode() <= 0 && !candidatePad->GetNumber().IsEmpty() )
+            differentPad = candidatePad;
+    BOOST_REQUIRE( differentPad );
+    NETINFO_ITEM* netB = new NETINFO_ITEM( board.get(), wxT( "B" ) );
+    board->Add( netB );
+    differentPad->SetNet( netB );
+    BOOST_REQUIRE_NE( differentPad->GetNetCode(), pad->GetNetCode() );
+    PCB_IO_MGR::Save( PCB_IO_MGR::KICAD_SEXP, wxString::FromUTF8( path.string() ), *board );
     ASSEMBLY_MANIFEST manifest;
     manifest.base_directory = path.parent_path();
     manifest.instances = { { "tx", path.filename().string() }, { "rx", path.filename().string() } };
