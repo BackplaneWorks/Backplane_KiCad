@@ -2370,6 +2370,8 @@ void BACKPLANE_EMBED::Prewarm( wxFrame* aFrame, int aWidth, int aHeight )
     // which builds its layout, its canvas's GL context and its first view; then hide it again.
     m_prewarming.insert( aFrame );
     TRACE_SCOPE trace( "embed:prewarm@" + aFrame->GetName().ToStdString( wxConvUTF8 ) );
+    // Parked before the show: on macOS ParkForPrewarm makes the window transparent and ignoring
+    // the mouse, and the show then orders it in behind everything; shown first, it would flash
     KIPLATFORM::EMBED::ParkForPrewarm( aFrame, std::max( aWidth, 400 ), std::max( aHeight, 300 ) );
 
     // Never activated: on Windows an activated prewarm kept the activation while hidden, and the
