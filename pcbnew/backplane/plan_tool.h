@@ -30,6 +30,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
 
 class BOARD_PLAN;
 class PCB_EDIT_FRAME;
@@ -72,6 +73,19 @@ public:
     /// Select (and optionally zoom to) a plan item from the panel.
     void SelectItem( const std::string& aId, bool aZoom );
 
+    /// The API's SelectPlanItems (plan-select): the plan selection becomes the known ids of aIds
+    /// (corridors, planes, notes, splits), as a click makes it; plan view is entered when it is off
+    /// and the editing loop started when it is not running, so the plan's keys act on the
+    /// selection; the first item's layer becomes the active layer; aZoom fits the view to them.
+    /// Returns the ids selected, in aIds' order (none: nothing changed).
+    std::vector<std::string> SelectItems( const std::vector<std::string>& aIds, bool aZoom );
+
+    /// Plan view on, and the plan editing loop running (it is the mode's tool).
+    void EnterPlanView();
+
+    /// Plan view is on (false headless or without a plan view item).
+    bool InPlanView() const;
+
     const std::set<std::string>& Selected() const { return m_selected; }
 
     /// The person is dragging plan items (previewed on the board's plan): plan writes from
@@ -96,6 +110,12 @@ private:
     /// outline and the parts as context), restoring what was visible on the way out.
     void hideBoardLayers( bool aHide );
     void fitBesideOverview();
+    /// Centre and fit the view on these plan items; the first one's copper layer in aLayer.
+    bool zoomTo( const std::vector<std::string>& aIds, PCB_LAYER_ID* aLayer );
+    /// The copper layer a plan item is on (UNDEFINED_LAYER for notes on every layer, unknown ids).
+    PCB_LAYER_ID layerOf( const std::string& aId ) const;
+    /// The plan item exists (corridor, plane, note or split).
+    bool isPlanItem( const std::string& aId ) const;
     /// Whether anything is selected; if not, the infobar says what to do.
     bool needSelection() const;
     std::map<int, bool> m_savedVisibility;
@@ -122,4 +142,5 @@ private:
     std::set<std::string> m_selected;
     bool                  m_dragging = false;
     bool                  m_drawing = false;
+    bool                  m_editing = false;   ///< EditPlan's loop is running
 };

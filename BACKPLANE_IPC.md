@@ -82,6 +82,7 @@ or read `api/proto/` directly.
 |---|---|---|
 | `GetCapabilities` | `backplane/capabilities.proto` | Fork version, upstream commit, API level, capability names, every registered command, native file versions. |
 | `SketchRoute` | `backplane/sketch_route.proto` | Routes a bundle of connections (item IDs, optional guide polyline, layer, corner mode, vias, time limit); new items join the open commit. Works headless with explicit item IDs; an empty list means "the selection" and only works in the GUI. |
+| `plan.SelectPlanItems` | `backplane/plan.proto` | Capability `plan-select`. Selects plan items (corridors, planes, notes, splits) in the plan tool as a click does, so W/A/R and the context menu act on them; makes the first item's layer active, zooms when `zoom`, enters plan view when it is off. Unknown ids come back in `missing`; none known is `AS_BAD_REQUEST`. `AS_BUSY` only during a plan drag or draw. GUI only. With `plan-select`, embed `SelectItems` in plan view only zooms to the board items (no selection or highlight) and plan view stays on. |
 
 Board-structure (rigid-flex) and assembly commands are added by the phase-2 port (PR #6) in
 `backplane/structure.proto` and `backplane/assembly.proto`; check `GetCapabilities` for

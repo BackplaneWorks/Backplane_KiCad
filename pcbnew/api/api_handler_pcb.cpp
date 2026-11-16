@@ -239,6 +239,8 @@ API_HANDLER_PCB::API_HANDLER_PCB( std::shared_ptr<PCB_CONTEXT> aContext, PCB_EDI
         registerHandler<RoutePlan, RoutePlanResponse>( &API_HANDLER_PCB::handleRoutePlan );
         registerHandler<StopPlanRouting, PlanResponse>( &API_HANDLER_PCB::handleStopPlanRouting );
         registerHandler<VerifyPlan, VerifyPlanResponse>( &API_HANDLER_PCB::handleVerifyPlan );
+        registerHandler<SelectPlanItems, SelectPlanItemsResponse>(
+                &API_HANDLER_PCB::handleSelectPlanItems );
     }
     registerHandler<kiapi::backplane::ListAssemblyComponents, kiapi::backplane::AssemblyResponse>(
             &API_HANDLER_PCB::handleListAssemblyComponents );
@@ -3482,6 +3484,16 @@ API_HANDLER_PCB::handleSelectItems( const HANDLER_CONTEXT<kiapi::backplane::embe
         }
     }
 
+    // Plan view (plan-select): the board's copper is hidden and the plan tool owns the selection,
+    // so the items are zoomed to, not selected or highlighted.  Selecting them would end the plan
+    // tool, and plan view with it.  The plan selection stays; SelectPlanItems selects plan items.
+    // The board view is unchanged
+    bool planView = false;
+
+    if( PLAN_VIEW_ITEM* planItem = frame()->GetCanvas() ? frame()->GetCanvas()->GetPlanView() : nullptr )
+        planView = planItem->IsPlanView();
+
+    if( !planView )
     {
         // The host's selection is not reported back to it; KiCad's own cross-probe to the
         // schematic still runs.

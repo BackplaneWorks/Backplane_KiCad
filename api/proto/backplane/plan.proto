@@ -145,3 +145,25 @@ message VerifyPlanResponse
   repeated string verified = 1;
   string          report   = 2;  // JSON {group: {ok, drc, unrouted, min_length, max_length, skew}}
 }
+
+// Select plan items (capability plan-select), exactly as the person's click in plan view does:
+// the plan tool's selection becomes `ids` (corridors c-*, planes p-*, notes n-*, splits s-*),
+// so W/A/R/L... and the context menu act on them.  The first item's layer becomes the active
+// layer; `zoom` fits the view to the items.  Plan view is entered when it is off (and the plan
+// tool started; it stays running).  GUI only.  Ids that are not plan items come back in
+// `missing`; when none is known it answers AS_BAD_REQUEST and nothing changes.  AS_BUSY only
+// during a plan drag or a corridor/plane being drawn.
+message SelectPlanItems
+{
+  kiapi.common.types.DocumentSpecifier board = 1;
+  repeated string ids  = 2;
+  bool            zoom = 3;
+}
+
+message SelectPlanItemsResponse
+{
+  repeated string selected     = 1;  // the plan tool's selection afterwards, in request order
+  repeated string missing      = 2;  // requested ids that are not plan items
+  string          active_layer = 3;  // the board's active layer afterwards ("In1.Cu")
+  bool            in_plan_view = 4;  // always true on success
+}

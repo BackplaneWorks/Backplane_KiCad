@@ -180,6 +180,8 @@ private:
             const HANDLER_CONTEXT<kiapi::backplane::plan::StopPlanRouting>& aCtx );
     HANDLER_RESULT<kiapi::backplane::plan::VerifyPlanResponse> handleVerifyPlan(
             const HANDLER_CONTEXT<kiapi::backplane::plan::VerifyPlan>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::plan::SelectPlanItemsResponse> handleSelectPlanItems(
+            const HANDLER_CONTEXT<kiapi::backplane::plan::SelectPlanItems>& aCtx );
 
     // Custom rules, merged per rule (docs/backplane/coedit.md)
     HANDLER_RESULT<CustomRulesResponse> handleEditCustomRules(

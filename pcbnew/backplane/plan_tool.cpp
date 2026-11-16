@@ -411,18 +411,59 @@ std::string PLAN_TOOL::HitTest( const VECTOR2I& aPoint, int* aVertex, const std:
 }
 
 
-void PLAN_TOOL::SelectItem( const std::string& aId, bool aZoom )
+bool PLAN_TOOL::isPlanItem( const std::string& aId ) const
 {
-    m_selected = { aId };
-    syncSelection();
+    BOARD_PLAN& plan = board()->GetPlan();
 
-    if( !aZoom )
-        return;
+    if( plan.FindCorridor( aId ) || plan.FindPlane( aId ) )
+        return true;
 
+    return std::any_of( plan.notes.begin(), plan.notes.end(),
+                        [&]( const PLAN_NOTE& n ) { return n.id == aId; } )
+           || std::any_of( plan.splits.begin(), plan.splits.end(),
+                           [&]( const PLAN_SPLIT& sp ) { return sp.id == aId; } );
+}
+
+
+PCB_LAYER_ID PLAN_TOOL::layerOf( const std::string& aId ) const
+{
+    BOARD_PLAN& plan = board()->GetPlan();
+    std::string name;
+
+    if( PLAN_CORRIDOR* c = plan.FindCorridor( aId ) )
+        name = c->layer;
+    else if( PLAN_PLANE* p = plan.FindPlane( aId ) )
+        name = p->layer;
+
+    for( const PLAN_SPLIT& sp : plan.splits )
+    {
+        if( sp.id == aId )
+            name = sp.layer;
+    }
+
+    for( const PLAN_NOTE& n : plan.notes )
+    {
+        if( n.id == aId && n.layer != "*" )
+            name = n.layer;
+    }
+
+    if( name.empty() )
+        return UNDEFINED_LAYER;
+
+    PCB_LAYER_ID layer = board()->GetLayerID( wxString::FromUTF8( name ) );
+    return IsCopperLayer( layer ) ? layer : UNDEFINED_LAYER;
+}
+
+
+bool PLAN_TOOL::zoomTo( const std::vector<std::string>& aIds, PCB_LAYER_ID* aLayer )
+{
     BOARD_PLAN& plan = board()->GetPlan();
     BOX2I       box;
     bool        found = false;
-    PCB_LAYER_ID layer = UNDEFINED_LAYER;
+    int         margin = 0;
+
+    if( aLayer )
+        *aLayer = UNDEFINED_LAYER;
 
     auto add = [&]( const VECTOR2I& p )
     {
@@ -434,32 +475,139 @@ void PLAN_TOOL::SelectItem( const std::string& aId, bool aZoom )
         found = true;
     };
 
-    if( PLAN_CORRIDOR* c = plan.FindCorridor( aId ) )
+    for( const std::string& id : aIds )
     {
-        for( const VECTOR2I& p : c->path )
-            add( p );
+        if( aLayer && *aLayer == UNDEFINED_LAYER )
+            *aLayer = layerOf( id );
 
-        box.Inflate( c->width );
-        layer = board()->GetLayerID( wxString::FromUTF8( c->layer ) );
-    }
-    else if( PLAN_PLANE* p = plan.FindPlane( aId ) )
-    {
-        for( const VECTOR2I& pt : p->outline.front() )
-            add( pt );
+        if( PLAN_CORRIDOR* c = plan.FindCorridor( id ) )
+        {
+            for( const VECTOR2I& p : c->path )
+                add( p );
 
-        layer = board()->GetLayerID( wxString::FromUTF8( p->layer ) );
+            margin = std::max( margin, c->width );
+        }
+        else if( PLAN_PLANE* p = plan.FindPlane( id ) )
+        {
+            for( const VECTOR2I& pt : p->outline.front() )
+                add( pt );
+        }
+        else
+        {
+            for( const PLAN_SPLIT& sp : plan.splits )
+            {
+                if( sp.id == id )
+                {
+                    for( const VECTOR2I& pt : sp.path )
+                        add( pt );
+                }
+            }
+
+            for( const PLAN_NOTE& n : plan.notes )
+            {
+                if( n.id == id )
+                    add( n.at );
+            }
+        }
     }
 
     if( !found )
+        return false;
+
+    box.Inflate( margin );
+    box.Inflate( std::max( box.GetWidth(), box.GetHeight() ) / 3 + 2000000 );
+    getView()->SetCenter( box.Centre() );
+    getView()->SetViewport( BOX2D( box.GetOrigin(), box.GetSize() ) );
+    return true;
+}
+
+
+void PLAN_TOOL::SelectItem( const std::string& aId, bool aZoom )
+{
+    m_selected = { aId };
+    syncSelection();
+
+    if( !aZoom )
+        return;
+
+    PCB_LAYER_ID layer = UNDEFINED_LAYER;
+
+    if( !zoomTo( { aId }, &layer ) )
         return;
 
     if( layer != UNDEFINED_LAYER )
         editFrame()->SetActiveLayer( layer );
 
-    box.Inflate( std::max( box.GetWidth(), box.GetHeight() ) / 3 + 2000000 );
-    getView()->SetCenter( box.Centre() );
-    getView()->SetViewport( BOX2D( box.GetOrigin(), box.GetSize() ) );
     editFrame()->GetCanvas()->RefreshPlan();
+}
+
+
+bool PLAN_TOOL::InPlanView() const
+{
+    PLAN_VIEW_ITEM* item = planItem();
+    return item && item->IsPlanView();
+}
+
+
+void PLAN_TOOL::EnterPlanView()
+{
+    PLAN_VIEW_ITEM* item = planItem();
+
+    if( !item )
+        return;
+
+    if( !item->IsPlanView() )
+    {
+        item->SetPlanView( true );
+        item->SetShown( true );
+        hideBoardLayers( true );
+        fitBesideOverview();
+        editFrame()->GetCanvas()->RefreshPlan();
+    }
+
+    // Plan view's tool: started here, not posted, so the keys act on the selection as soon as
+    // the caller returns.  Plan view entered by its key posts planEdit; a loop already running
+    // ignores that second activation (EditPlan)
+    if( !m_editing )
+        m_toolMgr->RunAction( PCB_ACTIONS::planEdit );
+}
+
+
+std::vector<std::string> PLAN_TOOL::SelectItems( const std::vector<std::string>& aIds, bool aZoom )
+{
+    std::vector<std::string> known;
+
+    for( const std::string& id : aIds )
+    {
+        if( isPlanItem( id ) && std::find( known.begin(), known.end(), id ) == known.end() )
+            known.push_back( id );
+    }
+
+    if( known.empty() || !editFrame() )
+        return {};
+
+    EnterPlanView();
+
+    m_selected = std::set<std::string>( known.begin(), known.end() );
+    syncSelection();
+
+    PCB_LAYER_ID layer = UNDEFINED_LAYER;
+
+    for( const std::string& id : known )
+    {
+        if( ( layer = layerOf( id ) ) != UNDEFINED_LAYER )
+            break;
+    }
+
+    // The keys act on the active layer's items, as after a click on another layer's corridor
+    if( layer != UNDEFINED_LAYER )
+        editFrame()->SetActiveLayer( layer );
+
+    if( aZoom )
+        zoomTo( known, nullptr );
+
+    editFrame()->GetCanvas()->RefreshPlan();
+    return known;
 }
 
 
@@ -571,6 +719,9 @@ int PLAN_TOOL::EditPlan( const TOOL_EVENT& aEvent )
     controls()->ShowCursor( true );
     f->PushTool( aEvent );
 
+    m_editing = true;
+    struct EDITING { bool& flag; ~EDITING() { flag = false; } } editing{ m_editing };
+
     std::string hovered;
 
     while( TOOL_EVENT* evt = Wait() )
@@ -589,6 +740,11 @@ int PLAN_TOOL::EditPlan( const TOOL_EVENT& aEvent )
 
             break;
         }
+
+        // Its own activation again (plan view's key posts planEdit after SelectPlanItems started
+        // the loop): the mode is already on
+        if( evt->IsActivate() && evt->IsAction( &PCB_ACTIONS::planEdit ) )
+            continue;
 
         if( evt->IsActivate() && !evt->IsMoveTool() )
             break;
