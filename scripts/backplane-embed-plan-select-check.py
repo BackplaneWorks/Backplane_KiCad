@@ -272,6 +272,7 @@ def run(args, project):
                 api.request(embed.SelectItems(kind=embed.FK_PCB, references=refs, nets=nets, zoom=True),
                             embed.SelectItemsResponse)
                 time.sleep(0.5)
+                mode(case + " after SelectItems {zoom}", True)
                 show()
                 time.sleep(1.0)
                 s.shot(f"{case}-selected")
