@@ -426,8 +426,10 @@ message RunChecks
   bool      parity       = 3;  // FK_PCB: also schematic parity
 
   // canvas-idle: when non-zero, refused with AS_BUSY ("canvas in use: ...") if the checked
-  // frame's canvas had input within this many ms or its tool is busy (with parity, also a busy
-  // schematic tool).  KiCad never waits or queues: it refuses or runs.  0: no such check.
+  // frame's canvas, or any other embedded frame's canvas (one UI thread serves them all: the
+  // schematic panned during a DRC with parity), had input within this many ms, or the checked
+  // frame's tool is busy (with parity, also a busy schematic tool).  KiCad never waits or
+  // queues: it refuses or runs.  0: no such check.
   uint64    min_canvas_idle_ms = 4;
 }
 
