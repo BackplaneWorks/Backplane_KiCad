@@ -579,9 +579,14 @@ bool EDA_BASE_FRAME::ProcessEvent( wxEvent& aEvent )
     if( Pgm().m_Quitting )
         return true;
 
-    if( !m_isClosing && m_supportsAutoSave && IsShownOnScreen() && IsActive()
+    // An embedded frame is armed whether or not it is active or on show: it is never the active
+    // window while the person works in the host, and is hidden while another editor's tab is up,
+    // yet an agent's edit there (an API commit) must be snapshotted like the person's, or a crash
+    // loses it with no Recover Unsaved Changes.
+    if( !m_isClosing && m_supportsAutoSave
             && m_autoSavePending != isAutoSaveRequired()
-            && GetAutoSaveInterval() > 0 )
+            && GetAutoSaveInterval() > 0
+            && ( ( IsShownOnScreen() && IsActive() ) || BACKPLANE_EMBED::Get().IsEmbedded( this ) ) )
     {
         if( !m_autoSavePending )
         {
