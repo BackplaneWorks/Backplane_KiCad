@@ -13,7 +13,8 @@ footprint editors and GerbView are shown one after the other, and:
 - an API edit (BeginCommit, CreateItems, EndCommit) and a RunAction are answered, not AS_BUSY;
 - GetCapabilities has embed-notice, and exactly one ET_NOTICE kind "graphics" arrives for the whole
   process: the fallback sticks, so the later frames neither try OpenGL again nor say it again;
-- KiCad's stderr names the fallback.
+- KiCad's stderr names the fallback exactly once: OpenGL is probed once per process, not again by
+  each editor's own kiface (schematic, GerbView).
 
 Runs on a private Xvfb + i3 with a python-xlib stand-in host; screenshots to --out.
 """
@@ -170,7 +171,9 @@ def main():
         check(not popups(), f"no top-level KiCad window at any point ({popups()})")
 
     log = (args.out / "kicad.log").read_text(errors="replace")
-    check("notice graphics" in log, "KiCad's stderr names the fallback")
+    tries = log.count("notice graphics")
+    check(tries == 1, f"OpenGL is tried once per process, not once per editor: stderr names the fallback "
+                      f"once ({tries})")
 
     print(f"{len(FAILURES)} failed" if FAILURES else "ALL PASSED", flush=True)
     return 1 if FAILURES else 0
