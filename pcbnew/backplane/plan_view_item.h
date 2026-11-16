@@ -117,6 +117,10 @@ private:
     void drawNotesAndAudit( KIGFX::GAL* aGal, KIGFX::VIEW* aView, const std::string& aLayer ) const;
     void drawHeader( KIGFX::GAL* aGal, KIGFX::VIEW* aView, const std::string& aLayer ) const;
 
+    /// Board view with the plan shown over it: a small tag saying the plan is only shown here
+    /// and how to edit it, never plan view's header (which this view must not be taken for).
+    void drawOverlayTag( KIGFX::GAL* aGal, KIGFX::VIEW* aView ) const;
+
     BOARD*                m_board;
     PCB_LAYER_ID          m_activeLayer = F_Cu;
     bool                  m_planView = false;
