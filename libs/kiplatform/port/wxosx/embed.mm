@@ -563,6 +563,21 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 
     // Dialogs: a window ordered in or out changes its occlusion state; one closed says so first
     NSNotificationCenter* centre = [NSNotificationCenter defaultCenter];
+
+    // macOS 14+ activation is cooperative: the active app must consent before another may activate
+    // itself. Each time KiCad becomes active, it consents for the host's app, so the host can take the
+    // keyboard back (a reserved chord, Escape to Backplane) without a click. Nothing is activated here.
+    [centre addObserverForName:NSApplicationDidBecomeActiveNotification object:nil queue:nil
+                    usingBlock:^( NSNotification* ) {
+                        if( s_owner <= 0 )
+                            return;
+
+                        if( @available( macOS 14.0, * ) )
+                        {
+                            if( NSRunningApplication* host = [NSRunningApplication runningApplicationWithProcessIdentifier:s_owner] )
+                                [NSApp yieldActivationToApplication:host];
+                        }
+                    }];
     [centre addObserverForName:NSWindowDidChangeOcclusionStateNotification object:nil queue:nil
                     usingBlock:^( NSNotification* aNote ) { dialogChanged( (NSWindow*) aNote.object, false ); }];
     [centre addObserverForName:NSWindowWillCloseNotification object:nil queue:nil
