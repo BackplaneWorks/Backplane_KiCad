@@ -519,6 +519,9 @@ def main():
                 dx, dy, dw, dh = dialog[0][2]
                 cx, cy = dx + dw / 2, dy + dh / 2
                 check(r is not None and r[0] <= cx <= r[0] + r[2] and r[1] <= cy <= r[1] + r[3], "the dialog is centred over the host")
+                # above the frame too, not between the host and it (there the frame covered it: lane M's client run 18, Find unseen)
+                order = [w[0] for w in windows()]
+                check(dialog[0][0] in order and pcb in order and order.index(dialog[0][0]) < order.index(pcb), "the dialog is above the frame, not under it")
             check(any(e.type == embed.ET_DIALOG_OPENED for e in pump(500)), "ET_DIALOG_OPENED reported")
             # the person closes it: its Cancel button (bottom right; an agent's RunAction opened it, so KiCad was not the active app)
             if dialog:
