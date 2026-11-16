@@ -203,6 +203,12 @@ public:
     /// load deferred, or a load still running (call again later).  Reported as a background job.
     bool StartDeferredFullLoad();
 
+    /// Load these libraries now and wait for them (and for any load in flight), without starting a
+    /// deferred full load (DeferFullLoad): for a caller that needs only some libraries, such as
+    /// DRC's library parity, which would otherwise call BlockUntilLoaded() and so load them all.
+    /// Not from a thread-pool worker.
+    void LoadLibrariesNow( const std::set<wxString>& aNicknames );
+
     /// Aborts any async load in progress; blocks until fully done aborting.
     /// This is the public interface to allow LIBRARY_MANAGER to abort loads before project changes.
     /// Only a caller that discards the libraries, or leaves them to RestartAsyncLoad(), passes true to end the

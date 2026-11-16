@@ -1512,6 +1512,8 @@ bool IFACE::LoadAllLibraries()
     if( !adapter )
         return false;
 
-    adapter->AsyncLoad();
+    // An embedded KiCad's deferred full load starts here (reported as a job), else a plain load
+    if( !adapter->StartDeferredFullLoad() )
+        adapter->AsyncLoad();
     return true;
 }

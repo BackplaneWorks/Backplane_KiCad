@@ -17,6 +17,11 @@ scenario runs twice on a copy of pic_programmer, lazy then full, and the results
   saved: the same .kicad_pcb in both modes, byte for byte once each (uuid ...) is masked (the
   items they create get fresh random KIIDs, which differ between any two runs, full or lazy);
 - ERC and DRC with schematic parity (in-editor tasks): the same findings, as sets.
+- GetCapabilities lists embed-lazy-libraries lazy, and not with the full preload;
+- right after start, before anything loads them all: DRC with schematic parity loads only the
+  board's footprint libraries, and PlaceSymbolFromLibrary and CreateItems of a library symbol, each
+  from a global library the schematic does not use, load that library alone (both succeed, the
+  rest stay unloaded).
 
     backplane-embed-lazylibs-check.py <kicad> <kicad-cli> --libs <share/kicad> --out DIR
 """
@@ -213,6 +218,53 @@ def run_mode(args, mode):
             result["saved"] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                                for p in sorted(project.glob("*.kicad_*")) if p.suffix in (".kicad_pcb", ".kicad_sch")}
 
+            caps = api.module("backplane.capabilities")
+            result["capability"] = "embed-lazy-libraries" in api.request(
+                caps.GetCapabilities(), caps.GetCapabilitiesResponse).capabilities
+
+            def run_task(start, result_req, result_type):
+                token = api.request(start, tasks.StartTaskResponse).token
+                wait_for(lambda: api.request(tasks.GetTaskStatus(token=token), tasks.TaskStatusResponse).state
+                         != tasks.TS_RUNNING, 300, 1)
+                return api.request(result_req(token=token), result_type)
+
+            def count_loaded(kind):
+                return sum(1 for v in loaded(kind).values() if v == libtypes.LLS_LOADED)
+
+            # Before anything loads every library: DRC with parity loads only the board's own
+            run_task(boardtasks.StartDrcTask(board=pcb_doc, test_schematic_parity=True),
+                     boardtasks.GetDrcTaskResult, boardtasks.DrcTaskResult)
+            result["fp_loaded_after_early_parity"] = count_loaded(libtypes.LT_FOOTPRINT)
+
+            # A symbol from a library the schematic does not use, placed and created by library id
+            if sch_docs:
+                schcmd = api.module("schematic.schematic_commands")
+                schtypes = api.module("schematic.schematic_types")
+                sch_header = base.ItemHeader(document=sch_docs[0])
+                r = api.request_raw(schcmd.PlaceSymbolFromLibrary(
+                        header=sch_header, lib_id=base.LibraryIdentifier(library_nickname="Device", entry_name="R"),
+                        position=base.Vector2(x_nm=25_400_000, y_nm=25_400_000)))
+                result["place_symbol_unused_library"] = r.status.status == api.envelope.AS_OK
+                symbol = schtypes.SchematicSymbolInstance()
+                symbol.id.value = "00000000-0000-4000-8000-00000000c0de"
+                symbol.position.x_nm = 50_800_000
+                symbol.position.y_nm = 25_400_000
+                symbol.definition.id.CopyFrom(base.LibraryIdentifier(library_nickname="Timer", entry_name="NE555P"))
+                commit = api.request(editor.BeginCommit(header=sch_header), editor.BeginCommitResponse)
+                create = editor.CreateItems(header=sch_header)
+                create.items.add().Pack(symbol)
+                created = api.request(create, editor.CreateItemsResponse)
+                ok = (len(created.created_items) == 1 and created.created_items[0].status.code == editor.ISC_OK)
+                if ok:
+                    made = schtypes.SchematicSymbolInstance()
+                    ok = created.created_items[0].item.Unpack(made) and any(
+                        c.item.type_url.endswith("SchematicPin") for c in made.definition.items)
+                api.request(editor.EndCommit(header=sch_header, id=commit.id,
+                                             action=editor.CMA_COMMIT if ok else editor.CMA_DROP,
+                                             message="lazylibs: a library symbol by id"), editor.EndCommitResponse)
+                result["create_symbol_unused_library"] = ok
+                result["sym_loaded_after_by_id"] = count_loaded(libtypes.LT_SYMBOL)
+
             # The project's override wins at start
             header = base.ItemHeader(document=pcb_doc)
 
@@ -290,12 +342,6 @@ def run_mode(args, mode):
             result["global_diode_after_full"] = place("Diode_THT", "D_DO-35_SOD27_P7.62mm_Horizontal")
 
             # (Both modes placed the same footprints, so the checks below compare like with like)
-            def run_task(start, result_req, result_type):
-                token = api.request(start, tasks.StartTaskResponse).token
-                wait_for(lambda: api.request(tasks.GetTaskStatus(token=token), tasks.TaskStatusResponse).state
-                         != tasks.TS_RUNNING, 300, 1)
-                return api.request(result_req(token=token), result_type)
-
             drc = run_task(boardtasks.StartDrcTask(board=pcb_doc, test_schematic_parity=True),
                            boardtasks.GetDrcTaskResult, boardtasks.DrcTaskResult)
             result["drc"] = sorted({(int(v.error_type), v.description) for v in drc.violations})
@@ -360,6 +406,17 @@ def main():
           and lazy["uuids_after_updates"] == full["uuids_after_updates"],
           f"after both updates the saved .kicad_pcb is identical lazy and full but for fresh KIIDs "
           f"({lazy['saved_after_updates'][:16]}, {lazy['uuids_after_updates']} uuids)")
+    check(lazy["capability"] and not full["capability"],
+          "GetCapabilities lists embed-lazy-libraries lazy, not with the full preload")
+    check(lazy["fp_loaded_after_early_parity"] < full["fp_loaded_at_start"],
+          f"DRC with parity right after start loads only the board's footprint libraries "
+          f"({lazy['fp_loaded_after_early_parity']} loaded lazy, {full['fp_loaded_at_start']} full)")
+    check(all(r.get(k) for r in (lazy, full) for k in ("place_symbol_unused_library",
+                                                        "create_symbol_unused_library")),
+          "PlaceSymbolFromLibrary and CreateItems of a library symbol from an unused library, in both modes")
+    check(lazy.get("sym_loaded_after_by_id", 0) <= lazy["sym_loaded_after_open"] + 2,
+          f"those two load their libraries alone ({lazy['sym_loaded_after_open']} symbol libraries at start, "
+          f"{lazy.get('sym_loaded_after_by_id')} after, of {lazy['sym_libraries']})")
     check(lazy["drc"] == full["drc"], f"DRC with parity: the same findings ({len(lazy['drc'])})")
     check(lazy.get("erc") == full.get("erc"), f"ERC: the same findings ({len(lazy.get('erc') or [])})")
 

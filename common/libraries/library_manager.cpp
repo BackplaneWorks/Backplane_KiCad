@@ -1253,8 +1253,20 @@ void LIBRARY_MANAGER_ADAPTER::RestartAsyncLoad()
     // Blocking, since a lost try-lock would leave the cancelled libraries with nothing to restart them
     std::lock_guard lock( m_loadMutex );
 
-    if( m_rearmPending )
+    if( !m_rearmPending )
+        return;
+
+    // With the full load deferred (DeferFullLoad), restart only the libraries the project uses,
+    // as at start; the rest still load on first need
+    if( m_fullLoadDeferred.load() )
+    {
+        std::set<wxString> used = UsedLibraryNicknames( Type(), m_manager.Project().GetProjectFullName() );
+        asyncLoadLocked( &used );
+    }
+    else
+    {
         asyncLoadLocked();
+    }
 }
 
 
@@ -2084,10 +2096,26 @@ bool LIBRARY_MANAGER_ADAPTER::StartDeferredFullLoad()
 
 void LIBRARY_MANAGER_ADAPTER::loadNowDeferred( const wxString& aNickname )
 {
-    const std::set<wxString> one{ aNickname };
+    LoadLibrariesNow( { aNickname } );
+}
+
+
+void LIBRARY_MANAGER_ADAPTER::LoadLibrariesNow( const std::set<wxString>& aNicknames )
+{
+    auto allLoaded =
+            [&]()
+            {
+                for( const wxString& nickname : aNicknames )
+                {
+                    if( !IsLibraryLoaded( nickname ) )
+                        return false;
+                }
+
+                return true;
+            };
 
     // A load in flight drops a new request (AsyncLoad's try_lock), so wait for it and ask again
-    for( int attempt = 0; attempt < 2; ++attempt )
+    for( int attempt = 0; attempt < 2 && !allLoaded(); ++attempt )
     {
         {
             std::unique_lock<std::mutex> asyncLock( m_loadMutex );
@@ -2095,7 +2123,7 @@ void LIBRARY_MANAGER_ADAPTER::loadNowDeferred( const wxString& aNickname )
             for( const std::future<void>& future : m_futures )
                 future.wait();
 
-            asyncLoadLocked( &one );
+            asyncLoadLocked( &aNicknames );
         }
 
         {
@@ -2104,9 +2132,6 @@ void LIBRARY_MANAGER_ADAPTER::loadNowDeferred( const wxString& aNickname )
             for( const std::future<void>& future : m_futures )
                 future.wait();
         }
-
-        if( IsLibraryLoaded( aNickname ) )
-            return;
     }
 }
 

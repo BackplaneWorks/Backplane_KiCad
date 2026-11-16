@@ -43,6 +43,7 @@
 #include <project/project_file.h>
 #include <settings/settings_manager.h>
 #include <wx/string.h>
+#include <wx/utils.h>
 
 using namespace kiapi::common::commands;
 using namespace kiapi::common::types;
@@ -154,6 +155,13 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 reply.add_capabilities( "canvas-idle" );
                 // ClickMarker: a marker click by id, through the click's own code (bp.13 batch 8)
                 reply.add_capabilities( "click-marker" );
+                // Only the libraries the project's files name load at start, the rest on first
+                // need; a library asked for by name (PlaceSymbolFromLibrary,
+                // PlaceFootprintFromLibrary, CreateItems of a library symbol) loads alone at once,
+                // and LoadAllLibraries starts the rest (bp.13.1).  Absent with
+                // BACKPLANE_KICAD_FULL_LIBRARY_PRELOAD set
+                if( !wxGetEnv( wxS( "BACKPLANE_KICAD_FULL_LIBRARY_PRELOAD" ), nullptr ) )
+                    reply.add_capabilities( "embed-lazy-libraries" );
 #ifdef __WXGTK__
                 // A host-reserved chord pressed while a KiCad popup holds the keyboard closes
                 // the popup and reaches the host (X11; bp.13)

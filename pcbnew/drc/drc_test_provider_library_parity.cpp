@@ -1200,8 +1200,8 @@ bool DRC_TEST_PROVIDER_LIBRARY_PARITY::Run()
         if( nicknames.empty() )
             break;
 
-        adapter->AsyncLoad( nicknames );
-        adapter->BlockUntilLoaded();
+        // Only these: BlockUntilLoaded() would also start an embedded KiCad's deferred full load
+        adapter->LoadLibrariesNow( nicknames );
     }
     int           ii = 0;
     const int     progressDelta = 250;

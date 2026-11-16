@@ -414,7 +414,9 @@ LibraryCommandStatus API_HANDLER_LIBRARIES::loadAllLibraries()
     if( !adapter )
         return status;
 
-    adapter->AsyncLoad();
+    if( !adapter->StartDeferredFullLoad() )
+        adapter->AsyncLoad();
+
     status.set_code( LibraryCommandStatus::LCS_OK );
     return status;
 }
