@@ -51,6 +51,10 @@
 #include <dialog_shim.h>
 #include <kiplatform/embed.h>
 
+#ifdef __WXOSX__
+#include <widgets/ui_common.h>
+#endif
+
 #include <api/common/envelope.pb.h>
 #include <api/backplane/embed.pb.h>
 #include <backplane_embed_proto.h>
@@ -1316,6 +1320,26 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
 
         return wxEventFilter::Event_Processed;
     }
+
+#ifdef __WXOSX__
+    // On a Mac, Backspace (the key marked delete) deletes the selection: stock KiCad gets that
+    // from Edit > Delete, whose Del accelerator AppKit puts on that key, ahead of any hotkey.  An
+    // embedded frame has no menu bar of its own (the port hands the key to wx before AppKit's
+    // menus see it), so it runs Delete here, as that menu item would.  While an interactive tool
+    // is running (drawing a shape, routing) the key goes on to the tool's hotkeys as before, so
+    // Backspace still takes back a point or a segment; a text field gets it as text.
+    if( type == wxEVT_CHAR_HOOK && code == WXK_BACK && modifiers == 0
+        && !KIUI::IsInputControlFocused( window ) )
+    {
+        const FRAME_ENTRY* e = entry( frame );
+
+        if( e && e->ops.busy && !e->ops.busy() && e->ops.runAction
+            && e->ops.runAction( "common.Interactive.delete" ) )
+        {
+            return wxEventFilter::Event_Processed;
+        }
+    }
+#endif
 
     return -1;
 }

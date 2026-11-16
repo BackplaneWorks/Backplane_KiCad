@@ -603,10 +603,45 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
     // wx never sees them, so the host's reserved chords on those keys (RawCtrl+Tab...) never matched.
     // Seen first here, in an embedded frame they become the key event wx would have made, which the
     // shared FilterEvent matches as on every other platform; anything it does not take goes on as it was.
+    //
+    // Backspace (the key marked delete, 51) is handed to wx here too, before the main menu: AppKit
+    // matches it against menu key equivalents first (Edit > Delete's Del is that key), and an
+    // embedded frame's menus are not the ones the person sees.  The shared FilterEvent makes it
+    // Delete as stock KiCad on a Mac does; a text field keeps it (AppKit's field editor).
     [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
                                           handler:^NSEvent*( NSEvent* aEvent ) {
                                               NSEventModifierFlags m = aEvent.modifierFlags;
-                                              unsigned short       code = aEvent.keyCode;   // 48 Tab, 50 `
+                                              unsigned short       code = aEvent.keyCode;   // 48 Tab, 50 `, 51 Backspace
+                                              const NSEventModifierFlags chordMods =
+                                                      NSEventModifierFlagControl | NSEventModifierFlagOption
+                                                      | NSEventModifierFlagCommand | NSEventModifierFlagShift;
+
+                                              if( code == 51 && !( m & chordMods ) )
+                                              {
+                                                  NSWindow* key = NSApp.keyWindow;
+
+                                                  if( !key || !s_numbers.count( key.windowNumber )
+                                                      || [key.firstResponder isKindOfClass:[NSText class]] )
+                                                  {
+                                                      return aEvent;
+                                                  }
+
+                                                  wxWindow* focus = wxWindow::FindFocus();
+
+                                                  if( !focus )
+                                                      return aEvent;
+
+                                                  wxKeyEvent ke( wxEVT_CHAR_HOOK );
+                                                  ke.m_keyCode = WXK_BACK;
+                                                  ke.m_uniChar = WXK_BACK;
+                                                  ke.SetEventObject( focus );
+                                                  ke.SetId( focus->GetId() );
+
+                                                  bool taken = focus->GetEventHandler()->ProcessEvent( ke );
+                                                  trace( std::string( "macos: Backspace handed to wx: " )
+                                                         + ( taken ? "taken" : "not taken" ) );
+                                                  return taken ? nil : aEvent;
+                                              }
 
                                               if( !( m & NSEventModifierFlagControl ) || ( code != 48 && code != 50 ) )
                                                   return aEvent;
