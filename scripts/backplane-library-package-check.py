@@ -76,6 +76,10 @@ def main() -> None:
          "no Device symbol library with C")
     need((data / "footprints/Capacitor_SMD.pretty/C_0805_2012Metric.kicad_mod").is_file(),
          "no Capacitor_SMD.pretty/C_0805_2012Metric.kicad_mod")
+    # Byte for byte as on Linux: no CRLF checkout (Git for Windows and text=auto)
+    for sample in (data / "footprints/Capacitor_SMD.pretty/C_0805_2012Metric.kicad_mod", device / "C.kicad_sym"):
+        if sample.is_file():
+            need(b"\r" not in sample.read_bytes(), f"{sample.relative_to(data)} has CR line endings")
     need(any((data / "template").glob("*.kicad_wks")), "no worksheets in template/")
     need((data / "backplane-library/libraries/Backplane_Logo.pretty").is_dir(), "no Backplane_Logo.pretty")
     need(any((data / "3dmodels").glob("*.3dshapes")), "no 3D models")

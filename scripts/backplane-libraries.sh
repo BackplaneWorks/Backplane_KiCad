@@ -81,8 +81,10 @@ libraries="kicad-symbols kicad-footprints kicad-templates"
 clone_library() {
   local name="$1" commit="$2"
   local checkout="$library_root/$name"
-  # No line-ending conversion and no LFS smudge: KiCad's files go in byte for byte
-  GIT_LFS_SKIP_SMUDGE=1 git -c core.autocrlf=false -c core.longpaths=true \
+  # No line-ending conversion and no LFS smudge: KiCad's files go in byte for byte.  core.eol=lf as
+  # well as autocrlf=false: the libraries' .gitattributes say text=auto, which Git for Windows would
+  # otherwise check out as CRLF (core.eol=native)
+  GIT_LFS_SKIP_SMUDGE=1 git -c core.autocrlf=false -c core.eol=lf -c core.longpaths=true \
     clone --depth 1 --no-tags --branch "$KICAD_LIBRARY_TAG" \
     "https://gitlab.com/kicad/libraries/$name.git" "$checkout"
   test "$(git -C "$checkout" rev-parse HEAD)" = "$commit"
@@ -151,6 +153,7 @@ bundle="$stage_root/backplane-library"
 rm -rf "$checkout" "$bundle"
 git init -q "$checkout"
 git -C "$checkout" config core.autocrlf false
+git -C "$checkout" config core.eol lf
 git -C "$checkout" fetch -q --depth 1 "$BACKPLANE_LIBRARY_REPOSITORY" "$BACKPLANE_LIBRARY_COMMIT"
 git -C "$checkout" checkout -q --detach FETCH_HEAD
 test "$(git -C "$checkout" rev-parse HEAD)" = "$BACKPLANE_LIBRARY_COMMIT"
