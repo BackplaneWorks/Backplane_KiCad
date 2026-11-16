@@ -215,6 +215,34 @@ void centreOn( GtkWindow* aWindow, Window aOn )
 }
 
 
+/// A dialog shown over the host is the person's next step (the host asked for it, or KiCad needs
+/// them): give it the keyboard as it appears.  A dialog mapped in answer to an API request has no
+/// recent user time in KiCad's process (GTK leaves its _NET_WM_USER_TIME stale or 0), so a window
+/// manager with focus-stealing prevention (mutter) showed it on top but unfocused: Escape did not
+/// reach it until the person clicked it.  i3 focuses it anyway.  Stamped with the server's time and
+/// presented with it once mapped.
+gboolean presentDialog( gpointer aWindow )
+{
+    GtkWindow* window = GTK_WINDOW( aWindow );
+
+    if( gtk_widget_get_mapped( GTK_WIDGET( window ) ) )
+    {
+        if( GdkWindow* gdkWindow = gtk_widget_get_window( GTK_WIDGET( window ) ) )
+        {
+            if( GDK_IS_X11_WINDOW( gdkWindow ) )
+            {
+                guint32 now = gdk_x11_get_server_time( gdkWindow );
+                gdk_x11_window_set_user_time( gdkWindow, now );
+                gtk_window_present_with_time( window, now );
+            }
+        }
+    }
+
+    g_object_unref( window );
+    return G_SOURCE_REMOVE;
+}
+
+
 /// Dialogs and modal frames: transient for the host's top-level, centred on it.
 gboolean mapHook( GSignalInvocationHint*, guint aCount, const GValue* aParams, gpointer aMapped )
 {
@@ -254,6 +282,9 @@ gboolean mapHook( GSignalInvocationHint*, guint aCount, const GValue* aParams, g
 
                 trapped( [&]() { XSetTransientForHint( display, xid, (Window) top ); } );
                 centreOn( window, (Window) top );
+
+                // After the map completes (not inside the map emission)
+                g_idle_add( presentDialog, g_object_ref( window ) );
             }
         }
     }
