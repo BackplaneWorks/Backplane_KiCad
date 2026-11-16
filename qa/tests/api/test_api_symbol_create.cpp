@@ -15,6 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 // CreateItems of a schematic symbol from its library id over the headless api-server: the
 // token benchmark's repros 4 (fields sent with only their text), 6 (a derived symbol) and 7 (a

@@ -877,7 +877,8 @@ BOOST_AUTO_TEST_CASE( PartialFootprintValueUpdateKeepsTheField )
     KIID             id = target->m_Uuid;
 
     API_HANDLER_PCB handler( m_context );
-    BOOST_REQUIRE( handler.Handle( makeBeginCommitRequest() ).has_value() );
+    kiapi::common::ApiRequest beginRequest = makeBeginCommitRequest();
+    BOOST_REQUIRE( handler.Handle( beginRequest ).has_value() );
 
     kiapi::common::commands::UpdateItems command;
     *command.mutable_header()->mutable_document() = makeBoardDocument( *board );
