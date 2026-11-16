@@ -375,6 +375,46 @@ void orderOutAll();
 std::set<NSInteger> s_dialogs;   ///< KiCad's dialogs reported open (hooks.dialog)
 
 
+/// A dialog of KiCad's ordered above the frontmost of KiCad's own windows over the host's window `aHost` (the frame on show,
+/// a dialog already open), never just above the host: the one ordering for every dialog (centreOnHost, MakeTransientFor).
+void orderAboveOurs( NSWindow* aWindow, NSInteger aHost )
+{
+    // Above the frontmost of KiCad's own windows over the host (the frame on show, a dialog already open), never just above the
+    // host: there it went between the host and the frame, under the frame, and the host's re-stacking (its window kept just below
+    // the frame) then put it under the host too: Find open, unseen, its Escape lost (lane M's client run 18)
+    NSInteger above = aHost;
+    std::set<NSInteger> mine( s_dialogs );
+
+    for( auto& [frame, state] : s_frames )
+    {
+        if( NSWindow* f = onShow( frame, state ) ? nsWindowOf( frame ) : nil )
+            mine.insert( f.windowNumber );
+    }
+
+    mine.erase( aWindow.windowNumber );
+
+    if( CFArrayRef order = CGWindowListCopyWindowInfo( kCGWindowListOptionOnScreenAboveWindow, (CGWindowID) aHost ) )
+    {
+        // front to back: the first of ours is the frontmost
+        for( CFIndex i = 0; i < CFArrayGetCount( order ); i++ )
+        {
+            NSDictionary* info = (NSDictionary*) CFArrayGetValueAtIndex( order, i );
+            NSInteger     n = [[info objectForKey:(NSString*) kCGWindowNumber] integerValue];
+
+            if( mine.count( n ) )
+            {
+                above = n;
+                break;
+            }
+        }
+
+        CFRelease( order );
+    }
+
+    [aWindow orderWindow:NSWindowAbove relativeTo:above];
+}
+
+
 /// A dialog of KiCad's (any titled wx top-level that is not an embedded frame) centred on the
 /// host's window and ordered above the frontmost of KiCad's windows over it; bounds from the window list (no permission).
 void centreOnHost( NSWindow* aWindow )
@@ -402,39 +442,7 @@ void centreOnHost( NSWindow* aWindow )
     if( list )
         CFRelease( list );
 
-    // Above the frontmost of KiCad's own windows over the host (the frame on show, a dialog already open), never just above the
-    // host: there it went between the host and the frame, under the frame, and the host's re-stacking (its window kept just below
-    // the frame) then put it under the host too: Find open, unseen, its Escape lost (lane M's client run 18)
-    NSInteger above = (NSInteger) s_parent;
-    std::set<NSInteger> mine( s_dialogs );
-
-    for( auto& [frame, state] : s_frames )
-    {
-        if( NSWindow* f = onShow( frame, state ) ? nsWindowOf( frame ) : nil )
-            mine.insert( f.windowNumber );
-    }
-
-    mine.erase( aWindow.windowNumber );
-
-    if( CFArrayRef order = CGWindowListCopyWindowInfo( kCGWindowListOptionOnScreenAboveWindow, (CGWindowID) s_parent ) )
-    {
-        // front to back: the first of ours is the frontmost
-        for( CFIndex i = 0; i < CFArrayGetCount( order ); i++ )
-        {
-            NSDictionary* info = (NSDictionary*) CFArrayGetValueAtIndex( order, i );
-            NSInteger     n = [[info objectForKey:(NSString*) kCGWindowNumber] integerValue];
-
-            if( mine.count( n ) )
-            {
-                above = n;
-                break;
-            }
-        }
-
-        CFRelease( order );
-    }
-
-    [aWindow orderWindow:NSWindowAbove relativeTo:above];
+    orderAboveOurs( aWindow, (NSInteger) s_parent );
 }
 
 
@@ -1060,7 +1068,7 @@ void KIPLATFORM::EMBED::MakeTransientFor( wxWindow* aDialog, uint64_t aToplevel 
     if( !w || !aToplevel )
         return;
 
-    // Centre on the host's window (its bounds need no permission) and keep it above the host
+    // Centre on the host's window (its bounds need no permission) and keep it above KiCad's windows over the host
     CFArrayRef list = CGWindowListCopyWindowInfo( kCGWindowListOptionIncludingWindow,
                                                   (CGWindowID) aToplevel );
 
@@ -1081,5 +1089,6 @@ void KIPLATFORM::EMBED::MakeTransientFor( wxWindow* aDialog, uint64_t aToplevel 
     if( list )
         CFRelease( list );
 
-    [w orderWindow:NSWindowAbove relativeTo:(NSInteger) aToplevel];
+    // the same ordering as centreOnHost: just above the host it would go under the frame (lane M's client run 18)
+    orderAboveOurs( w, (NSInteger) aToplevel );
 }
