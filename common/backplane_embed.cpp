@@ -557,13 +557,15 @@ std::optional<std::string> BACKPLANE_EMBED::CanvasInUse( wxFrame* aFrame, uint64
                         }
                     };
 
-    if( const FRAME_ENTRY* e = aFrame ? entry( aFrame ) : nullptr )
+    const FRAME_ENTRY* checked = aFrame ? entry( aFrame ) : nullptr;
+
+    if( checked )
     {
-        EMBED_FRAME_INFO state = info( *e );
+        EMBED_FRAME_INFO state = info( *checked );
 
         if( state.canvasInputAgoMs < aMinIdleMs || state.toolBusy )
         {
-            std::string why = "canvas in use: " + describe( *e );
+            std::string why = "canvas in use: " + describe( *checked );
 
             if( state.canvasInputAgoMs < aMinIdleMs )
                 why += ", input " + std::to_string( state.canvasInputAgoMs ) + " ms ago";
@@ -573,6 +575,21 @@ std::optional<std::string> BACKPLANE_EMBED::CanvasInUse( wxFrame* aFrame, uint64
 
             return why;
         }
+    }
+
+    // One UI thread serves every editor: a check started while the person drags, wheels or types
+    // on another embedded canvas (the schematic panned while the board's DRC and its parity run)
+    // stalls that gesture just the same.
+    for( const FRAME_ENTRY& e : m_frames )
+    {
+        if( &e == checked || !e.frame || e.canvasInput.time_since_epoch().count() == 0 )
+            continue;
+
+        uint64_t ago = static_cast<uint64_t>( std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - e.canvasInput ).count() );
+
+        if( ago < aMinIdleMs )
+            return "canvas in use: " + describe( e ) + ", input " + std::to_string( ago ) + " ms ago";
     }
 
     if( const FRAME_ENTRY* e = aAlsoTool ? entry( aAlsoTool ) : nullptr )

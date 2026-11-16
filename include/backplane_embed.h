@@ -409,8 +409,9 @@ public:
 
     /**
      * canvas-idle: why a check must not start now on aFrame (RunChecks.min_canvas_idle_ms): its
-     * canvas had input within aMinIdleMs, or its tool is busy; with aAlsoTool, that frame's tool
-     * being busy too (DRC parity and the schematic editor).  "canvas in use: ..." or nothing.
+     * canvas, or any other embedded frame's (one UI thread serves them all), had input within
+     * aMinIdleMs, or its tool is busy; with aAlsoTool, that frame's tool being busy too (DRC
+     * parity and the schematic editor).  "canvas in use: ..." or nothing.
      */
     std::optional<std::string> CanvasInUse( wxFrame* aFrame, uint64_t aMinIdleMs,
                                             wxFrame* aAlsoTool = nullptr ) const;

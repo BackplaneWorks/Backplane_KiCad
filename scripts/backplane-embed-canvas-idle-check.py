@@ -8,6 +8,8 @@
 - RunChecks{min_canvas_idle_ms} is refused at once with AS_BUSY "canvas in use: ..." while the
   canvas had input within that time or a tool is busy, and accepted once it is idle; with 0 it
   runs regardless of recent input.
+- Input on another embedded canvas counts too (one UI thread): a schematic pan in progress refuses
+  the board's DRC with parity as it refuses ERC; an idle schematic lets it run.
 
 Runs on a private Xvfb + i3 with a python-xlib stand-in host; screenshots to --out.
 """
@@ -80,10 +82,11 @@ def main():
         def pcb():
             return {f.kind: f for f in api.request(embed.GetFrames(), embed.GetFramesResponse).frames}[embed.FK_PCB]
 
-        def run_checks(min_idle):
+        def run_checks(min_idle, kind=None, parity=False):
             """(accepted, error message); an accepted run is waited for to the end."""
             events()
-            reply = api.request_raw(embed.RunChecks(kind=embed.FK_PCB, min_canvas_idle_ms=min_idle))
+            reply = api.request_raw(embed.RunChecks(kind=embed.FK_PCB if kind is None else kind,
+                                                    parity=parity, min_canvas_idle_ms=min_idle))
             if reply.status.status != api.envelope.AS_OK:
                 return False, reply.status.error_message
             wait_for(lambda: any(e.type == embed.ET_CHECKS_DONE for e in events()), 300, 0.2)
@@ -179,6 +182,31 @@ def main():
         after = pcb().canvas_input_ago_ms
         check(before != U64_MAX and after >= before + 3500,
               f"motion with no button down is not input ({before} -> {after} ms)")
+
+        # 7. One UI thread serves every editor: a schematic pan in progress holds the board's DRC
+        #    with parity back just as it holds ERC, and an idle schematic lets it run (batch 11)
+        rs = api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        wait_for(lambda: viewable(disp, rs.frame.window), 120)
+        time.sleep(4)
+        sx, sy = canvas_centre(disp, s.host.root, rs.frame.window)
+        s.xdotool("mousemove", str(sx), str(sy), "mousedown", "2")
+        for step in range(10):
+            s.xdotool("mousemove", str(sx + 12 * step), str(sy + 6 * step))
+            time.sleep(0.05)
+        drc = run_checks(3000, embed.FK_PCB, parity=True)
+        for step in range(10):
+            s.xdotool("mousemove", str(sx + 120 - 12 * step), str(sy + 60 - 6 * step))
+            time.sleep(0.05)
+        erc = run_checks(3000, embed.FK_SCH)
+        s.xdotool("mouseup", "2")
+        s.shot("02-schematic-pan")
+        check(not erc[0] and erc[1].startswith("canvas in use: the schematic editor, input "),
+              f"ERC during a schematic pan: AS_BUSY for the schematic canvas ({erc})")
+        check(not drc[0] and drc[1].startswith("canvas in use: the schematic editor, input "),
+              f"DRC with parity during a schematic pan: the same refusal as ERC ({drc})")
+        time.sleep(3.5)
+        ok, why = run_checks(3000, embed.FK_PCB, parity=True)
+        check(ok, f"DRC with parity runs once the schematic is idle for 3.5 s ({why})")
 
     print(f"{len(FAILURES)} failed" if FAILURES else "ALL PASSED", flush=True)
     return 1 if FAILURES else 0

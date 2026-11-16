@@ -717,8 +717,9 @@ API_HANDLER_PCB::handleRunChecks( const HANDLER_CONTEXT<kiapi::backplane::embed:
 
     if( uint64_t minIdle = aCtx.Request.min_canvas_idle_ms() )
     {
-        // canvas-idle: a check never takes the UI thread in the middle of the person's gesture.
-        // With parity it loads into the schematic editor: a busy tool there blocks it too.
+        // canvas-idle: a check never takes the UI thread in the middle of the person's gesture,
+        // on this canvas or any other embedded one (the schematic panned, CanvasInUse).  With
+        // parity it loads into the schematic editor: a busy tool there blocks it too.
         wxFrame* sch = aCtx.Request.parity()
                                ? dynamic_cast<wxFrame*>( frame()->Kiway().Player( FRAME_SCH, false ) )
                                : nullptr;
