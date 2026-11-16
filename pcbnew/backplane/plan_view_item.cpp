@@ -1450,7 +1450,7 @@ void PLAN_VIEW_ITEM::drawOverlayTag( KIGFX::GAL* aGal, KIGFX::VIEW* aView ) cons
     aGal->SetStrokeColor( HEADER_DIM );
     aGal->SetFillColor( COLOR4D( 0.0, 0.0, 0.0, 0.55 ) );
     aGal->DrawRectangle( at - VECTOR2D( 8 * px, 10 * px ),
-                         at + VECTOR2D( small * 0.62 * tag.Length() + 10 * px, 10 * px ) );
+                         at + VECTOR2D( small * 0.84 * tag.Length() + 10 * px, 10 * px ) );
     aGal->SetIsStroke( false );
     text( aGal, tag, at, small, HEADER_DIM, false, GR_TEXT_H_ALIGN_LEFT );
 }
