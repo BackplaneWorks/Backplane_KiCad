@@ -49,18 +49,28 @@ bundle="$stage/KiCad.app"
 cli=$(find "$build" -type f -name kicad-cli -perm -111 | head -n 1)
 [ -n "$cli" ]
 cp "$cli" "$bundle/Contents/MacOS/kicad-cli"
-# The pinned KiCad libraries and the Backplane library (scripts/backplane-libraries.sh; no 3D models
-# yet) go where KiCad.app looks for its stock data, Contents/SharedSupport: symbols/, footprints/,
-# template/ (with the libraries' sym-lib-table and fp-lib-table), the three default global tables
-# and backplane-library/.  Before the whole-bundle re-sign below, which seals them.
-libraries="$PWD/build/backplane-libraries"
-rm -rf "$libraries"
-bash scripts/backplane-libraries.sh "$libraries"
-cp -R "$libraries/share/kicad/." "$bundle/Contents/SharedSupport/"
 python scripts/backplane-macos-relocate.py "$bundle" | tee "$release/relocation.log"
 root="$release/backplane-kicad-darwin-$(uname -m)-$version"
 mkdir -p "$root/bin" "$root/share/backplane" "$root/licenses"
 cp -R "$bundle" "$root/KiCad.app"
+# The pinned KiCad libraries, their 3D models and the Backplane library (scripts/backplane-libraries.sh)
+# go where KiCad.app looks for its stock data, Contents/SharedSupport: symbols/, footprints/,
+# 3dmodels/ (KICAD10_3DMODEL_DIR's default), template/ (with the libraries' sym-lib-table and
+# fp-lib-table), the three default global tables and backplane-library/.  After relocation (which
+# would run `file` on every one of them) and the bundle copy, before the whole-bundle re-sign below,
+# which seals them.  Moved, not copied: 3.4 GB of models.
+libraries="$PWD/build/backplane-libraries"
+rm -rf "$libraries"
+bash scripts/backplane-libraries.sh "$libraries" --with-3d
+shared="$root/KiCad.app/Contents/SharedSupport"
+for item in "$libraries/share/kicad"/*; do
+  name=$(basename "$item")
+  if [ -e "$shared/$name" ]; then
+    cp -R "$item/." "$shared/$name/" && rm -rf "$item"
+  else
+    mv "$item" "$shared/$name"
+  fi
+done
 # Relocation re-signed each Mach-O it changed, which left the bundles' own signatures stale
 # ("nested code is modified or invalid"): sign the whole bundle again, ad hoc, inside out, and
 # verify it (Gatekeeper is not involved: the hub's download is never quarantined)
@@ -99,7 +109,7 @@ LAUNCHER
   [ -x "$root/bin/$tool" ] || { echo "no $tool in the bundle" >&2; exit 2; }
 done
 cp LICENSE* COPYING* AUTHORS* "$root/licenses/" 2>/dev/null || true
-cp -R "$libraries/licenses/kicad-libraries" "$root/licenses/"
+mv "$libraries/licenses/kicad-libraries" "$root/licenses/"
 cp "$libraries/KICAD_LIBRARY_SOURCES.txt" "$root/"
 mkdir -p "$root/licenses/nng"
 cp "$nng_source/LICENSE.txt" "$root/licenses/nng/"
@@ -159,8 +169,10 @@ CHECK
 tar -C "$release" -czf "$release/$archive" "$(basename "$root")"
 # The libraries gate, on the archive as a person unpacks it: the files, tables, licences and
 # sources are inside, the bundle's signature still verifies, and the global tables resolve Device:C,
-# Capacitor_SMD and Backplane_Passives_Nominal C_0805_2012Metric (and its model) from an empty
+# Capacitor_SMD and Backplane_Passives_Nominal C_0805_2012Metric (and their models) from an empty
 # config home.
+# Room for the unpacked copy: the compiled objects are no longer needed (ccache keeps its own)
+find "$build" -name '*.o' -delete
 unpacked="$RUNNER_TEMP/libraries-gate"
 rm -rf "$unpacked" && mkdir -p "$unpacked"
 tar -C "$unpacked" -xzf "$release/$archive"

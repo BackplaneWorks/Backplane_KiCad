@@ -133,20 +133,32 @@ New-Item -ItemType Directory -Force $release | Out-Null
 $archive = "backplane-kicad-windows-x86_64-$version"
 $runtime = Join-Path $release $archive
 Move-Item $stage $runtime
-# The pinned KiCad libraries and the Backplane library (scripts/backplane-libraries.sh, staged by the
-# workflow's bash step): symbols, footprints, templates, the default global tables, their licences
-# and KICAD_LIBRARY_SOURCES.txt.  No 3D models on Windows yet.
+# The pinned KiCad libraries, their 3D models and the Backplane library (scripts/backplane-libraries.sh,
+# staged by the workflow's bash step): symbols, footprints, 3dmodels, templates, the default global
+# tables, their licences and KICAD_LIBRARY_SOURCES.txt.  Moved, not copied (3.4 GB of models).
 $libraryStage = $env:BACKPLANE_LIBRARY_STAGE
 if ($libraryStage) {
-    function Copy-Tree($from, $to) {
-        # robocopy: long paths, merges into what the install put there; 0-7 are success
-        $PSNativeCommandUseErrorActionPreference = $false
-        robocopy $from $to /E /NFL /NDL /NJH /NJS /NP | Out-Null
-        if ($LASTEXITCODE -ge 8) { throw "robocopy $from -> $to failed ($LASTEXITCODE)" }
-        $global:LASTEXITCODE = 0
+    function Move-Tree($from, $to) {
+        # A folder the install does not have is renamed in place; one it has (template) is merged
+        New-Item -ItemType Directory -Force $to | Out-Null
+        Get-ChildItem -LiteralPath $from -Force | ForEach-Object {
+            $target = Join-Path $to $_.Name
+            $sameDrive = (Split-Path -Qualifier $_.FullName) -eq (Split-Path -Qualifier $target)
+            if (!(Test-Path -LiteralPath $target) -and ($sameDrive -or !$_.PSIsContainer)) {
+                Move-Item -LiteralPath $_.FullName $target
+            } elseif ($_.PSIsContainer) {
+                # robocopy: long paths; 0-7 are success
+                $PSNativeCommandUseErrorActionPreference = $false
+                robocopy $_.FullName $target /E /MOVE /NFL /NDL /NJH /NJS /NP | Out-Null
+                if ($LASTEXITCODE -ge 8) { throw "robocopy $($_.FullName) -> $target failed ($LASTEXITCODE)" }
+                $global:LASTEXITCODE = 0
+            } else {
+                Move-Item -LiteralPath $_.FullName $target -Force
+            }
+        }
     }
-    Copy-Tree (Join-Path $libraryStage 'share\kicad') (Join-Path $runtime 'share\kicad')
-    Copy-Tree (Join-Path $libraryStage 'licenses\kicad-libraries') (Join-Path $runtime 'licenses\kicad-libraries')
+    Move-Tree (Join-Path $libraryStage 'share\kicad') (Join-Path $runtime 'share\kicad')
+    Move-Tree (Join-Path $libraryStage 'licenses\kicad-libraries') (Join-Path $runtime 'licenses\kicad-libraries')
     Copy-Item (Join-Path $libraryStage 'KICAD_LIBRARY_SOURCES.txt') $runtime
 } elseif ($env:GITHUB_ACTIONS) {
     throw 'BACKPLANE_LIBRARY_STAGE is not set: a release runtime must carry the KiCad libraries'
@@ -163,8 +175,9 @@ Compress-Archive -Path (Join-Path $symbols '*') -DestinationPath (Join-Path $rel
 if ($libraryStage) {
     # The libraries gate, on the zip as a person unpacks it: the files and tables are there, the
     # licences and sources are inside, and the global tables resolve Device:C and
-    # Capacitor_SMD:C_0805_2012Metric from an empty config home.
-    $unpacked = Join-Path $env:RUNNER_TEMP 'libraries-gate'
+    # Capacitor_SMD:C_0805_2012Metric with their models from an empty config home.
+    # On C: (the build drive), away from the runtime and its zip on D:
+    $unpacked = 'C:\bp\libraries-gate'
     if (Test-Path $unpacked) { Remove-Item -Recurse -Force $unpacked }
     Expand-Archive -Path (Join-Path $release "$archive.zip") -DestinationPath $unpacked
     $unpackedRoot = Join-Path $unpacked $archive

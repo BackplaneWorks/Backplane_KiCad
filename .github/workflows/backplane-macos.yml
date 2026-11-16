@@ -29,6 +29,8 @@ jobs:
         run: |
           brew install cmake ninja pkg-config ccache boost cairo curl eigen fontconfig freetype glew glm harfbuzz libgit2 ngspice opencascade pixman protobuf@29 rapidjson sqlite unixodbc wxwidgets yaml-cpp zint zstd glslang spirv-tools spirv-cross
           python -m pip install protobuf==5.29.6 pynng==0.9.0
+          # The KiCad 3D models are Git LFS objects (scripts/backplane-libraries.sh --with-3d)
+          brew install git-lfs || true
       - name: nng 1.x (Homebrew ships 2.0, whose API KiCad does not use)
         run: |
           # v1.12.3; the relocation step bundles the dylib by its absolute install name.

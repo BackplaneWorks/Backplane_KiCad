@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Check an unpacked runtime package carries the pinned KiCad libraries (scripts/backplane-libraries.sh).
 
-    backplane-library-package-check.py <runtime root> [--with-3d]
+    backplane-library-package-check.py <runtime root>
 
 The runtime root is the package's top folder (bin/, share/ or KiCad.app/, licenses/).  Checks:
 the three default global tables exist and nest ${KICAD10_TEMPLATE_DIR}/<table>; the template
-tables they name exist; Device and Capacitor_SMD:C_0805_2012Metric are there; the Backplane
+tables they name exist; Device and Capacitor_SMD:C_0805_2012Metric (and its 3D model) are there; the Backplane
 library is there and the footprint table names it; each library's licence folder has its
 BACKPLANE_SOURCE.txt and licence files, and KICAD_LIBRARY_SOURCES.txt names the same pins as
 scripts/backplane-libraries.sh; no Git LFS pointer; no table has a CR.
@@ -35,7 +35,7 @@ def pins() -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("root", type=Path)
-    parser.add_argument("--with-3d", action="store_true")
+    parser.add_argument("--with-3d", action="store_true", help="accepted for compatibility: every package carries 3D models")
     args = parser.parse_args()
     root = args.root.resolve(strict=True)
     mac = root / "KiCad.app/Contents/SharedSupport"
@@ -78,16 +78,12 @@ def main() -> None:
          "no Capacitor_SMD.pretty/C_0805_2012Metric.kicad_mod")
     need(any((data / "template").glob("*.kicad_wks")), "no worksheets in template/")
     need((data / "backplane-library/libraries/Backplane_Logo.pretty").is_dir(), "no Backplane_Logo.pretty")
-    if args.with_3d:
-        need(any((data / "3dmodels").glob("*.3dshapes")), "no 3D models")
-    else:
-        need(not (data / "3dmodels").exists() or not any((data / "3dmodels").glob("*.3dshapes")),
-             "3D models present: this package is not meant to carry them yet")
+    need(any((data / "3dmodels").glob("*.3dshapes")), "no 3D models")
+    need((data / "3dmodels/Capacitor_SMD.3dshapes/C_0805_2012Metric.step").is_file(),
+         "no 3dmodels/Capacitor_SMD.3dshapes/C_0805_2012Metric.step")
 
     expected = pins()
-    names = ["kicad-symbols", "kicad-footprints", "kicad-templates", "backplane-kicad-library"]
-    if args.with_3d:
-        names.append("kicad-packages3D")
+    names = ["kicad-symbols", "kicad-footprints", "kicad-templates", "kicad-packages3D", "backplane-kicad-library"]
     licences = root / "licenses/kicad-libraries"
     for name in names:
         folder = licences / name
@@ -112,8 +108,9 @@ def main() -> None:
         sys.exit(1)
     symbols = sum(1 for _ in (data / "symbols").glob("*.kicad_symdir"))
     footprints = sum(1 for _ in (data / "footprints").glob("*.pretty"))
-    print(f"PASS library package: {data.relative_to(root)} has {symbols} symbol and {footprints} footprint "
-          f"libraries, the templates, the three global tables, the Backplane library; licences and "
+    models = sum(1 for _ in (data / "3dmodels").glob("*.3dshapes"))
+    print(f"PASS library package: {data.relative_to(root)} has {symbols} symbol, {footprints} footprint and "
+          f"{models} 3D model libraries, the templates, the three global tables, the Backplane library; licences and "
           f"KICAD_LIBRARY_SOURCES.txt for {', '.join(names)}", flush=True)
 
 

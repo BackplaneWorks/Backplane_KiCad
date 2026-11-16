@@ -154,10 +154,10 @@ Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `f
 ## Libraries
 
 Every runtime (Linux, Windows, macOS) carries the same pinned libraries, staged by
-`scripts/backplane-libraries.sh`: KiCad's symbols, footprints and templates at tag 10.0.6 (3D models
-on Linux only, for now) and the Backplane KiCad library (footprints and their STEP models), in the
-stock data folder (`share/kicad`; on macOS `KiCad.app/Contents/SharedSupport`):
-`symbols/`, `footprints/`, `template/` (with the libraries' `sym-lib-table` and `fp-lib-table`),
+`scripts/backplane-libraries.sh`: KiCad's symbols, footprints, 3D models and templates at tag
+10.0.6 and the Backplane KiCad library (footprints and their STEP models), in the stock data folder
+(`share/kicad`; on macOS `KiCad.app/Contents/SharedSupport`): `symbols/`, `footprints/`,
+`3dmodels/` (`${KICAD10_3DMODEL_DIR}`'s default, no launcher needed), `template/` (with the libraries' `sym-lib-table` and `fp-lib-table`),
 `backplane-library/`, and the default global `sym-lib-table`, `fp-lib-table` and
 `design-block-lib-table`, which nest `${KICAD10_TEMPLATE_DIR}/<table>`; `fp-lib-table` also names
 the Backplane library's six footprint libraries through `${BACKPLANE_KICAD_LIBRARY}/libraries/`.

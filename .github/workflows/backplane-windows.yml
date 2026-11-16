@@ -45,12 +45,13 @@ jobs:
           path: C:\bp\vcpkg-cache
           key: kicad-windows-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'tools/custom_vcpkg_triplets/**') }}
           restore-keys: kicad-windows-vcpkg-
-      - name: Stage the pinned KiCad libraries (no 3D models)
+      - name: Stage the pinned KiCad libraries and 3D models
         shell: bash
         run: |
           set -euo pipefail
+          command -v git-lfs >/dev/null || { echo 'git-lfs is required for the 3D models' >&2; exit 1; }
           stage="$RUNNER_TEMP/kicad-library-stage"
-          bash scripts/backplane-libraries.sh "$stage"
+          bash scripts/backplane-libraries.sh "$stage" --with-3d
           echo "BACKPLANE_LIBRARY_STAGE=$(cygpath -w "$stage")" >> "$GITHUB_ENV"
       - name: Build, relocate, test and package
         shell: pwsh
