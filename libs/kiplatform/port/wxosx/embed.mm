@@ -152,14 +152,16 @@ void orderIn( wxWindow* aFrame, FRAME& aState )
 }
 
 
-/// Move a frame to its place: the host's container origin plus its container-relative rect.
+/// Move a frame to its place: it fills the host's container, as an X11 or Win32 frame fills the
+/// container window the host sizes to its pane. ShowFrame's own rect is the host's notion of its
+/// container (the client's whole window on macOS), so the host's rect is the one that counts here.
 void place( wxWindow* aFrame, FRAME& aState )
 {
-    if( aState.parked || !s_hostKnown || aState.w <= 0 || aState.h <= 0 )
+    if( aState.parked || !s_hostKnown || s_hostW <= 0 || s_hostH <= 0 )
         return;
 
     // wx counts screen coordinates from the primary display's top-left, as CGWindowList does
-    aFrame->SetSize( (int) ( s_hostX + aState.x ), (int) ( s_hostY + aState.y ), aState.w, aState.h );
+    aFrame->SetSize( (int) s_hostX, (int) s_hostY, (int) s_hostW, (int) s_hostH );
 }
 
 
