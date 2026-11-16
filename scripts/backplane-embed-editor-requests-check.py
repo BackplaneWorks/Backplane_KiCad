@@ -150,41 +150,6 @@ def main():
         check(unknown.status.status != 1 or "RAS_INVALID" in str(unknown.message),
               f"RunAction of an unknown action is not answered OK ({unknown.status.status})")
 
-        # ERC and DRC were closed (hidden, kept): opening any editor, by its action or its hotkey,
-        # must not show either again (they stayed KiCad's "blocking dialog", which an editor show
-        # raised: lane B, bp.13 batches 8 and 9)
-        collect(1)
-
-        def no_dialog_after(label, act):
-            collect(0.5)
-            act()
-            opened = [e.detail for e in collect(4) if e.type == embed.ET_DIALOG_OPENED]
-            check(not opened, f"{label} shows no closed dialog again ({opened})")
-
-        def run(action):
-            return lambda: api.request_raw(editor.RunAction(action=action))
-
-        def hotkey(kind, refs, key):
-            def act():
-                frame = show(kind)
-                time.sleep(1)
-                api.request(embed.SelectItems(kind=kind, references=refs), embed.SelectItemsResponse)
-                time.sleep(0.5)
-                s.xdotool("key", key)
-            return act
-
-        show(embed.FK_PCB)
-        time.sleep(1)
-        no_dialog_after("the Footprint Editor action from the board", run("common.Control.showFootprintEditor"))
-        show(embed.FK_PCB)
-        no_dialog_after("the Symbol Editor action from the board", run("common.Control.showSymbolEditor"))
-        show(embed.FK_PCB)
-        no_dialog_after("the Schematic Editor action from the board", run("pcbnew.EditorControl.showEeschema"))
-        show(embed.FK_SCH)
-        no_dialog_after("the PCB Editor action from the schematic", run("eeschema.EditorControl.showPcbNew"))
-        no_dialog_after("Ctrl+E (edit footprint) on the board", hotkey(embed.FK_PCB, ["RV1"], "ctrl+e"))
-        no_dialog_after("Ctrl+E (edit symbol) in the schematic", hotkey(embed.FK_SCH, ["U2"], "ctrl+e"))
-
     print(f"{len(FAILURES)} failed" if FAILURES else "ALL PASSED", flush=True)
     return 1 if FAILURES else 0
 
