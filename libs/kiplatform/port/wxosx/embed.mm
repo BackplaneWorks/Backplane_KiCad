@@ -71,6 +71,15 @@ std::map<NSWindow*, wxWindow*> s_byWindow;  ///< the same frames by their NSWind
 std::set<NSInteger>            s_numbers;   ///< windowNumbers of embedded frames
 
 dispatch_source_t s_ownerWatch = nullptr;
+
+
+/// On show as far as the frame and wx are concerned: mapped by us, not parked for a prewarm, and shown
+/// to wx (a HideFrame hides it through wx's Show(false), which does not come through UnmapNative: a
+/// frame hidden that way must never be ordered in again by a host rect, a raise or a re-attach)
+bool onShow( wxWindow* aFrame, const FRAME& aState )
+{
+    return aState.mapped && !aState.parked && aFrame && aFrame->IsShown();
+}
 pid_t             s_owner = 0;
 
 
@@ -357,6 +366,83 @@ void interposeViews( NSView* aView )
 void orderOutAll();
 
 
+/// A dialog of KiCad's (any titled wx top-level that is not an embedded frame) centred on the
+/// host's window and ordered just above it; its bounds come from the window list (no permission).
+void centreOnHost( NSWindow* aWindow )
+{
+    if( !s_parent )
+        return;
+
+    CFArrayRef list = CGWindowListCopyWindowInfo( kCGWindowListOptionIncludingWindow, (CGWindowID) s_parent );
+
+    if( list && CFArrayGetCount( list ) )
+    {
+        CGRect        host;
+        NSDictionary* info = (NSDictionary*) CFArrayGetValueAtIndex( list, 0 );
+
+        if( CGRectMakeWithDictionaryRepresentation( (CFDictionaryRef)[info objectForKey:(NSString*) kCGWindowBounds], &host ) )
+        {
+            // window-list coordinates count from the primary display's top-left; Cocoa's from its bottom-left
+            double H = NSScreen.screens[0].frame.size.height;
+            NSSize size = aWindow.frame.size;
+            [aWindow setFrameOrigin:NSMakePoint( host.origin.x + ( host.size.width - size.width ) / 2,
+                                                 H - ( host.origin.y + ( host.size.height + size.height ) / 2 ) )];
+        }
+    }
+
+    if( list )
+        CFRelease( list );
+
+    [aWindow orderWindow:NSWindowAbove relativeTo:(NSInteger) s_parent];
+}
+
+
+std::set<NSInteger> s_dialogs;   ///< KiCad's dialogs reported open (hooks.dialog)
+
+
+/// What X11's map and unmap of a top-level are on GTK: a dialog shown or gone, reported to the
+/// embedding state (ET_DIALOG_OPENED / CLOSED, AS_BUSY) and centred on the host when it appears.
+void dialogChanged( NSWindow* aWindow, bool aClosing )
+{
+    if( !aWindow || s_numbers.count( aWindow.windowNumber ) )
+        return;
+
+    uint64_t number = (uint64_t) aWindow.windowNumber;
+
+    if( s_hooks.isUnmanaged && s_hooks.isUnmanaged( number ) )
+        return;
+
+    // wx's own top-levels with a title bar: not menus, tooltips, popups or AppKit's panels
+    Class wxWin = NSClassFromString( @"wxNSWindow" );
+    Class wxPanel = NSClassFromString( @"wxNSPanel" );
+
+    if( !( ( wxWin && [aWindow isKindOfClass:wxWin] ) || ( wxPanel && [aWindow isKindOfClass:wxPanel] ) ) )
+        return;
+
+    if( !( aWindow.styleMask & NSWindowStyleMaskTitled ) )
+        return;
+
+    bool shown = aWindow.visible && !aClosing;
+
+    if( shown == ( s_dialogs.count( aWindow.windowNumber ) > 0 ) )
+        return;
+
+    if( shown )
+    {
+        s_dialogs.insert( aWindow.windowNumber );
+        centreOnHost( aWindow );
+    }
+    else
+    {
+        s_dialogs.erase( aWindow.windowNumber );
+    }
+
+    trace( std::string( "macos: dialog " ) + ( shown ? "shown " : "gone " ) + std::to_string( number ) );
+
+    if( s_hooks.dialog )
+        s_hooks.dialog( number, shown, wxString::FromUTF8( aWindow.title.UTF8String ? aWindow.title.UTF8String : "" ) );
+}
+
 /// Hide every frame the moment the process that owns the host's window ends (the client, which
 /// is not --parent-pid: the hub starts KiCad).  Its pid comes from the window list (no
 /// permission needed); the shared parent-pid poll still ends KiCad with the hub.
@@ -469,6 +555,13 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
     }
 
     interposeWindowClass( [NSWindow class] );
+
+    // Dialogs: a window ordered in or out changes its occlusion state; one closed says so first
+    NSNotificationCenter* centre = [NSNotificationCenter defaultCenter];
+    [centre addObserverForName:NSWindowDidChangeOcclusionStateNotification object:nil queue:nil
+                    usingBlock:^( NSNotification* aNote ) { dialogChanged( (NSWindow*) aNote.object, false ); }];
+    [centre addObserverForName:NSWindowWillCloseNotification object:nil queue:nil
+                    usingBlock:^( NSNotification* aNote ) { dialogChanged( (NSWindow*) aNote.object, true ); }];
 }
 
 
@@ -492,7 +585,7 @@ bool KIPLATFORM::EMBED::AttachHolder( uint64_t, uint64_t aParent )
     {
         for( auto& [frame, state] : s_frames )
         {
-            if( state.mapped )
+            if( onShow( frame, state ) )
                 orderIn( frame, state );
         }
     }
@@ -732,7 +825,7 @@ void KIPLATFORM::EMBED::SetFrameGeometry( wxWindow* aFrame, int aX, int aY, int 
 
     // A frame not on show keeps its size (layout) and stays ordered out; alpha 1 is applied when
     // EnsureMapped or ShowInactive orders it in
-    if( !f.mapped )
+    if( !onShow( aFrame, f ) )
     {
         aFrame->SetSize( aWidth, aHeight );
         return;
@@ -757,7 +850,7 @@ void KIPLATFORM::EMBED::SetHostRect( int aX, int aY, int aWidth, int aHeight, bo
 
     for( auto& [frame, state] : s_frames )
     {
-        if( !state.mapped || state.parked )
+        if( !onShow( frame, state ) )
             continue;
 
         NSWindow* w = nsWindowOf( frame );

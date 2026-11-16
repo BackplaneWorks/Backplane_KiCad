@@ -479,10 +479,13 @@ def main():
             check(wait_for(lambda: on_screen(pcb) and directly_above(pcb, hid), 3), "back to the tab: ShowFrame puts it back above the host")
 
             # a modal dialog (Board Setup) stays above the host, centred on it, and is reported
+            frame_numbers = {f.window for f in frames().values()}
+
             def kicad_windows_above_host():
+                # KiCad's windows above the host that are not its frames: the dialog
                 order = windows()
                 at = next((i for i, w in enumerate(order) if w[0] == hid), len(order))
-                return [w for w in order[:at] if w[1] == kicad.pid and w[0] != pcb]
+                return [w for w in order[:at] if w[1] == kicad.pid and w[0] not in frame_numbers]
 
             host_say("yield", kicad.pid)
             pump(0)
@@ -496,6 +499,11 @@ def main():
                 cx, cy = dx + dw / 2, dy + dh / 2
                 check(r is not None and r[0] <= cx <= r[0] + r[2] and r[1] <= cy <= r[1] + r[3], "the dialog is centred over the host")
             check(any(e.type == embed.ET_DIALOG_OPENED for e in pump(500)), "ET_DIALOG_OPENED reported")
+            # an agent's RunAction opened it, so KiCad is not the active app: the person's click on it would activate it
+            if dialog:
+                dx, dy, dw, dh = dialog[0][2]
+                click(dx + dw / 2, dy + 12)
+                time.sleep(0.4)
             key("escape", command=False)
             runner.join(10)
             check(wait_for(lambda: not kicad_windows_above_host(), 5), "Escape closes the dialog")
