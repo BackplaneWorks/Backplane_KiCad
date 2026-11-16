@@ -33,6 +33,10 @@ BOOST_AUTO_TEST_SUITE( KiwayBlockingDialog )
 // destroyed, so a modeless dialog closed by hiding it (ERC, DRC) stayed "blocking", and showing
 // another editor (COMMON_CONTROL's showFrame) raised it, which showed it again (lane B, bp.13).
 // Only a dialog on screen is blocking.
+//
+// Needs a display: the QA workflow skips it (qa_common's app never opens GDK there, so
+// CanDoDisplayTests() is false even under xvfb-run).  It runs on a desktop build; the regression
+// proof for the bug is lane B's repro on the real client.
 BOOST_AUTO_TEST_CASE( HiddenDialogIsNotBlocking )
 {
     if( !KI_TEST::CanDoDisplayTests() )
