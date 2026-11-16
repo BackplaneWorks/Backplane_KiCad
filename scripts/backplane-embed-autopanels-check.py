@@ -11,7 +11,8 @@
 - An agent at work opens the Agents pane by itself: that is auto, not the person's choice, so in
   a narrow pane it stays hidden; the agent's change and notice still reach the host
   (ET_DOCUMENT_EDITED, ET_AGENT_NOTICE undo_took_back), and the pane appears once there is room.
-- The schematic editor does the same at 700 px.
+- The schematic editor does the same at 700 px, and started narrow (611 px) its panels come back
+  when the pane widens to 1400 px.
 
 Runs on a private Xvfb + i3 with a python-xlib stand-in host; screenshots to --out.
 """
@@ -179,8 +180,18 @@ def main():
 
         # ---- Schematic
         hide_others(embed.FK_SCH)
-        sch = show(embed.FK_SCH, 1400)
+
+        # Started narrow (its first show at 611 px, as in a narrow pane): the panels go, and come
+        # back when the pane widens.  The wide-first PCB case above never saw a first call that
+        # was already narrow
+        sch = show(embed.FK_SCH, 611)
+        first = canvas_width(disp, sch.window)
+        check(first >= 611 * 0.58, f"schematic started at 611 px: canvas {first} px, at least ~60%")
+        s.shot("06-sch-611-first")
+        show(embed.FK_SCH, 1400)
         sch_wide = canvas_width(disp, sch.window)
+        check(sch_wide < 1400 * 0.88, f"schematic started narrow, then 1400 px: the side panels are back (canvas {sch_wide} px)")
+        s.shot("06-sch-1400-after-narrow")
         show(embed.FK_SCH, 700)
         sch_narrow = canvas_width(disp, sch.window)
         check(sch_narrow >= 700 * 0.58, f"schematic at 700 px: canvas {sch_narrow} px (at 1400: {sch_wide})")
