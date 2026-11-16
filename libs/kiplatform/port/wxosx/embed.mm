@@ -139,7 +139,10 @@ void orderIn( wxWindow* aFrame, FRAME& aState )
     w.alphaValue = 1.0;
     w.ignoresMouseEvents = NO;
 
-    if( !s_hostVisible || !s_parent )
+    // Never on screen before the host has said where its container is: without it the frame would be
+    // shown at wx's own geometry, a window over the host's whole width (first seen with the real client,
+    // whose first SetHostGeometry came while KiCad was still starting)
+    if( !s_hostVisible || !s_parent || !s_hostKnown )
     {
         [w orderOut:nil];
         return;
@@ -865,6 +868,7 @@ void KIPLATFORM::EMBED::SetFrameGeometry( wxWindow* aFrame, int aX, int aY, int 
 void KIPLATFORM::EMBED::SetHostRect( int aX, int aY, int aWidth, int aHeight, bool aVisible,
                                      bool aRaise )
 {
+    bool wasKnown = s_hostKnown;
     s_hostKnown = aWidth > 0 && aHeight > 0;
     s_hostX = aX;
     s_hostY = aY;
@@ -892,7 +896,7 @@ void KIPLATFORM::EMBED::SetHostRect( int aX, int aY, int aWidth, int aHeight, bo
 
         place( frame, state );
 
-        if( aRaise || visibilityChanged || !w.visible )
+        if( aRaise || visibilityChanged || !wasKnown || !w.visible )
             orderIn( frame, state );
     }
 
