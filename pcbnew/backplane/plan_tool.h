@@ -78,6 +78,10 @@ public:
     /// the API wait until the drag ends.
     bool IsDragging() const { return m_dragging; }
 
+    /// The plan tool is in the middle of something (a drag, a corridor or plane being drawn).
+    /// Otherwise plan view is a passive mode like the selection tool: the API is served in it.
+    bool InteractiveOperation() const { return m_dragging || m_drawing; }
+
     /// The id of the plan item at aPoint on the active layer, or on aLayer ("" if none); vertex
     /// hits set aVertex to the path/outline index.
     std::string HitTest( const VECTOR2I& aPoint, int* aVertex = nullptr,
@@ -117,4 +121,5 @@ private:
 
     std::set<std::string> m_selected;
     bool                  m_dragging = false;
+    bool                  m_drawing = false;
 };

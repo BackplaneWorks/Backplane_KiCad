@@ -23,7 +23,9 @@
 #include <gal/graphics_abstraction_layer.h>
 #include <geometry/shape_line_chain.h>
 #include <geometry/shape_poly_set.h>
+#include <hotkeys_basic.h>
 #include <pad.h>
+#include <tools/pcb_actions.h>
 #include <view/view.h>
 
 #include <algorithm>
@@ -449,8 +451,13 @@ void PLAN_VIEW_ITEM::ViewDraw( int aLayer, KIGFX::VIEW* aView ) const
     drawCorridors( gal, aView, layer, false );
     drawNotesAndAudit( gal, aView, layer );
 
-    if( m_planView || !plan.Empty() )
+    // Plan view's header (layer chip, status, progress, problems) only in plan view: over the
+    // board view the plan is shown, not edited (clicks are the selection tool's), and a header
+    // there made the two look the same.
+    if( m_planView )
         drawHeader( gal, aView, layer );
+    else if( !plan.Empty() )
+        drawOverlayTag( gal, aView );
 
     if( m_planView && plan.layers.size() > 1 )
         drawOverview( gal, aView, layer );
@@ -1420,6 +1427,32 @@ void PLAN_VIEW_ITEM::drawNotesAndAudit( KIGFX::GAL* aGal, KIGFX::VIEW* aView,
         aGal->DrawCircle( w.at, 7 * px );
         text( aGal, wxS( "!" ), w.at, size, COLOR4D( 1, 1, 1, 1 ), true );
     }
+}
+
+
+void PLAN_VIEW_ITEM::drawOverlayTag( KIGFX::GAL* aGal, KIGFX::VIEW* aView ) const
+{
+    BOX2D    vp = aView->GetViewport();
+    double   px = aView->ToWorld( 1.0 );
+    double   small = 11 * px;
+    VECTOR2D at = vp.GetOrigin() + VECTOR2D( 16 * px, 20 * px );
+
+    wxString key = KeyNameFromKeyCode( PCB_ACTIONS::planToggleView.GetHotKey() );
+    wxString tag = key.IsEmpty() ? wxString( _( "Routing plan shown (view only): open Routing Plan View to edit" ) )
+                                 : wxString::Format( _( "Routing plan shown (view only): %s to edit it in plan view" ),
+                                                     key );
+
+    aGal->AdvanceDepth();
+    aGal->AdvanceDepth();
+    aGal->SetIsFill( true );
+    aGal->SetIsStroke( true );
+    aGal->SetLineWidth( 1 * px );
+    aGal->SetStrokeColor( HEADER_DIM );
+    aGal->SetFillColor( COLOR4D( 0.0, 0.0, 0.0, 0.55 ) );
+    aGal->DrawRectangle( at - VECTOR2D( 8 * px, 10 * px ),
+                         at + VECTOR2D( small * 0.84 * tag.Length() + 10 * px, 10 * px ) );
+    aGal->SetIsStroke( false );
+    text( aGal, tag, at, small, HEADER_DIM, false, GR_TEXT_H_ALIGN_LEFT );
 }
 
 

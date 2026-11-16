@@ -3352,8 +3352,19 @@ bool PCB_EDIT_FRAME::interactiveOperationInProgress() const
 
     // A tool other than passive selection or point editing is actively modifying
     // the model (drawing, dragging, routing, etc.).
-    if( currentTool != mgr->GetTool<PCB_SELECTION_TOOL>()
-        && currentTool != mgr->GetTool<PCB_POINT_EDITOR>() )
+    // Plan view (the plan tool's EditPlan) is a passive mode like the selection tool: only a
+    // drag of plan items or a corridor/plane being drawn is an operation in progress.  Counting
+    // all of plan view as busy refused every API call in it (RunAction, SetActiveLayer, even
+    // pcbnew.Plan.togglePlanView), so a host could neither leave plan view nor change its layer.
+    PLAN_TOOL* planTool = mgr->GetTool<PLAN_TOOL>();
+
+    if( planTool && currentTool == planTool )
+    {
+        if( planTool->InteractiveOperation() )
+            return true;
+    }
+    else if( currentTool != mgr->GetTool<PCB_SELECTION_TOOL>()
+             && currentTool != mgr->GetTool<PCB_POINT_EDITOR>() )
     {
         return true;
     }
