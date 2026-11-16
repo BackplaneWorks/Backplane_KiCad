@@ -122,7 +122,17 @@ root = Path(sys.argv[1])
 manifest = json.loads((root / 'share/backplane/runtime.json').read_text())
 manifest['platform'] = 'darwin-' + sys.argv[2]
 manifest['backplaneLibrary'] = json.loads(Path(sys.argv[3]).read_text())
+# The oldest macOS the package runs on: the highest minos of every Mach-O in it (the bundled Homebrew
+# libraries are built for the runner's macOS). The hub reads it and refuses the install on an older Mac.
+import subprocess
+def minos(path):
+    out = subprocess.run(['vtool', '-show-build', str(path)], text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout
+    return [tuple(int(p) for p in line.split()[1].split('.')) for line in out.splitlines() if line.strip().startswith('minos')]
+seen = [v for f in (root / 'KiCad.app').rglob('*') if f.is_file() and not f.is_symlink() and (f.suffix in ('.dylib', '.so', '.kiface') or f.stat().st_mode & 0o111) for v in minos(f)]
+assert seen, 'no Mach-O minos found in the package'
+manifest['minOs'] = '.'.join(str(p) for p in max(seen))
 (root / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+print('manifest.json: minOs', manifest['minOs'], 'from', len(seen), 'Mach-O build versions')
 MANIFEST
 python scripts/backplane-ipc-smoke.py "$root/bin/kicad-cli" --expected-version "$version" | tee "$release/ipc.log"
 python scripts/backplane-document-ipc-regression.py "$root/bin/kicad-cli" | tee "$release/documents.log"
@@ -155,6 +165,22 @@ unpacked="$RUNNER_TEMP/libraries-gate"
 rm -rf "$unpacked" && mkdir -p "$unpacked"
 tar -C "$unpacked" -xzf "$release/$archive"
 codesign --verify --deep --strict "$unpacked/$(basename "$root")/KiCad.app"
+# minOs is the highest LC_BUILD_VERSION minos of the package's Mach-Os, as the manifest step takes it
+python - "$unpacked/$(basename "$root")" <<'MINOS'
+import json, subprocess, sys
+from pathlib import Path
+root = Path(sys.argv[1])
+def minos(path):
+    out = subprocess.run(['vtool', '-show-build', str(path)], text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout
+    return [tuple(int(p) for p in line.split()[1].split('.')) for line in out.splitlines() if line.strip().startswith('minos')]
+seen = [v for f in (root / 'KiCad.app').rglob('*') if f.is_file() and not f.is_symlink() and (f.suffix in ('.dylib', '.so', '.kiface') or f.stat().st_mode & 0o111) for v in minos(f)]
+manifest = json.loads((root / 'manifest.json').read_text())
+assert seen, 'no Mach-O minos found in the unpacked package'
+want = '.'.join(str(p) for p in max(seen))
+assert manifest.get('minOs') == want, f"manifest minOs {manifest.get('minOs')!r}, Mach-Os need {want}"
+assert manifest.get('backplaneLibrary', {}).get('commit'), 'manifest has no backplaneLibrary'
+print(f"PASS manifest: minOs {want} (highest of {len(seen)} Mach-O build versions), backplaneLibrary {manifest['backplaneLibrary']['commit'][:10]}")
+MINOS
 python scripts/backplane-library-package-check.py "$unpacked/$(basename "$root")" | tee "$release/libraries.log"
 python scripts/backplane-global-tables-regression.py "$unpacked/$(basename "$root")/bin/kicad-cli" | tee -a "$release/libraries.log"
 rm -rf "$unpacked" "$libraries"
