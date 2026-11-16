@@ -111,7 +111,17 @@ import sys
 root = Path(sys.argv[1])
 manifest = json.loads((root / 'share/backplane/runtime.json').read_text())
 manifest['platform'] = 'darwin-' + sys.argv[2]
+# The oldest macOS the package runs on: the highest minos of every Mach-O in it (the bundled Homebrew
+# libraries are built for the runner's macOS). The hub reads it and refuses the install on an older Mac.
+import subprocess
+def minos(path):
+    out = subprocess.run(['vtool', '-show-build', str(path)], text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout
+    return [tuple(int(p) for p in line.split()[1].split('.')) for line in out.splitlines() if line.strip().startswith('minos')]
+seen = [v for f in (root / 'KiCad.app').rglob('*') if f.is_file() and not f.is_symlink() and (f.suffix in ('.dylib', '.so', '.kiface') or f.stat().st_mode & 0o111) for v in minos(f)]
+assert seen, 'no Mach-O minos found in the package'
+manifest['minOs'] = '.'.join(str(p) for p in max(seen))
 (root / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+print('manifest.json: minOs', manifest['minOs'], 'from', len(seen), 'Mach-O build versions')
 MANIFEST
 python scripts/backplane-ipc-smoke.py "$root/bin/kicad-cli" --expected-version "$version" | tee "$release/ipc.log"
 python scripts/backplane-document-ipc-regression.py "$root/bin/kicad-cli" | tee "$release/documents.log"
