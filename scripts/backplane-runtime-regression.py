@@ -26,7 +26,7 @@ CAPABILITIES = {"api-server", "headless-pcb", "headless-sch", "export-v10", "par
                 "shutdown", "api-descriptor", "symbol-from-libid", "footprint-partial-update",
                 "drc-zone-guard", "rules-insert-position", "plan-keys", "runaction-frame", "task-gate-reads",
                 "no-load-migration", "api-handler-order",
-                "api-field-fixes", "sketch-route-width", "plan-view-api"}
+                "api-field-fixes", "sketch-route-width", "plan-view-api", "plan-select"}
 if sys.platform == "win32":
     # Windows only: the prewarm never takes the keyboard (verified on Windows)
     CAPABILITIES.add("prewarm-keeps-focus")

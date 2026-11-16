@@ -42,6 +42,7 @@
 
 #include <json_common.h>
 
+#include <algorithm>
 #include <set>
 
 using namespace kiapi::backplane::plan;
@@ -191,6 +192,67 @@ HANDLER_RESULT<PlanResponse> API_HANDLER_PCB::handleGetPlan( const HANDLER_CONTE
             response.set_in_plan_view( item->IsPlanView() );
     }
 
+    return response;
+}
+
+
+HANDLER_RESULT<SelectPlanItemsResponse> API_HANDLER_PCB::handleSelectPlanItems(
+        const HANDLER_CONTEXT<SelectPlanItems>& aCtx )
+{
+    HANDLER_RESULT<bool> valid = validateDocument( aCtx.Request.board() );
+
+    if( !valid )
+        return tl::unexpected( valid.error() );
+
+    if( std::optional<ApiResponseStatus> headless = checkForHeadless( "SelectPlanItems" ) )
+        return tl::unexpected( *headless );
+
+    if( std::optional<ApiResponseStatus> busy = checkForBusy() )
+        return tl::unexpected( *busy );
+
+    PLAN_TOOL* tool = toolManager()->GetTool<PLAN_TOOL>();
+
+    if( !tool || !frame()->GetCanvas() || !frame()->GetCanvas()->GetPlanView() )
+        return tl::unexpected( planError( ApiStatusCode::AS_UNIMPLEMENTED, "no plan view in this editor" ) );
+
+    // Plan view is a passive mode (plan-view-api): only a drag or a corridor/plane being drawn
+    // holds it
+    if( tool->InteractiveOperation() )
+    {
+        return tl::unexpected( planError( ApiStatusCode::AS_BUSY,
+                                          "the person is dragging or drawing plan items; retry in "
+                                          "a moment" ) );
+    }
+
+    std::vector<std::string> ids( aCtx.Request.ids().begin(), aCtx.Request.ids().end() );
+    std::vector<std::string> selected = tool->SelectItems( ids, aCtx.Request.zoom() );
+
+    SelectPlanItemsResponse response;
+
+    for( const std::string& id : ids )
+    {
+        if( std::find( selected.begin(), selected.end(), id ) == selected.end() )
+            response.add_missing( id );
+    }
+
+    if( selected.empty() )
+    {
+        std::string list;
+
+        for( const std::string& id : ids )
+            list += ( list.empty() ? "" : ", " ) + id;
+
+        return tl::unexpected( planError( ApiStatusCode::AS_BAD_REQUEST,
+                                          ids.empty() ? "no ids given"
+                                                      : "no plan item has these ids: " + list ) );
+    }
+
+    for( const std::string& id : selected )
+        response.add_selected( id );
+
+    response.set_active_layer( LSET::Name( frame()->GetActiveLayer() ).ToStdString() );
+    response.set_in_plan_view( tool->InPlanView() );
+    frame()->GetCanvas()->Refresh();
     return response;
 }
 

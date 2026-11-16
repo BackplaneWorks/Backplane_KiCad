@@ -193,6 +193,9 @@ or `kicad`); `GetFramesResponse.theme` reports it. Nothing is written to KiCad's
   schematic), and with `zoom` fits the view to what it found. Pins are `<reference>.<number>`.
   It answers `found` and `not_found` (`ItemNames`). In the schematic only one sheet is shown: the
   sheet of the first hit. Net names match with or without a leading `/`.
+  In the PCB editor's plan view (capability `plan-select`) it only zooms: the board's items are
+  neither selected nor highlighted, plan view and the plan selection stay. Plan items are
+  selected with `kiapi.backplane.plan.SelectPlanItems` (BACKPLANE_IPC.md).
 - `ET_SELECTION_CHANGED`: `Event.frame` is the editor, `Event.selection` the person's selection
   after the change (empty = cleared): footprint/symbol references, pads/pins as `U3.4`, and the
   nets of selected tracks, vias, zones, wires and labels. Not emitted for SelectItems, reloads,

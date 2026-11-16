@@ -63,6 +63,9 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
                        // SetActiveLayer...), AS_BUSY only during a plan drag or a corridor/plane being
                        // drawn; over the board view the plan overlay draws a "view only" tag, not plan
                        // view's header; GetPlan's PlanResponse.in_plan_view says whether plan view is on
+    "plan-select",     // kiapi.backplane.plan.SelectPlanItems selects plan items as a click does (entering
+                       // plan view, the first item's layer active, zoom); embed SelectItems in plan view
+                       // zooms to the board items without selecting them and keeps plan view on
 #ifdef _WIN32
     // embedded: a prewarm never takes the keyboard or the activation (shown with SW_SHOWNA; a focus
     // it takes while built goes back).  Windows only: verified there; the host gates its
