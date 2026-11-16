@@ -286,11 +286,13 @@ def board_with(footprint: str) -> str:
 
 
 def check_model(cli: Path, stock: Path, root: Path, nickname: str, footprint_file: Path, variable: str,
-                model: Path) -> None:
+                model: Path, relative: str = MODEL) -> None:
     """A board placing <nickname>:C_0805_2012Metric exports a GLB with its model; an absent model does not."""
     assert model.is_file() and model.stat().st_size > 1000, f"the runtime lacks {model}"
     source = footprint_file.read_text(encoding="utf-8")
-    reference = f'(model "${{{variable}}}/{MODEL}"'
+    # <relative> is the model's path under the variable: KiCad's own libraries keep their models in
+    # <dir>/<lib>.3dshapes, the Backplane library in <dir>/3dmodels/<lib>.3dshapes
+    reference = f'(model "${{{variable}}}/{relative}"'
     assert reference in source, f"{footprint_file.name} no longer names {reference}"
     placed = source.strip().replace('(footprint "C_0805_2012Metric"', f'(footprint "{nickname}:C_0805_2012Metric"', 1)
     placed = placed.replace('(layer "F.Cu")', '(layer "F.Cu")\n\t(at 100 100)', 1)
@@ -306,7 +308,7 @@ def check_model(cli: Path, stock: Path, root: Path, nickname: str, footprint_fil
         meshes[name] = ([m for m in glb_meshes(glb) if "C_0805_2012Metric" in m], glb.stat().st_size)
     assert meshes["with"][0], f"{nickname}: the GLB lacks the C_0805_2012Metric model: ${{{variable}}} did not resolve"
     assert not meshes["control"][0], f"{nickname}: the control (absent model) still has the mesh: the check proves nothing"
-    print(f"PASS model: {nickname}:C_0805_2012Metric's ${{{variable}}}/{MODEL} in the GLB "
+    print(f"PASS model: {nickname}:C_0805_2012Metric's ${{{variable}}}/{relative} in the GLB "
           f"({meshes['with'][1]} bytes, {meshes['control'][1]} without it)", flush=True)
 
 
@@ -325,7 +327,7 @@ def main() -> None:
                     "KICAD10_3DMODEL_DIR", stock / "3dmodels" / MODEL)
         check_model(cli, stock, root, "Backplane_Passives_Nominal",
                     stock / "backplane-library/libraries/Backplane_Passives_Nominal.pretty/C_0805_2012Metric.kicad_mod",
-                    "BACKPLANE_KICAD_LIBRARY", stock / "backplane-library/3dmodels" / MODEL)
+                    "BACKPLANE_KICAD_LIBRARY", stock / "backplane-library/3dmodels" / MODEL, "3dmodels/" + MODEL)
     print("PASS global tables: seeded from the runtime; Device:C, Capacitor_SMD and Backplane_Passives_Nominal C_0805_2012Metric and both models resolve", flush=True)
 
 
