@@ -59,6 +59,10 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
                        // Reference, Value, Datasheet or Description fills that mandatory field
     "sketch-route-width", // SketchRoute takes each net's class width (or track_width), lists failures[]
                           // with reasons, and answers a message with no board AS_BAD_REQUEST
+    "plan-view-api",   // plan view is a passive mode: the API is served in it (RunAction, togglePlanView,
+                       // SetActiveLayer...), AS_BUSY only during a plan drag or a corridor/plane being
+                       // drawn; over the board view the plan overlay draws a "view only" tag, not plan
+                       // view's header
 #ifdef _WIN32
     // embedded: a prewarm never takes the keyboard or the activation (shown with SW_SHOWNA; a focus
     // it takes while built goes back).  Windows only: verified there; the host gates its

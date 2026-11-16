@@ -1324,6 +1324,9 @@ std::vector<VECTOR2I> PLAN_TOOL::collectPoints( bool aClosed )
     std::string           layer = activeLayerName();
     int                   width = 1500000;
 
+    m_drawing = true;
+    struct CLEAR { bool& flag; ~CLEAR() { flag = false; } } clear{ m_drawing };
+
     while( TOOL_EVENT* evt = Wait() )
     {
         VECTOR2I pos = evt->HasPosition() ? VECTOR2I( evt->Position() )
