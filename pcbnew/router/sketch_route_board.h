@@ -56,6 +56,9 @@ struct SKETCH_ROUTE_REQUEST
     /// 0 keeps the router's default
     int m_timeLimitMs = 0;
 
+    /// Track width for every route (nm); 0 takes each net's own (net class, rules)
+    int m_trackWidth = 0;
+
     /// Called with (done, total); return false to cancel
     std::function<bool( int, int )> m_progress;
 
@@ -73,6 +76,19 @@ struct SKETCH_ROUTE_RESULT
 
     /// Tracks, arcs and vias created, in the order they were added
     std::vector<BOARD_ITEM*> m_added;
+
+    /// A connection left unrouted, and why
+    struct FAILURE
+    {
+        wxString    m_net;
+        BOARD_ITEM* m_start = nullptr;
+        BOARD_ITEM* m_end = nullptr;
+        VECTOR2I    m_startPos;
+        VECTOR2I    m_endPos;
+        wxString    m_reason;
+    };
+
+    std::vector<FAILURE> m_failures;
 };
 
 

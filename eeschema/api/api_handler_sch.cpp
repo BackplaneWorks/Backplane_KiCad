@@ -125,6 +125,104 @@ static void CopyLibraryFieldDefault( kiapi::schematic::types::SchematicField* aT
 }
 
 
+/// A mandatory field sent with no place (only its text): placed as the library places it, with
+/// the given text.  It became a field at the sheet origin, hidden.  A shown or autoplaced flag that
+/// is set is kept too; anything with a place is the client's own field and stays as sent.
+static void MergeLibraryFieldDefault( kiapi::schematic::types::SchematicField* aTarget,
+                                      const kiapi::schematic::types::SchematicField& aLibrary,
+                                      const kiapi::common::types::Vector2& aSymbolPosition )
+{
+    if( aTarget->text().has_position() )
+        return;
+
+    kiapi::schematic::types::SchematicField given = *aTarget;
+    CopyLibraryFieldDefault( aTarget, aLibrary, aSymbolPosition );
+    aTarget->mutable_text()->set_text( given.text().text() );
+
+    if( !given.text().hyperlink().empty() )
+        aTarget->mutable_text()->set_hyperlink( given.text().hyperlink() );
+
+    if( given.visible() )
+        aTarget->set_visible( true );
+
+    if( given.show_name() )
+        aTarget->set_show_name( true );
+
+    if( given.allow_auto_place() )
+        aTarget->set_allow_auto_place( true );
+
+    if( given.custom_properties_size() > 0 )
+        *aTarget->mutable_custom_properties() = given.custom_properties();
+}
+
+
+/// A user field named as a mandatory field (Reference, Value, Footprint, Datasheet, Description)
+/// is that field: it was answered ISC_OK and dropped, as user fields never replace a mandatory one.
+/// Its text goes into the mandatory field (kept where it is when that is sent too).
+static void MapMandatoryUserFields( kiapi::schematic::types::SchematicSymbolInstance& aSymbol )
+{
+    using kiapi::schematic::types::SchematicField;
+
+    auto slot = [&]( const std::string& aName, bool& aHave ) -> SchematicField*
+                {
+                    wxString name = wxString::FromUTF8( aName );
+
+                    if( name.IsSameAs( wxS( "Reference" ), false ) )
+                    {
+                        aHave = aSymbol.has_reference_field();
+                        return aSymbol.mutable_reference_field();
+                    }
+
+                    if( name.IsSameAs( wxS( "Value" ), false ) )
+                    {
+                        aHave = aSymbol.has_value_field();
+                        return aSymbol.mutable_value_field();
+                    }
+
+                    if( name.IsSameAs( wxS( "Footprint" ), false ) )
+                    {
+                        aHave = aSymbol.has_footprint_field();
+                        return aSymbol.mutable_footprint_field();
+                    }
+
+                    if( name.IsSameAs( wxS( "Datasheet" ), false ) )
+                    {
+                        aHave = aSymbol.has_datasheet_field();
+                        return aSymbol.mutable_datasheet_field();
+                    }
+
+                    if( name.IsSameAs( wxS( "Description" ), false ) )
+                    {
+                        aHave = aSymbol.has_description_field();
+                        return aSymbol.mutable_description_field();
+                    }
+
+                    return nullptr;
+                };
+
+    google::protobuf::RepeatedPtrField<SchematicField> kept;
+
+    for( const SchematicField& field : aSymbol.user_fields() )
+    {
+        bool            have = false;
+        SchematicField* target = slot( field.name(), have );
+
+        if( !target )
+        {
+            *kept.Add() = field;
+            continue;
+        }
+
+        if( have )
+            target->mutable_text()->set_text( field.text().text() );
+        else
+            *target = field;
+    }
+
+    aSymbol.mutable_user_fields()->Swap( &kept );
+}
+
+
 static bool ResolveLibraryOnlySymbol( kiapi::schematic::types::SchematicSymbolInstance& aSymbol,
                                       SYMBOL_LIBRARY_ADAPTER* aAdapter, std::string& aError )
 {
@@ -145,8 +243,16 @@ static bool ResolveLibraryOnlySymbol( kiapi::schematic::types::SchematicSymbolIn
         return false;
     }
 
+    // A symbol that extends another is the flattened symbol, as PlaceSymbolFromLibrary and the
+    // library API give it; unflattened, the sheet's lib_symbols copy was a library mismatch (ERC)
+    std::unique_ptr<LIB_SYMBOL> flattened;
+
+    // (SCH_SYMBOL's constructor from a library symbol flattens the same way)
+    if( librarySymbol->IsDerived() )
+        flattened = librarySymbol->Flatten();
+
     kiapi::schematic::types::SchematicSymbol libraryDefinition;
-    librarySymbol->Serialize( libraryDefinition );
+    ( flattened ? flattened.get() : librarySymbol )->Serialize( libraryDefinition );
     aSymbol.mutable_definition()->CopyFrom( libraryDefinition );
 
     // A minimal instance gets the library defaults, while explicit client fields remain intact.
@@ -154,20 +260,33 @@ static bool ResolveLibraryOnlySymbol( kiapi::schematic::types::SchematicSymbolIn
 
     if( !aSymbol.has_reference_field() )
         CopyLibraryFieldDefault( aSymbol.mutable_reference_field(), libraryDefinition.reference_field(), position );
+    else
+        MergeLibraryFieldDefault( aSymbol.mutable_reference_field(), libraryDefinition.reference_field(), position );
 
     if( !aSymbol.has_value_field() )
         CopyLibraryFieldDefault( aSymbol.mutable_value_field(), libraryDefinition.value_field(), position );
+    else
+        MergeLibraryFieldDefault( aSymbol.mutable_value_field(), libraryDefinition.value_field(), position );
 
     if( !aSymbol.has_footprint_field() )
         CopyLibraryFieldDefault( aSymbol.mutable_footprint_field(), libraryDefinition.footprint_field(), position );
+    else
+        MergeLibraryFieldDefault( aSymbol.mutable_footprint_field(), libraryDefinition.footprint_field(), position );
 
     if( !aSymbol.has_datasheet_field() )
         CopyLibraryFieldDefault( aSymbol.mutable_datasheet_field(), libraryDefinition.datasheet_field(), position );
+    else
+        MergeLibraryFieldDefault( aSymbol.mutable_datasheet_field(), libraryDefinition.datasheet_field(), position );
 
     if( !aSymbol.has_description_field() )
     {
         CopyLibraryFieldDefault( aSymbol.mutable_description_field(), libraryDefinition.description_field(),
                                  position );
+    }
+    else
+    {
+        MergeLibraryFieldDefault( aSymbol.mutable_description_field(), libraryDefinition.description_field(),
+                                  position );
     }
 
     return true;
@@ -1404,6 +1523,8 @@ HANDLER_RESULT<ItemRequestStatus> API_HANDLER_SCH::handleCreateUpdateItemsIntern
             {
                 std::string symbolError;
 
+                MapMandatoryUserFields( symbolProto );
+
                 // Only a create builds a symbol from its library id; an update keeps the
                 // existing (possibly edited) definition.
                 if( aCreate
@@ -1674,6 +1795,10 @@ HANDLER_RESULT<ItemRequestStatus> API_HANDLER_SCH::handleCreateUpdateItemsIntern
                     aItemHandler( status, anyItem );
                     continue;
                 }
+
+                // A new symbol asked to be autoplaced is placed as the editor places one
+                if( symbolProto.fields_autoplaced() )
+                    symbol->AutoplaceFields( targetScreen, AUTOPLACE_AUTO );
 
                 if( PackSymbol( &packed, symbol, targetPath, schematic() ) )
                     newItem.PackFrom( packed );

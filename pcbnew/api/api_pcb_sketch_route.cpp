@@ -91,6 +91,10 @@ DIRECTION_45::CORNER_MODE cornerMode( SketchRouteCornerMode aMode )
 HANDLER_RESULT<SketchRouteResponse> API_HANDLER_PCB::handleSketchRoute(
         const HANDLER_CONTEXT<SketchRoute>& aCtx )
 {
+    // Without a board no handler would take it and the client got AS_UNHANDLED: say what is missing
+    if( !aCtx.Request.has_board() )
+        return tl::unexpected( badRequest( "SketchRoute needs `board` (the board's DocumentSpecifier)" ) );
+
     if( std::optional<ApiResponseStatus> busy = checkForBusy() )
         return tl::unexpected( *busy );
 
@@ -154,6 +158,16 @@ HANDLER_RESULT<SketchRouteResponse> API_HANDLER_PCB::handleSketchRoute(
     request.m_allowVias = !aCtx.Request.disallow_vias();
     request.m_timeLimitMs = (int) std::min<uint32_t>( aCtx.Request.time_limit_ms(), INT_MAX );
 
+    if( aCtx.Request.has_track_width() )
+    {
+        int64_t width = aCtx.Request.track_width().value_nm();
+
+        if( width < 0 || width > INT_MAX )
+            return tl::unexpected( badRequest( "track_width is out of range" ) );
+
+        request.m_trackWidth = (int) width;
+    }
+
     if( aCtx.Request.has_guide() && aCtx.Request.guide().nodes_size() > 0 )
     {
         SHAPE_LINE_CHAIN guide = UnpackPolyLine( aCtx.Request.guide() );
@@ -188,6 +202,24 @@ HANDLER_RESULT<SketchRouteResponse> API_HANDLER_PCB::handleSketchRoute(
 
     for( BOARD_ITEM* item : result.m_added )
         response.add_created_items()->set_value( item->m_Uuid.AsStdString() );
+
+    for( const SKETCH_ROUTE_RESULT::FAILURE& failure : result.m_failures )
+    {
+        kiapi::backplane::SketchRouteFailure* out = response.add_failures();
+        out->set_net( failure.m_net.ToStdString( wxConvUTF8 ) );
+
+        if( failure.m_start )
+            out->mutable_start()->set_value( failure.m_start->m_Uuid.AsStdString() );
+
+        if( failure.m_end )
+            out->mutable_end()->set_value( failure.m_end->m_Uuid.AsStdString() );
+
+        out->mutable_start_pos()->set_x_nm( failure.m_startPos.x );
+        out->mutable_start_pos()->set_y_nm( failure.m_startPos.y );
+        out->mutable_end_pos()->set_x_nm( failure.m_endPos.x );
+        out->mutable_end_pos()->set_y_nm( failure.m_endPos.y );
+        out->set_reason( failure.m_reason.ToStdString( wxConvUTF8 ) );
+    }
 
     if( !m_activeClients.count( aCtx.ClientName ) )
         pushCurrentCommit( aCtx.ClientName, _( "Sketch route via API" ) );

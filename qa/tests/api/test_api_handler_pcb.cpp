@@ -19,6 +19,8 @@
 
 #include <api/api_server.h>
 #include <memory>
+#include <optional>
+#include <set>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -37,6 +39,15 @@
 #include <settings/settings_manager.h>
 #include <zone.h>
 #include <zone_filler.h>
+#include <footprint.h>
+#include <pcb_field.h>
+#include <pcb_track.h>
+#include <pad.h>
+#include <netclass.h>
+#include <project/net_settings.h>
+#include <board_design_settings.h>
+#include <api/backplane/sketch_route.pb.h>
+#include <api/board/board_types.pb.h>
 
 #include <api/api_handler_pcb.h>
 #include <api/api_task_scheduler.h>
@@ -836,6 +847,206 @@ BOOST_AUTO_TEST_CASE( DrcExclusionDropsMarkerReportFields )
     BOOST_CHECK( roundTrippedMsg.violating_rule().empty() );
     BOOST_CHECK( roundTrippedMsg.description().empty() );
     BOOST_CHECK( !roundTrippedMsg.excluded() );
+}
+
+
+// A partial FootprintInstance update that sends only the Value text keeps the field's layer, place,
+// size and visibility (repro 5 of the token benchmark: it reset them to F.SilkS, the origin and
+// hidden); a whole field, as GetItems gives it, still replaces it.
+BOOST_AUTO_TEST_CASE( PartialFootprintValueUpdateKeepsTheField )
+{
+    BOARD* board = loadBoard( wxS( "api_kitchen_sink" ) );
+
+    FOOTPRINT* target = nullptr;
+
+    for( FOOTPRINT* fp : board->Footprints() )
+    {
+        if( fp->GetField( FIELD_T::VALUE )->GetLayer() != F_SilkS && fp->GetField( FIELD_T::VALUE )->IsVisible() )
+        {
+            target = fp;
+            break;
+        }
+    }
+
+    BOOST_REQUIRE_MESSAGE( target, "the board has a footprint with its Value off F.SilkS and shown" );
+
+    const PCB_FIELD* before = target->GetField( FIELD_T::VALUE );
+    PCB_LAYER_ID     layer = before->GetLayer();
+    VECTOR2I         position = before->GetPosition();
+    VECTOR2I         size = before->GetTextSize();
+    KIID             id = target->m_Uuid;
+
+    API_HANDLER_PCB handler( m_context );
+    kiapi::common::ApiRequest beginRequest = makeBeginCommitRequest();
+    API_RESULT                begun = handler.Handle( beginRequest );
+    BOOST_REQUIRE( begun.has_value() );
+
+    kiapi::common::commands::BeginCommitResponse commit;
+    BOOST_REQUIRE( begun->message().UnpackTo( &commit ) );
+
+    kiapi::common::commands::UpdateItems command;
+    *command.mutable_header()->mutable_document() = makeBoardDocument( *board );
+
+    kiapi::board::types::FootprintInstance partial;
+    partial.mutable_id()->set_value( id.AsStdString() );
+    partial.mutable_value_field()->mutable_text()->mutable_text()->set_text( "10k1" );
+    command.add_items()->PackFrom( partial );
+
+    kiapi::common::ApiRequest request;
+    request.mutable_header()->set_client_name( "kicad.qa" );
+    BOOST_REQUIRE( request.mutable_message()->PackFrom( command ) );
+
+    API_RESULT result = handler.Handle( request );
+    BOOST_REQUIRE_MESSAGE( result.has_value(), "UpdateItems failed" );
+
+    kiapi::common::commands::UpdateItemsResponse response;
+    BOOST_REQUIRE( result->message().UnpackTo( &response ) );
+    BOOST_REQUIRE_EQUAL( response.updated_items_size(), 1 );
+    BOOST_CHECK_EQUAL( response.updated_items( 0 ).status().code(), kiapi::common::commands::ISC_OK );
+
+    // The change lands on the board when the commit is pushed
+    kiapi::common::commands::EndCommit end;
+    *end.mutable_id() = commit.id();
+    end.set_action( kiapi::common::commands::CMA_COMMIT );
+    kiapi::common::ApiRequest endRequest;
+    endRequest.mutable_header()->set_client_name( "kicad.qa" );
+    BOOST_REQUIRE( endRequest.mutable_message()->PackFrom( end ) );
+    BOOST_REQUIRE_MESSAGE( handler.Handle( endRequest ).has_value(), "EndCommit failed" );
+
+    FOOTPRINT* after = nullptr;
+
+    for( FOOTPRINT* fp : board->Footprints() )
+    {
+        if( fp->m_Uuid == id )
+            after = fp;
+    }
+
+    BOOST_REQUIRE( after );
+    const PCB_FIELD* value = after->GetField( FIELD_T::VALUE );
+
+    BOOST_CHECK_EQUAL( value->GetText(), wxString( wxS( "10k1" ) ) );
+    BOOST_CHECK_EQUAL( value->GetLayer(), layer );
+    BOOST_CHECK( value->GetPosition() == position );
+    BOOST_CHECK( value->GetTextSize() == size );
+    BOOST_CHECK( value->IsVisible() );
+}
+
+
+// SketchRoute (token benchmark repro 8): routes at the net's net class width, also a class set
+// after the router's rules were first built; an explicit track_width wins; a message with no
+// board is a bad request, not unhandled.
+BOOST_AUTO_TEST_CASE( SketchRouteWidthsAndBadRequest )
+{
+    BOARD* board = loadBoard( wxS( "issue25265" ) );
+
+    std::vector<PAD*> pads;
+    wxString          netName;
+
+    for( FOOTPRINT* fp : board->Footprints() )
+    {
+        for( PAD* pad : fp->Pads() )
+        {
+            if( pad->GetNetname().Contains( wxS( "V+" ) ) )
+            {
+                pads.push_back( pad );
+                netName = pad->GetNetname();
+            }
+        }
+    }
+
+    BOOST_REQUIRE_EQUAL( pads.size(), 2 );
+
+    API_HANDLER_PCB handler( m_context );
+
+    auto route = [&]( std::optional<int> aWidth, kiapi::backplane::SketchRouteResponse* aOut ) -> API_RESULT
+                 {
+                     kiapi::backplane::SketchRoute command;
+                     *command.mutable_board() = makeBoardDocument( *board );
+
+                     for( PAD* pad : pads )
+                         command.add_items()->set_value( pad->m_Uuid.AsStdString() );
+
+                     if( aWidth )
+                         command.mutable_track_width()->set_value_nm( *aWidth );
+
+                     kiapi::common::ApiRequest request;
+                     request.mutable_header()->set_client_name( "kicad.qa" );
+                     request.mutable_message()->PackFrom( command );
+
+                     API_RESULT result = handler.Handle( request );
+
+                     if( result.has_value() && aOut )
+                         result->message().UnpackTo( aOut );
+
+                     return result;
+                 };
+
+    auto newTrackWidths = [&]( const kiapi::backplane::SketchRouteResponse& aResponse )
+                          {
+                              std::set<int> widths;
+
+                              for( const kiapi::common::types::KIID& id : aResponse.created_items() )
+                              {
+                                  for( PCB_TRACK* track : board->Tracks() )
+                                  {
+                                      if( track->m_Uuid.AsStdString() == id.value() && track->Type() == PCB_TRACE_T )
+                                          widths.insert( track->GetWidth() );
+                                  }
+                              }
+
+                              return widths;
+                          };
+
+    auto removeTracks = [&]()
+                        {
+                            std::vector<PCB_TRACK*> tracks( board->Tracks().begin(), board->Tracks().end() );
+
+                            for( PCB_TRACK* track : tracks )
+                            {
+                                board->Remove( track );
+                                delete track;
+                            }
+                        };
+
+    // First route: builds the router's rules
+    kiapi::backplane::SketchRouteResponse response;
+    API_RESULT result = route( std::nullopt, &response );
+    BOOST_REQUIRE_MESSAGE( result.has_value(), "SketchRoute failed" );
+    BOOST_CHECK_EQUAL( response.connections(), 1 );
+    BOOST_CHECK_EQUAL( response.routed() + response.failures_size(), response.connections() );
+    removeTracks();
+
+    // A net class set afterwards is honoured
+    BOARD_DESIGN_SETTINGS&    bds = board->GetDesignSettings();
+    std::shared_ptr<NETCLASS> wide = std::make_shared<NETCLASS>( wxS( "Wide" ) );
+    wide->SetTrackWidth( 500000 );
+    bds.m_NetSettings->SetNetclass( wxS( "Wide" ), wide );
+    bds.m_NetSettings->SetNetclassPatternAssignment( netName, wxS( "Wide" ) );
+    bds.m_NetSettings->ClearAllCaches();
+
+    response.Clear();
+    result = route( std::nullopt, &response );
+    BOOST_REQUIRE( result.has_value() );
+    BOOST_CHECK_EQUAL( response.routed(), 1 );
+    BOOST_CHECK( newTrackWidths( response ) == std::set<int>{ 500000 } );
+    removeTracks();
+
+    // An explicit width wins
+    response.Clear();
+    result = route( 300000, &response );
+    BOOST_REQUIRE( result.has_value() );
+    BOOST_CHECK_EQUAL( response.routed(), 1 );
+    BOOST_CHECK( newTrackWidths( response ) == std::set<int>{ 300000 } );
+
+    // No board: a bad request
+    kiapi::backplane::SketchRoute noBoard;
+    noBoard.add_items()->set_value( pads[0]->m_Uuid.AsStdString() );
+    kiapi::common::ApiRequest request;
+    request.mutable_header()->set_client_name( "kicad.qa" );
+    request.mutable_message()->PackFrom( noBoard );
+    result = handler.Handle( request );
+    BOOST_REQUIRE( !result.has_value() );
+    BOOST_CHECK_EQUAL( result.error().status(), kiapi::common::ApiStatusCode::AS_BAD_REQUEST );
 }
 
 

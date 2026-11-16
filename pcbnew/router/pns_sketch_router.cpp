@@ -2129,6 +2129,9 @@ int SKETCH_ROUTER::bundlePitch( const std::vector<SKETCH_CONNECTION>& aConnectio
 
         if( conn.m_start && iface->ImportSizes( sizes, conn.m_start, conn.m_net, conn.m_startPos ) )
         {
+            if( m_options.m_trackWidth > 0 )
+                sizes.SetTrackWidth( m_options.m_trackWidth );
+
             pitch = std::max( pitch, sizes.TrackWidth()
                                      + std::max( sizes.Clearance(), sizes.MinClearance() ) );
         }
@@ -2765,6 +2768,9 @@ bool SKETCH_ROUTER::routePass( NODE* aNode, const std::vector<SKETCH_CONNECTION>
             continue;
         }
 
+        if( m_options.m_trackWidth > 0 )
+            sizes.SetTrackWidth( m_options.m_trackWidth );
+
         const int width = std::max( 1, sizes.TrackWidth() );
 
         auto reserve =
@@ -3015,6 +3021,9 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
 
     if( !iface->ImportSizes( sizes, aConn.m_start, aConn.m_net, aConn.m_startPos ) )
         return false;
+
+    if( m_options.m_trackWidth > 0 )
+        sizes.SetTrackWidth( m_options.m_trackWidth );
 
     sizes.SetViaType( VIATYPE::THROUGH );
 

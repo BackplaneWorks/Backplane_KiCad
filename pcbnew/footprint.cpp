@@ -796,40 +796,57 @@ bool FOOTPRINT::Deserialize( const google::protobuf::Any &aContainer )
     if( footprint.locked() != kiapi::common::types::LockedState::LS_UNKNOWN )
         SetLocked( footprint.locked() == kiapi::common::types::LockedState::LS_LOCKED );
 
-    google::protobuf::Any buf;
-    types::Field mandatoryField;
+    // A mandatory field: sent whole (as GetItems gives it: its layer, place and attributes) it
+    // replaces the field; sent with only its text (no layer, no place, no attributes) it is a
+    // partial update and only the text changes, as the footprint keeps what it is not sent.
+    // Before, a text-only field reset the layer to F.SilkS, the place to the origin and hid it.
+    auto mergeField =
+            [&]( const types::Field& aGiven, FIELD_T aId )
+            {
+                PCB_FIELD*            field = GetField( aId );
+                google::protobuf::Any buf;
+                types::Field          merged;
+
+                const kiapi::common::types::Text& givenText = aGiven.text().text();
+                bool partial = aGiven.text().layer() == types::BoardLayer::BL_UNKNOWN
+                               && !givenText.has_position() && !givenText.has_attributes();
+
+                if( partial && field )
+                {
+                    field->Serialize( merged );
+                    merged.mutable_text()->mutable_text()->set_text( givenText.text() );
+
+                    if( !givenText.hyperlink().empty() )
+                        merged.mutable_text()->mutable_text()->set_hyperlink( givenText.hyperlink() );
+
+                    // Showing a field is a partial update too; hiding one takes the whole field
+                    if( aGiven.visible() )
+                        merged.set_visible( true );
+
+                    if( aGiven.custom_properties_size() > 0 )
+                        *merged.mutable_custom_properties() = aGiven.custom_properties();
+                }
+                else
+                {
+                    merged = aGiven;
+                }
+
+                merged.mutable_id()->set_id( (int) aId );
+                buf.PackFrom( merged );
+                GetField( aId )->Deserialize( buf );
+            };
 
     if( footprint.has_reference_field() )
-    {
-        mandatoryField = footprint.reference_field();
-        mandatoryField.mutable_id()->set_id( (int) FIELD_T::REFERENCE );
-        buf.PackFrom( mandatoryField );
-        GetField( FIELD_T::REFERENCE )->Deserialize( buf );
-    }
+        mergeField( footprint.reference_field(), FIELD_T::REFERENCE );
 
     if( footprint.has_value_field() )
-    {
-        mandatoryField = footprint.value_field();
-        mandatoryField.mutable_id()->set_id( (int) FIELD_T::VALUE );
-        buf.PackFrom( mandatoryField );
-        GetField( FIELD_T::VALUE )->Deserialize( buf );
-    }
+        mergeField( footprint.value_field(), FIELD_T::VALUE );
 
     if( footprint.has_datasheet_field() )
-    {
-        mandatoryField = footprint.datasheet_field();
-        mandatoryField.mutable_id()->set_id( (int) FIELD_T::DATASHEET );
-        buf.PackFrom( mandatoryField );
-        GetField( FIELD_T::DATASHEET )->Deserialize( buf );
-    }
+        mergeField( footprint.datasheet_field(), FIELD_T::DATASHEET );
 
     if( footprint.has_description_field() )
-    {
-        mandatoryField = footprint.description_field();
-        mandatoryField.mutable_id()->set_id( (int) FIELD_T::DESCRIPTION );
-        buf.PackFrom( mandatoryField );
-        GetField( FIELD_T::DESCRIPTION )->Deserialize( buf );
-    }
+        mergeField( footprint.description_field(), FIELD_T::DESCRIPTION );
 
     if( footprint.has_attributes() )
     {

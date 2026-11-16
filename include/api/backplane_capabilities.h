@@ -53,6 +53,12 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     "no-load-migration", // embedded: opening a document changes nothing (no load-time 3D migration;
                          // KiCad's own load fixes are actor "kicad"); SaveDocument of an unmodified
                          // document in an open editor writes nothing
+    "api-field-fixes", // a FootprintInstance field sent with only its text is a partial update; CreateItems of
+                       // a library symbol places text-only fields as the library does and honours
+                       // fields_autoplaced, flattens a derived symbol, and a user field named Footprint,
+                       // Reference, Value, Datasheet or Description fills that mandatory field
+    "sketch-route-width", // SketchRoute takes each net's class width (or track_width), lists failures[]
+                          // with reasons, and answers a message with no board AS_BAD_REQUEST
 #ifdef _WIN32
     // embedded: a prewarm never takes the keyboard or the activation (shown with SW_SHOWNA; a focus
     // it takes while built goes back).  Windows only: verified there; the host gates its
