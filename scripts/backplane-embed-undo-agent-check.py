@@ -8,7 +8,13 @@ then a click and Ctrl+Z showed "Incomplete undo/redo operation: some items not f
 restored nothing, when an agent read the board (the hub's kicad_edit find: SetAgentActivity, then
 GetItems as "agent:t1") after each key.
 
-Three rounds in the board editor (DRC markers) and three in the schematic editor (ERC markers),
+First, the person's keys alone with no click between them (climb-j, bp.13.1), three cycles:
+Ctrl+A, Delete, the host's checks, Ctrl+Z, checks, Ctrl+Y, checks, Ctrl+Z.  The hidden progress
+dialog of a check run used to take the keyboard off the canvas, so Ctrl+Z and Ctrl+Y did nothing
+until a click.  (After a failed step the person's own RunAction, client person:pane, puts the
+document back so the next steps still mean something.)
+
+Then three rounds in the board editor (DRC markers) and three in the schematic editor (ERC markers),
 the person's steps as real keys after a canvas click (xdotool), the host's RunChecks after each
 edit, an agent read after EVERY step, and the agent's own commits interleaved:
 
@@ -29,6 +35,7 @@ Needs Xvfb, i3, xdotool, python-xlib, pynng, protobuf.
 import argparse
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -75,7 +82,9 @@ def run_editor(editor, args):
                 IpcSession(args.kicad_cli, api_socket=s.socket, timeout=120000,
                            client_name="works.backplane.hub") as hub, \
                 IpcSession(args.kicad_cli, api_socket=s.socket, timeout=120000,
-                           client_name="agent:t1") as agent:
+                           client_name="agent:t1") as agent, \
+                IpcSession(args.kicad_cli, api_socket=s.socket, timeout=120000,
+                           client_name="person:pane") as pane:
             embed = hub.module("backplane.embed")
             coedit = hub.module("backplane.coedit")
             cmds = hub.module("common.commands.editor_commands")
@@ -219,6 +228,54 @@ def run_editor(editor, args):
             check(first_markers > 0, f"{editor}: the checks leave markers to select ({first_markers})")
             base = ids()
             check(any(k[0] == main_type for k in base), f"{editor}: the document has real items ({len(base)})")
+
+            def focused():
+                r = subprocess.run(["xdotool", "getwindowfocus"], env=s.env, capture_output=True, text=True)
+                wid = r.stdout.strip()
+                name = subprocess.run(["xdotool", "getwindowname", wid], env=s.env, capture_output=True,
+                                      text=True).stdout.strip() if wid else ""
+                return f"{wid}:{name!r}"
+
+            def keys_only():
+                """The person's keys alone, no click between them (climb-j, bp.13.1): each key only
+                when KiCad is idle, the host's checks after each edit."""
+                for cyc in range(1, 4):
+                    tag = f"{editor} keys only {cyc}"
+                    full = ids()
+                    print(f"INFO {tag}: focus before Ctrl+A {focused()}", flush=True)
+                    key("ctrl+a", click=False)
+                    key("Delete", click=False)
+                    r = ids()
+                    check(not any(k[0] == main_type for k in r),
+                          f"{tag}: Ctrl+A, Delete removes the real items ({len(full - r)} gone, {len(r)} left)")
+                    run_checks()
+                    agent_read()
+                    print(f"INFO {tag}: focus before Ctrl+Z {focused()}", flush=True)
+                    key("ctrl+z", click=False)
+                    expect(f"{tag}: Ctrl+Z after the checks brings them back", full)
+                    run_checks()
+                    agent_read()
+                    print(f"INFO {tag}: focus before Ctrl+Y {focused()}", flush=True)
+                    key("ctrl+y", click=False)
+                    if not expect(f"{tag}: Ctrl+Y after the checks removes them again", r):
+                        # diagnosis: the person's own redo through the API (actor: the person)
+                        pane.request(cmds.RunAction(action="common.Interactive.redo", frame=frame_type),
+                                     cmds.RunActionResponse)
+                        time.sleep(1.5)
+                        print(f"INFO {tag}: after the person's RunAction redo, {len(ids())} real items", flush=True)
+                    run_checks()
+                    agent_read()
+                    key("ctrl+z", click=False)
+                    if ids() != full:
+                        pane.request(cmds.RunAction(action="common.Interactive.undo", frame=frame_type),
+                                     cmds.RunActionResponse)
+                        time.sleep(1.5)
+                    expect(f"{tag}: Ctrl+Z after that brings them back", full)
+                    run_checks()
+                    agent_read()
+                    no_dialog(tag)
+
+            keys_only()
 
             for rnd in range(1, 4):
                 tag = f"{editor} round {rnd}"

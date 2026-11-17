@@ -26,6 +26,7 @@
 #include <wx/progdlg.h>
 #include <wx/gauge.h>
 #include <wx/appprogress.h>
+#include <wx/weakref.h>
 #include <cstdint>
 
 #include <core/throttle.h>
@@ -101,6 +102,11 @@ private:
     std::atomic_bool       m_lastUpdateResult;
     std::atomic_bool       m_indeterminate;
     uint64_t               m_embedJob = 0;   ///< the host's ET_PROGRESS job, when embedded
+
+    /// Embedded: the window that had the keyboard when the job began (the person's canvas).  The
+    /// hidden dialog still disables its frame for the job, which takes the keyboard off the
+    /// canvas; it is given back when the job ends (see the destructor).
+    wxWeakRef<wxWindow>    m_focusBefore;
 };
 
 
