@@ -60,13 +60,23 @@ jobs:
       - name: Free disk space
         run: df -h / ; rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc 2>/dev/null || true; df -h /
 
+      # Restores main's Linux runtime cache for the same toolchain (the key is computed exactly as
+      # in backplane-linux-release.yml); QA never saves one.
+      - name: Compiler cache key (toolchain)
+        id: toolchain
+        shell: bash
+        run: |
+          id=$( { . /etc/os-release; echo "$ID $VERSION_ID"; gcc --version; ld --version | head -1; } | sha256sum | cut -c1-12)
+          echo "prefix=kicad-ccache-${{ runner.os }}-$id-" >> "$GITHUB_OUTPUT"
+          echo "CCACHE_COMPILERCHECK=content" >> "$GITHUB_ENV"
+
       - name: Restore compiler cache
         uses: actions/cache/restore@v4
         with:
           path: ~/.cache/ccache
-          key: kicad-ccache-${{ runner.os }}-qa-${{ github.sha }}
+          key: ${{ steps.toolchain.outputs.prefix }}qa-${{ github.run_id }}
           restore-keys: |
-            kicad-ccache-${{ runner.os }}-
+            ${{ steps.toolchain.outputs.prefix }}
 
       - name: Configure
         run: |

@@ -81,18 +81,29 @@ jobs:
       - name: Context actions belong to a tool of their prefix
         run: python3 scripts/backplane-context-actions-test.py
 
+      # The cache lives on main only (backplane-cache-promote.yml on main saves it from this run's
+      # artifact): every branch and tag restores main's latest entry for this toolchain. A compiler
+      # is known by its contents (CCACHE_COMPILERCHECK), so an image update misses.
+      - name: Compiler cache key (toolchain)
+        id: toolchain
+        shell: bash
+        run: |
+          id=$( { . /etc/os-release; echo "$ID $VERSION_ID"; gcc --version; ld --version | head -1; } | sha256sum | cut -c1-12)
+          echo "prefix=kicad-ccache-${{ runner.os }}-$id-" >> "$GITHUB_OUTPUT"
+          echo "CCACHE_COMPILERCHECK=content" >> "$GITHUB_ENV"
+
       - name: Restore compiler cache
         id: compiler-cache
         uses: actions/cache/restore@v4
         with:
           path: ~/.cache/ccache
-          key: kicad-ccache-${{ runner.os }}-${{ github.sha }}-${{ github.run_id }}
+          key: ${{ steps.toolchain.outputs.prefix }}${{ github.run_id }}
           restore-keys: |
-            kicad-ccache-${{ runner.os }}-
+            ${{ steps.toolchain.outputs.prefix }}
 
       - name: Configure
         run: |
-          ccache --max-size=4G
+          ccache --max-size=1G
           fork_version="$(cat BACKPLANE_VERSION)"
           case "${GITHUB_REF_NAME}" in backplane-kicad-v*) fork_version="${GITHUB_REF_NAME#backplane-kicad-v}" ;; esac
           test "$fork_version" = "$(cat BACKPLANE_VERSION)"
@@ -118,12 +129,28 @@ jobs:
           cmake --build build/backplane-linux --parallel 4 -- -k 0
           cmake --install build/backplane-linux
 
-      - name: Preserve compiler cache after build attempts
+      # Branches don't save caches of their own. The compiler cache goes up as a 1-day artifact,
+      # and the promote workflow on main saves it as main's cache when this run is a successful
+      # release-line or candidate run.
+      - name: Pack the compiler cache for main
         if: always() && steps.compiler-cache.outcome == 'success'
-        uses: actions/cache/save@v4
+        shell: bash
+        run: |
+          ccache --evict-older-than 2d || true
+          ccache --show-stats || true
+          mkdir -p "$RUNNER_TEMP/ccache-out"
+          echo "${{ steps.toolchain.outputs.prefix }}" > "$RUNNER_TEMP/ccache-out/key-prefix"
+          tar -C ~/.cache/ccache -cf "$RUNNER_TEMP/ccache-out/ccache.tar" .
+
+      - name: Upload the compiler cache for main
+        if: always() && steps.compiler-cache.outcome == 'success'
+        uses: actions/upload-artifact@v4
         with:
-          path: ~/.cache/ccache
-          key: ${{ steps.compiler-cache.outputs.cache-primary-key }}
+          name: ccache-linux-x86_64-${{ github.sha }}
+          retention-days: 1
+          compression-level: 0
+          path: ${{ runner.temp }}/ccache-out
+          if-no-files-found: ignore
 
       - name: Install IPC smoke test dependencies
         run: |

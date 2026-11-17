@@ -18,6 +18,10 @@ jobs:
     timeout-minutes: 300
     env:
       CCACHE_DIR: ${{ github.workspace }}/.backplane-ccache
+      # A compiler is known by its contents, so a runner image or Xcode update misses rather than
+      # reusing objects; the size cap keeps main's one rolling entry (and its artifact) small.
+      CCACHE_COMPILERCHECK: content
+      CCACHE_MAXSIZE: 1G
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -43,12 +47,19 @@ jobs:
           cmake --install "$RUNNER_TEMP/nng-build"
           echo "BACKPLANE_NNG_PREFIX=$RUNNER_TEMP/nng" >> "$GITHUB_ENV"
           echo "BACKPLANE_NNG_SOURCE=$RUNNER_TEMP/nng-src" >> "$GITHUB_ENV"
+      # The cache lives on main only (backplane-cache-promote.yml on main saves it from this run's
+      # artifact): every branch and tag restores main's latest entry for this toolchain.
+      - name: Compiler cache key (toolchain)
+        id: toolchain
+        run: |
+          id=$( { sw_vers -productVersion; xcodebuild -version; clang --version; } | shasum -a 256 | cut -c1-12)
+          echo "prefix=kicad-macos-${{ runner.arch }}-$id-" >> "$GITHUB_OUTPUT"
       - uses: actions/cache/restore@v4
         id: compiler-cache
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: kicad-macos-${{ runner.arch }}-${{ github.sha }}-${{ github.run_id }}
-          restore-keys: kicad-macos-${{ runner.arch }}-
+          key: ${{ steps.toolchain.outputs.prefix }}${{ github.run_id }}
+          restore-keys: ${{ steps.toolchain.outputs.prefix }}
       - name: Build, relocate, test and package
         run: |
           python scripts/backplane-macos-relocate-test.py
@@ -67,12 +78,25 @@ jobs:
           compression-level: 0
           path: ${{ runner.temp }}/backplane-macos-stage.tar.gz
           if-no-files-found: ignore
-      - name: Preserve compiler work after build attempts
+      # Branches don't save caches of their own. The compiler cache goes up as a 1-day artifact,
+      # and the promote workflow on main saves it as main's cache when this run is a successful
+      # release-line or candidate run.
+      - name: Pack the compiler cache for main
         if: always() && steps.compiler-cache.outcome == 'success'
-        uses: actions/cache/save@v4
+        run: |
+          ccache --evict-older-than 2d || true
+          ccache --show-stats || true
+          mkdir -p "$RUNNER_TEMP/ccache-out"
+          echo "${{ steps.toolchain.outputs.prefix }}" > "$RUNNER_TEMP/ccache-out/key-prefix"
+          tar -C "$CCACHE_DIR" -cf "$RUNNER_TEMP/ccache-out/ccache.tar" .
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.compiler-cache.outcome == 'success'
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ steps.compiler-cache.outputs.cache-primary-key }}
+          name: ccache-macos-${{ runner.arch }}-${{ github.sha }}
+          retention-days: 1
+          compression-level: 0
+          path: ${{ runner.temp }}/ccache-out
+          if-no-files-found: ignore
       - name: Preserve native diagnostics
         if: always()
         uses: actions/upload-artifact@v4
