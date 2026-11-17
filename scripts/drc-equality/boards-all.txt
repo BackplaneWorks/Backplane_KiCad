@@ -13,8 +13,6 @@ demos/multichannel/multichannel_mixer.kicad_pcb
 demos/multichannel/multichannel_mixer-unrouted.kicad_pcb
 demos/openair-max/One-Air-Max.kicad_pcb
 demos/pic_programmer/pic_programmer.kicad_pcb
-demos/royalblue54L_feather/nfc_antenna/RoyalBlue54L-NFC-Antenna/RoyalBlue54L-NFC-Antenna.kicad_pcb
-demos/royalblue54L_feather/RoyalBlue54L-Feather.kicad_pcb
 demos/sonde xilinx/sonde xilinx.kicad_pcb
 demos/stickhub/StickHub.kicad_pcb
 demos/tiny_tapeout/tinytapeout-demo.kicad_pcb

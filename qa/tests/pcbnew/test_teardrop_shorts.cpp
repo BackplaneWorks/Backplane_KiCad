@@ -37,7 +37,7 @@
 
 
 /**
- * The U2 corner of demos/royalblue54L_feather.  The QFN's 3.6 mm exposed pad is held by the GND
+ * A QFN corner from a real board.  The QFN's 3.6 mm exposed pad is held by the GND
  * pour through thermal spokes so it wants no teardrop, but its centre falls in the thermal gap
  * punched for the via underneath it, where the fill reads as absent.
  */
