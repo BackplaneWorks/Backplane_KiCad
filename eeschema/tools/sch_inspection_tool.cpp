@@ -20,6 +20,8 @@
 
 #include <tool/tool_manager.h>
 #include "tools/sch_inspection_tool.h"
+#include <backplane_embed.h>
+#include <sim/simulator.h>
 #include "dialog_change_symbols.h"
 
 #include <sch_symbol.h>
@@ -1298,7 +1300,18 @@ int SCH_INSPECTION_TOOL::RunSimulation( const TOOL_EVENT& aEvent )
     SIMULATOR_FRAME* simFrame = (SIMULATOR_FRAME*) m_frame->Kiway().Player( FRAME_SIMULATOR, true );
 
     if( !simFrame )
+    {
+        // Backplane: embedded, why there is no Simulator is said in the editor the person is in (no
+        // message box; the host has it as ET_NOTICE kind "simulation")
+        if( BACKPLANE_EMBED::Get().Enabled() && !SIMULATOR::CreateError().empty() )
+        {
+            m_frame->ShowInfoBarError( _( "The simulator could not be started." ) + wxS( "  " )
+                                               + wxString::FromUTF8( SIMULATOR::CreateError() ),
+                                       true );
+        }
+
         return -1;
+    }
 
     if( wxWindow* blocking_win = simFrame->Kiway().GetBlockingDialog() )
         blocking_win->Close( true );

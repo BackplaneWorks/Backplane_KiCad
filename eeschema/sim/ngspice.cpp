@@ -590,7 +590,24 @@ void NGSPICE::init_dll()
 #endif
 
     if( !m_dll.IsLoaded() )
-        throw std::runtime_error( _( "Unable to load ngspice shared library. Please check your install." ).ToStdString() );
+    {
+        // Backplane (sim-run): with what was tried, so a package that lacks the library says where
+        // it was looked for
+        wxString tried = wxString::Format( wxS( "%s in the library search path" ), NGSPICE_DLL_FILE );
+
+        for( const std::string& path : dllPaths )
+        {
+            if( path.empty() )
+                continue;
+
+            dllFile.SetPath( path );
+            tried += wxS( ", " ) + dllFile.GetFullPath();
+        }
+
+        throw std::runtime_error( ( _( "Unable to load ngspice shared library. Please check your install." )
+                                    + wxS( " (" ) + wxS( "tried: " ) + tried + wxS( ")" ) )
+                                          .ToStdString( wxConvUTF8 ) );
+    }
 
     m_error = false;
 

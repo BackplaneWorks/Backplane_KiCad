@@ -1936,7 +1936,13 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
     };
 
     if( !impl.sim )
-        return failNow( SIM_ERROR, PK_OTHER, "ngspice could not be loaded" );
+    {
+        std::string why = SIMULATOR::CreateError();
+
+        return failNow( SIM_ERROR, PK_NO_SIMULATOR,
+                        "ngspice could not be loaded, so nothing can be simulated by this KiCad"
+                                + ( why.empty() ? std::string() : ": " + why ) );
+    }
 
     // Never over a run that is going (the handler answers AS_BUSY before it gets here)
     if( impl.sim->IsRunning() )

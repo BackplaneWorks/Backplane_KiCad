@@ -404,7 +404,11 @@ on the runtime before starting it.
   "another simulation is already running", a tuner that cannot be applied, a workbook that does
   not load) goes to its info bar and to the host as `ET_NOTICE` kind `simulation` (`title`,
   `detail`, `error`). The question about a changed sheet directive is not asked: the tab keeps its
-  command. Opening it neither yields (which would disable every frame for a moment) nor raises
+  command. When ngspice itself cannot be loaded (the library is missing from the package) there
+  is no Simulator frame and no message box either: `ShowFrame{FK_SIMULATOR}` is refused, the host
+  gets `ET_NOTICE` kind `simulation` ("The simulator could not be started.", the detail naming
+  where the library was looked for), the schematic editor's info bar says the same when the
+  person asks for the Simulator there, and `RunSimulation` answers `PK_NO_SIMULATOR`. Opening it neither yields (which would disable every frame for a moment) nor raises
   itself. The dialogs the person opens (the analysis dialog, a file chooser, the tuner's own
   fields) are ordinary dialogs and post `ET_DIALOG_OPENED`. The run itself has no progress
   dialog: ngspice runs in its own thread and the toolbar's stop button stops it.

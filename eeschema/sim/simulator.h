@@ -45,6 +45,10 @@ public:
     /// Create a simulator instance of particular type (currently only ngspice is handled)
     static std::shared_ptr<SPICE_SIMULATOR> CreateInstance( const std::string& aName );
 
+    /// Backplane (sim-run): why the last CreateInstance() gave nothing (the ngspice library that
+    /// could not be loaded, with the places tried); empty when it gave the simulator
+    static const std::string& CreateError();
+
     /**
      * @return mutex for exclusive access to the simulator.
      */
