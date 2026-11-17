@@ -30,6 +30,7 @@
 #import <QuartzCore/QuartzCore.h>
 #include <objc/runtime.h>
 
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -639,6 +640,53 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 
                                                   bool taken = focus->GetEventHandler()->ProcessEvent( ke );
                                                   trace( std::string( "macos: Backspace handed to wx: " )
+                                                         + ( taken ? "taken" : "not taken" ) );
+                                                  return taken ? nil : aEvent;
+                                              }
+
+                                              // Cmd chords (Undo, Redo, Copy, Find...): AppKit offers them to the menu
+                                              // bar's key equivalents before the window, and the menu bar installed in an
+                                              // accessory app is not the focused editor's.  Handed to wx first, as the
+                                              // window would get them: the canvas's hotkeys, then the frame's own menu bar
+                                              // (EDA_BASE_FRAME::OnCharHook), then the embed layer's reserved chords
+                                              // (FilterEvent, first of all).  A text field keeps them (AppKit's field
+                                              // editor); a chord nobody takes goes on to AppKit as before.
+                                              if( ( m & NSEventModifierFlagCommand ) && code != 48 && code != 50 )
+                                              {
+                                                  NSWindow* key = NSApp.keyWindow;
+                                                  NSString* chars = aEvent.charactersIgnoringModifiers;
+
+                                                  if( !key || !s_numbers.count( key.windowNumber )
+                                                      || [key.firstResponder isKindOfClass:[NSText class]]
+                                                      || chars.length != 1 )
+                                                  {
+                                                      return aEvent;
+                                                  }
+
+                                                  unichar ch = [chars characterAtIndex:0];
+
+                                                  // Printable ASCII only: letters, digits, punctuation (zoom's = and -)
+                                                  if( ch <= ' ' || ch >= 0x7F )
+                                                      return aEvent;
+
+                                                  wxWindow* focus = wxWindow::FindFocus();
+
+                                                  if( !focus )
+                                                      return aEvent;
+
+                                                  wxKeyEvent ke( wxEVT_CHAR_HOOK );
+                                                  ke.m_keyCode = std::toupper( (int) ch );
+                                                  ke.m_uniChar = ch;
+                                                  ke.m_controlDown = true;   // Cmd: wx's Ctrl on macOS
+                                                  ke.m_rawControlDown = ( m & NSEventModifierFlagControl ) != 0;
+                                                  ke.m_shiftDown = ( m & NSEventModifierFlagShift ) != 0;
+                                                  ke.m_altDown = ( m & NSEventModifierFlagOption ) != 0;
+                                                  ke.SetEventObject( focus );
+                                                  ke.SetId( focus->GetId() );
+
+                                                  bool taken = focus->GetEventHandler()->ProcessEvent( ke );
+                                                  trace( std::string( "macos: Cmd+" ) + (char) ke.m_keyCode
+                                                         + ( ke.m_shiftDown ? " (Shift)" : "" ) + " handed to wx: "
                                                          + ( taken ? "taken" : "not taken" ) );
                                                   return taken ? nil : aEvent;
                                               }
