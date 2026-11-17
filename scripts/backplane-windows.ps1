@@ -5,16 +5,20 @@ $ProgressPreference = 'SilentlyContinue'
 $PSNativeCommandUseErrorActionPreference = $true
 $source = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $source
-$build = 'C:\bp\build'
-$stage = 'C:\bp\stage'
+# Build root: C:\bp on GitHub's runner.  A local build machine (bp-win) sets BACKPLANE_WIN_ROOT to a
+# folder of its own on a drive other than the source's; BACKPLANE_WIN_JOBS limits the compile jobs.
+$root = if ($env:BACKPLANE_WIN_ROOT) { $env:BACKPLANE_WIN_ROOT.TrimEnd('\') } else { 'C:\bp' }
+$jobs = if ($env:BACKPLANE_WIN_JOBS) { [int]$env:BACKPLANE_WIN_JOBS } else { 4 }
+$build = Join-Path $root 'build'
+$stage = Join-Path $root 'stage'
 # MSVC's developer environment sets VCPKG_ROOT to its bundled copy.
 # Use only this job's dedicated pinned checkout.
-$env:VCPKG_ROOT = 'C:\bp\vcpkg'
+$env:VCPKG_ROOT = Join-Path $root 'vcpkg'
 $vcpkgCommit = '66c0373dc7fca549e5803087b9487edfe3aca0a1'
 # KiCad packaging/kicad-win-builder build.ps1 uses this vcpkg tool commit.
-New-Item -ItemType Directory -Force 'C:\bp', $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
-Get-PSDrive C,D | Select-Object Name,Used,Free
-python scripts/backplane-banned-functions-test.py --build-root C:\bp --require-cross-drive
+New-Item -ItemType Directory -Force $root, $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+Get-PSDrive C,D -ErrorAction SilentlyContinue | Select-Object Name,Used,Free
+python scripts/backplane-banned-functions-test.py --build-root $root --require-cross-drive
 if (!(Test-Path (Join-Path $env:VCPKG_ROOT '.git'))) {
     git init $env:VCPKG_ROOT
     git -C $env:VCPKG_ROOT remote add origin https://github.com/microsoft/vcpkg.git
@@ -29,8 +33,18 @@ $versionExtra = $Matches[1]
 if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "backplane-kicad-v$version") {
     throw 'Release tag does not match BACKPLANE_VERSION'
 }
+$configureStarted = Get-Date
 $upstream = (Get-Content BACKPLANE_UPSTREAM -Raw).Trim()
-cmake -S . -B $build -G Ninja `
+# BACKPLANE_WIN_CCACHE=1 (backplane-windows-local.ps1 -Ccache): KiCad's USE_CCACHE puts ccache in front
+# of cl and switches MSVC to embedded debug information (/Z7), which ccache can cache; the linker still
+# writes every PDB.  CCACHE_DIR and its size come from the caller.
+$cacheArgs = @()
+if ($env:BACKPLANE_WIN_CCACHE) {
+    if (!(Get-Command ccache -ErrorAction SilentlyContinue)) { throw 'BACKPLANE_WIN_CCACHE is set but ccache is not on PATH' }
+    $cacheArgs = @('-DUSE_CCACHE=ON')
+    ccache --zero-stats | Out-Null
+}
+cmake -S . -B $build -G Ninja @cacheArgs `
     "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
     "-DVCPKG_OVERLAY_TRIPLETS=$source/tools/custom_vcpkg_triplets" `
     '-DVCPKG_INSTALL_OPTIONS=--x-abi-tools-use-exact-versions' `
@@ -48,7 +62,16 @@ if (!$extra -or $extra.Matches[0].Groups[1].Value -ne $versionExtra) {
 $installed = Join-Path $build 'vcpkg_installed\x64-windows'
 $env:PATH = (Join-Path $installed 'tools\protobuf') + ';' + $env:PATH
 python scripts/backplane-ipc-smoke.py --check-bindings
-cmake --build $build --parallel 4
+"WINDOWS_KICAD_CONFIGURE_TIME {0:hh\:mm\:ss} (vcpkg dependencies and CMake)" -f ((Get-Date) - $configureStarted)
+if ($env:BACKPLANE_WIN_CONFIGURE_ONLY) {
+    # A local build machine's first step: vcpkg's dependencies installed and configured, no compile
+    Write-Output 'WINDOWS_KICAD_CONFIGURED (BACKPLANE_WIN_CONFIGURE_ONLY: stopping before the compile)'
+    return
+}
+$compileStarted = Get-Date
+cmake --build $build --parallel $jobs
+"WINDOWS_KICAD_COMPILE_TIME {0:hh\:mm\:ss} ({1} jobs)" -f ((Get-Date) - $compileStarted), $jobs
+if ($env:BACKPLANE_WIN_CCACHE) { ccache --show-stats }
 cmake --install $build
 # The PDBs (KICAD_WIN32_INSTALL_PDBS) go into their own symbols archive, never into the runtime,
 # so a stall stack from the release build can be resolved
@@ -107,7 +130,7 @@ Set-Content (Join-Path $licenses 'VCPKG_TOOL_COMMIT') $vcpkgCommit
 # Remove the build and dependency directories from runtime lookup. The package
 # must run using its own bin, not a separately installed KiCad/dependency DLL.
 $cleanPath = ($env:PATH -split ';' | Where-Object {
-    $_ -and !$_.StartsWith('C:\bp\', [StringComparison]::OrdinalIgnoreCase)
+    $_ -and !$_.StartsWith($root + '\', [StringComparison]::OrdinalIgnoreCase)
 }) -join ';'
 $env:PATH = "$bin;$cleanPath"
 $cli = Join-Path $bin 'kicad-cli.exe'
@@ -176,8 +199,8 @@ if ($libraryStage) {
     # The libraries gate, on the zip as a person unpacks it: the files and tables are there, the
     # licences and sources are inside, and the global tables resolve Device:C and
     # Capacitor_SMD:C_0805_2012Metric with their models from an empty config home.
-    # On C: (the build drive), away from the runtime and its zip on D:
-    $unpacked = 'C:\bp\libraries-gate'
+    # On the build drive, away from the runtime and its zip on the source drive
+    $unpacked = Join-Path $root 'libraries-gate'
     if (Test-Path $unpacked) { Remove-Item -Recurse -Force $unpacked }
     Expand-Archive -Path (Join-Path $release "$archive.zip") -DestinationPath $unpacked
     $unpackedRoot = Join-Path $unpacked $archive
