@@ -155,6 +155,8 @@ struct EMBED_FRAME_OPS
     std::function<wxWindow*()>                 canvas;           ///< the frame's drawing canvas, if any
     /// canvas-idle: whether an interactive tool is mid-operation, and the current tool's name
     std::function<bool( std::string& aToolName )> toolBusy;
+    /// Write pending changes to the autosave now and wait (EmbedFlushAutosave)
+    std::function<void()>                      flushAutosave;
 };
 
 struct EMBED_FRAME_INFO
@@ -321,6 +323,11 @@ public:
 
     /// AttachToParent.  aParent 0 detaches.  Returns false if the parent cannot be used.
     bool Attach( uint64_t aParent, uint64_t aToplevel, double aScale );
+
+    /// KIPLATFORM::EMBED::WindowsGone() / CheckWindowsGone() of the embedding state's own
+    /// kiplatform (kiplatform is a static library: a kiface's copy never saw the holder).
+    bool WindowsGone() const;
+    bool CheckWindowsGone() const;
 
     static EMBED_FRAME_KIND KindOf( FRAME_T aType );
 

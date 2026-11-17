@@ -147,6 +147,11 @@ public:
     /// The operations the embedding state uses on this frame.
     EMBED_FRAME_OPS embedOps();
 
+    /// Write this frame's pending changes to the autosave (local history or _autosave- files) now,
+    /// whatever tool is running, and wait for it: the embedded frame's windows are gone and the
+    /// host will restart KiCad, which offers them back.  Nothing is saved over the document.
+    void EmbedFlushAutosave();
+
     /// Files whose external changes reload this frame (embedded mode).  Default: none.
     /// Co-editing: merge changes other writers made to the files beside the document (the
     /// project file, the custom rules) into the open editor.  Polled by the embed layer.
@@ -749,6 +754,9 @@ protected:
      * Override this function if your derived frame supports automatic file saving.
      */
     virtual bool isAutoSaveRequired() const { return m_autoSaveRequired; }
+
+    /// The autosave's savers for this frame's project (doAutoSave's write, without its deferral).
+    void runAutoSavers( const wxString& aMessage );
 
     /**
      * This should be overridden by the derived class to handle the auto save feature.
