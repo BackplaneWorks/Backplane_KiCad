@@ -517,6 +517,12 @@ bool PNS_PCBNEW_RULE_RESOLVER::IsDrilledHole( const PNS::ITEM* aItem )
         }
     }
 
+    // Backplane: the hole-to-hole check tests every drilled or milled pad hole, slots too
+    // (drc_test_provider_hole_to_hole), so the router keeps a new hole from them as well.  With
+    // round holes only, a via could go right beside an oval mounting hole.
+    if( parent && parent->Type() == PCB_PAD_T )
+        return static_cast<PAD*>( parent )->HasHole();
+
     return parent && parent->HasDrilledHole();
 }
 
