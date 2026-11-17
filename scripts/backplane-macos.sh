@@ -194,6 +194,7 @@ assert manifest.get('backplaneLibrary', {}).get('commit'), 'manifest has no back
 print(f"PASS manifest: minOs {want} (highest of {len(seen)} Mach-O build versions), backplaneLibrary {manifest['backplaneLibrary']['commit'][:10]}")
 MINOS
 python scripts/backplane-library-package-check.py "$unpacked/$(basename "$root")" | tee "$release/libraries.log"
+python scripts/backplane-ngspice-package-check.py "$unpacked/$(basename "$root")" | tee -a "$release/libraries.log"
 python scripts/backplane-global-tables-regression.py "$unpacked/$(basename "$root")/bin/kicad-cli" | tee -a "$release/libraries.log"
 rm -rf "$unpacked" "$libraries"
 # The matching source, as the Linux and Windows releases attach it

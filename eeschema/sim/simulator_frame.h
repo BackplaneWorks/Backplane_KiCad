@@ -166,6 +166,49 @@ public:
     /**
      * Load plot, signal, cursor, measurement, etc. settings from a file.
      */
+    // Backplane (sim-frame, sim-run) ---------------------------------------------------------
+
+    /**
+     * A message the Simulator would put in a message box.  Embedded it goes to the info bar and to
+     * the host (ET_NOTICE, kind "simulation"), never into a modal box over the pane; otherwise it
+     * is the box it always was.
+     */
+    void ShowSimMessage( const wxString& aMessage, const wxString& aExtra, bool aError );
+
+    /**
+     * Run aCommand as this window's own run, for an API client (RunSimulation.show): the tab of
+     * the same analysis type (else a new one) takes the command and the options and is selected;
+     * the circuit takes this run's overrides and directives.
+     *
+     * @return false when the run did not start (the netlist failed, a run is in progress)
+     */
+    bool StartApiRun( const wxString& aCommand, unsigned aOptions,
+                      std::map<wxString, std::vector<NETLIST_EXPORTER_SPICE::FIELD_OVERRIDE>> aOverrides,
+                      std::vector<wxString> aDirectives );
+
+    /// The run of StartApiRun ended: plot aSignals ("V(/out)", "I(R1)") and forget its overrides
+    void EndApiRun( const std::vector<wxString>& aSignals );
+
+    /// An API run that did not go through this window ended: the simulator holds its circuit.
+    /// Take this window's own back, quietly, so a tuner or a cursor works on its tab again.
+    void RestoreAfterApiRun();
+
+    /// The workbook as the window has it now, written to aPath; nothing else changes (not the
+    /// project's workbook name, not the modified mark)
+    bool WriteWorkbookCopy( const wxString& aPath );
+
+    bool IsWorkbookModified() const { return m_workbookModified; }
+
+    /// The workbook is this window's document: what FrameInfo.modified and Close{fail_if_modified} see
+    bool IsContentModified() const override { return m_workbookModified; }
+
+    /// True while a just opened or just loaded workbook's tabs are still being laid out (until
+    /// a second after the window is first on screen): what the plots report then is not an edit
+    bool IsSettling() const;
+
+    /// The references being tuned in this window
+    std::vector<wxString> TunerRefs() const;
+
     bool LoadWorkbook( const wxString& aPath );
 
     /**
@@ -238,6 +281,9 @@ private:
     std::shared_ptr<SPICE_CIRCUIT_MODEL> m_circuitModel;
 
     bool                                 m_simFinished;
+    wxLongLong                           m_settledAt = 0;        ///< 0: not on screen since the load
+    bool                                 m_apiRun = false;       ///< StartSimulation is an API client's
+    bool                                 m_runStarted = false;   ///< the last StartSimulation ran ngspice
     bool                                 m_workbookModified;
 };
 

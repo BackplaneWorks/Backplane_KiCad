@@ -48,6 +48,9 @@
 #include <pgm_base.h>
 #include "ngspice.h"
 #include <sim/simulator_frame.h>
+#include <api/api_sch_sim.h>
+#include <backplane_embed.h>
+#include <wx/tokenzr.h>
 #include <sim/simulator_frame_ui.h>
 #include <sim/sim_plot_tab.h>
 #include <sim/spice_simulator.h>
@@ -189,6 +192,16 @@ SIMULATOR_FRAME::SIMULATOR_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
 
     Bind( wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( SIMULATOR_FRAME::onExit ), this, wxID_EXIT );
 
+    // Backplane: see IsSettling()
+    Bind( wxEVT_SHOW,
+          [this]( wxShowEvent& aEvent )
+          {
+              if( aEvent.IsShown() && m_settledAt == 0 )
+                  m_settledAt = wxGetLocalTimeMillis() + 1000;
+
+              aEvent.Skip();
+          } );
+
     Bind( EVT_SIM_UPDATE, &SIMULATOR_FRAME::onUpdateSim, this );
     Bind( EVT_SIM_STARTED, &SIMULATOR_FRAME::onSimStarted, this );
     Bind( EVT_SIM_FINISHED, &SIMULATOR_FRAME::onSimFinished, this );
@@ -201,15 +214,34 @@ SIMULATOR_FRAME::SIMULATOR_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     // by wxWidgets to be executed before our resize code.
     // Otherwise, the changes made by setSubWindowsSashSize are overwritten by one these
     // events
-    wxSafeYield();
-    m_ui->SetSubWindowsSashSize();
+    // Embedded (FK_SIMULATOR): no yield (it disables every frame while it runs, and the pane's
+    // frame loses the keyboard on Windows and macOS) and no raise (the host shows and focuses it)
+    if( BACKPLANE_EMBED::Get().Enabled() )
+    {
+        m_ui->SetSubWindowsSashSize();
+        CallAfter( [this]() { m_ui->SetSubWindowsSashSize(); } );
+    }
+    else
+    {
+        wxSafeYield();
+        m_ui->SetSubWindowsSashSize();
 
-    // Ensure the window is on top
-    Raise();
+        // Ensure the window is on top
+        Raise();
+    }
 
     m_ui->InitWorkbook();
     m_ui->FlushSimConsole();
     UpdateTitle();
+
+    // Backplane: opening the workbook the project names does not modify it (as LoadWorkbook()):
+    // its tabs and traces are added through the same code as the person's edits, which marks it.
+    // Without this a Simulator opened and closed again asks to save a workbook nobody changed.
+    CallAfter( [this]()
+               {
+                   m_workbookModified = false;
+                   UpdateTitle();
+               } );
 }
 
 
@@ -217,9 +249,18 @@ SIMULATOR_FRAME::~SIMULATOR_FRAME()
 {
     NULL_REPORTER devnull;
 
-    m_simulator->Attach( nullptr, wxEmptyString, 0, wxEmptyString, devnull );
-    m_simulator->SetSimStateListener( nullptr );
-    m_simulator->SetReporter( nullptr );
+    // An API run may hold the simulator (its own reporter and listener, or its circuit): only
+    // what is this window's is taken away, and the run forgets this window
+    SIM_API::RUNNER::Get().WindowGone( m_consoleReporter, m_stateListener );
+
+    if( !SIM_API::RUNNER::Active() )
+        m_simulator->Attach( nullptr, wxEmptyString, 0, wxEmptyString, devnull );
+
+    if( m_simulator->GetSimStateListener() == m_stateListener )
+        m_simulator->SetSimStateListener( nullptr );
+
+    if( m_simulator->GetReporter() == m_consoleReporter )
+        m_simulator->SetReporter( nullptr );
     delete m_stateListener;
     delete m_consoleReporter;
 }
@@ -374,13 +415,11 @@ void SIMULATOR_FRAME::showNetlistErrors( const WX_STRING_REPORTER& aReporter )
 
     if( aReporter.HasMessageOfSeverity( RPT_SEVERITY_UNDEFINED | RPT_SEVERITY_ERROR ) )
     {
-        DisplayErrorMessage( this, _( "Errors during netlist generation." ),
-                             wxJoin( lines, '\n' ) );
+        ShowSimMessage( _( "Errors during netlist generation." ), wxJoin( lines, '\n' ), true );
     }
     else if( aReporter.HasMessageOfSeverity( RPT_SEVERITY_WARNING ) )
     {
-        DisplayInfoMessage( this, _( "Warnings during netlist generation." ),
-                             wxJoin( lines, '\n' ) );
+        ShowSimMessage( _( "Warnings during netlist generation." ), wxJoin( lines, '\n' ), false );
     }
 }
 
@@ -457,8 +496,18 @@ void SIMULATOR_FRAME::StartSimulation()
 {
     SIM_TAB* simTab = m_ui->GetCurrentSimTab();
 
+    m_runStarted = false;
+
     if( !simTab )
         return;
+
+    // An API client's run holds the simulator (one ngspice in the process): loading this tab's
+    // circuit now would pull the netlist out from under it
+    if( !m_apiRun && SIM_API::RUNNER::Active() )
+    {
+        ShowSimMessage( _( "Another simulation is already running." ), wxEmptyString, true );
+        return;
+    }
 
     if( simTab->GetSimCommand().Upper().StartsWith( wxT( "FFT" ) )
         || simTab->GetSimCommand().Upper().Contains( wxT( "\nFFT" ) ) )
@@ -470,8 +519,8 @@ void SIMULATOR_FRAME::StartSimulation()
 
         if( tranSpicePlot.IsEmpty() )
         {
-            DisplayErrorMessage( this, _( "You must run a TRAN simulation first; its results "
-                                          "will be used for the fast Fourier transform." ) );
+            ShowSimMessage( _( "You must run a TRAN simulation first; its results "
+                               "will be used for the fast Fourier transform." ), wxEmptyString, true );
         }
         else
         {
@@ -502,12 +551,14 @@ void SIMULATOR_FRAME::StartSimulation()
     }
     else
     {
-        if( m_ui->GetSimTabIndex( simTab ) == 0
+        // Embedded, or for an API client's run, nobody is asked: the tab keeps the command it has
+        // (the saved set-up is explicit; the sheet's text is its default only while it has none)
+        if( !m_apiRun && m_ui->GetSimTabIndex( simTab ) == 0
                 && m_circuitModel->GetSchTextSimCommand() != simTab->GetLastSchTextSimCommand() )
         {
             if( simTab->GetLastSchTextSimCommand().IsEmpty()
-                || IsOK( this, _( "Schematic sheet simulation command directive has changed.  "
-                                  "Do you wish to update the Simulation Command?" ) ) )
+                || ( !BACKPLANE_EMBED::Get().Enabled() && IsOK( this, _( "Schematic sheet simulation command directive has changed.  "
+                                  "Do you wish to update the Simulation Command?" ) ) ) )
             {
                 simTab->SetSimCommand( m_circuitModel->GetSchTextSimCommand() );
                 simTab->SetLastSchTextSimCommand( simTab->GetSimCommand() );
@@ -531,7 +582,7 @@ void SIMULATOR_FRAME::StartSimulation()
         destroyTabPlot( simTab );
 
         m_ui->OnSimUpdate();
-        m_simulator->Run();
+        m_runStarted = m_simulator->Run();
 
         // Netlist from schematic may have changed; update signals list, measurements list,
         // etc.
@@ -539,8 +590,141 @@ void SIMULATOR_FRAME::StartSimulation()
     }
     else
     {
-        DisplayErrorMessage( this, _( "Another simulation is already running." ) );
+        ShowSimMessage( _( "Another simulation is already running." ), wxEmptyString, true );
     }
+}
+
+
+void SIMULATOR_FRAME::ShowSimMessage( const wxString& aMessage, const wxString& aExtra, bool aError )
+{
+    if( BACKPLANE_EMBED::Get().Enabled() )
+    {
+        wxString text = aMessage;
+
+        if( !aExtra.IsEmpty() )
+            text += wxS( "  " ) + aExtra.BeforeFirst( '\n' );
+
+        m_infoBar->RemoveAllButtons();
+        m_infoBar->AddCloseButton();
+        m_infoBar->ShowMessageFor( text, 20000, aError ? wxICON_ERROR : wxICON_INFORMATION );
+
+        BACKPLANE_EMBED::Get().Notice( this, "simulation", aMessage, aExtra, aError );
+        return;
+    }
+
+    if( aError )
+        DisplayErrorMessage( this, aMessage, aExtra );
+    else
+        DisplayInfoMessage( this, aMessage, aExtra );
+}
+
+
+bool SIMULATOR_FRAME::StartApiRun( const wxString& aCommand, unsigned aOptions,
+                                   std::map<wxString, std::vector<NETLIST_EXPORTER_SPICE::FIELD_OVERRIDE>> aOverrides,
+                                   std::vector<wxString> aDirectives )
+{
+    if( m_simulator->IsRunning() )
+        return false;
+
+    SIM_TYPE type = SPICE_CIRCUIT_MODEL::CommandToSimType( aCommand );
+    SIM_TAB* tab = m_ui->GetSimTab( type );
+
+    if( tab )
+    {
+        m_ui->SelectSimTab( tab );
+
+        if( tab->GetSimCommand() != aCommand || tab->GetSimOptions() != (int) aOptions )
+        {
+            tab->SetSimCommand( aCommand );
+            tab->SetSimOptions( aOptions );
+            OnModify();
+        }
+    }
+    else
+    {
+        tab = NewSimTab( aCommand );
+        tab->SetSimOptions( aOptions );
+        OnModify();
+    }
+
+    m_circuitModel->SetFieldOverrides( std::move( aOverrides ) );
+    m_circuitModel->SetExtraDirectives( std::move( aDirectives ) );
+
+    m_apiRun = true;
+    StartSimulation();
+    m_apiRun = false;
+
+    if( !m_runStarted )
+    {
+        m_circuitModel->SetFieldOverrides( {} );
+        m_circuitModel->SetExtraDirectives( {} );
+    }
+
+    return m_runStarted;
+}
+
+
+void SIMULATOR_FRAME::EndApiRun( const std::vector<wxString>& aSignals )
+{
+    // The next run of this window is the schematic's own again
+    m_circuitModel->SetFieldOverrides( {} );
+    m_circuitModel->SetExtraDirectives( {} );
+
+    // After this window has taken the finished run itself (its own finished event is queued)
+    CallAfter(
+            [this, aSignals]()
+            {
+                if( IsClosing() || !m_ui->GetCurrentSimTab() )
+                    return;
+
+                for( const wxString& signal : aSignals )
+                {
+                    // As the probe tool gives them: the signal's own name
+                    if( signal.Upper().StartsWith( wxS( "V(" ) ) )
+                        AddVoltageTrace( signal );
+                    else if( signal.Upper().StartsWith( wxS( "I" ) ) )
+                        AddCurrentTrace( signal );
+                }
+            } );
+}
+
+
+void SIMULATOR_FRAME::RestoreAfterApiRun()
+{
+    SIM_TAB* tab = m_ui->GetCurrentSimTab();
+
+    if( IsClosing() || !tab || tab->GetSpicePlotName().IsEmpty() || m_simulator->IsRunning() )
+        return;
+
+    NULL_REPORTER devnull;
+
+    m_simulator->Attach( m_circuitModel, tab->GetSimCommand(), tab->GetSimOptions(), Prj().GetProjectPath(),
+                         devnull );
+    m_simulator->Command( "setplot " + tab->GetSpicePlotName().ToStdString() );
+}
+
+
+bool SIMULATOR_FRAME::IsSettling() const
+{
+    return m_settledAt == 0 || wxGetLocalTimeMillis() < m_settledAt;
+}
+
+
+std::vector<wxString> SIMULATOR_FRAME::TunerRefs() const
+{
+    return m_ui->TunerRefs();
+}
+
+
+bool SIMULATOR_FRAME::WriteWorkbookCopy( const wxString& aPath )
+{
+    wxString stored = m_simulator->Settings() ? m_simulator->Settings()->GetWorkbookFilename() : wxString();
+    bool     written = m_ui->SaveWorkbook( aPath );
+
+    if( m_simulator->Settings() )
+        m_simulator->Settings()->SetWorkbookFilename( stored );
+
+    return written;
 }
 
 
@@ -603,6 +787,7 @@ bool SIMULATOR_FRAME::LoadWorkbook( const wxString& aPath )
     if( m_ui->LoadWorkbook( aPath ) )
     {
         UpdateTitle();
+        m_settledAt = IsShown() ? wxGetLocalTimeMillis() + 1000 : wxLongLong( 0 );
 
         // Successfully loading a workbook does not count as modifying it.  Clear the modified
         // flag after all the EVT_WORKBOOK_MODIFIED events have been processed.
@@ -614,7 +799,7 @@ bool SIMULATOR_FRAME::LoadWorkbook( const wxString& aPath )
         return true;
     }
 
-    DisplayErrorMessage( this, wxString::Format( _( "Unable to load or parse file %s" ), aPath ) );
+    ShowSimMessage( wxString::Format( _( "Unable to load or parse file %s" ), aPath ), wxEmptyString, true );
     return false;
 }
 
@@ -716,11 +901,15 @@ bool SIMULATOR_FRAME::canCloseWindow( wxCloseEvent& aEvent )
 
 void SIMULATOR_FRAME::doCloseWindow()
 {
-    if( m_simulator->IsRunning() )
-        m_simulator->Stop();
+    // An API client's run is not this window's to stop, nor its vectors this window's to delete
+    if( !SIM_API::RUNNER::Active() )
+    {
+        if( m_simulator->IsRunning() )
+            m_simulator->Stop();
 
-    // Prevent memory leak on exit by deleting all simulation vectors
-    m_simulator->Clean();
+        // Prevent memory leak on exit by deleting all simulation vectors
+        m_simulator->Clean();
+    }
 
     // Cancel a running simProbe or simTune tool
     m_schematicFrame->GetToolManager()->PostAction( ACTIONS::cancelInteractive );
@@ -940,6 +1129,10 @@ void SIMULATOR_FRAME::onUpdateSim( wxCommandEvent& aEvent )
     if( updateInProgress )
         return;
 
+    // An API client's run holds the simulator: a tuner waits for it
+    if( SIM_API::RUNNER::Active() )
+        return;
+
     updateInProgress = true;
 
     if( m_simulator->IsRunning() )
@@ -960,7 +1153,7 @@ void SIMULATOR_FRAME::onUpdateSim( wxCommandEvent& aEvent )
     }
     else
     {
-        DisplayErrorMessage( this, _( "Another simulation is already running." ) );
+        ShowSimMessage( _( "Another simulation is already running." ), wxEmptyString, true );
     }
 
     updateInProgress = false;

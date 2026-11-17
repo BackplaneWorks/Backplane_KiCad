@@ -106,6 +106,27 @@ $bin = Join-Path $stage 'bin'
 # vcpkg's app-local copies are in the build tree; the relocated runtime needs
 # its release DLLs and their notices too. Never include debug DLLs or PDBs.
 Copy-Item (Join-Path $installed 'bin\*.dll') $bin
+# ngspice's code models (*.cm: the XSPICE analog, digital and mixed-signal parts).  ngspice loads
+# them itself at run time, so they are in no import table: the build copies them beside the kiface
+# in the build tree (eeschema/CMakeLists.txt, NGSPICE_CM_DIR -> <kiface dir>\ngspice) but no install
+# rule carries them, and bp.13.1's runtime had ngspice.dll without them.  KiCad's loader
+# (eeschema/sim/ngspice.cpp, findCmPath) looks from the executables' folder for "ngspice\spice2poly.cm":
+# bin\ngspice in the runtime, the same place relative to the kiface as in the build tree.
+$codeModels = $null
+$cached = Select-String -LiteralPath (Join-Path $build 'CMakeCache.txt') -Pattern '^NGSPICE_CM_DIR:[A-Z]+=(.*)$'
+if ($cached -and (Test-Path (Join-Path $cached.Matches[0].Groups[1].Value 'spice2poly.cm'))) {
+    $codeModels = $cached.Matches[0].Groups[1].Value
+} elseif (Test-Path (Join-Path $installed 'lib\ngspice\spice2poly.cm')) {
+    $codeModels = Join-Path $installed 'lib\ngspice'
+}
+if (!$codeModels) { throw 'ngspice code models (spice2poly.cm) not found: neither NGSPICE_CM_DIR nor vcpkg_installed\x64-windows\lib\ngspice has them' }
+$codeModelTarget = Join-Path $bin 'ngspice'
+New-Item -ItemType Directory -Force $codeModelTarget | Out-Null
+Copy-Item (Join-Path $codeModels '*.cm') $codeModelTarget
+if (!(Test-Path (Join-Path $bin 'ngspice.dll')) -and !(Get-ChildItem $bin -Filter 'libngspice-*.dll')) {
+    throw 'the ngspice DLL is not in the runtime''s bin'
+}
+if (!(Test-Path (Join-Path $codeModelTarget 'spice2poly.cm'))) { throw 'ngspice code models did not reach bin\ngspice' }
 $licenses = Join-Path $stage 'licenses'
 New-Item -ItemType Directory -Force $licenses | Out-Null
 Get-ChildItem (Join-Path $installed 'share') -Directory | ForEach-Object {
@@ -205,6 +226,8 @@ if ($libraryStage) {
     Expand-Archive -Path (Join-Path $release "$archive.zip") -DestinationPath $unpacked
     $unpackedRoot = Join-Path $unpacked $archive
     python scripts/backplane-library-package-check.py $unpackedRoot
+    # ngspice.dll and bin\ngspice\*.cm are in the zip a person unpacks
+    python scripts/backplane-ngspice-package-check.py $unpackedRoot
     python scripts/backplane-global-tables-regression.py (Join-Path $unpackedRoot 'bin\kicad-cli.exe')
     Remove-Item -Recurse -Force $unpacked
 }

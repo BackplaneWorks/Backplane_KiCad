@@ -77,11 +77,11 @@ int SIMULATOR_CONTROL::NewAnalysisTab( const TOOL_EVENT& aEvent )
 
     if( reporter.HasMessageOfSeverity( RPT_SEVERITY_UNDEFINED | RPT_SEVERITY_ERROR ) )
     {
-        DisplayErrorMessage( m_simulatorFrame, _( "Errors during netlist generation." ), reporter.GetMessages() );
+        m_simulatorFrame->ShowSimMessage( _( "Errors during netlist generation." ), reporter.GetMessages(), true );
     }
     else if( reporter.HasMessageOfSeverity( RPT_SEVERITY_WARNING ) )
     {
-        DisplayInfoMessage( m_simulatorFrame, _( "Warnings during netlist generation." ), reporter.GetMessages() );
+        m_simulatorFrame->ShowSimMessage( _( "Warnings during netlist generation." ), reporter.GetMessages(), false );
     }
 
     dlg.SetSimCommand( wxS( "*" ) );

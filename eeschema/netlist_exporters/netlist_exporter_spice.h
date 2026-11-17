@@ -140,6 +140,39 @@ public:
 
     const std::vector<wxString>& GetDirectives() { return m_directives; }
 
+    /// Backplane (sim-run): a value for this exporter's netlists only; the schematic is not touched.
+    /// field: empty or "Value" = the device's principal value; "Sim.<Name>" = that whole field;
+    /// anything else = a model parameter (a Sim.Params key).
+    struct FIELD_OVERRIDE
+    {
+        wxString field;
+        wxString value;
+    };
+
+    void SetFieldOverrides( std::map<wxString, std::vector<FIELD_OVERRIDE>> aOverrides )
+    {
+        m_fieldOverrides = std::move( aOverrides );
+    }
+
+    /// Backplane (sim-run): a pin taken off its net for this exporter's netlists only.  The pin's
+    /// node in its element's line becomes newNode; what joins it to the net again (a 0 V source, a
+    /// probe) is the caller's, as extra directives.
+    struct PIN_BREAK
+    {
+        wxString reference;
+        wxString pin;        ///< the symbol pin's number
+        wxString newNode;
+        wxString node;       ///< out: the node the pin was on, set when the break is applied
+        bool     applied = false;
+    };
+
+    void SetPinBreaks( std::vector<PIN_BREAK> aBreaks ) { m_pinBreaks = std::move( aBreaks ); }
+
+    const std::vector<PIN_BREAK>& PinBreaks() const { return m_pinBreaks; }
+
+    /// Backplane (sim-run): netlist lines (.param, .options, .ic ...) for this exporter's netlists only
+    void SetExtraDirectives( std::vector<wxString> aDirectives ) { m_extraDirectives = std::move( aDirectives ); }
+
 protected:
     void ReadDirectives( unsigned aNetlistOptions );
     virtual void WriteDirectives( const wxString& aSimCommand, unsigned aSimOptions,
@@ -194,6 +227,15 @@ private:
      */
     SIM_DECOMPOSITION getDecomposition( SCH_SYMBOL& aSymbol, const SCH_SHEET_PATH& aSheet,
                                         const wxString& aVariantName ) const;
+
+    /// Backplane: the overrides of SetFieldOverrides, on the captured fields and on the built model
+    void applyFieldOverrides( const wxString& aRef, SIM_MODEL_INPUT& aInput, SPICE_ITEM& aItem ) const;
+    void applyParamOverrides( const wxString& aRef, bool aHadSimFields, SIM_MODEL& aModel,
+                              REPORTER& aReporter ) const;
+
+    std::map<wxString, std::vector<FIELD_OVERRIDE>> m_fieldOverrides;
+    std::vector<wxString>                           m_extraDirectives;
+    std::vector<PIN_BREAK>                          m_pinBreaks;
 
     void readModel( SCH_SHEET_PATH& aSheet, SCH_SYMBOL& aSymbol, SPICE_ITEM& aItem,
                     const wxString& aVariantName, REPORTER& aReporter );

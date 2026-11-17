@@ -39,6 +39,8 @@
 #include <memory>
 #include <stdexcept>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 
 #include <signal.h>
 #ifdef __WINDOWS__
@@ -308,6 +310,24 @@ bool NGSPICE::Attach( const std::shared_ptr<SIMULATION_MODEL>& aModel, const wxS
 }
 
 
+bool NGSPICE::AttachNetlist( const std::shared_ptr<SIMULATION_MODEL>& aModel, const std::string& aNetlist,
+                             unsigned aSimOptions, const wxString& aInputPath )
+{
+    NULL_REPORTER devnull;
+
+    setCodemodelsInputPath( aInputPath.ToStdString() );
+    SIMULATOR::Attach( aModel, wxEmptyString, aSimOptions, aInputPath, devnull );
+    updateNgspiceSettings();
+
+    bool loaded = LoadNetlist( aNetlist );
+
+    if( !( aSimOptions & NETLIST_EXPORTER_SPICE::OPTION_SAVE_ALL_EVENTS ) )
+        Command( "esave none" );
+
+    return loaded;
+}
+
+
 bool NGSPICE::LoadNetlist( const std::string& aNetlist )
 {
     LOCALE_IO         c_locale; // ngspice works correctly only with C locale
@@ -353,8 +373,25 @@ bool NGSPICE::Run()
 }
 
 
+void NGSPICE::SetPointBudget( uint64_t aValues, std::function<void()> aOnReached )
+{
+    std::lock_guard<std::mutex> lock( m_budgetMutex );
+
+    // A thread held at the old budget goes on
+    m_budget.store( 0 );
+    m_budgetCallback = std::move( aOnReached );
+    m_budgetValues.store( 0 );
+    m_budgetReached.store( false );
+    m_budgetRelease.store( false );
+    m_budget.store( aValues );
+}
+
+
 bool NGSPICE::Stop()
 {
+    // Backplane (sim-run): a run held at its point budget must get back to ngspice to see the halt
+    m_budgetRelease.store( true );
+
     LOCALE_IO c_locale;             // ngspice works correctly only with C locale
     bool      result = Command( "bg_halt" );    // bg_* commands execute in a separate thread
 
@@ -574,7 +611,8 @@ void NGSPICE::init_dll()
         m_ngSpice_UnlockRealloc = (ngSpice_UnlockRealloc) m_dll.GetSymbol( "ngSpice_UnlockRealloc" );
     }
 
-    m_ngSpice_Init( &cbSendChar, &cbSendStat, &cbControlledExit, nullptr, nullptr,
+    // Backplane (sim-run): the two data callbacks count the run's points (SetPointBudget)
+    m_ngSpice_Init( &cbSendChar, &cbSendStat, &cbControlledExit, &cbSendData, &cbSendInitData,
                     &cbBGThreadRunning, this );
 
     // Load a custom spinit file, to fix the problem with loading .cm files
@@ -585,6 +623,17 @@ void NGSPICE::init_dll()
 
     // Find *.cm files
     std::string cmPath = findCmPath();
+
+    // Backplane (sim-run): kept for the API (the search is relative to the executable's folder)
+    m_codeModelsPath.clear();
+
+    if( !cmPath.empty() )
+    {
+        wxFileName found;
+        found.AssignDir( wxString::FromUTF8( cmPath ) );
+        found.MakeAbsolute();
+        m_codeModelsPath = found.GetPath().ToStdString( wxConvUTF8 );
+    }
 
     // __CMPATH is used in custom spinit file to point to the codemodels directory
     if( !cmPath.empty() )
@@ -753,6 +802,44 @@ int NGSPICE::cbSendChar( char* aWhat, int aId, void* aUser )
 
 int NGSPICE::cbSendStat( char *aWhat, int aId, void* aUser )
 {
+    return 0;
+}
+
+
+int NGSPICE::cbSendInitData( pvecinfoall aData, int aId, void* aUser )
+{
+    return 0;
+}
+
+
+int NGSPICE::cbSendData( pvecvaluesall aData, int aCount, int aId, void* aUser )
+{
+    // Backplane (sim-run): called by ngspice's thread for each point it accepts
+    NGSPICE* sim = reinterpret_cast<NGSPICE*>( aUser );
+    uint64_t budget = sim->m_budget.load( std::memory_order_relaxed );
+
+    if( budget == 0 || !aData )
+        return 0;
+
+    uint64_t values = sim->m_budgetValues.fetch_add( static_cast<uint64_t>( std::max( aData->veccount, 1 ) ) )
+                      + static_cast<uint64_t>( std::max( aData->veccount, 1 ) );
+
+    if( values < budget )
+        return 0;
+
+    if( !sim->m_budgetReached.exchange( true ) )
+    {
+        std::lock_guard<std::mutex> lock( sim->m_budgetMutex );
+
+        if( sim->m_budgetCallback )
+            sim->m_budgetCallback();
+    }
+
+    // No further point until the halt is asked for (bg_halt is seen between points, once this
+    // returns).  Not for ever: a caller that never stops the run is not a reason to hang ngspice.
+    for( int ii = 0; ii < 5000 && !sim->m_budgetRelease.load() && sim->m_budget.load() != 0; ++ii )
+        std::this_thread::sleep_for( std::chrono::milliseconds( 2 ) );
+
     return 0;
 }
 

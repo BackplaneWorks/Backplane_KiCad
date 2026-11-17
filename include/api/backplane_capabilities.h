@@ -75,6 +75,19 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     // self-started prewarm on it
     "prewarm-keeps-focus",
 #endif
+    "sim-run",         // kiapi.backplane.sim (BACKPLANE_IPC.md "Simulation"): GetSimulationModels,
+                       // AssignSimulationModel, GetSimulationNetlist, Get/SetSimulationSetup, RunSimulation,
+                       // GetSimulationResult, StopSimulation; in the editor and headless (bp.13.2)
+    "sim-run-points-cap",  // RunSimulation.max_run_points: a run is stopped when ngspice has produced that
+                       // many values (points x saved vectors; left out: 5000000) and answered
+                       // SIM_POINT_LIMIT / PK_POINT_LIMIT with the points up to there; the person's
+                       // own runs in the Simulator window have no limit (bp.13.2)
+    "sim-thin-minmax", // RunSimulation.max_points keeps each stretch's lowest and highest point of
+                       // every returned vector (RunSimulation.thinning, answered in
+                       // RunSimulationResponse.thinning), and a short `signals` list is all ngspice
+                       // saves (RunSimulationResponse.saved_requested_only) (bp.13.2)
+    "sim-frame",       // embedded: FK_SIMULATOR = 8, KiCad's Simulator window as an embedded frame on the
+                       // open schematic, opened on demand (BACKPLANE_EMBED.md "Simulator"; bp.13.2)
 } );
 
 } // namespace BACKPLANE

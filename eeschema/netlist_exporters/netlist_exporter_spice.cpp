@@ -142,6 +142,10 @@ bool NETLIST_EXPORTER_SPICE::ReadSchematicAndLibraries( unsigned aNetlistOptions
 
     m_nets.clear();
     m_items.clear();
+
+    for( PIN_BREAK& pinBreak : m_pinBreaks )
+        pinBreak.applied = false;
+
     m_multiunitModels.clear();
     m_modelNameGenerator.Clear();
     m_referencesAlreadyFound.Clear();
@@ -669,8 +673,23 @@ void NETLIST_EXPORTER_SPICE::readModel( SCH_SHEET_PATH& aSheet, SCH_SYMBOL& aSym
     wxString mergedSimPins = repeat ? wxString()
                                     : collectMergedSimPins( aSymbol, aSheet, aVariantName );
 
-    const SIM_LIBRARY::MODEL& libModel = m_libMgr.CreateModel( &aSheet, aSymbol, true, 0, aVariantName,
-                                                               aReporter, mergedSimPins );
+    // Backplane (sim-run): the same two steps as SIM_LIB_MGR::CreateModel( sheet, symbol ... ), with
+    // this run's overrides between and after them
+    SIM_MODEL_INPUT input = SIM_LIB_MGR::CaptureModelInput( &aSheet, aSymbol, 0, aVariantName, mergedSimPins );
+    bool            hadSimFields = false;
+
+    if( !m_fieldOverrides.empty() )
+    {
+        applyFieldOverrides( aSymbol.GetRef( &aSheet ), input, aItem );
+
+        for( const auto& [name, value] : input.fields )
+            hadSimFields |= name.StartsWith( wxS( "Sim." ) ) && !value.IsEmpty();
+    }
+
+    const SIM_LIBRARY::MODEL& libModel = m_libMgr.CreateModel( input, true, aReporter );
+
+    if( !m_fieldOverrides.empty() )
+        applyParamOverrides( aSymbol.GetRef( &aSheet ), hadSimFields, libModel.model, aReporter );
 
     aItem.baseModelName = libModel.name;
     aItem.model = &libModel.model;
@@ -721,6 +740,108 @@ void NETLIST_EXPORTER_SPICE::readModel( SCH_SHEET_PATH& aSheet, SCH_SYMBOL& aSym
 }
 
 
+void NETLIST_EXPORTER_SPICE::applyFieldOverrides( const wxString& aRef, SIM_MODEL_INPUT& aInput,
+                                                  SPICE_ITEM& aItem ) const
+{
+    auto it = m_fieldOverrides.find( aRef );
+
+    if( it == m_fieldOverrides.end() )
+        return;
+
+    for( const FIELD_OVERRIDE& override : it->second )
+    {
+        wxString name = override.field;
+
+        if( name.IsEmpty() || name.IsSameAs( SIM_VALUE_FIELD, false ) )
+            name = SIM_VALUE_FIELD;
+        else if( !name.StartsWith( wxS( "Sim." ) ) )
+            continue;   // a model parameter: applyParamOverrides
+
+        bool found = false;
+
+        for( auto& [fieldName, value] : aInput.fields )
+        {
+            if( fieldName == name )
+            {
+                value = override.value;
+                found = true;
+            }
+        }
+
+        if( !found )
+            aInput.fields.emplace_back( name, override.value );
+
+        if( SCH_FIELD* field = FindField( aItem.fields, name ) )
+        {
+            field->SetText( override.value );
+        }
+        else
+        {
+            aItem.fields.emplace_back( nullptr, FIELD_T::USER, name );
+            aItem.fields.back().SetText( override.value );
+        }
+    }
+}
+
+
+void NETLIST_EXPORTER_SPICE::applyParamOverrides( const wxString& aRef, bool aHadSimFields, SIM_MODEL& aModel,
+                                                  REPORTER& aReporter ) const
+{
+    auto it = m_fieldOverrides.find( aRef );
+
+    if( it == m_fieldOverrides.end() )
+        return;
+
+    for( const FIELD_OVERRIDE& override : it->second )
+    {
+        const SIM_MODEL::PARAM* param = nullptr;
+
+        if( override.field.IsEmpty() || override.field.IsSameAs( SIM_VALUE_FIELD, false ) )
+        {
+            // An inferred model took it from the Value field already.  A model given by Sim.* fields
+            // keeps its value in Sim.Params: its principal (tunable) parameter is the one meant.
+            if( !aHadSimFields )
+                continue;
+
+            param = aModel.GetTunerParam();
+
+            for( int ii = 0; !param && ii < aModel.GetParamCount(); ++ii )
+            {
+                if( aModel.GetParam( ii ).info.category == SIM_MODEL::PARAM::CATEGORY::PRINCIPAL )
+                    param = &aModel.GetParam( ii );
+            }
+        }
+        else if( override.field.StartsWith( wxS( "Sim." ) ) )
+        {
+            continue;
+        }
+        else
+        {
+            param = aModel.FindParam( override.field.ToStdString() );
+        }
+
+        if( !param )
+        {
+            aReporter.Report( wxString::Format( wxS( "Override: %s has no parameter '%s'" ), aRef,
+                                                override.field.IsEmpty() ? wxString( SIM_VALUE_FIELD )
+                                                                         : override.field ),
+                              RPT_SEVERITY_ERROR );
+            continue;
+        }
+
+        try
+        {
+            aModel.SetParamValue( param->info.name, override.value.ToStdString() );
+        }
+        catch( const IO_ERROR& e )
+        {
+            aReporter.Report( wxString::Format( wxS( "Override: %s %s: %s" ), aRef, override.field, e.What() ),
+                              RPT_SEVERITY_ERROR );
+        }
+    }
+}
+
+
 void NETLIST_EXPORTER_SPICE::readPinNumbers( SCH_SYMBOL& aSymbol, SPICE_ITEM& aItem,
                                              const std::vector<PIN_INFO>& aPins  )
 {
@@ -735,6 +856,18 @@ void NETLIST_EXPORTER_SPICE::readPinNetNames( SCH_SYMBOL& aSymbol, SPICE_ITEM& a
     for( const PIN_INFO& pinInfo : aPins )
     {
         wxString netName = GenerateItemPinNetName( pinInfo.netName, aNcCounter );
+
+        // Backplane (sim-run): this pin is taken off its net for this netlist
+        for( PIN_BREAK& pinBreak : m_pinBreaks )
+        {
+            if( pinBreak.reference == wxString( aItem.refName ) && pinBreak.pin == pinInfo.num )
+            {
+                pinBreak.node = netName;
+                pinBreak.applied = true;
+                m_nets.insert( netName );
+                netName = pinBreak.newNode;
+            }
+        }
 
         aItem.pinNetNames.push_back( netName.ToStdString() );
         m_nets.insert( netName );
@@ -896,6 +1029,16 @@ void NETLIST_EXPORTER_SPICE::writeItems( OUTPUTFORMATTER& aFormatter )
 void NETLIST_EXPORTER_SPICE::WriteDirectives( const wxString& aSimCommand, unsigned aSimOptions,
                                               OUTPUTFORMATTER& aFormatter ) const
 {
+    // Backplane (sim-run): this run's own lines
+    for( const wxString& directive : m_extraDirectives )
+    {
+        wxString line = directive;
+        line.Trim( true ).Trim( false );
+
+        if( !line.IsEmpty() )
+            aFormatter.Print( 0, "%s\n", TO_UTF8( line ) );
+    }
+
     if( aSimOptions & OPTION_SAVE_ALL_VOLTAGES )
         aFormatter.Print( 0, ".save all\n" );
 

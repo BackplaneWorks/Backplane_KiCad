@@ -46,6 +46,24 @@ class SCH_ITEM;
 class SCH_SHEET;
 
 
+namespace kiapi::backplane::sim
+{
+class GetSimulationModels;
+class GetSimulationModelsResponse;
+class AssignSimulationModel;
+class AssignSimulationModelResponse;
+class GetSimulationNetlist;
+class GetSimulationNetlistResponse;
+class GetSimulationSetup;
+class SetSimulationSetup;
+class SetupResponse;
+class RunSimulation;
+class RunSimulationResponse;
+class GetSimulationResult;
+class StopSimulation;
+class StopSimulationResponse;
+}
+
 class HOST_MARKERS_ITEM;
 class SCH_MARKER;
 class SCH_SHEET_PATH;
@@ -252,6 +270,37 @@ private:
 
     HANDLER_RESULT<kiapi::schematic::tasks::ErcTaskResult> handleGetErcTaskResult(
             const HANDLER_CONTEXT<kiapi::schematic::tasks::GetErcTaskResult>& aCtx );
+
+    // Simulation (kiapi.backplane.sim, capability sim-run): api_handler_sch_sim.cpp
+    void registerSimHandlers();
+
+    /// Stop an API run on this handler's schematic and let go of it (the schematic is going away)
+    void detachSimulation();
+
+    /// AS_BUSY while an interactive tool runs (the exporter refreshes connectivity), or no schematic
+    std::optional<ApiResponseStatus> simNetlistReady();
+
+    /// The open Simulator window and the workbook file.  aReload true: the window takes the file.
+    /// False: when the window has unsaved tabs, they are written to a temporary copy whose path
+    /// is returned (the caller reads and removes it).  Empty without a Simulator window.
+    wxString simSyncWorkbook( bool aReload );
+
+    HANDLER_RESULT<kiapi::backplane::sim::GetSimulationModelsResponse> handleGetSimulationModels(
+            const HANDLER_CONTEXT<kiapi::backplane::sim::GetSimulationModels>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::sim::AssignSimulationModelResponse> handleAssignSimulationModel(
+            const HANDLER_CONTEXT<kiapi::backplane::sim::AssignSimulationModel>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::sim::GetSimulationNetlistResponse> handleGetSimulationNetlist(
+            const HANDLER_CONTEXT<kiapi::backplane::sim::GetSimulationNetlist>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::sim::SetupResponse> handleGetSimulationSetup(
+            const HANDLER_CONTEXT<kiapi::backplane::sim::GetSimulationSetup>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::sim::SetupResponse> handleSetSimulationSetup(
+            const HANDLER_CONTEXT<kiapi::backplane::sim::SetSimulationSetup>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::sim::RunSimulationResponse> handleRunSimulation(
+            const HANDLER_CONTEXT<kiapi::backplane::sim::RunSimulation>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::sim::RunSimulationResponse> handleGetSimulationResult(
+            const HANDLER_CONTEXT<kiapi::backplane::sim::GetSimulationResult>& aCtx );
+    HANDLER_RESULT<kiapi::backplane::sim::StopSimulationResponse> handleStopSimulation(
+            const HANDLER_CONTEXT<kiapi::backplane::sim::StopSimulation>& aCtx );
 
     class ERC_TASK;
 

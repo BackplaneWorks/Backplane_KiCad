@@ -587,7 +587,11 @@ SIMULATOR_FRAME_UI::SIMULATOR_FRAME_UI( SIMULATOR_FRAME* aSimulatorFrame, SCH_ED
           {
               rebuildSignalsGrid( m_filter->GetValue() );
               updatePlotCursors();
-              OnModify();
+
+              // Backplane: the plots post this while a workbook's tabs are first laid out too.
+              // That is no edit: a Simulator opened and closed again must not ask to save.
+              if( !m_simulatorFrame->IsSettling() )
+                  OnModify();
           } );
 
     m_signalsGrid->wxGrid::SetLabelFont( KIUI::GetStatusFont( this ) );
@@ -1868,15 +1872,26 @@ void SIMULATOR_FRAME_UI::UpdateMeasurement( int aRow )
 }
 
 
+std::vector<wxString> SIMULATOR_FRAME_UI::TunerRefs() const
+{
+    std::vector<wxString> refs;
+
+    for( const TUNER_SLIDER* tuner : m_tuners )
+        refs.push_back( tuner->GetSymbolRef() );
+
+    return refs;
+}
+
+
 void SIMULATOR_FRAME_UI::AddTuner( const SCH_SHEET_PATH& aSheetPath, SCH_SYMBOL* aSymbol )
 {
     SIM_PLOT_TAB* plotTab = dynamic_cast<SIM_PLOT_TAB*>( GetCurrentSimTab() );
 
     if( !plotTab )
     {
-        DisplayErrorMessage( nullptr, _( "The current analysis must have a plot in order to tune "
-                                         "the value of a passive R, L, C model or voltage or "
-                                         "current source." ) );
+        m_simulatorFrame->ShowSimMessage( _( "The current analysis must have a plot in order to tune "
+                                             "the value of a passive R, L, C model or voltage or "
+                                             "current source." ), wxEmptyString, true );
         return;
     }
 
@@ -1901,7 +1916,7 @@ void SIMULATOR_FRAME_UI::AddTuner( const SCH_SHEET_PATH& aSheetPath, SCH_SYMBOL*
         }
         catch( const KI_PARAM_ERROR& e )
         {
-            DisplayErrorMessage( nullptr, e.What() );
+            m_simulatorFrame->ShowSimMessage( e.What(), wxEmptyString, true );
         }
     }
 }
@@ -1917,8 +1932,9 @@ void SIMULATOR_FRAME_UI::UpdateTunerValue( const SCH_SHEET_PATH& aSheetPath, con
 
     if( !symbol )
     {
-        DisplayErrorMessage( this, _( "Could not apply tuned value(s):" ) + wxS( " " )
-                                           + wxString::Format( _( "%s not found" ), aRef ) );
+        m_simulatorFrame->ShowSimMessage( _( "Could not apply tuned value(s):" ) + wxS( " " )
+                                                  + wxString::Format( _( "%s not found" ), aRef ),
+                                          wxEmptyString, true );
         return;
     }
 
@@ -1942,8 +1958,9 @@ void SIMULATOR_FRAME_UI::UpdateTunerValue( const SCH_SHEET_PATH& aSheetPath, con
 
     if( !tunerParam )
     {
-        DisplayErrorMessage( this, _( "Could not apply tuned value(s):" ) + wxS( " " )
-                                           + wxString::Format( _( "%s is not tunable" ), aRef ) );
+        m_simulatorFrame->ShowSimMessage( _( "Could not apply tuned value(s):" ) + wxS( " " )
+                                                  + wxString::Format( _( "%s is not tunable" ), aRef ),
+                                          wxEmptyString, true );
         return;
     }
 
@@ -2728,7 +2745,7 @@ void SIMULATOR_FRAME_UI::applyTuners()
     }
 
     if( reporter.HasMessage() )
-        DisplayErrorMessage( this, _( "Could not apply tuned value(s):" ) + wxS( "\n" ) + reporter.GetMessages() );
+        m_simulatorFrame->ShowSimMessage( _( "Could not apply tuned value(s):" ), reporter.GetMessages(), true );
 }
 
 bool SIMULATOR_FRAME_UI::LoadWorkbook( const wxString& aPath )
@@ -4165,7 +4182,20 @@ void SIMULATOR_FRAME_UI::updatePlotCursors()
 void SIMULATOR_FRAME_UI::onPlotCursorUpdate( wxCommandEvent& aEvent )
 {
     updatePlotCursors();
-    OnModify();
+
+    // Backplane: a plot posts this when it is first laid out too.  With no cursor on any trace
+    // nothing of the workbook changed, and a Simulator opened and closed again must not ask to
+    // save it.
+    bool anyCursor = false;
+
+    if( SIM_PLOT_TAB* plotTab = dynamic_cast<SIM_PLOT_TAB*>( GetCurrentSimTab() ) )
+    {
+        for( const auto& [name, trace] : plotTab->GetTraces() )
+            anyCursor |= trace->GetCursor( 1 ) || trace->GetCursor( 2 );
+    }
+
+    if( anyCursor )
+        OnModify();
 }
 
 
