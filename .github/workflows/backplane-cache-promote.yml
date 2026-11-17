@@ -110,6 +110,8 @@ jobs:
           mkdir -p "$CCACHE_DIR"
           tar -C "$CCACHE_DIR" -xf "$RUNNER_TEMP/in/ccache/data.tar"
           rm -rf "$RUNNER_TEMP/in"; du -sh "$CCACHE_DIR"
+          # Never replace main's entry with an empty or evicted cache
+          n=$(find "$CCACHE_DIR" -type f | wc -l); [ "$n" -ge 1000 ] || { echo "only $n files: not promoted" >&2; exit 1; }
           echo "key=${prefix}main-$RUN_ID" >> "$GITHUB_OUTPUT"
       - uses: actions/cache/save@v4
         with:
@@ -149,6 +151,7 @@ jobs:
           mkdir -p ~/.cache/ccache
           tar -C ~/.cache/ccache -xf "$RUNNER_TEMP/in/ccache/data.tar" --no-same-owner
           rm -rf "$RUNNER_TEMP/in"; du -sh ~/.cache/ccache
+          n=$(find ~/.cache/ccache -type f | wc -l); [ "$n" -ge 1000 ] || { echo "only $n files: not promoted" >&2; exit 1; }
           echo "key=${prefix}main-$RUN_ID" >> "$GITHUB_OUTPUT"
       - uses: actions/cache/save@v4
         with:
@@ -181,6 +184,8 @@ jobs:
           if ($prefix -notmatch '^kicad-windows-ccache-[0-9a-f]{12}-$') { throw "bad key prefix: $prefix" }
           New-Item -ItemType Directory -Force C:\bp\ccache | Out-Null
           tar -C C:/bp/ccache -xf (Join-Path $in 'ccache\data.tar')
+          $n = (Get-ChildItem C:\bp\ccache -Recurse -File).Count
+          if ($n -lt 1000) { throw "only $n files in the compiler cache: not promoted" }
           "key=${prefix}main-$env:RUN_ID" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           if (Test-Path (Join-Path $in 'vcpkg\data.tar')) {
             $vk = (Get-Content (Join-Path $in 'vcpkg\key') -Raw).Trim()
