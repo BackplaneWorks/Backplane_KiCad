@@ -9,7 +9,6 @@ install( DIRECTORY
     multichannel
     openair-max
     pic_programmer
-    royalblue54L_feather
     simulation
     "sonde xilinx"
     stickhub
