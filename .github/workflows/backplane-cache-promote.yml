@@ -1,0 +1,112 @@
+name: Backplane KiCad cache promote
+
+# A run can read only its own ref's caches and the default branch's (main). Release-line and
+# candidate builds therefore don't save caches of their own. Each one uploads its compiler cache
+# as a 1-day artifact named ccache-<platform>-<sha>, and this workflow, which runs on main, saves
+# it as main's one rolling entry per platform. Every new candidate branch and every tag then
+# restores a warm cache.
+#
+# The cache is written only from the fork's own successful push or workflow_dispatch runs on
+# release/** or a candidate branch (^fix/bp<N>(.<M>)*-final<k>$). Never from a pull request, a
+# fork or a feature branch. Only cache entries are deleted (main's older entries of the same
+# platform), never artifacts or runs.
+on:
+  workflow_run:
+    workflows:
+      - Backplane KiCad macOS
+      - Backplane KiCad Linux runtime (upstream master base)
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cache-promote-${{ github.event.workflow_run.name }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN_ID: ${{ github.event.workflow_run.id }}
+      HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Release line or candidate branch only
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$HEAD_BRANCH" =~ ^release/ ]] || [[ "$HEAD_BRANCH" =~ ^fix/bp[0-9]+(\.[0-9]+)*-final[0-9]*$ ]]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::$HEAD_BRANCH is neither release/** nor a candidate branch; nothing promoted"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+          # The artifact must be this run's own: named for its platform and head SHA.
+          name=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+            -q "[.artifacts[] | select(.expired == false and (.name | test(\"^ccache-[a-z0-9_-]+-$HEAD_SHA\$\"))) | .name][0] // \"\"")
+          echo "artifact=$name" >> "$GITHUB_OUTPUT"
+          [ -n "$name" ] || { echo "::notice::run $RUN_ID uploaded no compiler cache"; echo "ok=false" >> "$GITHUB_OUTPUT"; }
+
+      - name: Download the run's compiler cache
+        if: steps.gate.outputs.ok == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.gate.outputs.artifact }}
+          run-id: ${{ env.RUN_ID }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/in
+
+      - name: Unpack
+        if: steps.gate.outputs.ok == 'true'
+        id: unpack
+        shell: bash
+        run: |
+          set -euo pipefail
+          prefix=$(tr -d '[:space:]' < "$RUNNER_TEMP/in/key-prefix")
+          # The prefix is the branch workflow's own (kicad-macos-<arch>-<toolchain>- or
+          # kicad-ccache-Linux-<toolchain>-); refuse anything else.
+          [[ "$prefix" =~ ^kicad-(macos-[A-Za-z0-9]+|ccache-Linux)-[0-9a-f]{12}-$ ]] || { echo "bad key prefix: $prefix" >&2; exit 1; }
+          mkdir -p "$RUNNER_TEMP/ccache"
+          tar -C "$RUNNER_TEMP/ccache" -xf "$RUNNER_TEMP/in/ccache.tar" --no-same-owner
+          rm -rf "$RUNNER_TEMP/in"
+          du -sh "$RUNNER_TEMP/ccache"
+          echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
+          echo "family=${prefix%-*-}-" >> "$GITHUB_OUTPUT"
+
+      - name: Save as main's cache
+        if: steps.gate.outputs.ok == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/ccache
+          key: ${{ steps.unpack.outputs.prefix }}main-${{ env.RUN_ID }}
+
+      - name: Keep one rolling entry per platform
+        if: steps.gate.outputs.ok == 'true'
+        shell: bash
+        env:
+          KEEP: ${{ steps.unpack.outputs.prefix }}main-${{ env.RUN_ID }}
+          FAMILY: ${{ steps.unpack.outputs.family }}
+        run: |
+          set -euo pipefail
+          # main's entries of this platform (any toolchain), newest first; keep the newest one,
+          # which is this run's unless a later promote has already saved.
+          mapfile -t entries < <(gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/actions/caches?ref=refs/heads/main&key=$FAMILY&sort=created_at&direction=desc&per_page=100" \
+            -q '.actions_caches[] | "\(.id) \(.key)"')
+          for i in "${!entries[@]}"; do
+            [ "$i" -eq 0 ] && { echo "kept ${entries[$i]}"; continue; }
+            id=${entries[$i]%% *}
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/caches/$id" && echo "deleted ${entries[$i]}"
+          done
+          echo "promoted run $RUN_ID ($HEAD_BRANCH @ ${HEAD_SHA:0:10}) as $KEEP" >> "$GITHUB_STEP_SUMMARY"
