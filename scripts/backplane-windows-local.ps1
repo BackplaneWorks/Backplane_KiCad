@@ -76,8 +76,13 @@ if (!$SkipLibraries) {
     & $bash scripts/backplane-libraries.sh ($libraries -replace '\\', '/') --with-3d
     $env:BACKPLANE_LIBRARY_STAGE = $libraries
 }
-$release = Join-Path $source 'release\windows'
-if (!$ConfigureOnly -and (Test-Path $release)) { Remove-Item -Recurse -Force $release }
+# The package and the PDB symbols archive of an earlier build in this checkout (GitHub's is always fresh)
+if (!$ConfigureOnly) {
+    foreach ($old in 'release\windows', 'release\symbols') {
+        $path = Join-Path $source $old
+        if (Test-Path $path) { Remove-Item -Recurse -Force $path }
+    }
+}
 $started = Get-Date
 & (Join-Path $PSScriptRoot 'backplane-windows.ps1')
 "backplane-windows.ps1 took {0:hh\:mm\:ss}" -f ((Get-Date) - $started)
