@@ -85,6 +85,17 @@ public:
     virtual bool LoadNetlist( const std::string& aNetlist ) = 0;
 
     /**
+     * Backplane (sim-run): load a netlist given as text, as Attach() does one it has exported:
+     * the code models' input path, the settings' commands, then the netlist.  aModel stays
+     * attached for its names only.
+     */
+    virtual bool AttachNetlist( const std::shared_ptr<SIMULATION_MODEL>& aModel, const std::string& aNetlist,
+                                unsigned aSimOptions, const wxString& aInputPath )
+    {
+        return false;
+    }
+
+    /**
      * Execute a Spice command as if it was typed into console.
      *
      * @param aCmd is the command to be issued.

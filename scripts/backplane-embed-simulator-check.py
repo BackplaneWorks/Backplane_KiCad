@@ -13,6 +13,12 @@ On a generated RC low-pass project:
 - A run the window cannot start (a bad override) is SIM_NETLIST_ERROR with ET_NOTICE kind
   "simulation" and no dialog.
 - SetSimulationSetup shows in the open window; GetSimulationSetup reads its live tabs.
+- The same commands through the GUI process' handlers with no Simulator window (models, netlist,
+  an .ac run, SIM_RUNNING / AS_BUSY / StopSimulation, an assignment and its undo).
+- ShowFrame{prewarm} opens it hidden with no show request.
+- The tune tool adds a part to the window's tuner panel (Setup.tuners) with no dialog.
+- Closing the window while an API run is in flight (plain or shown) leaves the run to be stopped
+  and collected.
 - HideFrame, ShowFrame again, Ctrl+W on the focused frame closes it (as the editors), Close
   {FK_SIMULATOR} closes it without a prompt; the schematic editor stays.
 
@@ -88,6 +94,13 @@ def main():
                 xtest.fake_input(person, X.KeyRelease, code)
             person.sync()
 
+        def collect_any(response, doc):
+            deadline = time.monotonic() + 60
+            while response.status == sim.SIM_RUNNING and time.monotonic() < deadline:
+                response = api.request(sim.GetSimulationResult(run_id=response.run_id, wait_ms=500, document=doc),
+                                       sim.RunSimulationResponse)
+            return response
+
         def collect(response):
             deadline = time.monotonic() + 60
             while response.status == sim.SIM_RUNNING and time.monotonic() < deadline:
@@ -100,9 +113,75 @@ def main():
         check(embed.FK_SIMULATOR == FK_SIMULATOR, "FK_SIMULATOR = 8")
         check(FK_SIMULATOR not in frames(), f"no Simulator frame before it is asked for ({sorted(frames())})")
 
+        before = set(s.watcher.current())
+
+        # The same commands through the GUI process' handlers, with no Simulator window
+        r = api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        wait_for(lambda: viewable(disp, r.frame.window), 60)
+        time.sleep(2)
+        docs = api.request(editor.GetOpenDocuments(type=types.DOCTYPE_SCHEMATIC), editor.GetOpenDocumentsResponse)
+        document = docs.documents[0]
+        models = api.request(sim.GetSimulationModels(document=document), sim.GetSimulationModelsResponse)
+        check(sorted(m.reference for m in models.models) == ["C1", "R1", "V1"] and models.problems == 0,
+              "GUI: GetSimulationModels")
+        netlist = api.request(sim.GetSimulationNetlist(document=document, command=".op"),
+                              sim.GetSimulationNetlistResponse)
+        check("R1 /in /out 1k" in netlist.netlist and not netlist.problems, "GUI: GetSimulationNetlist")
+        r = collect_any(api.request(sim.RunSimulation(document=document, command=".ac dec 10 1 100k",
+                                                      signals=["V(/out)"], measures=["f3db WHEN vdb(/out)=-3.0103"],
+                                                      overrides=[sim.Override(reference="V1", value="dc 0 ac 1")],
+                                                      wait_ms=1000), sim.RunSimulationResponse), document)
+        f3db = r.measures[0].value if r.measures else 0
+        check(r.status == sim.SIM_OK and not r.shown and abs(f3db - 159.155) < 0.5,
+              f"GUI: RunSimulation .ac without a Simulator window (f3db {f3db:.3f} Hz; status {r.status}, "
+              f"measures {[(m.name, m.failed, m.error) for m in r.measures]})")
+        r = api.request(sim.RunSimulation(document=document, command=".tran 20n 60", wait_ms=50),
+                        sim.RunSimulationResponse)
+        busy = api.request_raw(sim.RunSimulation(document=document, command=".op"))
+        frames()   # the UI thread serves other requests while ngspice runs
+        stop = api.request(sim.StopSimulation(document=document), sim.StopSimulationResponse)
+        done = collect_any(api.request(sim.GetSimulationResult(document=document, wait_ms=1000),
+                                       sim.RunSimulationResponse), document)
+        check(r.status == sim.SIM_RUNNING and busy.status.status == api.envelope.AS_BUSY and stop.stopping
+              and done.status == sim.SIM_ABORTED and done.points > 10,
+              f"GUI: SIM_RUNNING, AS_BUSY for a second run, StopSimulation ({done.points} points kept)")
+        a = api.request(sim.AssignSimulationModel(
+            document=document, references=["R1"],
+            builtin=sim.BuiltinModel(device="R", params=[sim.Param(name="r", value="2k")])),
+            sim.AssignSimulationModelResponse)
+        r = collect_any(api.request(sim.RunSimulation(document=document, command=".tf v(/out) V1", wait_ms=1000),
+                                    sim.RunSimulationResponse), document)
+        rout = next((v.value for v in r.values if v.name.startswith("output_impedance")), 0)
+        check(a.changed == 1 and abs(rout - 2000) < 1e-6, f"GUI: AssignSimulationModel is simulated (Rout {rout})")
+        api.request_raw(editor.RunAction(action="common.Interactive.undo"))
+        time.sleep(0.5)
+        value = api.request(sim.GetSimulationModels(document=document, references=["R1"]),
+                            sim.GetSimulationModelsResponse).models[0].value
+        check(value == "1k", f"GUI: the assignment is one undo step (R1 = {value})")
+        setup = api.request(sim.GetSimulationSetup(document=document), sim.SetupResponse).setup
+        check(not setup.tabs and not setup.tuners, "GUI: GetSimulationSetup with no workbook and no window")
+        check(FK_SIMULATOR not in frames(), "none of it opened the Simulator window")
+        check(not set(s.watcher.current()) - before, "no dialog appeared")
+        api.request(embed.HideFrame(window=frames()[embed.FK_SCH].window), embed.HideFrameResponse)
+
+        # A prewarm, though a host should not ask for one: opened hidden, no show request
+        events()
+        r = api.request(embed.ShowFrame(kind=FK_SIMULATOR, prewarm=True, width=w, height=h), embed.ShowFrameResponse)
+        got = []
+        opened = wait_for(lambda: got.extend(events()) or any(
+            e.type == embed.ET_FRAME_OPENED and e.frame.kind == FK_SIMULATOR for e in got), 30, 0.3)
+        time.sleep(1)
+        got.extend(events())
+        check(opened and FK_SIMULATOR in frames() and not frames()[FK_SIMULATOR].shown,
+              "ShowFrame{prewarm} opens the Simulator hidden")
+        check(not any(e.type in (embed.ET_SHOW_REQUESTED, embed.ET_FRAME_SHOWN) and e.frame.kind == FK_SIMULATOR
+                      for e in got), "a prewarm posts no show request and no ET_FRAME_SHOWN")
+        check(not set(s.watcher.current()) - before, "no dialog appeared")
+        api.request(embed.Close(mode=embed.CM_DISCARD, kind=FK_SIMULATOR), embed.CloseResponse)
+        check(wait_for(lambda: FK_SIMULATOR not in frames(), 10), "the prewarmed frame closes")
+
         # Opened on demand; the schematic editor comes with it, hidden
         events()
-        before = set(s.watcher.current())
         t = time.monotonic()
         r = api.request(embed.ShowFrame(kind=FK_SIMULATOR, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
         took = time.monotonic() - t
@@ -112,16 +191,13 @@ def main():
         time.sleep(2)
         now = frames()
         check(FK_SIMULATOR in now and now[FK_SIMULATOR].shown, "GetFrames lists it, shown")
-        check(embed.FK_SCH in now and not now[embed.FK_SCH].shown, "the schematic editor is loaded, hidden")
+        check(embed.FK_SCH in now and not now[embed.FK_SCH].shown, "the schematic editor stays hidden behind it")
         got = events()
         kinds = [(e.type, e.frame.kind) for e in got]
         check((embed.ET_FRAME_OPENED, FK_SIMULATOR) in kinds and (embed.ET_FRAME_SHOWN, FK_SIMULATOR) in kinds,
               "ET_FRAME_OPENED and ET_FRAME_SHOWN for FK_SIMULATOR")
         check(not set(s.watcher.current()) - before, "no dialog appeared")
         s.shot("01-simulator")
-
-        docs = api.request(editor.GetOpenDocuments(type=types.DOCTYPE_SCHEMATIC), editor.GetOpenDocumentsResponse)
-        document = docs.documents[0]
 
         # The window's own run, with the numbers back
         r = collect(api.request(sim.RunSimulation(document=document, command=".tran 5u 5m", show=True,
@@ -178,7 +254,77 @@ def main():
         check(not set(s.watcher.current()) - before, "no dialog appeared")
         s.shot("03-setup")
 
+        # The tuner: the person picks R1 in the schematic; it joins the window's tuner panel
+        tran = collect(api.request(sim.RunSimulation(document=document, command=".tran 5u 5m", show=True,
+                                                     signals=["V(/out)"], wait_ms=1000), sim.RunSimulationResponse))
+        sch = api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        wait_for(lambda: viewable(disp, sch.frame.window), 30)
+        time.sleep(1)
+
+        def pick(reference, row):
+            # the part's reference text fills the canvas; the tune tool then takes a click on it
+            box = types.Box2(position=types.Vector2(x_nm=49_000_000, y_nm=int((25.4 + 12.7 * row - 4.2) * 1e6)),
+                             size=types.Vector2(x_nm=5_000_000, y_nm=3_200_000))
+            api.request(embed.SelectItems(kind=embed.FK_SCH, references=[reference], zoom_box_nm=box),
+                        embed.SelectItemsResponse)
+            time.sleep(1)
+            api.request_raw(editor.RunAction(action="eeschema.Simulation.tune"))
+            time.sleep(1)
+            for dx, dy in ((0, 0), (-60, 0), (60, 0), (0, -40), (0, 40), (-120, 0), (120, 0)):
+                click(w // 2 + dx, h // 2 + dy)
+                time.sleep(0.7)
+                tuners = api.request(sim.GetSimulationSetup(document=document), sim.SetupResponse).setup.tuners
+                if reference in tuners:
+                    return list(tuners)
+                api.request_raw(editor.RunAction(action="eeschema.Simulation.tune"))
+                time.sleep(0.5)
+            return list(api.request(sim.GetSimulationSetup(document=document), sim.SetupResponse).setup.tuners)
+
+        s.shot("03b-tune-pick")
+        tuners = pick("R1", 1)
+        check(tran.status == sim.SIM_OK and tuners == ["R1"],
+              f"the tune tool adds R1 to the Simulator's tuners, embedded ({tuners})")
+        check(not set(s.watcher.current()) - before, "no dialog appeared for the tuner")
+        chord("Escape")
+        api.request(embed.HideFrame(window=sch.frame.window), embed.HideFrameResponse)
+        api.request(embed.ShowFrame(kind=FK_SIMULATOR, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        time.sleep(1)
+        s.shot("03c-tuner")
+        r = collect(api.request(sim.RunSimulation(document=document, command=".op", wait_ms=1000),
+                                sim.RunSimulationResponse))
+        setup = api.request(sim.GetSimulationSetup(document=document), sim.SetupResponse).setup
+        check(r.status == sim.SIM_OK and list(setup.tuners) == ["R1"],
+              "an API run beside the window keeps its tuner")
+
+        # Closing the window while an API run is in flight: the run goes on and is collected
+        for shown in (False, True):
+            if FK_SIMULATOR not in frames():
+                api.request(embed.ShowFrame(kind=FK_SIMULATOR, x=0, y=0, width=w, height=h),
+                            embed.ShowFrameResponse)
+                time.sleep(2)
+            r = api.request(sim.RunSimulation(document=document, command=".tran 20n 60", show=shown, wait_ms=50,
+                                              timeout_ms=60000), sim.RunSimulationResponse)
+            api.request(embed.Close(mode=embed.CM_DISCARD, kind=FK_SIMULATOR), embed.CloseResponse)
+            gone = wait_for(lambda: FK_SIMULATOR not in frames(), 10)
+            still = api.request(sim.GetSimulationResult(document=document, run_id=r.run_id, wait_ms=300),
+                                sim.RunSimulationResponse)
+            stop = api.request(sim.StopSimulation(document=document), sim.StopSimulationResponse)
+            done = collect(api.request(sim.GetSimulationResult(document=document, run_id=r.run_id, wait_ms=1000),
+                                       sim.RunSimulationResponse))
+            check(r.status == sim.SIM_RUNNING and r.shown == shown and gone and still.status == sim.SIM_RUNNING
+                  and stop.stopping and done.status == sim.SIM_ABORTED and done.points > 10,
+                  f"the window closed during a {'shown' if shown else 'plain'} API run: the run goes on, is "
+                  f"stopped and collected ({done.points} points; statuses {r.status}/{still.status}/{done.status})")
+            after = collect(api.request(sim.RunSimulation(document=document, command=".op", wait_ms=1000),
+                                        sim.RunSimulationResponse))
+            check(after.status == sim.SIM_OK, "and the simulator is usable afterwards")
+        check(s.kicad_process.poll() is None, "KiCad is still running")
+        check(not set(s.watcher.current()) - before, "no dialog appeared")
+        api.request(embed.ShowFrame(kind=FK_SIMULATOR, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        time.sleep(2)
+
         # Hide, show, focus and Ctrl+W
+        check(not frames()[FK_SIMULATOR].modified, "a reopened Simulator starts unmodified")
         window = frames()[FK_SIMULATOR].window
         events()
         api.request(embed.HideFrame(window=window), embed.HideFrameResponse)
@@ -189,11 +335,14 @@ def main():
         check(r.frame.window == window and wait_for(lambda: frames()[FK_SIMULATOR].shown, 10),
               "ShowFrame shows the same frame again")
         time.sleep(1)
-        click(w // 2, h // 2)
+        check(not frames()[FK_SIMULATOR].modified, "a freshly opened Simulator is not modified")
+        click(w // 5, h * 3 // 4)   # in its console: a click on the signal grid would change a trace
         check(wait_for(lambda: frames()[FK_SIMULATOR].focused, 10), "a click gives it the keyboard (focused)")
+        check(not frames()[FK_SIMULATOR].modified, "the click changed nothing")
         events()
         chord("Control_L", "w")
         closed = wait_for(lambda: FK_SIMULATOR not in frames(), 10)
+        s.shot("05-after-ctrl-w")
         check(closed, "Ctrl+W closes the Simulator frame")
         check(any(e.type == embed.ET_FRAME_CLOSED and e.frame.kind == FK_SIMULATOR for e in events()),
               "ET_FRAME_CLOSED")

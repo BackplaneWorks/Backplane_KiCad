@@ -17,6 +17,9 @@ and every command is asked:
   models     GetSimulationModels, AssignSimulationModel (built-in, library .model and .subckt
              with a pin map, raw, clear, exclude_from_sim, all-or-nothing), saved and reloaded
   set-up     SetSimulationSetup / GetSimulationSetup write the workbook KiCad's Simulator reads
+  netlist    GetSimulationNetlist.lines places each pin's node in its element line; a loop is
+             broken there and its loop gain run with RunSimulation.netlist (crossover and phase
+             margin against the closed form)
 
     backplane-sim-headless-check.py <kicad-cli> [--out DIR]
 
@@ -441,7 +444,8 @@ def check_models(c):
              Part("D1", "D", ["GND", "a"]),                      # pin 1 = K, pin 2 = A
              Part("U1", "DIV", ["a", "half", "GND"]),
              Part("R9", "1k", ["half", "GND"]),
-             Part("TP1", "TestPoint", ["half"])]
+             Part("TP1", "TestPoint", ["half"]),
+             Part("H1", "MountingHole", [])]                    # no pin at all
     c.open("models", parts, files={"sim/models.lib": MODELS_LIB})
     get = lambda **kw: c.api.request(sim.GetSimulationModels(document=c.document, **kw),
                                      sim.GetSimulationModelsResponse)
@@ -450,15 +454,33 @@ def check_models(c):
 
     models = get()
     by_ref = {m.reference: m for m in models.models}
-    assert set(by_ref) == {"V1", "R1", "D1", "U1", "R9", "TP1"} and models.symbols == 6, by_ref.keys()
+    assert set(by_ref) == {"V1", "R1", "D1", "U1", "R9", "TP1", "H1"} and models.symbols == 7, by_ref.keys()
     assert by_ref["R1"].source == sim.MS_INFERRED and by_ref["R1"].device == "R", by_ref["R1"]
     assert by_ref["R1"].error_kind == sim.ME_NONE and by_ref["R1"].netlist_line.strip() == "R1 /in /a 1k"
     assert [(p.pin_number, p.net) for p in by_ref["R1"].pins] == [("1", "/in"), ("2", "/a")], by_ref["R1"].pins
-    for ref in ("D1", "U1", "TP1"):
+    for ref in ("D1", "U1", "TP1", "H1"):
         assert by_ref[ref].error_kind == sim.ME_NO_MODEL and by_ref[ref].source == sim.MS_NONE, by_ref[ref]
-    assert models.problems == 3 and [m.reference for m in get(only_problems=True).models] == ["D1", "TP1", "U1"]
+    assert models.problems == 4 and [m.reference for m in get(only_problems=True).models] == \
+        ["D1", "H1", "TP1", "U1"]
     assert get(references=["R1", "R77"]).not_found == ["R77"]
-    c.ok("GetSimulationModels", "inferred passives, 3 parts without a model")
+    c.ok("GetSimulationModels", "inferred passives, 4 parts without a model")
+
+    # every symbol the exporter writes is listed and can be excluded: a mounting hole has no pin,
+    # KiCad would write it as "H1 __H1"
+    exported = c.api.request(sim.GetSimulationNetlist(document=c.document, command=".op"),
+                             sim.GetSimulationNetlistResponse)
+    assert "H1 __H1" in exported.netlist, exported.netlist
+    assert any(p.reference == "H1" and p.kind == sim.PK_MISSING_MODEL for p in exported.problems), exported.problems
+    blocked = c.run(".op")
+    assert blocked.status == sim.SIM_MODEL_ERROR and any(p.reference == "H1" for p in blocked.problems), blocked
+    r = assign(references=["H1"], exclude_from_sim=True)
+    assert r.changed == 1 and r.failed == 0 and r.results[0].model.exclude_from_sim, r
+    exported = c.api.request(sim.GetSimulationNetlist(document=c.document, command=".op"),
+                             sim.GetSimulationNetlistResponse)
+    assert "H1" not in exported.netlist and get().problems == 3, exported.netlist
+    r = assign(references=["H1"], builtin=sim.BuiltinModel(device="R"))
+    assert r.failed == 1 and r.results[0].error_kind == sim.ME_PIN_MISMATCH, r.results[0]
+    c.ok("a symbol without pins", "H1 is listed, blocks the run by name, is excluded by reference")
 
     # a library .model with an explicit pin map (the symbol's pin 1 is the cathode)
     r = assign(references=["D1"], library=sim.LibraryModel(library="sim/models.lib", name="DCHK"),
@@ -629,6 +651,80 @@ def check_setup(c):
     c.ok("GetSimulationNetlist", "nodes, pin currents, directives, overrides")
 
 
+def check_netlist_run(c):
+    """RunSimulation.netlist: the host's own netlist, here a loop broken at a pin for its loop gain."""
+    sim = c.sim
+
+    # A unity-gain buffer: E1 (gain 1000) drives out through 1k into 1u; out feeds back to E1's
+    # inverting input.  Loop gain T(f) = 1000 / (1 + j f/fc); it crosses 0 dB at fc*sqrt(1e6-1)
+    # with a phase margin of 90 degrees + atan(1/999.9995).
+    parts = [Part("V1", "dc 0 ac 0", ["ref", "GND"]),
+             Part("E1", "1000", ["drv", "GND", "ref", "out"],
+                  fields={"Sim.Device": "SPICE", "Sim.Params": 'type="E" model="1000"'}),
+             Part("R1", "1k", ["drv", "out"]), Part("C1", "1u", ["out", "GND"])]
+    c.open("loop", parts)
+    exported = c.api.request(sim.GetSimulationNetlist(document=c.document, command=".ac dec 200 1 1meg"),
+                             sim.GetSimulationNetlistResponse)
+    assert not [p for p in exported.problems if p.severity == sim.PS_ERROR], exported.problems
+    lines = {line.reference: line for line in exported.lines}
+    assert set(lines) == {"V1", "E1", "R1", "C1"}, lines.keys()
+    e1 = lines["E1"]
+    text = exported.netlist.split("\n")
+    assert e1.item == "E1" and text[e1.line_number - 1].split()[0] == "E1" and e1.line.strip() == \
+        text[e1.line_number - 1].strip(), (e1, text)
+    nodes = {n.pin_number: n for n in e1.nodes}
+    tokens = text[e1.line_number - 1].split()
+    assert [tokens[n.token] for n in e1.nodes] == [n.node for n in e1.nodes], (tokens, e1.nodes)
+    assert nodes["4"].node == "/out" and nodes["4"].token == 4, nodes["4"]
+    r1 = lines["R1"]
+    assert [(n.pin_number, n.node, n.token) for n in r1.nodes] == [("1", "/drv", 1), ("2", "/out", 2)], r1.nodes
+    c.ok("netlist lines", f"E1 at line {e1.line_number}, pin 4 is token {nodes['4'].token} ({nodes['4'].node})")
+
+    # Break the loop at E1's inverting input (pin 4): a 0 V AC source between the pin and its net.
+    # With the source's + at the net, T = -V(pin side) / V(net side) by voltage injection.
+    tokens[nodes["4"].token] = "fb"
+    text[e1.line_number - 1] = " ".join(tokens)
+    end = max(i for i, line in enumerate(text) if line.strip().lower() == ".end")
+    text.insert(end, "Vinj /out fb dc 0 ac 1")
+    broken = "\n".join(text)
+    r = c.run(netlist=broken, signals=["V(/out)", "fb"],
+              measures=["ac closed FIND vdb(fb) AT=1"], include_netlist=True)
+    assert r.status == sim.SIM_OK and r.analysis == "AC" and not r.shown, r
+    assert "Vinj /out fb" in r.netlist and r.netlist.count(".ac dec 200 1 1meg") == 1, r.netlist
+    frequency = r.vectors[0].real
+    net = c.vector(r, "V(/out)")
+    pin = c.vector(r, "fb")
+    fc = 1 / (2 * math.pi * 1e3 * 1e-6)
+    worst = 0.0
+    margin = None
+    for f, nr, ni, pr, pi in zip(frequency, net.real, net.imag, pin.real, pin.imag):
+        loop = -complex(nr, ni) / complex(pr, pi)
+        expected = 1000 / (1 + 1j * f / fc)
+        worst = max(worst, abs(loop - expected) / abs(expected))
+        if margin is None and abs(loop) <= 1:
+            margin = 180 + math.degrees(cmath.phase(loop))
+    assert worst < 1e-6, worst
+    assert margin is not None and abs(margin - 90.06) < 0.5, margin
+    # the injected 1 V divides as 1 / (1 + T) on the pin side: -60.0087 dB at 1 Hz
+    assert not r.measures[0].failed and close(r.measures[0].value, 20 * math.log10(1 / 1001), rel=1e-4), r.measures
+    cross = next(f for f, nr, ni, pr, pi in zip(frequency, net.real, net.imag, pin.real, pin.imag)
+                 if abs(complex(nr, ni)) <= abs(complex(pr, pi)))
+    assert close(cross, fc * math.sqrt(1e6 - 1), rel=0.02), (cross, fc * math.sqrt(1e6 - 1))
+    c.ok("loop gain by RunSimulation.netlist",
+         f"|T-T0|/|T0| max {worst:.1e}, crossover {cross:.0f} Hz, phase margin {margin:.2f} deg")
+
+    # The command of the request replaces none in the text; the schematic's names still resolve
+    plain = "\n".join(line for line in exported.netlist.split("\n") if not line.startswith(".ac"))
+    r = c.run(".op", netlist=plain, signals=["out"])
+    assert r.status == sim.SIM_OK and r.analysis == "OP" and close(c.value(r, "V(/out)"), 0.0, absolute=1e-9), r
+    bad = c.api.request_raw(sim.RunSimulation(document=c.document, netlist=plain))
+    assert bad.status.status == c.api.envelope.AS_BAD_REQUEST and "analysis" in bad.status.error_message, bad.status
+    r = c.run(".op", netlist=plain.replace("R1 /drv /out 1k", "R1 /drv /out 1k\nXU9 /out nowhere MISSING"))
+    assert r.status == sim.SIM_MODEL_ERROR and c.problem(r, sim.PK_MISSING_MODEL), r
+    assert close(c.value(c.run(".op"), "V(/out)"), 0.0, absolute=1e-9), "the schematic's own netlist still runs"
+    c.ok("netlist run controls", "command added, names resolved, no analysis refused, ngspice's errors told")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("cli", type=Path)
@@ -645,6 +741,7 @@ def main():
         check_failures(checker)
         check_models(checker)
         check_setup(checker)
+        check_netlist_run(checker)
         if args.out:
             args.out.mkdir(parents=True, exist_ok=True)
             (args.out / "sim-headless.json").write_text(json.dumps(checker.report, indent=2) + "\n")

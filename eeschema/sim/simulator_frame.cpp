@@ -192,6 +192,16 @@ SIMULATOR_FRAME::SIMULATOR_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
 
     Bind( wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( SIMULATOR_FRAME::onExit ), this, wxID_EXIT );
 
+    // Backplane: see IsSettling()
+    Bind( wxEVT_SHOW,
+          [this]( wxShowEvent& aEvent )
+          {
+              if( aEvent.IsShown() && m_settledAt == 0 )
+                  m_settledAt = wxGetLocalTimeMillis() + 1000;
+
+              aEvent.Skip();
+          } );
+
     Bind( EVT_SIM_UPDATE, &SIMULATOR_FRAME::onUpdateSim, this );
     Bind( EVT_SIM_STARTED, &SIMULATOR_FRAME::onSimStarted, this );
     Bind( EVT_SIM_FINISHED, &SIMULATOR_FRAME::onSimFinished, this );
@@ -223,6 +233,15 @@ SIMULATOR_FRAME::SIMULATOR_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
     m_ui->InitWorkbook();
     m_ui->FlushSimConsole();
     UpdateTitle();
+
+    // Backplane: opening the workbook the project names does not modify it (as LoadWorkbook()):
+    // its tabs and traces are added through the same code as the person's edits, which marks it.
+    // Without this a Simulator opened and closed again asks to save a workbook nobody changed.
+    CallAfter( [this]()
+               {
+                   m_workbookModified = false;
+                   UpdateTitle();
+               } );
 }
 
 
@@ -685,6 +704,18 @@ void SIMULATOR_FRAME::RestoreAfterApiRun()
 }
 
 
+bool SIMULATOR_FRAME::IsSettling() const
+{
+    return m_settledAt == 0 || wxGetLocalTimeMillis() < m_settledAt;
+}
+
+
+std::vector<wxString> SIMULATOR_FRAME::TunerRefs() const
+{
+    return m_ui->TunerRefs();
+}
+
+
 bool SIMULATOR_FRAME::WriteWorkbookCopy( const wxString& aPath )
 {
     wxString stored = m_simulator->Settings() ? m_simulator->Settings()->GetWorkbookFilename() : wxString();
@@ -756,6 +787,7 @@ bool SIMULATOR_FRAME::LoadWorkbook( const wxString& aPath )
     if( m_ui->LoadWorkbook( aPath ) )
     {
         UpdateTitle();
+        m_settledAt = IsShown() ? wxGetLocalTimeMillis() + 1000 : wxLongLong( 0 );
 
         // Successfully loading a workbook does not count as modifying it.  Clear the modified
         // flag after all the EVT_WORKBOOK_MODIFIED events have been processed.

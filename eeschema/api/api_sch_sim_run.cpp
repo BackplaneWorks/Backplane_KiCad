@@ -284,12 +284,24 @@ void SIM_API::TopologyProblems( const CIRCUIT& aCircuit, google::protobuf::Repea
         bool                mos = device == SIM_MODEL::DEVICE_T::NMOS || device == SIM_MODEL::DEVICE_T::PMOS;
         std::string         first;
 
+        // The element's pins: its model's, or (raw SPICE without a pin map) the symbol's in order
+        std::vector<std::pair<std::string, std::string>> pins;   // symbol pin number, model node
+
         for( const SIM_MODEL_PIN& pin : item.model->GetPins() )
         {
-            if( pin.symbolPinNumber.IsEmpty() )
-                continue;
+            if( !pin.symbolPinNumber.IsEmpty() )
+                pins.emplace_back( utf8( pin.symbolPinNumber ), pin.modelPinName );
+        }
 
-            auto it = std::find( item.pinNumbers.begin(), item.pinNumbers.end(), utf8( pin.symbolPinNumber ) );
+        if( item.model->GetPinCount() == 0 )
+        {
+            for( const std::string& number : item.pinNumbers )
+                pins.emplace_back( number, std::string() );
+        }
+
+        for( const auto& [pinNumber, modelPin] : pins )
+        {
+            auto it = std::find( item.pinNumbers.begin(), item.pinNumbers.end(), pinNumber );
 
             if( it == item.pinNumbers.end() )
                 continue;
@@ -307,10 +319,10 @@ void SIM_API::TopologyProblems( const CIRCUIT& aCircuit, google::protobuf::Repea
             std::string& who = users[node];
 
             if( who.size() < 120 )
-                who += ( who.empty() ? "" : ", " ) + item.refName + " pin " + utf8( pin.symbolPinNumber );
+                who += ( who.empty() ? "" : ", " ) + item.refName + " pin " + pinNumber;
 
             // A capacitor and a current source pass no DC; a MOS gate neither
-            if( isolating || ( mos && lower( pin.modelPinName ) == "g" ) )
+            if( isolating || ( mos && lower( modelPin ) == "g" ) )
                 continue;
 
             if( first.empty() )
@@ -1061,6 +1073,12 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
         if( !active || complete )
             return;
 
+        // ngspice says "finished" from its thread a little before the thread is gone (it may still
+        // be writing a file a directive asked for): commands given meanwhile are refused.  As the
+        // Simulator window does, wait for it, briefly.
+        for( int ii = 0; ii < 400 && sim->IsRunning(); ++ii )
+            std::this_thread::sleep_for( milliseconds( 5 ) );
+
         RunSimulationResponse out;
         SIM_TYPE              type = SPICE_CIRCUIT_MODEL::CommandToSimType( request.command );
         STOP_REASON           stopped = stopReason.load();
@@ -1540,6 +1558,17 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
             aCircuit->ReadSchematicAndLibraries( aRequest.options, exporterReporter );
             attached = true;
         }
+        else if( !aRequest.netlistText.empty() )
+        {
+            // The host's own netlist: the schematic is read for its names only, and what its
+            // exporter would say about it is not this run's
+            LINE_REPORTER ignored;
+
+            aCircuit->ReadSchematicAndLibraries( aRequest.options, ignored );
+            aCircuit->MarkWritten();
+            impl.sim->AttachNetlist( aCircuit, aRequest.netlistText, aRequest.options, aProjectPath );
+            attached = true;
+        }
         else
         {
             attached = impl.sim->Attach( aCircuit, aRequest.command, aRequest.options, aProjectPath,
@@ -1562,7 +1591,10 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
     impl.loadLines = impl.console.TextLines().size();
 
     ReporterToProblems( exporterReporter, &impl.netlistProblems );
-    TopologyProblems( *aCircuit, &impl.topology );
+
+    // A host's netlist is not the schematic's topology
+    if( aRequest.netlistText.empty() )
+        TopologyProblems( *aCircuit, &impl.topology );
 
     for( const SPICE_ITEM& item : aCircuit->GetItems() )
     {
@@ -1591,7 +1623,7 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
                         impl.netlistProblems.empty() ? "the netlist could not be written" : "" );
     }
 
-    if( impl.devices == 0 )
+    if( impl.devices == 0 && aRequest.netlistText.empty() )
         return failNow( SIM_NETLIST_ERROR, PK_NETLIST, "the schematic has nothing to simulate" );
 
     // Without node 0 every voltage is arbitrary: not run

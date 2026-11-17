@@ -135,8 +135,10 @@ std::vector<PART> collectParts( SCHEMATIC* aSchematic )
         {
             wxString ref = symbol->GetRef( &sheet );
 
-            // Power symbols and symbols with nothing to connect are not parts of the circuit
-            if( symbol->IsPower() || ref.StartsWith( wxS( "#" ) ) || symbol->GetAllLibPins().empty() )
+            // Power symbols are nets, not parts.  Everything else the exporter writes, a mounting
+            // hole without a pin included (as "H1 __H1", which ngspice cannot read): it is listed,
+            // so it can be given a model or excluded
+            if( symbol->IsPower() || ref.StartsWith( wxS( "#" ) ) )
                 continue;
 
             auto [it, added] = byRef.try_emplace( ref, parts.size() );
@@ -1600,6 +1602,118 @@ API_HANDLER_SCH::handleGetSimulationNetlist( const HANDLER_CONTEXT<GetSimulation
 
     response.set_items( items );
 
+    // Each element's line and where each pin's node stands in it
+    {
+        std::vector<std::string> netlistLines;
+        std::string              netlistText = response.netlist();
+
+        for( size_t at = 0; at <= netlistText.size(); )
+        {
+            size_t next = netlistText.find( '\n', at );
+            netlistLines.push_back( netlistText.substr( at, next == std::string::npos ? std::string::npos
+                                                                                     : next - at ) );
+
+            if( next == std::string::npos )
+                break;
+
+            at = next + 1;
+        }
+
+        auto tokensOf = []( const std::string& aLine )
+        {
+            std::vector<std::string> tokens;
+            wxStringTokenizer        tokenizer( wxString::FromUTF8( aLine ), wxS( " \t\r\n" ), wxTOKEN_STRTOK );
+
+            while( tokenizer.HasMoreTokens() )
+                tokens.push_back( utf8( tokenizer.GetNextToken() ) );
+
+            return tokens;
+        };
+
+        for( const SPICE_ITEM& item : circuit.GetItems() )
+        {
+            if( !item.model || !item.model->IsEnabled() )
+                continue;
+
+            std::string name = item.model->SpiceGenerator().ItemName( item );
+            std::string text = item.model->SpiceGenerator().ItemLine( item );
+            ItemLine*   out = response.add_lines();
+
+            out->set_reference( item.refName );
+            out->set_item( name );
+            out->set_line( text );
+
+            for( size_t ii = 0; ii < netlistLines.size(); ++ii )
+            {
+                std::vector<std::string> tokens = tokensOf( netlistLines[ii] );
+
+                if( !tokens.empty() && tokens[0] == name )
+                {
+                    out->set_line_number( static_cast<int>( ii ) + 1 );
+                    break;
+                }
+            }
+
+            std::vector<std::string> tokens = tokensOf( text.substr( 0, text.find( '\n' ) ) );
+            size_t                   from = 1;
+
+            // A raw SPICE element without a pin map takes the symbol's pins in their order
+            if( item.model->GetPinCount() == 0 )
+            {
+                for( size_t ii = 0; ii < item.pinNumbers.size() && ii < item.pinNetNames.size(); ++ii )
+                {
+                    ItemNode* node = out->add_nodes();
+                    node->set_pin_number( item.pinNumbers[ii] );
+                    node->set_model_node( std::to_string( ii + 1 ) );
+                    node->set_node( item.pinNetNames[ii] );
+                    node->set_token( -1 );
+
+                    for( size_t jj = from; jj < tokens.size(); ++jj )
+                    {
+                        if( tokens[jj] == item.pinNetNames[ii] )
+                        {
+                            node->set_token( static_cast<int>( jj ) );
+                            from = jj + 1;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            for( const SIM_MODEL_PIN& pin : item.model->GetPins() )
+            {
+                if( pin.symbolPinNumber.IsEmpty() )
+                    continue;
+
+                auto it = std::find( item.pinNumbers.begin(), item.pinNumbers.end(), utf8( pin.symbolPinNumber ) );
+
+                if( it == item.pinNumbers.end() )
+                    continue;
+
+                size_t index = it - item.pinNumbers.begin();
+
+                if( index >= item.pinNetNames.size() )
+                    continue;
+
+                ItemNode* node = out->add_nodes();
+                node->set_pin_number( utf8( pin.symbolPinNumber ) );
+                node->set_model_node( pin.modelPinName );
+                node->set_node( item.pinNetNames[index] );
+                node->set_token( -1 );
+
+                for( size_t ii = from; ii < tokens.size(); ++ii )
+                {
+                    if( tokens[ii] == item.pinNetNames[index] )
+                    {
+                        node->set_token( static_cast<int>( ii ) );
+                        from = ii + 1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     for( const wxString& directive : circuit.GetDirectives() )
         response.add_directives( utf8( directive ) );
 
@@ -1626,6 +1740,15 @@ API_HANDLER_SCH::handleGetSimulationSetup( const HANDLER_CONTEXT<GetSimulationSe
 
     if( !live.IsEmpty() )
         wxRemoveFile( live );
+
+    if( KIWAY* kiway = m_frame ? context()->GetKiway() : nullptr )
+    {
+        if( KIWAY_PLAYER* window = kiway->Player( FRAME_SIMULATOR, false ) )
+        {
+            for( const wxString& ref : static_cast<SIMULATOR_FRAME*>( window )->TunerRefs() )
+                response.mutable_setup()->add_tuners( utf8( ref ) );
+        }
+    }
 
     return response;
 }
@@ -1853,6 +1976,28 @@ API_HANDLER_SCH::handleRunSimulation( const HANDLER_CONTEXT<RunSimulation>& aCtx
     wxString command = wxString::FromUTF8( request.command() );
     command.Trim().Trim( false );
 
+    // A host's own netlist: its analysis is the request's command, else the one the text holds
+    const bool raw = !request.netlist().empty();
+
+    if( raw && command.IsEmpty() )
+    {
+        wxStringTokenizer textLines( wxString::FromUTF8( request.netlist() ), wxS( "\r\n" ), wxTOKEN_STRTOK );
+
+        while( textLines.HasMoreTokens() && command.IsEmpty() )
+        {
+            wxString line = textLines.GetNextToken().Trim().Trim( false );
+
+            if( line.StartsWith( wxS( "." ) ) && SPICE_CIRCUIT_MODEL::IsSimCommand( line ) )
+                command = line;
+        }
+
+        if( command.IsEmpty() )
+        {
+            return tl::unexpected( statusError( ApiStatusCode::AS_BAD_REQUEST,
+                                                "the netlist has no analysis line and no command was given" ) );
+        }
+    }
+
     if( command.IsEmpty() )
     {
         unsigned saved = run.options;
@@ -1909,13 +2054,52 @@ API_HANDLER_SCH::handleRunSimulation( const HANDLER_CONTEXT<RunSimulation>& aCtx
     for( const std::string& measure : request.measures() )
         run.measures.push_back( measure );
 
+    if( raw )
+    {
+        std::string text = request.netlist();
+
+        if( !text.empty() && text.back() != '\n' )
+            text += '\n';
+
+        if( !wxString::FromUTF8( request.command() ).Trim().IsEmpty() )
+        {
+            // The request's analysis goes before the text's .end
+            std::string analysis = utf8( run.command ) + "\n";
+            size_t      end = std::string::npos;
+            size_t      at = 0;
+
+            while( at < text.size() )
+            {
+                size_t      next = text.find( '\n', at );
+                std::string line = text.substr( at, next == std::string::npos ? std::string::npos : next - at );
+                wxString    trimmed = wxString::FromUTF8( line ).Trim().Trim( false ).Lower();
+
+                if( trimmed == wxS( ".end" ) )
+                    end = at;
+
+                if( next == std::string::npos )
+                    break;
+
+                at = next + 1;
+            }
+
+            if( end == std::string::npos )
+                text += analysis + ".end\n";
+            else
+                text.insert( end, analysis );
+        }
+
+        run.netlistText = text;
+    }
+
     run.includeNetlist = request.include_netlist();
-    run.show = request.show() && m_frame;
+    run.show = request.show() && m_frame && !raw;
     run.timeoutMs = request.timeout_ms() ? request.timeout_ms() : 120000;
     run.maxPoints = request.max_points();
 
     // Every symbol needs its reference: the exporter (and the Simulator window, with a dialog)
     // refuses a schematic that is not annotated
+    if( !raw )
     {
         SCH_REFERENCE_LIST references;
         sch->Hierarchy().GetSymbols( references, SYMBOL_FILTER_NON_POWER );
@@ -1948,6 +2132,7 @@ API_HANDLER_SCH::handleRunSimulation( const HANDLER_CONTEXT<RunSimulation>& aCtx
 
     // A symbol without a usable model is told by KiCad's own model code, with its reference;
     // ngspice is not given a netlist that has one (it cannot recover from some of them)
+    if( !raw )
     {
         RunSimulationResponse early;
 

@@ -587,7 +587,11 @@ SIMULATOR_FRAME_UI::SIMULATOR_FRAME_UI( SIMULATOR_FRAME* aSimulatorFrame, SCH_ED
           {
               rebuildSignalsGrid( m_filter->GetValue() );
               updatePlotCursors();
-              OnModify();
+
+              // Backplane: the plots post this while a workbook's tabs are first laid out too.
+              // That is no edit: a Simulator opened and closed again must not ask to save.
+              if( !m_simulatorFrame->IsSettling() )
+                  OnModify();
           } );
 
     m_signalsGrid->wxGrid::SetLabelFont( KIUI::GetStatusFont( this ) );
@@ -1865,6 +1869,17 @@ void SIMULATOR_FRAME_UI::UpdateMeasurement( int aRow )
     }
 
     m_measurementsGrid->SetCellValue( aRow, COL_MEASUREMENT_VALUE, result );
+}
+
+
+std::vector<wxString> SIMULATOR_FRAME_UI::TunerRefs() const
+{
+    std::vector<wxString> refs;
+
+    for( const TUNER_SLIDER* tuner : m_tuners )
+        refs.push_back( tuner->GetSymbolRef() );
+
+    return refs;
 }
 
 
@@ -4167,7 +4182,20 @@ void SIMULATOR_FRAME_UI::updatePlotCursors()
 void SIMULATOR_FRAME_UI::onPlotCursorUpdate( wxCommandEvent& aEvent )
 {
     updatePlotCursors();
-    OnModify();
+
+    // Backplane: a plot posts this when it is first laid out too.  With no cursor on any trace
+    // nothing of the workbook changed, and a Simulator opened and closed again must not ask to
+    // save it.
+    bool anyCursor = false;
+
+    if( SIM_PLOT_TAB* plotTab = dynamic_cast<SIM_PLOT_TAB*>( GetCurrentSimTab() ) )
+    {
+        for( const auto& [name, trace] : plotTab->GetTraces() )
+            anyCursor |= trace->GetCursor( 1 ) || trace->GetCursor( 2 );
+    }
+
+    if( anyCursor )
+        OnModify();
 }
 
 

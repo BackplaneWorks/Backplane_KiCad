@@ -309,6 +309,27 @@ message GetSimulationNetlistResponse
   string              command      = 5;  // the analysis line(s) in it
   repeated string     directives   = 6;  // the directives found on the schematic's sheets
   int32               items        = 7;  // SPICE items written
+  repeated ItemLine   lines        = 8;  // each symbol's element line and where its pins' nodes are in it
+}
+
+// Where a symbol pin's node is written in the netlist, so a host can rewrite a connection (break
+// a loop at a pin, insert a source) and run the result with RunSimulation.netlist.
+message ItemNode
+{
+  string pin_number = 1;  // the symbol pin
+  string model_node = 2;  // the model's node it is ("+", "in", "C")
+  string node       = 3;  // the node as written in the line ("/out", "GND")
+  int32  token      = 4;  // its place among the line's white-space separated tokens, 0-based (the
+                          // element's name is token 0); -1 when it is not found as a token
+}
+
+message ItemLine
+{
+  string reference = 1;          // "R1"
+  string item      = 2;          // the element's name in the netlist ("R1", "XU1")
+  string line      = 3;          // the element's line(s), as in `netlist`
+  int32  line_number = 4;        // 1-based line of `netlist` where it starts; 0 when not found
+  repeated ItemNode nodes = 5;   // the connected pins, in the line's order
 }
 
 
@@ -345,6 +366,8 @@ message Setup
   repeated string schematic_directives = 6;  // the other SPICE directives on the sheets
   string compatibility              = 7;  // ngspice's model compatibility mode for this project:
                                           // "user", "ngspice", "pspice", "ltspice", "ltpspice", "hspice"
+  repeated string tuners            = 8;  // GetSimulationSetup with the Simulator window open: the
+                                          // references the person is tuning there ("R1"); not saved
 }
 
 // The analysis saved with the design: what the Simulator window opens with.  Changes nothing.
@@ -515,6 +538,15 @@ message RunSimulation
   // Return at most this many points of each vector (every Nth point, the first and the last
   // always).  0 = all.
   uint32 max_points = 12;
+
+  // When set, ngspice gets this text instead of the netlist exported from the schematic (a host's
+  // one-off variation of GetSimulationNetlist's: a loop broken at a pin, an injected source).
+  // `directives`, `overrides` and `options` are then ignored; a non-empty `command` is added
+  // before the text's .end (fft lines still run after the analysis), else the text must hold its
+  // analysis line.  The schematic's names still map nodes to nets and elements to references in
+  // `signals`, `vectors` and `problems`.  No model or topology check is made by KiCad (ngspice's
+  // own errors are reported), and the run is never shown in the Simulator window.
+  string netlist = 13;
 }
 
 message RunSimulationResponse

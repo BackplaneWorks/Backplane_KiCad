@@ -244,6 +244,9 @@ public:
         return m_plotNotebook->GetPageIndex( aPlot );
     }
 
+    /// Backplane (sim-run): the references of the symbols being tuned
+    std::vector<wxString> TunerRefs() const;
+
     /// Backplane (sim-run): make aTab the current tab
     void SelectSimTab( SIM_TAB* aTab )
     {

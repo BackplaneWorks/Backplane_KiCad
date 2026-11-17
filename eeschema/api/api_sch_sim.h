@@ -100,6 +100,9 @@ public:
     /// KiCad's net name -> the ngspice node, of the last netlist
     const std::map<wxString, wxString>& NetNodes() const { return m_netNodes; }
 
+    /// A netlist that did not come from this exporter is about to be loaded
+    void MarkWritten() { m_writtenAt = std::chrono::steady_clock::now(); }
+
     /// When the last netlist was fully written (the simulator reads it after)
     std::chrono::steady_clock::time_point WrittenAt() const { return m_writtenAt; }
 
@@ -157,6 +160,9 @@ struct RUN_REQUEST
     unsigned                 timeoutMs = 120000;
     unsigned                 maxPoints = 0;
     unsigned                 options = 0;
+
+    /// RunSimulation.netlist: ngspice gets this text, not the schematic's export
+    std::string              netlistText;
 
     /// RunSimulation.show with a Simulator window: the run is that window's own.  Starts it
     /// (its tab, its circuit, its ngspice run); false when it did not start.

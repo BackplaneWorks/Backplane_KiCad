@@ -396,7 +396,9 @@ on the runtime before starting it.
 - Opened on demand: `ShowFrame{kind: FK_SIMULATOR}` creates it (about half a second on a small
   project). It simulates the open schematic, so the schematic editor is loaded, hidden, when it is
   not open yet. A host should not prewarm it; `ShowFrame{prewarm}` works when asked.
-- It has no document of its own: `FrameInfo.document` is empty, `modified` is the workbook's, and
+- It has no document of its own: `FrameInfo.document` is empty, `modified` is the workbook's
+  (opening or reloading a workbook, and the plots' first layout, do not modify it, so a Simulator
+  opened and closed again asks nothing), and
   `ReloadDocument` is `AS_UNIMPLEMENTED` for it. Closing the schematic editor closes it.
 - No message box over the pane. What the Simulator would say in one (netlist errors and warnings,
   "another simulation is already running", a tuner that cannot be applied, a workbook that does
@@ -415,7 +417,8 @@ on the runtime before starting it.
   API's run ends; while an API run lasts the window's run button and tuners answer "another
   simulation is already running". Closing the window during an API run does not stop the run.
 - `SetSimulationSetup` reloads the open window's workbook (its plots are drawn again by the next
-  run); `GetSimulationSetup` reads the window's tabs as they are, saved or not.
+  run); `GetSimulationSetup` reads the window's tabs as they are, saved or not, and `tuners`: the
+  parts the person is tuning (the schematic's tune tool adds them; no dialog).
 
 `scripts/backplane-embed-simulator-check.py <kicad> <kicad-cli> --out <dir>` checks all of this on
 a generated RC low-pass under Xvfb (input through XTEST).

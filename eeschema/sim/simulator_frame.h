@@ -199,6 +199,16 @@ public:
 
     bool IsWorkbookModified() const { return m_workbookModified; }
 
+    /// The workbook is this window's document: what FrameInfo.modified and Close{fail_if_modified} see
+    bool IsContentModified() const override { return m_workbookModified; }
+
+    /// True while a just opened or just loaded workbook's tabs are still being laid out (until
+    /// a second after the window is first on screen): what the plots report then is not an edit
+    bool IsSettling() const;
+
+    /// The references being tuned in this window
+    std::vector<wxString> TunerRefs() const;
+
     bool LoadWorkbook( const wxString& aPath );
 
     /**
@@ -271,6 +281,7 @@ private:
     std::shared_ptr<SPICE_CIRCUIT_MODEL> m_circuitModel;
 
     bool                                 m_simFinished;
+    wxLongLong                           m_settledAt = 0;        ///< 0: not on screen since the load
     bool                                 m_apiRun = false;       ///< StartSimulation is an API client's
     bool                                 m_runStarted = false;   ///< the last StartSimulation ran ngspice
     bool                                 m_workbookModified;

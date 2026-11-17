@@ -308,6 +308,24 @@ bool NGSPICE::Attach( const std::shared_ptr<SIMULATION_MODEL>& aModel, const wxS
 }
 
 
+bool NGSPICE::AttachNetlist( const std::shared_ptr<SIMULATION_MODEL>& aModel, const std::string& aNetlist,
+                             unsigned aSimOptions, const wxString& aInputPath )
+{
+    NULL_REPORTER devnull;
+
+    setCodemodelsInputPath( aInputPath.ToStdString() );
+    SIMULATOR::Attach( aModel, wxEmptyString, aSimOptions, aInputPath, devnull );
+    updateNgspiceSettings();
+
+    bool loaded = LoadNetlist( aNetlist );
+
+    if( !( aSimOptions & NETLIST_EXPORTER_SPICE::OPTION_SAVE_ALL_EVENTS ) )
+        Command( "esave none" );
+
+    return loaded;
+}
+
+
 bool NGSPICE::LoadNetlist( const std::string& aNetlist )
 {
     LOCALE_IO         c_locale; // ngspice works correctly only with C locale
