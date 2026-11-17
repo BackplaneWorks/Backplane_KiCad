@@ -680,9 +680,12 @@ void PCB_BASE_EDIT_FRAME::PutDataInPreviousState( PICKED_ITEMS_LIST* aList, bool
         {
             if( !GetBoard()->ResolveItem( eda_item->m_Uuid, true ) )
             {
-                // Remove this non existent item
+                // Remove this non existent item.  A DRC marker is derived data (each check run
+                // regenerates the markers, and they no longer enter undo entries): one gone is
+                // skipped quietly; a real item gone is still reported.
+                bool derived = eda_item->Type() == PCB_MARKER_T;
                 aList->RemovePicker( ii );
-                not_found = true;
+                not_found |= !derived;
 
                 if( aList->GetCount() == 0 )
                     break;

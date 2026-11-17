@@ -236,6 +236,12 @@ void BOARD_COMMIT::Push( const wxString& aMessage, int aCommitFlags )
 
     std::unordered_set<EDA_ITEM*> removedItems;
 
+    // DRC markers are derived data: every check run deletes and regenerates them, so an undo
+    // entry holding one would point at a freed marker by the next undo or redo ("Incomplete
+    // undo/redo operation: some items not found", or worse).  They never enter the person's
+    // undo; a marker this commit removes is deleted here (the next check brings it back).
+    std::vector<BOARD_ITEM*> removedMarkers;
+
     // Dirty flags and lists
     bool                     solderMaskDirty = false;
     bool                     autofillZones = false;
@@ -431,7 +437,7 @@ void BOARD_COMMIT::Push( const wxString& aMessage, int aCommitFlags )
             if( enteredGroup && boardItem->IsGroupableType() && !boardItem->GetParentGroup() )
                 enteredGroup->AddItem( boardItem );
 
-            if( !( aCommitFlags & SKIP_UNDO ) )
+            if( !( aCommitFlags & SKIP_UNDO ) && boardItem->Type() != PCB_MARKER_T )
                 undoList.PushItem( ITEM_PICKER( nullptr, boardItem, UNDO_REDO::NEWITEM ) );
 
             if( !( changeFlags & CHT_DONE ) )
@@ -463,7 +469,11 @@ void BOARD_COMMIT::Push( const wxString& aMessage, int aCommitFlags )
         {
             EDA_GROUP* parentGroup = boardItem->GetParentGroup();
 
-            if( !( aCommitFlags & SKIP_UNDO ) )
+            if( !( aCommitFlags & SKIP_UNDO ) && boardItem->Type() == PCB_MARKER_T )
+            {
+                removedMarkers.push_back( boardItem );
+            }
+            else if( !( aCommitFlags & SKIP_UNDO ) )
             {
                 UNDO_REDO   status = boardItem->Type() == PCB_FIELD_T ? UNDO_REDO::CHANGED : UNDO_REDO::DELETED;
                 ITEM_PICKER itemWrapper( nullptr, boardItem, status );
@@ -633,7 +643,7 @@ void BOARD_COMMIT::Push( const wxString& aMessage, int aCommitFlags )
         {
             BOARD_ITEM* boardItemCopy = static_cast<BOARD_ITEM*>( entry.m_copy );
 
-            if( !( aCommitFlags & SKIP_UNDO ) )
+            if( !( aCommitFlags & SKIP_UNDO ) && boardItem->Type() != PCB_MARKER_T )
             {
                 ITEM_PICKER itemWrapper( nullptr, boardItem, UNDO_REDO::CHANGED );
                 itemWrapper.SetLink( entry.m_copy );
@@ -814,7 +824,8 @@ void BOARD_COMMIT::Push( const wxString& aMessage, int aCommitFlags )
 
     if( frame )
     {
-        if( !( aCommitFlags & SKIP_UNDO ) )
+        // A commit of markers alone (a person deleting a selected marker) leaves no undo entry
+        if( !( aCommitFlags & SKIP_UNDO ) && undoList.GetCount() > 0 )
         {
             if( aCommitFlags & APPEND_UNDO )
                 frame->AppendCopyToUndoList( undoList, UNDO_REDO::UNSPECIFIED );
@@ -865,6 +876,9 @@ void BOARD_COMMIT::Push( const wxString& aMessage, int aCommitFlags )
 
     if( containsDrillMap && frame )
         frame->RefreshDrillSymbols( KIGFX::LAYERS | KIGFX::GEOMETRY | KIGFX::REPAINT );
+
+    for( BOARD_ITEM* marker : removedMarkers )
+        delete marker;
 
     clear();
 }
