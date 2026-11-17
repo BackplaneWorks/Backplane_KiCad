@@ -128,6 +128,9 @@ struct SKETCH_ROUTER_OPTIONS
     ///< Run the PNS optimizer over each finished route.
     bool m_optimize = true;
 
+    ///< When no route leaves and enters the pads straight, let it leave and enter them any way
+    bool m_freeExits = true;
+
     ///< Keep each net's obstacles by place (SKETCH_FIELD) instead of asking the node about every
     ///< probe.  The routes are the same; off only to compare.
     bool m_obstacleField = true;

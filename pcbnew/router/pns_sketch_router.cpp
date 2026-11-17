@@ -22,6 +22,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <map>
 #include <queue>
@@ -52,6 +54,20 @@
 namespace PNS {
 
 namespace {
+
+/// What each search did: wxLogTrace PNS_SKETCH, and with BACKPLANE_SKETCH_TRACE set, standard
+/// error too (a headless server shows no trace log)
+template <typename... Args>
+void sketchTrace( const wxString& aFormat, Args... aArgs )
+{
+    static const bool toStderr = std::getenv( "BACKPLANE_SKETCH_TRACE" ) != nullptr;
+
+    if( toStderr )
+        fprintf( stderr, "%s\n", (const char*) wxString::Format( aFormat, aArgs... ).utf8_str() );
+    else if( wxLog::IsAllowedTraceMask( wxT( "PNS_SKETCH" ) ) )
+        wxLogTrace( wxT( "PNS_SKETCH" ), aFormat, aArgs... );
+}
+
 
 constexpr int   DIR_NONE = 8;
 constexpr int   DIR_SLOTS = 9;
@@ -1976,7 +1992,7 @@ NODE* SKETCH_ROUTER::Route( NODE* aWorld, const std::vector<SKETCH_CONNECTION>& 
                                                        snapped.CLastPoint(), ends, ends, pitch, &snapped,
                                                        halfWidth, centerCost );
 
-                wxLogTrace( wxT( "PNS_SKETCH" ), wxT( "sketch fit, band %d: %s" ), halfWidth,
+                sketchTrace( wxT( "sketch fit, band %d: %s" ), halfWidth,
                             fitted.PointCount() >= 2 ? wxT( "found" ) : wxT( "blocked" ) );
 
                 if( fitted.PointCount() >= 2 )
@@ -2215,7 +2231,7 @@ void SKETCH_ROUTER::formBundles( NODE* aWorld, std::vector<SKETCH_CONNECTION>& a
 
         if( spine.PointCount() < 2 )
         {
-            wxLogTrace( wxT( "PNS_SKETCH" ), wxT( "no path for a bundle of %d" ), (int) members.size() );
+            sketchTrace( wxT( "no path for a bundle of %d" ), (int) members.size() );
             continue;
         }
 
@@ -2224,7 +2240,7 @@ void SKETCH_ROUTER::formBundles( NODE* aWorld, std::vector<SKETCH_CONNECTION>& a
         bundle.m_members = members;
         m_bundles.push_back( bundle );
 
-        wxLogTrace( wxT( "PNS_SKETCH" ), wxT( "bundle of %d along %d points" ), (int) members.size(),
+        sketchTrace( wxT( "bundle of %d along %d points" ), (int) members.size(),
                     spine.PointCount() );
     }
 }
@@ -2893,7 +2909,7 @@ SHAPE_LINE_CHAIN SKETCH_ROUTER::laneCorridor( const SKETCH_CONNECTION& aConn, do
 
                 if( best < 0 )
                 {
-                    wxLogTrace( wxT( "PNS_SKETCH" ), wxT( "no fanout from (%d,%d), %d candidates, nearest %.0f, %d exits" ),
+                    sketchTrace( wxT( "no fanout from (%d,%d), %d candidates, nearest %.0f, %d exits" ),
                                 aPad.x, aPad.y, (int) candidates.size(), nearestDist, (int) aExits.size() );
                 }
 
@@ -3471,6 +3487,8 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
     const std::vector<SKETCH_EXIT> relaxedStart = PadExits( aConn.m_start, s, width, m_orthogonal, false );
     const std::vector<SKETCH_EXIT> relaxedEnd = PadExits( aConn.m_end, t, width, m_orthogonal, false );
 
+    const std::vector<SKETCH_EXIT> noExits;
+
     const int minSegment = ( width + clearance ) / 8;
 
     // Short connections often need nothing more than a straight exit and a direct trace
@@ -3680,6 +3698,9 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         bool                            m_viaZone;
         const std::vector<SKETCH_EXIT>* m_startExits;
         const std::vector<SKETCH_EXIT>* m_endExits;
+
+        ///< Attempts of one group are all searched, and the cheapest route found is kept
+        int                             m_group = 0;
     };
 
     const int baseMargin = std::max( { 3 * ( viaDiameter + clearance ),
@@ -3698,26 +3719,104 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         attempts.push_back( { baseMargin, &corridor, corridorHalfWidth, false, true, &relaxedStart, &relaxedEnd } );
         attempts.push_back( { baseMargin * 3, nullptr, 0, false, false, &strictStart, &strictEnd } );
         attempts.push_back( { wholeBoard, nullptr, 0, false, false, &relaxedStart, &relaxedEnd } );
+
+        // The first that works is the one: a sketch says where the route should go
+        for( size_t i = 0; i < attempts.size(); i++ )
+            attempts[i].m_group = (int) i;
+    }
+    else if( m_options.m_freeExits )
+    {
+        // A pad boxed in by its neighbours has no straight way out as long as an exit asks,
+        // and a route that insists on one may go a long way round for it.  So each window is
+        // searched with the exits and without, and the cheaper route is the one kept.
+        attempts.push_back( { baseMargin, nullptr, 0, false, false, &strictStart, &strictEnd, 0 } );
+        attempts.push_back( { baseMargin, nullptr, 0, false, false, &noExits, &noExits, 0 } );
+        attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &strictStart, &strictEnd, 1 } );
+        attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &relaxedStart, &relaxedEnd, 1 } );
+        attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &noExits, &noExits, 1 } );
+        attempts.push_back( { wholeBoard, nullptr, 0, false, false, &relaxedStart, &relaxedEnd, 2 } );
+        attempts.push_back( { wholeBoard, nullptr, 0, false, false, &noExits, &noExits, 2 } );
     }
     else
     {
-        attempts.push_back( { baseMargin, nullptr, 0, false, false, &strictStart, &strictEnd } );
-        attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &strictStart, &strictEnd } );
-        attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &relaxedStart, &relaxedEnd } );
-        attempts.push_back( { wholeBoard, nullptr, 0, false, false, &relaxedStart, &relaxedEnd } );
+        attempts.push_back( { baseMargin, nullptr, 0, false, false, &strictStart, &strictEnd, 0 } );
+        attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &strictStart, &strictEnd, 1 } );
+        attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &relaxedStart, &relaxedEnd, 2 } );
+        attempts.push_back( { wholeBoard, nullptr, 0, false, false, &relaxedStart, &relaxedEnd, 3 } );
     }
 
-    std::vector<std::tuple<BOX2I, const SHAPE_LINE_CHAIN*, bool>> tried;
+    // Routes found by the attempts of the group being searched
+    struct CANDIDATE_ROUTE
+    {
+        GRID_SEARCH::RESULT m_result;
+        const ATTEMPT*      m_attempt;
+        int                 m_endRadius;
+        int                 m_pitch;
+        double              m_cost;     ///< nm of track, with what vias and corners cost
+    };
+
+    std::vector<CANDIDATE_ROUTE> candidates;
+
+    auto commitCheapest =
+            [&]() -> bool
+            {
+                std::stable_sort( candidates.begin(), candidates.end(),
+                                  []( const CANDIDATE_ROUTE& aA, const CANDIDATE_ROUTE& aB )
+                                  {
+                                      return aA.m_cost < aB.m_cost;
+                                  } );
+
+                for( const CANDIDATE_ROUTE& cand : candidates )
+                {
+                    const ATTEMPT& attempt = *cand.m_attempt;
+
+                    // Keep the cleanups inside the corridor the route was found in.  A lane's
+                    // fanout is part of its corridor, so the cleanups don't get the extra room
+                    // around the pads the search had: where a fanout runs a long way, that would
+                    // let them cut across the sketch.
+                    m_corridor = attempt.m_corridor;
+                    m_corridorHalfWidth = attempt.m_halfWidth;
+                    m_corridorStartRoom = std::max( attempt.m_halfWidth, cand.m_endRadius + 2 * cand.m_pitch );
+                    m_corridorEndRoom = m_corridorStartRoom;
+
+                    bool committed = commitPath( aNode, aConn, width, clearance, cand.m_result.m_runs,
+                                                 cand.m_result.m_runLayers, cand.m_result.m_vias, viaProto,
+                                                 *attempt.m_startExits, *attempt.m_endExits,
+                                                 sizes.GetHoleToHole(), aVias, aLength );
+                    m_corridor = nullptr;
+
+                    if( committed )
+                    {
+                        aCost = cand.m_result.m_cost * cand.m_pitch;
+                        aDetoured = guided && !attempt.m_corridor;
+                        return true;
+                    }
+                }
+
+                candidates.clear();
+                return false;
+            };
+
+    // As short as a route between the two can be: 45 degree corners, no obstacle
+    const double direct = std::max( std::abs( t.x - s.x ), std::abs( t.y - s.y ) )
+                          + ( M_SQRT2 - 1.0 ) * std::min( std::abs( t.x - s.x ), std::abs( t.y - s.y ) );
+
+    std::vector<std::tuple<BOX2I, const SHAPE_LINE_CHAIN*, int>> tried;
 
     // A free search that ran out of room without touching its window's edge has seen all it
     // can reach; a larger window won't find anything more with the same exits
-    bool strictExhausted = false;
-    bool relaxedExhausted = false;
+    bool exhausted[3] = { false, false, false };   // strict exits, relaxed, none
 
     for( const ATTEMPT& attempt : attempts )
     {
         if( cancelled() )
             return false;
+
+        if( !candidates.empty() && candidates.front().m_attempt->m_group != attempt.m_group
+                && commitCheapest() )
+        {
+            return true;
+        }
 
         BOX2I window = span;
         window.Inflate( std::min( attempt.m_margin, 2000000000 / 4 ) );
@@ -3737,13 +3836,15 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         }
 
         // Relaxed exits are the same as strict ones for anything but pads
-        const bool strict = *attempt.m_startExits == strictStart && *attempt.m_endExits == strictEnd;
-        auto       key = std::make_tuple( window, attempt.m_corridor, strict );
+        const bool free = attempt.m_startExits == &noExits;
+        const bool strict = !free && *attempt.m_startExits == strictStart && *attempt.m_endExits == strictEnd;
+        const int  exitKind = free ? 2 : strict ? 0 : 1;
+        auto       key = std::make_tuple( window, attempt.m_corridor, exitKind );
 
         if( std::find( tried.begin(), tried.end(), key ) != tried.end() )
             continue;
 
-        if( !attempt.m_corridor && ( strict ? strictExhausted : relaxedExhausted ) )
+        if( !attempt.m_corridor && exhausted[exitKind] )
             continue;
 
         tried.push_back( key );
@@ -3810,9 +3911,14 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         const int64_t   attemptStart = nowMs();
         const long long expansionsBefore = m_stats.m_expansions;
 
-        if( !search.EndReachable() )
+        // The grid goes through the start, so the end is met from the grid points around it;
+        // between close neighbours none of those may have a clear way in.  The same search
+        // from the end has its grid through the end, and meets the start that way instead.
+        const bool forward = search.EndReachable();
+
+        if( !forward && ( attempt.m_corridor || !m_options.m_freeExits ) )
         {
-            wxLogTrace( wxT( "PNS_SKETCH" ), wxT( "  %s: end unreachable (window %d x %d, pitch %d)" ),
+            sketchTrace( wxT( "  %s: end unreachable (window %d x %d, pitch %d)" ),
                         iface->GetNetName( aConn.m_net ), (int) window.GetWidth(),
                         (int) window.GetHeight(), attemptPitch );
             continue;
@@ -3835,7 +3941,8 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
             for( const SKETCH_EXIT& exit : back.m_endExits )
                 back.m_endRadius = std::max( back.m_endRadius, exit.m_length + 4 * attemptPitch );
 
-            back.m_maxExpansions = std::min( params.m_maxExpansions, 30000 );
+            if( forward )
+                back.m_maxExpansions = std::min( params.m_maxExpansions, 30000 );
 
             GRID_SEARCH         backSearch( back, m_stats );
             GRID_SEARCH::RESULT backResult;
@@ -3861,52 +3968,46 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
             else if( backStatus == GRID_SEARCH::STATUS::UNREACHABLE && !backSearch.HitWindowEdge() )
             {
                 status = backStatus;
-                ( strict ? strictExhausted : relaxedExhausted ) = true;
+                exhausted[exitKind] = true;
             }
         }
 
-        if( status == GRID_SEARCH::STATUS::BUDGET )
+        if( status == GRID_SEARCH::STATUS::BUDGET && forward )
             status = search.Run( result );
 
-        wxLogTrace( wxT( "PNS_SKETCH" ),
-                    wxT( "  %s (%d,%d)->(%d,%d): %s, corridor %d, exits %s, window %d x %d, "
+        sketchTrace(
+                    wxT( "  %s (%d,%d)->(%d,%d): %s%s, corridor %d, exits %s, window %d x %d, "
                          "pitch %d, %lld expansions, %lld ms" ),
                     iface->GetNetName( aConn.m_net ), s.x, s.y, t.x, t.y,
                     status == GRID_SEARCH::STATUS::FOUND         ? wxT( "found" )
                     : status == GRID_SEARCH::STATUS::UNREACHABLE ? wxT( "unreachable" )
                                                                  : wxT( "over budget" ),
+                    forward ? wxT( "" ) : wxT( " (from the end only)" ),
                     attempt.m_corridor == &lane ? 2 : attempt.m_corridor ? 1 : 0,
-                    strict ? wxT( "strict" ) : wxT( "relaxed" ),
+                    free ? wxT( "none" ) : strict ? wxT( "strict" ) : wxT( "relaxed" ),
                     (int) window.GetWidth(), (int) window.GetHeight(), attemptPitch,
                     m_stats.m_expansions - expansionsBefore, (long long) ( nowMs() - attemptStart ) );
 
         if( status == GRID_SEARCH::STATUS::UNREACHABLE && !attempt.m_corridor && !search.HitWindowEdge() )
-            ( strict ? strictExhausted : relaxedExhausted ) = true;
+            exhausted[exitKind] = true;
 
         if( status != GRID_SEARCH::STATUS::FOUND )
             continue;
 
-        // Keep the cleanups inside the corridor the route was found in.  A lane's fanout is part
-        // of its corridor, so the cleanups don't get the extra room around the pads the search
-        // had: where a fanout runs a long way, that would let them cut across the sketch.
-        m_corridor = attempt.m_corridor;
-        m_corridorHalfWidth = attempt.m_halfWidth;
-        m_corridorStartRoom = std::max( attempt.m_halfWidth, params.m_endRadius + 2 * attemptPitch );
-        m_corridorEndRoom = m_corridorStartRoom;
+        // Leaving a pad askew costs about a track's pitch at each end: a route with straight
+        // exits wins unless it is clearly the longer one
+        CANDIDATE_ROUTE cand{ result, &attempt, params.m_endRadius, attemptPitch,
+                              result.m_cost * attemptPitch + ( free ? 2.0 * ( width + clearance ) : 0.0 ) };
 
-        bool committed = commitPath( aNode, aConn, width, clearance, result.m_runs,
-                                     result.m_runLayers, result.m_vias, viaProto,
-                                     *attempt.m_startExits, *attempt.m_endExits,
-                                     sizes.GetHoleToHole(), aVias, aLength );
-        m_corridor = nullptr;
+        candidates.push_back( std::move( cand ) );
 
-        if( committed )
-        {
-            aCost = result.m_cost * attemptPitch;
-            aDetoured = guided && !attempt.m_corridor;
+        // Next to nothing to gain over this one
+        if( candidates.back().m_cost <= 1.15 * direct + width + clearance && commitCheapest() )
             return true;
-        }
     }
+
+    if( !candidates.empty() && commitCheapest() )
+        return true;
 
     return false;
 }

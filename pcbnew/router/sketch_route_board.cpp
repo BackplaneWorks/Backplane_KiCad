@@ -31,6 +31,7 @@
 #include <string>
 
 #include <wx/filename.h>
+#include <wx/log.h>
 
 #include "pns_arc.h"
 #include "pns_kicad_iface.h"
@@ -125,6 +126,9 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
 
         if( list.find( "field" ) != std::string::npos )
             options.m_obstacleField = false;
+
+        if( list.find( "freeexits" ) != std::string::npos )
+            options.m_freeExits = false;
     }
 
     if( aRequest.m_configure )
