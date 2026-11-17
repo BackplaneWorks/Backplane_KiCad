@@ -4,7 +4,7 @@
 # sources (GitLab's NuGet feed read-only, a files cache on this machine), the pinned libraries and
 # 3D models, then scripts/backplane-windows.ps1 (build, relocate, IPC smoke, package, libraries gate).
 #
-#   pwsh -File scripts/backplane-windows-local.ps1 -Root E:\bpk [-Jobs 2] [-SkipLibraries]
+#   pwsh -File scripts/backplane-windows-local.ps1 -Root E:\bpk [-Jobs 2] [-SkipLibraries] [-ConfigureOnly]
 #
 # -Root holds everything (vcpkg, its binary cache, build, stage, the library stage) and must be on a
 # drive other than this checkout's (the build script checks it, as on GitHub: source D:, build C:).
@@ -13,7 +13,9 @@
 param(
     [Parameter(Mandatory = $true)][string]$Root,
     [int]$Jobs = 2,
-    [switch]$SkipLibraries
+    [switch]$SkipLibraries,
+    # Install vcpkg's dependencies and configure only (no libraries, no compile)
+    [switch]$ConfigureOnly
 )
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
@@ -46,6 +48,10 @@ cl 2>&1 | Select-Object -First 1
 # The IPC test client, as the workflow installs it (protoc 33.4 from the vcpkg graph: gencode 6.33.4)
 python -m pip install --quiet --disable-pip-version-check protobuf==6.33.4 pynng==0.9.0
 
+if ($ConfigureOnly) {
+    $env:BACKPLANE_WIN_CONFIGURE_ONLY = '1'
+    $SkipLibraries = $true
+}
 if (!$SkipLibraries) {
     $libraries = Join-Path $Root 'kicad-library-stage'
     if (Test-Path $libraries) { Remove-Item -Recurse -Force $libraries }
@@ -54,7 +60,7 @@ if (!$SkipLibraries) {
     $env:BACKPLANE_LIBRARY_STAGE = $libraries
 }
 $release = Join-Path $source 'release\windows'
-if (Test-Path $release) { Remove-Item -Recurse -Force $release }
+if (!$ConfigureOnly -and (Test-Path $release)) { Remove-Item -Recurse -Force $release }
 $started = Get-Date
 & (Join-Path $PSScriptRoot 'backplane-windows.ps1')
 "backplane-windows.ps1 took {0:hh\:mm\:ss}" -f ((Get-Date) - $started)

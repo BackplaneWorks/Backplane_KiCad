@@ -52,6 +52,11 @@ if (!$extra -or $extra.Matches[0].Groups[1].Value -ne $versionExtra) {
 $installed = Join-Path $build 'vcpkg_installed\x64-windows'
 $env:PATH = (Join-Path $installed 'tools\protobuf') + ';' + $env:PATH
 python scripts/backplane-ipc-smoke.py --check-bindings
+if ($env:BACKPLANE_WIN_CONFIGURE_ONLY) {
+    # A local build machine's first step: vcpkg's dependencies installed and configured, no compile
+    Write-Output 'WINDOWS_KICAD_CONFIGURED (BACKPLANE_WIN_CONFIGURE_ONLY: stopping before the compile)'
+    return
+}
 cmake --build $build --parallel $jobs
 cmake --install $build
 # The PDBs (KICAD_WIN32_INSTALL_PDBS) go into their own symbols archive, never into the runtime,
