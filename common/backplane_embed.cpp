@@ -1272,8 +1272,23 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
         {
             if( w == canvas )
             {
+#ifdef __WXMSW__
+                // The keyboard lives on the GAL's own window, a wxGLCanvas child of the draw
+                // panel (OPENGL_GAL).  Focus already there, or anywhere inside the panel, stays:
+                // moving it to the panel took it off the GL canvas, and wxMSW passed it on to a
+                // button, so no hotkey fired after the first click (Carbon, batch 12).  Otherwise
+                // it goes to the window clicked, the GL canvas.
+                wxWindow* focus = wxWindow::FindFocus();
+
+                if( focus != canvas && !( focus && canvas->IsDescendant( focus ) ) )
+                {
+                    wxWindow* target = window->AcceptsFocus() ? window : canvas;
+                    target->SetFocus();
+                }
+#else
                 if( wxWindow::FindFocus() != canvas )
                     canvas->SetFocus();
+#endif
 
                 break;
             }
