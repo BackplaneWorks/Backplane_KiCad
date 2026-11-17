@@ -75,6 +75,9 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     // self-started prewarm on it
     "prewarm-keeps-focus",
 #endif
+    "sim-run",         // kiapi.backplane.sim (BACKPLANE_IPC.md "Simulation"): GetSimulationModels,
+                       // AssignSimulationModel, GetSimulationNetlist, Get/SetSimulationSetup, RunSimulation,
+                       // GetSimulationResult, StopSimulation; in the editor and headless (bp.13.2)
 } );
 
 } // namespace BACKPLANE

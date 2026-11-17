@@ -140,6 +140,68 @@ Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `f
 `marker`, 9 `checks`, 10 `drc_marker`, 11 `reserved_key` (bp.13); messages `ReservedKey`,
 `SetHostGeometry` (macOS, bp.13).
 
+## Simulation (`kiapi.backplane.sim`, capability `sim-run`, bp.13.2)
+
+`backplane/sim.proto`. KiCad's own simulator behind eight commands: its model code (`SIM_LIB_MGR`,
+`SIM_MODEL` and its serializer), its SPICE netlist exporter and its ngspice instance. Served by the
+schematic editor (embedded or not) and by `kicad-cli api-server` with the same answers; `document`
+is the open schematic. A net called `GND` (or `0`) is ngspice's node 0.
+
+| Command | What |
+|---|---|
+| `GetSimulationModels {document, references, include_params, only_problems}` | Per symbol (a multi-unit part once; power symbols never): reference, value, `lib_id`, `exclude_from_sim`, `dnp`, the `Sim.*` fields as stored, `source` (`MS_INFERRED` from the Value of an R, C, L, V or I; `MS_BUILTIN`; `MS_LIBRARY`; `MS_RAW`; `MS_NONE`), `device`, `type`, the SPICE item letter, the model name, the library as stored and resolved, every pin with its model node and its net, the netlist line, and `error_kind` + `error` when it would not simulate (`ME_NO_MODEL`, `ME_LIBRARY_NOT_FOUND`, `ME_MODEL_NOT_IN_LIBRARY`, `ME_PIN_MISMATCH`, `ME_BAD_PARAMS`, `ME_OTHER`). `symbols`, `excluded`, `problems` count the whole design. Changes nothing. |
+| `AssignSimulationModel {document, references, builtin \| library \| raw \| clear, pins, exclude_from_sim, partial}` | Writes the `Sim.*` fields as the Simulation Model dialog does (the model is built by KiCad and written by its serializer): a built-in device with parameters (`device` "R", "V", "NPN"..., `type` "", "SIN", "PULSE"...; a device with a principal value keeps it in the Value field, as KiCad does), a `.model` or `.subckt` of a library file (stored relative to the project when inside it), raw SPICE, or `clear`. `pins` maps symbol pins to model nodes (by name, or 1-based position); none = by pin order, which the answer reports. `exclude_from_sim` sets the symbol attribute, alone or with a model. One commit and one undo step; every unit of a part gets the fields. Nothing is written when any reference fails, unless `partial`. Each result carries the symbol as it now simulates. |
+| `GetSimulationNetlist {document, command, options, directives, overrides}` | The netlist ngspice would get, the net to node map (`V(<node>)` is the voltage vector), each pin current's vector and KiCad signal name, the sheet's directives, and `problems`: the symbols without a usable model, nodes with no DC path to ground (`PK_FLOATING_NODE`), a circuit without node 0 (`PK_NO_GROUND`). Changes nothing. |
+| `GetSimulationSetup {document}` | The Simulator's workbook (`<project>.wbk` unless the project names another): each tab's analysis, command, options, traces and measurements; the user-defined signals; the analysis written as text on a sheet; the other sheet directives; the project's ngspice compatibility mode. Changes nothing. |
+| `SetSimulationSetup {document, command, options, signals, measurements, tab, remove, compatibility}` | Writes a tab of that workbook (format 8, what the Simulator loads) and names the workbook in the project file. Without `tab` the tab of the same analysis type is replaced, else one is appended; a trace keeps the colour and cursors the person gave it. Never touches the schematic. |
+| `RunSimulation {document, command, directives, overrides, signals, measures, include_netlist, show, timeout_ms, options, wait_ms, max_points}` | Runs. See below. |
+| `GetSimulationResult {document, run_id, wait_ms}` | Collects a run answered `SIM_RUNNING`. The last result stays until the next `RunSimulation`. |
+| `StopSimulation {document, run_id}` | Stops the run; its result is `SIM_ABORTED` with the points ngspice had. |
+
+**The run.** `command` is the analysis line(s): `.op`, `.tran`, `.ac`, `.dc`, `.noise`, `.pz`,
+`.tf`, `.sp`; a frequency content analysis is a `.tran` line followed by `linearize`/`fft` lines,
+as the Simulator's FFT tab does. Empty = the saved set-up's first tab, else the analysis written
+on a sheet. `directives` are netlist lines for this run. `overrides {reference, field, value}`
+change this run's netlist only (`field` empty or `Value`: the principal value; a `Sim.Params` key;
+or a whole `Sim.<Name>` field): sweeps and tuning never write the schematic. `signals` choose the
+vectors that come back with data: `V(/out)`, `I(R1)`, an ngspice vector, or a net name; `*` = all;
+none = names and lengths only. `measures` are ngspice `meas` statements run after the analysis
+(the analysis word may be left out).
+
+The API socket serves one request at a time, so the request does not wait for a long run: it
+waits `wait_ms` (default 250; at most 1000 in a GUI process, where the UI thread waits with it) and
+then answers `status = SIM_RUNNING` with `run_id`; `GetSimulationResult` collects it and
+`StopSimulation` ends it. ngspice runs in its own thread, as for the Simulator window: the editor
+and every other request stay served. One run at a time in a KiCad process (the Simulator window's
+runs included): a second `RunSimulation` is `AS_BUSY`. `timeout_ms` (default 120000) stops the run
+by itself: `SIM_TIMEOUT`, with the points so far.
+
+The answer: `status`; `problems[] {kind, severity, reference, node, net, message}`; `log`
+(ngspice's console, the last 200 lines); `vectors[] {name, signal, kind, length, complex, real[],
+imag[], plot}` with the sweep axis first (`max_points` thins every vector alike, the first and
+last point kept); `values[]` for every single number (all of `.op`, the three results of `.tf`,
+the noise totals); `measures[] {name, value, failed, error}`; `netlist` when asked or refused;
+`timings {netlist_ms, load_ms, run_ms, total_ms}`; `ngspice_version`, `nodes`, `devices`, `points`,
+`analysis`, `command`, `run_id`.
+
+| `status` | When | `problems` name |
+|---|---|---|
+| `SIM_MODEL_ERROR` | a symbol has no usable model: found by KiCad's model code before ngspice sees a netlist, or ngspice knows no such model or subcircuit | the symbol: `PK_MISSING_MODEL`, `PK_LIBRARY_NOT_FOUND`, `PK_MODEL_NOT_IN_LIBRARY`, `PK_PIN_MISMATCH`, `PK_BAD_PARAMS` |
+| `SIM_NETLIST_ERROR` | the netlist could not be written or ngspice refused it (an override naming no parameter, a syntax error) | `PK_NETLIST` with the line |
+| `SIM_NO_CONVERGENCE` | the operating point or a time step did not converge | `PK_NO_CONVERGENCE` with the node or device ngspice had trouble with |
+| `SIM_FLOATING_NODE` | a node has no DC path to ground and the matrix was singular, or there is no node 0 (then nothing is run). When ngspice still got numbers by its fallbacks they come back, but they are gmin's, not the circuit's | `PK_FLOATING_NODE` with the node, its net and what is connected to it; `PK_NO_GROUND` |
+| `SIM_SINGULAR_MATRIX` | a singular matrix with every node grounded (a loop of voltage sources or inductors) | `PK_SINGULAR_MATRIX` with the node or the device whose branch it is |
+| `SIM_TIMEOUT`, `SIM_ABORTED` | stopped | `PK_TIMEOUT`, `PK_ABORTED` |
+| `SIM_ERROR` | anything else ngspice called an error | `PK_OTHER` |
+
+With `SIM_OK`, `problems` holds warnings only: a measure that gave no value
+(`PK_MEASURE_FAILED`), an asked signal with no vector, a floating node that did not stop this
+analysis.
+
+Sources (VDC, VSIN, VPULSE, IDC...) are ordinary symbols of KiCad's `Simulation_SPICE` library.
+A project that has no workbook yet simulates in LTspice/PSpice compatibility, as in the Simulator
+window; the project's setting is not written by a run.
+
 ## Files
 
 - Native files use upstream master's format (newer than KiCad 10.0.x). Custom properties and
@@ -199,6 +261,12 @@ default is never saved). Without the capability only the Linux launcher seeds an
   item colours until the editor is reopened.  The editors' own canvases follow the change.
 
 ## Tests
+
+`scripts/backplane-sim-headless-check.py <kicad-cli>` (sim-run) generates small schematics and
+checks every analysis against its closed form (a divider's `.op`, `.dc` and `.tf`; an RC
+low-pass's `.ac` corner, `.tran` step, kT/C `.noise` and `.pz` pole; a two-port's `.sp`; an FFT
+line), the run controls, each failure kind with its reference or node, the model commands and the
+workbook.
 
 `scripts/backplane-*-regression.py <kicad-cli>` run headless against an isolated server and never
 touch user projects; CI runs all of them on every build. `--stock-cli <stock 10.0.x kicad-cli>`

@@ -347,6 +347,7 @@ API_HANDLER_SCH::API_HANDLER_SCH( SCH_EDIT_FRAME* aFrame ) :
 API_HANDLER_SCH::~API_HANDLER_SCH()
 {
     *m_alive = false;
+    detachSimulation();
 }
 
 
@@ -450,6 +451,8 @@ API_HANDLER_SCH::API_HANDLER_SCH( std::shared_ptr<SCH_CONTEXT> aContext,
             &API_HANDLER_SCH::handleExpandTextVariables );
     registerHandler<PlaceSymbolFromLibrary, PlaceFromLibraryResponse>(
             &API_HANDLER_SCH::handlePlaceSymbolFromLibrary );
+
+    registerSimHandlers();
 }
 
 

@@ -109,6 +109,12 @@ public:
         m_reporter.store( aReporter, std::memory_order_release );
     }
 
+    /// Backplane (sim-run): who receives the log and the state now, so a run of the API can give
+    /// them back to the Simulator window when it ends.
+    REPORTER* GetReporter() const { return m_reporter.load( std::memory_order_acquire ); }
+
+    SIM_STATE_LISTENER* GetSimStateListener() const { return m_stateListener.load( std::memory_order_acquire ); }
+
     /// Set a #SIM_STATE_LISTENER object to receive simulation state transitions.
     virtual void SetSimStateListener( SIM_STATE_LISTENER* aListener )
     {

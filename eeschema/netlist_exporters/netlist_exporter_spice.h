@@ -140,6 +140,20 @@ public:
 
     const std::vector<wxString>& GetDirectives() { return m_directives; }
 
+    /// Backplane (sim-run): a value for this exporter's netlists only; the schematic is not touched.
+    /// field: empty or "Value" = the device's principal value; "Sim.<Name>" = that whole field;
+    /// anything else = a model parameter (a Sim.Params key).
+    struct FIELD_OVERRIDE
+    {
+        wxString field;
+        wxString value;
+    };
+
+    void SetFieldOverrides( std::map<wxString, std::vector<FIELD_OVERRIDE>> aOverrides )
+    {
+        m_fieldOverrides = std::move( aOverrides );
+    }
+
 protected:
     void ReadDirectives( unsigned aNetlistOptions );
     virtual void WriteDirectives( const wxString& aSimCommand, unsigned aSimOptions,
@@ -194,6 +208,13 @@ private:
      */
     SIM_DECOMPOSITION getDecomposition( SCH_SYMBOL& aSymbol, const SCH_SHEET_PATH& aSheet,
                                         const wxString& aVariantName ) const;
+
+    /// Backplane: the overrides of SetFieldOverrides, on the captured fields and on the built model
+    void applyFieldOverrides( const wxString& aRef, SIM_MODEL_INPUT& aInput, SPICE_ITEM& aItem ) const;
+    void applyParamOverrides( const wxString& aRef, bool aHadSimFields, SIM_MODEL& aModel,
+                              REPORTER& aReporter ) const;
+
+    std::map<wxString, std::vector<FIELD_OVERRIDE>> m_fieldOverrides;
 
     void readModel( SCH_SHEET_PATH& aSheet, SCH_SYMBOL& aSymbol, SPICE_ITEM& aItem,
                     const wxString& aVariantName, REPORTER& aReporter );
