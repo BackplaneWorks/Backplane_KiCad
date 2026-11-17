@@ -15,28 +15,34 @@ name: Backplane KiCad cache promote
 # is therefore saved on the same runner (and container) as its build, under the same path.
 on:
   workflow_run:
+    # A workflow whose file is also on main is matched by main's name for it: the Linux workflow
+    # is "Backplane KiCad Linux release" on main and "...runtime (upstream master base)" on the
+    # release line, so both names are listed.
     workflows:
       - Backplane KiCad macOS
+      - Backplane KiCad Linux release
       - Backplane KiCad Linux runtime (upstream master base)
       - Backplane KiCad Windows
     types: [completed]
+  # Promote one finished run by hand (a run whose promote didn't fire), under the same rules
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: The build run whose compiler cache to promote
+        required: true
 
 permissions:
   contents: read
 
 concurrency:
-  group: cache-promote-${{ github.event.workflow_run.name }}
+  group: cache-promote-${{ github.event.workflow_run.workflow_id || inputs.run_id }}
   cancel-in-progress: false
 
 env:
-  RUN_ID: ${{ github.event.workflow_run.id }}
+  RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
 
 jobs:
   gate:
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
-      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -45,15 +51,26 @@ jobs:
       artifact: ${{ steps.gate.outputs.artifact }}
       platform: ${{ steps.gate.outputs.platform }}
     steps:
+      # The run is read back from the API for both triggers, so a hand promote has the same rules:
+      # a successful push or workflow_dispatch run of this repo, on release/** or a candidate branch
       - name: Release line or candidate branch, and the run's own artifact
         id: gate
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo "bad run id: $RUN_ID" >&2; exit 1; }
+          IFS=$'\t' read -r CONCLUSION EVENT HEAD_REPO HEAD_BRANCH HEAD_SHA WF_PATH < <(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" \
+            -q '[.conclusion // "", .event, .head_repository.full_name, .head_branch, .head_sha, .path] | @tsv')
+          case "$WF_PATH" in
+            .github/workflows/backplane-macos.yml|.github/workflows/backplane-linux-release.yml|.github/workflows/backplane-windows.yml) ;;
+            *) echo "::notice::run $RUN_ID is $WF_PATH, not a KiCad build: nothing promoted"; exit 0 ;;
+          esac
+          if [ "$CONCLUSION" != success ] || ! [[ "$EVENT" =~ ^(push|workflow_dispatch)$ ]] || [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+            echo "::notice::run $RUN_ID is $CONCLUSION/$EVENT from $HEAD_REPO: nothing promoted"
+            exit 0
+          fi
           if ! [[ "$HEAD_BRANCH" =~ ^release/ || "$HEAD_BRANCH" =~ ^fix/bp[0-9]+(\.[0-9]+)*-final[0-9]*$ ]]; then
             echo "::notice::$HEAD_BRANCH is neither release/** nor a candidate branch: nothing promoted"
             exit 0
