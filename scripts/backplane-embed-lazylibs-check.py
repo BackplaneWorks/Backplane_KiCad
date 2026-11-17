@@ -69,6 +69,19 @@ def click_from_corner(session, box, dx, dy):
     session.xdotool("mousemove", str(box[0] + box[2] - dx), str(box[1] + box[3] - dy), "click", "1")
 
 
+def wait_dialog(session, title, timeout=180):
+    """Wait for a dialog to be shown.  A lazy chooser opens only after the deferred full load
+    (every library of the stock tables), so a fixed wait can close nothing and leave it modal."""
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        if find_dialog(session, title) is not None:
+            time.sleep(1.0)   # let it draw before the screenshot
+            return True
+        time.sleep(0.5)
+    print(f"  {title!r} not shown after {timeout} s", flush=True)
+    return False
+
+
 def close_dialog(session, title, dx=150):
     """Close a dialog by its bottom-right button (Cancel / Close), found from the window manager's
     list: keys may go to the embedded frame, which keeps the keyboard.  Waits until it is gone, so
@@ -328,7 +341,7 @@ def run_mode(args, mode):
             s.xdotool("mousemove", str(w // 2), str(h // 2), "click", "1")
             time.sleep(0.5)
             s.xdotool("key", "a")
-            time.sleep(3)
+            wait_dialog(s, "Footprint Chooser")
             s.shot(f"{mode}-footprint-chooser")
             close_dialog(s, "Footprint Chooser")
             s.xdotool("key", "Escape")
@@ -350,7 +363,7 @@ def run_mode(args, mode):
             s.xdotool("mousemove", str(w // 2), str(h // 2), "click", "1")
             time.sleep(0.5)
             s.xdotool("key", "a")
-            time.sleep(3)
+            wait_dialog(s, "Choose Symbol")
             s.shot(f"{mode}-symbol-chooser")
             close_dialog(s, "Choose Symbol")
             s.xdotool("key", "Escape")
