@@ -561,10 +561,34 @@ BOARD_ITEM* PNS_PCBNEW_RULE_RESOLVER::getBoardItem( const PNS::ITEM* aItem, PCB_
 
     case PNS::ITEM::VIA_T:
     case PNS::ITEM::HOLE_T:
+    {
         m_dummyVias[aIdx].SetLayer( aBoardLayer );
         m_dummyVias[aIdx].SetNet( static_cast<NETINFO_ITEM*>( aItem->Net() ) );
         m_dummyVias[aIdx].SetStart( aItem->Anchor( 0 ) );
+
+        // Backplane: a rule may ask what via this is (A.Via_Type == 'Micro', its layers, its
+        // size), and a via the router has not placed yet stood in as a through via of no
+        // size, so a board's own rules for its laser vias never applied while routing.
+        const PNS::ITEM* owner = aItem->Kind() == PNS::ITEM::HOLE_T ? aItem->ParentPadVia() : aItem;
+
+        if( owner && owner->Kind() == PNS::ITEM::VIA_T )
+        {
+            const PNS::VIA* via = static_cast<const PNS::VIA*>( owner );
+
+            m_dummyVias[aIdx].SetViaType( via->ViaType() );
+            m_dummyVias[aIdx].SetLayerPair( m_routerIface->GetBoardLayerFromPNSLayer( via->Layers().Start() ),
+                                            m_routerIface->GetBoardLayerFromPNSLayer( via->Layers().End() ) );
+            m_dummyVias[aIdx].SetWidth( PADSTACK::TEMP_ALL_LAYERS, via->Diameter( via->Layers().Start() ) );
+            m_dummyVias[aIdx].SetDrill( via->Drill() );
+        }
+        else
+        {
+            m_dummyVias[aIdx].SetViaType( VIATYPE::THROUGH );
+            m_dummyVias[aIdx].SetLayerPair( F_Cu, B_Cu );
+        }
+
         return &m_dummyVias[aIdx];
+    }
 
     case PNS::ITEM::SEGMENT_T:
     case PNS::ITEM::LINE_T:

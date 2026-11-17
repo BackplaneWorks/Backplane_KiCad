@@ -835,7 +835,9 @@ public:
             if( !cand.m_exclusions )
             {
                 if( head.Collide( cand.m_shape, cand.m_distance ) )
+                {
                     return 0;
+                }
 
                 continue;
             }
@@ -1030,7 +1032,8 @@ private:
      * against both.  \a aQuestion keeps the clearances of the three questions apart.
      */
     void collect( std::vector<VIA_NEIGHBOUR>& aOut, const ITEM* aItem, const ITEM* aHead, int aLayer,
-                  const COLLISION_SEARCH_OPTIONS& aOptions, int aQuestion, const BOX2I& aTile, int aDepth = 0 )
+                  const COLLISION_SEARCH_OPTIONS& aOptions, int aQuestion, const BOX2I& aTile, int aPlace,
+                  int aDepth = 0 )
     {
         if( aDepth > 3 || !aItem->CollisionCandidate( aHead ) )
             return;
@@ -1044,12 +1047,12 @@ private:
             if( aItem->Kind() == ITEM::HOLE_T || aItem->Net() != holeH->Net()
                     || resolver->HasUserDefinedPhysicalConstraint() )
             {
-                collect( aOut, aItem, holeH, aLayer, aOptions, aQuestion, aTile, aDepth + 1 );
+                collect( aOut, aItem, holeH, aLayer, aOptions, aQuestion, aTile, aPlace, aDepth + 1 );
             }
         }
 
         if( aItem->HasHole() && holeI && holeI->CollisionCandidate( aHead ) )
-            collect( aOut, holeI, aHead, aLayer, aOptions, aQuestion, aTile, aDepth + 1 );
+            collect( aOut, holeI, aHead, aLayer, aOptions, aQuestion, aTile, aPlace, aDepth + 1 );
 
         if( !aItem->Layers().Overlaps( aHead->Layers() ) )
             return;
@@ -1061,8 +1064,8 @@ private:
             return;
 
         auto& cache = aItem->BelongsTo( m_node ) && m_node->GetParent() ? m_branchViaClearance : m_viaClearance;
-        const std::pair<const ITEM*, int> k( aItem, aQuestion * 2 + ( aHead->Kind() == ITEM::HOLE_T ? 1 : 0 ) );
-        auto  found = cache.find( k );
+        const std::pair<const ITEM*, int> k( aItem, ( aQuestion * 2 + ( aHead->Kind() == ITEM::HOLE_T ? 1 : 0 ) ) * 64 + aPlace );
+        auto  found = aPlace < 0 ? cache.end() : cache.find( k );
         int   clr;
 
         if( found != cache.end() )
@@ -1072,7 +1075,9 @@ private:
         else
         {
             clr = aItem->CollisionClearance( aHead, m_node, &aOptions );
-            cache.emplace( k, clr );
+
+            if( aPlace >= 0 )
+                cache.emplace( k, clr );
         }
 
         if( clr < 0 )
@@ -1146,20 +1151,23 @@ private:
 
         const int question = aKind * 4;
 
+        // (a via in a tile an area's border runs through is asked about at the tile's middle)
+        const int where = place( via.Layers().Start(), box );
+
         for( int layer = via.Layers().Start(); layer <= via.Layers().End(); layer++ )
         {
             m_node->VisitNearby( layer, box, m_node->GetMaxClearance() + radius + 1,
                     [&]( ITEM* aItem )
                     {
-                        collect( aOut, aItem, &via, layer, any, question, box );
+                        collect( aOut, aItem, &via, layer, any, question, box, where );
 
                         if( aItem->OfKind( own.m_kindMask ) && aItem->Net() == m_net )
-                            collect( aOut, aItem, &via, layer, own, question + 1, box );
+                            collect( aOut, aItem, &via, layer, own, question + 1, box, where );
 
                         if( aHoleToHole > 0 && via.Hole() && aItem->OfKind( ITEM::HOLE_T )
                                 && via.Hole()->Layers().Overlaps( layer ) )
                         {
-                            collect( aOut, aItem, via.Hole(), layer, holes, question + 2, box );
+                            collect( aOut, aItem, via.Hole(), layer, holes, question + 2, box, where );
                         }
                     } );
         }
@@ -1172,10 +1180,71 @@ private:
         return ( uint64_t( aLayer ) << 48 ) | ( uint64_t( aTx + TILE_BIAS ) << 24 ) | uint64_t( aTy + TILE_BIAS );
     }
 
-    int clearance( const ITEM* aItem, const SEGMENT& aProto, int aLayer )
+    /**
+     * The rules a track is under may depend on where it is (inside a fanout area, a part's
+     * courtyard).  What the rules ask of a track alone at the tile's middle and corners says
+     * which place the tile is: the same everywhere in it, and clearances worked out in one
+     * tile serve every tile of that place.  A tile the border of an area runs through has no
+     * one answer (-1): there each clearance is the largest of the five.
+     */
+    int place( int aLayer, const BOX2I& aTile )
     {
+        RULE_RESOLVER* resolver = m_node->GetRuleResolver();
+        const VECTOR2I points[] = { aTile.Centre(), aTile.GetOrigin(), aTile.GetEnd(),
+                                    VECTOR2I( aTile.GetRight(), aTile.GetTop() ),
+                                    VECTOR2I( aTile.GetLeft(), aTile.GetBottom() ) };
+        int            value = 0;
+
+        for( int i = 0; i < 5; i++ )
+        {
+            SEGMENT probe( SEG( points[i], points[i] ), m_net );
+            probe.SetWidth( m_width );
+            probe.SetLayer( aLayer );
+
+            CONSTRAINT constraint;
+            int        here = 0;
+
+            if( resolver->QueryConstraint( CONSTRAINT_TYPE::CT_CLEARANCE, &probe, nullptr, aLayer, &constraint ) )
+                here = constraint.m_Value.Min();
+
+            if( i == 0 )
+                value = here;
+            else if( here != value )
+                return -1;
+        }
+
+        auto found = std::find( m_places.begin(), m_places.end(), value );
+
+        if( found == m_places.end() )
+        {
+            m_places.push_back( value );
+            return (int) m_places.size() - 1;
+        }
+
+        return int( found - m_places.begin() );
+    }
+
+    int clearance( const ITEM* aItem, const SEGMENT& aProto, int aLayer, int aPlace, const BOX2I& aTile )
+    {
+        if( aPlace < 0 )
+        {
+            int worst = -1;
+
+            for( const VECTOR2I& pt : { aTile.Centre(), aTile.GetOrigin(), aTile.GetEnd(),
+                                        VECTOR2I( aTile.GetRight(), aTile.GetTop() ),
+                                        VECTOR2I( aTile.GetLeft(), aTile.GetBottom() ) } )
+            {
+                SEGMENT probe( SEG( pt, pt ), m_net );
+                probe.SetWidth( m_width );
+                probe.SetLayer( aLayer );
+                worst = std::max( worst, aItem->CollisionClearance( &probe, m_node, &m_options ) );
+            }
+
+            return worst;
+        }
+
         auto& cache = aItem->BelongsTo( m_node ) && m_node->GetParent() ? m_branchClearance : m_rootClearance;
-        const std::pair<const ITEM*, int> k( aItem, aLayer );
+        const std::pair<const ITEM*, int> k( aItem, aLayer * 64 + aPlace );
         auto  it = cache.find( k );
 
         if( it != cache.end() )
@@ -1204,6 +1273,7 @@ private:
         proto.SetLayer( aLayer );
 
         RULE_RESOLVER* resolver = m_node->GetRuleResolver();
+        const int      where = place( aLayer, box );
 
         m_node->VisitNearby( aLayer, box, m_node->GetMaxClearance() + m_width / 2 + 1,
                 [&]( ITEM* aItem )
@@ -1214,7 +1284,7 @@ private:
                         return;
                     }
 
-                    const int clr = clearance( aItem, proto, aLayer );
+                    const int clr = clearance( aItem, proto, aLayer, where, box );
 
                     if( clr < 0 )
                         return;
@@ -1271,6 +1341,7 @@ private:
     std::unordered_map<std::pair<const ITEM*, int>, int, PAIR_HASH> m_viaClearance;
     std::unordered_map<std::pair<const ITEM*, int>, int, PAIR_HASH> m_branchViaClearance;
     int                                                             m_viaReach = 0;
+    std::vector<int>                                                m_places;     ///< see place()
 };
 
 
@@ -1300,6 +1371,9 @@ public:
         };
 
         std::vector<VIA_KIND>    m_viaKinds;
+
+        ///< The board's rules for a via of a kind at a place (its size, a disallow), or none
+        std::function<bool( int, const VECTOR2I& )> m_viaAllowed;
 
         ///< Local layers no track may run on: planes, which a stack of vias may pass
         std::vector<bool>        m_noTracks;
@@ -1913,9 +1987,13 @@ private:
 
             if( answer >= 0 )
             {
+                const bool ok = answer == 1
+                                && ( !m_p.m_viaAllowed || m_p.m_viaAllowed( aKind, cellPos( aIx, aIy ) ) );
+
+
                 m_stats.m_collisionChecks++;
-                state = answer ? 1 : 2;
-                return answer == 1;
+                state = ok ? 1 : 2;
+                return ok;
             }
         }
 
@@ -1945,6 +2023,9 @@ private:
 
         if( free )
             free = viaHolesClear( m_p.m_node, via, m_p.m_holeToHole );
+
+        if( free && m_p.m_viaAllowed )
+            free = m_p.m_viaAllowed( aKind, via.Pos() );
 
         m_stats.m_collisionChecks++;
         state = free ? 1 : 2;
@@ -2477,6 +2558,7 @@ NODE* SKETCH_ROUTER::Route( NODE* aWorld, const std::vector<SKETCH_CONNECTION>& 
     m_stats.m_elapsedMs = double( nowMs() - start );
     m_fields.clear();
     m_passChanges.clear();
+    m_viaAllowedTiles.clear();
 
     if( best && bestRouted <= 0 )
     {
@@ -4248,6 +4330,41 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         params.m_viaField = m_options.m_viaField;
         params.m_pitch = attemptPitch;
         params.m_viaKinds = viaKinds;
+
+        if( m_options.m_viaAllowed && !m_options.m_viaKinds.empty() )
+        {
+            // The rules are asked per millimetre tile: at its middle and corners, and where
+            // those agree that is the answer for all of it
+            params.m_viaAllowed =
+                    [this, &aConn]( int aKind, const VECTOR2I& aPos )
+                    {
+                        const SKETCH_VIA_KIND& kind = m_options.m_viaKinds[aKind];
+                        const int              tx = aPos.x >> 20;
+                        const int              ty = aPos.y >> 20;
+                        auto [it, isNew] = m_viaAllowedTiles.try_emplace( { aConn.m_net, aKind, tx, ty }, 0 );
+
+                        if( isNew )
+                        {
+                            const int      size = 1 << 20;
+                            const VECTOR2I o( tx * size, ty * size );
+                            int            yes = 0;
+
+                            for( const VECTOR2I& pt : { o + VECTOR2I( size / 2, size / 2 ), o,
+                                                        o + VECTOR2I( size - 1, 0 ), o + VECTOR2I( 0, size - 1 ),
+                                                        o + VECTOR2I( size - 1, size - 1 ) } )
+                            {
+                                yes += m_options.m_viaAllowed( kind, aConn.m_net, pt ) ? 1 : 0;
+                            }
+
+                            it->second = yes == 5 ? 1 : yes == 0 ? 0 : -1;
+                        }
+
+                        if( it->second >= 0 )
+                            return it->second == 1;
+
+                        return m_options.m_viaAllowed( kind, aConn.m_net, aPos );
+                    };
+        }
         params.m_noTracks = noTracks;
         params.m_layers = layers;
         params.m_startLayers = startMask;
@@ -4877,6 +4994,28 @@ void SKETCH_ROUTER::BoardConventions( BOARD* aBoard, ROUTER_IFACE* aIface,
             kind.m_cost += 6000000.0 * ( 1.0 - double( count ) / vias );
 
         aOptions.m_viaKinds.push_back( kind );
+
+        // And the smallest the board uses, for where its rules allow no larger (a fanout
+        // area): a little dearer, so the usual size is taken wherever it fits
+        const SIZE* small = nullptr;
+
+        for( const SIZE& size : sizes )
+        {
+            if( size.m_count >= 2 && size.m_diameter < pick->m_diameter
+                    && ( !small || size.m_diameter < small->m_diameter ) )
+            {
+                small = &size;
+            }
+        }
+
+        if( small )
+        {
+            kind.m_diameter = small->m_diameter;
+            kind.m_drill = small->m_drill;
+            kind.m_like = small->m_first;
+            kind.m_cost += 100000.0;
+            aOptions.m_viaKinds.push_back( kind );
+        }
     }
 }
 

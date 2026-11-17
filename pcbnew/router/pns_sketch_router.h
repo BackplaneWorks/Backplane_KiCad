@@ -24,6 +24,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <tuple>
 #include <vector>
 
 #include <math/box2.h>
@@ -105,6 +106,10 @@ struct SKETCH_ROUTER_OPTIONS
 
     ///< The vias to change layer with.  Empty: a through via of each net's own size.
     std::vector<SKETCH_VIA_KIND> m_viaKinds;
+
+    ///< Whether the board's rules allow a via of this kind, on this net, at this place (its
+    ///< diameter, hole and annular ring, a disallow rule).  Unset: anywhere.
+    std::function<bool( const SKETCH_VIA_KIND&, NET_HANDLE, const VECTOR2I& )> m_viaAllowed;
 
     ///< PNS layer the routes should run on where they can (usually the active layer), or -1.
     int m_preferredLayer = -1;
@@ -379,6 +384,9 @@ private:
 
     std::map<std::pair<NET_HANDLE, int>, std::unique_ptr<SKETCH_FIELD>> m_fields;
     std::vector<FIELD_CHANGE>        m_passChanges;   ///< copper the current pass added
+
+    ///< By net, kind of via and tile: 1 the rules allow it there, 0 not, -1 it depends where
+    std::map<std::tuple<NET_HANDLE, int, int, int>, int8_t> m_viaAllowedTiles;
     std::function<bool( int, int )>  m_progressCallback;
     std::vector<int>                 m_layers;
     DIRECTION_45::CORNER_MODE        m_cornerMode;

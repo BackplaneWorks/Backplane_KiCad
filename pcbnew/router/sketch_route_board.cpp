@@ -28,6 +28,8 @@
 #include <netinfo.h>
 #include <pcb_track.h>
 #include <cstdlib>
+#include <map>
+#include <memory>
 #include <string>
 
 #include <wx/filename.h>
@@ -109,6 +111,70 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
     options.m_guide = aRequest.m_guide;
     options.m_allowVias = aRequest.m_allowVias;
     options.m_trackWidth = aRequest.m_trackWidth;
+
+    // The board's rules may hold a via to a size by where it is (a smaller laser via only
+    // inside a fine-pitch part's fanout): ask them for each kind where the search would put one
+    std::map<const PNS::SKETCH_VIA_KIND*, std::unique_ptr<PCB_VIA>> probes;
+
+    options.m_viaAllowed =
+            [&]( const PNS::SKETCH_VIA_KIND& aKind, PNS::NET_HANDLE aNet, const VECTOR2I& aPos ) -> bool
+            {
+                std::unique_ptr<PCB_VIA>& probe = probes[&aKind];
+
+                if( !probe )
+                {
+                    if( aKind.m_like && aKind.m_like->Type() == PCB_VIA_T )
+                    {
+                        probe.reset( static_cast<PCB_VIA*>( aKind.m_like->Clone() ) );
+                    }
+                    else
+                    {
+                        probe = std::make_unique<PCB_VIA>( aBoard );
+                        probe->SetViaType( (VIATYPE) aKind.m_type );
+                        probe->SetLayerPair( iface.GetBoardLayerFromPNSLayer( aKind.m_layerStart ),
+                                             iface.GetBoardLayerFromPNSLayer( aKind.m_layerEnd ) );
+                        probe->SetWidth( PADSTACK::TEMP_ALL_LAYERS, aKind.m_diameter );
+                        probe->SetDrill( aKind.m_drill );
+                    }
+
+                    probe->SetParent( aBoard );
+
+                    // It moves: nothing the rules work out about it may be kept
+                    probe->SetFlags( ROUTER_TRANSIENT );
+                }
+
+                probe->SetPosition( aPos );
+
+                if( NETINFO_ITEM* net = static_cast<NETINFO_ITEM*>( aNet ) )
+                    probe->SetNet( net );
+
+                DRC_ENGINE&        engine = *bds.m_DRCEngine;
+                const PCB_LAYER_ID layer = probe->TopLayer();
+
+                auto within =
+                        [&]( DRC_CONSTRAINT_T aType, int aValue )
+                        {
+                            DRC_CONSTRAINT c = engine.EvalRules( aType, probe.get(), nullptr, layer );
+
+                            if( c.IsNull() || c.GetSeverity() == RPT_SEVERITY_IGNORE )
+                                return true;
+
+                            return ( !c.GetValue().HasMin() || aValue >= c.GetValue().Min() )
+                                   && ( !c.GetValue().HasMax() || aValue <= c.GetValue().Max() );
+                        };
+
+                if( !within( VIA_DIAMETER_CONSTRAINT, aKind.m_diameter )
+                        || !within( HOLE_SIZE_CONSTRAINT, aKind.m_drill )
+                        || !within( ANNULAR_WIDTH_CONSTRAINT, ( aKind.m_diameter - aKind.m_drill ) / 2 ) )
+                {
+                    return false;
+                }
+
+                DRC_CONSTRAINT disallow = engine.EvalRules( DISALLOW_CONSTRAINT, probe.get(), nullptr,
+                                                            UNDEFINED_LAYER );
+
+                return !disallow.m_DisallowFlags || disallow.GetSeverity() == RPT_SEVERITY_IGNORE;
+            };
 
     if( aRequest.m_timeLimitMs > 0 )
         options.m_timeLimitMs = aRequest.m_timeLimitMs;
