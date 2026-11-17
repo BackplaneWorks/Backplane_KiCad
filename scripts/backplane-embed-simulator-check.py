@@ -244,6 +244,25 @@ def main():
                                                      wait_ms=1000), sim.RunSimulationResponse))
         check(good.status == sim.SIM_OK and good.shown, "the next shown run is clean (the override is forgotten)")
 
+        # max_run_points in the GUI process, both ways: a shown run (the window's own) and a
+        # background one are stopped at the limit with their points; no dialog, and it runs after
+        for shown in (True, False):
+            capped = collect(api.request(sim.RunSimulation(document=document, command=".tran 1u 5", show=shown,
+                                                           signals=["V(/out)"], max_run_points=30000,
+                                                           max_points=200, wait_ms=1000),
+                                         sim.RunSimulationResponse))
+            limit = [p for p in capped.problems if p.kind == sim.PK_POINT_LIMIT]
+            check(capped.status == sim.SIM_POINT_LIMIT and capped.shown == shown and len(limit) == 1
+                  and 0 < capped.points < 31000 and 2 <= len(capped.vectors[0].real) <= 200
+                  and capped.thinning == sim.TH_MIN_MAX,
+                  f"GUI: max_run_points stops a {'shown' if shown else 'background'} run "
+                  f"({capped.points} points, status {capped.status})")
+        after = collect(api.request(sim.RunSimulation(document=document, command=".tran 5u 5m", show=True,
+                                                      signals=["V(/out)"], wait_ms=1000), sim.RunSimulationResponse))
+        check(after.status == sim.SIM_OK and after.shown and after.max_run_points == 5000000,
+              "the next shown run is whole (limit 5000000)")
+        check(not set(s.watcher.current()) - before, "no dialog appeared for the limit")
+
         # The saved set-up, with the window open
         answer = api.request(sim.SetSimulationSetup(document=document, command=".ac dec 10 1 100k",
                                                     signals=["V(/out)"]), sim.SetupResponse)

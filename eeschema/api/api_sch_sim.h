@@ -112,6 +112,14 @@ public:
         m_breaks = std::move( aBreaks );
     }
 
+    /// Have ngspice save only these (RunSimulation.signals, and the vectors its measures name as
+    /// "v(x)" / "i(x)") instead of every voltage and current.  Applied when the schematic is read,
+    /// and only when every one of them is a net's voltage or a two-pin part's current.
+    void SetSaves( std::vector<std::string> aSignals ) { m_saveSignals = std::move( aSignals ); }
+
+    /// True when the last netlist saves only what SetSaves named
+    bool SavedRequestedOnly() const { return m_savedOnly; }
+
     /// What each break became in the last netlist
     const std::vector<kiapi::backplane::sim::BrokenPin>& Broken() const { return m_broken; }
 
@@ -131,10 +139,18 @@ public:
 protected:
     wxString GenerateItemPinNetName( const wxString& aNetName, int& aNcCounter ) const override;
 
+    void WriteDirectives( const wxString& aSimCommand, unsigned aSimOptions,
+                          OUTPUTFORMATTER& aFormatter ) const override;
+
 private:
     mutable std::map<wxString, wxString>  m_netNodes;
     std::vector<wxString>                 m_runDirectives;
     std::vector<BREAK_REQUEST>            m_breaks;
+    std::vector<std::string>              m_saveSignals;
+    bool                                  m_savedOnly = false;
+
+    /// The .save / .probe lines for m_saveSignals; false when one of them cannot be saved alone
+    bool saveLines( std::vector<wxString>& aLines ) const;
     std::vector<kiapi::backplane::sim::BrokenPin> m_broken;
     std::chrono::steady_clock::time_point m_writtenAt;
 };
@@ -173,6 +189,10 @@ bool SetOverrides( CIRCUIT& aCircuit,
 wxString SavedCommand( SCHEMATIC* aSchematic, KIWAY* aKiway, unsigned* aOptions );
 
 
+/// RunSimulation.max_run_points when the request gives none: values (points x saved vectors) a
+/// run may produce before it is stopped as SIM_POINT_LIMIT.  40 MB of doubles in ngspice.
+constexpr uint64_t DEFAULT_MAX_RUN_POINTS = 5000000;
+
 /// What a run needs from its request and its netlist once the schematic is out of the picture.
 struct RUN_REQUEST
 {
@@ -184,6 +204,8 @@ struct RUN_REQUEST
     bool                     show = false;
     unsigned                 timeoutMs = 120000;
     unsigned                 maxPoints = 0;
+    kiapi::backplane::sim::Thinning thinning = kiapi::backplane::sim::TH_MIN_MAX;
+    uint64_t                 maxRunPoints = DEFAULT_MAX_RUN_POINTS;
     unsigned                 options = 0;
 
     /// RunSimulation.netlist: ngspice gets this text, not the schematic's export

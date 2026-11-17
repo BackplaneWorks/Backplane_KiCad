@@ -240,6 +240,8 @@ enum ProblemKind
                                  // ngspice has no code models loaded: its *.cm files are not in
                                  // the runtime (a packaging fault), or ngspice does not know the
                                  // code model the element's .model names
+  PK_POINT_LIMIT          = 16;  // the run reached max_run_points and was stopped (capability
+                                 // `sim-run-points-cap`); the message gives the points and where
 }
 
 enum ProblemSeverity
@@ -463,6 +465,21 @@ enum RunStatus
   SIM_ABORTED         = 8;   // stopped by StopSimulation or by the person
   SIM_ERROR           = 9;   // any other failure (see problems and log)
   SIM_RUNNING         = 10;  // not finished within wait_ms: collect it with GetSimulationResult
+  SIM_POINT_LIMIT     = 11;  // the run reached max_run_points and was stopped; the answer has the
+                             // points up to there (capability `sim-run-points-cap`)
+}
+
+// How max_points made a vector shorter (capability `sim-thin-minmax`).
+enum Thinning
+{
+  TH_NONE      = 0;  // in a request: TH_MIN_MAX.  In an answer: no vector was thinned
+  TH_MIN_MAX   = 1;  // the points kept are, of each of max_points/2 or fewer equal stretches of the
+                     // sweep, where each returned vector is lowest and highest there (a complex
+                     // vector: its magnitude), with the first and the last point: no peak or dip
+                     // of a returned vector is lost.  Every vector of a plot keeps the same
+                     // points, in sweep order, so they still share the sweep axis
+  TH_EVERY_NTH = 2;  // every Nth point, the first and the last always (what bp.13.2 did before
+                     // the capability); a peak between two kept points is lost
 }
 
 enum VectorKind
@@ -545,6 +562,14 @@ message RunSimulation
   // The vectors to return with their data: "V(/out)", "I(R1)", an ngspice vector name, or a net
   // name ("/out", "OUT").  "*" = all.  None: names and lengths only.  The sweep axis comes first
   // whenever any data is returned.
+  //
+  // With capability `sim-thin-minmax`, a .tran, .ac or .dc run asked for at most 32 signals has
+  // ngspice save only those (.save / .probe lines replace ".save all" and ".probe alli"), so a
+  // long run does not hold every node and current: the answer says saved_requested_only and
+  // lists only those vectors.  Everything is saved as before when a signal is "*" or is not a
+  // net's voltage or a two-pin part's current, when a measure names a vector by anything but
+  // v(...), i(...) and their vdb/vm/vp/vr/vi forms, when `options` sets save_all_*, a
+  // directive is .save or .probe, there is an fft line, `breaks`, `show`, or `netlist`.
   repeated string signals = 5;
 
   // ngspice measurements run after the analysis, each a `meas` statement without the leading
@@ -568,8 +593,7 @@ message RunSimulation
   // GUI process at most 1000 (the UI thread waits with it); headless at most timeout_ms.
   optional uint32 wait_ms = 11;
 
-  // Return at most this many points of each vector (every Nth point, the first and the last
-  // always).  0 = all.
+  // Return at most this many points of each vector, thinned as `thinning` says.  0 = all.
   uint32 max_points = 12;
 
   // When set, ngspice gets this text instead of the netlist exported from the schematic (a host's
@@ -585,6 +609,17 @@ message RunSimulation
   // breaks is not shown in the Simulator window.  A reference or pin the schematic does not
   // have is SIM_NETLIST_ERROR naming it.
   repeated Break breaks = 14;
+
+  // Stop the run when ngspice has produced this many values: points of the sweep x vectors it
+  // saves (so the memory the run takes in KiCad is bounded: 8 bytes a value, 16 for .ac).  The
+  // answer is then SIM_POINT_LIMIT with PK_POINT_LIMIT and the points up to there, as SIM_TIMEOUT
+  // has them.  0 = 5000000; there is no "no limit", give a larger number.  It applies to every
+  // RunSimulation, `show` and `netlist` included; a run the person starts in the Simulator
+  // window has no limit.  Capability `sim-run-points-cap`.
+  uint64 max_run_points = 15;
+
+  // How max_points thins.  Left out: TH_MIN_MAX.  Capability `sim-thin-minmax`.
+  Thinning thinning = 16;
 }
 
 message RunSimulationResponse
@@ -609,6 +644,15 @@ message RunSimulationResponse
   string           code_models = 18;  // the directory ngspice's code models (*.cm) were loaded from;
                                       // empty: none found, XSPICE parts cannot be simulated
   repeated BrokenPin broken = 19;     // with `breaks`: what each became
+  Thinning         thinning = 20;     // how max_points thinned the vectors returned; TH_NONE: none
+                                      // was thinned.  TH_EVERY_NTH without having asked for it:
+                                      // max_points was too small for the extremes of that many vectors
+  bool             saved_requested_only = 21;  // ngspice saved only the vectors `signals` (and the
+                                      // measures) name, with the sweep axis: `vectors` lists no
+                                      // other.  See RunSimulation.signals
+  uint64           run_values = 22;   // values ngspice produced (points x saved vectors), what
+                                      // max_run_points limits
+  uint64           max_run_points = 23;  // the limit this run had
 }
 
 // Collect a run that was answered SIM_RUNNING.  Waits up to wait_ms like RunSimulation, and

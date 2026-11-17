@@ -265,8 +265,107 @@ bool SIM_API::CIRCUIT::ReadSchematicAndLibraries( unsigned aNetlistOptions, REPO
         m_broken.push_back( broken );
     }
 
+    // Only what was asked for is saved, when all of it can be named to ngspice
+    m_savedOnly = !m_saveSignals.empty() && ok && saveLines( lines );
+
     SetExtraDirectives( lines );
     return ok;
+}
+
+
+bool SIM_API::CIRCUIT::saveLines( std::vector<wxString>& aLines ) const
+{
+    std::set<std::string> saves;
+    std::set<std::string> probes;
+
+    for( const std::string& asked : m_saveSignals )
+    {
+        std::string signal = lower( trimmed( asked ) );
+
+        signal.erase( std::remove( signal.begin(), signal.end(), ' ' ), signal.end() );
+
+        if( signal.size() > 3 && signal.rfind( "i(", 0 ) == 0 && signal.back() == ')' )
+        {
+            // The current of a two-pin part: ngspice measures it with .probe ("r1#branch"); a
+            // voltage source's is there already
+            std::string name = signal.substr( 2, signal.size() - 3 );
+            std::string item;
+
+            for( const SPICE_ITEM& candidate : GetItems() )
+            {
+                if( !candidate.model || !candidate.model->IsEnabled() )
+                    continue;
+
+                std::string itemName = lower( candidate.model->SpiceGenerator().ItemName( candidate ) );
+
+                if( ( lower( candidate.refName ) == name || itemName == name ) && candidate.model->GetPinCount() == 2 )
+                    item = itemName;
+            }
+
+            if( item.empty() || std::string( "rclvid" ).find( item[0] ) == std::string::npos )
+                return false;
+
+            if( item[0] == 'v' )
+            {
+                saves.insert( "i(" + item + ")" );
+            }
+            else
+            {
+                probes.insert( "i(" + item + ")" );
+                saves.insert( item + "#branch" );
+            }
+
+            continue;
+        }
+
+        if( signal.size() > 3 && signal.rfind( "v(", 0 ) == 0 && signal.back() == ')' )
+            signal = signal.substr( 2, signal.size() - 3 );
+
+        std::string node;
+
+        for( const auto& [net, ngNode] : m_netNodes )
+        {
+            std::string netLower = lower( utf8( net ) );
+            std::string nodeLower = lower( utf8( ngNode ) );
+
+            if( netLower == signal || netLower == "/" + signal || nodeLower == signal || nodeLower == "/" + signal )
+                node = nodeLower;
+        }
+
+        if( node.empty() || node == "0" || node.find_first_of( " ,()" ) != std::string::npos )
+            return false;
+
+        saves.insert( "v(" + node + ")" );
+    }
+
+    if( saves.empty() )
+        return false;
+
+    std::string save = ".save";
+
+    for( const std::string& vector : saves )
+        save += " " + vector;
+
+    aLines.push_back( wxString::FromUTF8( save ) );
+
+    for( const std::string& probe : probes )
+        aLines.push_back( wxString::FromUTF8( ".probe " + probe ) );
+
+    return true;
+}
+
+
+void SIM_API::CIRCUIT::WriteDirectives( const wxString& aSimCommand, unsigned aSimOptions,
+                                        OUTPUTFORMATTER& aFormatter ) const
+{
+    // The run's own .save and .probe lines stand for ".save all" and ".probe alli"
+    if( m_savedOnly )
+    {
+        aSimOptions &= ~( NETLIST_EXPORTER_SPICE::OPTION_SAVE_ALL_VOLTAGES
+                          | NETLIST_EXPORTER_SPICE::OPTION_SAVE_ALL_CURRENTS );
+    }
+
+    SPICE_CIRCUIT_MODEL::WriteDirectives( aSimCommand, aSimOptions, aFormatter );
 }
 
 
@@ -485,7 +584,8 @@ enum class STOP_REASON
 {
     NONE,
     TIMEOUT,
-    ABORT
+    ABORT,
+    POINTS
 };
 
 
@@ -760,6 +860,7 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
     std::mutex              mutex;
     std::condition_variable cv;
     bool                    finished = false;
+    bool                    budgetHit = false;   ///< the run reached max_run_points (under mutex)
 
     std::unique_lock<std::mutex> simLock;
     REPORTER*                    previousReporter = nullptr;
@@ -770,6 +871,15 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
     bool                         inWindow = false;            ///< the run is the Simulator window's own
     SIM_STATE_LISTENER*          forwardListener = nullptr;   ///< the window's, told as well (under mutex)
     std::vector<std::string>     ownedPlots;
+    Thinning                     thinned = TH_NONE;           ///< how this result's vectors were thinned
+    std::string                  axisName;                    ///< of the main plot, with its last value
+    double                       axisEnd = 0.0;
+
+    bool BudgetHit()
+    {
+        std::lock_guard<std::mutex> lock( mutex );
+        return budgetHit;
+    }
 
     void OnSimStateChange( SIMULATOR* aObject, SIM_STATE aNewState ) override
     {
@@ -875,6 +985,9 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
             SIM_STATE_LISTENER* listener = nullptr;
             REPORTER*           reporter = nullptr;
 
+            // The person's own runs have no limit
+            sim->SetPointBudget( 0, nullptr );
+
             {
                 std::lock_guard<std::mutex> lock( mutex );
                 listener = previousListener;
@@ -916,6 +1029,12 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
 
         if( sim )
             aOut.set_code_models( sim->CodeModelsPath() );
+
+        if( sim && active )
+            aOut.set_run_values( sim->ValuesProduced() );
+
+        aOut.set_max_run_points( request.maxRunPoints );
+        aOut.set_saved_requested_only( circuit && !inWindow && circuit->SavedRequestedOnly() );
 
         for( const BrokenPin& pin : broken )
             *aOut.add_broken() = pin;
@@ -1069,26 +1188,196 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
         return names;
     }
 
-    void Decimate( const std::vector<double>& aIn, google::protobuf::RepeatedField<double>* aOut )
+    /// A vector whose data goes in the response
+    struct SENT
     {
-        size_t count = aIn.size();
+        Vector*             vector = nullptr;
+        std::vector<double> real;
+        std::vector<double> imag;   ///< empty unless complex
+        bool                isAxis = false;
+    };
 
-        if( request.maxPoints < 2 || count <= request.maxPoints )
+    /// The points to keep of vectors of aCount points so that none of them loses an extreme: of
+    /// each of B equal stretches, where each vector is lowest and highest, with the first and the
+    /// last point; B the most that keeps max_points or fewer.  Empty when even B = 1 is too many.
+    std::vector<size_t> MinMaxPoints( const std::vector<SENT*>& aVectors, size_t aCount )
+    {
+        std::vector<const SENT*> vectors;
+
+        // The sweep axis rises with its index: it has no extremes of its own to keep
+        for( const SENT* candidate : aVectors )
         {
-            aOut->Reserve( static_cast<int>( count ) );
-
-            for( double value : aIn )
-                aOut->AddAlreadyReserved( value );
-
-            return;
+            if( !candidate->isAxis )
+                vectors.push_back( candidate );
         }
 
-        size_t stride = ( count - 1 + request.maxPoints - 2 ) / ( request.maxPoints - 1 );
+        if( vectors.empty() )
+            vectors.assign( aVectors.begin(), aVectors.end() );
 
-        for( size_t ii = 0; ii < count - 1; ii += stride )
-            aOut->Add( aIn[ii] );
+        const size_t         most = request.maxPoints;
+        std::vector<uint8_t> mark;
 
-        aOut->Add( aIn[count - 1] );
+        auto trial = [&]( size_t aBuckets ) -> size_t
+        {
+            mark.assign( aCount, 0 );
+            mark[0] = 1;
+            mark[aCount - 1] = 1;
+
+            for( const SENT* sent : vectors )
+            {
+                const double* real = sent->real.data();
+                const double* imag = sent->imag.size() == aCount ? sent->imag.data() : nullptr;
+
+                auto key = [&]( size_t aIndex )
+                {
+                    return imag ? real[aIndex] * real[aIndex] + imag[aIndex] * imag[aIndex] : real[aIndex];
+                };
+
+                for( size_t bucket = 0; bucket < aBuckets; ++bucket )
+                {
+                    size_t from = bucket * aCount / aBuckets;
+                    size_t to = ( bucket + 1 ) * aCount / aBuckets;
+
+                    if( from >= to )
+                        continue;
+
+                    size_t lowest = from;
+                    size_t highest = from;
+                    double low = key( from );
+                    double high = low;
+
+                    for( size_t ii = from + 1; ii < to; ++ii )
+                    {
+                        double value = key( ii );
+
+                        if( value < low )
+                        {
+                            low = value;
+                            lowest = ii;
+                        }
+                        else if( value > high )
+                        {
+                            high = value;
+                            highest = ii;
+                        }
+                    }
+
+                    mark[lowest] = 1;
+                    mark[highest] = 1;
+                }
+            }
+
+            return static_cast<size_t>( std::count( mark.begin(), mark.end(), 1 ) );
+        };
+
+        size_t best = 0;
+        size_t tried = 0;
+        size_t low = 1;
+        size_t high = most / 2;
+
+        while( low <= high )
+        {
+            // One vector's extremes fit in most / 2 stretches: tried first
+            size_t middle = best == 0 && tried == 0 ? high : low + ( high - low ) / 2;
+
+            tried = middle;
+
+            if( trial( middle ) <= most )
+            {
+                best = middle;
+                low = middle + 1;
+            }
+            else
+            {
+                high = middle - 1;
+            }
+        }
+
+        if( best == 0 )
+            return {};
+
+        if( tried != best )
+            trial( best );
+
+        std::vector<size_t> keep;
+
+        for( size_t ii = 0; ii < aCount; ++ii )
+        {
+            if( mark[ii] )
+                keep.push_back( ii );
+        }
+
+        return keep;
+    }
+
+    /// The data of the vectors to return, thinned to max_points: vectors of one length keep the
+    /// same points (they share the sweep axis)
+    void Fill( std::vector<SENT>& aSent )
+    {
+        std::map<size_t, std::vector<SENT*>> byLength;
+
+        for( SENT& sent : aSent )
+            byLength[sent.real.size()].push_back( &sent );
+
+        for( auto& [count, group] : byLength )
+        {
+            std::vector<size_t> keep;
+            bool                thin = request.maxPoints >= 2 && count > request.maxPoints;
+
+            if( thin )
+            {
+                Thinning how = request.thinning == TH_EVERY_NTH ? TH_EVERY_NTH : TH_MIN_MAX;
+
+                if( how == TH_MIN_MAX )
+                    keep = MinMaxPoints( group, count );
+
+                if( keep.empty() )
+                {
+                    size_t stride = ( count - 1 + request.maxPoints - 2 ) / ( request.maxPoints - 1 );
+
+                    how = TH_EVERY_NTH;
+
+                    for( size_t ii = 0; ii < count - 1; ii += stride )
+                        keep.push_back( ii );
+
+                    keep.push_back( count - 1 );
+                }
+
+                // Said of the whole answer: every Nth point anywhere is what a reader must know
+                if( thinned != TH_EVERY_NTH )
+                    thinned = how;
+            }
+
+            for( SENT* sent : group )
+            {
+                auto put = [&]( const std::vector<double>& aIn, google::protobuf::RepeatedField<double>* aOut )
+                {
+                    if( !thin )
+                    {
+                        aOut->Reserve( static_cast<int>( aIn.size() ) );
+
+                        for( double value : aIn )
+                            aOut->AddAlreadyReserved( value );
+
+                        return;
+                    }
+
+                    aOut->Reserve( static_cast<int>( keep.size() ) );
+
+                    for( size_t index : keep )
+                        aOut->AddAlreadyReserved( aIn[index] );
+                };
+
+                put( sent->real, sent->vector->mutable_real() );
+
+                if( sent->imag.size() == count )
+                    put( sent->imag, sent->vector->mutable_imag() );
+
+                // Not held longer than needed
+                std::vector<double>().swap( sent->real );
+                std::vector<double>().swap( sent->imag );
+            }
+        }
     }
 
     /// Read the current plot's vectors into the response
@@ -1112,7 +1401,8 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
                 wanted[signal] = Wanted( signal );
         }
 
-        bool anyData = all || !wanted.empty();
+        bool              anyData = all || !wanted.empty();
+        std::vector<SENT> sent;
 
         // The sweep axis first
         std::stable_sort( names.begin(), names.end(),
@@ -1135,7 +1425,11 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
                 continue;
 
             if( isAxis && aMainPlot )
+            {
                 aOut.set_points( static_cast<int>( real.size() ) );
+                axisName = nameLower;
+                axisEnd = real.back();
+            }
 
             if( real.size() == 1 && !isAxis )
             {
@@ -1173,12 +1467,18 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
 
             if( send )
             {
-                Decimate( real, vector->mutable_real() );
+                SENT& kept = sent.emplace_back();
 
-                if( isComplex )
-                    Decimate( imag, vector->mutable_imag() );
+                kept.vector = vector;
+                kept.real = std::move( real );
+                kept.isAxis = isAxis;
+
+                if( isComplex && imag.size() == kept.real.size() )
+                    kept.imag = std::move( imag );
             }
         }
+
+        Fill( sent );
     }
 
     void Finalize()
@@ -1206,6 +1506,9 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
         std::set<std::string> matched;
 
         measureNames.clear();
+        thinned = TH_NONE;
+        axisName.clear();
+        axisEnd = 0.0;
 
         try
         {
@@ -1342,6 +1645,8 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
         if( out.points() == 0 && !out.values().empty() )
             out.set_points( 1 );
 
+        out.set_thinning( thinned );
+
         // A run that left nothing behind failed, whatever the console said
         if( out.vectors().empty() && out.values().empty() )
             failed = true;
@@ -1399,6 +1704,25 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
             problem->set_kind( PK_TIMEOUT );
             problem->set_severity( PS_ERROR );
             problem->set_message( "the run was stopped after " + std::to_string( request.timeoutMs ) + " ms" );
+        }
+        else if( stopped == STOP_REASON::POINTS )
+        {
+            char where[64] = "";
+
+            if( !axisName.empty() )
+                snprintf( where, sizeof( where ), ", %s = %.6g", axisName.c_str(), axisEnd );
+
+            out.set_status( SIM_POINT_LIMIT );
+            Problem* problem = out.add_problems();
+            problem->set_kind( PK_POINT_LIMIT );
+            problem->set_severity( PS_ERROR );
+            problem->set_message( "the run was stopped at " + std::to_string( out.points() ) + " points" + where
+                                  + ": ngspice had produced " + std::to_string( out.run_values() )
+                                  + " values (points x saved vectors) and max_run_points is "
+                                  + std::to_string( request.maxRunPoints )
+                                  + ".  The vectors hold the run up to there.  Ask for fewer signals (only "
+                                    "they are then saved), a shorter or coarser analysis, or a larger "
+                                    "max_run_points" );
         }
         else if( stopped == STOP_REASON::ABORT )
         {
@@ -1475,6 +1799,9 @@ SIM_API::RUNNER::RUNNER() :
 
 SIM_API::RUNNER::~RUNNER()
 {
+    if( m_impl->sim )
+        m_impl->sim->SetPointBudget( 0, nullptr );
+
     if( m_impl->watchdog.joinable() )
     {
         {
@@ -1554,6 +1881,7 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
     impl.loadLines = 0;
     impl.result.Clear();
     impl.stopReason = STOP_REASON::NONE;
+    impl.thinned = TH_NONE;
     impl.itemRefs.clear();
     impl.nodeNets.clear();
     impl.nodes.clear();
@@ -1570,6 +1898,7 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
     {
         std::lock_guard<std::mutex> lock( impl.mutex );
         impl.finished = false;
+        impl.budgetHit = false;
     }
 
     auto failNow = [&]( RunStatus aStatus, ProblemKind aKind, const std::string& aMessage )
@@ -1795,6 +2124,19 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
             return failNow( SIM_FLOATING_NODE, PK_NO_GROUND, "" );
     }
 
+    // The run's memory is bounded: ngspice's thread says when it has made max_run_points values and
+    // makes no more until it is stopped (asked for below, on the main thread)
+    impl.sim->SetPointBudget( aRequest.maxRunPoints,
+                              [this]()
+                              {
+                                  {
+                                      std::lock_guard<std::mutex> lock( m_impl->mutex );
+                                      m_impl->budgetHit = true;
+                                  }
+
+                                  m_impl->cv.notify_all();
+                              } );
+
     if( impl.inWindow )
     {
         started = aRequest.startInWindow();
@@ -1832,28 +2174,38 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
             {
                 IMPL&                        watched = *m_impl;
                 std::unique_lock<std::mutex> lock( watched.mutex );
+                bool                         pointsTold = false;
 
-                if( watched.cv.wait_until( lock, deadline,
-                                           [&]()
-                                           {
-                                               return watched.finished;
-                                           } ) )
+                while( !watched.finished )
                 {
-                    return;
-                }
+                    bool woke = watched.cv.wait_until( lock, deadline,
+                                                       [&]()
+                                                       {
+                                                           return watched.finished
+                                                                  || ( watched.budgetHit && !pointsTold );
+                                                       } );
 
-                lock.unlock();
+                    if( watched.finished )
+                        return;
 
-                if( wxTheApp )
-                {
-                    wxTheApp->CallAfter(
-                            [run]()
-                            {
-                                IMPL& timed = *RUNNER::Get().m_impl;
+                    STOP_REASON reason = woke ? STOP_REASON::POINTS : STOP_REASON::TIMEOUT;
 
-                                if( timed.active && timed.id == run )
-                                    timed.StopRun( STOP_REASON::TIMEOUT );
-                            } );
+                    pointsTold = true;
+
+                    if( wxTheApp )
+                    {
+                        wxTheApp->CallAfter(
+                                [run, reason]()
+                                {
+                                    IMPL& stopped = *RUNNER::Get().m_impl;
+
+                                    if( stopped.active && stopped.id == run )
+                                        stopped.StopRun( reason );
+                                } );
+                    }
+
+                    if( reason == STOP_REASON::TIMEOUT )
+                        return;
                 }
             } );
 
@@ -1878,13 +2230,13 @@ bool SIM_API::RUNNER::Collect( uint64_t aId, unsigned aWaitMs, RunSimulationResp
             impl.cv.wait_until( lock, std::min( until, impl.deadline ),
                                 [&]()
                                 {
-                                    return impl.finished;
+                                    return impl.finished || impl.budgetHit;
                                 } );
         }
 
-        if( !impl.Finished() && steady_clock::now() >= impl.deadline )
+        if( !impl.Finished() && ( impl.BudgetHit() || steady_clock::now() >= impl.deadline ) )
         {
-            impl.StopRun( STOP_REASON::TIMEOUT );
+            impl.StopRun( impl.BudgetHit() ? STOP_REASON::POINTS : STOP_REASON::TIMEOUT );
 
             std::unique_lock<std::mutex> lock( impl.mutex );
 

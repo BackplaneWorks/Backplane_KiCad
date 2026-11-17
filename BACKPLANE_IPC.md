@@ -158,7 +158,7 @@ is the open schematic. A net called `GND` (or `0`) is ngspice's node 0.
 | `GetSimulationNetlist {document, command, options, directives, overrides}` | The netlist ngspice would get, the net to node map (`V(<node>)` is the voltage vector), each pin current's vector and KiCad signal name, the sheet's directives, `lines[] {reference, item, line, line_number, nodes[] {pin_number, model_node, node, token}}` (each element's line, its 1-based line in the netlist, and the white-space token that is each pin's node, so a host can rewrite one connection), and `problems`: the symbols without a usable model, nodes with no DC path to ground (`PK_FLOATING_NODE`), a circuit without node 0 (`PK_NO_GROUND`). Changes nothing. |
 | `GetSimulationSetup {document}` | The Simulator's workbook (`<project>.wbk` unless the project names another): each tab's analysis, command, options, traces and measurements; the user-defined signals; `tuners` (the references being tuned in the open Simulator window); the analysis written as text on a sheet; the other sheet directives; the project's ngspice compatibility mode. Changes nothing. |
 | `SetSimulationSetup {document, command, options, signals, measurements, tab, remove, compatibility}` | Writes a tab of that workbook (format 8, what the Simulator loads) and names the workbook in the project file. Without `tab` the tab of the same analysis type is replaced, else one is appended; a trace keeps the colour and cursors the person gave it. Never touches the schematic. |
-| `RunSimulation {document, command, directives, overrides, signals, measures, include_netlist, show, timeout_ms, options, wait_ms, max_points, netlist, breaks}` | Runs. See below. |
+| `RunSimulation {document, command, directives, overrides, signals, measures, include_netlist, show, timeout_ms, options, wait_ms, max_points, netlist, breaks, max_run_points, thinning}` | Runs. See below. |
 | `GetSimulationResult {document, run_id, wait_ms}` | Collects a run answered `SIM_RUNNING`. The last result stays until the next `RunSimulation`. |
 | `StopSimulation {document, run_id}` | Stops the run; its result is `SIM_ABORTED` with the points ngspice had. |
 
@@ -201,14 +201,49 @@ and every other request stay served. One run at a time in a KiCad process (the S
 runs included): a second `RunSimulation` is `AS_BUSY`. `timeout_ms` (default 120000) stops the run
 by itself: `SIM_TIMEOUT`, with the points so far.
 
+`max_run_points` (capability `sim-run-points-cap`) bounds the memory a run takes in KiCad. It
+counts values: points of the sweep times the vectors ngspice saves (8 bytes each, 16 for `.ac`).
+Left out or 0 it is **5000000**; there is no "no limit", give a larger number. When ngspice has
+produced that many, its thread makes no further point and the run is stopped: the answer is
+`status = SIM_POINT_LIMIT` with one `PK_POINT_LIMIT` problem ("the run was stopped at 2500000
+points, time = 2.45977: ngspice had produced 5000000 values ... and max_run_points is 5000000")
+and the vectors up to there, thinned by `max_points` as any other answer; the next run starts
+clean. `run_values` and `max_run_points` are in every answer (`run_values` also while
+`SIM_RUNNING`). It applies to every `RunSimulation`, `show` and `netlist` included, and to no run
+the person starts in the Simulator window. Measured headless: a `.tran 1u 20` (20 million
+points) is stopped after 3.7 s at 2.5 million points with KiCad at 295 MB.
+
+`signals` also decides what ngspice saves (capability `sim-thin-minmax`): a `.tran`, `.ac` or
+`.dc` run asked for at most 32 signals, each a net's voltage or the current of a two-pin part
+(R, C, L, D, V, I), gets `.save` / `.probe` lines for those in place of `.save all` and
+`.probe alli`, and the vectors its `measures` name as `v(...)`, `i(...)`, `vdb(...)`, `vm(...)`,
+`vp(...)`, `vr(...)`, `vi(...)` are saved with them. The answer then has
+`saved_requested_only = true` and **lists only those vectors** (before the capability it listed
+every vector, the others without data). Everything is saved as before with no `signals`, with
+`"*"`, a signal that is neither (or names nothing), a measure that names a vector any other way,
+`options.save_all_*` set in the request, a `.save` or `.probe` directive, an fft line, `breaks`,
+`show`, `netlist`, and for every other analysis.
+
 The answer: `status`; `problems[] {kind, severity, reference, node, net, message}`; `log`
 (ngspice's console, the last 200 lines); `vectors[] {name, signal, kind, length, complex, real[],
-imag[], plot}` with the sweep axis first (`max_points` thins every vector alike, the first and
-last point kept); `values[]` for every single number (all of `.op`, the three results of `.tf`,
+imag[], plot}` with the sweep axis first; `values[]` for every single number (all of `.op`, the three results of `.tf`,
 the noise totals); `measures[] {name, value, failed, error}`; `netlist` when asked or refused;
 `timings {netlist_ms, load_ms, run_ms, total_ms}`; `ngspice_version`, `nodes`, `devices`, `points`,
 `analysis`, `command`, `run_id`; `code_models` (the folder ngspice's code models were loaded from;
-empty when it found none); `broken[]`.
+empty when it found none); `broken[]`; `thinning`, `saved_requested_only`, `run_values`,
+`max_run_points`.
+
+`max_points` thins every returned vector of a plot to the same points, so they still share the
+sweep axis, the first and the last always kept. Which points is `thinning` (capability
+`sim-thin-minmax`), answered in the response's `thinning` (`TH_NONE`: nothing was thinned):
+
+- `TH_MIN_MAX` (the default): the sweep is cut into equal stretches, at most `max_points / 2`,
+  and of each stretch the points are kept where each returned vector is lowest and highest (a
+  complex vector: its magnitude). No peak or dip of a returned vector is lost; the points are the
+  run's own, in sweep order, no longer evenly spaced. With several vectors there are fewer
+  stretches, so that the total stays within `max_points`.
+- `TH_EVERY_NTH`: every Nth point, as before the capability. Also what the answer says when
+  `TH_MIN_MAX` was asked but `max_points` is smaller than two points a vector plus two.
 
 | `status` | When | `problems` name |
 |---|---|---|
@@ -218,6 +253,7 @@ empty when it found none); `broken[]`.
 | `SIM_FLOATING_NODE` | a node has no DC path to ground and the matrix was singular, or there is no node 0 (then nothing is run). When ngspice still got numbers by its fallbacks they come back, but they are gmin's, not the circuit's | `PK_FLOATING_NODE` with the node, its net and what is connected to it; `PK_NO_GROUND` |
 | `SIM_SINGULAR_MATRIX` | a singular matrix with every node grounded (a loop of voltage sources or inductors) | `PK_SINGULAR_MATRIX` with the node or the device whose branch it is |
 | `SIM_TIMEOUT`, `SIM_ABORTED` | stopped | `PK_TIMEOUT`, `PK_ABORTED` |
+| `SIM_POINT_LIMIT` | the run reached `max_run_points` (5000000 values unless given) and was stopped; the vectors hold it up to there | `PK_POINT_LIMIT` with the points, the sweep value reached, and the limit |
 | `SIM_ERROR` | anything else ngspice called an error | `PK_OTHER` |
 
 With `SIM_OK`, `problems` holds warnings only: a measure that gave no value
@@ -302,7 +338,9 @@ macOS); the three packaging scripts run it. That they load is the headless check
 `scripts/backplane-sim-headless-check.py <kicad-cli>` (sim-run) generates small schematics and
 checks every analysis against its closed form (a divider's `.op`, `.dc` and `.tf`; an RC
 low-pass's `.ac` corner, `.tran` step, kT/C `.noise` and `.pz` pole; a two-port's `.sp`; an FFT
-line), the run controls, each failure kind with its reference or node, the model commands and the
+line), the run controls, the limits (`max_run_points` waited for and collected, the default,
+min/max thinning against a spike every Nth point misses, what is saved for a list of signals),
+each failure kind with its reference or node, the model commands and the
 workbook.
 
 `scripts/backplane-*-regression.py <kicad-cli>` run headless against an isolated server and never

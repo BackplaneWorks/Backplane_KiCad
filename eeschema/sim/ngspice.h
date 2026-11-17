@@ -34,6 +34,8 @@
 #include <enum_vector.h>
 
 #include <atomic>
+#include <mutex>
+#include <functional>
 
 #if defined(__WINDOWS__)
 struct _EXCEPTION_POINTERS;
@@ -74,6 +76,12 @@ public:
     /// @copydoc SPICE_SIMULATOR::AttachNetlist()
     bool AttachNetlist( const std::shared_ptr<SIMULATION_MODEL>& aModel, const std::string& aNetlist,
                         unsigned aSimOptions, const wxString& aInputPath ) override final;
+
+    /// @copydoc SPICE_SIMULATOR::SetPointBudget()
+    void SetPointBudget( uint64_t aValues, std::function<void()> aOnReached ) override final;
+
+    /// @copydoc SPICE_SIMULATOR::ValuesProduced()
+    uint64_t ValuesProduced() const override final { return m_budgetValues.load(); }
 
     /// @copydoc SPICE_SIMULATOR::Run()
     bool Run() override final;
@@ -187,12 +195,22 @@ private:
     /// Backplane: where init_dll() found the code models, absolute; empty when nowhere
     std::string m_codeModelsPath;
 
+    /// Backplane (sim-run): the point budget of the run (see SetPointBudget)
+    std::atomic<uint64_t> m_budget{ 0 };
+    std::atomic<uint64_t> m_budgetValues{ 0 };
+    std::atomic<bool>     m_budgetReached{ false };
+    std::atomic<bool>     m_budgetRelease{ false };
+    std::mutex            m_budgetMutex;
+    std::function<void()> m_budgetCallback;
+
     /// Load codemodel files from a directory.
     bool loadCodemodels( const std::string& aPath );
 
     // Callback functions
     static int cbSendChar( char* what, int aId, void* aUser );
     static int cbSendStat( char* what, int aId, void* aUser );
+    static int cbSendData( pvecvaluesall aData, int aCount, int aId, void* aUser );
+    static int cbSendInitData( pvecinfoall aData, int aId, void* aUser );
     static int cbBGThreadRunning( NG_BOOL aFinished, int aId, void* aUser );
     static int cbControlledExit( int aStatus, NG_BOOL aImmediate, NG_BOOL aExitOnQuit, int aId,
                                  void* aUser );

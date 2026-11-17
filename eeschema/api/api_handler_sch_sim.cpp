@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <chrono>
 #include <fstream>
+#include <regex>
 #include <set>
 
 #include <fmt/format.h>
@@ -2094,6 +2095,8 @@ API_HANDLER_SCH::handleRunSimulation( const HANDLER_CONTEXT<RunSimulation>& aCtx
     run.show = request.show() && m_frame && !raw && request.breaks().empty();
     run.timeoutMs = request.timeout_ms() ? request.timeout_ms() : 120000;
     run.maxPoints = request.max_points();
+    run.thinning = request.thinning() == TH_EVERY_NTH ? TH_EVERY_NTH : TH_MIN_MAX;
+    run.maxRunPoints = request.max_run_points() ? request.max_run_points() : SIM_API::DEFAULT_MAX_RUN_POINTS;
 
     // Every symbol needs its reference: the exporter (and the Simulator window, with a dialog)
     // refuses a schematic that is not annotated
@@ -2232,6 +2235,52 @@ API_HANDLER_SCH::handleRunSimulation( const HANDLER_CONTEXT<RunSimulation>& aCtx
                     static_cast<SIMULATOR_FRAME*>( window )->RestoreAfterApiRun();
             };
         }
+    }
+
+    // A short list of signals: ngspice saves only those, not every node and current, when nothing
+    // else of the request needs the others
+    {
+        SIM_TYPE                 type = SPICE_CIRCUIT_MODEL::CommandToSimType( run.command );
+        std::vector<std::string> saves( run.signals.begin(), run.signals.end() );
+        bool                     only = !raw && !run.startInWindow && run.postCommands.empty()
+                                        && request.breaks().empty()
+                                        && !saves.empty() && saves.size() <= 32
+                                        && ( type == ST_TRAN || type == ST_AC || type == ST_DC )
+                                        && !request.options().has_save_all_voltages()
+                                        && !request.options().has_save_all_currents()
+                                        && !( run.options & NETLIST_EXPORTER_SPICE::OPTION_SAVE_ALL_DISSIPATIONS );
+
+        for( const std::string& signal : saves )
+            only = only && signal.find( '*' ) == std::string::npos;
+
+        for( const std::string& directive : request.directives() )
+        {
+            wxString line = wxString::FromUTF8( directive ).Trim( false ).Lower();
+
+            only = only && !line.StartsWith( wxS( ".save" ) ) && !line.StartsWith( wxS( ".probe" ) );
+        }
+
+        // A measure reads the vectors it names: those are saved too, when all of them are plain
+        // node voltages and part currents
+        static const std::regex named( R"(\b(vdb|vm|vp|vr|vi|v|i)\(\s*([^()\s]+)\s*\))", std::regex::icase );
+
+        for( const std::string& measure : run.measures )
+        {
+            size_t found = 0;
+
+            for( std::sregex_iterator it( measure.begin(), measure.end(), named ), end; it != end; ++it )
+            {
+                std::string function = ( *it )[1].str();
+
+                saves.push_back( ( ( function == "i" || function == "I" ) ? "i(" : "v(" ) + ( *it )[2].str() + ")" );
+                found++;
+            }
+
+            only = only && found > 0 && measure.find_first_of( "@#" ) == std::string::npos;
+        }
+
+        if( only )
+            circuit->SetSaves( saves );
     }
 
     uint64_t id = runner.Start( circuit, run, sch->Project().GetProjectPath(), settings, started );

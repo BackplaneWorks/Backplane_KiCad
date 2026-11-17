@@ -11,6 +11,10 @@ and every command is asked:
   run        overrides (netlist only), directives, measures, max_points, the saved set-up as the
              default command, SIM_RUNNING + GetSimulationResult, StopSimulation, the timeout,
              AS_BUSY for a second run
+  limits     max_run_points stops a long run as SIM_POINT_LIMIT with the points so far (waited
+             for and collected later), the default limit; max_points keeps a spike every Nth
+             point misses (TH_MIN_MAX), one set of points for every vector; only the asked
+             signals (and a measure's) are saved by ngspice, and when everything still is
   failures   each named distinctly with its reference or node: a missing model, a library that is
              not found, a model not in its library, an unknown subcircuit, no convergence, a
              floating node, no ground, a singular matrix
@@ -147,7 +151,9 @@ def check_analyses(c):
     assert r.vectors[0].kind == sim.VK_SWEEP and list(r.vectors[0].real) == [float(i) for i in range(11)], r.vectors[0]
     out = c.vector(r, "V(/out)")
     assert out.kind == sim.VK_VOLTAGE and all(close(v, i / 4, absolute=1e-12) for i, v in enumerate(out.real)), out
-    assert not c.vector(r, "V(/in)").real and c.vector(r, "V(/in)").length == 11, "unasked vectors carry no data"
+    assert r.saved_requested_only and len(r.vectors) == 2, "only the asked signal is saved, with the axis"
+    r = c.run(".dc V1 0 10 1")
+    assert not c.vector(r, "V(/in)").real and c.vector(r, "V(/in)").length == 11, "no signals: names and lengths"
     c.ok("dc sweep", "V(out)=V1/4 at 11 points")
 
     # .tf: gain 1/4, input 4k, output 3k || 1k
@@ -194,7 +200,7 @@ def check_analyses(c):
                                            include_netlist=True).netlist
     c.ok("tran step", f"max error {worst:.2e}, tau measured {r.measures[0].value:.6g}")
 
-    # max_points: every Nth point, the first and the last kept
+    # max_points: the first and the last point kept (how it thins: check_limits)
     full = len(t.real)
     r = c.run(".tran 5u 5m", signals=["V(/out)"], max_points=50)
     t2 = r.vectors[0]
@@ -352,6 +358,117 @@ def check_run_controls(c):
                                sim.RunSimulationResponse)
     assert result.status == sim.SIM_OK and result.points > 1000 and len(c.vector(result, "V(/out)").real) > 1000
     c.ok("collect later", f"{result.points} points by GetSimulationResult")
+
+
+def check_limits(c):
+    sim = c.sim
+    # a 4 us spike on a divider, in a 5 ms transient of about 5000 points
+    c.open("limits", [Part("V1", "dc 0 pulse(0 10 2.5031m 1u 1u 2u 1)", ["in", "GND"]),
+                      Part("R1", "3k", ["in", "out"]), Part("R2", "1k", ["out", "GND"]),
+                      Part("C1", "1p", ["out", "GND"])])
+
+    # max_run_points: the run stops, named, with what it had; the simulator is free again
+    started = time.monotonic()
+    r = c.run(".tran 1u 2", signals=["V(/out)"], max_run_points=20000)
+    took = time.monotonic() - started
+    assert r.status == sim.SIM_POINT_LIMIT, (r.status, r.problems)
+    problem = c.problem(r, sim.PK_POINT_LIMIT)
+    assert "stopped at" in problem.message and "time =" in problem.message, problem.message
+    assert r.saved_requested_only and [v.name for v in r.vectors] == ["time", "/out"], r.vectors
+    assert r.max_run_points == 20000 and 20000 <= r.run_values <= 20010, r.run_values
+    assert 9990 <= r.points <= 10005, r.points
+    t = r.vectors[0]
+    assert len(t.real) == len(r.vectors[1].real) == r.points and 0 < t.real[-1] < 0.1, (len(t.real), t.real[-1])
+    assert took < 20, took
+    c.ok("max_run_points", f"SIM_POINT_LIMIT at {r.points} points of 2 vectors, t = {t.real[-1]:.4g} s, "
+                           f"{took:.1f} s: {problem.message[:60]}...")
+
+    # every vector saved: a third as many points for the same budget
+    r = c.run(".tran 1u 2", max_run_points=20000)
+    vectors = len(r.vectors)
+    assert r.status == sim.SIM_POINT_LIMIT and not r.saved_requested_only and vectors > 2, r
+    assert abs(r.points * vectors - 20000) <= 2 * vectors, (r.points, vectors)
+    c.ok("max_run_points, all saved", f"{r.points} points x {vectors} vectors")
+
+    # not waited for: collected later with the same answer
+    r = c.run(".tran 1u 2", wait_ms=0, signals=["V(/out)"], max_run_points=30000)
+    deadline = time.monotonic() + 30
+    while r.status == sim.SIM_RUNNING and time.monotonic() < deadline:
+        r = c.api.request(sim.GetSimulationResult(document=c.document, wait_ms=200),
+                          sim.RunSimulationResponse)
+    assert r.status == sim.SIM_POINT_LIMIT and 14990 <= r.points <= 15005, (r.status, r.points)
+    assert len(c.vector(r, "V(/out)").real) == r.points, "the points so far come with it"
+    c.ok("max_run_points, collected", f"GetSimulationResult: SIM_POINT_LIMIT at {r.points} points")
+
+    # the default, and a run under it
+    full = c.run(".tran 1u 5m", signals=["V(/out)", "V(/in)"])
+    assert full.status == sim.SIM_OK and full.max_run_points == 5000000, (full.status, full.max_run_points)
+    assert full.thinning == sim.TH_NONE and full.run_values == full.points * 3, (full.run_values, full.points)
+    out = list(c.vector(full, "V(/out)").real)
+    peak = max(out)
+    assert close(peak, 2.5, rel=2e-2) and full.points > 2000, (peak, full.points)
+    c.ok("default limit", f"5000000; {full.points} points x 3 vectors = {full.run_values} values")
+
+    # max_points: the spike survives, every vector keeps the same points
+    r = c.run(".tran 1u 5m", signals=["V(/out)", "V(/in)"], max_points=50)
+    t, thin, vin = r.vectors[0], c.vector(r, "V(/out)"), c.vector(r, "V(/in)")
+    assert r.thinning == sim.TH_MIN_MAX and t.length == full.points, (r.thinning, t.length)
+    assert 4 <= len(t.real) <= 50 and len(t.real) == len(thin.real) == len(vin.real), len(t.real)
+    assert max(thin.real) == peak and min(thin.real) == min(out), (max(thin.real), peak)
+    assert max(vin.real) == max(c.vector(full, "V(/in)").real), "each vector's own extremes"
+    assert t.real[0] == 0.0 and close(t.real[-1], 5e-3), (t.real[0], t.real[-1])
+    assert all(b > a for a, b in zip(t.real, t.real[1:])), "in sweep order"
+    pairs = dict(zip(full.vectors[0].real, out))
+    assert all(pairs[x] == y for x, y in zip(t.real, thin.real)), "points of the run, not made up"
+    nth = c.run(".tran 1u 5m", signals=["V(/out)", "V(/in)"], max_points=50, thinning=sim.TH_EVERY_NTH)
+    assert nth.thinning == sim.TH_EVERY_NTH and 2 <= len(nth.vectors[0].real) <= 51, nth.thinning
+    missed = max(c.vector(nth, "V(/out)").real)
+    c.ok("max_points min/max", f"{full.points} -> {len(t.real)} points, peak {max(thin.real):.4g} V kept "
+                               f"(every Nth point: {len(nth.vectors[0].real)} points, peak {missed:.4g} V)")
+
+    # too few points for the extremes of that many vectors: every Nth, and said so
+    r = c.run(".tran 1u 5m", signals=["*"], max_points=4)
+    assert r.thinning == sim.TH_EVERY_NTH and not r.saved_requested_only, r.thinning
+    assert all(len(v.real) <= 5 for v in r.vectors), [len(v.real) for v in r.vectors]
+    # complex vectors: by magnitude, real and imaginary parts of the same points
+    r = c.run(".ac dec 100 1 1g", signals=["V(/out)"], max_points=20)
+    v = c.vector(r, "V(/out)")
+    assert r.thinning == sim.TH_MIN_MAX and len(v.real) == len(v.imag) == len(r.vectors[0].real) <= 20, r
+    c.ok("max_points edge cases", "falls back to every Nth when max_points is too small; .ac by magnitude")
+
+    # only what is asked is saved
+    r = c.run(".tran 1u 5m", signals=["OUT", "I(R1)", "I(V1)", "I(C1)"], include_netlist=True)
+    assert r.status == sim.SIM_OK and r.saved_requested_only, (r.status, r.problems)
+    assert sorted(v.name for v in r.vectors) == ["/out", "c1#branch", "r1#branch", "time", "v1#branch"], \
+        [v.name for v in r.vectors]
+    assert ".save all" not in r.netlist and ".probe alli" not in r.netlist and ".save " in r.netlist, r.netlist
+    assert all(len(v.real) == r.points for v in r.vectors), "all asked, all returned"
+    assert close(max(c.vector(r, "V(/out)").real), peak, rel=1e-3), "the same answer"
+    assert close(max(c.vector(r, "I(R1)").real), 2.5e-3, rel=2e-2), max(c.vector(r, "I(R1)").real)
+    saved = r.netlist
+    # a measure's vectors are saved with them
+    r = c.run(".tran 1u 5m", signals=["V(/out)"], measures=["tran vinmax MAX v(/in)"])
+    assert r.saved_requested_only and not r.measures[0].failed and close(r.measures[0].value, 10, rel=1e-3), r
+    assert sorted(v.name for v in r.vectors) == ["/in", "/out", "time"], [v.name for v in r.vectors]
+    c.ok("signals saved alone", "voltages, part and source currents, a measure's vector: "
+                                + "; ".join(l for l in saved.splitlines() if l.startswith((".save", ".probe"))))
+
+    # everything is saved as before whenever something may need it
+    everything = len(c.run(".tran 1u 5m").vectors)
+    for why, fields in (("*", dict(signals=["*"])),
+                        ("an unknown signal", dict(signals=["V(/out)", "V(nowhere)"])),
+                        ("a measure of another kind", dict(signals=["V(/out)"], measures=["tran m MAX /in"])),
+                        ("options", dict(signals=["V(/out)"], options=sim.Options(save_all_currents=True))),
+                        ("a .save directive", dict(signals=["V(/out)"], directives=[".save v(/in)"])),
+                        ("an fft line", dict(signals=["V(/out)"], command=".tran 1u 5m\nfft v(/out)"))):
+        command = fields.pop("command", ".tran 1u 5m")
+        r = c.run(command, **fields)
+        assert r.status == sim.SIM_OK and not r.saved_requested_only, (why, r.status, r.problems)
+        if why in ("*", "an unknown signal", "a measure of another kind"):
+            assert len(r.vectors) == everything, (why, [v.name for v in r.vectors])
+    r = c.run(".op", signals=["V(/out)"])
+    assert not r.saved_requested_only and len(r.values) > 1, r.values
+    c.ok("everything saved otherwise", "*, an unknown signal, a bare-name measure, options, .save, fft, .op")
 
 
 def check_failures(c):
@@ -887,6 +1004,7 @@ def main():
             return
         check_analyses(checker)
         check_run_controls(checker)
+        check_limits(checker)
         check_failures(checker)
         check_models(checker)
         check_setup(checker)

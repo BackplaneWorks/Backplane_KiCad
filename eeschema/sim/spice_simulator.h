@@ -23,6 +23,7 @@
 #ifndef SPICE_SIMULATOR_H
 #define SPICE_SIMULATOR_H
 
+#include <functional>
 #include "sim_types.h"
 #include "spice_settings.h"
 #include "simulator.h"
@@ -123,6 +124,18 @@ public:
     /// Backplane (sim-run): the directory the simulator's code models (XSPICE *.cm) were loaded
     /// from; empty when it found none (then a netlist with an A element cannot run)
     virtual std::string CodeModelsPath() const { return std::string(); }
+
+    /**
+     * Backplane (sim-run): a budget for the run about to start, in values (points produced x
+     * vectors saved).  When the run reaches it aOnReached is called once, from the simulator's
+     * thread, and that thread makes no further point until Stop() (or a new budget) is given, so
+     * the run's memory stays bounded however long the caller takes.  0 = none (the default: the
+     * person's own runs have none).
+     */
+    virtual void SetPointBudget( uint64_t aValues, std::function<void()> aOnReached ) {}
+
+    /// Backplane (sim-run): values produced by the run under the budget (0 without one)
+    virtual uint64_t ValuesProduced() const { return 0; }
 
     /// Backplane (sim-run): who receives the log and the state now, so a run of the API can give
     /// them back to the Simulator window when it ends.
