@@ -35,6 +35,8 @@
 #include <board_connected_item.h>
 #include <footprint.h>
 #include <pad.h>
+#include <zone.h>
+#include <pcb_track.h>
 #include <trigo.h>
 #include <connectivity/connectivity_data.h>
 #include <connectivity/connectivity_algo.h>
@@ -1043,7 +1045,19 @@ public:
         NET_HANDLE               m_net = nullptr;
         int                      m_width = 0;
         int                      m_pitch = 0;
-        const VIA*               m_viaProto = nullptr;
+
+        /// A via the board uses: what it joins and what it costs
+        struct VIA_KIND
+        {
+            VIA    m_proto;
+            double m_cost = 0.0;        ///< as a length of track (nm)
+            bool   m_endsOnly = false;  ///< a micro via joins its two end layers only
+        };
+
+        std::vector<VIA_KIND>    m_viaKinds;
+
+        ///< Local layers no track may run on: planes, which a stack of vias may pass
+        std::vector<bool>        m_noTracks;
         std::vector<int>         m_layers;           ///< PNS layer of each local layer
         std::vector<bool>        m_startLayers;      ///< Local layers the start may be left on
         std::vector<bool>        m_endLayers;        ///< Local layers the end may be reached on
@@ -1085,7 +1099,6 @@ public:
         SKETCH_FIELD*            m_field = nullptr;
         bool                     m_orthogonal = false;
         bool                     m_allowVias = true;
-        double                   m_viaCost = 20.0;   ///< in grid steps
         double                   m_bendCost = 2.0;   ///< in grid steps
         double                   m_wrongWayCost = 0.2;
         double                   m_heuristicWeight = 1.3;
@@ -1101,6 +1114,7 @@ public:
         std::vector<SHAPE_LINE_CHAIN> m_runs;
         std::vector<int>              m_runLayers;
         std::vector<VECTOR2I>         m_vias;
+        std::vector<int>              m_viaKinds;   ///< of each via, an index into the kinds
         double                        m_cost = 0.0;
     };
 
@@ -1137,7 +1151,33 @@ public:
 
         m_head.assign( cells * m_nLayers, -1 );
         m_edges.assign( cells * m_nLayers, 0 );
-        m_viaState.assign( cells, 0 );
+        m_nKinds = (int) m_p.m_viaKinds.size();
+        m_viaState.assign( cells * std::max( 1, m_nKinds ), 0 );
+        m_minViaCost = COST_INF;
+
+        // Where each kind of via can take a route: the layers of the search it joins
+        for( const PARAMS::VIA_KIND& kind : m_p.m_viaKinds )
+        {
+            std::vector<int> joins;
+
+            for( int k = 0; k < m_nLayers; k++ )
+            {
+                const int layer = m_p.m_layers[k];
+
+                if( kind.m_endsOnly ? ( layer == kind.m_proto.Layers().Start() || layer == kind.m_proto.Layers().End() )
+                                    : kind.m_proto.Layers().Overlaps( layer ) )
+                {
+                    joins.push_back( k );
+                }
+            }
+
+            m_kindJoins.push_back( joins );
+            m_kindCost.push_back( float( kind.m_cost / p ) );
+            m_minViaCost = std::min( m_minViaCost, m_kindCost.back() );
+        }
+
+        m_noTracks = m_p.m_noTracks;
+        m_noTracks.resize( m_nLayers, false );
 
         if( m_p.m_corridor )
             buildCorridor();
@@ -1224,7 +1264,7 @@ public:
             }
 
             // Moves along the current layer
-            for( int nd = 0; nd < 8; nd++ )
+            for( int nd = 0; nd < 8 && !m_noTracks[k]; nd++ )
             {
                 if( m_p.m_orthogonal && ( nd & 1 ) )
                     continue;
@@ -1282,18 +1322,39 @@ public:
                 relax( nx, ny, k, nd, ng, e.rec, cur.lastVia, open );
             }
 
-            // Layer changes.  A via may not follow another via or start the route, and it has to
-            // keep clear of the previous via on the path, which isn't in the world yet.
-            if( m_p.m_allowVias && m_nLayers > 1 && d != DIR_NONE && inViaZone( ix, iy )
-                    && viaSpaced( cur ) && viaFree( ix, iy ) )
-            {
-                float   ng = cur.g + (float) m_p.m_viaCost;
-                int32_t cell = (int32_t) cellIndex( ix, iy );
+            // Layer changes.  A via may not start the route, and it has to keep clear of the
+            // previous via on the path, which isn't in the world yet.  Only a micro via may
+            // follow another, on top of it: a stack through the layers between.
+            const bool stacking = d == DIR_NONE && cur.via != 0;
 
-                for( int k2 = 0; k2 < m_nLayers; k2++ )
+            if( m_p.m_allowVias && m_nLayers > 1 && ( d != DIR_NONE || stacking ) && inViaZone( ix, iy )
+                    && ( stacking || viaSpaced( cur ) ) )
+            {
+                const int32_t cell = (int32_t) cellIndex( ix, iy );
+
+                for( int kind = 0; kind < m_nKinds; kind++ )
                 {
-                    if( k2 != k )
-                        relax( ix, iy, k2, DIR_NONE, ng, e.rec, cell, open );
+                    const std::vector<int>& joins = m_kindJoins[kind];
+
+                    if( joins.size() < 2 || std::find( joins.begin(), joins.end(), k ) == joins.end() )
+                        continue;
+
+                    if( stacking && ( kind == cur.via - 1 || !m_p.m_viaKinds[kind].m_endsOnly
+                                      || !m_p.m_viaKinds[cur.via - 1].m_endsOnly ) )
+                    {
+                        continue;
+                    }
+
+                    if( !viaFree( ix, iy, kind ) )
+                        continue;
+
+                    const float ng = cur.g + m_kindCost[kind];
+
+                    for( int k2 : joins )
+                    {
+                        if( k2 != k )
+                            relax( ix, iy, k2, DIR_NONE, ng, e.rec, cell, open, uint8_t( kind + 1 ) );
+                    }
                 }
             }
         }
@@ -1350,6 +1411,7 @@ private:
         float   g;
         int32_t parent;
         int32_t lastVia;    ///< cell of the latest via on the best path here, or -1
+        uint8_t via = 0;    ///< reached by a via of this kind (plus one), or 0
         uint8_t layer;
         uint8_t dir;
         bool    closed;
@@ -1402,7 +1464,7 @@ private:
             h = std::max( dx, dy ) + ( SQRT2 - 1.0 ) * std::min( dx, dy );
 
         if( !m_p.m_endLayers[aLayer] )
-            h += m_p.m_viaCost;
+            h += m_minViaCost < COST_INF ? m_minViaCost : 0.0f;
 
         return float( h * m_p.m_heuristicWeight );
     }
@@ -1422,14 +1484,15 @@ private:
         if( m_blocks[slot] < 0 )
         {
             m_blocks[slot] = (int32_t) m_recs.size();
-            m_recs.push_back( { aIx, aIy, COST_INF, -1, -1, (uint8_t) aLayer, (uint8_t) aDir, false } );
+            m_recs.push_back( { aIx, aIy, COST_INF, -1, -1, 0, (uint8_t) aLayer, (uint8_t) aDir, false } );
         }
 
         return m_blocks[slot];
     }
 
     void relax( int aIx, int aIy, int aLayer, int aDir, float aG, int32_t aParent, int32_t aLastVia,
-                std::priority_queue<OPEN_ENTRY, std::vector<OPEN_ENTRY>, OPEN_CMP>& aOpen )
+                std::priority_queue<OPEN_ENTRY, std::vector<OPEN_ENTRY>, OPEN_CMP>& aOpen,
+                uint8_t aVia = 0 )
     {
         int32_t idx = rec( aIx, aIy, aLayer, aDir );
         REC&    r = m_recs[idx];
@@ -1440,6 +1503,7 @@ private:
         r.g = aG;
         r.parent = aParent;
         r.lastVia = aLastVia;
+        r.via = aVia;
         aOpen.push( { aG + heuristic( aIx, aIy, aLayer ), aG, idx } );
     }
 
@@ -1583,26 +1647,27 @@ private:
         return dx * dx + dy * dy >= double( m_p.m_minViaSpacing ) * m_p.m_minViaSpacing;
     }
 
-    bool viaFree( int aIx, int aIy )
+    bool viaFree( int aIx, int aIy, int aKind )
     {
-        uint8_t& state = m_viaState[cellIndex( aIx, aIy )];
+        uint8_t& state = m_viaState[cellIndex( aIx, aIy ) * m_nKinds + aKind];
 
         if( state )
             return state == 1;
 
-        VIA via( *m_p.m_viaProto );
+        VIA via( m_p.m_viaKinds[aKind].m_proto );
         via.SetPos( cellPos( aIx, aIy ) );
 
         bool free = !m_p.m_node->CheckColliding( &via );
 
         if( free )
         {
-            // Keep vias off pads and other vias, including those of our own net
+            // Keep vias off pads and other vias, including those of our own net.  A micro
+            // via may stand in a pad of its net, as the fanout of a fine-pitch part does.
             COLLISION_SEARCH_OPTIONS opts;
             opts.m_differentNetsOnly = false;
             opts.SetFixedClearanceOverride( 0 );
             opts.m_limitCount = 1;
-            opts.m_kindMask = ITEM::SOLID_T | ITEM::VIA_T;
+            opts.m_kindMask = m_p.m_viaKinds[aKind].m_endsOnly ? ITEM::VIA_T : ITEM::SOLID_T | ITEM::VIA_T;
 
             NET_HANDLE net = m_p.m_net;
             opts.m_filter = [net]( const ITEM* aCandidate, const ITEM* )
@@ -1829,6 +1894,7 @@ private:
                 aResult.m_runs.push_back( run );
                 aResult.m_runLayers.push_back( m_p.m_layers[layer] );
                 aResult.m_vias.push_back( pos );
+                aResult.m_viaKinds.push_back( std::max( 0, r.via - 1 ) );
 
                 run.Clear();
                 layer = r.layer;
@@ -1865,7 +1931,12 @@ private:
     std::vector<int32_t>    m_blocks;
     std::vector<REC>        m_recs;
     std::vector<uint8_t>    m_edges;      ///< Per cell and layer: 2 bit state of 4 edges
-    std::vector<uint8_t>    m_viaState;   ///< Per cell: 0 unknown, 1 free, 2 blocked
+    std::vector<uint8_t>    m_viaState;   ///< Per cell and kind of via: 0 unknown, 1 free, 2 blocked
+    int                     m_nKinds = 0;
+    std::vector<std::vector<int>> m_kindJoins;  ///< Local layers each kind of via joins
+    std::vector<float>      m_kindCost;         ///< in grid steps
+    float                   m_minViaCost = 0.0f;
+    std::vector<bool>       m_noTracks;
     std::vector<uint8_t>    m_allowed;    ///< Per cell corridor mask (empty when unused)
     std::vector<uint8_t>    m_offCenter;  ///< Per cell distance from the corridor's middle, 0..255
     std::vector<float>      m_along;      ///< Per cell position along the corridor, -1 off it
@@ -2271,13 +2342,10 @@ SHAPE_LINE_CHAIN SKETCH_ROUTER::searchSpine( NODE* aWorld, const std::vector<SKE
     // their lane centres, which would otherwise squeeze the outer lanes out wherever the spine
     // hugs an obstacle.
     const int width = (int) ( aMembers.size() + 1 ) * aPitch;
-    VIA       noVia;
-
     GRID_SEARCH::PARAMS params;
     params.m_node = aWorld;
     params.m_width = width;
     params.m_pitch = std::max( aPitch, width / 4 );
-    params.m_viaProto = &noVia;
     params.m_layers = { layer };
     params.m_startLayers = { true };
     params.m_endLayers = { true };
@@ -3388,14 +3456,36 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
     const int width = std::max( 1, sizes.TrackWidth() );
     const int clearance = std::max( sizes.Clearance(), sizes.MinClearance() );
 
-    // A through via spans the whole board, as the line placer's do
-    const PNS_LAYER_RANGE viaLayers( iface->GetPNSLayerFromBoardLayer( F_Cu ),
-                                     iface->GetPNSLayerFromBoardLayer( B_Cu ) );
+    // The vias to change layer with: the kinds the board itself uses (a laser micro via between
+    // two neighbouring layers, a drilled one through all), or without any yet, a through via
+    // of the net's size, which spans the whole board as the line placer's do
+    std::vector<GRID_SEARCH::PARAMS::VIA_KIND> viaKinds;
 
-    VIA viaProto( VECTOR2I( 0, 0 ), viaLayers, sizes.ViaDiameter(), sizes.ViaDrill(), aConn.m_net,
-                  VIATYPE::THROUGH );
+    for( const SKETCH_VIA_KIND& kind : m_options.m_viaKinds )
+    {
+        GRID_SEARCH::PARAMS::VIA_KIND k;
+        k.m_proto = VIA( VECTOR2I( 0, 0 ), PNS_LAYER_RANGE( kind.m_layerStart, kind.m_layerEnd ),
+                         kind.m_diameter, kind.m_drill, aConn.m_net, (VIATYPE) kind.m_type );
+        k.m_cost = kind.m_cost;
+        k.m_endsOnly = (VIATYPE) kind.m_type == VIATYPE::MICROVIA;
+        viaKinds.push_back( k );
+    }
 
-    const int viaDiameter = viaProto.Diameter( viaProto.Layers().Start() );
+    if( viaKinds.empty() )
+    {
+        GRID_SEARCH::PARAMS::VIA_KIND k;
+        k.m_proto = VIA( VECTOR2I( 0, 0 ),
+                         PNS_LAYER_RANGE( iface->GetPNSLayerFromBoardLayer( F_Cu ),
+                                          iface->GetPNSLayerFromBoardLayer( B_Cu ) ),
+                         sizes.ViaDiameter(), sizes.ViaDrill(), aConn.m_net, VIATYPE::THROUGH );
+        k.m_cost = m_options.m_viaCost;
+        viaKinds.push_back( k );
+    }
+
+    int viaDiameter = 0;
+
+    for( const GRID_SEARCH::PARAMS::VIA_KIND& kind : viaKinds )
+        viaDiameter = std::max( viaDiameter, kind.m_proto.Diameter( kind.m_proto.Layers().Start() ) );
 
     // Work out which layers the route may use and which ones it can leave and enter on
     std::vector<int> layers = m_layers;
@@ -3445,6 +3535,23 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
 
     if( startLayers.empty() || endLayers.empty() || layers.empty() )
         return false;
+
+    // Planes carry no track, but a stack of vias may pass one on its way down
+    std::vector<int> transit;
+
+    for( int layer : m_options.m_transitLayers )
+    {
+        if( std::find( layers.begin(), layers.end(), layer ) == layers.end() )
+            transit.push_back( layer );
+    }
+
+    layers.insert( layers.end(), transit.begin(), transit.end() );
+    std::sort( layers.begin(), layers.end() );
+
+    std::vector<bool> noTracks( layers.size(), false );
+
+    for( size_t k = 0; k < layers.size(); k++ )
+        noTracks[k] = std::find( transit.begin(), transit.end(), layers[k] ) != transit.end();
 
     std::vector<bool> startMask( layers.size(), false );
     std::vector<bool> endMask( layers.size(), false );
@@ -3581,7 +3688,7 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
                 std::vector<SHAPE_LINE_CHAIN> runs = { best };
                 std::vector<int>              runLayers = { layers[k] };
 
-                if( commitPath( aNode, aConn, width, clearance, runs, runLayers, {}, viaProto,
+                if( commitPath( aNode, aConn, width, clearance, runs, runLayers, {}, {},
                                 strictStart, strictEnd, sizes.GetHoleToHole(), aVias, aLength ) )
                 {
                     aCost = bestLength;
@@ -3779,8 +3886,13 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
                     m_corridorStartRoom = std::max( attempt.m_halfWidth, cand.m_endRadius + 2 * cand.m_pitch );
                     m_corridorEndRoom = m_corridorStartRoom;
 
+                    std::vector<VIA> vias;
+
+                    for( int kind : cand.m_result.m_viaKinds )
+                        vias.push_back( viaKinds[kind].m_proto );
+
                     bool committed = commitPath( aNode, aConn, width, clearance, cand.m_result.m_runs,
-                                                 cand.m_result.m_runLayers, cand.m_result.m_vias, viaProto,
+                                                 cand.m_result.m_runLayers, cand.m_result.m_vias, vias,
                                                  *attempt.m_startExits, *attempt.m_endExits,
                                                  sizes.GetHoleToHole(), aVias, aLength );
                     m_corridor = nullptr;
@@ -3862,7 +3974,8 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         params.m_width = width;
         params.m_field = field( aNode, aConn.m_net, width );
         params.m_pitch = attemptPitch;
-        params.m_viaProto = &viaProto;
+        params.m_viaKinds = viaKinds;
+        params.m_noTracks = noTracks;
         params.m_layers = layers;
         params.m_startLayers = startMask;
         params.m_endLayers = endMask;
@@ -3893,7 +4006,6 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         params.m_allowVias = m_options.m_allowVias
                              && ( attempt.m_corridor != &lane || preferred < 0
                                   || !startMask[preferred] || !endMask[preferred] );
-        params.m_viaCost = m_options.m_viaCost / attemptPitch;
         params.m_bendCost = m_options.m_bendCost;
         params.m_wrongWayCost = guided || preferred >= 0 ? 0.0 : m_options.m_wrongWayCost;
         // A greedy search would drift across its lane to save a few expansions and crowd the
@@ -3958,6 +4070,7 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
                 std::reverse( backResult.m_runs.begin(), backResult.m_runs.end() );
                 std::reverse( backResult.m_runLayers.begin(), backResult.m_runLayers.end() );
                 std::reverse( backResult.m_vias.begin(), backResult.m_vias.end() );
+                std::reverse( backResult.m_viaKinds.begin(), backResult.m_viaKinds.end() );
 
                 for( SHAPE_LINE_CHAIN& run : backResult.m_runs )
                     run = run.Reverse();
@@ -4227,16 +4340,17 @@ SHAPE_LINE_CHAIN SKETCH_ROUTER::roundCorners( NODE* aNode, const SHAPE_LINE_CHAI
 bool SKETCH_ROUTER::commitPath( NODE* aNode, const SKETCH_CONNECTION& aConn, int aWidth,
                                 int aClearance, const std::vector<SHAPE_LINE_CHAIN>& aRuns,
                                 const std::vector<int>& aRunLayers,
-                                const std::vector<VECTOR2I>& aVias, const VIA& aViaProto,
+                                const std::vector<VECTOR2I>& aVias, const std::vector<VIA>& aViaProtos,
                                 const std::vector<SKETCH_EXIT>& aStartExits,
                                 const std::vector<SKETCH_EXIT>& aEndExits, int aHoleToHole,
                                 int& aViaCount, long long& aLength )
 {
     std::vector<VIA*> addedVias;
 
-    for( const VECTOR2I& pos : aVias )
+    for( size_t i = 0; i < aVias.size() && i < aViaProtos.size(); i++ )
     {
-        std::unique_ptr<VIA> via = std::make_unique<VIA>( aViaProto );
+        const VECTOR2I&      pos = aVias[i];
+        std::unique_ptr<VIA> via = std::make_unique<VIA>( aViaProtos[i] );
         via->SetPos( pos );
         via->SetNet( aConn.m_net );
 
@@ -4364,6 +4478,130 @@ std::vector<int> SKETCH_ROUTER::RoutableLayers( BOARD* aBoard, ROUTER_IFACE* aIf
 
     std::sort( layers.begin(), layers.end() );
     return layers;
+}
+
+
+void SKETCH_ROUTER::BoardConventions( BOARD* aBoard, ROUTER_IFACE* aIface,
+                                      SKETCH_ROUTER_OPTIONS& aOptions )
+{
+    aOptions.m_layers = RoutableLayers( aBoard, aIface );
+    aOptions.m_transitLayers.clear();
+    aOptions.m_viaKinds.clear();
+
+    // An inner layer with a pour and next to no track is a plane, whatever the stackup calls
+    // it: tracks would cut it.  Vias pass.
+    std::map<PCB_LAYER_ID, int> tracksOn;
+    int                         tracks = 0;
+
+    struct SIZE
+    {
+        int            m_diameter;
+        int            m_drill;
+        int            m_count;
+        const PCB_VIA* m_first;
+    };
+
+    // By type and layer pair: the sizes in use
+    std::map<std::tuple<int, int, int>, std::vector<SIZE>> spans;
+    int                                                    vias = 0;
+    bool                                                   micro = false;
+
+    for( PCB_TRACK* track : aBoard->Tracks() )
+    {
+        if( track->Type() != PCB_VIA_T )
+        {
+            tracksOn[track->GetLayer()]++;
+            tracks++;
+            continue;
+        }
+
+        PCB_VIA*  via = static_cast<PCB_VIA*>( track );
+        const int start = aIface->GetPNSLayerFromBoardLayer( via->TopLayer() );
+        const int end = aIface->GetPNSLayerFromBoardLayer( via->BottomLayer() );
+
+        if( start < 0 || end <= start )
+            continue;
+
+        std::vector<SIZE>& sizes = spans[{ (int) via->GetViaType(), start, end }];
+        const int          diameter = via->GetWidth( via->TopLayer() );
+        const int          drill = via->GetDrillValue();
+        auto               same = std::find_if( sizes.begin(), sizes.end(),
+                                                [&]( const SIZE& aSize )
+                                                {
+                                                    return aSize.m_diameter == diameter && aSize.m_drill == drill;
+                                                } );
+
+        if( same == sizes.end() )
+            sizes.push_back( { diameter, drill, 1, via } );
+        else
+            same->m_count++;
+
+        vias++;
+        micro |= via->GetViaType() == VIATYPE::MICROVIA;
+    }
+
+    LSET zoned;
+
+    for( ZONE* zone : aBoard->Zones() )
+    {
+        if( !zone->GetIsRuleArea() && zone->GetNetCode() > 0 )
+            zoned |= zone->GetLayerSet();
+    }
+
+    std::vector<int> routable;
+
+    for( int layer : aOptions.m_layers )
+    {
+        const PCB_LAYER_ID id = aIface->GetBoardLayerFromPNSLayer( layer );
+
+        if( id != F_Cu && id != B_Cu && zoned.Contains( id ) && tracksOn[id] * 50 < tracks )
+            aOptions.m_transitLayers.push_back( layer );
+        else
+            routable.push_back( layer );
+    }
+
+    if( !routable.empty() )
+        aOptions.m_layers = routable;
+    else
+        aOptions.m_transitLayers.clear();
+
+    for( auto& [span, sizes] : spans )
+    {
+        // Of the sizes the board uses often for this pair of layers, the largest
+        int most = 0;
+        int count = 0;
+
+        for( const SIZE& size : sizes )
+        {
+            most = std::max( most, size.m_count );
+            count += size.m_count;
+        }
+
+        const SIZE* pick = nullptr;
+
+        for( const SIZE& size : sizes )
+        {
+            if( size.m_count * 4 >= most && ( !pick || size.m_diameter > pick->m_diameter ) )
+                pick = &size;
+        }
+
+        SKETCH_VIA_KIND kind;
+        kind.m_type = std::get<0>( span );
+        kind.m_layerStart = std::get<1>( span );
+        kind.m_layerEnd = std::get<2>( span );
+        kind.m_diameter = pick->m_diameter;
+        kind.m_drill = pick->m_drill;
+        kind.m_like = pick->m_first;
+
+        // A via costs its detour's worth, more the more layers it goes through, and a drilled
+        // one on a board of laser vias by how rare its kind is there
+        kind.m_cost = 1000000.0 + 400000.0 * ( kind.m_layerEnd - kind.m_layerStart );
+
+        if( micro && (VIATYPE) kind.m_type != VIATYPE::MICROVIA )
+            kind.m_cost += 6000000.0 * ( 1.0 - double( count ) / vias );
+
+        aOptions.m_viaKinds.push_back( kind );
+    }
 }
 
 

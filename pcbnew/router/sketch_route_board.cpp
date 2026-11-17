@@ -104,7 +104,7 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
     PNS::SKETCH_ROUTER          sketch( &router );
     PNS::SKETCH_ROUTER_OPTIONS& options = sketch.Options();
 
-    options.m_layers = PNS::SKETCH_ROUTER::RoutableLayers( aBoard, &iface );
+    PNS::SKETCH_ROUTER::BoardConventions( aBoard, &iface, options );
     options.m_boundary = aBoard->GetBoardEdgesBoundingBox();
     options.m_guide = aRequest.m_guide;
     options.m_allowVias = aRequest.m_allowVias;
@@ -129,6 +129,13 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
 
         if( list.find( "freeexits" ) != std::string::npos )
             options.m_freeExits = false;
+
+        if( list.find( "conventions" ) != std::string::npos )
+        {
+            options.m_layers = PNS::SKETCH_ROUTER::RoutableLayers( aBoard, &iface );
+            options.m_transitLayers.clear();
+            options.m_viaKinds.clear();
+        }
     }
 
     if( aRequest.m_configure )
@@ -218,7 +225,32 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
         case PNS::ITEM::VIA_T:
         {
             PNS::VIA* via = static_cast<PNS::VIA*>( item );
-            PCB_VIA*  pcbVia = new PCB_VIA( aBoard );
+            PCB_VIA*  pcbVia = nullptr;
+
+            // Made like the board's own vias of its kind where it has them
+            for( const PNS::SKETCH_VIA_KIND& kind : options.m_viaKinds )
+            {
+                if( kind.m_like && kind.m_like->Type() == PCB_VIA_T && (VIATYPE) kind.m_type == via->ViaType()
+                        && kind.m_layerStart == via->Layers().Start() && kind.m_layerEnd == via->Layers().End()
+                        && kind.m_diameter == via->Diameter( via->Layers().Start() ) && kind.m_drill == via->Drill() )
+                {
+                    pcbVia = static_cast<PCB_VIA*>( kind.m_like->Duplicate( false ) );
+                    pcbVia->SetLocked( false );
+                    pcbVia->ClearFlags();
+                    break;
+                }
+            }
+
+            if( pcbVia )
+            {
+                pcbVia->SetPosition( via->Pos() );
+                pcbVia->SetNet( net );
+                pcbVia->SetIsFree( via->IsFree() );
+                boardItem = pcbVia;
+                break;
+            }
+
+            pcbVia = new PCB_VIA( aBoard );
             pcbVia->SetPosition( via->Pos() );
             pcbVia->SetWidth( PADSTACK::TEMP_ALL_LAYERS, via->Diameter( 0 ) );
             pcbVia->SetDrill( via->Drill() );

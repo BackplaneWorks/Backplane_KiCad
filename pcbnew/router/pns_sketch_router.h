@@ -35,6 +35,7 @@
 
 class BOARD;
 class BOARD_CONNECTED_ITEM;
+class BOARD_ITEM;
 
 namespace PNS {
 
@@ -76,10 +77,34 @@ struct SKETCH_EXIT
 };
 
 
+/**
+ * A kind of via the router may place: the layers it joins, its size, and what one costs.
+ */
+struct SKETCH_VIA_KIND
+{
+    int    m_type = 0;          ///< a VIATYPE
+    int    m_layerStart = 0;    ///< PNS layers
+    int    m_layerEnd = 0;
+    int    m_diameter = 0;
+    int    m_drill = 0;
+    double m_cost = 0.0;        ///< as a length of track (nm)
+
+    ///< One of the board's own vias of this kind: a new one is made like it (filled, capped
+    ///< and tented as the board's are, which a stack of micro vias has to be), or nullptr
+    const BOARD_ITEM* m_like = nullptr;
+};
+
+
 struct SKETCH_ROUTER_OPTIONS
 {
     ///< PNS layers the router may put tracks on.  Empty means every copper layer.
     std::vector<int> m_layers;
+
+    ///< PNS layers that carry planes: no track goes there, but a stack of vias may pass
+    std::vector<int> m_transitLayers;
+
+    ///< The vias to change layer with.  Empty: a through via of each net's own size.
+    std::vector<SKETCH_VIA_KIND> m_viaKinds;
 
     ///< PNS layer the routes should run on where they can (usually the active layer), or -1.
     int m_preferredLayer = -1;
@@ -222,6 +247,15 @@ public:
     static std::vector<int> RoutableLayers( BOARD* aBoard, ROUTER_IFACE* aIface );
 
     /**
+     * Take the board's own conventions into \a aOptions: the layers it routes on (m_layers),
+     * the inner layers it keeps as planes (m_transitLayers: a pour and next to no track) and
+     * the kinds of via it uses (m_viaKinds: laser micro vias between neighbouring layers on a
+     * board that has them, each at the size the board mostly uses).  A board with no via yet
+     * leaves m_viaKinds empty, and each net's own through via is used.
+     */
+    static void BoardConventions( BOARD* aBoard, ROUTER_IFACE* aIface, SKETCH_ROUTER_OPTIONS& aOptions );
+
+    /**
      * Return the ways a track may leave \a aItem from \a aAnchor.  Pads are left square to one
      * of their edges, preferably along the long axis of elongated pads, and never back under
      * their own footprint; round pads may also be left diagonally.  Each exit runs straight until the track is clear of the
@@ -304,7 +338,7 @@ private:
 
     bool commitPath( NODE* aNode, const SKETCH_CONNECTION& aConn, int aWidth, int aClearance,
                      const std::vector<SHAPE_LINE_CHAIN>& aRuns, const std::vector<int>& aRunLayers,
-                     const std::vector<VECTOR2I>& aVias, const VIA& aViaProto,
+                     const std::vector<VECTOR2I>& aVias, const std::vector<VIA>& aViaProtos,
                      const std::vector<SKETCH_EXIT>& aStartExits,
                      const std::vector<SKETCH_EXIT>& aEndExits, int aHoleToHole, int& aViaCount,
                      long long& aLength );
