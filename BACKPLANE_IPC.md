@@ -158,7 +158,7 @@ is the open schematic. A net called `GND` (or `0`) is ngspice's node 0.
 | `GetSimulationNetlist {document, command, options, directives, overrides}` | The netlist ngspice would get, the net to node map (`V(<node>)` is the voltage vector), each pin current's vector and KiCad signal name, the sheet's directives, `lines[] {reference, item, line, line_number, nodes[] {pin_number, model_node, node, token}}` (each element's line, its 1-based line in the netlist, and the white-space token that is each pin's node, so a host can rewrite one connection), and `problems`: the symbols without a usable model, nodes with no DC path to ground (`PK_FLOATING_NODE`), a circuit without node 0 (`PK_NO_GROUND`). Changes nothing. |
 | `GetSimulationSetup {document}` | The Simulator's workbook (`<project>.wbk` unless the project names another): each tab's analysis, command, options, traces and measurements; the user-defined signals; `tuners` (the references being tuned in the open Simulator window); the analysis written as text on a sheet; the other sheet directives; the project's ngspice compatibility mode. Changes nothing. |
 | `SetSimulationSetup {document, command, options, signals, measurements, tab, remove, compatibility}` | Writes a tab of that workbook (format 8, what the Simulator loads) and names the workbook in the project file. Without `tab` the tab of the same analysis type is replaced, else one is appended; a trace keeps the colour and cursors the person gave it. Never touches the schematic. |
-| `RunSimulation {document, command, directives, overrides, signals, measures, include_netlist, show, timeout_ms, options, wait_ms, max_points, netlist}` | Runs. See below. |
+| `RunSimulation {document, command, directives, overrides, signals, measures, include_netlist, show, timeout_ms, options, wait_ms, max_points, netlist, breaks}` | Runs. See below. |
 | `GetSimulationResult {document, run_id, wait_ms}` | Collects a run answered `SIM_RUNNING`. The last result stays until the next `RunSimulation`. |
 | `StopSimulation {document, run_id}` | Stops the run; its result is `SIM_ABORTED` with the points ngspice had. |
 
@@ -171,6 +171,18 @@ or a whole `Sim.<Name>` field): sweeps and tuning never write the schematic. `si
 vectors that come back with data: `V(/out)`, `I(R1)`, an ngspice vector, or a net name; `*` = all;
 none = names and lengths only. `measures` are ngspice `meas` statements run after the analysis
 (the analysis word may be left out).
+
+`breaks[] {reference, pin, insert}` (also on `GetSimulationNetlist`): a symbol pin taken off its
+net for this netlist only. In the element's line the pin's node becomes `brk_<ref>_<pin>` and
+`insert` is written to join the two again, with `{net}` (the node the pin was on), `{pin}` (its
+new node) and `{name}` (`<ref>_<pin>`, for element names) filled in. Empty `insert` is
+`Vbrk_{name} {net} {pin} dc 0 ac 0`: a 0 V source that changes nothing and whose current (vector
+`vbrk_<name>#branch`) is the current into the pin. A loop gain by voltage injection is
+`Vinj_{name} {net} {pin} dc 0 ac 1` with T = -V({net}) / V({pin}), both returned by `signals`. It
+goes by pin number, so it holds for a subcircuit part whatever its model's node order and moves
+only the named pin of a multi-unit part. The answer's `broken[]` gives each break's two nodes and
+the line written; `lines[]` shows the pin's new node. A reference or pin the schematic does not
+have is `SIM_NETLIST_ERROR` naming it. A run with breaks is not shown in the Simulator window.
 
 `netlist`: when set, ngspice gets this text instead of the schematic's export: a host's one-off
 variation of `GetSimulationNetlist`'s (a loop broken at a pin with a 0 V source for its loop
@@ -195,11 +207,12 @@ imag[], plot}` with the sweep axis first (`max_points` thins every vector alike,
 last point kept); `values[]` for every single number (all of `.op`, the three results of `.tf`,
 the noise totals); `measures[] {name, value, failed, error}`; `netlist` when asked or refused;
 `timings {netlist_ms, load_ms, run_ms, total_ms}`; `ngspice_version`, `nodes`, `devices`, `points`,
-`analysis`, `command`, `run_id`.
+`analysis`, `command`, `run_id`; `code_models` (the folder ngspice's code models were loaded from;
+empty when it found none); `broken[]`.
 
 | `status` | When | `problems` name |
 |---|---|---|
-| `SIM_MODEL_ERROR` | a symbol has no usable model: found by KiCad's model code before ngspice sees a netlist, or ngspice knows no such model or subcircuit | the symbol: `PK_MISSING_MODEL`, `PK_LIBRARY_NOT_FOUND`, `PK_MODEL_NOT_IN_LIBRARY`, `PK_PIN_MISMATCH`, `PK_BAD_PARAMS` |
+| `SIM_MODEL_ERROR` | a symbol has no usable model: found by KiCad's model code before ngspice sees a netlist, or ngspice knows no such model or subcircuit; or the netlist has an XSPICE (`A`) element and this KiCad's ngspice found no code models | the symbol: `PK_MISSING_MODEL`, `PK_LIBRARY_NOT_FOUND`, `PK_MODEL_NOT_IN_LIBRARY`, `PK_PIN_MISMATCH`, `PK_BAD_PARAMS`; `PK_CODE_MODELS` (the runtime lacks ngspice's `*.cm` files: a packaging fault, not the design's) |
 | `SIM_NETLIST_ERROR` | the netlist could not be written or ngspice refused it (an override naming no parameter, a syntax error) | `PK_NETLIST` with the line |
 | `SIM_NO_CONVERGENCE` | the operating point or a time step did not converge | `PK_NO_CONVERGENCE` with the node or device ngspice had trouble with |
 | `SIM_FLOATING_NODE` | a node has no DC path to ground and the matrix was singular, or there is no node 0 (then nothing is run). When ngspice still got numbers by its fallbacks they come back, but they are gmin's, not the circuit's | `PK_FLOATING_NODE` with the node, its net and what is connected to it; `PK_NO_GROUND` |
@@ -278,6 +291,13 @@ default is never saved). Without the capability only the Linux launcher seeds an
   item colours until the editor is reopened.  The editors' own canvases follow the change.
 
 ## Tests
+
+`scripts/backplane-ngspice-package-check.py <runtime root>` checks an unpacked package has the
+ngspice library and its code models (`spice2poly.cm`, `analog.cm`, `digital.cm`) where KiCad's
+loader looks (`lib/ngspice` on Linux, `bin\ngspice` on Windows, `Contents/PlugIns/sim/ngspice` on
+macOS); the three packaging scripts run it. That they load is the headless check's XSPICE cases
+(a `gain` block from the schematic, an AND gate through `adc_bridge`/`dac_bridge`);
+`--expect-no-code-models` checks the `PK_CODE_MODELS` answer on a runtime stripped of them.
 
 `scripts/backplane-sim-headless-check.py <kicad-cli>` (sim-run) generates small schematics and
 checks every analysis against its closed form (a divider's `.op`, `.dc` and `.tf`; an RC

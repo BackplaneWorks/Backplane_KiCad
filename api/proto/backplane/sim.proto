@@ -236,6 +236,10 @@ enum ProblemKind
   PK_TIMEOUT              = 12;
   PK_ABORTED              = 13;
   PK_OTHER                = 14;  // an ngspice error line that is none of the above
+  PK_CODE_MODELS          = 15;  // the netlist has an XSPICE (code model) element and this KiCad's
+                                 // ngspice has no code models loaded: its *.cm files are not in
+                                 // the runtime (a packaging fault), or ngspice does not know the
+                                 // code model the element's .model names
 }
 
 enum ProblemSeverity
@@ -288,6 +292,24 @@ message PinCurrent
   string signal     = 5;  // KiCad's name for it ("I(R1)", "Ic(Q1)")
 }
 
+// A symbol pin taken off its net, for this netlist only: the way to change a connection for one
+// run (a loop opened at an op-amp input for its loop gain, a current probe in a pin, an injected
+// source).  In the element's line the pin's node becomes a new node, and `insert` is written to
+// join the two again.  It works by pin number, so it holds for a subcircuit part whatever its
+// model's node order and for any unit of a multi-unit part.
+message Break
+{
+  string reference = 1;  // "U1"
+  string pin       = 2;  // the symbol pin's number ("3")
+
+  // The netlist line(s) put between the net and the pin; {net} is the node the pin was on, {pin}
+  // the pin's new node, {name} a name unique to this break ("U1_3") for element names.
+  // Empty = "Vbrk_{name} {net} {pin} dc 0 ac 0": a 0 V source, which changes nothing and whose
+  // current (vector "vbrk_<name>#branch") is the current into the pin.  A loop gain by voltage
+  // injection is "Vinj_{name} {net} {pin} dc 0 ac 1" with T = -V({net}) / V({pin}).
+  string insert    = 3;
+}
+
 // The SPICE netlist ngspice would get, without running it.  Changes nothing.
 message GetSimulationNetlist
 {
@@ -296,6 +318,7 @@ message GetSimulationNetlist
   Options           options    = 3;
   repeated string   directives = 4;  // as RunSimulation
   repeated Override overrides  = 5;  // as RunSimulation
+  repeated Break    breaks     = 6;  // as RunSimulation; `lines` then shows each broken pin's new node
 }
 
 message GetSimulationNetlistResponse
@@ -310,6 +333,16 @@ message GetSimulationNetlistResponse
   repeated string     directives   = 6;  // the directives found on the schematic's sheets
   int32               items        = 7;  // SPICE items written
   repeated ItemLine   lines        = 8;  // each symbol's element line and where its pins' nodes are in it
+  repeated BrokenPin  broken       = 9;  // with `breaks`: what each became
+}
+
+message BrokenPin
+{
+  string reference = 1;
+  string pin       = 2;
+  string net_node  = 3;  // the node the pin was on ("/out"): {net}
+  string pin_node  = 4;  // the pin's new node ("brk_U1_3"): {pin}
+  string insert    = 5;  // the line(s) written, placeholders filled in
 }
 
 // Where a symbol pin's node is written in the netlist, so a host can rewrite a connection (break
@@ -547,6 +580,11 @@ message RunSimulation
   // `signals`, `vectors` and `problems`.  No model or topology check is made by KiCad (ngspice's
   // own errors are reported), and the run is never shown in the Simulator window.
   string netlist = 13;
+
+  // Pins taken off their nets for this run (see Break).  Ignored with `netlist`; a run with
+  // breaks is not shown in the Simulator window.  A reference or pin the schematic does not
+  // have is SIM_NETLIST_ERROR naming it.
+  repeated Break breaks = 14;
 }
 
 message RunSimulationResponse
@@ -568,6 +606,9 @@ message RunSimulationResponse
   uint64           run_id   = 15;  // this run; with SIM_RUNNING, what GetSimulationResult takes
   double           progress = 16;  // SIM_RUNNING: 0..1 where ngspice reports it, else 0
   bool             shown    = 17;  // the run is shown in the Simulator window
+  string           code_models = 18;  // the directory ngspice's code models (*.cm) were loaded from;
+                                      // empty: none found, XSPICE parts cannot be simulated
+  repeated BrokenPin broken = 19;     // with `breaks`: what each became
 }
 
 // Collect a run that was answered SIM_RUNNING.  Waits up to wait_ms like RunSimulation, and

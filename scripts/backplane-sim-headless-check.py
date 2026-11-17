@@ -17,6 +17,13 @@ and every command is asked:
   models     GetSimulationModels, AssignSimulationModel (built-in, library .model and .subckt
              with a pin map, raw, clear, exclude_from_sim, all-or-nothing), saved and reloaded
   set-up     SetSimulationSetup / GetSimulationSetup write the workbook KiCad's Simulator reads
+  breaks     Break takes a pin off its net for one run: at a subcircuit part (a 0 V source changes
+             nothing and reads the pin's current; a resistor changes the answer as computed), a
+             loop gain by one Break, and one pin of a multi-unit op-amp in KiCad's own test
+             projects (only that pin moves; the response is unchanged)
+  xspice     an analog code model from the schematic and digital ones through bridges, so the
+             runtime's ngspice code models (*.cm) are proven loaded; --expect-no-code-models
+             checks the PK_CODE_MODELS answer on a runtime stripped of them
   netlist    GetSimulationNetlist.lines places each pin's node in its element line; a loop is
              broken there and its loop gain run with RunSimulation.netlist (crossover and phase
              margin against the closed form)
@@ -30,6 +37,7 @@ import argparse
 import cmath
 import json
 import math
+import shutil
 from pathlib import Path
 import sys
 import time
@@ -725,10 +733,147 @@ def check_netlist_run(c):
     c.ok("netlist run controls", "command added, names resolved, no analysis refused, ngspice's errors told")
 
 
+def check_breaks(c):
+    """Break: a pin taken off its net for one netlist, by reference and pin number."""
+    sim = c.sim
+    netlist_of = lambda **kw: c.api.request(sim.GetSimulationNetlist(document=c.document, **kw),
+                                            sim.GetSimulationNetlistResponse)
+
+    # A subcircuit part: U1 (in, out, gnd = 1k / 1k) drives R9 = 1k from its pin 2
+    c.open("breaksub", [Part("V1", "dc 5", ["in", "GND"]), Part("U1", "DIV", ["in", "half", "GND"],
+                                                                 fields={"Sim.Library": "models.lib",
+                                                                         "Sim.Name": "DIVCHK"}),
+                        Part("R9", "1k", ["half", "GND"])], files={"models.lib": MODELS_LIB})
+    plain = c.run(".op")
+    assert plain.status == sim.SIM_OK and close(c.value(plain, "V(/half)"), 5 / 3), plain
+    # the default: a 0 V source, nothing changes, and its current is the pin's
+    r = c.run(".op", breaks=[sim.Break(reference="U1", pin="2")], include_netlist=True)
+    assert r.status == sim.SIM_OK and close(c.value(r, "V(/half)"), 5 / 3), r
+    broken = r.broken[0]
+    assert (broken.reference, broken.pin, broken.net_node, broken.pin_node) == ("U1", "2", "/half", "brk_U1_2")
+    assert broken.insert == "Vbrk_U1_2 /half brk_U1_2 dc 0 ac 0" and broken.insert in r.netlist, r.netlist
+    assert close(c.value(r, "brk_u1_2"), 5 / 3), "the pin's own node is a vector"
+    # the source's + is at the net, so its branch current flows from the net into the pin: U1's
+    # pin 2 sources R9's 1.667 mA, so it reads -1.667 mA
+    assert close(c.value(r, "vbrk_u1_2#branch"), -(5 / 3) / 1e3, rel=1e-6), r.values
+    # a part in the break: 1k between U1's output pin and its net halves the loaded output
+    r = c.run(".op", breaks=[sim.Break(reference="U1", pin="2", insert="Rbrk_{name} {net} {pin} 1k")])
+    assert r.status == sim.SIM_OK and close(c.value(r, "V(/half)"), 1.0) and close(c.value(r, "brk_u1_2"), 2.0), r
+    listed = netlist_of(command=".op", breaks=[sim.Break(reference="U1", pin="2")])
+    u1 = next(line for line in listed.lines if line.reference == "U1")
+    assert [(n.pin_number, n.node) for n in u1.nodes] == [("1", "/in"), ("2", "brk_U1_2"), ("3", "GND")], u1.nodes
+    assert listed.broken[0].pin_node == "brk_U1_2" and not [p for p in listed.problems if p.severity == sim.PS_ERROR]
+    assert close(c.value(c.run(".op"), "V(/half)"), 5 / 3), "the next run has no break"
+    # refusals name what is wrong
+    r = c.run(".op", breaks=[sim.Break(reference="U1", pin="9")])
+    assert r.status == sim.SIM_NETLIST_ERROR and any("U1" in p.message and "9" in p.message for p in r.problems), r
+    r = c.run(".op", breaks=[sim.Break(reference="U7", pin="1")])
+    assert r.status == sim.SIM_NETLIST_ERROR and any("U7" in p.message for p in r.problems), r
+    c.ok("break at a subcircuit pin", "0 V source: unchanged, pin current read; 1k inserted: 1.667 V -> 1.0 V")
+
+    # The loop gain of the buffer of check_netlist_run, now by one Break (no netlist editing)
+    c.open("breakloop", [Part("V1", "dc 0 ac 0", ["ref", "GND"]),
+                         Part("E1", "1000", ["drv", "GND", "ref", "out"],
+                              fields={"Sim.Device": "SPICE", "Sim.Params": 'type="E" model="1000"'}),
+                         Part("R1", "1k", ["drv", "out"]), Part("C1", "1u", ["out", "GND"])])
+    r = c.run(".ac dec 200 1 1meg", signals=["V(/out)", "brk_E1_4"],
+              breaks=[sim.Break(reference="E1", pin="4", insert="Vinj_{name} {net} {pin} dc 0 ac 1")])
+    assert r.status == sim.SIM_OK and not r.shown, r
+    fc = 1 / (2 * math.pi * 1e3 * 1e-6)
+    net, pin = c.vector(r, "V(/out)"), c.vector(r, "brk_e1_4")
+    worst, margin = 0.0, None
+    for f, nr, ni, pr, pi in zip(r.vectors[0].real, net.real, net.imag, pin.real, pin.imag):
+        loop = -complex(nr, ni) / complex(pr, pi)
+        worst = max(worst, abs(loop - 1000 / (1 + 1j * f / fc)) / abs(1000 / (1 + 1j * f / fc)))
+        if margin is None and abs(loop) <= 1:
+            margin = 180 + math.degrees(cmath.phase(loop))
+    assert worst < 1e-6 and margin is not None and abs(margin - 90.06) < 0.5, (worst, margin)
+    c.ok("loop gain by one Break", f"|T-T0|/|T0| max {worst:.1e}, phase margin {margin:.2f} deg")
+
+    # A multi-unit op-amp (KiCad's own test projects: one subcircuit for both units, and a wrapper
+    # repeated per unit).  Pin 2 is unit A's inverting input; unit B's pin 6 is on the same net.
+    source = c.api.source / "qa/data/eeschema/spice_netlists"
+    for name in ("multiunit_pinmap_split", "multiunit_repeat_opamp"):
+        if c.document is not None:
+            c.api.request(c.project.CloseDocument(document=c.document), Empty)
+        folder = c.api.root / name
+        shutil.copytree(source / name, folder)
+        c.path = folder / f"{name}.kicad_sch"
+        c.document = c.api.request(c.project.OpenDocument(type=c.types.DOCTYPE_SCHEMATIC, path=str(c.path)),
+                                   c.project.OpenDocumentResponse).document
+        before = netlist_of()
+        u1 = next(line for line in before.lines if line.reference == "U1")
+        nodes = {n.pin_number: n for n in u1.nodes}
+        assert nodes["2"].node == nodes["6"].node, "both units' inverting inputs share a net"
+        plain = c.run(signals=["V(/out)"])
+        r = c.run(signals=["V(/out)"], breaks=[sim.Break(reference="U1", pin="2")])
+        assert plain.status == sim.SIM_OK and r.status == sim.SIM_OK and r.points == plain.points > 100, (r, plain)
+        a, b = c.vector(plain, "V(/out)"), c.vector(r, "V(/out)")
+        worst = max(abs(complex(x, y) - complex(u, v)) / max(abs(complex(x, y)), 1e-12)
+                    for x, y, u, v in zip(a.real, a.imag, b.real, b.imag))
+        assert worst < 1e-6, worst
+        after = netlist_of(breaks=[sim.Break(reference="U1", pin="2")])
+        u1b = {n.pin_number: n for n in next(line for line in after.lines if line.reference == "U1").nodes}
+        assert u1b["2"].node == "brk_U1_2" and u1b["2"].token == nodes["2"].token, u1b["2"]
+        assert u1b["6"].node == nodes["6"].node, "only the named pin is broken, not the unit beside it on that net"
+        tokens = after.netlist.split("\n")[next(l.line_number for l in after.lines if l.reference == "U1") - 1].split()
+        assert tokens[u1b["2"].token] == "brk_U1_2" and tokens[u1b["6"].token] == nodes["6"].node, tokens
+        assert any(v.name == "vbrk_u1_2#branch" for v in r.vectors), "the break's current is a vector"
+        c.ok(f"break at a multi-unit pin ({name})", f"token {u1b['2'].token} of XU1, V(out) unchanged to {worst:.1e}")
+
+
+def check_code_models(c, expect_missing=False):
+    """XSPICE: an analog code model from the schematic, digital ones through bridges."""
+    sim = c.sim
+    c.open("xspice", [Part("V1", "dc 2", ["in", "GND"]),
+                      Part("A1", "GAIN", ["in", "out"],
+                           fields={"Sim.Device": "SPICE", "Sim.Params": 'type="A" model="gainchk"'}),
+                      Part("R1", "1k", ["out", "GND"])], texts=[".model gainchk gain(gain=2.5)"])
+    r = c.run(".op")
+    if expect_missing:
+        problem = c.problem(r, sim.PK_CODE_MODELS)
+        assert r.status == sim.SIM_MODEL_ERROR and not r.code_models and problem.reference == "A1", r
+        assert "code models" in problem.message and problem.severity == sim.PS_ERROR, problem
+        c.ok("code models missing", problem.message[:100])
+        return
+    assert r.status == sim.SIM_OK and close(c.value(r, "V(/out)"), 5.0), r
+    assert r.code_models and Path(r.code_models).is_dir() and list(Path(r.code_models).glob("*.cm")), r.code_models
+    c.ok("analog code model", f"gain block: V(out)=5, code models from {r.code_models}")
+
+    digital = """.title and gate through bridges
+V1 a 0 dc {a}
+V2 b 0 dc {b}
+Aadc [a b] [da db] adc1
+Aand [da db] dy and1
+Adac [dy] [y] dac1
+R1 y 0 1k
+.model adc1 adc_bridge(in_low=1 in_high=4)
+.model and1 d_and(rise_delay=1n fall_delay=1n)
+.model dac1 dac_bridge(out_low=0 out_high=3.3)
+.end
+"""
+    for a, b, expected in ((5, 5, 3.3), (5, 0, 0.0), (0, 5, 0.0)):
+        r = c.run(".op", netlist=digital.format(a=a, b=b), signals=["y"])
+        assert r.status == sim.SIM_OK and close(c.value(r, "y"), expected, absolute=1e-6), (a, b, r)
+    c.ok("digital code models", "adc_bridge, d_and, dac_bridge: the AND gate's truth table")
+
+    # a code model ngspice does not have is the part's missing model, not a packaging fault
+    c.open("xspice2", [Part("V1", "dc 2", ["in", "GND"]),
+                       Part("A1", "GAIN", ["in", "out"],
+                            fields={"Sim.Device": "SPICE", "Sim.Params": 'type="A" model="nomodel"'}),
+                       Part("R1", "1k", ["out", "GND"])])
+    r = c.run(".op")
+    assert r.status == sim.SIM_MODEL_ERROR and any(p.reference == "A1" for p in r.problems), r
+    c.ok("unknown code model", [p.message for p in r.problems][0][:90])
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("cli", type=Path)
     parser.add_argument("--out", type=Path, default=None)
+    parser.add_argument("--expect-no-code-models", action="store_true",
+                        help="the runtime under test has had its ngspice code models (*.cm) removed: "
+                             "check only that an XSPICE part is refused as PK_CODE_MODELS")
     args = parser.parse_args()
     with IpcSession(args.cli, timeout=120000, client_name="works.backplane.sim-check") as api:
         capabilities = api.module("backplane.capabilities")
@@ -736,12 +881,18 @@ def main():
         assert "sim-run" in have.capabilities, list(have.capabilities)
         checker = Checker(api, args.out)
         checker.ok("capability", "sim-run")
+        if args.expect_no_code_models:
+            check_code_models(checker, expect_missing=True)
+            print(f"SIM_HEADLESS_OK {checker.count} checks (no code models)", flush=True)
+            return
         check_analyses(checker)
         check_run_controls(checker)
         check_failures(checker)
         check_models(checker)
         check_setup(checker)
         check_netlist_run(checker)
+        check_breaks(checker)
+        check_code_models(checker)
         if args.out:
             args.out.mkdir(parents=True, exist_ok=True)
             (args.out / "sim-headless.json").write_text(json.dumps(checker.report, indent=2) + "\n")

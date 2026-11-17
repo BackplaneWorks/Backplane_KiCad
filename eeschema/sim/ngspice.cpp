@@ -604,6 +604,17 @@ void NGSPICE::init_dll()
     // Find *.cm files
     std::string cmPath = findCmPath();
 
+    // Backplane (sim-run): kept for the API (the search is relative to the executable's folder)
+    m_codeModelsPath.clear();
+
+    if( !cmPath.empty() )
+    {
+        wxFileName found;
+        found.AssignDir( wxString::FromUTF8( cmPath ) );
+        found.MakeAbsolute();
+        m_codeModelsPath = found.GetPath().ToStdString( wxConvUTF8 );
+    }
+
     // __CMPATH is used in custom spinit file to point to the codemodels directory
     if( !cmPath.empty() )
         Command( "set __CMPATH=\"" + cmPath + "\"" );

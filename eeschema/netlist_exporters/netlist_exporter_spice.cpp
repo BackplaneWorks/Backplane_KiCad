@@ -142,6 +142,10 @@ bool NETLIST_EXPORTER_SPICE::ReadSchematicAndLibraries( unsigned aNetlistOptions
 
     m_nets.clear();
     m_items.clear();
+
+    for( PIN_BREAK& pinBreak : m_pinBreaks )
+        pinBreak.applied = false;
+
     m_multiunitModels.clear();
     m_modelNameGenerator.Clear();
     m_referencesAlreadyFound.Clear();
@@ -852,6 +856,18 @@ void NETLIST_EXPORTER_SPICE::readPinNetNames( SCH_SYMBOL& aSymbol, SPICE_ITEM& a
     for( const PIN_INFO& pinInfo : aPins )
     {
         wxString netName = GenerateItemPinNetName( pinInfo.netName, aNcCounter );
+
+        // Backplane (sim-run): this pin is taken off its net for this netlist
+        for( PIN_BREAK& pinBreak : m_pinBreaks )
+        {
+            if( pinBreak.reference == wxString( aItem.refName ) && pinBreak.pin == pinInfo.num )
+            {
+                pinBreak.node = netName;
+                pinBreak.applied = true;
+                m_nets.insert( netName );
+                netName = pinBreak.newNode;
+            }
+        }
 
         aItem.pinNetNames.push_back( netName.ToStdString() );
         m_nets.insert( netName );

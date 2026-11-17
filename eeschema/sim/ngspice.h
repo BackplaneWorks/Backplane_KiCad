@@ -68,6 +68,9 @@ public:
     /// Load a netlist for the simulation
     bool LoadNetlist( const std::string& aNetlist ) override final;
 
+    /// @copydoc SPICE_SIMULATOR::CodeModelsPath()
+    std::string CodeModelsPath() const override final { return m_codeModelsPath; }
+
     /// @copydoc SPICE_SIMULATOR::AttachNetlist()
     bool AttachNetlist( const std::shared_ptr<SIMULATION_MODEL>& aModel, const std::string& aNetlist,
                         unsigned aSimOptions, const wxString& aInputPath ) override final;
@@ -180,6 +183,9 @@ private:
 
     /// Send additional search path for codemodels to ngspice.
     bool setCodemodelsInputPath( const std::string& aPath );
+
+    /// Backplane: where init_dll() found the code models, absolute; empty when nowhere
+    std::string m_codeModelsPath;
 
     /// Load codemodel files from a directory.
     bool loadCodemodels( const std::string& aPath );

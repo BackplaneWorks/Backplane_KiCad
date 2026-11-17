@@ -299,6 +299,7 @@ jobs:
           "release/${archive_root}/bin/kicad-cli" project downgrade --help
           /usr/bin/python3 scripts/backplane-library-smoke.py "release/${archive_root}"
           /usr/bin/python3 scripts/backplane-library-package-check.py "release/${archive_root}" --with-3d
+          /usr/bin/python3 scripts/backplane-ngspice-package-check.py "release/${archive_root}"
           du -sh "release/${archive_root}/share/kicad/3dmodels" "release/${archive_root}"
           (cd release && tar -czf "${archive_root}.tar.gz" "${archive_root}")
           for archive in release/*.tar.gz; do

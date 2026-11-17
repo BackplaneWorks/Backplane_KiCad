@@ -97,6 +97,24 @@ public:
     /// sheets only once it has written one)
     wxString SheetCommand();
 
+    /// A pin to take off its net (kiapi.backplane.sim.Break)
+    struct BREAK_REQUEST
+    {
+        wxString reference;
+        wxString pin;
+        wxString insert;
+    };
+
+    /// This run's own lines and breaks; applied each time the schematic is read
+    void SetRun( std::vector<wxString> aDirectives, std::vector<BREAK_REQUEST> aBreaks )
+    {
+        m_runDirectives = std::move( aDirectives );
+        m_breaks = std::move( aBreaks );
+    }
+
+    /// What each break became in the last netlist
+    const std::vector<kiapi::backplane::sim::BrokenPin>& Broken() const { return m_broken; }
+
     /// KiCad's net name -> the ngspice node, of the last netlist
     const std::map<wxString, wxString>& NetNodes() const { return m_netNodes; }
 
@@ -115,6 +133,9 @@ protected:
 
 private:
     mutable std::map<wxString, wxString>  m_netNodes;
+    std::vector<wxString>                 m_runDirectives;
+    std::vector<BREAK_REQUEST>            m_breaks;
+    std::vector<kiapi::backplane::sim::BrokenPin> m_broken;
     std::chrono::steady_clock::time_point m_writtenAt;
 };
 
@@ -137,6 +158,10 @@ void ModelProblems( SCHEMATIC* aSchematic, google::protobuf::RepeatedPtrField<ki
 /// from the netlist's items.
 void TopologyProblems( const CIRCUIT& aCircuit,
                        google::protobuf::RepeatedPtrField<kiapi::backplane::sim::Problem>* aOut );
+
+/// The request's directives and breaks onto the circuit
+void SetRun( CIRCUIT& aCircuit, const google::protobuf::RepeatedPtrField<std::string>& aDirectives,
+             const google::protobuf::RepeatedPtrField<kiapi::backplane::sim::Break>& aBreaks );
 
 /// Apply the request's overrides to the circuit; false and aError when one is malformed
 bool SetOverrides( CIRCUIT& aCircuit,

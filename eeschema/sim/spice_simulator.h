@@ -120,6 +120,10 @@ public:
         m_reporter.store( aReporter, std::memory_order_release );
     }
 
+    /// Backplane (sim-run): the directory the simulator's code models (XSPICE *.cm) were loaded
+    /// from; empty when it found none (then a netlist with an A element cannot run)
+    virtual std::string CodeModelsPath() const { return std::string(); }
+
     /// Backplane (sim-run): who receives the log and the state now, so a run of the API can give
     /// them back to the Simulator window when it ends.
     REPORTER* GetReporter() const { return m_reporter.load( std::memory_order_acquire ); }

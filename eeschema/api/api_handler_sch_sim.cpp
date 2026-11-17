@@ -1536,12 +1536,7 @@ API_HANDLER_SCH::handleGetSimulationNetlist( const HANDLER_CONTEXT<GetSimulation
     if( !SIM_API::SetOverrides( circuit, aCtx.Request.overrides(), overrideError ) )
         return tl::unexpected( statusError( ApiStatusCode::AS_BAD_REQUEST, overrideError ) );
 
-    std::vector<wxString> directives;
-
-    for( const std::string& directive : aCtx.Request.directives() )
-        directives.push_back( wxString::FromUTF8( directive ) );
-
-    circuit.SetExtraDirectives( directives );
+    SIM_API::SetRun( circuit, aCtx.Request.directives(), aCtx.Request.breaks() );
 
     STRING_FORMATTER formatter;
 
@@ -1562,6 +1557,9 @@ API_HANDLER_SCH::handleGetSimulationNetlist( const HANDLER_CONTEXT<GetSimulation
     // The exporter's own lines, less those the model problems already tell with their symbol
     if( response.problems().empty() )
         SIM_API::ReporterToProblems( reporter, response.mutable_problems() );
+
+    for( const BrokenPin& pin : circuit.Broken() )
+        *response.add_broken() = pin;
 
     SIM_API::TopologyProblems( circuit, response.mutable_problems() );
 
@@ -2093,7 +2091,7 @@ API_HANDLER_SCH::handleRunSimulation( const HANDLER_CONTEXT<RunSimulation>& aCtx
     }
 
     run.includeNetlist = request.include_netlist();
-    run.show = request.show() && m_frame && !raw;
+    run.show = request.show() && m_frame && !raw && request.breaks().empty();
     run.timeoutMs = request.timeout_ms() ? request.timeout_ms() : 120000;
     run.maxPoints = request.max_points();
 
@@ -2162,7 +2160,8 @@ API_HANDLER_SCH::handleRunSimulation( const HANDLER_CONTEXT<RunSimulation>& aCtx
     for( const std::string& directive : request.directives() )
         directives.push_back( wxString::FromUTF8( directive ) );
 
-    circuit->SetExtraDirectives( directives );
+    SIM_API::SetRun( *circuit, request.directives(), raw ? google::protobuf::RepeatedPtrField<Break>()
+                                                         : request.breaks() );
 
     std::shared_ptr<SPICE_SETTINGS> settings;
 

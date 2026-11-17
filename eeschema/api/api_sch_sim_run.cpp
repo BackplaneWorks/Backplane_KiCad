@@ -197,7 +197,95 @@ void SIM_API::LINE_REPORTER::Clear()
 bool SIM_API::CIRCUIT::ReadSchematicAndLibraries( unsigned aNetlistOptions, REPORTER& aReporter )
 {
     m_netNodes.clear();
-    return SPICE_CIRCUIT_MODEL::ReadSchematicAndLibraries( aNetlistOptions, aReporter );
+    m_broken.clear();
+
+    auto nameOf = []( const BREAK_REQUEST& aBreak ) -> wxString
+    {
+        wxString name = aBreak.reference + wxS( "_" ) + aBreak.pin;
+
+        for( size_t ii = 0; ii < name.length(); ++ii )
+        {
+            if( !wxIsalnum( name[ii] ) && name[ii] != '_' )
+                name[ii] = '_';
+        }
+
+        return name;
+    };
+
+    std::vector<PIN_BREAK> pinBreaks;
+
+    for( const BREAK_REQUEST& request : m_breaks )
+    {
+        PIN_BREAK pinBreak;
+        pinBreak.reference = request.reference;
+        pinBreak.pin = request.pin;
+        pinBreak.newNode = wxS( "brk_" ) + nameOf( request );
+        pinBreaks.push_back( pinBreak );
+    }
+
+    SetPinBreaks( pinBreaks );
+    SetExtraDirectives( m_runDirectives );
+
+    bool ok = SPICE_CIRCUIT_MODEL::ReadSchematicAndLibraries( aNetlistOptions, aReporter );
+
+    // What joins each broken pin to its net again, written with this run's other lines
+    std::vector<wxString> lines = m_runDirectives;
+
+    for( size_t ii = 0; ii < m_breaks.size() && ii < PinBreaks().size(); ++ii )
+    {
+        const PIN_BREAK& applied = PinBreaks()[ii];
+
+        if( !applied.applied )
+        {
+            aReporter.Report( wxString::Format( wxS( "Break: the netlist has no pin %s of %s" ), applied.pin,
+                                                applied.reference ),
+                              RPT_SEVERITY_ERROR );
+            ok = false;
+            continue;
+        }
+
+        wxString insert = m_breaks[ii].insert;
+        insert.Trim( true ).Trim( false );
+
+        if( insert.IsEmpty() )
+            insert = wxS( "Vbrk_{name} {net} {pin} dc 0 ac 0" );
+
+        insert.Replace( wxS( "{net}" ), applied.node );
+        insert.Replace( wxS( "{pin}" ), applied.newNode );
+        insert.Replace( wxS( "{name}" ), nameOf( m_breaks[ii] ) );
+
+        lines.push_back( insert );
+
+        kiapi::backplane::sim::BrokenPin broken;
+        broken.set_reference( utf8( applied.reference ) );
+        broken.set_pin( utf8( applied.pin ) );
+        broken.set_net_node( utf8( applied.node ) );
+        broken.set_pin_node( utf8( applied.newNode ) );
+        broken.set_insert( utf8( insert ) );
+        m_broken.push_back( broken );
+    }
+
+    SetExtraDirectives( lines );
+    return ok;
+}
+
+
+void SIM_API::SetRun( CIRCUIT& aCircuit, const google::protobuf::RepeatedPtrField<std::string>& aDirectives,
+                      const google::protobuf::RepeatedPtrField<Break>& aBreaks )
+{
+    std::vector<wxString>               directives;
+    std::vector<CIRCUIT::BREAK_REQUEST> breaks;
+
+    for( const std::string& directive : aDirectives )
+        directives.push_back( wxString::FromUTF8( directive ) );
+
+    for( const Break& item : aBreaks )
+    {
+        breaks.push_back( { wxString::FromUTF8( item.reference() ), wxString::FromUTF8( item.pin() ),
+                            wxString::FromUTF8( item.insert() ) } );
+    }
+
+    aCircuit.SetRun( std::move( directives ), std::move( breaks ) );
 }
 
 
@@ -329,6 +417,17 @@ void SIM_API::TopologyProblems( const CIRCUIT& aCircuit, google::protobuf::Repea
                 first = node;
             else
                 join( first, node );
+        }
+    }
+
+    // A broken pin is joined to its net again by what was inserted (taken as a DC path: the
+    // default is a 0 V source)
+    for( const NETLIST_EXPORTER_SPICE::PIN_BREAK& pinBreak : aCircuit.PinBreaks() )
+    {
+        if( pinBreak.applied )
+        {
+            ground |= isGround( utf8( pinBreak.node ) );
+            join( nodeKey( utf8( pinBreak.node ) ), nodeKey( utf8( pinBreak.newNode ) ) );
         }
     }
 
@@ -555,6 +654,12 @@ void consoleProblems( const std::vector<std::string>& aLines, size_t aLoadLines,
 
             add( PK_NO_CONVERGENCE, PS_ERROR, ref, node, text );
         }
+        else if( line.find( "mif-error" ) != std::string::npos
+                 || ( line.find( "code model" ) != std::string::npos && isError ) )
+        {
+            add( PK_CODE_MODELS, PS_ERROR, lastItemRef, "", text );
+            aFailed = true;
+        }
         else if( line.find( "unknown subckt" ) != std::string::npos )
         {
             std::string ref = lastItemRef;
@@ -661,6 +766,7 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
     SIM_STATE_LISTENER*          previousListener = nullptr;
     std::thread                  watchdog;
     std::set<std::string>        measureNames;
+    std::vector<BrokenPin>       broken;
     bool                         inWindow = false;            ///< the run is the Simulator window's own
     SIM_STATE_LISTENER*          forwardListener = nullptr;   ///< the window's, told as well (under mutex)
     std::vector<std::string>     ownedPlots;
@@ -807,6 +913,13 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
     {
         aOut.set_run_id( id );
         aOut.set_shown( inWindow );
+
+        if( sim )
+            aOut.set_code_models( sim->CodeModelsPath() );
+
+        for( const BrokenPin& pin : broken )
+            *aOut.add_broken() = pin;
+
         aOut.set_analysis( AnalysisName( request.command ) );
 
         std::string command = utf8( request.command );
@@ -1249,6 +1362,7 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
             case PK_SINGULAR_MATRIX:      singular = true;    break;
             case PK_NO_CONVERGENCE:       convergence = true; break;
             case PK_MISSING_MODEL:
+            case PK_CODE_MODELS:
             case PK_LIBRARY_NOT_FOUND:
             case PK_MODEL_NOT_IN_LIBRARY:
             case PK_PIN_MISMATCH:         model = true;       break;
@@ -1621,6 +1735,54 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
 
         return failNow( modelError ? SIM_MODEL_ERROR : SIM_NETLIST_ERROR, PK_NETLIST,
                         impl.netlistProblems.empty() ? "the netlist could not be written" : "" );
+    }
+
+    impl.broken = aCircuit->Broken();
+
+    // An XSPICE element needs ngspice's code models: when this KiCad found none (its *.cm files
+    // are not in the runtime) that is said, rather than ngspice's "unknown model" for the part
+    if( impl.sim->CodeModelsPath().empty() )
+    {
+        std::string element;
+        std::string text = aRequest.netlistText.empty() ? std::string() : aRequest.netlistText;
+
+        if( text.empty() )
+        {
+            for( const SPICE_ITEM& item : aCircuit->GetItems() )
+            {
+                if( item.model && item.model->IsEnabled() )
+                    text += item.model->SpiceGenerator().ItemLine( item );
+            }
+        }
+
+        wxStringTokenizer textLines( wxString::FromUTF8( text ), wxS( "\r\n" ), wxTOKEN_STRTOK );
+
+        while( textLines.HasMoreTokens() && element.empty() )
+        {
+            wxString line = textLines.GetNextToken().Trim( false );
+
+            if( !line.IsEmpty() && ( line[0] == 'a' || line[0] == 'A' ) )
+                element = utf8( line.BeforeFirst( ' ' ) );
+        }
+
+        if( !element.empty() )
+        {
+            std::string ref;
+
+            if( auto it = impl.itemRefs.find( lower( element ) ); it != impl.itemRefs.end() )
+                ref = it->second;
+
+            RunSimulationResponse out;
+
+            Problem* problem = impl.netlistProblems.Add();
+            problem->set_kind( PK_CODE_MODELS );
+            problem->set_severity( PS_ERROR );
+            problem->set_reference( ref );
+            problem->set_message( "ngspice's code models (*.cm) were not found by this KiCad, so the XSPICE "
+                                  "element " + element + " cannot be simulated: the runtime is missing its "
+                                  "ngspice code-model folder" );
+            return failNow( SIM_MODEL_ERROR, PK_CODE_MODELS, "" );
+        }
     }
 
     if( impl.devices == 0 && aRequest.netlistText.empty() )
