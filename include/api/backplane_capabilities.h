@@ -78,6 +78,8 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     "sim-run",         // kiapi.backplane.sim (BACKPLANE_IPC.md "Simulation"): GetSimulationModels,
                        // AssignSimulationModel, GetSimulationNetlist, Get/SetSimulationSetup, RunSimulation,
                        // GetSimulationResult, StopSimulation; in the editor and headless (bp.13.2)
+    "sim-frame",       // embedded: FK_SIMULATOR = 8, KiCad's Simulator window as an embedded frame on the
+                       // open schematic, opened on demand (BACKPLANE_EMBED.md "Simulator"; bp.13.2)
 } );
 
 } // namespace BACKPLANE

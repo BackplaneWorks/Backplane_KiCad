@@ -244,6 +244,15 @@ public:
         return m_plotNotebook->GetPageIndex( aPlot );
     }
 
+    /// Backplane (sim-run): make aTab the current tab
+    void SelectSimTab( SIM_TAB* aTab )
+    {
+        int index = m_plotNotebook->GetPageIndex( aTab );
+
+        if( index >= 0 && index != m_plotNotebook->GetSelection() )
+            m_plotNotebook->SetSelection( index );
+    }
+
     /**
      * Return true if a tab other than @p aExcept records @p aPlotName as its ngspice plot.
      *

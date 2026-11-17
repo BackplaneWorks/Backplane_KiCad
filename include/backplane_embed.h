@@ -56,7 +56,8 @@ enum class EMBED_FRAME_KIND : int
     FOOTPRINT_EDITOR = 4,
     PCB_3D = 5,
     OTHER = 6,
-    GERBVIEW = 7
+    GERBVIEW = 7,
+    SIMULATOR = 8   ///< SIMULATOR_FRAME, on the open schematic (bp.13.2, sim-frame)
 };
 
 /// Values match kiapi.backplane.embed.EventType.

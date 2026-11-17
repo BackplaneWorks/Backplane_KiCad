@@ -154,6 +154,9 @@ public:
         m_fieldOverrides = std::move( aOverrides );
     }
 
+    /// Backplane (sim-run): netlist lines (.param, .options, .ic ...) for this exporter's netlists only
+    void SetExtraDirectives( std::vector<wxString> aDirectives ) { m_extraDirectives = std::move( aDirectives ); }
+
 protected:
     void ReadDirectives( unsigned aNetlistOptions );
     virtual void WriteDirectives( const wxString& aSimCommand, unsigned aSimOptions,
@@ -215,6 +218,7 @@ private:
                               REPORTER& aReporter ) const;
 
     std::map<wxString, std::vector<FIELD_OVERRIDE>> m_fieldOverrides;
+    std::vector<wxString>                           m_extraDirectives;
 
     void readModel( SCH_SHEET_PATH& aSheet, SCH_SYMBOL& aSymbol, SPICE_ITEM& aItem,
                     const wxString& aVariantName, REPORTER& aReporter );

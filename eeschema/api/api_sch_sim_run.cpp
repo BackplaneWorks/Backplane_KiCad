@@ -104,7 +104,25 @@ REPORTER& SIM_API::LINE_REPORTER::Report( const wxString& aText, SEVERITY aSever
 {
     std::lock_guard<std::mutex> lock( m_mutex );
     m_lines.push_back( { aText, aSeverity } );
+
+    if( m_forward )
+        m_forward->Report( aText, aSeverity );
+
     return *this;
+}
+
+
+void SIM_API::LINE_REPORTER::SetForward( REPORTER* aReporter )
+{
+    std::lock_guard<std::mutex> lock( m_mutex );
+    m_forward = aReporter;
+}
+
+
+REPORTER* SIM_API::LINE_REPORTER::Forward() const
+{
+    std::lock_guard<std::mutex> lock( m_mutex );
+    return m_forward;
 }
 
 
@@ -196,22 +214,6 @@ void SIM_API::CIRCUIT::WriteTail( OUTPUTFORMATTER& aFormatter, unsigned aNetlist
 {
     SPICE_CIRCUIT_MODEL::WriteTail( aFormatter, aNetlistOptions );
     m_writtenAt = steady_clock::now();
-}
-
-
-void SIM_API::CIRCUIT::WriteDirectives( const wxString& aSimCommand, unsigned aSimOptions,
-                                        OUTPUTFORMATTER& aFormatter ) const
-{
-    for( const wxString& directive : m_extraDirectives )
-    {
-        wxString line = directive;
-        line.Trim( true ).Trim( false );
-
-        if( !line.IsEmpty() )
-            aFormatter.Print( 0, "%s\n", TO_UTF8( line ) );
-    }
-
-    SPICE_CIRCUIT_MODEL::WriteDirectives( aSimCommand, aSimOptions, aFormatter );
 }
 
 
@@ -647,17 +649,20 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
     SIM_STATE_LISTENER*          previousListener = nullptr;
     std::thread                  watchdog;
     std::set<std::string>        measureNames;
+    bool                         inWindow = false;            ///< the run is the Simulator window's own
+    SIM_STATE_LISTENER*          forwardListener = nullptr;   ///< the window's, told as well (under mutex)
     std::vector<std::string>     ownedPlots;
 
     void OnSimStateChange( SIMULATOR* aObject, SIM_STATE aNewState ) override
     {
-        if( aNewState != SIM_IDLE )
-            return;
-
         {
             std::lock_guard<std::mutex> lock( mutex );
 
-            if( finished )
+            // The Simulator window follows its own run
+            if( forwardListener )
+                forwardListener->OnSimStateChange( aObject, aNewState );
+
+            if( aNewState != SIM_IDLE || finished )
                 return;
 
             finished = true;
@@ -749,16 +754,34 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
 
         if( sim )
         {
-            sim->SetSimStateListener( previousListener );
-            sim->SetReporter( previousReporter );
+            SIM_STATE_LISTENER* listener = nullptr;
+            REPORTER*           reporter = nullptr;
 
-            // The circuit holds the schematic: it is not kept past the run
-            NULL_REPORTER devnull;
-            sim->Attach( nullptr, wxEmptyString, 0, wxEmptyString, devnull );
+            {
+                std::lock_guard<std::mutex> lock( mutex );
+                listener = previousListener;
+                reporter = previousReporter;
+                forwardListener = nullptr;
+            }
+
+            console.SetForward( nullptr );
+            sim->SetSimStateListener( listener );
+            sim->SetReporter( reporter );
+
+            // The circuit holds the schematic: it is not kept past the run (the window's own
+            // circuit is the window's)
+            if( !inWindow )
+            {
+                NULL_REPORTER devnull;
+                sim->Attach( nullptr, wxEmptyString, 0, wxEmptyString, devnull );
+            }
         }
 
-        previousListener = nullptr;
-        previousReporter = nullptr;
+        {
+            std::lock_guard<std::mutex> lock( mutex );
+            previousListener = nullptr;
+            previousReporter = nullptr;
+        }
         circuit.reset();
         schematic = nullptr;
 
@@ -771,6 +794,7 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
     void FillCommon( RunSimulationResponse& aOut )
     {
         aOut.set_run_id( id );
+        aOut.set_shown( inWindow );
         aOut.set_analysis( AnalysisName( request.command ) );
 
         std::string command = utf8( request.command );
@@ -784,8 +808,12 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
         aOut.set_devices( devices );
 
         Timings* timings = aOut.mutable_timings();
-        timings->set_netlist_ms( msBetween( attachStart, circuit ? circuit->WrittenAt() : attachStart ) );
-        timings->set_load_ms( msBetween( circuit ? circuit->WrittenAt() : attachStart, attachEnd ) );
+        // The window's own run writes and loads its netlist itself: one figure for both
+        steady_clock::time_point written = circuit && circuit->WrittenAt() >= attachStart ? circuit->WrittenAt()
+                                                                                        : attachEnd;
+
+        timings->set_netlist_ms( msBetween( attachStart, written ) );
+        timings->set_load_ms( msBetween( written, attachEnd ) );
     }
 
     void Log( RunSimulationResponse& aOut )
@@ -1109,21 +1137,39 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
                 }
             }
 
-            if( sim->CurrentPlotName() != wxS( "const" ) )
-                ownedPlots.push_back( utf8( sim->CurrentPlotName() ) );
+            // The window's run leaves its plots to the window's tab
+            auto own = [&]()
+            {
+                if( !inWindow && sim->CurrentPlotName() != wxS( "const" ) )
+                    ownedPlots.push_back( utf8( sim->CurrentPlotName() ) );
+            };
+
+            own();
 
             if( type == ST_NOISE )
             {
-                // ngspice makes two plots: the spectra, then (current) the integrated totals
-                std::string totals = utf8( sim->CurrentPlotName() );
+                // ngspice makes two plots: the spectra (odd), then the integrated totals (even).
+                // The totals are current when the run ends; the Simulator window, when the run
+                // is its own, may have moved to the spectra already.  Either way both are read
+                // and the current plot is left as it was found.
+                std::string current = utf8( sim->CurrentPlotName() );
                 long        number = 0;
 
-                ReadPlot( out, type, false, matched );
-
-                if( totals.rfind( "noise", 0 ) == 0 && wxString( totals.substr( 5 ) ).ToLong( &number ) && number > 1 )
+                if( current.rfind( "noise", 0 ) == 0 && wxString( current.substr( 5 ) ).ToLong( &number )
+                    && number >= 1 )
                 {
-                    sim->Command( "setplot noise" + std::to_string( number - 1 ) );
-                    ownedPlots.push_back( utf8( sim->CurrentPlotName() ) );
+                    long spectra = ( number % 2 == 0 ) ? number - 1 : number;
+
+                    sim->Command( "setplot noise" + std::to_string( spectra + 1 ) );
+                    own();
+                    ReadPlot( out, type, false, matched );
+                    sim->Command( "setplot noise" + std::to_string( spectra ) );
+                    own();
+                    ReadPlot( out, type, true, matched );
+                    sim->Command( "setplot " + current );
+                }
+                else
+                {
                     ReadPlot( out, type, true, matched );
                 }
             }
@@ -1278,7 +1324,13 @@ struct SIM_API::RUNNER::IMPL : public SIM_STATE_LISTENER
 
         result.Swap( &out );
         complete = true;
+
+        std::function<void( const RunSimulationResponse& )> ended = request.onEnd;
+
         ReleaseSimulator();
+
+        if( ended )
+            ended( result );
     }
 };
 
@@ -1308,6 +1360,37 @@ SIM_API::RUNNER& SIM_API::RUNNER::Get()
 {
     static RUNNER runner;
     return runner;
+}
+
+
+bool SIM_API::RUNNER::Active()
+{
+    return Get().m_impl->active;
+}
+
+
+void SIM_API::RUNNER::WindowGone( REPORTER* aReporter, SIM_STATE_LISTENER* aListener )
+{
+    IMPL& impl = *m_impl;
+
+    {
+        std::lock_guard<std::mutex> lock( impl.mutex );
+
+        if( impl.previousReporter == aReporter )
+            impl.previousReporter = nullptr;
+
+        if( impl.previousListener == aListener )
+            impl.previousListener = nullptr;
+
+        if( impl.forwardListener == aListener )
+            impl.forwardListener = nullptr;
+    }
+
+    if( impl.console.Forward() == aReporter )
+        impl.console.SetForward( nullptr );
+
+    // Its plots went with it (the window deletes every vector when it closes without a run)
+    impl.request.onEnd = nullptr;
 }
 
 
@@ -1345,6 +1428,7 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
     impl.devices = 0;
     impl.topology.Clear();
     impl.netlistProblems.Clear();
+    impl.inWindow = static_cast<bool>( aRequest.startInWindow );
     impl.requestStart = aRequestStart;
     impl.attachStart = steady_clock::now();
     impl.attachEnd = impl.attachStart;
@@ -1389,14 +1473,31 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
     if( !impl.sim )
         return failNow( SIM_ERROR, PK_OTHER, "ngspice could not be loaded" );
 
-    impl.simLock = std::unique_lock<std::mutex>( impl.sim->GetMutex(), std::try_to_lock );
+    // The window's own run takes the simulator's mutex itself
+    if( !impl.inWindow )
+    {
+        impl.simLock = std::unique_lock<std::mutex>( impl.sim->GetMutex(), std::try_to_lock );
 
-    if( !impl.simLock.owns_lock() )
-        return failNow( SIM_ERROR, PK_OTHER, "another simulation holds the simulator" );
+        if( !impl.simLock.owns_lock() )
+            return failNow( SIM_ERROR, PK_OTHER, "another simulation holds the simulator" );
+    }
 
-    impl.previousReporter = impl.sim->GetReporter();
-    impl.previousListener = impl.sim->GetSimStateListener();
+    {
+        std::lock_guard<std::mutex> lock( impl.mutex );
+        impl.previousReporter = impl.sim->GetReporter();
+        impl.previousListener = impl.sim->GetSimStateListener();
+    }
+
     impl.Version();
+
+    if( impl.inWindow )
+    {
+        // The window keeps hearing its run: its console and its state listener are told as well
+        std::lock_guard<std::mutex> lock( impl.mutex );
+        impl.forwardListener = impl.previousListener;
+        impl.console.SetForward( impl.previousReporter );
+    }
+
     impl.sim->SetReporter( &impl.console );
     impl.sim->SetSimStateListener( &impl );
 
@@ -1428,11 +1529,22 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
 
     LINE_REPORTER exporterReporter;
     bool          attached = false;
+    bool          started = false;
 
     try
     {
-        attached = impl.sim->Attach( aCircuit, aRequest.command, aRequest.options, aProjectPath,
-                                     exporterReporter );
+        if( impl.inWindow )
+        {
+            // The window writes the netlist, loads it and runs, as for the person; this circuit
+            // is read for the names only
+            aCircuit->ReadSchematicAndLibraries( aRequest.options, exporterReporter );
+            attached = true;
+        }
+        else
+        {
+            attached = impl.sim->Attach( aCircuit, aRequest.command, aRequest.options, aProjectPath,
+                                         exporterReporter );
+        }
     }
     catch( const IO_ERROR& e )
     {
@@ -1489,10 +1601,22 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
             return failNow( SIM_FLOATING_NODE, PK_NO_GROUND, "" );
     }
 
+    if( impl.inWindow )
+    {
+        started = aRequest.startInWindow();
+        impl.attachEnd = steady_clock::now();
+    }
+
     impl.runStart = steady_clock::now();
     impl.deadline = impl.runStart + milliseconds( aRequest.timeoutMs );
 
-    if( !impl.sim->Run() )
+    if( impl.inWindow && !started )
+    {
+        return failNow( SIM_NETLIST_ERROR, PK_NETLIST,
+                        "the Simulator window could not start the run (see its message)" );
+    }
+
+    if( !impl.inWindow && !impl.sim->Run() )
     {
         impl.runEnd = steady_clock::now();
 

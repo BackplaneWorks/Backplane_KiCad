@@ -1013,6 +1013,16 @@ void NETLIST_EXPORTER_SPICE::writeItems( OUTPUTFORMATTER& aFormatter )
 void NETLIST_EXPORTER_SPICE::WriteDirectives( const wxString& aSimCommand, unsigned aSimOptions,
                                               OUTPUTFORMATTER& aFormatter ) const
 {
+    // Backplane (sim-run): this run's own lines
+    for( const wxString& directive : m_extraDirectives )
+    {
+        wxString line = directive;
+        line.Trim( true ).Trim( false );
+
+        if( !line.IsEmpty() )
+            aFormatter.Print( 0, "%s\n", TO_UTF8( line ) );
+    }
+
     if( aSimOptions & OPTION_SAVE_ALL_VOLTAGES )
         aFormatter.Print( 0, ".save all\n" );
 

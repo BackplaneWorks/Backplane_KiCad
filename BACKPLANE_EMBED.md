@@ -386,6 +386,40 @@ that no progress window is ever mapped.
   that handles `ET_EDITOR_REQUESTED` shows the editor as a tab with `ShowFrame` and ignores the
   `ET_SHOW_REQUESTED` for these two kinds.
 
+## bp.13.2: the Simulator (`FK_SIMULATOR = 8`, capability `sim-frame`)
+
+KiCad's Simulator window (`SIMULATOR_FRAME`) is an embedded frame like the editors: `ShowFrame`,
+`HideFrame`, `Close{kind}`, `GetFrames`, focus, reserved keys, Ctrl+W (Cmd+W) and the frame events
+behave as for `FK_SCH`. `sim-frame` is in the headless manifest too, so a host can gate its tab
+on the runtime before starting it.
+
+- Opened on demand: `ShowFrame{kind: FK_SIMULATOR}` creates it (about half a second on a small
+  project). It simulates the open schematic, so the schematic editor is loaded, hidden, when it is
+  not open yet. A host should not prewarm it; `ShowFrame{prewarm}` works when asked.
+- It has no document of its own: `FrameInfo.document` is empty, `modified` is the workbook's, and
+  `ReloadDocument` is `AS_UNIMPLEMENTED` for it. Closing the schematic editor closes it.
+- No message box over the pane. What the Simulator would say in one (netlist errors and warnings,
+  "another simulation is already running", a tuner that cannot be applied, a workbook that does
+  not load) goes to its info bar and to the host as `ET_NOTICE` kind `simulation` (`title`,
+  `detail`, `error`). The question about a changed sheet directive is not asked: the tab keeps its
+  command. Opening it neither yields (which would disable every frame for a moment) nor raises
+  itself. The dialogs the person opens (the analysis dialog, a file chooser, the tuner's own
+  fields) are ordinary dialogs and post `ET_DIALOG_OPENED`. The run itself has no progress
+  dialog: ngspice runs in its own thread and the toolbar's stop button stops it.
+- `RunSimulation{show}` (BACKPLANE_IPC.md "Simulation") makes the run the window's own: the window
+  is opened if needed (a hidden one asks with `ET_SHOW_REQUESTED`), the tab of that analysis type
+  (else a new tab) takes the command and is selected, the asked voltage and current signals
+  become its traces, and the numbers still come back over the API; `shown` says so. Overrides and
+  directives apply to that run only. A frequency content analysis (`fft` lines) is run but not
+  shown. Without `show`, an open window keeps its tabs and takes its own circuit back when the
+  API's run ends; while an API run lasts the window's run button and tuners answer "another
+  simulation is already running". Closing the window during an API run does not stop the run.
+- `SetSimulationSetup` reloads the open window's workbook (its plots are drawn again by the next
+  run); `GetSimulationSetup` reads the window's tabs as they are, saved or not.
+
+`scripts/backplane-embed-simulator-check.py <kicad> <kicad-cli> --out <dir>` checks all of this on
+a generated RC low-pass under Xvfb (input through XTEST).
+
 ## bp.13: checks in the editor, markers, selection by id and place
 
 - `RunChecks{kind, refill_zones, parity}` runs DRC (FK_PCB) or ERC (FK_SCH) on the open document,

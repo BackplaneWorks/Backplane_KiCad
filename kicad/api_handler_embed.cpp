@@ -187,6 +187,22 @@ bool openFrame( EMBED_FRAME_KIND aKind, bool aShow )
         if( const EMBED_FRAME_OPS* pcbOps = pcb ? embed.Ops( pcb ) : nullptr; pcbOps && pcbOps->runAction )
             run( [&]() { pcbOps->runAction( "common.Control.show3DViewer" ); } );
     }
+    else if( aKind == EMBED_FRAME_KIND::SIMULATOR )
+    {
+        wxFrame* sch = embed.FindFrame( EMBED_FRAME_KIND::SCH );
+
+        // The Simulator simulates the open schematic: its editor is loaded, hidden, if needed
+        if( !sch )
+        {
+            embed.m_quietShowRequests++;
+            managerOps.runAction( "kicad.Control.editSchematic" );
+            embed.m_quietShowRequests--;
+            sch = embed.FindFrame( EMBED_FRAME_KIND::SCH );
+        }
+
+        if( const EMBED_FRAME_OPS* schOps = sch ? embed.Ops( sch ) : nullptr; schOps && schOps->runAction )
+            run( [&]() { schOps->runAction( "eeschema.EditorControl.showSimulator" ); } );
+    }
     else if( aKind == EMBED_FRAME_KIND::GERBVIEW )
     {
         // In KiCad's own process (the project manager starts a separate GerbView otherwise)
@@ -297,7 +313,7 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
     {
         return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST,
                                         "ShowFrame needs one of FK_PCB, FK_SCH, FK_SYMBOL_EDITOR, "
-                                        "FK_FOOTPRINT_EDITOR, FK_PCB_3D or FK_GERBVIEW" ) );
+                                        "FK_FOOTPRINT_EDITOR, FK_PCB_3D, FK_GERBVIEW or FK_SIMULATOR" ) );
     }
 
     wxFrame* frame = embed.FindFrame( kind );
@@ -694,7 +710,7 @@ HANDLER_RESULT<ReloadDocumentResponse> API_HANDLER_EMBED::handleReloadDocument(
     BACKPLANE_EMBED&    embed = BACKPLANE_EMBED::Get();
     EMBED_FRAME_KIND    kind = embed.Info( frame ).kind;
 
-    if( kind == EMBED_FRAME_KIND::PCB_3D || kind == EMBED_FRAME_KIND::OTHER )
+    if( kind == EMBED_FRAME_KIND::PCB_3D || kind == EMBED_FRAME_KIND::OTHER || kind == EMBED_FRAME_KIND::SIMULATOR )
     {
         return tl::unexpected( failure( ApiStatusCode::AS_UNIMPLEMENTED,
                                         "this frame has no document to reload" ) );

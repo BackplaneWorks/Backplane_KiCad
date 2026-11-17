@@ -58,6 +58,10 @@
 #include <wildcards_and_files_ext.h>
 
 #include <sim/sim_lib_mgr.h>
+#include <sim/simulator_frame.h>
+#include <tools/sch_actions.h>
+#include <tool/tool_manager.h>
+#include <backplane_embed.h>
 #include <sim/sim_library.h>
 #include <sim/sim_model.h>
 #include <sim/sim_model_serializer.h>
@@ -762,7 +766,7 @@ int traceTypeOf( const wxString& aSignal, const wxString& aCommand )
 }
 
 
-void packSetup( SCHEMATIC* aSchematic, KIWAY* aKiway, Setup* aOut )
+void packSetup( SCHEMATIC* aSchematic, KIWAY* aKiway, Setup* aOut, const wxString& aLiveCopy = wxEmptyString )
 {
     wxString stored;
     wxString path = workbookPath( aSchematic, &stored );
@@ -772,7 +776,7 @@ void packSetup( SCHEMATIC* aSchematic, KIWAY* aKiway, Setup* aOut )
 
     nlohmann::json js;
 
-    if( readWorkbook( path, js ) )
+    if( readWorkbook( aLiveCopy.IsEmpty() ? path : aLiveCopy, js ) )
     {
         if( js.contains( "tabs" ) && js["tabs"].is_array() )
         {
@@ -1615,8 +1619,14 @@ API_HANDLER_SCH::handleGetSimulationSetup( const HANDLER_CONTEXT<GetSimulationSe
     wxLogNull     quiet;
     SetupResponse response;
 
-    simSyncWorkbook( false );
-    packSetup( schematic(), context()->GetKiway(), response.mutable_setup() );
+    // With a Simulator window open, its tabs as they are now, saved or not
+    wxString live = simSyncWorkbook( false );
+
+    packSetup( schematic(), context()->GetKiway(), response.mutable_setup(), live );
+
+    if( !live.IsEmpty() )
+        wxRemoveFile( live );
+
     return response;
 }
 
@@ -1668,11 +1678,15 @@ API_HANDLER_SCH::handleSetSimulationSetup( const HANDLER_CONTEXT<SetSimulationSe
     }
 
     // The Simulator window's live tabs first, so what the person has open is what is edited
-    simSyncWorkbook( false );
+    wxString live = simSyncWorkbook( false );
 
     nlohmann::json js;
+    bool           read = readWorkbook( live.IsEmpty() ? path : live, js );
 
-    if( !readWorkbook( path, js ) )
+    if( !live.IsEmpty() )
+        wxRemoveFile( live );
+
+    if( !read )
         js = nlohmann::json( { { "version", 8 }, { "tabs", nlohmann::json::array() },
                                { "user_defined_signals", nlohmann::json::array() }, { "custom_cursors", 2 } } );
 
@@ -1773,7 +1787,7 @@ API_HANDLER_SCH::handleSetSimulationSetup( const HANDLER_CONTEXT<SetSimulationSe
         }
     }
 
-    bool changed = js != before || mode != settings->GetCompatibilityMode() || stored.IsEmpty();
+    bool changed = js != before || mode != settings->GetCompatibilityMode() || stored.IsEmpty() || !live.IsEmpty();
 
     if( changed )
     {
@@ -1900,6 +1914,38 @@ API_HANDLER_SCH::handleRunSimulation( const HANDLER_CONTEXT<RunSimulation>& aCtx
     run.timeoutMs = request.timeout_ms() ? request.timeout_ms() : 120000;
     run.maxPoints = request.max_points();
 
+    // Every symbol needs its reference: the exporter (and the Simulator window, with a dialog)
+    // refuses a schematic that is not annotated
+    {
+        SCH_REFERENCE_LIST references;
+        sch->Hierarchy().GetSymbols( references, SYMBOL_FILTER_NON_POWER );
+
+        wxString first;
+        int      errors = references.GetCount() == 0 ? 0
+                                                     : references.CheckAnnotation(
+                                                               [&]( ERCE_T, const wxString& aMessage, SCH_REFERENCE*,
+                                                                    SCH_REFERENCE* )
+                                                               {
+                                                                   if( first.IsEmpty() )
+                                                                       first = aMessage;
+                                                               } );
+
+        if( errors > 0 )
+        {
+            RunSimulationResponse early;
+            Problem*              problem = early.add_problems();
+
+            problem->set_kind( PK_NETLIST );
+            problem->set_severity( PS_ERROR );
+            problem->set_message( fmt::format( "the schematic is not fully annotated ({} problem(s)): {}", errors,
+                                               utf8( oneLine( first ) ) ) );
+            early.set_status( SIM_NETLIST_ERROR );
+            early.set_analysis( SIM_API::AnalysisName( run.command ) );
+            early.set_command( utf8( command ) );
+            return early;
+        }
+    }
+
     // A symbol without a usable model is told by KiCad's own model code, with its reference;
     // ngspice is not given a netlist that has one (it cannot recover from some of them)
     {
@@ -1938,6 +1984,72 @@ API_HANDLER_SCH::handleRunSimulation( const HANDLER_CONTEXT<RunSimulation>& aCtx
     if( sch->Project().GetProjectFile().m_SchematicSettings )
         settings = sch->Project().GetProjectFile().m_SchematicSettings->m_NgspiceSettings;
 
+    // The Simulator window.  With `show` the run is its own (opened if needed; a frequency
+    // content analysis is not, its tab needs a transient tab of the window's first).  Without, a
+    // window that is open takes its own circuit back when the run ends.
+    KIWAY* kiway = context()->GetKiway();
+
+    if( m_frame && kiway )
+    {
+        if( run.show && run.postCommands.empty() )
+        {
+            if( !kiway->Player( FRAME_SIMULATOR, false ) || !kiway->Player( FRAME_SIMULATOR, false )->IsShown() )
+                frame()->GetToolManager()->RunAction( SCH_ACTIONS::showSimulator );
+
+            if( kiway->Player( FRAME_SIMULATOR, false ) )
+            {
+                std::map<wxString, std::vector<NETLIST_EXPORTER_SPICE::FIELD_OVERRIDE>> overrides;
+
+                for( const Override& override : request.overrides() )
+                {
+                    overrides[wxString::FromUTF8( override.reference() )].push_back(
+                            { wxString::FromUTF8( override.field() ), wxString::FromUTF8( override.value() ) } );
+                }
+
+                wxString windowCommand = run.command;
+                unsigned options = run.options;
+
+                run.startInWindow = [kiway, windowCommand, options, overrides, directives]() -> bool
+                {
+                    SIMULATOR_FRAME* window = static_cast<SIMULATOR_FRAME*>( kiway->Player( FRAME_SIMULATOR, false ) );
+                    return window && window->StartApiRun( windowCommand, options, overrides, directives );
+                };
+
+                run.onEnd = [kiway]( const RunSimulationResponse& aResult )
+                {
+                    SIMULATOR_FRAME* window = static_cast<SIMULATOR_FRAME*>( kiway->Player( FRAME_SIMULATOR, false ) );
+
+                    if( !window )
+                        return;
+
+                    std::vector<wxString> signals;
+
+                    for( const Vector& vector : aResult.vectors() )
+                    {
+                        if( !vector.real().empty() && !vector.signal().empty()
+                            && ( vector.kind() == VK_VOLTAGE || vector.kind() == VK_CURRENT ) )
+                        {
+                            signals.push_back( wxString::FromUTF8( vector.signal() ) );
+                        }
+                    }
+
+                    window->EndApiRun( signals );
+                };
+            }
+        }
+
+        if( !run.startInWindow )
+        {
+            run.show = false;
+
+            run.onEnd = [kiway]( const RunSimulationResponse& )
+            {
+                if( KIWAY_PLAYER* window = kiway->Player( FRAME_SIMULATOR, false ) )
+                    static_cast<SIMULATOR_FRAME*>( window )->RestoreAfterApiRun();
+            };
+        }
+    }
+
     uint64_t id = runner.Start( circuit, run, sch->Project().GetProjectPath(), settings, started );
 
     unsigned waitMs = request.has_wait_ms() ? request.wait_ms() : 250;
@@ -1951,9 +2063,6 @@ API_HANDLER_SCH::handleRunSimulation( const HANDLER_CONTEXT<RunSimulation>& aCtx
 
     if( !runner.Collect( id, waitMs, response ) )
         return tl::unexpected( statusError( ApiStatusCode::AS_INTERNAL_ERROR, "the run was lost" ) );
-
-    if( run.show && response.status() != kiapi::backplane::sim::SIM_RUNNING )
-        response.set_shown( simShowRun( response, request ) );
 
     return response;
 }
@@ -1997,14 +2106,37 @@ API_HANDLER_SCH::handleStopSimulation( const HANDLER_CONTEXT<StopSimulation>& aC
 }
 
 
-// The embedded Simulator window (FK_SIMULATOR) joins here; until it does these do nothing.
-
-void API_HANDLER_SCH::simSyncWorkbook( bool aReload )
+wxString API_HANDLER_SCH::simSyncWorkbook( bool aReload )
 {
-}
+    KIWAY* kiway = m_frame && context() ? context()->GetKiway() : nullptr;
 
+    if( !kiway )
+        return wxEmptyString;
 
-bool API_HANDLER_SCH::simShowRun( const RunSimulationResponse& aResponse, const RunSimulation& aRequest )
-{
-    return false;
+    SIMULATOR_FRAME* window = static_cast<SIMULATOR_FRAME*>( kiway->Player( FRAME_SIMULATOR, false ) );
+
+    if( !window )
+        return wxEmptyString;
+
+    if( aReload )
+    {
+        // The window takes the workbook as the file now has it
+        window->LoadWorkbook( workbookPath( schematic() ) );
+        return wxEmptyString;
+    }
+
+    // What the person has open and has not saved: a copy of it, for reading
+    if( !window->IsWorkbookModified() )
+        return wxEmptyString;
+
+    wxString copy = wxFileName::CreateTempFileName( wxS( "kicad-sim-workbook" ) );
+
+    if( copy.IsEmpty() || !window->WriteWorkbookCopy( copy ) )
+        return wxEmptyString;
+
+    // SaveWorkbook writes <name>.wbk
+    wxFileName written( copy );
+    written.SetExt( FILEEXT::WorkbookFileExtension );
+    wxRemoveFile( copy );
+    return written.GetFullPath();
 }

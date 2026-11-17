@@ -1874,9 +1874,9 @@ void SIMULATOR_FRAME_UI::AddTuner( const SCH_SHEET_PATH& aSheetPath, SCH_SYMBOL*
 
     if( !plotTab )
     {
-        DisplayErrorMessage( nullptr, _( "The current analysis must have a plot in order to tune "
-                                         "the value of a passive R, L, C model or voltage or "
-                                         "current source." ) );
+        m_simulatorFrame->ShowSimMessage( _( "The current analysis must have a plot in order to tune "
+                                             "the value of a passive R, L, C model or voltage or "
+                                             "current source." ), wxEmptyString, true );
         return;
     }
 
@@ -1901,7 +1901,7 @@ void SIMULATOR_FRAME_UI::AddTuner( const SCH_SHEET_PATH& aSheetPath, SCH_SYMBOL*
         }
         catch( const KI_PARAM_ERROR& e )
         {
-            DisplayErrorMessage( nullptr, e.What() );
+            m_simulatorFrame->ShowSimMessage( e.What(), wxEmptyString, true );
         }
     }
 }
@@ -1917,8 +1917,9 @@ void SIMULATOR_FRAME_UI::UpdateTunerValue( const SCH_SHEET_PATH& aSheetPath, con
 
     if( !symbol )
     {
-        DisplayErrorMessage( this, _( "Could not apply tuned value(s):" ) + wxS( " " )
-                                           + wxString::Format( _( "%s not found" ), aRef ) );
+        m_simulatorFrame->ShowSimMessage( _( "Could not apply tuned value(s):" ) + wxS( " " )
+                                                  + wxString::Format( _( "%s not found" ), aRef ),
+                                          wxEmptyString, true );
         return;
     }
 
@@ -1942,8 +1943,9 @@ void SIMULATOR_FRAME_UI::UpdateTunerValue( const SCH_SHEET_PATH& aSheetPath, con
 
     if( !tunerParam )
     {
-        DisplayErrorMessage( this, _( "Could not apply tuned value(s):" ) + wxS( " " )
-                                           + wxString::Format( _( "%s is not tunable" ), aRef ) );
+        m_simulatorFrame->ShowSimMessage( _( "Could not apply tuned value(s):" ) + wxS( " " )
+                                                  + wxString::Format( _( "%s is not tunable" ), aRef ),
+                                          wxEmptyString, true );
         return;
     }
 
@@ -2728,7 +2730,7 @@ void SIMULATOR_FRAME_UI::applyTuners()
     }
 
     if( reporter.HasMessage() )
-        DisplayErrorMessage( this, _( "Could not apply tuned value(s):" ) + wxS( "\n" ) + reporter.GetMessages() );
+        m_simulatorFrame->ShowSimMessage( _( "Could not apply tuned value(s):" ), reporter.GetMessages(), true );
 }
 
 bool SIMULATOR_FRAME_UI::LoadWorkbook( const wxString& aPath )

@@ -25,6 +25,7 @@
 
 #include <chrono>
 #include <deque>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -68,9 +69,15 @@ public:
 
     void Clear();
 
+    /// Also pass every line on to aReporter (the Simulator window's console); null to stop
+    void SetForward( REPORTER* aReporter );
+
+    REPORTER* Forward() const;
+
 private:
     mutable std::mutex m_mutex;
     std::vector<LINE>  m_lines;
+    REPORTER*          m_forward = nullptr;
 };
 
 
@@ -90,8 +97,6 @@ public:
     /// sheets only once it has written one)
     wxString SheetCommand();
 
-    void SetExtraDirectives( std::vector<wxString> aDirectives ) { m_extraDirectives = std::move( aDirectives ); }
-
     /// KiCad's net name -> the ngspice node, of the last netlist
     const std::map<wxString, wxString>& NetNodes() const { return m_netNodes; }
 
@@ -103,13 +108,9 @@ public:
     void WriteTail( OUTPUTFORMATTER& aFormatter, unsigned aNetlistOptions ) override;
 
 protected:
-    void WriteDirectives( const wxString& aSimCommand, unsigned aSimOptions,
-                          OUTPUTFORMATTER& aFormatter ) const override;
-
     wxString GenerateItemPinNetName( const wxString& aNetName, int& aNcCounter ) const override;
 
 private:
-    std::vector<wxString>                 m_extraDirectives;
     mutable std::map<wxString, wxString>  m_netNodes;
     std::chrono::steady_clock::time_point m_writtenAt;
 };
@@ -156,6 +157,14 @@ struct RUN_REQUEST
     unsigned                 timeoutMs = 120000;
     unsigned                 maxPoints = 0;
     unsigned                 options = 0;
+
+    /// RunSimulation.show with a Simulator window: the run is that window's own.  Starts it
+    /// (its tab, its circuit, its ngspice run); false when it did not start.
+    std::function<bool()> startInWindow;
+
+    /// Called on the main thread when the run has ended and its result is read (the window plots
+    /// the signals, or takes its own circuit back)
+    std::function<void( const kiapi::backplane::sim::RunSimulationResponse& )> onEnd;
 };
 
 
@@ -170,6 +179,13 @@ public:
 
     /// True while a run started here has not been collected as finished
     bool Busy() const;
+
+    /// True while an API run holds the simulator (the Simulator window keeps its hands off)
+    static bool Active();
+
+    /// The Simulator window is going away: its console reporter and state listener are no
+    /// longer given anything, nor given back the simulator when a run ends
+    void WindowGone( REPORTER* aReporter, SIM_STATE_LISTENER* aListener );
 
     /// Start: attach the circuit (netlist + ngspice load) and run in ngspice's background thread.
     /// The response is complete at once when the netlist or the load fails.

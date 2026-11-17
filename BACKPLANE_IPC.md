@@ -140,6 +140,10 @@ Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `f
 `marker`, 9 `checks`, 10 `drc_marker`, 11 `reserved_key` (bp.13); messages `ReservedKey`,
 `SetHostGeometry` (macOS, bp.13).
 
+bp.13.2 numbers: `FrameKind` 8 `FK_SIMULATOR` (capability `sim-frame`, BACKPLANE_EMBED.md); no new
+`EventType` (the Simulator's messages are `ET_NOTICE` kind `simulation`); package
+`kiapi.backplane.sim` (capability `sim-run`, below).
+
 ## Simulation (`kiapi.backplane.sim`, capability `sim-run`, bp.13.2)
 
 `backplane/sim.proto`. KiCad's own simulator behind eight commands: its model code (`SIM_LIB_MGR`,
@@ -197,6 +201,10 @@ the noise totals); `measures[] {name, value, failed, error}`; `netlist` when ask
 With `SIM_OK`, `problems` holds warnings only: a measure that gave no value
 (`PK_MEASURE_FAILED`), an asked signal with no vector, a floating node that did not stop this
 analysis.
+
+`show` (GUI only): the run is the Simulator window's own, see BACKPLANE_EMBED.md; `shown` in the
+answer. A schematic that is not fully annotated is `SIM_NETLIST_ERROR` at once (no annotate
+dialog).
 
 Sources (VDC, VSIN, VPULSE, IDC...) are ordinary symbols of KiCad's `Simulation_SPICE` library.
 A project that has no workbook yet simulates in LTspice/PSpice compatibility, as in the Simulator

@@ -280,13 +280,10 @@ private:
     /// AS_BUSY while an interactive tool runs (the exporter refreshes connectivity), or no schematic
     std::optional<ApiResponseStatus> simNetlistReady();
 
-    /// The open Simulator window and the workbook file: aReload false writes the window's live tabs
-    /// to the file, true makes the window take the file.  Nothing without a Simulator window.
-    void simSyncWorkbook( bool aReload );
-
-    /// Show a finished API run in the Simulator window; false when it could not
-    bool simShowRun( const kiapi::backplane::sim::RunSimulationResponse& aResponse,
-                     const kiapi::backplane::sim::RunSimulation&         aRequest );
+    /// The open Simulator window and the workbook file.  aReload true: the window takes the file.
+    /// False: when the window has unsaved tabs, they are written to a temporary copy whose path
+    /// is returned (the caller reads and removes it).  Empty without a Simulator window.
+    wxString simSyncWorkbook( bool aReload );
 
     HANDLER_RESULT<kiapi::backplane::sim::GetSimulationModelsResponse> handleGetSimulationModels(
             const HANDLER_CONTEXT<kiapi::backplane::sim::GetSimulationModels>& aCtx );
