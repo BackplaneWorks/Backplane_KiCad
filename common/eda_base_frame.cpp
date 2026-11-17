@@ -83,6 +83,10 @@
 #include <kiplatform/io.h>
 #include <kiplatform/ui.h>
 #include <backplane_embed.h>
+#include <widgets/ui_common.h>
+
+#include <cctype>
+#include <memory>
 #include <algorithm>
 #include <tuple>
 
@@ -773,12 +777,86 @@ bool EDA_BASE_FRAME::doAutoSave()
 }
 
 
+#ifdef __WXMSW__
+namespace
+{
+/// The item of aMenu (or a submenu) whose accelerator is aKeyCode with aModifiers (wxMOD_*).
+wxMenuItem* findAccelItem( wxMenu* aMenu, int aKeyCode, int aModifiers )
+{
+    for( wxMenuItem* item : aMenu->GetMenuItems() )
+    {
+        if( wxMenu* sub = item->GetSubMenu() )
+        {
+            if( wxMenuItem* found = findAccelItem( sub, aKeyCode, aModifiers ) )
+                return found;
+
+            continue;
+        }
+
+        std::unique_ptr<wxAcceleratorEntry> accel( item->GetAccel() );
+
+        if( !accel || !accel->IsOk() )
+            continue;
+
+        int flags = accel->GetFlags();
+        int mods = ( ( flags & wxACCEL_CTRL ) ? wxMOD_CONTROL : 0 )
+                   | ( ( flags & wxACCEL_ALT ) ? wxMOD_ALT : 0 )
+                   | ( ( flags & wxACCEL_SHIFT ) ? wxMOD_SHIFT : 0 );
+        int key = accel->GetKeyCode();
+
+        if( key > 0 && key < 0x80 )
+            key = std::toupper( key );
+
+        if( key == aKeyCode && mods == aModifiers )
+            return item;
+    }
+
+    return nullptr;
+}
+} // namespace
+#endif
+
+
 void EDA_BASE_FRAME::OnCharHook( wxKeyEvent& aKeyEvent )
 {
     wxLogTrace( kicadTraceKeyEvent, wxS( "EDA_BASE_FRAME::OnCharHook %s" ), dump( aKeyEvent ) );
 
-    // Key events can be filtered here.
-    // Currently no filtering is made.
+#ifdef __WXMSW__
+    // An embedded frame's menu accelerators, for the keys its canvas left (KiCad's hotkeys take
+    // theirs first).  The frame is a WS_CHILD of a holder inside another process's window: it has
+    // no menu bar of its own on screen, so the menu bar's accelerator table is not worth relying
+    // on there, and its items' states are only refreshed when a menu opens.  The chord is looked
+    // up in the frame's menu bar, the item's menu updated, and the item run as the menu would.
+    if( BACKPLANE_EMBED::Get().IsEmbedded( this ) && !KIUI::IsInputControlFocused() )
+    {
+        int mods = aKeyEvent.GetModifiers() & ( wxMOD_CONTROL | wxMOD_ALT | wxMOD_SHIFT );
+        int key = aKeyEvent.GetKeyCode();
+
+        if( key > 0 && key < 0x80 )
+            key = std::toupper( key );
+
+        // Quitting is the host's (it closes KiCad through each editor's save prompt)
+        if( key == 'Q' && mods == wxMOD_CONTROL )
+            return;
+
+        wxMenuBar* menuBar = GetMenuBar();
+
+        for( size_t ii = 0; menuBar && ii < menuBar->GetMenuCount(); ++ii )
+        {
+            if( wxMenuItem* item = findAccelItem( menuBar->GetMenu( ii ), key, mods ) )
+            {
+                if( wxMenu* menu = item->GetMenu() )
+                    menu->UpdateUI( this );
+
+                if( item->GetId() != wxID_EXIT )
+                    ProcessCommand( item );
+
+                return;
+            }
+        }
+    }
+#endif
+
     aKeyEvent.Skip();
 }
 
