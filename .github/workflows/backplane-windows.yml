@@ -33,7 +33,7 @@ jobs:
       CCACHE_DIR: C:\bp\ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
       CCACHE_COMPRESS: '1'
-      CCACHE_MAXSIZE: 2.5G
+      CCACHE_MAXSIZE: 3.5G
       CCACHE_COMPILERCHECK: content
     steps:
       - name: Preserve LF and enable Git long paths

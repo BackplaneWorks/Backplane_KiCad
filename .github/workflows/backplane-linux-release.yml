@@ -103,7 +103,7 @@ jobs:
 
       - name: Configure
         run: |
-          ccache --max-size=1G
+          ccache --max-size=500M
           fork_version="$(cat BACKPLANE_VERSION)"
           case "${GITHUB_REF_NAME}" in backplane-kicad-v*) fork_version="${GITHUB_REF_NAME#backplane-kicad-v}" ;; esac
           test "$fork_version" = "$(cat BACKPLANE_VERSION)"

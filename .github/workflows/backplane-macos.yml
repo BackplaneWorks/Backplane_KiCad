@@ -21,7 +21,7 @@ jobs:
       # A compiler is known by its contents, so a runner image or Xcode update misses rather than
       # reusing objects; the size cap keeps main's one rolling entry (and its artifact) small.
       CCACHE_COMPILERCHECK: content
-      CCACHE_MAXSIZE: 1G
+      CCACHE_MAXSIZE: 500M
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
