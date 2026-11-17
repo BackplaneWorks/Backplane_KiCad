@@ -453,14 +453,18 @@ void dialogChanged( NSWindow* aWindow, bool aClosing )
     if( s_hooks.isUnmanaged && s_hooks.isUnmanaged( number ) )
         return;
 
-    // wx's own top-levels with a title bar: not menus, tooltips, popups or AppKit's panels
+    // wx's own top-levels with a title bar: not menus, tooltips, popups or AppKit's panels; and
+    // the window of a modal session AppKit runs for KiCad (NSAlert: the native message boxes, such
+    // as "KiCad found unsaved changes..." at a project's open, before the API answers)
     Class wxWin = NSClassFromString( @"wxNSWindow" );
     Class wxPanel = NSClassFromString( @"wxNSPanel" );
+    bool  modal = aWindow == NSApp.modalWindow;
+    bool  known = s_dialogs.count( aWindow.windowNumber ) > 0;   // reported shown: its closing too
 
-    if( !( ( wxWin && [aWindow isKindOfClass:wxWin] ) || ( wxPanel && [aWindow isKindOfClass:wxPanel] ) ) )
+    if( !modal && !known && !( ( wxWin && [aWindow isKindOfClass:wxWin] ) || ( wxPanel && [aWindow isKindOfClass:wxPanel] ) ) )
         return;
 
-    if( !( aWindow.styleMask & NSWindowStyleMaskTitled ) )
+    if( !modal && !known && !( aWindow.styleMask & NSWindowStyleMaskTitled ) )
         return;
 
     bool shown = aWindow.visible && !aClosing;
