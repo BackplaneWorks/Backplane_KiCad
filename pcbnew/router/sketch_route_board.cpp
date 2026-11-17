@@ -111,6 +111,7 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
     options.m_guide = aRequest.m_guide;
     options.m_allowVias = aRequest.m_allowVias;
     options.m_trackWidth = aRequest.m_trackWidth;
+    options.m_minTrackWidth = aRequest.m_minTrackWidth;
 
     // The board's rules may hold a via to a size by where it is (a smaller laser via only
     // inside a fine-pitch part's fanout): ask them for each kind where the search would put one
@@ -148,13 +149,12 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
                 if( NETINFO_ITEM* net = static_cast<NETINFO_ITEM*>( aNet ) )
                     probe->SetNet( net );
 
-                DRC_ENGINE&        engine = *bds.m_DRCEngine;
-                const PCB_LAYER_ID layer = probe->TopLayer();
+                DRC_ENGINE& engine = *bds.m_DRCEngine;
 
                 auto within =
-                        [&]( DRC_CONSTRAINT_T aType, int aValue )
+                        [&]( DRC_CONSTRAINT_T aType, PCB_LAYER_ID aLayer, int aValue )
                         {
-                            DRC_CONSTRAINT c = engine.EvalRules( aType, probe.get(), nullptr, layer );
+                            DRC_CONSTRAINT c = engine.EvalRules( aType, probe.get(), nullptr, aLayer );
 
                             if( c.IsNull() || c.GetSeverity() == RPT_SEVERITY_IGNORE )
                                 return true;
@@ -163,12 +163,22 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
                                    && ( !c.GetValue().HasMax() || aValue <= c.GetValue().Max() );
                         };
 
-                if( !within( VIA_DIAMETER_CONSTRAINT, aKind.m_diameter )
-                        || !within( HOLE_SIZE_CONSTRAINT, aKind.m_drill )
-                        || !within( ANNULAR_WIDTH_CONSTRAINT, ( aKind.m_diameter - aKind.m_drill ) / 2 ) )
-                {
+                // On the layers the design rule checks themselves ask about
+                bool ok = within( HOLE_SIZE_CONSTRAINT, UNDEFINED_LAYER, aKind.m_drill );
+
+                probe->Padstack().ForEachUniqueLayer(
+                        [&]( PCB_LAYER_ID aLayer )
+                        {
+                            if( !ok || probe->IsGhostLayer( aLayer ) )
+                                return;
+
+                            ok = within( VIA_DIAMETER_CONSTRAINT, aLayer, probe->GetWidth( aLayer ) )
+                                 && within( ANNULAR_WIDTH_CONSTRAINT, aLayer,
+                                            ( probe->GetWidth( aLayer ) - probe->GetDrillValue() ) / 2 );
+                        } );
+
+                if( !ok )
                     return false;
-                }
 
                 DRC_CONSTRAINT disallow = engine.EvalRules( DISALLOW_CONSTRAINT, probe.get(), nullptr,
                                                             UNDEFINED_LAYER );

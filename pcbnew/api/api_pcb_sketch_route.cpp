@@ -168,6 +168,16 @@ HANDLER_RESULT<SketchRouteResponse> API_HANDLER_PCB::handleSketchRoute(
         request.m_trackWidth = (int) width;
     }
 
+    if( aCtx.Request.has_min_track_width() )
+    {
+        int64_t width = aCtx.Request.min_track_width().value_nm();
+
+        if( width < 0 || width > INT_MAX )
+            return tl::unexpected( badRequest( "min_track_width is out of range" ) );
+
+        request.m_minTrackWidth = (int) width;
+    }
+
     if( aCtx.Request.has_guide() && aCtx.Request.guide().nodes_size() > 0 )
     {
         SHAPE_LINE_CHAIN guide = UnpackPolyLine( aCtx.Request.guide() );
@@ -199,6 +209,7 @@ HANDLER_RESULT<SketchRouteResponse> API_HANDLER_PCB::handleSketchRoute(
     response.set_length_nm( result.m_stats.m_length );
     response.set_timed_out( result.m_stats.m_timedOut );
     response.set_elapsed_ms( result.m_stats.m_elapsedMs );
+    response.set_narrowed( result.m_stats.m_narrowed );
 
     for( BOARD_ITEM* item : result.m_added )
         response.add_created_items()->set_value( item->m_Uuid.AsStdString() );

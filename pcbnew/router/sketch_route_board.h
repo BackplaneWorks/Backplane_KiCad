@@ -59,6 +59,10 @@ struct SKETCH_ROUTE_REQUEST
     /// Track width for every route (nm); 0 takes each net's own (net class, rules)
     int m_trackWidth = 0;
 
+    /// A connection with no way at its width may be routed this narrow (nm) where the
+    /// board's rules allow; 0 never routes narrower than the net asks
+    int m_minTrackWidth = 0;
+
     /// Called with (done, total); return false to cancel
     std::function<bool( int, int )> m_progress;
 

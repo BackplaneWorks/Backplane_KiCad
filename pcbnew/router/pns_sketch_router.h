@@ -128,6 +128,10 @@ struct SKETCH_ROUTER_OPTIONS
     ///< Track width for every route (nm); 0 takes each net's own (its net class or rules).
     int m_trackWidth = 0;
 
+    ///< A connection with no way at its net's width may be routed this narrow (nm), or as
+    ///< narrow as the board's rules allow where it runs if that is wider.  0: never narrower.
+    int m_minTrackWidth = 0;
+
     ///< Cost of a via, as an equivalent length of track (nm).
     double m_viaCost = 3000000.0;
 
@@ -177,6 +181,7 @@ struct SKETCH_ROUTER_STATS
     int              m_connections = 0;
     int              m_routed = 0;
     int              m_vias = 0;
+    int              m_narrowed = 0;      ///< Connections routed narrower than their net asks
     int              m_passes = 0;
     long long        m_length = 0;
     long long        m_expansions = 0;
@@ -281,7 +286,7 @@ private:
 
     bool routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn, int aBundleSize,
                           double aLaneOffset, double& aCost, int& aVias, long long& aLength,
-                          bool& aDetoured );
+                          bool& aDetoured, int aNarrowWidth = 0 );
 
     /**
      * Connections routed together along one sketch.  Every member gets a lane beside the
@@ -384,6 +389,7 @@ private:
 
     std::map<std::pair<NET_HANDLE, int>, std::unique_ptr<SKETCH_FIELD>> m_fields;
     std::vector<FIELD_CHANGE>        m_passChanges;   ///< copper the current pass added
+    int                              m_narrowed = 0;  ///< see SKETCH_ROUTER_STATS
 
     ///< By net, kind of via and tile: 1 the rules allow it there, 0 not, -1 it depends where
     std::map<std::tuple<NET_HANDLE, int, int, int>, int8_t> m_viaAllowedTiles;

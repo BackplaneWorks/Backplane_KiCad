@@ -2497,6 +2497,7 @@ NODE* SKETCH_ROUTER::Route( NODE* aWorld, const std::vector<SKETCH_CONNECTION>& 
         int                  vias = 0;
         long long            routedLength = 0;
 
+        m_narrowed = 0;
         routePass( branch, conns, order, status, cost, vias, routedLength );
         m_stats.m_passes = pass + 1;
 
@@ -2518,6 +2519,7 @@ NODE* SKETCH_ROUTER::Route( NODE* aWorld, const std::vector<SKETCH_CONNECTION>& 
             bestStatus = status;
             bestVias = vias;
             bestLength = routedLength;
+            m_stats.m_narrowed = m_narrowed;
         }
         else
         {
@@ -3637,10 +3639,16 @@ bool SKETCH_ROUTER::routePass( NODE* aNode, const std::vector<SKETCH_CONNECTION>
             }
         }
 
+        const int narrowedBefore = m_narrowed;
+
         if( routeConnection( aNode, aConnections[idx],
                              bundle >= 0 ? (int) m_bundles[bundle].m_members.size() : 1,
                              m_laneOffsets[idx], cost, aVias, aLength, detoured ) )
         {
+            // A route narrower than its net asks counts against the pass, like a long way round
+            if( m_narrowed > narrowedBefore )
+                cost += 5.0 * cost + 1e6;
+
             aStatus[idx] = detoured ? ROUTE_DETOURED : ROUTE_OK;
             aCost += cost;
         }
@@ -3781,7 +3789,7 @@ std::vector<SKETCH_EXIT> SKETCH_ROUTER::PadExits( const ITEM* aItem, const VECTO
 
 bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn, int aBundleSize,
                                      double aLaneOffset, double& aCost, int& aVias,
-                                     long long& aLength, bool& aDetoured )
+                                     long long& aLength, bool& aDetoured, int aNarrowWidth )
 {
     ROUTER_IFACE* iface = Router()->GetInterface();
 
@@ -3797,6 +3805,9 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
 
     if( m_options.m_trackWidth > 0 )
         sizes.SetTrackWidth( m_options.m_trackWidth );
+
+    if( aNarrowWidth > 0 )
+        sizes.SetTrackWidth( aNarrowWidth );
 
     sizes.SetViaType( VIATYPE::THROUGH );
 
@@ -4514,6 +4525,38 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
 
     if( !candidates.empty() && commitCheapest() )
         return true;
+
+    // No way at the net's width.  Between the pads of a fine-pitch part the board's rules
+    // often allow a narrower track than the net's class asks, and its designer used one:
+    // when the caller allows it, the connection is tried once more that narrow.
+    if( aNarrowWidth == 0 && !guided && m_options.m_minTrackWidth > 0 && !cancelled() )
+    {
+        int narrow = m_options.m_minTrackWidth;
+
+        for( const auto& [pos, item] : { std::pair<VECTOR2I, ITEM*>{ s, aConn.m_start },
+                                        std::pair<VECTOR2I, ITEM*>{ t, aConn.m_end } } )
+        {
+            SEGMENT probe( SEG( pos, pos ), aConn.m_net );
+            probe.SetWidth( narrow );
+            probe.SetLayer( item->Layers().Start() );
+
+            CONSTRAINT constraint;
+
+            if( aNode->GetRuleResolver()->QueryConstraint( CONSTRAINT_TYPE::CT_WIDTH, &probe, nullptr,
+                                                           item->Layers().Start(), &constraint )
+                    && constraint.m_Value.HasMin() )
+            {
+                narrow = std::max( narrow, constraint.m_Value.Min() );
+            }
+        }
+
+        if( narrow < width && routeConnection( aNode, aConn, aBundleSize, aLaneOffset, aCost, aVias, aLength,
+                                               aDetoured, narrow ) )
+        {
+            m_narrowed++;
+            return true;
+        }
+    }
 
     return false;
 }
