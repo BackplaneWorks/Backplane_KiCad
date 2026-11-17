@@ -50,6 +50,7 @@ enum LineMarker {
 class ITEM;
 class HOLE;
 struct COLLISION_SEARCH_CONTEXT;
+struct COLLISION_SEARCH_OPTIONS;
 
 // An opaque net identifier.  The internal workings are owned by the ROUTER_IFACE.
 typedef void* NET_HANDLE;
@@ -236,6 +237,18 @@ public:
      *
      * @return true, if a collision was found.
      */
+    /**
+     * Backplane: the clearance Collide() holds \a aHead to against this item where their layers
+     * overlap, or -1 when the pair never collides (same net, a keepout that does not apply, not
+     * flashed on the layer).  It does not depend on where the two are, but for rules that ask.
+     */
+    int CollisionClearance( const ITEM* aHead, const NODE* aNode,
+                            const COLLISION_SEARCH_OPTIONS* aOptions = nullptr ) const;
+
+    /// Backplane: false for the pairs Collide() never looks at (an item and itself, a hole and
+    /// the pad or via it belongs to)
+    bool CollisionCandidate( const ITEM* aHead ) const;
+
     bool Collide( const ITEM* aHead, const NODE* aNode, int aLayer,
                   COLLISION_SEARCH_CONTEXT* aCtx = nullptr ) const;
 

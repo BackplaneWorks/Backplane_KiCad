@@ -22,6 +22,8 @@
 
 #include <algorithm>
 #include <functional>
+#include <map>
+#include <memory>
 #include <vector>
 
 #include <math/box2.h>
@@ -38,6 +40,7 @@ namespace PNS {
 
 class NODE;
 class ROUTER_IFACE;
+class SKETCH_FIELD;
 class VIA;
 
 /**
@@ -124,6 +127,10 @@ struct SKETCH_ROUTER_OPTIONS
 
     ///< Run the PNS optimizer over each finished route.
     bool m_optimize = true;
+
+    ///< Keep each net's obstacles by place (SKETCH_FIELD) instead of asking the node about every
+    ///< probe.  The routes are the same; off only to compare.
+    bool m_obstacleField = true;
 
     ///< Without a sketch, route groups of connections between the same two footprints as
     ///< bundles along a path found for the whole group.
@@ -313,11 +320,27 @@ private:
 
     bool cancelled();
 
+    ///< The obstacle field of a net and track width, made on first use
+    SKETCH_FIELD* field( NODE* aNode, NET_HANDLE aNet, int aWidth );
+
+    ///< Tell the fields that an item is about to be added to or taken from the node
+    void fieldsChanged( const ITEM* aItem );
+
+    struct FIELD_CHANGE
+    {
+        BOX2I m_box;
+        int   m_layerStart;
+        int   m_layerEnd;
+    };
+
     ///< Report progress from within a search; false once the user has cancelled
     bool keepGoing();
 
     SKETCH_ROUTER_OPTIONS            m_options;
     SKETCH_ROUTER_STATS              m_stats;
+
+    std::map<std::pair<NET_HANDLE, int>, std::unique_ptr<SKETCH_FIELD>> m_fields;
+    std::vector<FIELD_CHANGE>        m_passChanges;   ///< copper the current pass added
     std::function<bool( int, int )>  m_progressCallback;
     std::vector<int>                 m_layers;
     DIRECTION_45::CORNER_MODE        m_cornerMode;

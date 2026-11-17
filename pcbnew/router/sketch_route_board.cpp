@@ -27,6 +27,9 @@
 #include <drc/drc_engine.h>
 #include <netinfo.h>
 #include <pcb_track.h>
+#include <cstdlib>
+#include <string>
+
 #include <wx/filename.h>
 
 #include "pns_arc.h"
@@ -114,6 +117,15 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
 
     if( aRequest.m_progress )
         sketch.SetProgressCallback( aRequest.m_progress );
+
+    // For comparing the router with and without a piece of itself (the routing benchmark)
+    if( const char* off = std::getenv( "BACKPLANE_SKETCH_OFF" ) )
+    {
+        const std::string list( off );
+
+        if( list.find( "field" ) != std::string::npos )
+            options.m_obstacleField = false;
+    }
 
     if( aRequest.m_configure )
         aRequest.m_configure( options );

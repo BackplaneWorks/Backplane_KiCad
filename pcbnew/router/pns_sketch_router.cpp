@@ -753,6 +753,265 @@ bool viaHolesClear( NODE* aNode, const VIA& aVia, int aHoleToHole )
 
 
 /**
+ * What a track of one net and width may not touch, kept by where it is.
+ *
+ * The search asks about millions of short segments, and NODE::CheckColliding() works out the
+ * clearance to every nearby item anew for each of them (the rules are evaluated for a temporary
+ * item, which no cache holds for long).  The clearance between a track of this net and an item
+ * depends on the two, not on where the probe is, so it is asked once per item here, and the
+ * items that can matter to a probe are kept per tile of the board.  A probe is then a few
+ * shape tests.  The answers are those of NODE::CheckColliding(): the same candidates, the same
+ * clearances (ITEM::CollisionClearance()), the same shape test and the same exclusions.  A rule
+ * that depends on where the track is (an area) is asked at the tile's middle; every route is
+ * checked whole by the node before it is kept.
+ */
+class SKETCH_FIELD
+{
+public:
+    SKETCH_FIELD( NODE* aNode, NET_HANDLE aNet, int aWidth ) :
+            m_node( aNode ),
+            m_net( aNet ),
+            m_width( aWidth )
+    {
+        m_options.m_limitCount = 1;
+    }
+
+    void SetNode( NODE* aNode )
+    {
+        m_node = aNode;
+        m_branchClearance.clear();
+    }
+
+    NET_HANDLE Net() const { return m_net; }
+    int        Width() const { return m_width; }
+
+    /// Copper was added to or taken from the node inside \a aBox on these layers
+    void Changed( const BOX2I& aBox, int aLayerStart, int aLayerEnd )
+    {
+        m_branchClearance.clear();
+
+        if( m_tiles.empty() )
+            return;
+
+        BOX2I box = aBox;
+        box.Inflate( m_node->GetMaxClearance() + m_width );
+
+        const int x0 = box.GetLeft() >> TILE_SHIFT;
+        const int y0 = box.GetTop() >> TILE_SHIFT;
+        const int x1 = box.GetRight() >> TILE_SHIFT;
+        const int y1 = box.GetBottom() >> TILE_SHIFT;
+
+        if( int64_t( x1 - x0 + 1 ) * ( y1 - y0 + 1 ) * ( aLayerEnd - aLayerStart + 1 ) > (int64_t) m_tiles.size() )
+        {
+            for( auto it = m_tiles.begin(); it != m_tiles.end(); )
+            {
+                const int layer = int( it->first >> 48 );
+                const int tx = int( ( it->first >> 24 ) & 0xFFFFFF ) - TILE_BIAS;
+                const int ty = int( it->first & 0xFFFFFF ) - TILE_BIAS;
+
+                if( layer >= aLayerStart && layer <= aLayerEnd && tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1 )
+                    it = m_tiles.erase( it );
+                else
+                    ++it;
+            }
+
+            return;
+        }
+
+        for( int layer = aLayerStart; layer <= aLayerEnd; layer++ )
+        {
+            for( int ty = y0; ty <= y1; ty++ )
+            {
+                for( int tx = x0; tx <= x1; tx++ )
+                    m_tiles.erase( key( layer, tx, ty ) );
+            }
+        }
+    }
+
+    /// As !NODE::CheckColliding() of a segment of the field's net and width on \a aLayer
+    bool SegmentFree( const VECTOR2I& aA, const VECTOR2I& aB, int aLayer )
+    {
+        const int x0 = std::min( aA.x, aB.x ) >> TILE_SHIFT;
+        const int y0 = std::min( aA.y, aB.y ) >> TILE_SHIFT;
+        const int x1 = std::max( aA.x, aB.x ) >> TILE_SHIFT;
+        const int y1 = std::max( aA.y, aB.y ) >> TILE_SHIFT;
+
+        if( ( x1 - x0 + 1 ) * ( y1 - y0 + 1 ) > 9 )
+        {
+            SEGMENT seg( SEG( aA, aB ), m_net );
+            seg.SetWidth( m_width );
+            seg.SetLayer( aLayer );
+            return !m_node->CheckColliding( &seg );
+        }
+
+        const SHAPE_SEGMENT head( aA, aB, m_width );
+        BOX2I               headBox( aA, VECTOR2I( 0, 0 ) );
+        headBox.Merge( aB );
+
+        for( int ty = y0; ty <= y1; ty++ )
+        {
+            for( int tx = x0; tx <= x1; tx++ )
+            {
+                for( const NEIGHBOUR& cand : tile( aLayer, tx, ty ) )
+                {
+                    if( !cand.m_reach.Intersects( headBox ) )
+                        continue;
+
+                    if( !cand.m_exclusions )
+                    {
+                        if( head.Collide( cand.m_shape, cand.m_distance ) )
+                            return false;
+
+                        continue;
+                    }
+
+                    // Castellated edges and net ties let copper through at some places
+                    int      actual = 0;
+                    VECTOR2I pos;
+
+                    if( !head.Collide( cand.m_shape, cand.m_distance, &actual, &pos ) )
+                        continue;
+
+                    if( ( cand.m_exclusions & CASTELLATION ) && m_node->QueryEdgeExclusions( pos ) )
+                        continue;
+
+                    if( cand.m_exclusions & NET_TIE )
+                    {
+                        SEGMENT seg( SEG( aA, aB ), m_net );
+                        seg.SetWidth( m_width );
+                        seg.SetLayer( aLayer );
+
+                        if( m_node->GetRuleResolver()->IsNetTieExclusion( &seg, pos, cand.m_item ) )
+                            continue;
+                    }
+
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+private:
+    // About a millimetre: a few grid steps of a fine track, a few dozen items at most
+    static constexpr int TILE_SHIFT = 20;
+    static constexpr int TILE_BIAS = 1 << 23;
+
+    enum EXCLUSIONS { CASTELLATION = 1, NET_TIE = 2 };
+
+    struct NEIGHBOUR
+    {
+        const SHAPE* m_shape;
+        const ITEM*  m_item;
+        BOX2I        m_reach;       ///< the item's box, grown by the distance a track's middle must keep
+        int          m_distance;    ///< what SHAPE::Collide() is asked: the clearance less one
+        int          m_exclusions;
+    };
+
+    static uint64_t key( int aLayer, int aTx, int aTy )
+    {
+        return ( uint64_t( aLayer ) << 48 ) | ( uint64_t( aTx + TILE_BIAS ) << 24 ) | uint64_t( aTy + TILE_BIAS );
+    }
+
+    int clearance( const ITEM* aItem, const SEGMENT& aProto, int aLayer )
+    {
+        auto& cache = aItem->BelongsTo( m_node ) && m_node->GetParent() ? m_branchClearance : m_rootClearance;
+        const std::pair<const ITEM*, int> k( aItem, aLayer );
+        auto  it = cache.find( k );
+
+        if( it != cache.end() )
+            return it->second;
+
+        const int value = aItem->CollisionClearance( &aProto, m_node, &m_options );
+
+        cache.emplace( k, value );
+        return value;
+    }
+
+    const std::vector<NEIGHBOUR>& tile( int aLayer, int aTx, int aTy )
+    {
+        auto [it, isNew] = m_tiles.try_emplace( key( aLayer, aTx, aTy ) );
+
+        if( !isNew )
+            return it->second;
+
+        std::vector<NEIGHBOUR>& cands = it->second;
+        const int               size = 1 << TILE_SHIFT;
+        const BOX2I             box( VECTOR2I( aTx * size, aTy * size ), VECTOR2I( size - 1, size - 1 ) );
+        const VECTOR2I          middle = box.Centre();
+
+        SEGMENT proto( SEG( middle, middle ), m_net );
+        proto.SetWidth( m_width );
+        proto.SetLayer( aLayer );
+
+        RULE_RESOLVER* resolver = m_node->GetRuleResolver();
+
+        m_node->VisitNearby( aLayer, box, m_node->GetMaxClearance() + m_width / 2 + 1,
+                [&]( ITEM* aItem )
+                {
+                    if( !aItem->OfKind( m_options.m_kindMask ) || !aItem->CollisionCandidate( &proto )
+                            || !aItem->Layers().Overlaps( aLayer ) )
+                    {
+                        return;
+                    }
+
+                    const int clr = clearance( aItem, proto, aLayer );
+
+                    if( clr < 0 )
+                        return;
+
+                    const SHAPE* shape = aItem->Shape( aLayer );
+
+                    if( !shape )
+                        return;
+
+                    NEIGHBOUR cand;
+                    cand.m_shape = shape;
+                    cand.m_item = aItem;
+                    cand.m_distance = clr - 1;
+                    cand.m_reach = shape->BBox();
+                    cand.m_reach.Inflate( std::max( 0, clr ) + m_width / 2 + 1 );
+                    cand.m_exclusions = 0;
+
+                    if( !cand.m_reach.Intersects( box ) )
+                        return;
+
+                    if( ( aItem->Parent() && aItem->Parent()->GetLayer() == Edge_Cuts )
+                            || resolver->IsNonPlatedSlot( aItem ) )
+                    {
+                        cand.m_exclusions |= CASTELLATION;
+                    }
+
+                    if( resolver->IsInNetTie( aItem ) )
+                        cand.m_exclusions |= NET_TIE;
+
+                    cands.push_back( cand );
+                } );
+
+        return cands;
+    }
+
+    struct PAIR_HASH
+    {
+        size_t operator()( const std::pair<const ITEM*, int>& aKey ) const
+        {
+            return std::hash<const void*>()( aKey.first ) * 31 + aKey.second;
+        }
+    };
+
+    NODE*                    m_node;
+    NET_HANDLE               m_net;
+    int                      m_width;
+    COLLISION_SEARCH_OPTIONS m_options;
+
+    std::unordered_map<uint64_t, std::vector<NEIGHBOUR>> m_tiles;
+    std::unordered_map<std::pair<const ITEM*, int>, int, PAIR_HASH> m_rootClearance;
+    std::unordered_map<std::pair<const ITEM*, int>, int, PAIR_HASH> m_branchClearance;
+};
+
+
+/**
  * A* search for one connection over a window of the octilinear routing grid.
  *
  * The grid origin is the start anchor, so the route leaves it on a grid line.  With exits it
@@ -805,6 +1064,9 @@ public:
 
         ///< Items on these nets are not obstacles
         const std::set<NET_HANDLE>* m_ignoreNets = nullptr;
+
+        ///< The obstacles of this net and width by place, or nullptr to ask the node each time
+        SKETCH_FIELD*            m_field = nullptr;
         bool                     m_orthogonal = false;
         bool                     m_allowVias = true;
         double                   m_viaCost = 20.0;   ///< in grid steps
@@ -1228,6 +1490,12 @@ private:
         if( inFreeZone( ( aA + aB ) / 2 ) )
             return true;
 
+        if( m_p.m_field && !m_p.m_ignoreNets )
+        {
+            m_stats.m_collisionChecks++;
+            return m_p.m_field->SegmentFree( aA, aB, m_p.m_layers[aLayer] );
+        }
+
         SEGMENT seg( SEG( aA, aB ), m_p.m_net );
         seg.SetWidth( m_p.m_width );
         seg.SetLayer( m_p.m_layers[aLayer] );
@@ -1640,6 +1908,8 @@ NODE* SKETCH_ROUTER::Route( NODE* aWorld, const std::vector<SKETCH_CONNECTION>& 
 
     m_stats = SKETCH_ROUTER_STATS();
     m_stats.m_connections = (int) aConnections.size();
+    m_fields.clear();
+    m_passChanges.clear();
     m_deadline = start + std::max( 1, m_options.m_timeLimitMs );
     m_cornerMode = Settings().GetCornerMode();
     m_orthogonal = m_cornerMode == DIRECTION_45::MITERED_90
@@ -1778,6 +2048,17 @@ NODE* SKETCH_ROUTER::Route( NODE* aWorld, const std::vector<SKETCH_CONNECTION>& 
         NODE*                branch = aWorld->Branch();
         std::vector<uint8_t> status( aConnections.size(), ROUTE_FAILED );
 
+        // The last pass's copper went with its branch
+        for( auto& [key, found] : m_fields )
+        {
+            found->SetNode( branch );
+
+            for( const FIELD_CHANGE& change : m_passChanges )
+                found->Changed( change.m_box, change.m_layerStart, change.m_layerEnd );
+        }
+
+        m_passChanges.clear();
+
         m_stats.m_lanes.clear();
         double               cost = 0.0;
         int                  vias = 0;
@@ -1842,6 +2123,8 @@ NODE* SKETCH_ROUTER::Route( NODE* aWorld, const std::vector<SKETCH_CONNECTION>& 
     }
 
     m_stats.m_elapsedMs = double( nowMs() - start );
+    m_fields.clear();
+    m_passChanges.clear();
 
     if( best && bestRouted <= 0 )
     {
@@ -2747,6 +3030,61 @@ double SKETCH_ROUTER::bendInnerness( const SKETCH_CONNECTION& aConn ) const
 }
 
 
+SKETCH_FIELD* SKETCH_ROUTER::field( NODE* aNode, NET_HANDLE aNet, int aWidth )
+{
+    if( !m_options.m_obstacleField )
+        return nullptr;
+
+    std::unique_ptr<SKETCH_FIELD>& found = m_fields[{ aNet, aWidth }];
+
+    if( !found )
+        found = std::make_unique<SKETCH_FIELD>( aNode, aNet, aWidth );
+
+    return found.get();
+}
+
+
+void SKETCH_ROUTER::fieldsChanged( const ITEM* aItem )
+{
+    if( m_fields.empty() )
+        return;
+
+    BOX2I box;
+
+    if( aItem->Kind() == ITEM::LINE_T )
+    {
+        const LINE* line = static_cast<const LINE*>( aItem );
+        box = line->CLine().BBox();
+        box.Inflate( line->Width() / 2 + 1 );
+    }
+    else
+    {
+        bool first = true;
+
+        for( int layer = aItem->Layers().Start(); layer <= aItem->Layers().End(); layer++ )
+        {
+            if( const SHAPE* shape = aItem->Shape( layer ) )
+            {
+                if( first )
+                    box = shape->BBox();
+                else
+                    box.Merge( shape->BBox() );
+
+                first = false;
+            }
+        }
+
+        if( first )
+            return;
+    }
+
+    m_passChanges.push_back( { box, aItem->Layers().Start(), aItem->Layers().End() } );
+
+    for( auto& [key, found] : m_fields )
+        found->Changed( box, aItem->Layers().Start(), aItem->Layers().End() );
+}
+
+
 bool SKETCH_ROUTER::routePass( NODE* aNode, const std::vector<SKETCH_CONNECTION>& aConnections,
                                const std::vector<int>& aOrder, std::vector<uint8_t>& aStatus,
                                double& aCost, int& aVias, long long& aLength )
@@ -2807,6 +3145,7 @@ bool SKETCH_ROUTER::routePass( NODE* aNode, const std::vector<SKETCH_CONNECTION>
                     stub->SetLayer( aPad->Layers().Start() );
 
                     reserved[idx].push_back( stub.get() );
+                    fieldsChanged( stub.get() );
                     aNode->Add( std::move( stub ), true );
                 };
 
@@ -2818,7 +3157,10 @@ bool SKETCH_ROUTER::routePass( NODE* aNode, const std::vector<SKETCH_CONNECTION>
             [&]( int aIdx )
             {
                 for( SEGMENT* stub : reserved[aIdx] )
+                {
+                    fieldsChanged( stub );
                     aNode->Remove( stub );
+                }
 
                 reserved[aIdx].clear();
             };
@@ -3417,6 +3759,7 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         params.m_node = aNode;
         params.m_net = aConn.m_net;
         params.m_width = width;
+        params.m_field = field( aNode, aConn.m_net, width );
         params.m_pitch = attemptPitch;
         params.m_viaProto = &viaProto;
         params.m_layers = layers;
@@ -3797,6 +4140,7 @@ bool SKETCH_ROUTER::commitPath( NODE* aNode, const SKETCH_CONNECTION& aConn, int
         via->SetNet( aConn.m_net );
 
         addedVias.push_back( via.get() );
+        fieldsChanged( via.get() );
         aNode->Add( std::move( via ) );
     }
 
@@ -3879,13 +4223,19 @@ bool SKETCH_ROUTER::commitPath( NODE* aNode, const SKETCH_CONNECTION& aConn, int
     if( !ok )
     {
         for( VIA* via : addedVias )
+        {
+            fieldsChanged( via );
             aNode->Remove( via );
+        }
 
         return false;
     }
 
     for( LINE& line : lines )
+    {
+        fieldsChanged( &line );
         aNode->Add( line );
+    }
 
     aViaCount += (int) aVias.size();
     aLength += length;

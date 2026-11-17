@@ -38,6 +38,8 @@
 #include "pns_item.h"
 #include "pns_itemset.h"
 #include "pns_line.h"
+#include <geometry/shape_rect.h>
+
 #include "pns_node.h"
 #include "pns_via.h"
 #include "pns_solid.h"
@@ -809,6 +811,36 @@ bool NODE::Add( std::unique_ptr< ARC > aArc, bool aAllowRedundant )
 void NODE::AddEdgeExclusion( std::unique_ptr<SHAPE> aShape )
 {
     m_edgeExclusions.push_back( std::move( aShape ) );
+}
+
+
+void NODE::VisitNearby( int aLayer, const BOX2I& aBox, int aDistance,
+                        const std::function<void( ITEM* )>& aVisitor ) const
+{
+    const SHAPE_RECT rect( aBox );
+
+    auto own =
+            [&]( ITEM* aItem )
+            {
+                aVisitor( aItem );
+                return true;
+            };
+
+    m_index->QueryLayer( aLayer, &rect, aDistance, own );
+
+    if( !isRoot() )
+    {
+        auto inherited =
+                [&]( ITEM* aItem )
+                {
+                    if( !Overrides( aItem ) )
+                        aVisitor( aItem );
+
+                    return true;
+                };
+
+        m_root->m_index->QueryLayer( aLayer, &rect, aDistance, inherited );
+    }
 }
 
 

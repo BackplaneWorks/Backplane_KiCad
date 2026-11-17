@@ -124,6 +124,19 @@ public:
     int Query( const SHAPE* aShape, int aMinDistance, Visitor& aVisitor ) const;
 
     /**
+     * Backplane: call \a aVisitor on every item of PNS layer \a aLayer whose bounding box is
+     * within \a aMinDistance of \a aShape's.  No collision test is made.
+     */
+    template<class Visitor>
+    int QueryLayer( int aLayer, const SHAPE* aShape, int aMinDistance, Visitor& aVisitor ) const
+    {
+        if( aLayer < 0 || aLayer >= (int) m_subIndices.size() )
+            return 0;
+
+        return m_subIndices[aLayer]->Query( aShape, aMinDistance, aVisitor );
+    }
+
+    /**
      * Returns list of all items in a given net.
      */
     NET_ITEMS_LIST* GetItemsForNet( NET_HANDLE aNet );
