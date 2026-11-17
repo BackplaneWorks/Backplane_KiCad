@@ -4,7 +4,10 @@
 # sources (GitLab's NuGet feed read-only, a files cache on this machine), the pinned libraries and
 # 3D models, then scripts/backplane-windows.ps1 (build, relocate, IPC smoke, package, libraries gate).
 #
-#   pwsh -File scripts/backplane-windows-local.ps1 -Root E:\bpk [-Jobs 2] [-SkipLibraries] [-ConfigureOnly]
+#   pwsh -File scripts/backplane-windows-local.ps1 -Root E:\bpk [-Jobs 2] [-SkipLibraries] [-ConfigureOnly] [-Ccache]
+#
+# bp-winbuild (32 cores, its data disk D:): -Root D:\bpk -Jobs 32 -Priority Normal -Ccache, the
+# checkout in C:\src\kicad; scripts/backplane-windows-toolchain.ps1 installs its tools.
 #
 # -Root holds everything (vcpkg, its binary cache, build, stage, the library stage) and must be on a
 # drive other than this checkout's (the build script checks it, as on GitHub: source D:, build C:).
@@ -17,7 +20,10 @@ param(
     # Install vcpkg's dependencies and configure only (no libraries, no compile)
     [switch]$ConfigureOnly,
     # Idle while another job shares the machine (bp-win's timed gates)
-    [ValidateSet('Idle', 'BelowNormal', 'Normal')][string]$Priority = 'BelowNormal'
+    [ValidateSet('Idle', 'BelowNormal', 'Normal')][string]$Priority = 'BelowNormal',
+    # ccache for the compile, its cache in <Root>\ccache (bp-winbuild: on, from its data disk)
+    [switch]$Ccache,
+    [string]$CcacheSize = '40G'
 )
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
@@ -36,6 +42,15 @@ $env:VCPKG_DEFAULT_BINARY_CACHE = Join-Path $Root 'vcpkg-cache'
 $env:VCPKG_BINARY_SOURCES = "clear;nuget,https://gitlab.com/api/v4/projects/27426693/packages/nuget/index.json,read;files,$($env:VCPKG_DEFAULT_BINARY_CACHE),readwrite"
 $env:VCPKG_MAX_CONCURRENCY = "$Jobs"
 $env:RUNNER_TEMP = Join-Path $Root 'temp'
+if ($Ccache) {
+    $env:BACKPLANE_WIN_CCACHE = '1'
+    $env:CCACHE_DIR = Join-Path $Root 'ccache'
+    $env:CCACHE_MAXSIZE = $CcacheSize
+    # Paths under the checkout hash relative, so another checkout folder still hits
+    $env:CCACHE_BASEDIR = $source
+    $env:CCACHE_COMPRESS = '1'
+    New-Item -ItemType Directory -Force $env:CCACHE_DIR | Out-Null
+} else { Remove-Item Env:BACKPLANE_WIN_CCACHE -ErrorAction SilentlyContinue }
 Remove-Item Env:GITHUB_ACTIONS -ErrorAction SilentlyContinue
 
 # The MSVC x64 developer environment (what ilammy/msvc-dev-cmd gives the workflow)

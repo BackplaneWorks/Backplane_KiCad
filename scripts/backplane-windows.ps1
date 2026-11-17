@@ -34,7 +34,16 @@ if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "backplane-kica
     throw 'Release tag does not match BACKPLANE_VERSION'
 }
 $upstream = (Get-Content BACKPLANE_UPSTREAM -Raw).Trim()
-cmake -S . -B $build -G Ninja `
+# BACKPLANE_WIN_CCACHE=1 (backplane-windows-local.ps1 -Ccache): KiCad's USE_CCACHE puts ccache in front
+# of cl and switches MSVC to embedded debug information (/Z7), which ccache can cache; the linker still
+# writes every PDB.  CCACHE_DIR and its size come from the caller.
+$cacheArgs = @()
+if ($env:BACKPLANE_WIN_CCACHE) {
+    if (!(Get-Command ccache -ErrorAction SilentlyContinue)) { throw 'BACKPLANE_WIN_CCACHE is set but ccache is not on PATH' }
+    $cacheArgs = @('-DUSE_CCACHE=ON')
+    ccache --zero-stats | Out-Null
+}
+cmake -S . -B $build -G Ninja @cacheArgs `
     "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
     "-DVCPKG_OVERLAY_TRIPLETS=$source/tools/custom_vcpkg_triplets" `
     '-DVCPKG_INSTALL_OPTIONS=--x-abi-tools-use-exact-versions' `
@@ -58,6 +67,7 @@ if ($env:BACKPLANE_WIN_CONFIGURE_ONLY) {
     return
 }
 cmake --build $build --parallel $jobs
+if ($env:BACKPLANE_WIN_CCACHE) { ccache --show-stats }
 cmake --install $build
 # The PDBs (KICAD_WIN32_INSTALL_PDBS) go into their own symbols archive, never into the runtime,
 # so a stall stack from the release build can be resolved
