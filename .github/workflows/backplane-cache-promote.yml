@@ -1,20 +1,24 @@
 name: Backplane KiCad cache promote
 
 # A run can read only its own ref's caches and the default branch's (main). Release-line and
-# candidate builds therefore don't save caches of their own. Each one uploads its compiler cache
-# as a 1-day artifact named ccache-<platform>-<sha>, and this workflow, which runs on main, saves
-# it as main's one rolling entry per platform. Every new candidate branch and every tag then
-# restores a warm cache.
+# candidate builds therefore don't save caches of their own. Each one uploads its caches as a
+# 1-day artifact named ccache-<platform>-<sha>, and this workflow, which runs on main, saves them
+# as main's caches. That's one rolling compiler cache entry per platform, plus Windows' vcpkg
+# binary cache per vcpkg graph. Every new candidate branch and every tag then restores warm.
 #
-# The cache is written only from the fork's own successful push or workflow_dispatch runs on
-# release/** or a candidate branch (^fix/bp<N>(.<M>)*-final<k>$). Never from a pull request, a
-# fork or a feature branch. Only cache entries are deleted (main's older entries of the same
-# platform), never artifacts or runs.
+# Only the fork's own successful push or workflow_dispatch runs on release/** or a candidate
+# branch (^fix/bp<N>(.<M>)*-final<k>$) write main's caches. Never a pull request, a fork or a
+# feature branch. Only cache entries are deleted (main's older entries of the same platform),
+# never artifacts or runs.
+#
+# actions/cache matches an entry by its path and compression as well as its key. Each platform
+# is therefore saved on the same runner (and container) as its build, under the same path.
 on:
   workflow_run:
     workflows:
       - Backplane KiCad macOS
       - Backplane KiCad Linux runtime (upstream master base)
+      - Backplane KiCad Windows
     types: [completed]
 
 permissions:
@@ -24,89 +28,190 @@ concurrency:
   group: cache-promote-${{ github.event.workflow_run.name }}
   cancel-in-progress: false
 
+env:
+  RUN_ID: ${{ github.event.workflow_run.id }}
+
 jobs:
-  promote:
+  gate:
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 5
     permissions:
-      actions: write
-      contents: read
-    env:
-      GH_TOKEN: ${{ github.token }}
-      RUN_ID: ${{ github.event.workflow_run.id }}
-      HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
-      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      actions: read
+    outputs:
+      artifact: ${{ steps.gate.outputs.artifact }}
+      platform: ${{ steps.gate.outputs.platform }}
     steps:
-      - name: Release line or candidate branch only
+      - name: Release line or candidate branch, and the run's own artifact
         id: gate
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-          if [[ "$HEAD_BRANCH" =~ ^release/ ]] || [[ "$HEAD_BRANCH" =~ ^fix/bp[0-9]+(\.[0-9]+)*-final[0-9]*$ ]]; then
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::$HEAD_BRANCH is neither release/** nor a candidate branch; nothing promoted"
-            echo "ok=false" >> "$GITHUB_OUTPUT"
+          if ! [[ "$HEAD_BRANCH" =~ ^release/ || "$HEAD_BRANCH" =~ ^fix/bp[0-9]+(\.[0-9]+)*-final[0-9]*$ ]]; then
+            echo "::notice::$HEAD_BRANCH is neither release/** nor a candidate branch: nothing promoted"
+            exit 0
           fi
-          # The artifact must be this run's own: named for its platform and head SHA.
           name=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
-            -q "[.artifacts[] | select(.expired == false and (.name | test(\"^ccache-[a-z0-9_-]+-$HEAD_SHA\$\"))) | .name][0] // \"\"")
+            -q "[.artifacts[] | select(.expired == false and (.name | test(\"^ccache-(macos-ARM64|linux-x86_64|windows-x64)-$HEAD_SHA\$\"))) | .name][0] // \"\"")
+          if [ -z "$name" ]; then echo "::notice::run $RUN_ID uploaded no compiler cache"; exit 0; fi
+          platform=${name#ccache-}; platform=${platform%%-*}
           echo "artifact=$name" >> "$GITHUB_OUTPUT"
-          [ -n "$name" ] || { echo "::notice::run $RUN_ID uploaded no compiler cache"; echo "ok=false" >> "$GITHUB_OUTPUT"; }
+          echo "platform=$platform" >> "$GITHUB_OUTPUT"
+          echo "promoting $name from run $RUN_ID ($HEAD_BRANCH @ ${HEAD_SHA:0:10})" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Download the run's compiler cache
-        if: steps.gate.outputs.ok == 'true'
-        uses: actions/download-artifact@v4
+  macos:
+    needs: gate
+    if: needs.gate.outputs.platform == 'macos'
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      actions: read
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.backplane-ccache
+    outputs:
+      key: ${{ steps.unpack.outputs.key }}
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          name: ${{ steps.gate.outputs.artifact }}
+          name: ${{ needs.gate.outputs.artifact }}
           run-id: ${{ env.RUN_ID }}
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/in
-
       - name: Unpack
-        if: steps.gate.outputs.ok == 'true'
+        id: unpack
+        run: |
+          set -euo pipefail
+          prefix=$(tr -d '[:space:]' < "$RUNNER_TEMP/in/ccache/key-prefix")
+          [[ "$prefix" =~ ^kicad-macos-[A-Za-z0-9]+-[0-9a-f]{12}-$ ]] || { echo "bad key prefix: $prefix" >&2; exit 1; }
+          mkdir -p "$CCACHE_DIR"
+          tar -C "$CCACHE_DIR" -xf "$RUNNER_TEMP/in/ccache/data.tar"
+          rm -rf "$RUNNER_TEMP/in"; du -sh "$CCACHE_DIR"
+          echo "key=${prefix}main-$RUN_ID" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/save@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.unpack.outputs.key }}
+
+  linux:
+    needs: gate
+    if: needs.gate.outputs.platform == 'linux'
+    runs-on: ubuntu-24.04
+    # The build's own container, so ~ and the compression match its restore
+    container:
+      image: ubuntu:26.04
+    timeout-minutes: 30
+    permissions:
+      actions: read
+    outputs:
+      key: ${{ steps.unpack.outputs.key }}
+    steps:
+      - name: Tools the build container has
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y ca-certificates zstd
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.gate.outputs.artifact }}
+          run-id: ${{ env.RUN_ID }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/in
+      - name: Unpack
         id: unpack
         shell: bash
         run: |
           set -euo pipefail
-          prefix=$(tr -d '[:space:]' < "$RUNNER_TEMP/in/key-prefix")
-          # The prefix is the branch workflow's own (kicad-macos-<arch>-<toolchain>- or
-          # kicad-ccache-Linux-<toolchain>-); refuse anything else.
-          [[ "$prefix" =~ ^kicad-(macos-[A-Za-z0-9]+|ccache-Linux)-[0-9a-f]{12}-$ ]] || { echo "bad key prefix: $prefix" >&2; exit 1; }
-          mkdir -p "$RUNNER_TEMP/ccache"
-          tar -C "$RUNNER_TEMP/ccache" -xf "$RUNNER_TEMP/in/ccache.tar" --no-same-owner
-          rm -rf "$RUNNER_TEMP/in"
-          du -sh "$RUNNER_TEMP/ccache"
-          echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
-          echo "family=${prefix%-*-}-" >> "$GITHUB_OUTPUT"
-
-      - name: Save as main's cache
-        if: steps.gate.outputs.ok == 'true'
-        uses: actions/cache/save@v4
+          prefix=$(tr -d '[:space:]' < "$RUNNER_TEMP/in/ccache/key-prefix")
+          [[ "$prefix" =~ ^kicad-ccache-Linux-[0-9a-f]{12}-$ ]] || { echo "bad key prefix: $prefix" >&2; exit 1; }
+          mkdir -p ~/.cache/ccache
+          tar -C ~/.cache/ccache -xf "$RUNNER_TEMP/in/ccache/data.tar" --no-same-owner
+          rm -rf "$RUNNER_TEMP/in"; du -sh ~/.cache/ccache
+          echo "key=${prefix}main-$RUN_ID" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/save@v4
         with:
-          path: ${{ runner.temp }}/ccache
-          key: ${{ steps.unpack.outputs.prefix }}main-${{ env.RUN_ID }}
+          path: ~/.cache/ccache
+          key: ${{ steps.unpack.outputs.key }}
 
+  windows:
+    needs: gate
+    if: needs.gate.outputs.platform == 'windows'
+    runs-on: windows-2022
+    timeout-minutes: 30
+    permissions:
+      actions: read
+    outputs:
+      key: ${{ steps.unpack.outputs.key }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.gate.outputs.artifact }}
+          run-id: ${{ env.RUN_ID }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/in
+      - name: Unpack
+        id: unpack
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $in = Join-Path $env:RUNNER_TEMP 'in'
+          $prefix = (Get-Content (Join-Path $in 'ccache\key-prefix') -Raw).Trim()
+          if ($prefix -notmatch '^kicad-windows-ccache-[0-9a-f]{12}-$') { throw "bad key prefix: $prefix" }
+          New-Item -ItemType Directory -Force C:\bp\ccache | Out-Null
+          tar -C C:/bp/ccache -xf (Join-Path $in 'ccache\data.tar')
+          "key=${prefix}main-$env:RUN_ID" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          if (Test-Path (Join-Path $in 'vcpkg\data.tar')) {
+            $vk = (Get-Content (Join-Path $in 'vcpkg\key') -Raw).Trim()
+            if ($vk -notmatch '^kicad-windows-vcpkg-[0-9a-f]{64}$') { throw "bad vcpkg key: $vk" }
+            New-Item -ItemType Directory -Force C:\bp\vcpkg-cache | Out-Null
+            tar -C C:/bp/vcpkg-cache -xf (Join-Path $in 'vcpkg\data.tar')
+            "vcpkg_key=$vk" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+          }
+          Remove-Item -Recurse -Force $in
+      - uses: actions/cache/save@v4
+        with:
+          path: C:\bp\ccache
+          key: ${{ steps.unpack.outputs.key }}
+      # Saved once per vcpkg graph: a key that main already has is refused by the cache service.
+      - uses: actions/cache/save@v4
+        if: steps.unpack.outputs.vcpkg_key != ''
+        continue-on-error: true
+        with:
+          path: C:\bp\vcpkg-cache
+          key: ${{ steps.unpack.outputs.vcpkg_key }}
+
+  # main keeps one compiler cache entry per platform: the newest. Older ones (any toolchain) go.
+  prune:
+    needs: [gate, macos, linux, windows]
+    if: always() && (needs.macos.result == 'success' || needs.linux.result == 'success' || needs.windows.result == 'success')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
       - name: Keep one rolling entry per platform
-        if: steps.gate.outputs.ok == 'true'
         shell: bash
         env:
-          KEEP: ${{ steps.unpack.outputs.prefix }}main-${{ env.RUN_ID }}
-          FAMILY: ${{ steps.unpack.outputs.family }}
+          GH_TOKEN: ${{ github.token }}
+          PLATFORM: ${{ needs.gate.outputs.platform }}
         run: |
           set -euo pipefail
-          # main's entries of this platform (any toolchain), newest first; keep the newest one,
-          # which is this run's unless a later promote has already saved.
+          case "$PLATFORM" in
+            macos) family=kicad-macos- ;;
+            linux) family=kicad-ccache-Linux- ;;
+            windows) family=kicad-windows-ccache- ;;
+            *) exit 0 ;;
+          esac
           mapfile -t entries < <(gh api --paginate \
-            "repos/$GITHUB_REPOSITORY/actions/caches?ref=refs/heads/main&key=$FAMILY&sort=created_at&direction=desc&per_page=100" \
+            "repos/$GITHUB_REPOSITORY/actions/caches?ref=refs/heads/main&key=$family&sort=created_at&direction=desc&per_page=100" \
             -q '.actions_caches[] | "\(.id) \(.key)"')
           for i in "${!entries[@]}"; do
-            [ "$i" -eq 0 ] && { echo "kept ${entries[$i]}"; continue; }
-            id=${entries[$i]%% *}
-            gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/caches/$id" && echo "deleted ${entries[$i]}"
+            if [ "$i" -eq 0 ]; then echo "kept ${entries[$i]}" | tee -a "$GITHUB_STEP_SUMMARY"; continue; fi
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/caches/${entries[$i]%% *}"
+            echo "deleted ${entries[$i]}" | tee -a "$GITHUB_STEP_SUMMARY"
           done
-          echo "promoted run $RUN_ID ($HEAD_BRANCH @ ${HEAD_SHA:0:10}) as $KEEP" >> "$GITHUB_STEP_SUMMARY"
