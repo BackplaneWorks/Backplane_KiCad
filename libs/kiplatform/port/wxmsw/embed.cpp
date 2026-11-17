@@ -353,7 +353,26 @@ bool KIPLATFORM::EMBED::Supported()
 
 bool KIPLATFORM::EMBED::FrameIsKey( wxWindow* aFrame )
 {
-    return HasFocus( aFrame );
+    HWND frame = aFrame ? static_cast<HWND>( aFrame->GetHWND() ) : nullptr;
+
+    if( !frame )
+        return false;
+
+    // The embedded frame is a child of the host's window, sharing its input queue: GetFocus names
+    // the host's own focused control when the person is in the host, and nothing when the focus
+    // was dropped inside KiCad (a focused child disabled or destroyed during a job: the
+    // schematic's check run, Carbon on bp.13.1).  So the keyboard is KiCad's while the host's
+    // top-level, the one holding this frame, is in the foreground and the focus is either in the
+    // frame or nowhere.
+    HWND focus = GetFocus();
+    bool ours = !focus || focus == frame || IsChild( frame, focus );
+    bool front = GetForegroundWindow() == GetAncestor( frame, GA_ROOT );
+
+    trace( "FrameIsKey %s: focus %s, foreground %s -> %s", describe( frame ).c_str(),
+           describe( focus ).c_str(), describe( GetForegroundWindow() ).c_str(),
+           ours && front ? "yes" : "no" );
+
+    return ours && front;
 }
 
 
