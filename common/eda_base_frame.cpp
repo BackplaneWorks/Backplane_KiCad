@@ -844,6 +844,26 @@ void EDA_BASE_FRAME::OnCharHook( wxKeyEvent& aKeyEvent )
         if( key == 'Q' && mods == wxMOD_CONTROL )
             return;
 
+        // KiCad's hotkeys first, as the canvas would take them, when the keyboard is elsewhere in
+        // the frame (the frame itself, a side panel): the chord never passed the canvas's tool
+        // dispatcher.  Undo and redo depend on it: their menu items' labels are rewritten by
+        // UpdateUI ("Undo Delete", without the accelerator), so the menu lookup below cannot
+        // find them; zoom (Cmd+-, Cmd++) likewise.  A chord the canvas already declined is not
+        // offered again.
+        wxWindow* canvas = EmbedCanvas();
+        wxWindow* focus = wxWindow::FindFocus();
+        bool      canvasSawIt = canvas && focus && ( focus == canvas || canvas->IsDescendant( focus ) );
+
+        if( mods && !canvasSawIt && m_toolDispatcher )
+        {
+            wxKeyEvent hotkey( aKeyEvent );
+            hotkey.Skip( false );
+            m_toolDispatcher->DispatchWxEvent( hotkey );
+
+            if( !hotkey.GetSkipped() )
+                return;
+        }
+
         wxMenuBar* menuBar = mods ? GetMenuBar() : nullptr;
 
         for( size_t ii = 0; menuBar && ii < menuBar->GetMenuCount(); ++ii )

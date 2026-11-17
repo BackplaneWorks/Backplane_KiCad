@@ -686,8 +686,9 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 
                                                   bool taken = focus->GetEventHandler()->ProcessEvent( ke );
                                                   trace( std::string( "macos: Cmd+" ) + (char) ke.m_keyCode
-                                                         + ( ke.m_shiftDown ? " (Shift)" : "" ) + " handed to wx: "
-                                                         + ( taken ? "taken" : "not taken" ) );
+                                                         + ( ke.m_shiftDown ? " (Shift)" : "" ) + " handed to wx ("
+                                                         + wxString( focus->GetClassInfo()->GetClassName() ).ToStdString()
+                                                         + "): " + ( taken ? "taken" : "not taken" ) );
                                                   return taken ? nil : aEvent;
                                               }
 
