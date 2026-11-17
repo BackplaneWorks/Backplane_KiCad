@@ -69,6 +69,10 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     "global-tables-seeded", // a config home with no global library table gets the runtime's default
                             // (<stock data>/<table>) at first start, never over an existing one;
                             // ${BACKPLANE_KICAD_LIBRARY} defaults to <stock data>/backplane-library
+    // Runtime traits the host keys an update on before installing (in the manifest on purpose:
+    // they describe the runtime, not a session; GetFrames advertises them too):
+    "embed-autopanels",  // embedded side panels follow the frame's width (EmbedAutoPanels)
+    "embed-gl-fallback", // no modal box for the OpenGL fallback: an ET_NOTICE of kind "graphics"
 #ifdef _WIN32
     // embedded: a prewarm never takes the keyboard or the activation (shown with SW_SHOWNA; a focus
     // it takes while built goes back).  Windows only: verified there; the host gates its
