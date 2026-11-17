@@ -1079,7 +1079,12 @@ bool KICAD_MANAGER_FRAME::LoadProject( const wxFileName& aProjectFileName )
 
     PrintPrjInfo();
 
-    KIPLATFORM::APP::RegisterApplicationRestart( aProjectFileName.GetFullPath() );
+    // Embedded, the host owns KiCad's lifetime: Windows Error Reporting must not relaunch it after
+    // a crash as a plain `kicad <project>` on the person's profile (the first-run wizard came up
+    // over the host).  The host reports the death; the autosave covers the work.
+    if( !BACKPLANE_EMBED::Get().Enabled() )
+        KIPLATFORM::APP::RegisterApplicationRestart( aProjectFileName.GetFullPath() );
+
     m_openSavedWindows = true;
 
     KIPLATFORM::ENV::AddToRecentDocs( aProjectFileName.GetFullPath() );

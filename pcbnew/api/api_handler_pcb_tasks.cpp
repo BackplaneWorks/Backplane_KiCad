@@ -47,6 +47,8 @@
 #include <tool/tool_manager.h>
 #include <tools/drc_tool.h>
 #include <tools/zone_filler_tool.h>
+#include <tools/pcb_selection_tool.h>
+#include <tool/actions.h>
 #include <widgets/report_severity.h>
 #include <widgets/wx_progress_reporters.h>
 #include <wildcards_and_files_ext.h>
@@ -318,6 +320,32 @@ public:
                 } );
 
         m_board->RecordDRCExclusions();
+
+        // DeleteMARKERs frees the markers outside any commit, so nothing deselects them: one the
+        // person had selected (Ctrl+A takes markers too) stayed in the selection, freed, and the
+        // next UI-condition pass read it (SELECTION_CONDITIONS::hasTypesFunc, Carbon's crash).
+        // The DRC dialog clears the whole selection first; here only the markers leave it, so
+        // the person's own selection stays.
+        if( frame )
+        {
+            if( PCB_SELECTION_TOOL* selTool = frame->GetToolManager()->GetTool<PCB_SELECTION_TOOL>() )
+            {
+                std::vector<EDA_ITEM*> markers;
+
+                for( EDA_ITEM* item : selTool->GetSelection() )
+                {
+                    if( item->Type() == PCB_MARKER_T )
+                        markers.push_back( item );
+                }
+
+                for( EDA_ITEM* marker : markers )
+                    selTool->RemoveItemFromSel( marker, true /* quiet */ );
+
+                if( !markers.empty() )
+                    frame->GetToolManager()->ProcessEvent( EVENTS::UnselectedEvent );
+            }
+        }
+
         m_board->DeleteMARKERs( true, true );
 
         if( reporter )

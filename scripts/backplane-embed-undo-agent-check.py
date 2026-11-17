@@ -278,6 +278,36 @@ def run_editor(editor, args):
                                              f"({len(text)} bytes, footprints: {text.count('(footprint')})")
                 key("Escape", click=False)
 
+                # 1b. markers in the selection across a check (Carbon's crash, bp.13.1): Ctrl+A takes
+                # the DRC markers too; a check run frees every marker; nothing freed may stay
+                # selected for the next UI-condition pass (hover, menu update)
+                key("ctrl+a", click=False)
+
+                def selection_types():
+                    found = {}
+                    for item in hub.request(cmds.GetSelection(header=header), cmds.SelectionResponse).items:
+                        t = item.type_url.split(".")[-1]
+                        found[t] = found.get(t, 0) + 1
+                    return found
+
+                sel_before = selection_types()
+                print(f"INFO pcb markers in the selection: before the check {sel_before}", flush=True)
+                check(run_checks(), "pcb selection with markers: the check finishes")
+                for dx in range(0, 300, 30):
+                    s.xdotool("mousemove", str(cx - 150 + dx), str(cy - 60 + dx // 3))
+                    time.sleep(0.1)
+                time.sleep(1.5)
+                alive = s.kicad_process.poll() is None
+                sel_after = selection_types() if alive else {}
+                print(f"INFO pcb markers in the selection: after the check {sel_after}", flush=True)
+                check(alive and not any("Marker" in t for t in sel_after),
+                      f"pcb selection with markers across a check: no marker stays selected and KiCad runs "
+                      f"(after: {sel_after})")
+                check(alive and {t: n for t, n in sel_after.items() if "Marker" not in t}
+                      == {t: n for t, n in sel_before.items() if "Marker" not in t},
+                      "pcb selection with markers across a check: the person's own selection stays")
+                key("Escape", click=False)
+
                 # 3. typing in a text field across a check (opt-in: the Search pane's Ctrl+G is
                 # also PCB's Group, so on some keymaps the keys below act on the board instead)
                 if args.text_field_case:
