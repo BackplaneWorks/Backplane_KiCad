@@ -1343,6 +1343,16 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
     if( type == wxEVT_CHAR_HOOK && code == 'O' && modifiers == wxMOD_CONTROL )
         return wxEventFilter::Event_Processed;
 
+    // Cmd+W closes the embedded editor (the decided behaviour; the pane follows to View) through
+    // the frame's own File > Close, before any hotkey: on a Mac, AppKit gives the menu's key
+    // equivalents first claim, so stock KiCad never let a canvas hotkey (the router's Ctrl+W
+    // corner mode) take it.  The save prompt and ET_FRAME_CLOSED follow; a text field keeps it.
+    if( type == wxEVT_CHAR_HOOK && code == 'W' && modifiers == wxMOD_CONTROL
+        && !KIUI::IsInputControlFocused( window ) && frame->ProcessCommand( wxID_CLOSE ) )
+    {
+        return wxEventFilter::Event_Processed;
+    }
+
     // On a Mac, Backspace (the key marked delete) deletes the selection: stock KiCad gets that
     // from Edit > Delete, whose Del accelerator AppKit puts on that key, ahead of any hotkey.  An
     // embedded frame has no menu bar of its own (the port hands the key to wx before AppKit's
