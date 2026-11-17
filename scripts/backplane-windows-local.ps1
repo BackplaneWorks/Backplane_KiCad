@@ -8,14 +8,16 @@
 #
 # -Root holds everything (vcpkg, its binary cache, build, stage, the library stage) and must be on a
 # drive other than this checkout's (the build script checks it, as on GitHub: source D:, build C:).
-# The package lands in <checkout>\release\windows.  Runs at below-normal priority; -Jobs limits the
+# The package lands in <checkout>\release\windows.  Runs at -Priority (below normal); -Jobs limits the
 # compile jobs.  Re-running reuses the build folder: only what changed is compiled.
 param(
     [Parameter(Mandatory = $true)][string]$Root,
     [int]$Jobs = 2,
     [switch]$SkipLibraries,
     # Install vcpkg's dependencies and configure only (no libraries, no compile)
-    [switch]$ConfigureOnly
+    [switch]$ConfigureOnly,
+    # Idle while another job shares the machine (bp-win's timed gates)
+    [ValidateSet('Idle', 'BelowNormal', 'Normal')][string]$Priority = 'BelowNormal'
 )
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
@@ -26,7 +28,7 @@ if ((Split-Path -Qualifier $Root) -eq (Split-Path -Qualifier $source)) {
     throw "-Root $Root must be on another drive than the checkout $source"
 }
 New-Item -ItemType Directory -Force $Root, (Join-Path $Root 'vcpkg-cache'), (Join-Path $Root 'temp') | Out-Null
-[Diagnostics.Process]::GetCurrentProcess().PriorityClass = 'BelowNormal'   # children inherit it
+[Diagnostics.Process]::GetCurrentProcess().PriorityClass = $Priority   # children inherit it
 
 $env:BACKPLANE_WIN_ROOT = $Root
 $env:BACKPLANE_WIN_JOBS = "$Jobs"
