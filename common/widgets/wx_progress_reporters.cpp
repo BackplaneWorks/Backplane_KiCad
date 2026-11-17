@@ -21,6 +21,7 @@
  */
 
 #include <thread>
+#include <wx/app.h>
 #include <wx/evtloop.h>
 #include <wx/utils.h>
 #include <backplane_embed.h>
@@ -59,7 +60,10 @@ WX_PROGRESS_REPORTER::WX_PROGRESS_REPORTER( wxWindow* aParent, const wxString& a
     // Embedded, the job is the host's to draw: the dialog is created (Create() shows it, which
     // Show() vetoes) and never maps.  Before Create(), so that veto already holds.
     if( BACKPLANE_EMBED::Get().Enabled() && !wxGetEnv( wxS( "BACKPLANE_KICAD_PROGRESS_DIALOGS" ), nullptr ) )
+    {
         m_embedJob = BACKPLANE_EMBED::Get().ProgressBegin( aParent, aTitle, aCanAbort != 0 );
+        m_focusBefore = wxWindow::FindFocus();
+    }
 
     WX_PROGRESS_REPORTER_BASE::Create( aTitle,
                                        aReserveSpaceForMessage ? getPlaceholderText() : wxString( wxEmptyString ),
@@ -81,7 +85,50 @@ WX_PROGRESS_REPORTER::WX_PROGRESS_REPORTER( wxWindow* aParent, const wxString& a
 WX_PROGRESS_REPORTER::~WX_PROGRESS_REPORTER()
 {
     if( m_embedJob )
+    {
         BACKPLANE_EMBED::Get().ProgressEnd( m_embedJob );
+
+        // The hidden dialog disabled its frame for the job (wxGenericProgressDialog does, mapped
+        // or not), and a disabled frame loses the keyboard: after a host's check run (RunChecks)
+        // the person's Ctrl+Z and Ctrl+Y went to the frame's menu accelerators, not the canvas,
+        // and did nothing until a click.  Enable the frame now (the base destructor does it again,
+        // harmlessly) and give the keyboard back to the window that had it, unless the person put
+        // it somewhere else meanwhile.  Never taken from outside KiCad: only when KiCad had it.
+        ReenableOtherWindows();
+
+        if( wxWindow* before = m_focusBefore.get() )
+        {
+            wxWeakRef<wxWindow> target( before );
+            wxWeakRef<wxWindow> top( wxGetTopLevelParent( before ) );
+            wxWindow*           dialog = this;
+
+            auto giveBack =
+                    [target, top, dialog]()
+                    {
+                        wxWindow* win = target.get();
+
+                        if( !win || !win->IsShownOnScreen() || !win->IsEnabled() )
+                            return;
+
+                        wxWindow* now = wxWindow::FindFocus();
+
+                        if( now == win )
+                            return;
+
+                        if( !now || now == top.get() || now == dialog
+                            || wxGetTopLevelParent( now ) == dialog )
+                        {
+                            win->SetFocus();
+                        }
+                    };
+
+            giveBack();
+
+            // focus events arrive later (GTK): look again once they have
+            if( wxTheApp )
+                wxTheApp->CallAfter( [giveBack]() { giveBack(); } );
+        }
+    }
 }
 
 
