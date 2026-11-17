@@ -46,6 +46,7 @@
 #include <netclass.h>
 #include <project/net_settings.h>
 #include <board_design_settings.h>
+#include <api/backplane/plan.pb.h>
 #include <api/backplane/sketch_route.pb.h>
 #include <api/board/board_types.pb.h>
 
@@ -807,6 +808,18 @@ BOOST_AUTO_TEST_CASE( TaskQueriesAllowedDuringTask )
     {
         BOOST_CHECK_MESSAGE( !KICAD_API_SERVER::IsReadServedDuringTask( change ), change );
     }
+
+    // GetPlan is a read as stored; with `derived` it builds the audit from connectivity
+    google::protobuf::Any                 any;
+    kiapi::backplane::plan::GetPlan       getPlan;
+    const std::string                     planType = getPlan.GetTypeName();
+
+    any.PackFrom( getPlan );
+    BOOST_CHECK( KICAD_API_SERVER::IsReadServedDuringTask( planType, any ) );
+    getPlan.set_derived( true );
+    any.PackFrom( getPlan );
+    BOOST_CHECK( !KICAD_API_SERVER::IsReadServedDuringTask( planType, any ) );
+    BOOST_CHECK( !KICAD_API_SERVER::IsReadServedDuringTask( planType ) );
 }
 
 
