@@ -10,9 +10,11 @@ on:
 permissions:
   contents: read
 
+# A newer push or dispatch on the same branch queues behind the running build instead of cancelling
+# it: superseded candidates are cancelled by hand with the guard (docs/release-playbook.md).
 concurrency:
   group: windows-kicad-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   windows:
@@ -24,6 +26,15 @@ jobs:
       VCPKG_BINARY_SOURCES: 'clear;nuget,https://gitlab.com/api/v4/projects/27426693/packages/nuget/index.json,read;files,C:\bp\vcpkg-cache,readwrite'
       VCPKG_DEFAULT_BINARY_CACHE: C:\bp\vcpkg-cache
       VCPKG_MAX_CONCURRENCY: '4'
+      # ccache in front of cl (scripts/backplane-windows.ps1, BACKPLANE_WIN_CCACHE: KiCad's USE_CCACHE
+      # with /Z7; the PDBs are still linked), the same compiler cache as bp-winbuild. A compiler is
+      # known by its contents, so a runner image or MSVC update misses rather than reusing objects.
+      BACKPLANE_WIN_CCACHE: '1'
+      CCACHE_DIR: C:\bp\ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_COMPRESS: '1'
+      CCACHE_MAXSIZE: 2.5G
+      CCACHE_COMPILERCHECK: content
     steps:
       - name: Preserve LF and enable Git long paths
         shell: pwsh
@@ -40,7 +51,34 @@ jobs:
       - name: Native IPC test client
         # The pinned vcpkg graph supplies protoc 33.4 (Python gencode 6.33.4).
         run: python -m pip install protobuf==6.33.4 pynng==0.9.0
-      - uses: actions/cache@v4
+      - name: ccache for MSVC, and the compiler cache key (toolchain)
+        id: toolchain
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $v = '4.14.3'
+          $zip = Join-Path $env:RUNNER_TEMP 'ccache.zip'
+          Invoke-WebRequest "https://github.com/ccache/ccache/releases/download/v$v/ccache-$v-windows-x86_64.zip" -OutFile $zip
+          Expand-Archive $zip (Join-Path $env:RUNNER_TEMP 'ccache-zip')
+          $dir = 'C:\bp\tools\ccache'
+          New-Item -ItemType Directory -Force $dir, $env:CCACHE_DIR | Out-Null
+          Copy-Item (Get-ChildItem (Join-Path $env:RUNNER_TEMP 'ccache-zip') -Recurse -Filter ccache.exe | Select-Object -First 1).FullName $dir
+          $dir | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+          $cl = (& cl 2>&1 | Select-Object -First 1) -join ''
+          $text = "$env:ImageOS $env:ImageVersion $cl ccache $v"
+          $sha = [Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($text))
+          $id = (-join ($sha | ForEach-Object { $_.ToString('x2') })).Substring(0, 12)
+          "prefix=kicad-windows-ccache-$id-" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
+      # Both caches live on main only (backplane-cache-promote.yml on main saves them from this run's
+      # artifact): every branch and tag restores main's entries.
+      - uses: actions/cache/restore@v4
+        id: compiler-cache
+        with:
+          path: C:\bp\ccache
+          key: ${{ steps.toolchain.outputs.prefix }}${{ github.run_id }}
+          restore-keys: ${{ steps.toolchain.outputs.prefix }}
+      - uses: actions/cache/restore@v4
+        id: vcpkg-cache
         with:
           path: C:\bp\vcpkg-cache
           key: kicad-windows-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'tools/custom_vcpkg_triplets/**') }}
@@ -56,6 +94,37 @@ jobs:
       - name: Build, relocate, test and package
         shell: pwsh
         run: ./scripts/backplane-windows.ps1
+      # Branches don't save caches of their own. The compiler cache (and the vcpkg binary cache, when
+      # main has none for this vcpkg graph yet) go up as a 1-day artifact, and the promote workflow
+      # on main saves them as main's when this run is a successful release-line or candidate run.
+      - name: Pack the caches for main
+        if: always() && steps.compiler-cache.outcome == 'success'
+        shell: pwsh
+        env:
+          PREFIX: ${{ steps.toolchain.outputs.prefix }}
+          VCPKG_KEY: ${{ steps.vcpkg-cache.outputs.cache-primary-key }}
+          VCPKG_HIT: ${{ steps.vcpkg-cache.outputs.cache-hit }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = Join-Path $env:RUNNER_TEMP 'ccache-out'
+          New-Item -ItemType Directory -Force (Join-Path $out 'ccache') | Out-Null
+          ccache --evict-older-than 2d
+          ccache --show-stats
+          Set-Content (Join-Path $out 'ccache\key-prefix') $env:PREFIX
+          tar -C C:/bp/ccache -cf (Join-Path $out 'ccache\data.tar') .
+          if ($env:VCPKG_HIT -ne 'true' -and (Test-Path C:\bp\vcpkg-cache)) {
+            New-Item -ItemType Directory -Force (Join-Path $out 'vcpkg') | Out-Null
+            Set-Content (Join-Path $out 'vcpkg\key') $env:VCPKG_KEY
+            tar -C C:/bp/vcpkg-cache -cf (Join-Path $out 'vcpkg\data.tar') .
+          }
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.compiler-cache.outcome == 'success'
+        with:
+          name: ccache-windows-x64-${{ github.sha }}
+          retention-days: 1
+          compression-level: 0
+          path: ${{ runner.temp }}/ccache-out
+          if-no-files-found: ignore
       - name: Keep build diagnostics
         if: always()
         uses: actions/upload-artifact@v4

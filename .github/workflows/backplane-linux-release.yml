@@ -138,9 +138,9 @@ jobs:
         run: |
           ccache --evict-older-than 2d || true
           ccache --show-stats || true
-          mkdir -p "$RUNNER_TEMP/ccache-out"
-          echo "${{ steps.toolchain.outputs.prefix }}" > "$RUNNER_TEMP/ccache-out/key-prefix"
-          tar -C ~/.cache/ccache -cf "$RUNNER_TEMP/ccache-out/ccache.tar" .
+          mkdir -p "$RUNNER_TEMP/ccache-out/ccache"
+          echo "${{ steps.toolchain.outputs.prefix }}" > "$RUNNER_TEMP/ccache-out/ccache/key-prefix"
+          tar -C ~/.cache/ccache -cf "$RUNNER_TEMP/ccache-out/ccache/data.tar" .
 
       - name: Upload the compiler cache for main
         if: always() && steps.compiler-cache.outcome == 'success'
