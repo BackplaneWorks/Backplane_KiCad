@@ -376,12 +376,90 @@ def main():
         check(r.status == sim.SIM_OK and r.shown, "it runs again after being reopened")
         time.sleep(1)
         s.shot("04-reopened")
+
+        # The keyboard stays with the frame the person is in through an agent's runs, in the
+        # background and shown in this window
+        click(w // 5, h * 3 // 4)
+        check(wait_for(lambda: frames()[FK_SIMULATOR].focused, 10), "a click gives the reopened Simulator the keyboard")
+        for shown in (False, True):
+            r = collect(api.request(sim.RunSimulation(document=document, command=".tran 5u 5m", show=shown,
+                                                      signals=["V(/out)"], wait_ms=1000), sim.RunSimulationResponse))
+            time.sleep(0.5)
+            check(r.status == sim.SIM_OK and r.shown == shown and frames()[FK_SIMULATOR].focused,
+                  f"the Simulator keeps the keyboard after an agent's {'shown' if shown else 'background'} run")
+        check(not set(s.watcher.current()) - before, "no dialog appeared")
         api.request(embed.Close(mode=embed.CM_DISCARD, kind=FK_SIMULATOR), embed.CloseResponse)
         check(wait_for(lambda: FK_SIMULATOR not in frames(), 10), "Close{FK_SIMULATOR} closes it")
         check(not set(s.watcher.current()) - before, "no save prompt")
         r = collect(api.request(sim.RunSimulation(document=document, command=".op", wait_ms=1000),
                                 sim.RunSimulationResponse))
         check(r.status == sim.SIM_OK, "the API still simulates with the window closed")
+
+        # An agent's shown run that has to open the Simulator does not take the keyboard from the
+        # editor the person is in
+        r = api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        wait_for(lambda: viewable(disp, r.frame.window), 30)
+        time.sleep(1)
+        click(w // 2, h // 2)
+        check(wait_for(lambda: frames()[embed.FK_SCH].focused, 10), "the schematic editor has the keyboard")
+        events()
+        r = collect(api.request(sim.RunSimulation(document=document, command=".tran 5u 5m", show=True,
+                                                  signals=["V(/out)"], wait_ms=1000), sim.RunSimulationResponse))
+        time.sleep(1)
+        now = frames()
+        check(r.status == sim.SIM_OK and r.shown and FK_SIMULATOR in now, "an agent's shown run opens the Simulator")
+        check(now[embed.FK_SCH].focused and not now[FK_SIMULATOR].focused,
+              "the schematic editor keeps the keyboard (the Simulator opened without taking it)")
+        check(any(e.type == embed.ET_SHOW_REQUESTED and e.frame.kind == FK_SIMULATOR for e in events()),
+              "the host is asked to show it (ET_SHOW_REQUESTED)")
+        check(not set(s.watcher.current()) - before, "no dialog appeared")
+
+    # A fresh KiCad: the person's own run (the Run hotkey in the focused Simulator) before the API
+    # has simulated anything.  An agent's RunSimulation meanwhile is AS_BUSY and the person's run
+    # goes on (it used to be loaded over).
+    with Session(args.kicad, args.out / "fresh", source) as s, \
+            IpcSession(args.kicad_cli, api_socket=s.socket, timeout=300000) as api:
+        embed = api.module("backplane.embed")
+        sim = api.module("backplane.sim")
+        types = api.module("common.types.base_types")
+        editor = api.module("common.commands.editor_commands")
+        w, h = s.host.size
+        person = xdisplay.Display(s.name)
+        r = api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        wait_for(lambda: viewable(s.host.display, r.frame.window), 60)
+        time.sleep(2)
+        document = api.request(editor.GetOpenDocuments(type=types.DOCTYPE_SCHEMATIC),
+                               editor.GetOpenDocumentsResponse).documents[0]
+        r = api.request(embed.ShowFrame(kind=FK_SIMULATOR, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        wait_for(lambda: viewable(s.host.display, r.frame.window), 60)
+        time.sleep(2)
+        api.request(sim.SetSimulationSetup(document=document, command=".tran 1u 4", signals=["V(/out)"]),
+                    sim.SetupResponse)
+        time.sleep(1)
+        before = set(s.watcher.current())
+        origin = s.host.container.translate_coords(person.screen().root, 0, 0)
+        xtest.fake_input(person, X.MotionNotify, x=w // 3 - origin.x, y=h // 3 - origin.y)
+        xtest.fake_input(person, X.ButtonPress, 1)
+        xtest.fake_input(person, X.ButtonRelease, 1)
+        code = person.keysym_to_keycode(XK.string_to_keysym("r"))
+        person.sync()
+        time.sleep(1)
+        xtest.fake_input(person, X.KeyPress, code)
+        xtest.fake_input(person, X.KeyRelease, code)
+        person.sync()
+        time.sleep(1)
+        request = sim.RunSimulation(document=document, command=".op", wait_ms=0)
+        first = api.request_raw(request)
+        check(first.status.status == api.envelope.AS_BUSY,
+              f"a first API run during the person's own run is AS_BUSY ({first.status.status})")
+        time.sleep(0.7)
+        check(api.request_raw(request).status.status == api.envelope.AS_BUSY, "the person's run goes on")
+        done = wait_for(lambda: api.request_raw(sim.RunSimulation(document=document, command="not an analysis"))
+                        .status.status != api.envelope.AS_BUSY, 120)
+        r = api.request(sim.RunSimulation(document=document, command=".op", wait_ms=1000), sim.RunSimulationResponse)
+        check(done and r.status == sim.SIM_OK, "and the API runs once it has ended")
+        check(not set(s.watcher.current()) - before, "no dialog appeared")
+        s.shot("05-person-run")
 
     print(f"{len(FAILURES)} failed" if FAILURES else "ALL PASSED", flush=True)
     return 1 if FAILURES else 0

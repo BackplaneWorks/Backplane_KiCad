@@ -206,7 +206,9 @@ waits `wait_ms` (default 250; at most 1000 in a GUI process, where the UI thread
 then answers `status = SIM_RUNNING` with `run_id`; `GetSimulationResult` collects it and
 `StopSimulation` ends it. ngspice runs in its own thread, as for the Simulator window: the editor
 and every other request stay served. One run at a time in a KiCad process (the Simulator window's
-runs included): a second `RunSimulation` is `AS_BUSY`. `timeout_ms` (default 120000) stops the run
+runs included): a second `RunSimulation` is `AS_BUSY`. (Before bp.13.2's second sim commit a first API run in a
+process, sent while the person's own run was going, was not refused and loaded its circuit over
+that run.) `timeout_ms` (default 120000) stops the run
 by itself: `SIM_TIMEOUT`, with the points so far.
 
 `max_run_points` (capability `sim-run-points-cap`) bounds the memory a run takes in KiCad. It

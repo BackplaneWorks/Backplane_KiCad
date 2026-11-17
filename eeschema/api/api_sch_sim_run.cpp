@@ -1858,7 +1858,11 @@ bool SIM_API::RUNNER::Busy() const
     if( m_impl->active )
         return true;
 
-    // The Simulator window's own run
+    // The Simulator window's own run.  The simulator is the one instance the window has too: it is
+    // asked for here, not only once the API has run something (a first API run sent while the
+    // person's own run was going loaded its circuit over that run)
+    m_impl->EnsureSimulator();
+
     return m_impl->sim && m_impl->sim->IsRunning();
 }
 
@@ -1933,6 +1937,10 @@ uint64_t SIM_API::RUNNER::Start( std::shared_ptr<CIRCUIT> aCircuit, const RUN_RE
 
     if( !impl.sim )
         return failNow( SIM_ERROR, PK_OTHER, "ngspice could not be loaded" );
+
+    // Never over a run that is going (the handler answers AS_BUSY before it gets here)
+    if( impl.sim->IsRunning() )
+        return failNow( SIM_ERROR, PK_OTHER, "another simulation is running" );
 
     // The window's own run takes the simulator's mutex itself
     if( !impl.inWindow )
