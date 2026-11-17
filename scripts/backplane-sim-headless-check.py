@@ -27,7 +27,8 @@ and every command is asked:
              projects (only that pin moves; the response is unchanged)
   xspice     an analog code model from the schematic and digital ones through bridges, so the
              runtime's ngspice code models (*.cm) are proven loaded; --expect-no-code-models
-             checks the PK_CODE_MODELS answer on a runtime stripped of them
+             checks the PK_CODE_MODELS answer on a runtime stripped of them; --expect-no-ngspice
+             the PK_NO_SIMULATOR answer on one whose ngspice library does not load
   netlist    GetSimulationNetlist.lines places each pin's node in its element line; a loop is
              broken there and its loop gain run with RunSimulation.netlist (crossover and phase
              margin against the closed form)
@@ -988,6 +989,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("cli", type=Path)
     parser.add_argument("--out", type=Path, default=None)
+    parser.add_argument("--expect-no-ngspice", action="store_true",
+                        help="the runtime under test cannot load its ngspice library (removed, or replaced "
+                             "by a file that is not one): check only that a run is refused as "
+                             "PK_NO_SIMULATOR naming where it was looked for, and that the rest still answers")
     parser.add_argument("--expect-no-code-models", action="store_true",
                         help="the runtime under test has had its ngspice code models (*.cm) removed: "
                              "check only that an XSPICE part is refused as PK_CODE_MODELS")
@@ -998,6 +1003,22 @@ def main():
         assert "sim-run" in have.capabilities, list(have.capabilities)
         checker = Checker(api, args.out)
         checker.ok("capability", "sim-run")
+        if args.expect_no_ngspice:
+            sim = checker.sim
+            checker.open("nongspice", divider())
+            r = checker.run(".op")
+            problem = checker.problem(r, sim.PK_NO_SIMULATOR)
+            assert r.status == sim.SIM_ERROR and problem.severity == sim.PS_ERROR, r
+            assert "ngspice" in problem.message and "tried:" in problem.message, problem.message
+            netlist = api.request(sim.GetSimulationNetlist(document=checker.document),
+                                  sim.GetSimulationNetlistResponse)
+            models = api.request(sim.GetSimulationModels(document=checker.document),
+                                 sim.GetSimulationModelsResponse)
+            assert "R1 /in /out 3k" in netlist.netlist and len(models.models) == 3, (netlist.netlist, models)
+            assert checker.run(".op").status == sim.SIM_ERROR, "asked again, answered again"
+            checker.ok("no ngspice library", problem.message)
+            print(f"SIM_HEADLESS_OK {checker.count} checks (no ngspice)", flush=True)
+            return
         if args.expect_no_code_models:
             check_code_models(checker, expect_missing=True)
             print(f"SIM_HEADLESS_OK {checker.count} checks (no code models)", flush=True)

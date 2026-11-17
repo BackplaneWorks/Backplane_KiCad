@@ -242,6 +242,8 @@ enum ProblemKind
                                  // code model the element's .model names
   PK_POINT_LIMIT          = 16;  // the run reached max_run_points and was stopped (capability
                                  // `sim-run-points-cap`); the message gives the points and where
+  PK_NO_SIMULATOR         = 17;  // this KiCad could not load its ngspice library (status SIM_ERROR):
+                                 // a packaging fault; the message lists where it was looked for
 }
 
 enum ProblemSeverity

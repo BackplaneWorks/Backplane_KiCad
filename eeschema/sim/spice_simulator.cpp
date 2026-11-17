@@ -26,6 +26,18 @@
 #include "ngspice.h"
 #include "macros.h"
 
+#include <backplane_embed.h>
+#include <pgm_base.h>
+
+static std::string s_createError;
+
+
+const std::string& SIMULATOR::CreateError()
+{
+    return s_createError;
+}
+
+
 std::shared_ptr<SPICE_SIMULATOR> SIMULATOR::CreateInstance( const std::string& )
 {
     try
@@ -35,11 +47,25 @@ std::shared_ptr<SPICE_SIMULATOR> SIMULATOR::CreateInstance( const std::string& )
         if( !ngspiceInstance )
             ngspiceInstance = std::make_shared<NGSPICE>();
 
+        s_createError.clear();
         return ngspiceInstance;
     }
     catch( std::exception& e )
     {
-        DisplayError( nullptr, e.what() );
+        s_createError = e.what();
+
+        // Backplane: no message box over an embedded pane, and none without a person (the API
+        // answers the run with the reason).  Embedded, the host hears it as the Simulator's other
+        // messages (ET_NOTICE kind "simulation"); whoever asked for the window shows it too.
+        if( BACKPLANE_EMBED::Get().Enabled() )
+        {
+            BACKPLANE_EMBED::Get().Notice( nullptr, "simulation", _( "The simulator could not be started." ),
+                                           wxString::FromUTF8( e.what() ), true );
+        }
+        else if( Pgm().IsGUI() )
+        {
+            DisplayError( nullptr, e.what() );
+        }
     }
 
     return nullptr;

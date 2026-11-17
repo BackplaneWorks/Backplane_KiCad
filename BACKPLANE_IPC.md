@@ -264,7 +264,7 @@ sweep axis, the first and the last always kept. Which points is `thinning` (capa
 | `SIM_SINGULAR_MATRIX` | a singular matrix with every node grounded (a loop of voltage sources or inductors) | `PK_SINGULAR_MATRIX` with the node or the device whose branch it is |
 | `SIM_TIMEOUT`, `SIM_ABORTED` | stopped | `PK_TIMEOUT`, `PK_ABORTED` |
 | `SIM_POINT_LIMIT` | the run reached `max_run_points` (5000000 values unless given) and was stopped; the vectors hold it up to there | `PK_POINT_LIMIT` with the points, the sweep value reached, and the limit |
-| `SIM_ERROR` | anything else ngspice called an error | `PK_OTHER` |
+| `SIM_ERROR` | anything else ngspice called an error; or this KiCad could not load its ngspice library at all (a packaging fault: nothing can be simulated, the other sim commands still answer) | `PK_OTHER`; `PK_NO_SIMULATOR` with where the library was looked for ("tried: libngspice.so.0 in the library search path, ...") |
 
 With `SIM_OK`, `problems` holds warnings only: a measure that gave no value
 (`PK_MEASURE_FAILED`), an asked signal with no vector, a floating node that did not stop this
@@ -343,7 +343,9 @@ ngspice library and its code models (`spice2poly.cm`, `analog.cm`, `digital.cm`)
 loader looks (`lib/ngspice` on Linux, `bin\ngspice` on Windows, `Contents/PlugIns/sim/ngspice` on
 macOS); the three packaging scripts run it. That they load is the headless check's XSPICE cases
 (a `gain` block from the schematic, an AND gate through `adc_bridge`/`dac_bridge`);
-`--expect-no-code-models` checks the `PK_CODE_MODELS` answer on a runtime stripped of them.
+`--expect-no-code-models` checks the `PK_CODE_MODELS` answer on a runtime stripped of them, and
+`--expect-no-ngspice` the `PK_NO_SIMULATOR` answer on one whose ngspice library does not load
+(the embed check has the same flag: no message box, `ET_NOTICE`, the editor's info bar).
 
 `scripts/backplane-sim-headless-check.py <kicad-cli>` (sim-run) generates small schematics and
 checks every analysis against its closed form (a divider's `.op`, `.dc` and `.tf`; an RC

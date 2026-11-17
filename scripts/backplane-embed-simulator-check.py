@@ -45,16 +45,85 @@ from backplane_sim_test_support import Part, write_project  # noqa: E402
 FK_SIMULATOR = 8
 
 
+def no_ngspice(args, source):
+    """A runtime whose ngspice library does not load: no message box over the pane, ever."""
+    with Session(args.kicad, args.out, source) as s, \
+            IpcSession(args.kicad_cli, api_socket=s.socket, timeout=120000) as api:
+        embed = api.module("backplane.embed")
+        sim = api.module("backplane.sim")
+        types = api.module("common.types.base_types")
+        editor = api.module("common.commands.editor_commands")
+        w, h = s.host.size
+        since = [0]
+
+        def events():
+            reply = api.request(embed.NextEvents(since=since[0]), embed.NextEventsResponse)
+            for e in reply.events:
+                since[0] = max(since[0], e.seq)
+            return list(reply.events)
+
+        def frames():
+            return {f.kind: f for f in api.request(embed.GetFrames(), embed.GetFramesResponse).frames}
+
+        r = api.request(embed.ShowFrame(kind=embed.FK_SCH, x=0, y=0, width=w, height=h), embed.ShowFrameResponse)
+        wait_for(lambda: viewable(s.host.display, r.frame.window), 60)
+        time.sleep(2)
+        document = api.request(editor.GetOpenDocuments(type=types.DOCTYPE_SCHEMATIC),
+                               editor.GetOpenDocumentsResponse).documents[0]
+        before = set(s.watcher.current())
+        events()
+
+        # The host asks for the Simulator
+        reply = api.request_raw(embed.ShowFrame(kind=FK_SIMULATOR, x=0, y=0, width=w, height=h))
+        time.sleep(2)
+        check(reply.status.status != api.envelope.AS_OK and FK_SIMULATOR not in frames(),
+              f"ShowFrame{{FK_SIMULATOR}} is refused, no frame ({reply.status.status}: "
+              f"{reply.status.error_message[:160]})")
+        notices = [json.loads(e.detail) for e in events() if e.type == embed.ET_NOTICE]
+        check(any(n.get("kind") == "simulation" and n.get("error") and "ngspice" in n.get("detail", "")
+                  and "tried:" in n.get("detail", "") for n in notices),
+              f"ET_NOTICE kind simulation says the library did not load and where it was looked for ({notices})")
+        check(not set(s.watcher.current()) - before, "no message box appeared")
+
+        # The person asks for it from the schematic editor (Inspect > Simulator)
+        api.request_raw(editor.RunAction(action="eeschema.EditorControl.showSimulator"))
+        time.sleep(2)
+        check(FK_SIMULATOR not in frames() and not set(s.watcher.current()) - before,
+              "the person's Simulator action opens no message box (the editor's info bar says it)")
+        s.shot("no-ngspice-infobar")
+
+        # An agent's runs, in the background and shown
+        for shown in (False, True):
+            r = api.request(sim.RunSimulation(document=document, command=".op", show=shown, wait_ms=1000),
+                            sim.RunSimulationResponse)
+            named = [p for p in r.problems if p.kind == sim.PK_NO_SIMULATOR]
+            check(r.status == sim.SIM_ERROR and len(named) == 1 and "tried:" in named[0].message,
+                  f"GUI: a {'shown' if shown else 'background'} run answers PK_NO_SIMULATOR "
+                  f"({named[0].message[:120] if named else r})")
+        time.sleep(1)
+        check(not set(s.watcher.current()) - before, "no message box appeared for the runs")
+        check(embed.FK_SCH in frames() and s.kicad_process.poll() is None, "the schematic editor is still there")
+
+    print(f"{len(FAILURES)} failed" if FAILURES else "ALL PASSED (no ngspice)", flush=True)
+    return 1 if FAILURES else 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("kicad", type=Path)
     parser.add_argument("kicad_cli", type=Path)
     parser.add_argument("--out", type=Path, default=Path("embed-simulator-out"))
+    parser.add_argument("--expect-no-ngspice", action="store_true",
+                        help="the runtime cannot load its ngspice library: check only that nothing modal "
+                             "appears, the host gets ET_NOTICE kind simulation and the API names it")
     args = parser.parse_args()
 
     source = Path(tempfile.mkdtemp(prefix="backplane-sim-project-")) / "simrc"
     write_project(source, "simrc", [Part("V1", "dc 0 pulse(0 1 0 1n 1n 1 2)", ["in", "GND"]),
                                     Part("R1", "1k", ["in", "out"]), Part("C1", "1u", ["out", "GND"])])
+
+    if args.expect_no_ngspice:
+        return no_ngspice(args, source)
 
     with Session(args.kicad, args.out, source) as s, \
             IpcSession(args.kicad_cli, api_socket=s.socket, timeout=300000) as api:
