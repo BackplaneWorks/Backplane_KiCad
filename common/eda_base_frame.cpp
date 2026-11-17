@@ -368,6 +368,21 @@ EDA_BASE_FRAME::~EDA_BASE_FRAME()
 }
 
 
+void EDA_BASE_FRAME::EmbedFlushAutosave()
+{
+    if( !m_supportsAutoSave || !isAutoSaveRequired() )
+        return;
+
+    m_autoSaveTimer->Stop();
+    m_autoSavePending = false;
+    m_autoSaveDeferredSince = wxInvalidDateTime;
+    m_autoSaveRequired = false;
+
+    runAutoSavers( wxS( "Autosave (KiCad's windows were lost)" ) );
+    Kiway().LocalHistory().WaitForPendingSave();
+}
+
+
 EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
 {
     EMBED_FRAME_OPS ops;
@@ -393,6 +408,7 @@ EMBED_FRAME_OPS EDA_BASE_FRAME::embedOps()
     ops.autoPanels = [this]() { EmbedAutoPanels(); };
     ops.canvas = [this]() { return EmbedCanvas(); };
     ops.toolBusy = [this]( std::string& aName ) { return EmbedToolBusy( aName ); };
+    ops.flushAutosave = [this]() { EmbedFlushAutosave(); };
 
     // A reload frees what a modal dialog or a running interactive tool is holding: wait.
     ops.busy = [this]() { return !IsEnabled() || !ToolStackIsEmpty(); };
@@ -756,20 +772,25 @@ bool EDA_BASE_FRAME::doAutoSave()
     m_autoSaveDeferredSince = wxInvalidDateTime;
     m_autoSaveRequired = false;
 
+    runAutoSavers( wxS( "Autosave" ) );
+    return true;
+}
+
+
+void EDA_BASE_FRAME::runAutoSavers( const wxString& aMessage )
+{
     COMMON_SETTINGS* cs = Pgm().GetCommonSettings();
 
     // Incremental and zip-autosave both write outside the project tree when the user
     // selects USER_DIR, so a read-only project is fine in that mode.  Only when the
     // chosen location is the project directory does the project tree need to be writable.
     if( cs->m_Backup.location == BACKUP_LOCATION::PROJECT_DIR && Prj().IsReadOnly() )
-        return true;
+        return;
 
     if( cs->AutosaveUsesLocalHistory() )
-        Kiway().LocalHistory().RunRegisteredSaversAndCommit( Prj().GetProjectPath(), wxS( "Autosave" ) );
+        Kiway().LocalHistory().RunRegisteredSaversAndCommit( Prj().GetProjectPath(), aMessage );
     else
         Kiway().LocalHistory().RunRegisteredSaversAsAutosaveFiles( Prj().GetProjectPath() );
-
-    return true;
 }
 
 

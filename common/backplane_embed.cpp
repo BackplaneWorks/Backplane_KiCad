@@ -26,6 +26,7 @@
 #include <cctype>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <fmt/format.h>
 
 #include <wx/app.h>
@@ -210,6 +211,29 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
                 m_parent = 0;
                 PushEvent( EMBED_EVENT_TYPE::DETACHED, {} );
             };
+    hooks.windowsLost =
+            [this]()
+            {
+                m_parent = 0;
+
+                // Pending changes go to the autosave now, so the restarted KiCad offers them back
+                std::vector<FRAME_ENTRY> frames = m_frames;
+
+                for( const FRAME_ENTRY& e : frames )
+                {
+                    if( e.ops.flushAutosave )
+                        e.ops.flushAutosave();
+                }
+
+                // GTK and wx keep objects whose native windows the server has destroyed: any of
+                // them can crash the next time it is touched, so the process ends here, before
+                // the main loop reaches them.  Exit code 3 tells the host: windows lost, the
+                // changes are in the autosave; restart KiCad and it offers them back.
+                fprintf( stderr, "kicad embed: windows lost (the host destroyed KiCad's windows); "
+                                 "autosave written, exiting with code 3\n" );
+                fflush( nullptr );
+                std::_Exit( 3 );
+            };
     hooks.reparented =
             [this]( uint64_t aParent )
             {
@@ -386,6 +410,18 @@ bool BACKPLANE_EMBED::Attach( uint64_t aParent, uint64_t aToplevel, double aScal
 
     m_parent = aParent;
     return true;
+}
+
+
+bool BACKPLANE_EMBED::WindowsGone() const
+{
+    return m_enabled && KIPLATFORM::EMBED::WindowsGone();
+}
+
+
+bool BACKPLANE_EMBED::CheckWindowsGone() const
+{
+    return m_enabled && KIPLATFORM::EMBED::CheckWindowsGone();
 }
 
 

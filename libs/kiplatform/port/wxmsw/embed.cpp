@@ -351,6 +351,18 @@ bool KIPLATFORM::EMBED::Supported()
 }
 
 
+bool KIPLATFORM::EMBED::WindowsGone()
+{
+    return false;
+}
+
+
+bool KIPLATFORM::EMBED::CheckWindowsGone()
+{
+    return false;
+}
+
+
 namespace
 {
 /// The calling thread's own stack, "module+0xoffset" per frame (symbolise with the shipped pdbs)

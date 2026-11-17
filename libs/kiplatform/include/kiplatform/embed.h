@@ -57,6 +57,11 @@ namespace EMBED
         /// The host moved the holder into another of its windows, which is the parent now.
         std::function<void( uint64_t aParent )> reparented;
 
+        /// KiCad's own windows were destroyed under it (X11: the host destroyed its container
+        /// with the holder still inside).  Nothing can be shown again: the handler saves what it
+        /// can and ends the process.  Called once, on the UI thread.
+        std::function<void()> windowsLost;
+
         /// A key pressed while one of KiCad's popups (a menu, a combo box's list) holds the
         /// keyboard, as a wx key code and wx modifiers, before the popup sees it.  Return true
         /// to take it: the popup does not get it.  aClosePopup closes the popup (call it before
@@ -98,6 +103,16 @@ namespace EMBED
 
     /// True if the running toolkit backend can embed (X11 or Windows; not Wayland or macOS).
     bool Supported();
+
+    /// True once KiCad's own windows may have been destroyed under it (X11: an X error on one of
+    /// them, until checked; then for good if the holder is gone).  Nothing may draw then: GL on a
+    /// destroyed drawable crashes the driver or raises an error GDK exits on.  Elsewhere false.
+    bool WindowsGone();
+
+    /// WindowsGone(), after asking the server whether the holder still exists (X11: one round
+    /// trip; a destroyed holder is handled as lost at once).  For a graphics failure, which can
+    /// come before any X error.  Elsewhere false.
+    bool CheckWindowsGone();
 
     /// Install the native hooks.  Call once, before any frame is shown.
     void Install( const HOOKS& aHooks );

@@ -575,6 +575,18 @@ bool KIPLATFORM::EMBED::Supported()
 }
 
 
+bool KIPLATFORM::EMBED::WindowsGone()
+{
+    return false;
+}
+
+
+bool KIPLATFORM::EMBED::CheckWindowsGone()
+{
+    return false;
+}
+
+
 void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 {
     s_hooks = aHooks;
