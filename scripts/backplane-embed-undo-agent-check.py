@@ -9,7 +9,8 @@ restored nothing, when an agent read the board (the hub's kicad_edit find: SetAg
 GetItems as "agent:t1") after each key.
 
 First, the person's keys alone with no click between them (climb-j, bp.13.1), three cycles:
-Ctrl+A, Delete, the host's checks, Ctrl+Z, checks, Ctrl+Y, checks, Ctrl+Z.  The hidden progress
+Ctrl+A, Delete, the host's checks, Ctrl+Z, checks, Ctrl+Y, checks, Ctrl+Z; and again after the
+person was in another top-level window (Backplane's composer) and clicked the canvas once.  The hidden progress
 dialog of a check run used to take the keyboard off the canvas, so Ctrl+Z and Ctrl+Y did nothing
 until a click.  (After a failed step the person's own RunAction, client person:pane, puts the
 document back so the next steps still mean something.)
@@ -236,11 +237,33 @@ def run_editor(editor, args):
                                       text=True).stdout.strip() if wid else ""
                 return f"{wid}:{name!r}"
 
-            def keys_only():
+            def keys_only(variant="keys only"):
                 """The person's keys alone, no click between them (climb-j, bp.13.1): each key only
                 when KiCad is idle, the host's checks after each edit."""
+                if variant != "keys only":
+                    # climb-j's redo_after_backplane: the person was in Backplane's composer (another
+                    # top-level window), then clicks the canvas once
+                    scr = s.host.display.screen()
+                    # a widget of the host's own top-level, as the composer is in Backplane's window
+                    other = s.host.top.create_window(w - 150, h - 80, 140, 70, 0, scr.root_depth,
+                                                     background_pixel=scr.white_pixel)
+                    other.set_wm_name("Composer")
+                    other.map()
+                    s.host.display.sync()
+                    time.sleep(1.0)
+                    s.xdotool("windowfocus", "--sync", str(other.id))
+                    time.sleep(0.5)
+                    print(f"INFO {editor} {variant}: focus in the other window {focused()}", flush=True)
+                    managed.update(s.watcher.current())
+                    s.xdotool("mousemove", str(cx), str(cy), "click", "1")
+                    time.sleep(0.6)
+                    s.xdotool("key", "Escape")
+                    time.sleep(0.4)
+                    other.destroy()
+                    s.host.display.sync()
+                    print(f"INFO {editor} {variant}: focus after the canvas click {focused()}", flush=True)
                 for cyc in range(1, 4):
-                    tag = f"{editor} keys only {cyc}"
+                    tag = f"{editor} {variant} {cyc}"
                     full = ids()
                     print(f"INFO {tag}: focus before Ctrl+A {focused()}", flush=True)
                     key("ctrl+a", click=False)
@@ -276,6 +299,7 @@ def run_editor(editor, args):
                     no_dialog(tag)
 
             keys_only()
+            keys_only("after another window")
 
             for rnd in range(1, 4):
                 tag = f"{editor} round {rnd}"
