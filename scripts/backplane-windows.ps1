@@ -33,6 +33,7 @@ $versionExtra = $Matches[1]
 if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "backplane-kicad-v$version") {
     throw 'Release tag does not match BACKPLANE_VERSION'
 }
+$configureStarted = Get-Date
 $upstream = (Get-Content BACKPLANE_UPSTREAM -Raw).Trim()
 # BACKPLANE_WIN_CCACHE=1 (backplane-windows-local.ps1 -Ccache): KiCad's USE_CCACHE puts ccache in front
 # of cl and switches MSVC to embedded debug information (/Z7), which ccache can cache; the linker still
@@ -61,12 +62,15 @@ if (!$extra -or $extra.Matches[0].Groups[1].Value -ne $versionExtra) {
 $installed = Join-Path $build 'vcpkg_installed\x64-windows'
 $env:PATH = (Join-Path $installed 'tools\protobuf') + ';' + $env:PATH
 python scripts/backplane-ipc-smoke.py --check-bindings
+"WINDOWS_KICAD_CONFIGURE_TIME {0:hh\:mm\:ss} (vcpkg dependencies and CMake)" -f ((Get-Date) - $configureStarted)
 if ($env:BACKPLANE_WIN_CONFIGURE_ONLY) {
     # A local build machine's first step: vcpkg's dependencies installed and configured, no compile
     Write-Output 'WINDOWS_KICAD_CONFIGURED (BACKPLANE_WIN_CONFIGURE_ONLY: stopping before the compile)'
     return
 }
+$compileStarted = Get-Date
 cmake --build $build --parallel $jobs
+"WINDOWS_KICAD_COMPILE_TIME {0:hh\:mm\:ss} ({1} jobs)" -f ((Get-Date) - $compileStarted), $jobs
 if ($env:BACKPLANE_WIN_CCACHE) { ccache --show-stats }
 cmake --install $build
 # The PDBs (KICAD_WIN32_INSTALL_PDBS) go into their own symbols archive, never into the runtime,
