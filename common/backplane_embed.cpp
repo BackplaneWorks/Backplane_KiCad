@@ -51,7 +51,7 @@
 #include <dialog_shim.h>
 #include <kiplatform/embed.h>
 
-#ifdef __WXOSX__
+#if defined( __WXOSX__ ) || defined( __WXMSW__ )
 #include <widgets/ui_common.h>
 #endif
 
@@ -1338,6 +1338,18 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
         {
             return wxEventFilter::Event_Processed;
         }
+    }
+#endif
+
+#ifdef __WXMSW__
+    // Ctrl+W closes the embedded editor, as on Linux and macOS.  Stock KiCad on Windows gives
+    // File > Close no accelerator (ACTION_MENU::AddClose; Ctrl+F4 is the platform's), so the key
+    // did nothing.  It runs the frame's own File > Close item, as the menu would: the save
+    // prompt and ET_FRAME_CLOSED follow.  A text field keeps the key.
+    if( type == wxEVT_CHAR_HOOK && code == 'W' && modifiers == wxMOD_CONTROL
+        && !KIUI::IsInputControlFocused( window ) && frame->ProcessCommand( wxID_CLOSE ) )
+    {
+        return wxEventFilter::Event_Processed;
     }
 #endif
 
