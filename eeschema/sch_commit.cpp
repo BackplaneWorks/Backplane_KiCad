@@ -378,7 +378,10 @@ void SCH_COMMIT::pushSchEdit( const wxString& aMessage, int aCommitFlags )
 
             updateConnectivityFlag( schItem, screen );
 
-            if( !( aCommitFlags & SKIP_UNDO ) )
+            // ERC markers are derived data: every check run deletes and regenerates them, so an
+            // undo entry holding one would point at a freed marker by the next undo or redo.
+            // They never enter the person's undo.
+            if( !( aCommitFlags & SKIP_UNDO ) && schItem->Type() != SCH_MARKER_T )
                 undoList.PushItem( ITEM_PICKER( screen, schItem, UNDO_REDO::NEWITEM ) );
 
             if( !( changeFlags & CHT_DONE ) )
@@ -407,7 +410,7 @@ void SCH_COMMIT::pushSchEdit( const wxString& aMessage, int aCommitFlags )
         {
             updateConnectivityFlag( schItem, screen );
 
-            if( !( aCommitFlags & SKIP_UNDO ) )
+            if( !( aCommitFlags & SKIP_UNDO ) && schItem->Type() != SCH_MARKER_T )
             {
                 ITEM_PICKER itemWrapper( screen, schItem, UNDO_REDO::DELETED );
                 itemWrapper.SetLink( entry.m_copy );
@@ -431,6 +434,8 @@ void SCH_COMMIT::pushSchEdit( const wxString& aMessage, int aCommitFlags )
 
             if( ( aCommitFlags & SKIP_UNDO ) && ( !cleanupPending || ( aCommitFlags & DELETE_REMOVED_ITEMS ) ) )
                 cleanupRemovedItems.emplace_back( schItem );
+            else if( !( aCommitFlags & SKIP_UNDO ) && schItem->Type() == SCH_MARKER_T )
+                cleanupRemovedItems.emplace_back( schItem );   // not in the undo: the next check brings it back
 
             if( EDA_GROUP* group = schItem->GetParentGroup() )
                 group->RemoveItem( schItem );
@@ -507,7 +512,7 @@ void SCH_COMMIT::pushSchEdit( const wxString& aMessage, int aCommitFlags )
                     screen->PruneUnusedLibSymbol( origSymbol->GetSchSymbolLibraryName() );
             }
 
-            if( !( aCommitFlags & SKIP_UNDO ) )
+            if( !( aCommitFlags & SKIP_UNDO ) && schItem->Type() != SCH_MARKER_T )
             {
 #if 0
                 // While this keeps us from marking documents modified when someone OK's a dialog with
