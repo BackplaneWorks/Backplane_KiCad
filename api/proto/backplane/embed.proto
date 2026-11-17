@@ -41,6 +41,8 @@ enum FrameKind
   FK_PCB_3D           = 5;  // EDA_3D_VIEWER_FRAME of the PCB editor
   FK_OTHER            = 6;  // any other embedded, non-modal frame (viewers, calculator, ...)
   FK_GERBVIEW         = 7;  // GERBVIEW_FRAME, in KiCad's own process (bp.13, desktop only)
+  FK_SIMULATOR        = 8;  // SIMULATOR_FRAME: KiCad's Simulator on the open schematic (bp.13.2,
+                            // capability sim-frame); opened on demand, never prewarmed by default
 }
 
 message FrameInfo

@@ -1,0 +1,562 @@
+/*
+ * This program source code file is part of KiCad, a free EDA CAD application.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*
+ * Simulation (fork-only, bp.13.2; BACKPLANE_IPC.md "Simulation").  KiCad's own simulator: the
+ * SPICE netlist exporter, the model library manager and serializer, ngspice.  Served by the
+ * schematic editor (embedded or not) and by the headless `kicad-cli api-server`, with the same
+ * answers.  Capability `sim-run`.  The embedded Simulator window is embed.proto's FK_SIMULATOR
+ * (capability `sim-frame`).
+ *
+ * Every `document` is the open schematic (type DT_SCHEMATIC); a `document.sheet_path` is ignored:
+ * the whole design is simulated, as the Simulator window does.
+ *
+ * Numbers are SI doubles.  A field or parameter value is the text KiCad stores ("10k", "1u").
+ *
+ * Field numbers are stable from bp.13.2: fields are only added.
+ */
+
+syntax = "proto3";
+
+package kiapi.backplane.sim;
+
+import "common/types/base_types.proto";
+
+
+// ---------------------------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------------------------
+
+// Where a symbol's model comes from.
+enum ModelSource
+{
+  MS_UNKNOWN  = 0;
+  MS_NONE     = 1;  // no model: the symbol would not simulate (see SymbolModel.error)
+  MS_INFERRED = 2;  // no Sim.* fields: a passive (R, C, L) or source KiCad infers from the
+                    // reference prefix and the Value field
+  MS_BUILTIN  = 3;  // Sim.Device (+ Sim.Type) names an ideal or ngspice built-in device
+  MS_LIBRARY  = 4;  // Sim.Library + Sim.Name: a .model or .subckt in a SPICE (or IBIS) library file
+  MS_RAW      = 5;  // raw SPICE (Sim.Device = SPICE): the line is given by Sim.Params
+}
+
+// Why a symbol would not simulate.
+enum ModelError
+{
+  ME_NONE                 = 0;
+  ME_NO_MODEL             = 1;  // nothing to simulate it with: no Sim.* fields and nothing inferred
+  ME_LIBRARY_NOT_FOUND    = 2;  // Sim.Library names a file that cannot be found or read
+  ME_MODEL_NOT_IN_LIBRARY = 3;  // the library has no model called Sim.Name
+  ME_PIN_MISMATCH         = 4;  // Sim.Pins names a symbol pin or a model node that does not exist,
+                                // or the symbol has fewer pins than the model has nodes
+  ME_BAD_PARAMS           = 5;  // Sim.Params (or the Value) does not parse for this device
+  ME_OTHER                = 6;  // anything else KiCad's model loader reported (see error)
+}
+
+message Field
+{
+  string name  = 1;  // "Sim.Device", "Sim.Type", "Sim.Library", "Sim.Name", "Sim.Params", "Sim.Pins", ...
+  string value = 2;  // as stored (text variables not expanded)
+}
+
+message Param
+{
+  string name          = 1;  // the Sim.Params key ("r", "dc", "ampl", "bf"...)
+  string value         = 2;  // as KiCad writes it; empty = not set (the default applies)
+  string unit          = 3;
+  string default_value = 4;
+  string description   = 5;
+  bool   is_instance   = 6;  // an instance parameter (on the device line), not a .model parameter
+  bool   is_principal  = 7;  // the device's principal value (r of R, c of C, dc of a source ...):
+                             // what an inferred model takes from the Value field
+}
+
+message PinMap
+{
+  string pin_number = 1;  // the symbol pin's number ("1", "A3")
+  string pin_name   = 2;  // the symbol pin's name ("K", "IN+"), informational on writes
+  string model_node = 3;  // the model's node: its name for a built-in or a .subckt ("+", "anode",
+                          // "IN"), else its 1-based position; empty = the pin is not connected to
+                          // the model
+  string net        = 4;  // GetSimulationModels: the net this pin is on, as KiCad names it
+}
+
+message SymbolModel
+{
+  string reference        = 1;   // "R1"; a multi-unit part appears once
+  string value            = 2;
+  string lib_id           = 3;   // "Device:R"
+  string sheet_path       = 4;   // human-readable sheet path of its first unit ("/", "/Power/")
+  kiapi.common.types.KIID id = 5; // its first unit's symbol
+  bool   exclude_from_sim = 6;   // the symbol's "Exclude from simulation" attribute
+  bool   dnp              = 7;   // do not populate (KiCad leaves DNP parts out of the netlist too)
+  repeated Field fields   = 8;   // every Sim.* field as stored (none for an inferred model)
+
+  ModelSource source      = 9;
+  string device           = 10;  // KiCad's device: "R", "C", "L", "D", "NPN", "NMOS", "V", "I",
+                                 // "SUBCKT", "SPICE", "TLINE", "SW", "XSPICE", "KIBIS" ...
+  string type             = 11;  // KiCad's device type: "" (ideal), "POT", "=" (behavioural), "DC",
+                                 // "SIN", "PULSE", "GUMMELPOON", "VDMOS" ...
+  string spice_primitive  = 12;  // the SPICE item letter the netlist uses: "R", "X", "Q", "V" ...
+  string model_name       = 13;  // the .model / .subckt name in the netlist; empty for an ideal device
+  string library          = 14;  // Sim.Library as stored (may be relative, may hold ${VARS})
+  string library_path     = 15;  // the same, absolute and resolved; empty when it is not found
+  repeated PinMap pins    = 16;  // every symbol pin, in the model's node order first
+  repeated Param  params  = 17;  // with include_params: every parameter of the model
+  string netlist_line     = 18;  // the item line(s) the netlist gets for it; empty when none
+
+  ModelError error_kind   = 19;  // ME_NONE: it simulates (or is excluded)
+  string     error        = 20;  // KiCad's message, one line
+}
+
+// Everything about how each symbol simulates.  Changes nothing.
+message GetSimulationModels
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+  repeated string references     = 2;  // only these (empty: every symbol; power symbols and
+                                       // symbols without pins are never listed)
+  bool            include_params = 3;  // also SymbolModel.params (large for semiconductor models)
+  bool            only_problems  = 4;  // only the symbols with an error_kind
+}
+
+message GetSimulationModelsResponse
+{
+  repeated SymbolModel models  = 1;
+  int32  symbols               = 2;  // symbols looked at (before the filters)
+  int32  excluded              = 3;  // of those, excluded from simulation (or DNP)
+  int32  problems              = 4;  // of those, with an error_kind
+  repeated string not_found    = 5;  // references asked for that the schematic does not have
+}
+
+message BuiltinModel
+{
+  string         device = 1;  // "R", "C", "L", "V", "I", "D", "NPN", "SW" ... (SymbolModel.device)
+  string         type   = 2;  // "" = the device's default type; else SymbolModel.type
+  repeated Param params = 3;  // name + value; others stay at their defaults
+}
+
+message LibraryModel
+{
+  string         library = 1;  // the path to store in Sim.Library: absolute, or relative to the
+                               // project ("sim/models/tl072.lib"); ${VARS} allowed
+  string         name    = 2;  // the .model or .subckt name in it
+  repeated Param params  = 3;  // parameter overrides (name + value), usually none
+}
+
+message RawSpiceModel
+{
+  string primitive = 1;  // the SPICE item letter ("X", "Q", "D" ...)
+  string model     = 2;  // the rest of the item line after the nodes ("TL072", "1k tc=0.001")
+  string library   = 3;  // optional: a file to .include, stored as given
+}
+
+// Write the Sim.* fields of one or more symbols exactly as KiCad's Simulation Model dialog does
+// (the model is built by KiCad's model code and written by its serializer), and/or set their
+// "Exclude from simulation" attribute.  One commit, one undo step; every unit of a multi-unit
+// part gets the same fields.  Nothing is written when any reference fails (see results[].error),
+// unless `partial` is set.
+message AssignSimulationModel
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+  repeated string references = 2;
+
+  oneof model
+  {
+    BuiltinModel  builtin = 3;
+    LibraryModel  library = 4;
+    RawSpiceModel raw     = 5;
+    bool          clear   = 6;  // true: remove every Sim.* field (back to no / an inferred model)
+  }
+
+  // The pin map.  Empty: by pin order (symbol pin N -> model node N), which the answer reports.
+  // Otherwise only the pins listed are connected.
+  repeated PinMap pins = 7;
+
+  // Set or clear "Exclude from simulation" on the references; with no `model` only this is done.
+  optional bool exclude_from_sim = 8;
+
+  bool partial = 9;  // write the references that work even when others fail
+}
+
+message AssignResult
+{
+  string      reference = 1;
+  bool        changed   = 2;  // false: it already was exactly this
+  SymbolModel model     = 3;  // the symbol as it now simulates (as GetSimulationModels gives it)
+  ModelError  error_kind = 4;
+  string      error     = 5;  // why nothing was written for it (unknown reference, model not in
+                              // library, pin mismatch ...)
+}
+
+message AssignSimulationModelResponse
+{
+  repeated AssignResult results = 1;  // one per reference, in the request's order
+  int32 changed = 2;                  // symbols written
+  int32 failed  = 3;
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Problems (shared by the netlist and the run)
+// ---------------------------------------------------------------------------------------------
+
+enum ProblemKind
+{
+  PK_UNKNOWN              = 0;
+  PK_MISSING_MODEL        = 1;   // a symbol has no model, or ngspice does not know the model or
+                                 // subcircuit a line names; reference = the symbol
+  PK_LIBRARY_NOT_FOUND    = 2;   // a model library (.include / Sim.Library) cannot be read
+  PK_MODEL_NOT_IN_LIBRARY = 3;
+  PK_PIN_MISMATCH         = 4;
+  PK_BAD_PARAMS           = 5;   // a parameter or value ngspice or KiCad cannot read
+  PK_NETLIST              = 6;   // any other netlist error (syntax, unknown device, bad command)
+  PK_NO_CONVERGENCE       = 7;   // the operating point or a time step did not converge
+                                 // ("timestep too small", "iteration limit reached", gmin/source
+                                 // stepping failed); node / reference = where ngspice says, if it does
+  PK_FLOATING_NODE        = 8;   // a node with no DC path to ground, or only one connection;
+                                 // node = the ngspice node, net = KiCad's net
+  PK_SINGULAR_MATRIX      = 9;   // "singular matrix" (a loop of voltage sources or inductors, a
+                                 // cut-set of current sources or capacitors); node / reference
+                                 // = what ngspice names
+  PK_NO_GROUND            = 10;  // the circuit has no node 0 (no GND power symbol)
+  PK_MEASURE_FAILED       = 11;  // a `measures` statement gave no value
+  PK_TIMEOUT              = 12;
+  PK_ABORTED              = 13;
+  PK_OTHER                = 14;  // an ngspice error line that is none of the above
+}
+
+enum ProblemSeverity
+{
+  PS_UNKNOWN = 0;
+  PS_ERROR   = 1;  // the run (or the netlist) failed, or would
+  PS_WARNING = 2;  // it ran; the result may not be what was meant
+}
+
+message Problem
+{
+  ProblemKind     kind      = 1;
+  ProblemSeverity severity  = 2;
+  string          reference = 3;  // the symbol ("R1", "U2"), when known
+  string          node      = 4;  // the ngspice node ("/out", "net-_r1-pad2_"), when known
+  string          net       = 5;  // the same as KiCad's net name ("/OUT"), when it maps to one
+  string          message   = 6;  // KiCad's or ngspice's own text, one line
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Netlist
+// ---------------------------------------------------------------------------------------------
+
+// Netlist options: KiCad's (the Simulator's "Simulation command" dialog).  A field left out takes
+// the value shown.
+message Options
+{
+  optional bool adjust_include_paths  = 1;  // default true: relative .include paths are made absolute
+  optional bool adjust_passive_vals   = 2;  // default true: "4k7", "1R5", "3,3k" are read as values
+  optional bool save_all_voltages     = 3;  // default true: .save all
+  optional bool save_all_currents     = 4;  // default true: .probe alli (pin currents)
+  optional bool save_all_dissipations = 5;  // default false: .probe allp (power of each device)
+  optional bool save_all_events       = 6;  // default true: digital (XSPICE event) nodes
+  optional bool current_sheet_as_root = 7;  // default false
+}
+
+message NetNode
+{
+  string net  = 1;  // KiCad's net name ("/OUT", "Net-(R1-Pad2)", "GND")
+  string node = 2;  // the ngspice node ("/out", "net-_r1-pad2_", "0"); its voltage vector is V(<node>)
+}
+
+message PinCurrent
+{
+  string reference  = 1;
+  string pin_number = 2;
+  string pin_name   = 3;
+  string vector     = 4;  // the ngspice vector of the current into this pin ("i(r1)", "i(@q1[ic])")
+  string signal     = 5;  // KiCad's name for it ("I(R1)", "Ic(Q1)")
+}
+
+// The SPICE netlist ngspice would get, without running it.  Changes nothing.
+message GetSimulationNetlist
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+  string            command    = 2;  // the analysis; empty = the saved setup's (its first tab)
+  Options           options    = 3;
+  repeated string   directives = 4;  // as RunSimulation
+  repeated Override overrides  = 5;  // as RunSimulation
+}
+
+message GetSimulationNetlistResponse
+{
+  string              netlist      = 1;
+  repeated NetNode    nodes        = 2;
+  repeated PinCurrent pin_currents = 3;
+  repeated Problem    problems     = 4;  // the exporter's errors and warnings (a missing model, an
+                                         // unreadable library ...): with an error the netlist is
+                                         // what could be written
+  string              command      = 5;  // the analysis line(s) in it
+  repeated string     directives   = 6;  // the directives found on the schematic's sheets
+  int32               items        = 7;  // SPICE items written
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// The saved set-up (the Simulator window's workbook)
+// ---------------------------------------------------------------------------------------------
+
+message Measurement
+{
+  string expr   = 1;  // as the Simulator's Measurements panel holds it ("MAX V(/out)")
+  string format = 2;  // its display format, as stored ("3~V"); may be empty
+}
+
+// One analysis tab of the Simulator window.
+message Analysis
+{
+  string   analysis = 1;           // "OP", "TRAN", "AC", "DC", "NOISE", "PZ", "TF", "SP", "FFT",
+                                   // "Custom"; set by KiCad from the command, ignored on writes
+  string   command  = 2;           // ".tran 1u 10m"
+  Options  options  = 3;
+  repeated string      signals      = 4;  // the traces the tab plots ("V(/out)", "I(R1)")
+  repeated Measurement measurements = 5;
+}
+
+message Setup
+{
+  repeated Analysis tabs            = 1;  // the workbook's tabs, in order
+  string workbook                   = 2;  // the workbook file as the project stores it (relative);
+                                          // empty = none yet
+  string workbook_path              = 3;  // absolute
+  repeated string user_defined_signals = 4;
+  string schematic_command          = 5;  // an analysis written as text on a schematic sheet
+                                          // (".tran 1u 10m"), which KiCad uses when a tab has none
+  repeated string schematic_directives = 6;  // the other SPICE directives on the sheets
+  string compatibility              = 7;  // ngspice's model compatibility mode for this project:
+                                          // "user", "ngspice", "pspice", "ltspice", "ltpspice", "hspice"
+}
+
+// The analysis saved with the design: what the Simulator window opens with.  Changes nothing.
+message GetSimulationSetup
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+}
+
+// Save an analysis with the design, so the person's Simulator window opens with it (and shows it
+// at once when the window is open).  Writes the workbook (<project>.wbk unless the project names
+// another) and the project's workbook setting; never the schematic.
+message SetSimulationSetup
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+  string          command = 2;  // the analysis line(s)
+  Options         options = 3;
+  repeated string signals = 4;  // the traces to plot ("V(/out)", "I(R1)"; net names accepted)
+  repeated Measurement measurements = 5;
+
+  // Which tab.  Left out: the tab whose analysis has the same type as `command` (the first such),
+  // else a new tab at the end.  Given: that tab is replaced (0-based; = the tab count appends).
+  optional int32 tab = 6;
+
+  bool remove = 7;  // remove tab `tab` instead (command, options, signals ignored)
+
+  optional string compatibility = 8;  // also set Setup.compatibility
+}
+
+message SetupResponse
+{
+  Setup setup   = 1;  // as it now is
+  int32 tab     = 2;  // SetSimulationSetup: the tab written
+  bool  changed = 3;  // SetSimulationSetup: false when it already was exactly this
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// Run
+// ---------------------------------------------------------------------------------------------
+
+// A value for this run's netlist only; the schematic is not touched.
+message Override
+{
+  string reference = 1;  // "R1"
+  string field     = 2;  // empty or "Value": the device's principal value; else a Sim.Params key
+                         // ("dc", "ampl", "tc1"), or "Sim.Params" for the whole field
+  string value     = 3;  // "22k"
+}
+
+enum RunStatus
+{
+  SIM_UNKNOWN         = 0;
+  SIM_OK              = 1;
+  SIM_NETLIST_ERROR   = 2;   // the netlist could not be written, or ngspice refused it
+  SIM_MODEL_ERROR     = 3;   // a model is missing or unusable (problems name the symbols)
+  SIM_NO_CONVERGENCE  = 4;
+  SIM_FLOATING_NODE   = 5;
+  SIM_SINGULAR_MATRIX = 6;
+  SIM_TIMEOUT         = 7;   // timeout_ms passed; the run was stopped
+  SIM_ABORTED         = 8;   // stopped by StopSimulation or by the person
+  SIM_ERROR           = 9;   // any other failure (see problems and log)
+  SIM_RUNNING         = 10;  // not finished within wait_ms: collect it with GetSimulationResult
+}
+
+enum VectorKind
+{
+  VK_UNKNOWN   = 0;
+  VK_TIME      = 1;  // the sweep axis of .tran, seconds
+  VK_FREQUENCY = 2;  // the sweep axis of .ac / .noise / .sp / fft, hertz
+  VK_SWEEP     = 3;  // the sweep axis of .dc (the swept source or parameter)
+  VK_VOLTAGE   = 4;
+  VK_CURRENT   = 5;
+  VK_POWER     = 6;
+  VK_NOISE     = 7;  // noise spectral density (V/sqrt(Hz) or A/sqrt(Hz)) or an integrated total
+  VK_SPARAM    = 8;  // an S, Y or Z parameter
+  VK_POLE      = 9;  // .pz: complex poles (rad/s)
+  VK_ZERO      = 10; // .pz: complex zeros (rad/s)
+  VK_OTHER     = 11;
+}
+
+message Vector
+{
+  string     name   = 1;  // the ngspice vector, lower case ("time", "v(/out)", "i(r1)", "onoise_spectrum")
+  string     signal = 2;  // KiCad's name for it ("V(/out)", "I(R1)"); empty when it has none
+  VectorKind kind   = 3;
+  uint32     length = 4;  // points ngspice has (before max_points)
+  bool       complex = 5; // imag is meaningful (.ac, .sp, .pz)
+  repeated double real = 6 [packed = true];  // empty when the vector was not asked for
+  repeated double imag = 7 [packed = true];  // only when complex
+  string     plot   = 8;  // the ngspice plot it is in, when not the run's main plot ("noise2", "sp1")
+}
+
+// A single number of the run: every node voltage and device current of .op, the three results of
+// .tf, the totals of .noise.
+message Value
+{
+  string name   = 1;  // the ngspice vector ("v(/out)", "i(v1)", "transfer_function", "onoise_total")
+  string signal = 2;  // KiCad's name ("V(/out)", "I(V1)")
+  double value  = 3;
+  VectorKind kind = 4;
+}
+
+message Measure
+{
+  string name   = 1;  // the result name in the meas statement
+  double value  = 2;
+  bool   failed = 3;  // ngspice gave no value (the trigger never happened ...)
+  string error  = 4;  // ngspice's line about it, when failed
+}
+
+message Timings
+{
+  double netlist_ms = 1;  // writing the netlist (KiCad's exporter, models and libraries)
+  double load_ms    = 2;  // ngspice reading it
+  double run_ms     = 3;  // the analysis itself
+  double total_ms   = 4;  // the whole request up to this answer
+}
+
+// Run an analysis on the open schematic, saved or not.  One run at a time in a KiCad process (the
+// Simulator window's own runs included): a RunSimulation meanwhile is answered AS_BUSY.
+//
+// The run is ngspice's background run: the editor stays usable.  The request waits `wait_ms` for
+// it; a run that ends in that time is answered whole.  One that does not is answered
+// status = SIM_RUNNING with its run_id, and GetSimulationResult collects it (the API socket
+// serves one request at a time, so a long wait would hold every other request, the event feed
+// included).
+message RunSimulation
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+
+  // The analysis line(s): ".op", ".tran 1u 10m", ".ac dec 20 1 1meg", ".dc V1 0 5 0.1",
+  // ".noise v(/out) V1 dec 10 1 1meg", ".pz ...", ".tf v(/out) V1", ".sp dec 10 1meg 1g".
+  // A frequency content analysis is a .tran line followed by an fft line: ".tran 1u 10m\nfft v(/out)".
+  // Empty = the saved setup's first tab (else the analysis written on the schematic).
+  string command = 2;
+
+  // Extra netlist lines for this run only (.param, .options, .ic, .nodeset, .temp, .include, .save).
+  repeated string directives = 3;
+
+  repeated Override overrides = 4;
+
+  // The vectors to return with their data: "V(/out)", "I(R1)", an ngspice vector name, or a net
+  // name ("/out", "OUT").  "*" = all.  None: names and lengths only.  The sweep axis comes first
+  // whenever any data is returned.
+  repeated string signals = 5;
+
+  // ngspice measurements run after the analysis, each a `meas` statement without the leading
+  // word: "tran rise TRIG v(/out) VAL=0.1 RISE=1 TARG v(/out) VAL=0.9 RISE=1", "ac f3db WHEN
+  // vdb(/out)=-3".  The analysis word may be left out ("f3db WHEN vdb(/out)=-3").
+  repeated string measures = 6;
+
+  bool include_netlist = 7;
+
+  // Embedded or in the GUI: also show this run in the Simulator window, as a tab with this
+  // command plotting `signals` (the window is opened if needed; the host hears
+  // ET_SHOW_REQUESTED for FK_SIMULATOR when it is hidden).  Ignored headless.
+  bool show = 8;
+
+  // Stop the run after this long and answer SIM_TIMEOUT.  0 = 120000.
+  uint32 timeout_ms = 9;
+
+  Options options = 10;
+
+  // How long this request waits for the run before answering SIM_RUNNING.  Left out: 250.  In a
+  // GUI process at most 1000 (the UI thread waits with it); headless at most timeout_ms.
+  optional uint32 wait_ms = 11;
+
+  // Return at most this many points of each vector (every Nth point, the first and the last
+  // always).  0 = all.
+  uint32 max_points = 12;
+}
+
+message RunSimulationResponse
+{
+  RunStatus        status   = 1;
+  repeated Problem problems = 2;
+  string           log      = 3;   // ngspice's console for this run, its last 200 lines
+  repeated Vector  vectors  = 4;   // the sweep axis first
+  repeated Value   values   = 5;   // .op, .tf, and every other vector of length 1
+  repeated Measure measures = 6;
+  string           netlist  = 7;   // with include_netlist (and whenever ngspice refused it)
+  Timings          timings  = 8;
+  string           ngspice_version = 9;
+  int32            nodes    = 10;  // circuit nodes
+  int32            devices  = 11;  // SPICE items in the netlist
+  int32            points   = 12;  // points of the sweep axis (1 for .op and .tf)
+  string           analysis = 13;  // "OP", "TRAN", "AC", "DC", "NOISE", "PZ", "TF", "SP", "FFT", "Custom"
+  string           command  = 14;  // the analysis line(s) that ran
+  uint64           run_id   = 15;  // this run; with SIM_RUNNING, what GetSimulationResult takes
+  double           progress = 16;  // SIM_RUNNING: 0..1 where ngspice reports it, else 0
+  bool             shown    = 17;  // the run is shown in the Simulator window
+}
+
+// Collect a run that was answered SIM_RUNNING.  Waits up to wait_ms like RunSimulation, and
+// answers SIM_RUNNING again while it lasts.  A finished run's result stays until the next
+// RunSimulation; an unknown run_id is AS_BAD_REQUEST.  Returns RunSimulationResponse.
+message GetSimulationResult
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+  uint64          run_id  = 2;  // 0 = the latest run
+  optional uint32 wait_ms = 3;
+}
+
+// Stop the running simulation; its result is then SIM_ABORTED with what ngspice had.  Answered
+// at once.
+message StopSimulation
+{
+  kiapi.common.types.DocumentSpecifier document = 1;
+  uint64 run_id = 2;  // 0 = whichever runs
+}
+
+message StopSimulationResponse
+{
+  bool stopping = 1;  // false: nothing was running
+}

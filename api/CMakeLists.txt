@@ -26,6 +26,7 @@ set( KIAPI_PROTO_SRCS
     backplane/coedit.proto
     backplane/plan.proto
     backplane/assembly.proto
+    backplane/sim.proto
     common/tasks.proto
 
     common/types/base_types.proto
