@@ -1571,9 +1571,12 @@ public:
             // Layer changes.  A via may not start the route, and it has to keep clear of the
             // previous via on the path, which isn't in the world yet.  Only a micro via may
             // follow another, on top of it: a stack through the layers between.
+            // A micro via may also stand in the pad the route starts on, as a fine-pitch part's
+            // inner pads have no other way out.
             const bool stacking = d == DIR_NONE && cur.via != 0;
+            const bool inStart = d == DIR_NONE && cur.via == 0 && cur.parent < 0;
 
-            if( m_p.m_allowVias && m_nLayers > 1 && ( d != DIR_NONE || stacking ) && inViaZone( ix, iy )
+            if( m_p.m_allowVias && m_nLayers > 1 && ( d != DIR_NONE || stacking || inStart ) && inViaZone( ix, iy )
                     && ( stacking || viaSpaced( cur ) ) )
             {
                 const int32_t cell = (int32_t) cellIndex( ix, iy );
@@ -1590,6 +1593,9 @@ public:
                     {
                         continue;
                     }
+
+                    if( inStart && !m_p.m_viaKinds[kind].m_endsOnly )
+                        continue;
 
                     if( !viaFree( ix, iy, kind ) )
                         continue;
@@ -4095,13 +4101,16 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         // A pad boxed in by its neighbours has no straight way out as long as an exit asks,
         // and a route that insists on one may go a long way round for it.  So each window is
         // searched with the exits and without, and the cheaper route is the one kept.
-        attempts.push_back( { baseMargin, nullptr, 0, false, false, &strictStart, &strictEnd, 0 } );
+        //
+        // Without exits first: what that search cannot reach in a window, one held to exits
+        // cannot either, so a window with no route is searched once, not three times.
         attempts.push_back( { baseMargin, nullptr, 0, false, false, &noExits, &noExits, 0 } );
+        attempts.push_back( { baseMargin, nullptr, 0, false, false, &strictStart, &strictEnd, 0 } );
+        attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &noExits, &noExits, 1 } );
         attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &strictStart, &strictEnd, 1 } );
         attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &relaxedStart, &relaxedEnd, 1 } );
-        attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &noExits, &noExits, 1 } );
-        attempts.push_back( { wholeBoard, nullptr, 0, false, false, &relaxedStart, &relaxedEnd, 2 } );
         attempts.push_back( { wholeBoard, nullptr, 0, false, false, &noExits, &noExits, 2 } );
+        attempts.push_back( { wholeBoard, nullptr, 0, false, false, &relaxedStart, &relaxedEnd, 2 } );
     }
     else
     {
@@ -4188,6 +4197,10 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         {
             return true;
         }
+
+        // Nothing without exits in this window: nothing with them
+        if( !guided && m_options.m_freeExits && attempt.m_startExits != &noExits && candidates.empty() )
+            continue;
 
         BOX2I window = span;
         window.Inflate( std::min( attempt.m_margin, 2000000000 / 4 ) );
@@ -4374,9 +4387,12 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
 
         candidates.push_back( std::move( cand ) );
 
-        // Next to nothing to gain over this one
-        if( candidates.back().m_cost <= 1.15 * direct + width + clearance && commitCheapest() )
+        // Next to nothing to gain over this one (one without exits waits for the one with)
+        if( ( !free || guided ) && candidates.back().m_cost <= 1.15 * direct + width + clearance
+                && commitCheapest() )
+        {
             return true;
+        }
     }
 
     if( !candidates.empty() && commitCheapest() )
