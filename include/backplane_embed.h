@@ -376,6 +376,11 @@ public:
     EMBED_FRAME_INFO      Info( wxFrame* aFrame ) const;
     /// The frame's drawing canvas (EMBED_FRAME_OPS::canvas), or null
     wxWindow*             Canvas( wxFrame* aFrame ) const;
+
+    /// Whether the keyboard is still in aFrame at the platform level (X11: the input focus is in
+    /// its window; Windows: GetFocus is in it; macOS: KiCad is active and the frame is key), even
+    /// while wx reports no focus (the frame disabled by a job).  False when it is in the host.
+    bool                  FrameHasKeyboard( wxFrame* aFrame ) const;
     std::vector<EMBED_FRAME_INFO> AllInfo() const;
     const EMBED_FRAME_OPS* Ops( wxFrame* aFrame ) const;
 

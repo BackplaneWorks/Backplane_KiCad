@@ -389,6 +389,12 @@ bool BACKPLANE_EMBED::Attach( uint64_t aParent, uint64_t aToplevel, double aScal
 }
 
 
+bool BACKPLANE_EMBED::FrameHasKeyboard( wxFrame* aFrame ) const
+{
+    return m_enabled && aFrame && KIPLATFORM::EMBED::FrameIsKey( aFrame );
+}
+
+
 EMBED_FRAME_KIND BACKPLANE_EMBED::KindOf( FRAME_T aType )
 {
     switch( aType )

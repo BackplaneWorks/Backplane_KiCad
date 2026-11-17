@@ -576,6 +576,13 @@ bool KIPLATFORM::EMBED::Supported()
 }
 
 
+bool KIPLATFORM::EMBED::FrameIsKey( wxWindow* aFrame )
+{
+    NSWindow* w = nsWindowOf( aFrame );
+    return w && NSApp.active && w.keyWindow;
+}
+
+
 void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 {
     s_hooks = aHooks;

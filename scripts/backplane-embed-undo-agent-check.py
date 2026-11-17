@@ -73,6 +73,49 @@ def item_id(any_item):
         return any_item.value[:64]
 
 
+def read_clipboard(display_name, timeout=5.0):
+    """The CLIPBOARD's text as another X client sees it (UTF8_STRING; INCR for large data), or None."""
+    from Xlib import X, Xatom, display as xdisplay
+    d = xdisplay.Display(display_name)
+    try:
+        w = d.screen().root.create_window(0, 0, 1, 1, 0, X.CopyFromParent,
+                                          event_mask=X.PropertyChangeMask)
+        clip, utf8, prop, incr = (d.intern_atom(n) for n in ("CLIPBOARD", "UTF8_STRING", "BP_CLIP", "INCR"))
+        w.convert_selection(clip, utf8, prop, X.CurrentTime)
+        d.flush()
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
+            if not d.pending_events():
+                time.sleep(0.02)
+                continue
+            ev = d.next_event()
+            if ev.type == X.SelectionNotify:
+                if ev.property == X.NONE:
+                    return None
+                r = w.get_full_property(prop, X.AnyPropertyType)
+                if r is None:
+                    return None
+                if r.property_type != incr:
+                    w.delete_property(prop)
+                    return bytes(r.value).decode("utf-8", "replace")
+                w.delete_property(prop)
+                d.flush()
+                data = b""
+                while time.monotonic() < end + 20:
+                    ev = d.next_event()
+                    if ev.type == X.PropertyNotify and ev.atom == prop and ev.state == X.PropertyNewValue:
+                        chunk = w.get_full_property(prop, X.AnyPropertyType)
+                        w.delete_property(prop)
+                        d.flush()
+                        if not chunk or not chunk.value:
+                            return data.decode("utf-8", "replace")
+                        data += bytes(chunk.value)
+                return data.decode("utf-8", "replace")
+        return None
+    finally:
+        d.close()
+
+
 def run_editor(editor, args):
     pcb = editor == "pcb"
     out = args.out / editor
@@ -212,6 +255,71 @@ def run_editor(editor, args):
                               cmds.RunActionResponse)
                 time.sleep(1.5)
 
+            def selected():
+                return len(hub.request(cmds.GetSelection(header=header), cmds.SelectionResponse).items)
+
+            def focus_rules():
+                """Where the keyboard goes after a host's check run (bp.13.1 give-back rule), on a
+                fresh frame and with no click: the canvas when wx had put it on a control nobody
+                chose; the text field the person was typing in; never taken from the host."""
+                def focused():
+                    r = subprocess.run(["xdotool", "getwindowfocus"], env=s.env, capture_output=True, text=True)
+                    return r.stdout.strip()
+
+                # 1. fresh frame: the startup check, then Ctrl+A and Ctrl+C act on the board
+                check(run_checks(), "pcb fresh frame: the startup check finishes")
+                print(f"INFO pcb fresh frame: focus after the check {focused()}", flush=True)
+                key("ctrl+a", click=False)
+                n = selected()
+                check(n > 0, f"pcb fresh frame: Ctrl+A with no click selects the board's items ({n})")
+                key("ctrl+c", click=False)
+                text = read_clipboard(s.env["DISPLAY"]) or ""
+                check("(footprint" in text, f"pcb fresh frame: Ctrl+C puts the board items on the clipboard "
+                                             f"({len(text)} bytes, footprints: {text.count('(footprint')})")
+                key("Escape", click=False)
+
+                # 3. typing in a text field across a check (opt-in: the Search pane's Ctrl+G is
+                # also PCB's Group, so on some keymaps the keys below act on the board instead)
+                if args.text_field_case:
+                    # Search pane's field (Ctrl+G) with the board selected: a Delete that reached the
+                    # canvas would delete the selection instead of a character.
+                    key("ctrl+a", click=False)
+                    before = ids()
+                    key("ctrl+g", click=False)
+                    s.xdotool("type", "--delay", "80", "U1")
+                    time.sleep(0.8)
+                    run_checks()
+                    s.xdotool("key", "BackSpace")
+                    s.xdotool("key", "Delete")
+                    time.sleep(1.5)
+                    check(ids() == before, f"pcb text field across a check: BackSpace/Delete stay in the field, "
+                                           f"the board is untouched ({len(before - ids())} items gone)")
+                    key("Escape", click=False)
+                    key("Escape", click=False)
+
+                # 4. the keyboard in the host across a check: it stays there
+                scr = s.host.display.screen()
+                other = s.host.top.create_window(w - 150, h - 80, 140, 70, 0, scr.root_depth,
+                                                 background_pixel=scr.white_pixel)
+                other.set_wm_name("Composer")
+                other.map()
+                s.host.display.sync()
+                time.sleep(1.0)
+                s.xdotool("windowfocus", "--sync", str(other.id))
+                time.sleep(0.5)
+                run_checks()
+                time.sleep(1.0)
+                where = focused()
+                # KiCad's windows are another X client's: a different resource base than the host's
+                holder = hub.request(embed.GetFrames(), embed.GetFramesResponse).holder
+                in_kicad = where.isdigit() and ( int( where ) & ~0x1FFFFF ) == ( holder & ~0x1FFFFF )
+                check(where.isdigit() and not in_kicad,
+                      f"pcb keyboard in the host across a check: it stays in the host ({where}, host field "
+                      f"{other.id}, KiCad's holder {holder})")
+                other.destroy()
+                s.host.display.sync()
+                managed.update(s.watcher.current())
+
             def expect(tag, want, shot=None):
                 got = ids()
                 ok = check(got == want, f"{tag} ({len(got)} real items, want {len(want)}; "
@@ -219,6 +327,9 @@ def run_editor(editor, args):
                 if not ok or shot:
                     s.shot(f"{tag.replace(' ', '-').replace(':', '')}")
                 return ok
+
+            if pcb and not args.no_focus_rules:
+                focus_rules()
 
             # the person starts on the canvas
             s.xdotool("mousemove", str(cx), str(cy), "click", "1")
@@ -386,6 +497,10 @@ def main():
     ap.add_argument("kicad_cli", type=Path)
     ap.add_argument("--out", type=Path, default=Path("embed-undo-agent-out"))
     ap.add_argument("--editor", action="append", choices=["pcb", "sch"])
+    ap.add_argument("--text-field-case", action="store_true", help="also type into the Search pane "
+                    "across a check (not reliable on every keymap)")
+    ap.add_argument("--no-focus-rules", action="store_true", help="skip the give-back cases (fresh frame, "
+                    "text field, keyboard in the host)")
     ap.add_argument("--no-agent-reads", action="store_true",
                     help="diagnosis only: leave out the agent's reads between the person's steps")
     args = ap.parse_args()

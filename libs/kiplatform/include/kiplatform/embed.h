@@ -99,6 +99,11 @@ namespace EMBED
     /// True if the running toolkit backend can embed (X11 or Windows; not Wayland or macOS).
     bool Supported();
 
+    /// Whether the keyboard is in aFrame at the platform level, whatever wx's own focus says (a
+    /// disabled frame has none): X11 and Windows, the input focus is in its window; macOS, KiCad
+    /// is the active app and aFrame's window is key.  False when the host has the keyboard.
+    bool FrameIsKey( wxWindow* aFrame );
+
     /// Install the native hooks.  Call once, before any frame is shown.
     void Install( const HOOKS& aHooks );
 

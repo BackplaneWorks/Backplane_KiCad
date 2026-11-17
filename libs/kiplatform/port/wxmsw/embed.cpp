@@ -351,6 +351,12 @@ bool KIPLATFORM::EMBED::Supported()
 }
 
 
+bool KIPLATFORM::EMBED::FrameIsKey( wxWindow* aFrame )
+{
+    return HasFocus( aFrame );
+}
+
+
 namespace
 {
 /// The calling thread's own stack, "module+0xoffset" per frame (symbolise with the shipped pdbs)

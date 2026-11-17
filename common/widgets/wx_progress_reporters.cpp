@@ -23,8 +23,10 @@
 #include <thread>
 #include <wx/app.h>
 #include <wx/evtloop.h>
+#include <wx/frame.h>
 #include <wx/utils.h>
 #include <backplane_embed.h>
+#include <widgets/ui_common.h>
 #include <widgets/wx_event_utils.h>
 #include <widgets/wx_progress_reporters.h>
 
@@ -65,9 +67,13 @@ WX_PROGRESS_REPORTER::WX_PROGRESS_REPORTER( wxWindow* aParent, const wxString& a
         m_focusBefore = wxWindow::FindFocus();
     }
 
+    // Embedded, no parent for the never-shown dialog: wxGenericProgressDialog disables its
+    // parent's top-level for the job, and disabling the embedded frame dropped the keyboard and,
+    // on Windows, made Windows activate other KiCad top-levels and then hand the foreground to the
+    // desktop instead of the host (Carbon, 0f96e1162f).  With no parent nothing is disabled.
     WX_PROGRESS_REPORTER_BASE::Create( aTitle,
                                        aReserveSpaceForMessage ? getPlaceholderText() : wxString( wxEmptyString ),
-                                       1, aParent,
+                                       1, m_embedJob ? nullptr : aParent,
                                        // wxPD_APP_MODAL |   // Don't use; messes up OSX when called from
                                        // quasi-modal dialog
                                        wxPD_AUTO_HIDE | // *MUST* use; otherwise wxWidgets will spin
@@ -88,38 +94,53 @@ WX_PROGRESS_REPORTER::~WX_PROGRESS_REPORTER()
     {
         BACKPLANE_EMBED::Get().ProgressEnd( m_embedJob );
 
-        // The hidden dialog disabled its frame for the job (wxGenericProgressDialog does, mapped
-        // or not), and a disabled frame loses the keyboard: after a host's check run (RunChecks)
-        // the person's Ctrl+Z and Ctrl+Y went to the frame's menu accelerators, not the canvas,
-        // and did nothing until a click.  Enable the frame now (the base destructor does it again,
-        // harmlessly) and give the keyboard back to the window that had it, unless the person put
-        // it somewhere else meanwhile.  Never taken from outside KiCad: only when KiCad had it.
+        // The keyboard after a host's check run (RunChecks), only while KiCad's frame still has it
+        // (never from the host) and the person has not put it somewhere else meanwhile.  The
+        // frame is no longer disabled for the job (no parent above), so the keyboard usually
+        // stays where it was; where it goes:
+        //  - to the text field the person was typing in (the caret stays, the next key lands there);
+        //  - to the canvas, when it had it;
+        //  - otherwise to the canvas too: a control nobody chose (the side panel wx focuses by
+        //    default on a fresh frame) would take the first Ctrl+A and Ctrl+C for its own list.
         ReenableOtherWindows();
 
         if( wxWindow* before = m_focusBefore.get() )
         {
-            wxWeakRef<wxWindow> target( before );
+            wxWeakRef<wxWindow> recorded( before );
             wxWeakRef<wxWindow> top( wxGetTopLevelParent( before ) );
             wxWindow*           dialog = this;
 
             auto giveBack =
-                    [target, top, dialog]()
+                    [recorded, top, dialog]()
                     {
-                        wxWindow* win = target.get();
+                        wxWindow* was = recorded.get();
+                        wxFrame*  frame = wxDynamicCast( top.get(), wxFrame );
 
-                        if( !win || !win->IsShownOnScreen() || !win->IsEnabled() )
+                        if( !was || !frame )
+                            return;
+
+                        BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+                        if( !embed.FrameHasKeyboard( frame ) )
                             return;
 
                         wxWindow* now = wxWindow::FindFocus();
 
-                        if( now == win )
+                        // Moved by the person meanwhile (anywhere but where it was): left there
+                        if( now && now != was && now != frame && now != dialog
+                            && wxGetTopLevelParent( now ) != dialog )
+                        {
+                            return;
+                        }
+
+                        wxWindow* canvas = embed.Canvas( frame );
+                        bool      onCanvas = canvas && ( was == canvas || canvas->IsDescendant( was ) );
+                        wxWindow* target = ( onCanvas || KIUI::IsInputControlFocused( was ) ) ? was : canvas;
+
+                        if( !target || target == now || !target->IsShownOnScreen() || !target->IsEnabled() )
                             return;
 
-                        if( !now || now == top.get() || now == dialog
-                            || wxGetTopLevelParent( now ) == dialog )
-                        {
-                            win->SetFocus();
-                        }
+                        target->SetFocus();
                     };
 
             giveBack();

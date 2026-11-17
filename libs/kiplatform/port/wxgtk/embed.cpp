@@ -277,6 +277,12 @@ bool KIPLATFORM::EMBED::Supported()
 }
 
 
+bool KIPLATFORM::EMBED::FrameIsKey( wxWindow* aFrame )
+{
+    return HasFocus( aFrame );
+}
+
+
 #ifdef GDK_WINDOWING_X11
 namespace
 {
