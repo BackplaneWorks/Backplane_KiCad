@@ -29,7 +29,9 @@ jobs:
       # ccache in front of cl (scripts/backplane-windows.ps1, BACKPLANE_WIN_CCACHE: KiCad's USE_CCACHE
       # with /Z7; the PDBs are still linked), the same compiler cache as bp-winbuild. A compiler is
       # known by its contents, so a runner image or MSVC update misses rather than reusing objects.
-      BACKPLANE_WIN_CCACHE: '1'
+      # Off unless the repository variable BACKPLANE_WIN_CCACHE is set (an empty value is off in the ps1),
+      # until a warm build's package is shown equal to a cold one's.
+      BACKPLANE_WIN_CCACHE: ${{ vars.BACKPLANE_WIN_CCACHE }}
       CCACHE_DIR: C:\bp\ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
       CCACHE_COMPRESS: '1'
