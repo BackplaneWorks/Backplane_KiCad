@@ -1322,6 +1322,12 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
     }
 
 #ifdef __WXOSX__
+    // Cmd+O would open another document inside the embedded editor (its hotkey, now that Cmd
+    // chords reach the canvas): the host owns which document is open, so the key does nothing,
+    // as Cmd+Q does (EDA_BASE_FRAME::OnCharHook).
+    if( type == wxEVT_CHAR_HOOK && code == 'O' && modifiers == wxMOD_CONTROL )
+        return wxEventFilter::Event_Processed;
+
     // On a Mac, Backspace (the key marked delete) deletes the selection: stock KiCad gets that
     // from Edit > Delete, whose Del accelerator AppKit puts on that key, ahead of any hotkey.  An
     // embedded frame has no menu bar of its own (the port hands the key to wx before AppKit's
