@@ -25,6 +25,8 @@
 #include <map>
 #include <memory>
 #include <tuple>
+#include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 #include <math/box2.h>
@@ -89,6 +91,10 @@ struct SKETCH_VIA_KIND
     int    m_diameter = 0;
     int    m_drill = 0;
     double m_cost = 0.0;        ///< as a length of track (nm)
+
+    ///< The board stands vias of this kind in pads of their net (filled and capped): so may the
+    ///< router.  A laser micro via always may.
+    bool m_inPad = false;
 
     ///< One of the board's own vias of this kind: a new one is made like it (filled, capped
     ///< and tented as the board's are, which a stack of micro vias has to be), or nullptr
@@ -164,6 +170,10 @@ struct SKETCH_ROUTER_OPTIONS
 
     ///< When no route leaves and enters the pads straight, let it leave and enter them any way
     bool m_freeExits = true;
+
+    ///< When a connection has no way, take up the routes of this call that are in its way,
+    ///< route it, and route those again
+    bool m_ripUp = true;
 
     ///< Keep each net's obstacles by place (SKETCH_FIELD) instead of asking the node about every
     ///< probe.  The routes are the same; off only to compare.
@@ -390,6 +400,17 @@ private:
     std::map<std::pair<NET_HANDLE, int>, std::unique_ptr<SKETCH_FIELD>> m_fields;
     std::vector<FIELD_CHANGE>        m_passChanges;   ///< copper the current pass added
     int                              m_narrowed = 0;  ///< see SKETCH_ROUTER_STATS
+
+    ///< Take the copper a connection made in this pass off the node again
+    void ripUp( NODE* aNode, int aConnection );
+
+    std::vector<std::vector<ITEM*>>        m_routeItems;  ///< what each connection made, this pass
+    std::unordered_map<const ITEM*, int>   m_itemOwner;   ///< and whose each of those (and its hole) is
+    std::vector<int>                       m_ripCount;    ///< times each connection was taken up
+    std::unordered_set<const ITEM*>        m_soft;        ///< copper that may be taken up now
+    std::vector<int>                       m_victims;     ///< connections the last search took up
+    bool                                   m_softMode = false;
+    int                                    m_current = -1; ///< the connection being routed
 
     ///< By net, kind of via and tile: 1 the rules allow it there, 0 not, -1 it depends where
     std::map<std::tuple<NET_HANDLE, int, int, int>, int8_t> m_viaAllowedTiles;

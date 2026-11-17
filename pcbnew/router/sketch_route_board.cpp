@@ -209,6 +209,9 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
         if( list.find( "freeexits" ) != std::string::npos )
             options.m_freeExits = false;
 
+        if( list.find( "ripup" ) != std::string::npos )
+            options.m_ripUp = false;
+
         if( list.find( "conventions" ) != std::string::npos )
         {
             options.m_layers = PNS::SKETCH_ROUTER::RoutableLayers( aBoard, &iface );

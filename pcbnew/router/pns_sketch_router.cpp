@@ -22,6 +22,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <unordered_set>
+#include <deque>
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
@@ -809,10 +811,14 @@ public:
      * every other hole.  The candidates and clearances are worked out as ITEM::collideSimple()
      * does, once per tile.
      *
-     * @return 1 free, 0 not, -1 when the via's shapes aren't the circles this knows.
+     * @return FREE, BLOCKED, SOFT (blocked only by copper that may be taken up, which \a aHits
+     *         gets), or -1 when the via's shapes aren't the circles this knows.
      */
-    int ViaFree( int aKind, const VIA& aProto, const VECTOR2I& aPos, int aHoleToHole, bool aInOwnPad )
+    int ViaFree( int aKind, const VIA& aProto, const VECTOR2I& aPos, int aHoleToHole, bool aInOwnPad,
+                 std::vector<const ITEM*>* aHits = nullptr )
     {
+        bool soft = false;
+
         const int tx = aPos.x >> TILE_SHIFT;
         const int ty = aPos.y >> TILE_SHIFT;
 
@@ -836,7 +842,13 @@ public:
             {
                 if( head.Collide( cand.m_shape, cand.m_distance ) )
                 {
-                    return 0;
+                    if( !m_soft || !m_soft->count( cand.m_item ) )
+                        return BLOCKED;
+
+                    soft = true;
+
+                    if( aHits )
+                        aHits->push_back( cand.m_item );
                 }
 
                 continue;
@@ -860,10 +872,10 @@ public:
                     continue;
             }
 
-            return 0;
+            return BLOCKED;
         }
 
-        return 1;
+        return soft ? SOFT : FREE;
     }
 
     NET_HANDLE Net() const { return m_net; }
@@ -935,9 +947,23 @@ public:
         }
     }
 
+    /// Copper that may be taken up again: a probe that only it blocks is SOFT, not BLOCKED
+    void SetSoft( const std::unordered_set<const ITEM*>* aSoft ) { m_soft = aSoft; }
+
+    enum STATE { FREE = 1, BLOCKED = 2, SOFT = 3 };
+
     /// As !NODE::CheckColliding() of a segment of the field's net and width on \a aLayer
     bool SegmentFree( const VECTOR2I& aA, const VECTOR2I& aB, int aLayer )
     {
+        return SegmentState( aA, aB, aLayer ) == FREE;
+    }
+
+    /// The same, telling copper that may be taken up (\a aHits gets it) from what may not
+    int SegmentState( const VECTOR2I& aA, const VECTOR2I& aB, int aLayer,
+                      std::vector<const ITEM*>* aHits = nullptr )
+    {
+        bool soft = false;
+
         const int x0 = std::min( aA.x, aB.x ) >> TILE_SHIFT;
         const int y0 = std::min( aA.y, aB.y ) >> TILE_SHIFT;
         const int x1 = std::max( aA.x, aB.x ) >> TILE_SHIFT;
@@ -948,7 +974,7 @@ public:
             SEGMENT seg( SEG( aA, aB ), m_net );
             seg.SetWidth( m_width );
             seg.SetLayer( aLayer );
-            return !m_node->CheckColliding( &seg );
+            return m_node->CheckColliding( &seg ) ? BLOCKED : FREE;
         }
 
         const SHAPE_SEGMENT head( aA, aB, m_width );
@@ -967,7 +993,15 @@ public:
                     if( !cand.m_exclusions )
                     {
                         if( head.Collide( cand.m_shape, cand.m_distance ) )
-                            return false;
+                        {
+                            if( !m_soft || !m_soft->count( cand.m_item ) )
+                                return BLOCKED;
+
+                            soft = true;
+
+                            if( aHits )
+                                aHits->push_back( cand.m_item );
+                        }
 
                         continue;
                     }
@@ -992,12 +1026,12 @@ public:
                             continue;
                     }
 
-                    return false;
+                    return BLOCKED;
                 }
             }
         }
 
-        return true;
+        return soft ? SOFT : FREE;
     }
 
 private:
@@ -1342,6 +1376,7 @@ private:
     std::unordered_map<std::pair<const ITEM*, int>, int, PAIR_HASH> m_branchViaClearance;
     int                                                             m_viaReach = 0;
     std::vector<int>                                                m_places;     ///< see place()
+    const std::unordered_set<const ITEM*>*                          m_soft = nullptr;
 };
 
 
@@ -1368,6 +1403,7 @@ public:
             VIA    m_proto;
             double m_cost = 0.0;        ///< as a length of track (nm)
             bool   m_endsOnly = false;  ///< a micro via joins its two end layers only
+            bool   m_inPad = false;     ///< may stand in a pad of its net
         };
 
         std::vector<VIA_KIND>    m_viaKinds;
@@ -1417,6 +1453,11 @@ public:
         ///< The obstacles of this net and width by place, or nullptr to ask the node each time
         SKETCH_FIELD*            m_field = nullptr;
         bool                     m_viaField = true;   ///< ask the field about vias too
+
+        ///< Go through copper the field calls soft, at this cost a grid edge (in steps): a route
+        ///< found this way says what to take up for it
+        bool                     m_soft = false;
+        double                   m_softCost = 10.0;
         bool                     m_orthogonal = false;
         bool                     m_allowVias = true;
         double                   m_bendCost = 2.0;   ///< in grid steps
@@ -1435,6 +1476,7 @@ public:
         std::vector<int>              m_runLayers;
         std::vector<VECTOR2I>         m_vias;
         std::vector<int>              m_viaKinds;   ///< of each via, an index into the kinds
+        std::vector<const ITEM*>      m_softHits;   ///< soft copper the route goes through
         double                        m_cost = 0.0;
     };
 
@@ -1627,6 +1669,9 @@ public:
 
                 float ng = cur.g + stepCost( k, nd );
 
+                if( m_p.m_soft && edgeState( ix, iy, nd, k ) == SKETCH_FIELD::SOFT )
+                    ng += (float) m_p.m_softCost;
+
                 // Keep to the middle of the corridor, which is the track's lane in a bundle
                 if( !m_offCenter.empty() )
                     ng += float( m_p.m_centerCost * m_offCenter[size_t( ny ) * m_w + nx] / 255.0 )
@@ -1668,13 +1713,16 @@ public:
                         continue;
                     }
 
-                    if( inStart && !m_p.m_viaKinds[kind].m_endsOnly )
+                    if( inStart && !m_p.m_viaKinds[kind].m_inPad )
                         continue;
 
                     if( !viaFree( ix, iy, kind ) )
                         continue;
 
-                    const float ng = cur.g + m_kindCost[kind];
+                    float ng = cur.g + m_kindCost[kind];
+
+                    if( m_p.m_soft && m_viaState[size_t( cell ) * m_nKinds + kind] == SKETCH_FIELD::SOFT )
+                        ng += float( 3.0 * m_p.m_softCost );
 
                     for( int k2 : joins )
                     {
@@ -1899,8 +1947,11 @@ private:
         if( m_p.m_field && !m_p.m_ignoreNets )
         {
             m_stats.m_collisionChecks++;
-            return m_p.m_field->SegmentFree( aA, aB, m_p.m_layers[aLayer] );
+            m_lastState = m_p.m_field->SegmentState( aA, aB, m_p.m_layers[aLayer] );
+            return m_lastState != SKETCH_FIELD::BLOCKED;
         }
+
+        m_lastState = 0;
 
         SEGMENT seg( SEG( aA, aB ), m_p.m_net );
         seg.SetWidth( m_p.m_width );
@@ -1927,6 +1978,13 @@ private:
 
     bool edgeFree( int aIx, int aIy, int aDir, int aLayer )
     {
+        const int state = edgeState( aIx, aIy, aDir, aLayer );
+
+        return state == SKETCH_FIELD::FREE || ( state == SKETCH_FIELD::SOFT && m_p.m_soft );
+    }
+
+    int edgeState( int aIx, int aIy, int aDir, int aLayer )
+    {
         // Each edge is cached once, on the cell it leaves in directions 0..3
         if( aDir >= 4 )
         {
@@ -1940,14 +1998,16 @@ private:
         const int known = ( state >> shift ) & 3;
 
         if( known )
-            return known == 1;
+            return known;
 
         const VECTOR2I a = cellPos( aIx, aIy );
         const VECTOR2I b = cellPos( aIx + DX[aDir], aIy + DY[aDir] );
         const bool     free = segmentFree( a, b, aLayer );
+        const int      now = !free ? SKETCH_FIELD::BLOCKED
+                                   : m_lastState == SKETCH_FIELD::SOFT ? SKETCH_FIELD::SOFT : SKETCH_FIELD::FREE;
 
-        state |= ( free ? 1 : 2 ) << shift;
-        return free;
+        state |= now << shift;
+        return now;
     }
 
     bool inViaZone( int aIx, int aIy ) const
@@ -1978,22 +2038,21 @@ private:
         uint8_t& state = m_viaState[cellIndex( aIx, aIy ) * m_nKinds + aKind];
 
         if( state )
-            return state == 1;
+            return state == SKETCH_FIELD::FREE || ( state == SKETCH_FIELD::SOFT && m_p.m_soft );
 
         if( m_p.m_field && !m_p.m_ignoreNets && m_p.m_viaField )
         {
             const int answer = m_p.m_field->ViaFree( aKind, m_p.m_viaKinds[aKind].m_proto, cellPos( aIx, aIy ),
-                                                     m_p.m_holeToHole, m_p.m_viaKinds[aKind].m_endsOnly );
+                                                     m_p.m_holeToHole, m_p.m_viaKinds[aKind].m_inPad );
 
             if( answer >= 0 )
             {
-                const bool ok = answer == 1
+                const bool ok = answer != SKETCH_FIELD::BLOCKED
                                 && ( !m_p.m_viaAllowed || m_p.m_viaAllowed( aKind, cellPos( aIx, aIy ) ) );
 
-
                 m_stats.m_collisionChecks++;
-                state = ok ? 1 : 2;
-                return ok;
+                state = ok ? answer : SKETCH_FIELD::BLOCKED;
+                return state == SKETCH_FIELD::FREE || ( state == SKETCH_FIELD::SOFT && m_p.m_soft );
             }
         }
 
@@ -2010,7 +2069,7 @@ private:
             opts.m_differentNetsOnly = false;
             opts.SetFixedClearanceOverride( 0 );
             opts.m_limitCount = 1;
-            opts.m_kindMask = m_p.m_viaKinds[aKind].m_endsOnly ? ITEM::VIA_T : ITEM::SOLID_T | ITEM::VIA_T;
+            opts.m_kindMask = m_p.m_viaKinds[aKind].m_inPad ? ITEM::VIA_T : ITEM::SOLID_T | ITEM::VIA_T;
 
             NET_HANDLE net = m_p.m_net;
             opts.m_filter = [net]( const ITEM* aCandidate, const ITEM* )
@@ -2058,6 +2117,8 @@ private:
                                                                    ? 0
                                                                    : std::max( m_p.m_pitch / 4, m_p.m_width ) ) )
         {
+            bool softApproach = false;
+
             if( path.PointCount() >= 2 && !inFreeZone( m_p.m_end ) )
             {
                 LINE line;
@@ -2068,8 +2129,29 @@ private:
 
                 m_stats.m_collisionChecks++;
 
-                if( m_p.m_node->CheckColliding( &line ) )
+                if( m_p.m_soft && m_p.m_field )
+                {
+                    // Through copper that may be taken up, as the rest of the route
+                    int worst = SKETCH_FIELD::FREE;
+
+                    for( int i = 0; i < path.SegmentCount() && worst != SKETCH_FIELD::BLOCKED; i++ )
+                    {
+                        const int state = m_p.m_field->SegmentState( path.CSegment( i ).A, path.CSegment( i ).B,
+                                                                     m_p.m_layers[aLayer] );
+
+                        if( state != SKETCH_FIELD::FREE )
+                            worst = state;
+                    }
+
+                    if( worst == SKETCH_FIELD::BLOCKED )
+                        continue;
+
+                    softApproach = worst == SKETCH_FIELD::SOFT;
+                }
+                else if( m_p.m_node->CheckColliding( &line ) )
+                {
                     continue;
+                }
             }
 
             APPROACH app;
@@ -2077,7 +2159,8 @@ private:
             app.m_firstDir = path.PointCount() >= 2 ? directionOf( path.CPoint( 1 ) - path.CPoint( 0 ) )
                                                     : -1;
             app.m_cost = float( path.Length() / m_p.m_pitch
-                                + std::max( 0, path.SegmentCount() - 1 ) * m_p.m_bendCost );
+                                + std::max( 0, path.SegmentCount() - 1 ) * m_p.m_bendCost
+                                + ( softApproach ? 3.0 * m_p.m_softCost : 0.0 ) );
 
             if( path.SegmentCount() >= 1 )
             {
@@ -2255,6 +2338,43 @@ private:
         aResult.m_runs.push_back( run );
         aResult.m_runLayers.push_back( m_p.m_layers[layer] );
 
+        // What the route goes through that would have to be taken up for it
+        if( m_p.m_soft && m_p.m_field )
+        {
+            for( size_t i = 1; i < chain.size(); i++ )
+            {
+                const REC& a = m_recs[chain[i - 1]];
+                const REC& b = m_recs[chain[i]];
+
+                if( a.layer == b.layer )
+                {
+                    m_p.m_field->SegmentState( cellPos( a.ix, a.iy ), cellPos( b.ix, b.iy ), m_p.m_layers[b.layer],
+                                               &aResult.m_softHits );
+                }
+                else if( b.via > 0 )
+                {
+                    m_p.m_field->ViaFree( b.via - 1, m_p.m_viaKinds[b.via - 1].m_proto, cellPos( b.ix, b.iy ),
+                                          m_p.m_holeToHole, m_p.m_viaKinds[b.via - 1].m_inPad,
+                                          &aResult.m_softHits );
+                }
+            }
+
+            const REC& first = m_recs[chain.front()];
+            const REC& last = m_recs[chain.back()];
+
+            if( m_p.m_start != cellPos( first.ix, first.iy ) )
+            {
+                m_p.m_field->SegmentState( m_p.m_start, cellPos( first.ix, first.iy ), m_p.m_layers[first.layer],
+                                           &aResult.m_softHits );
+            }
+
+            for( int i = 0; i < aApproach.m_path.SegmentCount(); i++ )
+            {
+                m_p.m_field->SegmentState( aApproach.m_path.CSegment( i ).A, aApproach.m_path.CSegment( i ).B,
+                                           m_p.m_layers[last.layer], &aResult.m_softHits );
+            }
+        }
+
         for( SHAPE_LINE_CHAIN& r : aResult.m_runs )
             r = simplifyExact( r );
     }
@@ -2283,6 +2403,7 @@ private:
     std::vector<float>      m_kindCost;         ///< in grid steps
     float                   m_minViaCost = 0.0f;
     std::vector<bool>       m_noTracks;
+    int                     m_lastState = 0;    ///< what the field said of the last segment asked
     std::vector<uint8_t>    m_allowed;    ///< Per cell corridor mask (empty when unused)
     std::vector<uint8_t>    m_offCenter;  ///< Per cell distance from the corridor's middle, 0..255
     std::vector<float>      m_along;      ///< Per cell position along the corridor, -1 off it
@@ -2507,6 +2628,9 @@ NODE* SKETCH_ROUTER::Route( NODE* aWorld, const std::vector<SKETCH_CONNECTION>& 
                                                     return aStatus != ROUTE_FAILED;
                                                 } );
         const int detoured = (int) std::count( status.begin(), status.end(), ROUTE_DETOURED );
+
+        sketchTrace( wxT( "pass %d: %d of %d routed, %d narrowed, cost %.0f" ), pass + 1, routed,
+                     (int) aConnections.size(), m_narrowed, cost );
 
         if( routed > bestRouted || ( routed == bestRouted && detoured < bestDetoured )
                 || ( routed == bestRouted && detoured == bestDetoured && cost < bestCost ) )
@@ -3518,6 +3642,23 @@ void SKETCH_ROUTER::fieldsChanged( const ITEM* aItem )
 }
 
 
+void SKETCH_ROUTER::ripUp( NODE* aNode, int aConnection )
+{
+    for( ITEM* item : m_routeItems[aConnection] )
+    {
+        fieldsChanged( item );
+        m_itemOwner.erase( item );
+
+        if( item->Kind() == ITEM::VIA_T )
+            m_itemOwner.erase( static_cast<VIA*>( item )->Hole() );
+
+        aNode->Remove( item );
+    }
+
+    m_routeItems[aConnection].clear();
+}
+
+
 bool SKETCH_ROUTER::routePass( NODE* aNode, const std::vector<SKETCH_CONNECTION>& aConnections,
                                const std::vector<int>& aOrder, std::vector<uint8_t>& aStatus,
                                double& aCost, int& aVias, long long& aLength )
@@ -3603,11 +3744,31 @@ bool SKETCH_ROUTER::routePass( NODE* aNode, const std::vector<SKETCH_CONNECTION>
 
     m_progressTotal = (int) aOrder.size();
 
-    for( int idx : aOrder )
-    {
-        m_progressDone = done;
+    // A connection with no way may have the routes of this pass that are in its way taken up:
+    // those go back to the front of the queue.  Each route may be taken up twice, and the
+    // whole pass a few times its size, so this ends.
+    const size_t          count = aConnections.size();
+    std::deque<int>       work( aOrder.begin(), aOrder.end() );
+    std::vector<double>   connCost( count, 0.0 );
+    std::vector<int>      connVias( count, 0 );
+    std::vector<long long> connLength( count, 0 );
+    int                   ripBudget = 3 * (int) count;
 
-        if( m_progressCallback && !m_progressCallback( done, (int) aOrder.size() ) )
+    m_routeItems.assign( count, {} );
+    m_itemOwner.clear();
+    m_ripCount.assign( count, 0 );
+
+    while( !work.empty() )
+    {
+        const int idx = work.front();
+        work.pop_front();
+
+        if( aStatus[idx] != ROUTE_FAILED )
+            continue;
+
+        m_progressDone = std::min( done, (int) aOrder.size() );
+
+        if( m_progressCallback && !m_progressCallback( m_progressDone, (int) aOrder.size() ) )
             m_stats.m_cancelled = true;
 
         if( cancelled() )
@@ -3640,20 +3801,71 @@ bool SKETCH_ROUTER::routePass( NODE* aNode, const std::vector<SKETCH_CONNECTION>
         }
 
         const int narrowedBefore = m_narrowed;
+        const int bundleSize = bundle >= 0 ? (int) m_bundles[bundle].m_members.size() : 1;
+        int       vias = 0;
+        long long length = 0;
 
-        if( routeConnection( aNode, aConnections[idx],
-                             bundle >= 0 ? (int) m_bundles[bundle].m_members.size() : 1,
-                             m_laneOffsets[idx], cost, aVias, aLength, detoured ) )
+        m_current = idx;
+
+        bool routed = routeConnection( aNode, aConnections[idx], bundleSize, m_laneOffsets[idx], cost, vias,
+                                       length, detoured );
+
+        if( !routed && m_options.m_ripUp && m_options.m_guide.PointCount() < 2 && ripBudget > 0 && !cancelled() )
+        {
+            m_soft.clear();
+
+            for( const auto& [item, owner] : m_itemOwner )
+            {
+                if( owner != idx && m_ripCount[owner] < 2 )
+                    m_soft.insert( item );
+            }
+
+            if( !m_soft.empty() )
+            {
+                ripBudget--;
+                m_victims.clear();
+                m_softMode = true;
+                routed = routeConnection( aNode, aConnections[idx], bundleSize, m_laneOffsets[idx], cost, vias,
+                                          length, detoured );
+                m_softMode = false;
+
+                sketchTrace( wxT( "  rip-up: %s, %d routes taken up" ),
+                             routed ? wxT( "routed" ) : wxT( "no way" ), (int) m_victims.size() );
+
+                for( auto it = m_victims.rbegin(); it != m_victims.rend(); ++it )
+                {
+                    m_ripCount[*it]++;
+                    aStatus[*it] = ROUTE_FAILED;
+                    connCost[*it] = 0.0;
+                    connVias[*it] = 0;
+                    connLength[*it] = 0;
+                    work.push_front( *it );
+                }
+            }
+        }
+
+        m_current = -1;
+
+        if( routed )
         {
             // A route narrower than its net asks counts against the pass, like a long way round
             if( m_narrowed > narrowedBefore )
                 cost += 5.0 * cost + 1e6;
 
             aStatus[idx] = detoured ? ROUTE_DETOURED : ROUTE_OK;
-            aCost += cost;
+            connCost[idx] = cost;
+            connVias[idx] = vias;
+            connLength[idx] = length;
         }
 
         done++;
+    }
+
+    for( size_t i = 0; i < count; i++ )
+    {
+        aCost += connCost[i];
+        aVias += connVias[i];
+        aLength += connLength[i];
     }
 
     for( size_t i = 0; i < reserved.size(); i++ )
@@ -3826,6 +4038,7 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
                          kind.m_diameter, kind.m_drill, aConn.m_net, (VIATYPE) kind.m_type );
         k.m_cost = kind.m_cost;
         k.m_endsOnly = (VIATYPE) kind.m_type == VIATYPE::MICROVIA;
+        k.m_inPad = k.m_endsOnly || kind.m_inPad;
         viaKinds.push_back( k );
     }
 
@@ -3957,7 +4170,7 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
     const int minSegment = ( width + clearance ) / 8;
 
     // Short connections often need nothing more than a straight exit and a direct trace
-    if( !guided )
+    if( !guided && !m_softMode )
     {
         for( size_t k = 0; k < layers.size(); k++ )
         {
@@ -4175,7 +4388,13 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
 
     std::vector<ATTEMPT> attempts;
 
-    if( guided )
+    if( m_softMode )
+    {
+        // Through the routes of this pass that may be taken up again
+        attempts.push_back( { baseMargin * 4, nullptr, 0, false, false, &noExits, &noExits, 0 } );
+        attempts.push_back( { wholeBoard, nullptr, 0, false, false, &noExits, &noExits, 1 } );
+    }
+    else if( guided )
     {
         if( lane.PointCount() )
             attempts.push_back( { baseMargin, &lane, laneHalfWidth, true, true, &strictStart, &strictEnd } );
@@ -4184,6 +4403,13 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         attempts.push_back( { baseMargin, &corridor, corridorHalfWidth, false, true, &relaxedStart, &relaxedEnd } );
         attempts.push_back( { baseMargin * 3, nullptr, 0, false, false, &strictStart, &strictEnd } );
         attempts.push_back( { wholeBoard, nullptr, 0, false, false, &relaxedStart, &relaxedEnd } );
+
+        // Sooner askew out of a pad than not connected
+        if( m_options.m_freeExits )
+        {
+            attempts.push_back( { baseMargin * 3, nullptr, 0, false, false, &noExits, &noExits } );
+            attempts.push_back( { wholeBoard, nullptr, 0, false, false, &noExits, &noExits } );
+        }
 
         // The first that works is the one: a sketch says where the route should go
         for( size_t i = 0; i < attempts.size(); i++ )
@@ -4237,6 +4463,32 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
                 for( const CANDIDATE_ROUTE& cand : candidates )
                 {
                     const ATTEMPT& attempt = *cand.m_attempt;
+
+                    if( m_softMode )
+                    {
+                        // Take up the routes this one goes through; they are routed again after
+                        std::set<int> victims;
+                        bool          known = true;
+
+                        for( const ITEM* hit : cand.m_result.m_softHits )
+                        {
+                            auto owner = m_itemOwner.find( hit );
+
+                            if( owner == m_itemOwner.end() )
+                                known = false;
+                            else
+                                victims.insert( owner->second );
+                        }
+
+                        if( !known )
+                            continue;
+
+                        for( int victim : victims )
+                        {
+                            ripUp( aNode, victim );
+                            m_victims.push_back( victim );
+                        }
+                    }
 
                     // Keep the cleanups inside the corridor the route was found in.  A lane's
                     // fanout is part of its corridor, so the cleanups don't get the extra room
@@ -4292,7 +4544,7 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         }
 
         // Nothing without exits in this window: nothing with them
-        if( !guided && m_options.m_freeExits && attempt.m_startExits != &noExits && candidates.empty() )
+        if( !guided && !m_softMode && m_options.m_freeExits && attempt.m_startExits != &noExits && candidates.empty() )
             continue;
 
         BOX2I window = span;
@@ -4338,6 +4590,10 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         params.m_net = aConn.m_net;
         params.m_width = width;
         params.m_field = field( aNode, aConn.m_net, width );
+        params.m_soft = m_softMode && params.m_field;
+
+        if( params.m_field )
+            params.m_field->SetSoft( m_softMode ? &m_soft : nullptr );
         params.m_viaField = m_options.m_viaField;
         params.m_pitch = attemptPitch;
         params.m_viaKinds = viaKinds;
@@ -4529,7 +4785,8 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
     // No way at the net's width.  Between the pads of a fine-pitch part the board's rules
     // often allow a narrower track than the net's class asks, and its designer used one:
     // when the caller allows it, the connection is tried once more that narrow.
-    if( aNarrowWidth == 0 && !guided && m_options.m_minTrackWidth > 0 && !cancelled() )
+    if( aNarrowWidth == 0 && m_options.m_guide.PointCount() < 2 && !m_softMode && m_options.m_minTrackWidth > 0
+            && !cancelled() )
     {
         int narrow = m_options.m_minTrackWidth;
 
@@ -4886,6 +5143,27 @@ bool SKETCH_ROUTER::commitPath( NODE* aNode, const SKETCH_CONNECTION& aConn, int
     {
         fieldsChanged( &line );
         aNode->Add( line );
+
+        if( m_current >= 0 )
+        {
+            for( LINKED_ITEM* link : line.Links() )
+            {
+                m_routeItems[m_current].push_back( link );
+                m_itemOwner[link] = m_current;
+            }
+        }
+    }
+
+    if( m_current >= 0 )
+    {
+        for( VIA* via : addedVias )
+        {
+            m_routeItems[m_current].push_back( via );
+            m_itemOwner[via] = m_current;
+
+            if( via->Hole() )
+                m_itemOwner[via->Hole()] = m_current;
+        }
     }
 
     aViaCount += (int) aVias.size();
@@ -4935,6 +5213,7 @@ void SKETCH_ROUTER::BoardConventions( BOARD* aBoard, ROUTER_IFACE* aIface,
         int            m_drill;
         int            m_count;
         const PCB_VIA* m_first;
+        int            m_inPads = 0;    ///< of them, standing in a pad of their own net
     };
 
     // By type and layer pair: the sizes in use
@@ -4968,9 +5247,26 @@ void SKETCH_ROUTER::BoardConventions( BOARD* aBoard, ROUTER_IFACE* aIface,
                                                 } );
 
         if( same == sizes.end() )
+        {
             sizes.push_back( { diameter, drill, 1, via } );
+            same = sizes.end() - 1;
+        }
         else
+        {
             same->m_count++;
+        }
+
+        for( PCB_LAYER_ID side : { via->TopLayer(), via->BottomLayer() } )
+        {
+            if( PAD* pad = aBoard->GetPad( via->GetPosition(), LSET( { side } ) ) )
+            {
+                if( pad->GetNetCode() == via->GetNetCode() && pad->GetAttribute() == PAD_ATTRIB::SMD )
+                {
+                    same->m_inPads++;
+                    break;
+                }
+            }
+        }
 
         vias++;
         micro |= via->GetViaType() == VIATYPE::MICROVIA;
@@ -5028,6 +5324,7 @@ void SKETCH_ROUTER::BoardConventions( BOARD* aBoard, ROUTER_IFACE* aIface,
         kind.m_diameter = pick->m_diameter;
         kind.m_drill = pick->m_drill;
         kind.m_like = pick->m_first;
+        kind.m_inPad = pick->m_inPads > 0;
 
         // A via costs its detour's worth, more the more layers it goes through, and a drilled
         // one on a board of laser vias by how rare its kind is there
@@ -5056,6 +5353,7 @@ void SKETCH_ROUTER::BoardConventions( BOARD* aBoard, ROUTER_IFACE* aIface,
             kind.m_diameter = small->m_diameter;
             kind.m_drill = small->m_drill;
             kind.m_like = small->m_first;
+            kind.m_inPad = small->m_inPads > 0;
             kind.m_cost += 100000.0;
             aOptions.m_viaKinds.push_back( kind );
         }
