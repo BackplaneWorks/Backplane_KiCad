@@ -122,6 +122,7 @@ The other bp.13 embed features have one capability each in the embedded GUI's `G
 | `click-marker` | a marker click by id | `ClickMarker{kind, marker \| host{set,id}, zoom}` does what a left click on that marker does, by the same code: a DRC/ERC marker becomes the selection (message panel, the DRC/ERC dialog's row) and one `ET_MARKER_CLICKED` is posted with the fields a real click gives; reply `event_seq`. No view change unless `zoom`; an ERC marker on another sheet shows that sheet. Unknown id: `AS_BAD_REQUEST` "ClickMarker: no marker ..."; frame not open: `AS_UNHANDLED`; during a task: `AS_BUSY` |
 | `runaction-frame` | which editor runs a `RunAction` | `RunAction.frame` (field 100) names it (`FT_PCB_EDITOR`, `FT_SCHEMATIC_EDITOR`); a named frame that cannot run it is refused at once with `AS_BAD_REQUEST` and the error message `RunAction: <FrameType> is not open`, `... does not accept actions` (only the PCB and schematic editors take actions) or `... has no action <name>`. With no frame, an `eeschema.*` action goes to the schematic editor and any other (`pcbnew.*`, and shared ones such as `common.Interactive.undo`) to the PCB editor while one is open, else to the schematic editor. Before it, with both editors open, a shared action could reach either |
 | `embed-popup-keys` | reserved chords get through KiCad's popups (Linux/X11) | while a KiCad popup (a menu such as Clarify Selection, a combo box's list) holds the keyboard, a chord from `SetReservedKeys` closes it and reaches the host as `_BACKPLANE_KEY`, as it does from a frame; other keys stay with the popup |
+| `embed-lazy-libraries` | libraries load on first need (bp.13.1) | at start only the footprint and symbol libraries the project's saved files name are loaded; a library asked for by name (`PlaceSymbolFromLibrary`, `PlaceFootprintFromLibrary`, `CreateItems` of a library symbol, DRC library parity) loads alone at once, as do the libraries ERC reads (those its symbols and their footprints name); a chooser, browser, editor or an update from the libraries loads the rest (`ET_PROGRESS`), as does `LoadAllLibraries`. Absent when `BACKPLANE_KICAD_FULL_LIBRARY_PRELOAD=1` restores the full preload |
 
 Number ledger for `kiapi.backplane.embed` (fork-only, additive; take the next free number and add
 it here in the same change):
@@ -139,6 +140,13 @@ it here in the same change):
 Other bp.13 numbers: `FrameKind` 7 `FK_GERBVIEW`; `FrameInfo` 12 `lib_id`, 13 `files`; `Event` 8
 `marker`, 9 `checks`, 10 `drc_marker`, 11 `reserved_key` (bp.13); messages `ReservedKey`,
 `SetHostGeometry` (macOS, bp.13).
+
+Libraries in `kicad --embedded`: at start only the footprint and symbol libraries the project's
+saved files name are loaded; the rest load on first need (a chooser, browser or editor, an update
+from the libraries; reported as `ET_PROGRESS`), and a library asked for by name loads alone at
+once, as do the libraries DRC's parity and ERC read (those the board and schematic name) (capability `embed-lazy-libraries`). Results are the same as with everything loaded; memory per open project is about 2 GB lower
+with the stock tables. `BACKPLANE_KICAD_FULL_LIBRARY_PRELOAD=1` in KiCad's environment restores the
+full preload at start (an escape hatch).
 
 ## Files
 

@@ -18,6 +18,9 @@
  */
 
 #include <api/api_handler_sch.h>
+#include <sch_sheet_path.h>
+#include <sch_symbol.h>
+#include <set>
 #include <api/backplane/embed.pb.h>
 #include <backplane_embed.h>
 #include <optional>
@@ -92,8 +95,31 @@ public:
             frame->ClearErcMarkers();
 
         SYMBOL_LIBRARY_ADAPTER* adapter = PROJECT_SCH::SymbolLibAdapter( &m_schematic->Project() );
-        adapter->AsyncLoad();
-        adapter->BlockUntilLoaded();
+
+        if( adapter->FullLoadDeferred() )
+        {
+            // An embedded KiCad's deferred full load (DeferFullLoad) is not needed for ERC: its
+            // library checks read only the libraries the schematic's symbols name
+            std::set<wxString> used;
+
+            for( const SCH_SHEET_PATH& path : m_schematic->Hierarchy() )
+            {
+                for( SCH_ITEM* item : path.LastScreen()->Items().OfType( SCH_SYMBOL_T ) )
+                {
+                    const wxString nickname = static_cast<SCH_SYMBOL*>( item )->GetLibId().GetLibNickname();
+
+                    if( !nickname.IsEmpty() )
+                        used.insert( nickname );
+                }
+            }
+
+            adapter->LoadLibrariesNow( used );
+        }
+        else
+        {
+            adapter->AsyncLoad();
+            adapter->BlockUntilLoaded();
+        }
 
         ERC_TESTER ercTester( m_schematic );
 

@@ -76,7 +76,12 @@ void getFootprintPadNumbers( const wxString& aFootprint, PROJECT* aProject, std:
     if( std::optional<LIBRARY_MANAGER_ADAPTER*> mgr =
                 Pgm().GetLibraryManager().Adapter( LIBRARY_TABLE_TYPE::FOOTPRINT ) )
     {
-        ( *mgr )->BlockUntilLoaded();
+        // An embedded KiCad's deferred full load (DeferFullLoad) is not needed for one footprint:
+        // LoadOne() below loads its library alone
+        if( ( *mgr )->FullLoadDeferred() )
+            ( *mgr )->WaitForLoadsInFlight();
+        else
+            ( *mgr )->BlockUntilLoaded();
     }
 
     FOOTPRINT_LIBRARY_ADAPTER* adapter = PROJECT_PCB::FootprintLibAdapter( aProject );

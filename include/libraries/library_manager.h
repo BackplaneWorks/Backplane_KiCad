@@ -187,7 +187,31 @@ public:
      *
      * @return false when @a aAbort cut the load short, in which case the flag has been cleared
      */
-    bool RunPreload( PROGRESS_REPORTER& aReporter, std::atomic_bool& aAbort );
+    bool RunPreload( PROGRESS_REPORTER& aReporter, std::atomic_bool& aAbort,
+                     const std::set<wxString>* aOnly = nullptr );
+
+    /// Load only some libraries now and the rest when something first needs them all: the next
+    /// BlockUntilLoaded() (a chooser, browser, editor or check that waits for the libraries)
+    /// starts the full load first.  Used by an embedded KiCad (`kicad --embedded`), where every
+    /// open project would otherwise hold the whole library tables in memory.
+    void DeferFullLoad() { m_fullLoadDeferred.store( true ); }
+
+    bool FullLoadDeferred() const { return m_fullLoadDeferred.load(); }
+
+    /// Start the deferred full load in the background, without waiting (for a view that fills
+    /// itself as libraries arrive, like the symbol chooser).  False when nothing was started: no
+    /// load deferred, or a load still running (call again later).  Reported as a background job.
+    bool StartDeferredFullLoad();
+
+    /// Load these libraries now and wait for them (and for any load in flight), without starting a
+    /// deferred full load (DeferFullLoad): for a caller that needs only some libraries, such as
+    /// DRC's library parity, which would otherwise call BlockUntilLoaded() and so load them all.
+    /// Not from a thread-pool worker.
+    void LoadLibrariesNow( const std::set<wxString>& aNicknames );
+
+    /// Wait for the loads already running, without starting a deferred full load (DeferFullLoad):
+    /// for a caller about to load one library itself (LoadOne).  Not from a thread-pool worker.
+    void WaitForLoadsInFlight();
 
     /// Aborts any async load in progress; blocks until fully done aborting.
     /// This is the public interface to allow LIBRARY_MANAGER to abort loads before project changes.
@@ -262,6 +286,12 @@ protected:
 
     std::optional<LIB_DATA*> fetchIfLoaded( const wxString& aNickname );
 
+    /// fetchIfLoaded() without the on-demand load of a deferred library
+    std::optional<LIB_DATA*> fetchLoaded( const wxString& aNickname );
+
+    /// Load one library now while the full load is deferred (see DeferFullLoad)
+    void loadNowDeferred( const wxString& aNickname );
+
     /// Fetches a loaded library, triggering a load of that library if it isn't loaded yet
     LIBRARY_RESULT<LIB_DATA*> loadIfNeeded( const wxString& aNickname );
 
@@ -333,6 +363,7 @@ protected:
     std::set<LOADING_KEY> m_loading;
 
     std::atomic_bool m_abort;
+    std::atomic_bool m_fullLoadDeferred{ false };   ///< see DeferFullLoad()
 
     /// Set with m_abort by an abort that cancels, so only such an abort turns a failed load into INVALID
     std::atomic_bool m_cancelling{ false };
@@ -598,5 +629,14 @@ private:
     std::map<ROW_CACHE_KEY, LIBRARY_TABLE_ROW*> m_rowCache;
     mutable std::mutex                          m_rowCacheMutex;
 };
+
+/**
+ * The library nicknames a project's documents use: footprints named by its board
+ * (`(footprint "Nick:Name"`) or symbols named by its schematic sheets (`(lib_id "Nick:Name"`).
+ * Read from the saved files, so it needs nothing loaded.  Used for an embedded KiCad's first,
+ * partial library load (LIBRARY_MANAGER_ADAPTER::DeferFullLoad).
+ */
+KICOMMON_API std::set<wxString> UsedLibraryNicknames( LIBRARY_TABLE_TYPE aType,
+                                                      const wxString& aProjectFullName );
 
 #endif //LIBRARY_MANAGER_H
