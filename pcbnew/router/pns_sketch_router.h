@@ -159,6 +159,7 @@ struct SKETCH_ROUTER_OPTIONS
     ///< Keep each net's obstacles by place (SKETCH_FIELD) instead of asking the node about every
     ///< probe.  The routes are the same; off only to compare.
     bool m_obstacleField = true;
+    bool m_viaField = true;     ///< and about vias
 
     ///< Without a sketch, route groups of connections between the same two footprints as
     ///< bundles along a path found for the whole group.

@@ -127,6 +127,9 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
         if( list.find( "field" ) != std::string::npos )
             options.m_obstacleField = false;
 
+        if( list.find( "viaf" ) != std::string::npos )
+            options.m_viaField = false;
+
         if( list.find( "freeexits" ) != std::string::npos )
             options.m_freeExits = false;
 

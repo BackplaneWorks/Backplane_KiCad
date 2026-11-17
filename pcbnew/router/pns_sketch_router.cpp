@@ -42,6 +42,7 @@
 #include <connectivity/connectivity_algo.h>
 #include <ratsnest/ratsnest_data.h>
 #include <geometry/shape_arc.h>
+#include <geometry/shape_circle.h>
 
 #include "pns_line.h"
 #include "pns_node.h"
@@ -798,6 +799,69 @@ public:
     {
         m_node = aNode;
         m_branchClearance.clear();
+        m_branchViaClearance.clear();
+    }
+
+    /**
+     * As the search's three questions about a via of kind \a aKind (a copy of \a aProto) at
+     * \a aPos: it collides with nothing (NODE::CheckColliding()), it stands on no pad or via
+     * of its own net (on no via, for a micro via), and its hole keeps \a aHoleToHole from
+     * every other hole.  The candidates and clearances are worked out as ITEM::collideSimple()
+     * does, once per tile.
+     *
+     * @return 1 free, 0 not, -1 when the via's shapes aren't the circles this knows.
+     */
+    int ViaFree( int aKind, const VIA& aProto, const VECTOR2I& aPos, int aHoleToHole, bool aInOwnPad )
+    {
+        const int tx = aPos.x >> TILE_SHIFT;
+        const int ty = aPos.y >> TILE_SHIFT;
+
+        auto [it, isNew] = m_viaTiles.try_emplace( key( aKind, tx, ty ) );
+
+        if( isNew && !buildViaTile( it->second, aProto, aKind, tx, ty, aHoleToHole, aInOwnPad ) )
+        {
+            m_viaTiles.erase( it );
+            return -1;
+        }
+
+        for( const VIA_NEIGHBOUR& cand : it->second )
+        {
+            if( !cand.m_reach.Contains( aPos ) )
+                continue;
+
+            const SHAPE_CIRCLE circle( aPos, cand.m_headRadius );
+            const SHAPE&       head = circle;
+
+            if( !cand.m_exclusions )
+            {
+                if( head.Collide( cand.m_shape, cand.m_distance ) )
+                    return 0;
+
+                continue;
+            }
+
+            int      actual = 0;
+            VECTOR2I pos;
+
+            if( !head.Collide( cand.m_shape, cand.m_distance, &actual, &pos ) )
+                continue;
+
+            if( ( cand.m_exclusions & CASTELLATION ) && m_node->QueryEdgeExclusions( pos ) )
+                continue;
+
+            if( cand.m_exclusions & NET_TIE )
+            {
+                VIA via( aProto );
+                via.SetPos( aPos );
+
+                if( m_node->GetRuleResolver()->IsNetTieExclusion( &via, pos, cand.m_item ) )
+                    continue;
+            }
+
+            return 0;
+        }
+
+        return 1;
     }
 
     NET_HANDLE Net() const { return m_net; }
@@ -807,6 +871,29 @@ public:
     void Changed( const BOX2I& aBox, int aLayerStart, int aLayerEnd )
     {
         m_branchClearance.clear();
+        m_branchViaClearance.clear();
+
+        if( !m_viaTiles.empty() )
+        {
+            BOX2I reach = aBox;
+            reach.Inflate( m_node->GetMaxClearance() + m_viaReach );
+
+            const int vx0 = reach.GetLeft() >> TILE_SHIFT;
+            const int vy0 = reach.GetTop() >> TILE_SHIFT;
+            const int vx1 = reach.GetRight() >> TILE_SHIFT;
+            const int vy1 = reach.GetBottom() >> TILE_SHIFT;
+
+            for( auto it = m_viaTiles.begin(); it != m_viaTiles.end(); )
+            {
+                const int tx = int( ( it->first >> 24 ) & 0xFFFFFF ) - TILE_BIAS;
+                const int ty = int( it->first & 0xFFFFFF ) - TILE_BIAS;
+
+                if( tx >= vx0 && tx <= vx1 && ty >= vy0 && ty <= vy1 )
+                    it = m_viaTiles.erase( it );
+                else
+                    ++it;
+            }
+        }
 
         if( m_tiles.empty() )
             return;
@@ -927,6 +1014,159 @@ private:
         int          m_exclusions;
     };
 
+    struct VIA_NEIGHBOUR
+    {
+        const SHAPE* m_shape;
+        const ITEM*  m_item;
+        BOX2I        m_reach;       ///< where the via's middle would be too close
+        int          m_distance;
+        int          m_headRadius;  ///< of the via's copper on the shape's layer, or of its hole
+        int          m_exclusions;
+    };
+
+    /**
+     * What ITEM::collideSimple( aHead ) would test \a aItem against on \a aLayer, as
+     * neighbours: the item against the head, against the head's hole, and the item's own hole
+     * against both.  \a aQuestion keeps the clearances of the three questions apart.
+     */
+    void collect( std::vector<VIA_NEIGHBOUR>& aOut, const ITEM* aItem, const ITEM* aHead, int aLayer,
+                  const COLLISION_SEARCH_OPTIONS& aOptions, int aQuestion, const BOX2I& aTile, int aDepth = 0 )
+    {
+        if( aDepth > 3 || !aItem->CollisionCandidate( aHead ) )
+            return;
+
+        RULE_RESOLVER* resolver = m_node->GetRuleResolver();
+        const HOLE*    holeH = aHead->Hole();
+        const HOLE*    holeI = aItem->Hole();
+
+        if( aHead->HasHole() && holeH && aItem->CollisionCandidate( holeH ) )
+        {
+            if( aItem->Kind() == ITEM::HOLE_T || aItem->Net() != holeH->Net()
+                    || resolver->HasUserDefinedPhysicalConstraint() )
+            {
+                collect( aOut, aItem, holeH, aLayer, aOptions, aQuestion, aTile, aDepth + 1 );
+            }
+        }
+
+        if( aItem->HasHole() && holeI && holeI->CollisionCandidate( aHead ) )
+            collect( aOut, holeI, aHead, aLayer, aOptions, aQuestion, aTile, aDepth + 1 );
+
+        if( !aItem->Layers().Overlaps( aHead->Layers() ) )
+            return;
+
+        const SHAPE* shapeI = aItem->Shape( aLayer );
+        const SHAPE* shapeH = aHead->Shape( aLayer );
+
+        if( !shapeI || !shapeH || shapeH->Type() != SH_CIRCLE )
+            return;
+
+        auto& cache = aItem->BelongsTo( m_node ) && m_node->GetParent() ? m_branchViaClearance : m_viaClearance;
+        const std::pair<const ITEM*, int> k( aItem, aQuestion * 2 + ( aHead->Kind() == ITEM::HOLE_T ? 1 : 0 ) );
+        auto  found = cache.find( k );
+        int   clr;
+
+        if( found != cache.end() )
+        {
+            clr = found->second;
+        }
+        else
+        {
+            clr = aItem->CollisionClearance( aHead, m_node, &aOptions );
+            cache.emplace( k, clr );
+        }
+
+        if( clr < 0 )
+            return;
+
+        VIA_NEIGHBOUR cand;
+        cand.m_shape = shapeI;
+        cand.m_item = aItem;
+        cand.m_distance = clr - 1;
+        cand.m_headRadius = static_cast<const SHAPE_CIRCLE*>( shapeH )->GetRadius();
+        cand.m_reach = shapeI->BBox();
+        cand.m_reach.Inflate( clr + cand.m_headRadius + 1 );
+        cand.m_exclusions = 0;
+
+        if( !cand.m_reach.Intersects( aTile ) )
+            return;
+
+        if( ( aItem->Parent() && aItem->Parent()->GetLayer() == Edge_Cuts ) || resolver->IsNonPlatedSlot( aItem ) )
+            cand.m_exclusions |= CASTELLATION;
+
+        if( resolver->IsInNetTie( aItem ) )
+            cand.m_exclusions |= NET_TIE;
+
+        aOut.push_back( cand );
+    }
+
+    bool buildViaTile( std::vector<VIA_NEIGHBOUR>& aOut, const VIA& aProto, int aKind, int aTx, int aTy,
+                       int aHoleToHole, bool aInOwnPad )
+    {
+        const int   size = 1 << TILE_SHIFT;
+        const BOX2I box( VECTOR2I( aTx * size, aTy * size ), VECTOR2I( size - 1, size - 1 ) );
+
+        VIA via( aProto );
+        via.SetPos( box.Centre() );
+
+        int radius = 0;
+
+        for( int layer = via.Layers().Start(); layer <= via.Layers().End(); layer++ )
+        {
+            const SHAPE* shape = via.Shape( layer );
+
+            if( !shape || shape->Type() != SH_CIRCLE )
+                return false;
+
+            radius = std::max( radius, static_cast<const SHAPE_CIRCLE*>( shape )->GetRadius() );
+        }
+
+        if( via.Hole() && ( !via.Hole()->Shape( -1 ) || via.Hole()->Shape( -1 )->Type() != SH_CIRCLE ) )
+            return false;
+
+        m_viaReach = std::max( m_viaReach, radius + 1 );
+
+        // 1. the via against everything
+        COLLISION_SEARCH_OPTIONS any;
+        any.m_limitCount = 1;
+
+        // 2. the via on copper of its own net, at no clearance
+        COLLISION_SEARCH_OPTIONS own;
+        own.m_differentNetsOnly = false;
+        own.SetFixedClearanceOverride( 0 );
+        own.m_limitCount = 1;
+        own.m_kindMask = aInOwnPad ? ITEM::VIA_T : ITEM::SOLID_T | ITEM::VIA_T;
+
+        // 3. its hole against every other hole
+        COLLISION_SEARCH_OPTIONS holes;
+        holes.m_differentNetsOnly = false;
+        holes.SetFixedClearanceOverride( aHoleToHole );
+        holes.m_limitCount = 1;
+        holes.m_kindMask = ITEM::HOLE_T;
+        holes.m_useClearanceEpsilon = false;
+
+        const int question = aKind * 4;
+
+        for( int layer = via.Layers().Start(); layer <= via.Layers().End(); layer++ )
+        {
+            m_node->VisitNearby( layer, box, m_node->GetMaxClearance() + radius + 1,
+                    [&]( ITEM* aItem )
+                    {
+                        collect( aOut, aItem, &via, layer, any, question, box );
+
+                        if( aItem->OfKind( own.m_kindMask ) && aItem->Net() == m_net )
+                            collect( aOut, aItem, &via, layer, own, question + 1, box );
+
+                        if( aHoleToHole > 0 && via.Hole() && aItem->OfKind( ITEM::HOLE_T )
+                                && via.Hole()->Layers().Overlaps( layer ) )
+                        {
+                            collect( aOut, aItem, via.Hole(), layer, holes, question + 2, box );
+                        }
+                    } );
+        }
+
+        return true;
+    }
+
     static uint64_t key( int aLayer, int aTx, int aTy )
     {
         return ( uint64_t( aLayer ) << 48 ) | ( uint64_t( aTx + TILE_BIAS ) << 24 ) | uint64_t( aTy + TILE_BIAS );
@@ -1026,6 +1266,11 @@ private:
     std::unordered_map<uint64_t, std::vector<NEIGHBOUR>> m_tiles;
     std::unordered_map<std::pair<const ITEM*, int>, int, PAIR_HASH> m_rootClearance;
     std::unordered_map<std::pair<const ITEM*, int>, int, PAIR_HASH> m_branchClearance;
+
+    std::unordered_map<uint64_t, std::vector<VIA_NEIGHBOUR>>        m_viaTiles;   ///< by kind and tile
+    std::unordered_map<std::pair<const ITEM*, int>, int, PAIR_HASH> m_viaClearance;
+    std::unordered_map<std::pair<const ITEM*, int>, int, PAIR_HASH> m_branchViaClearance;
+    int                                                             m_viaReach = 0;
 };
 
 
@@ -1097,6 +1342,7 @@ public:
 
         ///< The obstacles of this net and width by place, or nullptr to ask the node each time
         SKETCH_FIELD*            m_field = nullptr;
+        bool                     m_viaField = true;   ///< ask the field about vias too
         bool                     m_orthogonal = false;
         bool                     m_allowVias = true;
         double                   m_bendCost = 2.0;   ///< in grid steps
@@ -1653,6 +1899,19 @@ private:
 
         if( state )
             return state == 1;
+
+        if( m_p.m_field && !m_p.m_ignoreNets && m_p.m_viaField )
+        {
+            const int answer = m_p.m_field->ViaFree( aKind, m_p.m_viaKinds[aKind].m_proto, cellPos( aIx, aIy ),
+                                                     m_p.m_holeToHole, m_p.m_viaKinds[aKind].m_endsOnly );
+
+            if( answer >= 0 )
+            {
+                m_stats.m_collisionChecks++;
+                state = answer ? 1 : 2;
+                return answer == 1;
+            }
+        }
 
         VIA via( m_p.m_viaKinds[aKind].m_proto );
         via.SetPos( cellPos( aIx, aIy ) );
@@ -3973,6 +4232,7 @@ bool SKETCH_ROUTER::routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn
         params.m_net = aConn.m_net;
         params.m_width = width;
         params.m_field = field( aNode, aConn.m_net, width );
+        params.m_viaField = m_options.m_viaField;
         params.m_pitch = attemptPitch;
         params.m_viaKinds = viaKinds;
         params.m_noTracks = noTracks;
