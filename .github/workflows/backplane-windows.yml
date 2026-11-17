@@ -100,7 +100,8 @@ jobs:
       # main has none for this vcpkg graph yet) go up as a 1-day artifact, and the promote workflow
       # on main saves them as main's when this run is a successful release-line or candidate run.
       - name: Pack the caches for main
-        if: always() && steps.compiler-cache.outcome == 'success'
+        # Only a ccache-on build adds to the cache; an off build would re-upload main's entry unchanged
+        if: always() && steps.compiler-cache.outcome == 'success' && env.BACKPLANE_WIN_CCACHE != ''
         shell: pwsh
         env:
           PREFIX: ${{ steps.toolchain.outputs.prefix }}
@@ -120,7 +121,8 @@ jobs:
             tar -C C:/bp/vcpkg-cache -cf (Join-Path $out 'vcpkg\data.tar') .
           }
       - uses: actions/upload-artifact@v4
-        if: always() && steps.compiler-cache.outcome == 'success'
+        # Only a ccache-on build adds to the cache; an off build would re-upload main's entry unchanged
+        if: always() && steps.compiler-cache.outcome == 'success' && env.BACKPLANE_WIN_CCACHE != ''
         with:
           name: ccache-windows-x64-${{ github.sha }}
           retention-days: 1
