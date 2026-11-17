@@ -26,6 +26,7 @@
 #include <wx/frame.h>
 #include <wx/utils.h>
 #include <backplane_embed.h>
+#include <kiplatform/embed.h>
 #include <widgets/ui_common.h>
 #include <widgets/wx_event_utils.h>
 #include <widgets/wx_progress_reporters.h>
@@ -125,6 +126,16 @@ WX_PROGRESS_REPORTER::~WX_PROGRESS_REPORTER()
                             return;
 
                         wxWindow* now = wxWindow::FindFocus();
+
+                        auto name = []( wxWindow* aWin ) -> std::string
+                                    {
+                                        return aWin ? wxString( aWin->GetClassInfo()->GetClassName() )
+                                                              .ToStdString()
+                                                    : std::string( "nothing" );
+                                    };
+
+                        KIPLATFORM::EMBED::TraceLine( "check give-back: was " + name( was ) + ", now "
+                                                      + name( now ) );
 
                         // Moved by the person meanwhile (anywhere but where it was): left there
                         if( now && now != was && now != frame && now != dialog
