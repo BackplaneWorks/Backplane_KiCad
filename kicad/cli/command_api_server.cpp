@@ -44,6 +44,7 @@
 #include <build_version.h>
 #include <downgrade_target.h>
 #include <lib_id.h>
+#include <project.h>
 #include <settings/settings_manager.h>
 #include <wildcards_and_files_ext.h>
 #include <wx/app.h>
@@ -195,12 +196,37 @@ CLI::API_SERVER_COMMAND::API_SERVER_COMMAND() :
 }
 
 
+
+namespace
+{
+/// Backplane (headless-no-lock): a lock file someone else holds on the open project, as found.
+void fillForeignLock( kiapi::common::commands::OpenDocumentResponse& aResponse, const PROJECT& aProject )
+{
+    const PROJECT::FOREIGN_LOCK& lock = aProject.GetForeignLock();
+
+    if( lock.lockFile.IsEmpty() )
+        return;
+
+    kiapi::common::commands::ForeignLock* out = aResponse.mutable_foreign_lock();
+    out->set_lock_file( lock.lockFile.ToStdString( wxConvUTF8 ) );
+    out->set_user( lock.user.ToStdString( wxConvUTF8 ) );
+    out->set_host( lock.host.ToStdString( wxConvUTF8 ) );
+    out->set_held( lock.held );
+}
+} // namespace
+
 int CLI::API_SERVER_COMMAND::doPerform( KIWAY& aKiway )
 {
     using namespace kiapi::common;
 
     if( m_argParser.get<bool>( ARG_DESCRIBE ) )
         return printBackplaneDescription();
+
+    // Backplane (capability headless-no-lock): the API server is not a person editing.  It takes
+    // no project lock (its host may keep a document open for hours, and a person opening their
+    // own project in KiCad must not be told it is "already open"); someone else's is reported in
+    // OpenDocumentResponse.foreign_lock and left alone.
+    Pgm().GetSettingsManager().SetTakeProjectLocks( false );
 
     long long parentPid = 0;
     std::string parentPidText = m_argParser.get<std::string>( ARG_PARENT_PID );
@@ -541,6 +567,7 @@ int CLI::API_SERVER_COMMAND::doPerform( KIWAY& aKiway )
             doc->set_type( types::DOCTYPE_PROJECT );
             doc->mutable_project()->set_name( project.GetProjectName().ToUTF8() );
             doc->mutable_project()->set_path( project.GetProjectPath().ToUTF8() );
+            fillForeignLock( response, project );
 
             return response;
         }
@@ -608,6 +635,7 @@ int CLI::API_SERVER_COMMAND::doPerform( KIWAY& aKiway )
 
         docSpec->mutable_project()->set_name( project.GetProjectName().ToUTF8() );
         docSpec->mutable_project()->set_path( project.GetProjectPath().ToUTF8() );
+        fillForeignLock( response, project );
 
         return response;
     };

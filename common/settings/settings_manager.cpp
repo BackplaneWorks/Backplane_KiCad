@@ -1037,8 +1037,10 @@ bool SETTINGS_MANAGER::LoadProject( const wxString& aFullPath, bool aSetActive )
     if( m_projects.count( fullPath ) )
         return true;
 
-    // A passive load only inspects the lock rather than taking it
-    LOCKFILE lockFile = aSetActive ? LOCKFILE( fullPath ) : LOCKFILE::Inspect( fullPath );
+    // A passive load only inspects the lock rather than taking it; so does every load with
+    // project locks off (the headless API server: capability headless-no-lock)
+    const bool takeLock = aSetActive && m_takeProjectLocks;
+    LOCKFILE   lockFile = takeLock ? LOCKFILE( fullPath ) : LOCKFILE::Inspect( fullPath );
 
     if( !lockFile.Valid() )
         wxLogTrace( traceSettings, wxT( "Project %s is locked; opening read-only" ), fullPath );
@@ -1100,10 +1102,30 @@ bool SETTINGS_MANAGER::LoadProject( const wxString& aFullPath, bool aSetActive )
 
     bool success = loadProjectFile( *project );
 
-    project->SetReadOnly( !lockFile.Valid() || project->GetProjectFile().IsReadOnly() );
+    if( m_takeProjectLocks )
+    {
+        project->SetReadOnly( !lockFile.Valid() || project->GetProjectFile().IsReadOnly() );
 
-    if( lockFile.Valid() && aSetActive )
-        project->SetProjectLock( new LOCKFILE( std::move( lockFile ) ) );
+        if( lockFile.Valid() && takeLock )
+            project->SetProjectLock( new LOCKFILE( std::move( lockFile ) ) );
+    }
+    else
+    {
+        // No lock taken, and someone else's does not make this load read-only: it is reported
+        project->SetReadOnly( project->GetProjectFile().IsReadOnly() );
+
+        wxString lockPath = LOCKFILE::LockPathFor( fullPath );
+
+        if( !lockFile.Valid() || wxFileExists( lockPath ) )
+        {
+            PROJECT::FOREIGN_LOCK foreign;
+            foreign.lockFile = lockPath;
+            foreign.user = lockFile.GetUsername();
+            foreign.host = lockFile.GetHostname();
+            foreign.held = !lockFile.Valid();
+            project->SetForeignLock( foreign );
+        }
+    }
 
     m_projects[fullPath] = project.get();
 
