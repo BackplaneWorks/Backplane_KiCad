@@ -30,6 +30,10 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <chrono>
+#include <stdexcept>
+#include <thread>
+
 #include <backplane_embed.h>
 #include <embed_host_order.h>
 
@@ -309,6 +313,131 @@ BOOST_AUTO_TEST_CASE( RaiseKeptAcrossAQueuedRun )
     }
 
     BOOST_CHECK_EQUAL( applied().x, 61 );
+}
+
+
+BOOST_AUTO_TEST_CASE( ALaterBarrierHandledFirstWaitsForTheEarlierSlot )
+{
+    CLEAN clean;
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    handleGeometry( embed.ReserveHostSlot( GEOMETRY_TYPE ), rect( 10, 100 ) );
+
+    // Received: a hide (A), then a show (B), then the events socket's move (C).  B is handled
+    // before A (one dispatch never does this; nothing may depend on it).
+    uint64_t a = embed.ReserveHostSlot( GEOMETRY_TYPE );
+    uint64_t b = embed.ReserveHostSlot( SHOW_TYPE );
+    eventsGeometry( rect( 30, 300 ) );
+
+    {
+        BACKPLANE_EMBED::HOST_REQUEST show( b );
+        embed.HostBarrier( true );
+        BOOST_CHECK_EQUAL( applied().x, 10 );   // neither its show nor C ahead of A
+        BOOST_CHECK( applied().visible );
+    }
+
+    embed.DrainHost();
+    BOOST_CHECK_EQUAL( applied().x, 10 );       // still waiting for A
+    BOOST_CHECK_EQUAL( embed.HostState().seq < a, true );
+
+    handleGeometry( a, rect( 20, 200, false ) ); // A: the hide, then B's show, then C
+
+    BOOST_CHECK_EQUAL( applied().x, 30 );
+    BOOST_CHECK( applied().visible );           // B's show came after A's hide
+    BOOST_CHECK( embed.HostState().seq > b );
+}
+
+
+BOOST_AUTO_TEST_CASE( ARequestHandledInsideAnotherWaitsForIt )
+{
+    CLEAN clean;
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    handleGeometry( embed.ReserveHostSlot( GEOMETRY_TYPE ), rect( 10, 100, false ) );
+
+    // A ShowFrame whose load yields (a task pump, a nested loop) and another request served
+    // inside it: a second show and a geometry, both received after the first show
+    uint64_t outer = embed.ReserveHostSlot( SHOW_TYPE );
+    uint64_t inner = embed.ReserveHostSlot( HIDE_TYPE );
+    uint64_t move = embed.ReserveHostSlot( GEOMETRY_TYPE );
+
+    {
+        BACKPLANE_EMBED::HOST_REQUEST first( outer );
+        embed.HostBarrier( true );
+        BOOST_CHECK( applied().visible );
+
+        {
+            BACKPLANE_EMBED::HOST_REQUEST second( inner );
+            embed.HostBarrier( false );
+        }
+
+        handleGeometry( move, rect( 40, 400, false ) );
+        BOOST_CHECK( applied().visible );       // nothing after the running show yet
+        BOOST_CHECK_EQUAL( applied().x, 10 );
+    }
+
+    BOOST_CHECK_EQUAL( applied().x, 40 );       // then both, in order
+    BOOST_CHECK( !applied().visible );
+}
+
+
+BOOST_AUTO_TEST_CASE( AHandlerThatThrowsHoldsNothingBack )
+{
+    CLEAN clean;
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    for( bool begun : { false, true } )
+    {
+        uint64_t slot = embed.ReserveHostSlot( SHOW_TYPE );
+        eventsGeometry( rect( begun ? 72 : 71, 700 ) );
+
+        try
+        {
+            BACKPLANE_EMBED::HOST_REQUEST request( slot );
+
+            if( begun )
+                embed.HostBarrier( true );
+
+            throw std::runtime_error( "handler failed" );
+        }
+        catch( const std::runtime_error& )
+        {
+        }
+
+        BOOST_CHECK_EQUAL( applied().x, begun ? 72 : 71 );
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE( AShowHeldTooLongLetsLaterRequestsPass )
+{
+    CLEAN clean;
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    handleGeometry( embed.ReserveHostSlot( GEOMETRY_TYPE ), rect( 10, 100, false ) );
+
+    // A ShowFrame running a dialog: its show is applied; later moves wait, then pass
+    uint64_t show = embed.ReserveHostSlot( SHOW_TYPE );
+
+    {
+        BACKPLANE_EMBED::HOST_REQUEST request( show );
+        embed.HostBarrier( true );
+        eventsGeometry( rect( 80, 800 ) );
+        embed.DrainHost();
+        BOOST_CHECK_EQUAL( applied().x, 10 );
+
+        std::this_thread::sleep_for( std::chrono::milliseconds( BACKPLANE_EMBED::HOST_HOLD_MS + 100 ) );
+        embed.DrainHost();
+        BOOST_CHECK_EQUAL( applied().x, 80 );   // its effect came first; the rest goes on
+        BOOST_CHECK( applied().visible );
+
+        eventsGeometry( rect( 81, 810, false ) );
+        embed.DrainHost();
+        BOOST_CHECK( !applied().visible );
+    }
+
+    BOOST_CHECK_EQUAL( applied().x, 81 );       // the show's end re-applies nothing
+    BOOST_CHECK( !applied().visible );
 }
 
 

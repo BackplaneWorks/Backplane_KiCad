@@ -132,9 +132,17 @@ std::vector<OP> QUEUE::TakeReady( uint64_t aBefore )
         for( auto it = m_slots.begin(); it != m_slots.end() && it->first < aBefore; )
         {
             if( !it->second.done )
-                break;
+            {
+                if( !it->second.passable )
+                    break;
 
-            if( it->second.op )
+                ++it;   // stays until filled, holding nothing back
+                continue;
+            }
+
+            // A barrier filled after later slots went past it applies nothing now: its effect
+            // was applied when it began (MarkPassable is only for such slots)
+            if( it->second.op && !it->second.passable )
                 ready.push_back( *it->second.op );
 
             it = m_slots.erase( it );
@@ -148,7 +156,27 @@ std::vector<OP> QUEUE::TakeReady( uint64_t aBefore )
 bool QUEUE::HasReadyOrOpen( uint64_t aBefore ) const
 {
     std::lock_guard<std::mutex> lock( m_mutex );
-    return !m_slots.empty() && m_slots.begin()->first < aBefore;
+
+    for( const auto& [seq, slot] : m_slots )
+    {
+        if( seq >= aBefore )
+            break;
+
+        if( !slot.passable )
+            return true;
+    }
+
+    return false;
+}
+
+
+void QUEUE::MarkPassable( uint64_t aSeq )
+{
+    std::lock_guard<std::mutex> lock( m_mutex );
+    auto                        it = m_slots.find( aSeq );
+
+    if( it != m_slots.end() && !it->second.done )
+        it->second.passable = true;
 }
 
 } // namespace EMBED_HOST_ORDER

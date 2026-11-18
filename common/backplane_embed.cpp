@@ -2534,8 +2534,11 @@ BACKPLANE_EMBED::HOST_REQUEST::HOST_REQUEST( uint64_t aSlot )
     BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
     m_previous = embed.m_hostSlot;
     m_previousBegun = embed.m_hostSlotBegun;
+    m_previousDeferred = embed.m_hostSlotDeferred;
+    m_previousKind = embed.m_hostSlotKind;
     embed.m_hostSlot = aSlot;
     embed.m_hostSlotBegun = false;
+    embed.m_hostSlotDeferred = false;
 }
 
 
@@ -2547,9 +2550,10 @@ BACKPLANE_EMBED::HOST_REQUEST::~HOST_REQUEST()
     {
         if( embed.m_hostSlotBegun )
         {
-            // Its effect was applied at HostBarrier; the slot now only lets later ones through
+            // Applied at HostBarrier: the slot now only lets later ones through.  Deferred (an
+            // earlier request was still open then): the slot carries the effect, applied in turn.
             EMBED_HOST_ORDER::OP done;
-            done.kind = EMBED_HOST_ORDER::KIND::BARRIER;
+            done.kind = embed.m_hostSlotDeferred ? embed.m_hostSlotKind : EMBED_HOST_ORDER::KIND::BARRIER;
             embed.m_hostQueue.Fill( slot, done );
         }
         else
@@ -2558,8 +2562,11 @@ BACKPLANE_EMBED::HOST_REQUEST::~HOST_REQUEST()
         }
     }
 
+    embed.m_hostHeld.erase( embed.m_hostSlot );
     embed.m_hostSlot = m_previous;
     embed.m_hostSlotBegun = m_previousBegun;
+    embed.m_hostSlotDeferred = m_previousDeferred;
+    embed.m_hostSlotKind = m_previousKind;
     embed.DrainHost();
 }
 
@@ -2593,16 +2600,27 @@ void BACKPLANE_EMBED::HostBarrier( bool aExplicitShow )
     // Everything received before this request, then its own effect; its slot stays open, so
     // nothing received after it is applied until the request returns
     m_hostSlotBegun = true;
+    m_hostSlotKind = aExplicitShow ? EMBED_HOST_ORDER::KIND::SHOW : EMBED_HOST_ORDER::KIND::BARRIER;
 
     std::vector<EMBED_HOST_ORDER::OP> earlier = m_hostQueue.TakeReady( m_hostSlot );
 
     for( const EMBED_HOST_ORDER::OP& op : earlier )
         applyHostOp( op );
 
+    // An earlier request still unhandled (one dispatch never leaves this so, but nothing here
+    // relies on that): this one's effect waits for its turn.  Its slot is filled with it when the
+    // request returns and applied in order then.
+    if( m_hostQueue.HasReadyOrOpen( m_hostSlot ) )
+    {
+        m_hostSlotDeferred = true;
+        return;
+    }
+
     EMBED_HOST_ORDER::OP self;
-    self.kind = aExplicitShow ? EMBED_HOST_ORDER::KIND::SHOW : EMBED_HOST_ORDER::KIND::BARRIER;
+    self.kind = m_hostSlotKind;
     self.seq = m_hostSlot;
     applyHostOp( self );
+    m_hostHeld[m_hostSlot] = std::chrono::steady_clock::now();
 }
 
 
@@ -2612,6 +2630,24 @@ void BACKPLANE_EMBED::DrainHost()
         return;
 
     m_hostDraining = true;
+
+    // A show or hide that has applied its effect but whose request is still running (a dialog,
+    // a long load) holds later requests back for at most HOST_HOLD_MS: their effects come after
+    // its own either way
+    auto now = std::chrono::steady_clock::now();
+
+    for( auto it = m_hostHeld.begin(); it != m_hostHeld.end(); )
+    {
+        if( now - it->second >= std::chrono::milliseconds( HOST_HOLD_MS ) )
+        {
+            m_hostQueue.MarkPassable( it->first );
+            it = m_hostHeld.erase( it );
+        }
+        else
+        {
+            ++it;
+        }
+    }
 
     for( std::vector<EMBED_HOST_ORDER::OP> ready = m_hostQueue.TakeReady(); !ready.empty();
          ready = m_hostQueue.TakeReady() )

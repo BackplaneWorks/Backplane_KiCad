@@ -386,8 +386,10 @@ public:
         HOST_REQUEST& operator=( const HOST_REQUEST& ) = delete;
 
     private:
-        uint64_t m_previous;
-        bool     m_previousBegun;
+        uint64_t               m_previous;
+        bool                   m_previousBegun;
+        bool                   m_previousDeferred;
+        EMBED_HOST_ORDER::KIND m_previousKind;
     };
 
     /// SetHostGeometry on the main socket (UI thread): applied at its slot.
@@ -404,6 +406,10 @@ public:
 
     /// The host geometry last applied, and its slot.
     EMBED_HOST_ORDER::STATE HostState() const { return m_hostState; }
+
+    /// How long a show or hide whose effect is applied may hold later host requests back while
+    /// its request still runs.
+    static constexpr int HOST_HOLD_MS = 1000;
 
     /// A prewarm is opening a frame of this kind (from the request until Prewarm() takes it, or
     /// the open fails): the project manager's ShowPlayer gives such a frame no focus, as the
@@ -794,6 +800,12 @@ private:
     EMBED_HOST_ORDER::STATE m_hostState;           ///< the host as last applied (UI thread)
     uint64_t                m_hostSlot = 0;        ///< the slot of the request being handled
     bool                    m_hostSlotBegun = false; ///< HostBarrier ran for it
+    bool                    m_hostSlotDeferred = false; ///< ... with an earlier slot still open
+    EMBED_HOST_ORDER::KIND  m_hostSlotKind = EMBED_HOST_ORDER::KIND::BARRIER;
+
+    /// Barriers whose effect is applied while their request still runs, and since when: one
+    /// held longer than HOST_HOLD_MS (a dialog inside a ShowFrame) lets later requests pass
+    std::map<uint64_t, std::chrono::steady_clock::time_point> m_hostHeld;
     bool                    m_hostDraining = false;
     std::atomic<bool>       m_hostDrainPosted{ false };
 

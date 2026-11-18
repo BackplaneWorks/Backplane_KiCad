@@ -129,10 +129,15 @@ public:
     /// True if a slot before aBefore is still waiting to be applied.
     bool HasReadyOrOpen( uint64_t aBefore = UINT64_MAX ) const;
 
+    /// Slot aSeq, still open, no longer holds back the slots after it (its own effect is
+    /// already applied and its request has been running too long to keep everything waiting).
+    void MarkPassable( uint64_t aSeq );
+
 private:
     struct SLOT
     {
         bool              done = false;   ///< filled or cancelled
+        bool              passable = false; ///< open, but holds nothing back
         std::optional<OP> op;             ///< empty when cancelled
     };
 

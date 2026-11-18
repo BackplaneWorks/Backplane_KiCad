@@ -16,6 +16,7 @@ windows on macOS; here the order and the gate are what is checked, through GetFr
 """
 
 import argparse
+import pynng
 from pathlib import Path
 import statistics
 import sys
@@ -96,6 +97,23 @@ def main():
             ok = wait_for(lambda: same(host()[0], 209, 609, True), 5, 0.05)
             check(ok, f"the events socket's burst is applied, ending at its last rect ({host()[0].x})")
 
+        # A request that fails, and one whose client goes away before the answer: neither may
+        # hold back the geometry received after it
+        bad = api.request_raw(embed.HideFrame(window=123456789))
+        geometry(500, 650)
+        check(bad.status.status != 1 and same(host()[0], 500, 650, True),
+              f"after a failed HideFrame ({bad.status.status}), the next geometry is applied")
+
+        gone = api.envelope.ApiRequest()
+        gone.header.kicad_token = api.token
+        gone.header.client_name = "works.backplane.gone"
+        gone.message.Pack(embed.ShowFrame(kind=embed.FK_PCB))
+        with pynng.Req0(dial=f"ipc://{s.socket}", block_on_dial=True, send_timeout=5000) as raw:
+            raw.send(gone.SerializeToString())
+        geometry(510, 660)
+        check(wait_for(lambda: same(host()[0], 510, 660, True), 10, 0.05),
+              "after a ShowFrame whose client disconnected unanswered, the next geometry is applied")
+
         # During a real task
         busy_probe = editor.RunAction(action="common.Control.zoomFitScreen")
         rc = api.request(embed.RunChecks(kind=embed.FK_PCB, refill_zones=True, parity=True),
@@ -103,27 +121,53 @@ def main():
         during, times, refused = 0, [], []
         deadline = time.monotonic() + 300
         ii = 0
-        while time.monotonic() < deadline:
-            before = api.request_raw(busy_probe)
-            if before.status.status != 7 or "a task is running" not in before.status.error_message:
-                break   # the task is over
-            ii += 1
-            x = 300 + ii
-            t0 = time.monotonic()
-            reply = geometry(x, 700)
-            times.append((time.monotonic() - t0) * 1000)
-            g, _ = host()
-            after = api.request_raw(busy_probe)
-            if reply.status.status != 1:
-                refused.append(reply.status.error_message[:80])
-            elif same(g, x, 700, True) and "a task is running" in after.status.error_message:
-                during += 1
-            time.sleep(0.1)
+        applied_ms, ev_applied_ms, ev_during = [], [], 0
+        ev = IpcSession(args.kicad_cli, api_socket=events_sock, timeout=60000).__enter__()
+        try:
+            while time.monotonic() < deadline:
+                before = api.request_raw(busy_probe)
+                if before.status.status != 7 or "a task is running" not in before.status.error_message:
+                    break   # the task is over
+                ii += 1
 
-        print(f"RunChecks progress {rc.progress_id}: {during} geometries applied mid-task, "
-              f"{len(refused)} refused; reply ms median "
-              f"{statistics.median(times) if times else 0:.0f}, max {max(times) if times else 0:.0f}",
+                # Main socket: the reply, and when GetFrames first shows it applied
+                x = 300 + ii
+                t0 = time.monotonic()
+                reply = geometry(x, 700)
+                times.append((time.monotonic() - t0) * 1000)
+                while not same(host()[0], x, 700, True) and time.monotonic() - t0 < 10:
+                    time.sleep(0.005)
+                applied_ms.append((time.monotonic() - t0) * 1000)
+                after = api.request_raw(busy_probe)
+                if reply.status.status != 1:
+                    refused.append(reply.status.error_message[:80])
+                elif same(host()[0], x, 700, True) and "a task is running" in after.status.error_message:
+                    during += 1
+
+                # Events socket: answered at once by its own thread; applied by the task's pumps
+                x = 600 + ii
+                t0 = time.monotonic()
+                geometry(x, 720, sock=ev)
+                while not same(host()[0], x, 720, True) and time.monotonic() - t0 < 10:
+                    time.sleep(0.005)
+                if same(host()[0], x, 720, True):
+                    ev_applied_ms.append((time.monotonic() - t0) * 1000)
+                    if "a task is running" in api.request_raw(busy_probe).status.error_message:
+                        ev_during += 1
+                time.sleep(0.1)
+        finally:
+            ev.__exit__(None, None, None)
+
+        def stats(v):
+            return f"median {statistics.median(v):.0f}, max {max(v):.0f}" if v else "none"
+
+        print(f"RunChecks progress {rc.progress_id}: main socket {during} applied mid-task, "
+              f"{len(refused)} refused; reply ms {stats(times)}; send-to-applied ms {stats(applied_ms)} "
+              f"(KiCad's applied state, GetFrames.host; native window timing is macOS-only, lane M)",
               flush=True)
+        print(f"RunChecks: events socket {ev_during} applied mid-task; send-to-applied ms {stats(ev_applied_ms)}",
+              flush=True)
+        check(ev_during >= 3, f"the events socket's geometry is applied during the task too ({ev_during})")
         check(during >= 3 and not refused,
               f"SetHostGeometry during RunChecks is answered AS_OK and applied at once "
               f"({during} bracketed by AS_BUSY probes, refused {refused[:2]})")
