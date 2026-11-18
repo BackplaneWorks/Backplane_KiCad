@@ -204,6 +204,77 @@ BOOST_AUTO_TEST_CASE( EmbeddedLayoutComesBack )
 }
 
 
+// The library choosers through the real SaveToFile/LoadFromFile path: the person's chooser and
+// design-blocks panel sizes survive an embedded session (bp-win's rc.7 run wrote 32765 x 0), and the
+// embedded frame finds its own sane sizes at its next embedded start.
+BOOST_AUTO_TEST_CASE( EmbeddedChooserSizesKeepPersonsAndComeBack )
+{
+    KEEP_GEOMETRY_RESET reset;
+    wxString            dir = makeDir();
+    wxString            file = dir + wxS( "embed_geometry_test.json" );
+
+    nlohmann::json person = personFile();
+    person["design_block_chooser"] = nlohmann::json::parse( R"({ "width": 990, "height": 765,
+            "sash_pos_h": 495, "sash_pos_v": 518, "sort_mode": 0 })" );
+
+    {
+        std::ofstream out( file.fn_str() );
+        out << person.dump( 2 );
+    }
+
+    JSON_SETTINGS::SetKeepWindowGeometry( true );
+
+    {
+        TEST_APP_SETTINGS embedded;
+        embedded.LoadFromFile( dir );
+        BOOST_REQUIRE_EQUAL( embedded.m_DesignBlockChooserPanel.width, 990 );
+
+        embedded.m_DesignBlockChooserPanel.width = 640;       // the embedded panel, resized: sane
+        embedded.m_DesignBlockChooserPanel.height = 32765;    // bp-win's absurd height
+        embedded.m_DesignBlockChooserPanel.sash_pos_h = 300;
+        embedded.m_DesignBlockChooserPanel.sash_pos_v = 200;
+        embedded.m_DesignBlockChooserPanel.sort_mode = 1;     // not geometry: saved as usual
+        BOOST_CHECK( embedded.SaveToFile( dir ) );
+    }
+
+    nlohmann::json saved = readJson( file );
+    const nlohmann::json& chooser = saved["design_block_chooser"];
+
+    // The person's stock sizes, as their file had them.
+    BOOST_CHECK_EQUAL( chooser["width"].get<int>(), 990 );
+    BOOST_CHECK_EQUAL( chooser["height"].get<int>(), 765 );
+    BOOST_CHECK_EQUAL( chooser["sash_pos_h"].get<int>(), 495 );
+    BOOST_CHECK_EQUAL( chooser["sash_pos_v"].get<int>(), 518 );
+    BOOST_CHECK_EQUAL( chooser["sort_mode"].get<int>(), 1 );
+
+    // The embedded frame's own, sane ones only.
+    BOOST_REQUIRE( chooser.contains( "embed" ) );
+    BOOST_CHECK_EQUAL( chooser["embed"].value( "width", -2 ), 640 );
+    BOOST_CHECK_EQUAL( chooser["embed"].value( "sash_pos_h", -2 ), 300 );
+    BOOST_CHECK( !chooser["embed"].contains( "height" ) );
+
+    {
+        TEST_APP_SETTINGS next;     // the next embedded start
+        next.LoadFromFile( dir );
+        BOOST_CHECK_EQUAL( next.m_DesignBlockChooserPanel.width, 640 );
+        BOOST_CHECK_EQUAL( next.m_DesignBlockChooserPanel.sash_pos_v, 200 );
+        BOOST_CHECK_EQUAL( next.m_DesignBlockChooserPanel.height, 765 );    // never the absurd one
+    }
+
+    JSON_SETTINGS::SetKeepWindowGeometry( false );
+
+    {
+        TEST_APP_SETTINGS standalone;   // the person's own KiCad
+        standalone.LoadFromFile( dir );
+        BOOST_CHECK_EQUAL( standalone.m_DesignBlockChooserPanel.width, 990 );
+        BOOST_CHECK_EQUAL( standalone.m_DesignBlockChooserPanel.height, 765 );
+        BOOST_CHECK_EQUAL( standalone.m_DesignBlockChooserPanel.sash_pos_h, 495 );
+    }
+
+    wxRemoveFile( file );
+}
+
+
 // Without embedding, KiCad saves its geometry as before.
 BOOST_AUTO_TEST_CASE( StandaloneSaveWritesGeometry )
 {
