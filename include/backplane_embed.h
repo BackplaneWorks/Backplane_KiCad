@@ -40,6 +40,7 @@
 
 #include <frame_type.h>
 #include <kicommon.h>
+#include <embed_host_order.h>
 
 class wxFrame;
 class wxWindow;
@@ -364,9 +365,51 @@ public:
     /// Lay out and paint a hidden frame once off-screen, then hide it again (ShowFrame.prewarm).
     void Prewarm( wxFrame* aFrame, int aWidth, int aHeight );
 
-    /// SetHostGeometry from any thread: the newest rect is applied on the UI thread
-    /// (KIPLATFORM::EMBED::SetHostRect).  macOS only does anything with it.
+    /// SetHostGeometry received on the events socket (any thread): queued in receipt order with
+    /// the main socket's host requests and applied on the UI thread (EMBED_HOST_ORDER, #1199).
+    /// KIPLATFORM::EMBED::SetHostRect does the applying; only macOS does anything with it.
     void SetHostGeometryLater( int aX, int aY, int aWidth, int aHeight, bool aVisible, bool aRaise );
+
+    /// The main API socket's host requests (SetHostGeometry, ShowFrame, HideFrame, OpenGerbers)
+    /// take a slot when received (KICAD_API_SERVER, its listener thread): 0 for any other type.
+    uint64_t ReserveHostSlot( const std::string& aType );
+
+    /// Around the UI thread's handling of a request that took a slot: the handler's host calls
+    /// go to that slot, and a slot the handler never used (a refusal, an error) is dropped.
+    class KICOMMON_API HOST_REQUEST
+    {
+    public:
+        explicit HOST_REQUEST( uint64_t aSlot );
+        ~HOST_REQUEST();
+
+        HOST_REQUEST( const HOST_REQUEST& ) = delete;
+        HOST_REQUEST& operator=( const HOST_REQUEST& ) = delete;
+
+    private:
+        uint64_t               m_previous;
+        bool                   m_previousBegun;
+        bool                   m_previousDeferred;
+        EMBED_HOST_ORDER::KIND m_previousKind;
+    };
+
+    /// SetHostGeometry on the main socket (UI thread): applied at its slot.
+    void HostGeometryNow( int aX, int aY, int aWidth, int aHeight, bool aVisible, bool aRaise );
+
+    /// Start of a ShowFrame/HideFrame/OpenGerbers that will show or hide a frame (UI thread):
+    /// everything received before it is applied first, nothing received after it until it
+    /// returns.  aExplicitShow: the host is visible from here on.
+    void HostBarrier( bool aExplicitShow );
+
+    /// Apply every host request that is ready, in receipt order (UI thread; also called from
+    /// a running task's pumps, which do not run wx's other queues).
+    void DrainHost();
+
+    /// The host geometry last applied, and its slot.
+    EMBED_HOST_ORDER::STATE HostState() const { return m_hostState; }
+
+    /// How long a show or hide whose effect is applied may hold later host requests back while
+    /// its request still runs.
+    static constexpr int HOST_HOLD_MS = 1000;
 
     /// A prewarm is opening a frame of this kind (from the request until Prewarm() takes it, or
     /// the open fails): the project manager's ShowPlayer gives such a frame no focus, as the
@@ -753,15 +796,20 @@ private:
     std::map<wxFrame*, wxString>   m_conflicts;   ///< frame -> file with a pending conflict
     std::set<wxFrame*>             m_prewarming;  ///< frames being painted off-screen
 
-    struct HOST_RECT
-    {
-        int  x = 0, y = 0, width = 0, height = 0;
-        bool visible = true, raise = false;
-    };
+    EMBED_HOST_ORDER::QUEUE m_hostQueue;           ///< host requests in receipt order
+    EMBED_HOST_ORDER::STATE m_hostState;           ///< the host as last applied (UI thread)
+    uint64_t                m_hostSlot = 0;        ///< the slot of the request being handled
+    bool                    m_hostSlotBegun = false; ///< HostBarrier ran for it
+    bool                    m_hostSlotDeferred = false; ///< ... with an earlier slot still open
+    EMBED_HOST_ORDER::KIND  m_hostSlotKind = EMBED_HOST_ORDER::KIND::BARRIER;
 
-    std::mutex m_hostRectMutex;
-    HOST_RECT  m_hostRect;
-    bool       m_hostRectPending = false;
+    /// Barriers whose effect is applied while their request still runs, and since when: one
+    /// held longer than HOST_HOLD_MS (a dialog inside a ShowFrame) lets later requests pass
+    std::map<uint64_t, std::chrono::steady_clock::time_point> m_hostHeld;
+    bool                    m_hostDraining = false;
+    std::atomic<bool>       m_hostDrainPosted{ false };
+
+    void applyHostOp( const EMBED_HOST_ORDER::OP& aOp );
     std::set<EMBED_FRAME_KIND>     m_prewarmOpening;  ///< kinds a prewarm is opening
 
     wxTimer m_pollTimer;

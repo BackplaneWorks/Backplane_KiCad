@@ -28,6 +28,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fmt/format.h>
+#include <wx/thread.h>
 
 #include <wx/app.h>
 #include <wx/dialog.h>
@@ -2492,34 +2493,205 @@ bool BACKPLANE_EMBED::PrewarmOpening( FRAME_T aType ) const
 void BACKPLANE_EMBED::SetHostGeometryLater( int aX, int aY, int aWidth, int aHeight, bool aVisible,
                                             bool aRaise )
 {
-    // Coalesced: during a drag only the newest rect matters
-    {
-        std::lock_guard<std::mutex> lock( m_hostRectMutex );
-        bool pending = m_hostRectPending;
-        m_hostRect = { aX, aY, aWidth, aHeight, aVisible, aRaise };
-        m_hostRectPending = true;
+    // Its slot now, on the events socket's thread: the moment of receipt fixes its order
+    EMBED_HOST_ORDER::OP op;
+    op.kind = EMBED_HOST_ORDER::KIND::GEOMETRY;
+    op.geometry = { aX, aY, aWidth, aHeight, aVisible, aRaise };
+    m_hostQueue.Submit( op );
 
-        if( pending )
-            return;
-    }
-
-    if( !wxTheApp )
+    // One pending drain at a time; a running task's pumps drain too (ServeDuringTask), since they
+    // do not run wx's queues
+    if( !wxTheApp || m_hostDrainPosted.exchange( true ) )
         return;
 
     wxTheApp->CallAfter(
             [this]()
             {
-                HOST_RECT rect;
-
-                {
-                    std::lock_guard<std::mutex> lock( m_hostRectMutex );
-                    rect = m_hostRect;
-                    m_hostRectPending = false;
-                }
-
-                KIPLATFORM::EMBED::SetHostRect( rect.x, rect.y, rect.width, rect.height, rect.visible,
-                                                rect.raise );
+                m_hostDrainPosted = false;
+                DrainHost();
             } );
+}
+
+
+uint64_t BACKPLANE_EMBED::ReserveHostSlot( const std::string& aType )
+{
+    static const std::string package = "kiapi.backplane.embed.";
+
+    if( aType.compare( 0, package.size(), package ) != 0 )
+        return 0;
+
+    std::string name = aType.substr( package.size() );
+
+    if( name != "SetHostGeometry" && name != "ShowFrame" && name != "HideFrame" && name != "OpenGerbers" )
+        return 0;
+
+    return m_hostQueue.Reserve();
+}
+
+
+BACKPLANE_EMBED::HOST_REQUEST::HOST_REQUEST( uint64_t aSlot )
+{
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+    m_previous = embed.m_hostSlot;
+    m_previousBegun = embed.m_hostSlotBegun;
+    m_previousDeferred = embed.m_hostSlotDeferred;
+    m_previousKind = embed.m_hostSlotKind;
+    embed.m_hostSlot = aSlot;
+    embed.m_hostSlotBegun = false;
+    embed.m_hostSlotDeferred = false;
+}
+
+
+BACKPLANE_EMBED::HOST_REQUEST::~HOST_REQUEST()
+{
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    if( uint64_t slot = embed.m_hostSlot )
+    {
+        if( embed.m_hostSlotBegun )
+        {
+            // Applied at HostBarrier: the slot now only lets later ones through.  Deferred (an
+            // earlier request was still open then): the slot carries the effect, applied in turn.
+            EMBED_HOST_ORDER::OP done;
+            done.kind = embed.m_hostSlotDeferred ? embed.m_hostSlotKind : EMBED_HOST_ORDER::KIND::BARRIER;
+            embed.m_hostQueue.Fill( slot, done );
+        }
+        else
+        {
+            embed.m_hostQueue.Cancel( slot );   // refused, failed, or a geometry already filled
+        }
+    }
+
+    embed.m_hostHeld.erase( embed.m_hostSlot );
+    embed.m_hostSlot = m_previous;
+    embed.m_hostSlotBegun = m_previousBegun;
+    embed.m_hostSlotDeferred = m_previousDeferred;
+    embed.m_hostSlotKind = m_previousKind;
+    embed.DrainHost();
+}
+
+
+void BACKPLANE_EMBED::HostGeometryNow( int aX, int aY, int aWidth, int aHeight, bool aVisible,
+                                       bool aRaise )
+{
+    EMBED_HOST_ORDER::OP op;
+    op.kind = EMBED_HOST_ORDER::KIND::GEOMETRY;
+    op.geometry = { aX, aY, aWidth, aHeight, aVisible, aRaise };
+
+    if( m_hostSlot )
+    {
+        m_hostQueue.Fill( m_hostSlot, op );
+        m_hostSlot = 0;   // filled: the scope's end has nothing left to drop
+    }
+    else
+    {
+        m_hostQueue.Submit( op );
+    }
+
+    DrainHost();
+}
+
+
+void BACKPLANE_EMBED::HostBarrier( bool aExplicitShow )
+{
+    if( !m_hostSlot || m_hostSlotBegun )
+        return;
+
+    // Everything received before this request, then its own effect; its slot stays open, so
+    // nothing received after it is applied until the request returns
+    m_hostSlotBegun = true;
+    m_hostSlotKind = aExplicitShow ? EMBED_HOST_ORDER::KIND::SHOW : EMBED_HOST_ORDER::KIND::BARRIER;
+
+    std::vector<EMBED_HOST_ORDER::OP> earlier = m_hostQueue.TakeReady( m_hostSlot );
+
+    for( const EMBED_HOST_ORDER::OP& op : earlier )
+        applyHostOp( op );
+
+    // An earlier request still unhandled (one dispatch never leaves this so, but nothing here
+    // relies on that): this one's effect waits for its turn.  Its slot is filled with it when the
+    // request returns and applied in order then.
+    if( m_hostQueue.HasReadyOrOpen( m_hostSlot ) )
+    {
+        m_hostSlotDeferred = true;
+        return;
+    }
+
+    EMBED_HOST_ORDER::OP self;
+    self.kind = m_hostSlotKind;
+    self.seq = m_hostSlot;
+    applyHostOp( self );
+    m_hostHeld[m_hostSlot] = std::chrono::steady_clock::now();
+}
+
+
+void BACKPLANE_EMBED::DrainHost()
+{
+    if( m_hostDraining || !wxThread::IsMain() )
+        return;
+
+    m_hostDraining = true;
+
+    // A show or hide that has applied its effect but whose request is still running (a dialog,
+    // a long load) holds later requests back for at most HOST_HOLD_MS: their effects come after
+    // its own either way
+    auto now = std::chrono::steady_clock::now();
+
+    for( auto it = m_hostHeld.begin(); it != m_hostHeld.end(); )
+    {
+        if( now - it->second >= std::chrono::milliseconds( HOST_HOLD_MS ) )
+        {
+            // Only slots whose own effect was applied are ever here (HostBarrier, not deferred):
+            // an empty or deferred slot keeps holding the queue however long it is open
+            if( m_traceFile )
+            {
+                TraceNote( fmt::format( "host:release #{} after {} ms (its effect applied, its request still running)",
+                                        it->first,
+                                        std::chrono::duration_cast<std::chrono::milliseconds>( now - it->second ).count() ) );
+            }
+
+            m_hostQueue.MarkPassable( it->first );
+            it = m_hostHeld.erase( it );
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+    for( std::vector<EMBED_HOST_ORDER::OP> ready = m_hostQueue.TakeReady(); !ready.empty();
+         ready = m_hostQueue.TakeReady() )
+    {
+        for( const EMBED_HOST_ORDER::OP& op : ready )
+            applyHostOp( op );
+    }
+
+    m_hostDraining = false;
+}
+
+
+void BACKPLANE_EMBED::applyHostOp( const EMBED_HOST_ORDER::OP& aOp )
+{
+    EMBED_HOST_ORDER::STATE before = m_hostState;
+    m_hostState = EMBED_HOST_ORDER::Reduce( m_hostState, aOp );
+
+    bool apply = aOp.kind == EMBED_HOST_ORDER::KIND::GEOMETRY
+                 || m_hostState.geometry.visible != before.geometry.visible;
+
+    if( !apply )
+        return;
+
+    const EMBED_HOST_ORDER::GEOMETRY& g = m_hostState.geometry;
+    bool raise = aOp.kind == EMBED_HOST_ORDER::KIND::GEOMETRY && aOp.geometry.raise;
+
+    if( m_traceFile )
+    {
+        TraceNote( fmt::format( "host:{} #{} {},{} {}x{}{}{}",
+                                aOp.kind == EMBED_HOST_ORDER::KIND::GEOMETRY ? "geometry" : "show",
+                                aOp.seq, g.x, g.y, g.width, g.height, g.visible ? "" : " hidden",
+                                raise ? " raise" : "" ) );
+    }
+
+    KIPLATFORM::EMBED::SetHostRect( g.x, g.y, g.width, g.height, g.visible, raise );
 }
 
 

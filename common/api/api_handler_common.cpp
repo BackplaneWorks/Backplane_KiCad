@@ -133,6 +133,9 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 reply.add_capabilities( "embed-frame-drawn" );   // ET_FRAME_DRAWN (bp.13)
                 // ET_EDITOR_REQUESTED, FrameInfo.lib_id (bp.13)
                 reply.add_capabilities( "embed-editor-requested" );
+                // Host window requests applied in receipt order across both sockets,
+                // SetHostGeometry served during an API task, GetFrames.host (#1199)
+                reply.add_capabilities( "embed-host-order" );
                 // Event.detail of ET_SHOW_REQUESTED / ET_EDITOR_REQUESTED names the API client
                 // that caused it ("" = the person or KiCad itself); DRC parity is quiet (bp.13)
                 reply.add_capabilities( "embed-request-actor" );

@@ -155,6 +155,12 @@ message GetFramesResponse
   string             events_socket = 7;  // ipc:// URL of the long-poll socket for NextEvents
   ThemeMode          theme = 8;          // the theme set by SetTheme or --theme (bp.9)
   repeated Progress  progress = 9;       // jobs running now, for a resync after `lost` (bp.12)
+  // The host geometry as KiCad last applied it (#1199, capability embed-host-order): a
+  // SetHostGeometry reply says only that it was received; this says it took effect.  raise is
+  // never kept.  host_seq counts the host requests applied (SetHostGeometry, ShowFrame,
+  // HideFrame, OpenGerbers, from both sockets, in the order they were received).
+  SetHostGeometry    host     = 10;
+  uint64             host_seq = 11;
 }
 
 enum EventType
