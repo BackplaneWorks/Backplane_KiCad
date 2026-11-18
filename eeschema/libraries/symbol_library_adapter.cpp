@@ -277,8 +277,22 @@ LIB_SYMBOL* SYMBOL_LIBRARY_ADAPTER::LoadSymbol( const wxString& aNickname, const
         std::lock_guard pluginGuard( pluginMutex( aNickname ) );
 
         std::map<std::string, UTF8> options = ( *lib )->row->GetOptionsMap();
+        LIB_SYMBOL*                 symbol = nullptr;
 
-        if( LIB_SYMBOL* symbol = schplugin( *lib )->LoadSymbol( getUri( ( *lib )->row ), aName, &options ) )
+        // A plugin's error for one symbol (an HTTP library part whose own symbol cannot be loaded,
+        // a part the server no longer has) is that symbol not to be had: no caller (the place tool,
+        // the chooser's preview, Update Symbols from Library, ERC, the API) gets an exception for it.
+        try
+        {
+            symbol = schplugin( *lib )->LoadSymbol( getUri( ( *lib )->row ), aName, &options );
+        }
+        catch( const IO_ERROR& e )
+        {
+            wxLogTrace( traceLibraries, "LoadSymbol: %s:%s: %s", aNickname, aName, e.What() );
+            symbol = nullptr;
+        }
+
+        if( symbol )
         {
             LIB_ID id = symbol->GetLibId();
             id.SetLibNickname( ( *lib )->row->Nickname() );

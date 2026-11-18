@@ -12,8 +12,9 @@ holds that HTTP library and Device.  On a fresh server, with the HTTP part the f
 
 1. PlaceSymbolFromLibrary("My_Parts:470R ...") gives the part with Device:R's pins and body, and the
    part's own fields (value, footprint, MPN).
-2. A part whose symbol cannot be had ("Device:NoSuchSymbol") is refused with an error; it is not
-   placed as a symbol of fields alone.
+2. A part whose symbol cannot be had ("Device:NoSuchSymbol") is refused: the API answers with an
+   error naming the part (the library adapter turns the plugin's error into "not found"); it is not
+   placed as a symbol of fields alone, and no caller gets an exception for it.
 3. The first part placed again in the same session is still whole.
 
     backplane-httplib-headless-check.py <runtime>/bin/kicad-cli
@@ -212,9 +213,9 @@ def main():
 
         # 2. a part whose symbol cannot be had: an error, not a symbol of fields alone
         broken, error = place(BROKEN, 76200000)
-        check(broken is None or "SchematicPin" in kinds(broken),
-              f"a part whose symbol is missing is refused ({error or kinds(broken)})")
-        check(broken is not None or "NoSuchSymbol" in error, f"the error names the missing symbol ({error})")
+        check(broken is None, f"a part whose symbol is missing is not placed as fields alone ({kinds(broken) if broken else ''})")
+        check(broken is not None or ("not found" in error and BROKEN in error),
+              f"the API answers with a clear error naming the part ({error})")
 
         # 3. the same session: the first part again
         again, error = place(PART, 101600000)
