@@ -583,6 +583,18 @@ bool KIPLATFORM::EMBED::FrameIsKey( wxWindow* aFrame )
 }
 
 
+bool KIPLATFORM::EMBED::WindowsGone()
+{
+    return false;
+}
+
+
+bool KIPLATFORM::EMBED::CheckWindowsGone()
+{
+    return false;
+}
+
+
 void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 {
     s_hooks = aHooks;

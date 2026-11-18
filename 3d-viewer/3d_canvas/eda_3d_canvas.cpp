@@ -19,6 +19,7 @@
  */
 
 #include <backplane_embed.h>
+#include <backplane_embed.h>
 #include <kicad_gl/kiglu.h> // Must be included first
 #include <kicad_gl/gl_utils.h>
 #include <kicad_gl/gl_context_mgr.h>
@@ -436,6 +437,10 @@ static bool ownerAlive( wxWindow* aOwner )
 
 void EDA_3D_CANVAS::DoRePaint()
 {
+    // Embedded, with KiCad's windows destroyed by the host: GL on them crashes the driver
+    if( BACKPLANE_EMBED::Get().WindowsGone() )
+        return;
+
     if( m_is_currently_painting.test_and_set() )
         return;
 

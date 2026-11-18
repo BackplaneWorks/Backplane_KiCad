@@ -34,6 +34,8 @@
 #include <gdk/gdkx.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <xcb/xcb.h>
+#include <dlfcn.h>
 #endif
 
 namespace
@@ -44,6 +46,12 @@ KIPLATFORM::EMBED::HOOKS s_hooks;
 Window s_holder = 0;   ///< the holder window (ours)
 Window s_parent = 0;   ///< the host's container the holder is in, or 0 when parked
 bool   s_installed = false;
+bool   s_lost = false;            ///< the holder (and every frame in it) was destroyed under us
+bool   s_lostCheckQueued = false;
+
+XErrorHandler s_gdkErrorHandler = nullptr;   ///< GDK's handler: exits on an error nobody traps
+XID           s_resourceBase = 0;             ///< this connection's resource ids (the server's
+XID           s_resourceMask = 0;             ///< setup: base | n for n in mask)
 
 
 Display* xDisplay()
@@ -106,13 +114,92 @@ bool rootGeometry( Display* aDisplay, Window aWindow, int& aX, int& aY, int& aW,
 }
 
 
+/// KiCad's own windows are gone: the host destroyed its container (or an ancestor) with the
+/// holder still inside, and the server destroyed the holder and every frame's window with it.
+/// No reparent can bring them back; the process, its documents and the API stay.
+void windowsLost()
+{
+    if( s_lost )
+        return;
+
+    s_lost = true;
+    s_parent = 0;
+
+    if( s_hooks.windowsLost )
+        s_hooks.windowsLost();
+}
+
+
+/// After an X error on one of our own windows: is the holder still there?
+gboolean checkHolder( gpointer )
+{
+    s_lostCheckQueued = false;
+
+    if( s_holder && !s_lost )
+    {
+        // Not trapped(): embedXError takes the BadWindow on our own holder before GDK's trap
+        // would see it.  XGetWindowAttributes' status says it all.
+        Display*          display = xDisplay();
+        XWindowAttributes attrs;
+        bool              alive = display && XGetWindowAttributes( display, s_holder, &attrs ) != 0;
+
+        fprintf( stderr, "kicad embed: holder 0x%lx %s\n", s_holder, alive ? "still there" : "gone" );
+
+        if( !alive )
+            windowsLost();
+    }
+
+    return G_SOURCE_REMOVE;
+}
+
+
+/// GDK's X error handler exits (code 1) on any error nobody trapped.  An embedded KiCad's own
+/// windows can be destroyed by the host (its container destroyed with the holder inside), and
+/// GTK or GLX then trips over them on its next request; that error arrives before the
+/// DestroyNotify is dispatched.  So window and drawable errors on our own resources are taken
+/// here, and whether the holder survived is checked at once.  Every other error goes to GDK.
+int embedXError( Display* aDisplay, XErrorEvent* aError )
+{
+    bool own = ( aError->resourceid & ~s_resourceMask ) == s_resourceBase;
+
+    // GLX reports a destroyed drawable with its own (extension) error codes, from 128 up
+    bool gone = aError->error_code == BadWindow || aError->error_code == BadDrawable
+                || aError->error_code == BadMatch || aError->error_code >= 128;
+
+    if( s_holder && own && gone )
+    {
+        if( !s_lost && !s_lostCheckQueued )
+            fprintf( stderr, "kicad embed: X error %d (request %d) on our window 0x%lx: checking the holder\n",
+                     aError->error_code, aError->request_code, aError->resourceid );
+
+        if( !s_lost && !s_lostCheckQueued )
+        {
+            // Ahead of any redraw: until it has run, WindowsGone() holds every canvas back
+            s_lostCheckQueued = true;
+            g_idle_add_full( G_PRIORITY_HIGH, checkHolder, nullptr, nullptr );
+        }
+
+        return 0;
+    }
+
+    return s_gdkErrorHandler ? s_gdkErrorHandler( aDisplay, aError ) : 0;
+}
+
+
 /// The holder follows the host container's size, and notices when the host goes away.
 GdkFilterReturn holderFilter( GdkXEvent* aXEvent, GdkEvent*, gpointer )
 {
     XEvent* ev = static_cast<XEvent*>( aXEvent );
 
-    if( !s_holder )
+    if( !s_holder || s_lost )
         return GDK_FILTER_CONTINUE;
+
+    if( ev->type == DestroyNotify && ev->xdestroywindow.window == s_holder )
+    {
+        fprintf( stderr, "kicad embed: holder 0x%lx destroyed\n", s_holder );
+        windowsLost();
+        return GDK_FILTER_CONTINUE;
+    }
 
     if( ev->type == ConfigureNotify && s_parent && ev->xconfigure.window == s_parent
         && ev->xconfigure.event == s_parent )
@@ -283,6 +370,29 @@ bool KIPLATFORM::EMBED::FrameIsKey( wxWindow* aFrame )
 }
 
 
+bool KIPLATFORM::EMBED::WindowsGone()
+{
+#ifdef GDK_WINDOWING_X11
+    return s_lost || s_lostCheckQueued;
+#else
+    return false;
+#endif
+}
+
+
+bool KIPLATFORM::EMBED::CheckWindowsGone()
+{
+#ifdef GDK_WINDOWING_X11
+    if( s_holder && !s_lost )
+        checkHolder( nullptr );
+
+    return s_lost;
+#else
+    return false;
+#endif
+}
+
+
 #ifdef GDK_WINDOWING_X11
 namespace
 {
@@ -428,6 +538,25 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
         return;
 
     s_installed = true;
+
+    if( Display* display = xDisplay() )
+    {
+        // This connection's resource-id range, from the server's setup.  Looked up at run time
+        // (libX11-xcb and libxcb are loaded by GDK and Mesa) so the build needs no new library.
+        using GET_CONN = xcb_connection_t* ( * )( Display* );
+        using GET_SETUP = const xcb_setup_t* ( * )( xcb_connection_t* );
+        auto getConn = reinterpret_cast<GET_CONN>( dlsym( RTLD_DEFAULT, "XGetXCBConnection" ) );
+        auto getSetup = reinterpret_cast<GET_SETUP>( dlsym( RTLD_DEFAULT, "xcb_get_setup" ) );
+        const xcb_setup_t* setup = getConn && getSetup ? getSetup( getConn( display ) ) : nullptr;
+
+        if( setup )
+        {
+            s_resourceBase = setup->resource_id_base;
+            s_resourceMask = setup->resource_id_mask;
+            s_gdkErrorHandler = XSetErrorHandler( embedXError );
+        }
+    }
+
     gdk_window_add_filter( nullptr, holderFilter, nullptr );
     G_GNUC_BEGIN_IGNORE_DEPRECATIONS
     gtk_key_snooper_install( keySnooper, nullptr );
@@ -453,6 +582,9 @@ uint64_t KIPLATFORM::EMBED::CreateHolder( uint64_t aParent )
     Display* display = xDisplay();
 
     if( !display )
+        return 0;
+
+    if( s_lost )
         return 0;
 
     if( s_holder )
@@ -513,7 +645,7 @@ bool KIPLATFORM::EMBED::AttachHolder( uint64_t aHolder, uint64_t aParent )
 #ifdef GDK_WINDOWING_X11
     Display* display = xDisplay();
 
-    if( !display || !aHolder )
+    if( !display || !aHolder || s_lost )
         return false;
 
     Window holder = (Window) aHolder;

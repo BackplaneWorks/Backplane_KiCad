@@ -465,6 +465,10 @@ void EDA_DRAW_PANEL_GAL::teardownModernRenderInfra()
 
 bool EDA_DRAW_PANEL_GAL::recoverFromGalError( const std::exception& aError )
 {
+    // The failure is the destroyed window, not the backend: a new context there crashes Mesa
+    if( BACKPLANE_EMBED::Get().CheckWindowsGone() )
+        return false;
+
     // Reinitializing would hit the same VRAM ceiling, so out-of-memory goes straight to the fallback
     const bool gpuOutOfMemory = dynamic_cast<const KIGFX::GPU_OOM_ERROR*>( &aError ) != nullptr;
 
@@ -658,6 +662,10 @@ void EDA_DRAW_PANEL_GAL::submitCachedScene()
 
 bool EDA_DRAW_PANEL_GAL::DoRePaint( bool aAllowSkip )
 {
+    // Embedded, with KiCad's windows destroyed by the host: GL on them crashes the driver
+    if( BACKPLANE_EMBED::Get().WindowsGone() )
+        return false;
+
     if( BACKPLANE_EMBED::Get().Tracing() )
         BACKPLANE_EMBED::Get().TraceNote( std::string( "redraw_by:" ) + ( g_redrawCause ? g_redrawCause : "direct" ) );
 
