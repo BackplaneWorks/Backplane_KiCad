@@ -317,6 +317,12 @@ public:
 
     bool Enabled() const { return m_enabled; }
 
+    /// OpenGL failed in this process (embedded): every canvas, in every kiface, takes the fallback
+    /// without trying it again.  EDA_DRAW_FRAME's failed-canvas set is per kiface (libcommon is
+    /// linked into each), this is per process.  UI thread.
+    bool OpenGLFailed() const { return m_openglFailed; }
+    void SetOpenGLFailed() { m_openglFailed = true; }
+
     uint64_t Parent() const { return m_parent; }
     uint64_t Toplevel() const { return m_toplevel ? m_toplevel : m_parent; }
     uint64_t Holder() const { return m_parent ? m_holder : 0; }
@@ -739,6 +745,7 @@ private:
     double                   m_traceThreshold = 8.0;
     /// Notice() kinds and titles already posted
     std::set<std::string> m_noticesSent;
+    bool                     m_openglFailed = false;
     std::vector<std::pair<std::string, int>> m_traceNotes;
     std::mutex               m_traceMutex;
 
