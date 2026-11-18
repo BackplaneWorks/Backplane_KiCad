@@ -3126,7 +3126,7 @@ int ERC_TESTER::TestFootprintLinkIssues( KIFACE* aCvPcb, PROJECT* aProject )
                 if( !source.footprint.IsEmpty() && fpID.Parse( source.footprint, true ) < 0
                         && !fpID.GetLibNickname().empty() )
                 {
-                    used.insert( wxString( fpID.GetLibNickname() ) );
+                    used.insert( fpID.GetLibNickname().wx_str() );
                 }
             }
 

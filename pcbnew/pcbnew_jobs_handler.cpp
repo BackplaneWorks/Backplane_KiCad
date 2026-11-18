@@ -2992,7 +2992,7 @@ int PCBNEW_JOBS_HANDLER::JobExportDrc( JOB* aJob )
 
     for( const FOOTPRINT* footprint : brd->Footprints() )
     {
-        wxString nickname = footprint->GetFPID().GetLibNickname();
+        wxString nickname = footprint->GetFPID().GetLibNickname().wx_str();
 
         if( !nickname.IsEmpty() )
             usedLibraries.insert( nickname );
