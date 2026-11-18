@@ -18,6 +18,7 @@
 #include <backplane_embed.h>
 #include <backplane_coedit.h>
 #include <json_common.h>
+#include <settings/json_settings.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -327,6 +328,10 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
         return false;
 
     m_enabled = true;
+
+    // An embedded frame's geometry is the host pane's: never the person's KiCad's (#1185).
+    JSON_SETTINGS::SetKeepWindowGeometry( true );
+
     m_parent = aParent;
     m_toplevel = aToplevel;
     m_pollTimer.Start( 250 );

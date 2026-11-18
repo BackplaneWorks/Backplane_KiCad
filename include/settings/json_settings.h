@@ -162,6 +162,33 @@ public:
     virtual bool SaveToFile( const wxString& aDirectory = "", bool aForce = false );
 
     /**
+     * Backplane embedding (#1185): while set, an embedded frame's window geometry and AUI panel
+     * sizes live in their own "embed" sub-object, beside the stock keys, and the stock keys stay as
+     * the file on disk holds them.  An embedded frame is a child of the host's pane (or parked
+     * off-screen), so its position, size and panel sizes describe the host, not the person's
+     * standalone KiCad, and on Windows can be absurd.  The embedded frame still finds the layout it
+     * left (a panel it resized) at its next start; a standalone KiCad never reads it.  Values out
+     * of range (a position or size of 20000 px or more) are never kept.  Set by --embedded before
+     * any settings load, and by BACKPLANE_EMBED::Enable().
+     */
+    static void SetKeepWindowGeometry( bool aKeep );
+    static bool KeepWindowGeometry();
+
+    /**
+     * Before an embedded save: move each geometry value of aStore into its object's "embed"
+     * sub-object and give the stock key aDisk's value back (or remove it where aDisk lacks it).
+     * Geometry is the position, size, maximized state, display, AUI perspective and aui_state of
+     * each window object (an object holding size_x and size_y), and the *_width, *_height, *_size,
+     * *_pos and *_proportion members of the top-level "aui" object, and the width, height and sash
+     * members of each top-level *_chooser object (design_block_chooser is also the design-blocks
+     * panel docked in the frame: 32765 px tall in a Windows embed run).  Exposed for tests.
+     */
+    static void StashWindowGeometry( nlohmann::json& aStore, const nlohmann::json* aDisk );
+
+    /// After an embedded load: each object's stock geometry keys take its "embed" values.
+    static void UnstashWindowGeometry( nlohmann::json& aStore );
+
+    /**
      * @return true once the in-memory store has been synchronized with an on-disk file, either
      *         by loading an existing file or by a successful save
      */
