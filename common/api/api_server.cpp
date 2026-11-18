@@ -497,6 +497,20 @@ void KICAD_API_SERVER::onApiRequest( std::string* aRequest )
     // We don't actually need write access to this string, but client data is non-const
     evt->SetClientData( static_cast<void*>( aRequest ) );
 
+    // A host window request (#1199) takes its place in the embed's host order now, at receipt:
+    // the events socket's SetHostGeometry, received on another thread, is ordered against it
+    if( aRequest->find( "kiapi.backplane.embed." ) != std::string::npos )
+    {
+        ApiRequest  request;
+        std::string type;
+
+        if( request.ParseFromString( *aRequest )
+            && google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &type ) )
+        {
+            evt->SetExtraLong( static_cast<long>( BACKPLANE_EMBED::Get().ReserveHostSlot( type ) ) );
+        }
+    }
+
     // Waiting for the UI thread from now: the watchdog reports a long wait
     if( m_pending.fetch_add( 1 ) == 0 )
         m_pendingSinceMs = steadyMs();
@@ -524,6 +538,15 @@ bool KICAD_API_SERVER::IsReadServedDuringTask( const std::string& aType )
     };
 
     return reads.count( aType ) > 0;
+}
+
+
+bool KICAD_API_SERVER::IsWindowStateServedDuringTask( const std::string& aType )
+{
+    // Not reads, but they touch only where KiCad's windows are on screen (no document, no frame
+    // opened or closed): the host's window keeps moving while a check runs (#1199: a pane left dark
+    // for a whole DRC when its SetHostGeometry was refused)
+    return aType == "kiapi.backplane.embed.SetHostGeometry";
 }
 
 
@@ -572,6 +595,9 @@ void KICAD_API_SERVER::ServeDuringTask()
     // arriving is served at the next call.
     for( int ii = 0; ii < 64 && server->HasQueuedRequests(); ++ii )
         server->ProcessPendingEvents();
+
+    // The events socket's host geometry, whose drain was queued with wx (not run here)
+    BACKPLANE_EMBED::Get().DrainHost();
 }
 
 
@@ -586,6 +612,9 @@ void KICAD_API_SERVER::handleApiEvent( wxCommandEvent& aEvent )
         BACKPLANE_EMBED::Get().StartupMark( "first API request dispatched on the UI thread" );
 
     std::string& requestString = *static_cast<std::string*>( aEvent.GetClientData() );
+
+    // A host request's slot is filled by its handler, or dropped when it is refused
+    BACKPLANE_EMBED::HOST_REQUEST hostRequest( static_cast<uint64_t>( aEvent.GetExtraLong() ) );
     handleApiRequestString( requestString );
 }
 
@@ -650,7 +679,8 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
         std::string requestType;
         google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &requestType );
 
-        if( !IsReadServedDuringTask( requestType, request.message() ) )
+        if( !IsReadServedDuringTask( requestType, request.message() )
+            && !IsWindowStateServedDuringTask( requestType ) )
         {
             ApiResponse error;
             error.mutable_header()->set_kicad_token( m_token );

@@ -407,6 +407,7 @@ set( KICOMMON_SRCS
     singleton.cpp
     pgm_base.cpp
     backplane_embed.cpp
+    embed_host_order.cpp
     backplane_coedit.cpp
     backplane_merge.cpp
     backplane_embed_comment.cpp

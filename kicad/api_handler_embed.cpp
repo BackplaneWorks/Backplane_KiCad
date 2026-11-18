@@ -244,6 +244,8 @@ HANDLER_RESULT<OpenGerbersResponse> API_HANDLER_EMBED::handleOpenGerbers(
                                                      dialog->ToStdString( wxConvUTF8 ) ) ) );
     }
 
+    embed.HostBarrier( aCtx.Request.show() );   // in the host's receipt order (#1199)
+
     wxFrame* frame = embed.FindFrame( EMBED_FRAME_KIND::GERBVIEW );
 
     if( !frame )
@@ -315,6 +317,10 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
                                         "ShowFrame needs one of FK_PCB, FK_SCH, FK_SYMBOL_EDITOR, "
                                         "FK_FOOTPRINT_EDITOR, FK_PCB_3D, FK_GERBVIEW or FK_SIMULATOR" ) );
     }
+
+    // In the host's receipt order (#1199): what the host sent before this is applied first, nothing
+    // it sent after until this returns; an explicit show makes the host visible
+    embed.HostBarrier( !aCtx.Request.prewarm() );
 
     wxFrame* frame = embed.FindFrame( kind );
 
@@ -457,9 +463,11 @@ HANDLER_RESULT<ShowFrameResponse> API_HANDLER_EMBED::handleShowFrame(
 HANDLER_RESULT<SetHostGeometryResponse> API_HANDLER_EMBED::handleSetHostGeometry(
         const HANDLER_CONTEXT<SetHostGeometry>& aCtx )
 {
-    // On the UI thread already: applied now (the events socket's copy defers to here)
-    KIPLATFORM::EMBED::SetHostRect( aCtx.Request.x(), aCtx.Request.y(), aCtx.Request.width(),
-                                    aCtx.Request.height(), aCtx.Request.visible(), aCtx.Request.raise() );
+    // At its place in the host's receipt order, after anything the events socket received
+    // before it (#1199); served during an API task too (window state only)
+    BACKPLANE_EMBED::Get().HostGeometryNow( aCtx.Request.x(), aCtx.Request.y(), aCtx.Request.width(),
+                                            aCtx.Request.height(), aCtx.Request.visible(),
+                                            aCtx.Request.raise() );
     return SetHostGeometryResponse();
 }
 
@@ -474,6 +482,7 @@ HANDLER_RESULT<HideFrameResponse> API_HANDLER_EMBED::handleHideFrame(
     if( !frame )
         return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST, "no such frame" ) );
 
+    embed.HostBarrier( false );   // in the host's receipt order (#1199)
     embed.ShowEmbedded( frame, false );
 
     HideFrameResponse response;
@@ -503,6 +512,14 @@ HANDLER_RESULT<GetFramesResponse> API_HANDLER_EMBED::handleGetFrames(
 
     for( const std::string& chord : embed.ReservedKeys() )
         response.add_reserved_keys( chord );
+
+    EMBED_HOST_ORDER::STATE host = embed.HostState();
+    response.mutable_host()->set_x( host.geometry.x );
+    response.mutable_host()->set_y( host.geometry.y );
+    response.mutable_host()->set_width( host.geometry.width );
+    response.mutable_host()->set_height( host.geometry.height );
+    response.mutable_host()->set_visible( host.geometry.visible );
+    response.set_host_seq( host.seq );
 
     return response;
 }

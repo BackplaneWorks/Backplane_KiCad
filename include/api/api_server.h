@@ -82,6 +82,10 @@ public:
     /// reads); every other request is answered AS_BUSY naming the task.
     static bool IsReadServedDuringTask( const std::string& aType );
 
+    /// Window-state requests also served during an API task (SetHostGeometry: the host's window
+    /// geometry, no document).
+    static bool IsWindowStateServedDuringTask( const std::string& aType );
+
     /// IsReadServedDuringTask, deciding by the request body for the one type whose body makes it
     /// a read or not: GetPlan is a read without `derived` (the plan as stored); with it, it builds
     /// the audit from connectivity, which a running DRC is in the middle of.
