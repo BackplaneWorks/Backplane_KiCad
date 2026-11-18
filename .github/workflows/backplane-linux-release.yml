@@ -374,6 +374,10 @@ jobs:
               "release/${archive_root}/bin/kicad-cli" --output "$RUNNER_TEMP/structure-routing"; then
             failed+=("scripts/backplane-structure-routing-check.py")
           fi
+          if ! "$RUNNER_TEMP/ipc-smoke-venv/bin/python" scripts/backplane-headless-lock-check.py \
+              "release/${archive_root}/bin/kicad-cli"; then
+            failed+=("scripts/backplane-headless-lock-check.py")
+          fi
           if [ "${#failed[@]}" -ne 0 ]; then
             printf '::error::IPC regression failed: %s\n' "${failed[@]}"
             exit 1
