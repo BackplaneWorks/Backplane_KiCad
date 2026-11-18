@@ -109,6 +109,7 @@
 #include <tools/pcb_actions.h>
 #include <tools/pcb_selection_tool.h>
 #include <tools/zone_filler_tool.h>
+#include <widgets/progress_reporter_base.h>
 #include <tools/generator_tool.h>
 #include <zone.h>
 #include <zone_filler.h>
@@ -1658,15 +1659,12 @@ HANDLER_RESULT<Empty> API_HANDLER_PCB::handleSetBoardOrigin(
 
         if( f )
         {
-            frame()->CallAfter(
-                    [f, origin]()
-                    {
-                        // gridSetOrigin takes ownership and frees this
-                        VECTOR2D*     dorigin = new VECTOR2D( origin );
-                        TOOL_MANAGER* mgr = f->GetToolManager();
-                        mgr->RunAction( PCB_ACTIONS::gridSetOrigin, dorigin );
-                        f->Refresh();
-                    } );
+            // In the request (#1224): applied before the reply and inside the request's
+            // co-editing actor.  checkForBusy has refused already while a tool is busy; the
+            // action with a point sets the origin at once (no picker).
+            // gridSetOrigin takes ownership and frees this
+            f->GetToolManager()->RunAction( PCB_ACTIONS::gridSetOrigin, new VECTOR2D( origin ) );
+            f->Refresh();
         }
         else
         {
@@ -1683,13 +1681,10 @@ HANDLER_RESULT<Empty> API_HANDLER_PCB::handleSetBoardOrigin(
 
         if( f )
         {
-            frame()->CallAfter(
-                    [f, origin]()
-                    {
-                        TOOL_MANAGER* mgr = f->GetToolManager();
-                        mgr->RunAction( PCB_ACTIONS::drillSetOrigin, origin );
-                        f->Refresh();
-                    } );
+            // In the request (#1224), as the grid origin: its GRIDORIGIN undo entry is recorded
+            // under the request's actor
+            f->GetToolManager()->RunAction( PCB_ACTIONS::drillSetOrigin, origin );
+            f->Refresh();
         }
         else
         {
@@ -2150,6 +2145,21 @@ HANDLER_RESULT<std::vector<ZONE*>> API_HANDLER_PCB::resolveZonesToFill(
 }
 
 
+namespace
+{
+/// A progress reporter that shows nothing and never yields: a fill run inside an API request
+/// must not serve events (the request's co-editing actor and its reply order depend on it).
+class NO_UI_PROGRESS_REPORTER : public PROGRESS_REPORTER_BASE
+{
+public:
+    NO_UI_PROGRESS_REPORTER() : PROGRESS_REPORTER_BASE( 1 ) {}
+
+protected:
+    bool updateUI() override { return true; }
+};
+} // namespace
+
+
 HANDLER_RESULT<Empty> API_HANDLER_PCB::handleRefillZones( const HANDLER_CONTEXT<RefillZones>& aCtx )
 {
     if( HANDLER_RESULT<bool> documentValidation = validateDocument( aCtx.Request.board() ); !documentValidation )
@@ -2169,10 +2179,22 @@ HANDLER_RESULT<Empty> API_HANDLER_PCB::handleRefillZones( const HANDLER_CONTEXT<
     {
         if( frame() )
         {
-            frame()->CallAfter( [mgr]()
-                                {
-                                    mgr->RunAction( PCB_ACTIONS::zoneFillAll );
-                                } );
+            // In the request, as the explicit-ids path is (#1224): deferred, the fill ran after the
+            // reply, outside the request's co-editing actor (an agent's fill was recorded as the
+            // person's) and after a SaveDocument sent right behind it (the saved board had none).
+            // checkForBusy above has refused already if a tool other than the idle selection or
+            // point editor is current, a fill runs or undo is blocked, so nothing of the person's
+            // is interrupted.  The same fill as Edit > Fill All Zones (teardrops, generators),
+            // without its progress dialog: nothing yields inside the request.
+            NO_UI_PROGRESS_REPORTER reporter;
+
+            if( !mgr->GetTool<ZONE_FILLER_TOOL>()->FillAllZones( frame(), &reporter ) )
+            {
+                ApiResponseStatus e;
+                e.set_status( ApiStatusCode::AS_UNKNOWN );
+                e.set_error_message( "zone fill failed" );
+                return tl::unexpected( e );
+            }
         }
         else
         {
