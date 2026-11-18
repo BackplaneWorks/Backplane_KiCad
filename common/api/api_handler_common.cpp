@@ -140,6 +140,13 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 // fallbacks, "Could not use OpenGL..."; a file watcher that could not start)
                 // reaches the host instead, and the OpenGL failure sticks for the process (bp.13)
                 reply.add_capabilities( "embed-notice" );
+                // The OpenGL fallback (no usable GPU: software rendering) never opens a modal box
+                // over an embedded frame; it is an ET_NOTICE of kind "graphics" (bp.13)
+                reply.add_capabilities( "embed-gl-fallback" );
+                // Side panels follow the frame's width (EmbedAutoPanels): hidden least-needed first
+                // below 60% canvas, shown again only if KiCad hid them; a pane the person toggles is
+                // theirs for the session (bp.13)
+                reply.add_capabilities( "embed-autopanels" );
 #ifdef __WXOSX__
                 // Frames are borderless top-levels placed over the host's pane: --parent-window
                 // is the host's CGWindowID, the host sends SetHostGeometry, and reserved chords
