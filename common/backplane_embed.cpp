@@ -2640,6 +2640,15 @@ void BACKPLANE_EMBED::DrainHost()
     {
         if( now - it->second >= std::chrono::milliseconds( HOST_HOLD_MS ) )
         {
+            // Only slots whose own effect was applied are ever here (HostBarrier, not deferred):
+            // an empty or deferred slot keeps holding the queue however long it is open
+            if( m_traceFile )
+            {
+                TraceNote( fmt::format( "host:release #{} after {} ms (its effect applied, its request still running)",
+                                        it->first,
+                                        std::chrono::duration_cast<std::chrono::milliseconds>( now - it->second ).count() ) );
+            }
+
             m_hostQueue.MarkPassable( it->first );
             it = m_hostHeld.erase( it );
         }

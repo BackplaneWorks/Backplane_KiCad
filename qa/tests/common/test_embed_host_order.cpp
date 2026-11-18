@@ -441,4 +441,38 @@ BOOST_AUTO_TEST_CASE( AShowHeldTooLongLetsLaterRequestsPass )
 }
 
 
+BOOST_AUTO_TEST_CASE( AnEmptySlotHoldsTheQueueHoweverLong )
+{
+    CLEAN clean;
+    BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+    handleGeometry( embed.ReserveHostSlot( GEOMETRY_TYPE ), rect( 10, 100, false ) );
+
+    // Received, never handled yet (empty), and a show handled but deferred behind it: past the
+    // hold limit neither lets the later move through
+    uint64_t empty = embed.ReserveHostSlot( GEOMETRY_TYPE );
+    uint64_t deferred = embed.ReserveHostSlot( SHOW_TYPE );
+    eventsGeometry( rect( 90, 900 ) );
+
+    {
+        BACKPLANE_EMBED::HOST_REQUEST request( deferred );
+        embed.HostBarrier( true );
+
+        std::this_thread::sleep_for( std::chrono::milliseconds( BACKPLANE_EMBED::HOST_HOLD_MS + 100 ) );
+        embed.DrainHost();
+        BOOST_CHECK_EQUAL( applied().x, 10 );
+        BOOST_CHECK( !applied().visible );
+    }
+
+    std::this_thread::sleep_for( std::chrono::milliseconds( BACKPLANE_EMBED::HOST_HOLD_MS + 100 ) );
+    embed.DrainHost();
+    BOOST_CHECK_EQUAL( applied().x, 10 );       // the empty slot still holds everything
+    BOOST_CHECK( !applied().visible );
+
+    handleGeometry( empty, rect( 20, 200, false ) );
+    BOOST_CHECK_EQUAL( applied().x, 90 );       // then: its hide, the show, the move
+    BOOST_CHECK( applied().visible );
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
