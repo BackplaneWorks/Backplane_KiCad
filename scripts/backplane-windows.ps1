@@ -69,7 +69,8 @@ if ($env:BACKPLANE_WIN_CONFIGURE_ONLY) {
     return
 }
 $compileStarted = Get-Date
-cmake --build $build --parallel $jobs
+# -k 0: keep going after a failure, so one run names every compile error (lead, 2026-11-18)
+cmake --build $build --parallel $jobs -- -k 0
 "WINDOWS_KICAD_COMPILE_TIME {0:hh\:mm\:ss} ({1} jobs)" -f ((Get-Date) - $compileStarted), $jobs
 if ($env:BACKPLANE_WIN_CCACHE) { ccache --show-stats }
 cmake --install $build
