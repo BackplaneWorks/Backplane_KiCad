@@ -378,6 +378,11 @@ jobs:
               "release/${archive_root}/bin/kicad-cli"; then
             failed+=("scripts/backplane-headless-lock-check.py")
           fi
+          # #1192: an HTTP library part placed first, cold, has its symbol's pins and body
+          if ! "$RUNNER_TEMP/ipc-smoke-venv/bin/python" scripts/backplane-httplib-headless-check.py \
+              "release/${archive_root}/bin/kicad-cli"; then
+            failed+=("scripts/backplane-httplib-headless-check.py")
+          fi
           if [ "${#failed[@]}" -ne 0 ]; then
             printf '::error::IPC regression failed: %s\n' "${failed[@]}"
             exit 1
