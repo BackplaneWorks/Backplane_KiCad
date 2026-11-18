@@ -24,6 +24,8 @@ import threading
 import time
 import uuid
 
+# The watcher and test thread share a Display; Xlib otherwise uses no-op locks.
+import Xlib.threaded  # noqa: F401
 from Xlib import X, Xatom, display as xdisplay
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))

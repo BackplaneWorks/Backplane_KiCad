@@ -383,6 +383,7 @@ jobs:
       # every frame kind inside a host window, focus, reserved keys, dialogs, AS_BUSY, Close.
       - name: Embedded GUI check on Xvfb
         if: always() && env.archive_root != ''
+        timeout-minutes: 20
         shell: bash
         run: |
           set -euo pipefail
