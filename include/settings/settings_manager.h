@@ -300,6 +300,15 @@ public:
     bool LoadProject( const wxString& aFullPath, bool aSetActive = true );
 
     /**
+     * Backplane (capability headless-no-lock): whether loading a project takes its lock file.
+     * The headless API server (kicad-cli api-server) turns it off: it is not a person editing,
+     * and who may write is decided by its host.  It still reads a lock someone else holds and
+     * records it on the project (PROJECT::GetForeignLock), never takes, overrides or removes it.
+     */
+    void SetTakeProjectLocks( bool aTake ) { m_takeProjectLocks = aTake; }
+    bool TakesProjectLocks() const { return m_takeProjectLocks; }
+
+    /**
      * Save, unload and unregister the given #PROJECT.
      *
      * @param aProject is the project object to unload.
@@ -498,6 +507,8 @@ public:
     static wxString GetUserSettingsPath();
 
 private:
+    bool m_takeProjectLocks = true;
+
     JSON_SETTINGS* registerSettings( JSON_SETTINGS* aSettings, bool aLoadNow = true );
 
     /**

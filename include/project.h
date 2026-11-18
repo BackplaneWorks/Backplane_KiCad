@@ -313,6 +313,19 @@ public:
 
     void SetProjectLock( LOCKFILE* aLockFile );
 
+    /// Backplane: a project lock file another program holds, as a headless load found it (no
+    /// lock is taken then).  Empty lockFile: none.
+    struct FOREIGN_LOCK
+    {
+        wxString lockFile;
+        wxString user;
+        wxString host;
+        bool     held = false;   ///< a live process holds it (else a stale file)
+    };
+
+    void SetForeignLock( const FOREIGN_LOCK& aLock ) { m_foreignLock = aLock; }
+    const FOREIGN_LOCK& GetForeignLock() const { return m_foreignLock; }
+
     LOCKFILE* GetProjectLock() const;
 
     /**
@@ -407,6 +420,7 @@ private:
 
     /// Lock
     std::unique_ptr<LOCKFILE> m_project_lock;
+    FOREIGN_LOCK              m_foreignLock;
 
     /// Synchronise access to DesignBlockLibs()
     std::mutex m_designBlockLibsMutex;

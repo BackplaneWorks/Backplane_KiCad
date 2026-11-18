@@ -28,7 +28,7 @@ CAPABILITIES = {"api-server", "headless-pcb", "headless-sch", "export-v10", "par
                 "no-load-migration", "api-handler-order",
                 "api-field-fixes", "sketch-route-width", "plan-view-api", "plan-select",
                 "global-tables-seeded", "sim-run", "sim-frame", "sim-run-points-cap",
-                "sim-thin-minmax"}
+                "sim-thin-minmax", "headless-no-lock"}
 if sys.platform == "win32":
     # Windows only: the prewarm never takes the keyboard (verified on Windows)
     CAPABILITIES.add("prewarm-keeps-focus")

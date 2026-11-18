@@ -88,6 +88,9 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
                        // saves (RunSimulationResponse.saved_requested_only) (bp.13.2)
     "sim-frame",       // embedded: FK_SIMULATOR = 8, KiCad's Simulator window as an embedded frame on the
                        // open schematic, opened on demand (BACKPLANE_EMBED.md "Simulator"; bp.13.2)
+    "headless-no-lock", // kicad-cli api-server takes no project lock on OpenDocument and removes none;
+                       // another program's lock is reported in OpenDocumentResponse.foreign_lock
+                       // {lock_file, user, host, held} and the open succeeds without a prompt (bp.13.2)
 } );
 
 } // namespace BACKPLANE

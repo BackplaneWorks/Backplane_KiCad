@@ -76,6 +76,16 @@ with pynng.Req0(dial="ipc:///run/user/1000/backplane/kicad/<hash>/api.sock") as 
 Full command list and what master lacks: `bp-coord/kicad-fork/IPC-MAP.md` (coordination repo),
 or read `api/proto/` directly.
 
+Project locks (capability `headless-no-lock`, bp.13.2): `kicad-cli api-server` takes no project
+lock. `OpenDocument` creates no `~<name>.kicad_pro.lck` (nor a board's or schematic's), and the
+server removes no lock file it did not create, including when it exits or is killed. A lock file
+another program has on the project (a person's KiCad, another server) is read, left untouched and
+reported in `OpenDocumentResponse.foreign_lock {lock_file, user, host, held}`. `held` is true when
+a live process holds it, false for a stale file. The open still succeeds, never with a prompt, and
+the project is not made read-only by it: who may write is the host's decision. The embedded GUI
+editor still takes the lock as stock KiCad does, the person is editing there. On runtimes without
+the capability, the headless server takes the lock between open and close.
+
 ## Fork commands (`kiapi.backplane`)
 
 | Command | Proto | Notes |

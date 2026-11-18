@@ -141,6 +141,20 @@ message OpenDocument
 message OpenDocumentResponse
 {
   kiapi.common.types.DocumentSpecifier document = 1;
+
+  // Backplane fork (capability headless-no-lock): the headless API server takes no project lock.
+  // When another program's lock file is on the project (a person's KiCad, another server), it is
+  // reported here and left untouched; the open still succeeds, never with a prompt.  Unset: none.
+  ForeignLock foreign_lock = 100;
+}
+
+// Backplane fork: a project lock file found by a headless open.
+message ForeignLock
+{
+  string lock_file = 1;  // absolute path of the ~<project>.kicad_pro.lck file
+  string user      = 2;  // the holder's user, as the lock file gives it ("" if unreadable)
+  string host      = 3;  // the holder's host, likewise
+  bool   held      = 4;  // a live process holds it; false: a stale file nobody holds
 }
 
 
