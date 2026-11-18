@@ -33,6 +33,7 @@
 
 #include <api/api_server.h>
 #include <backplane_embed.h>
+#include <settings/json_settings.h>
 #include <bitmaps/bitmap_types.h>
 #include <bitmap_store.h>
 #include <local_history.h>
@@ -168,6 +169,10 @@ bool PGM_KICAD::OnPgmInit()
 
     bool mergetoolMode = parser.FoundSwitch( "mergetool" ) == wxCMD_SWITCH_ON;
     bool embedded = parser.FoundSwitch( "embedded" ) == wxCMD_SWITCH_ON;
+
+    // #1185: from the first settings file on, this process keeps its window geometry apart.
+    if( embedded )
+        JSON_SETTINGS::SetKeepWindowGeometry( true );
 
     auto parseId = [&]( const wxString& aName, unsigned long long& aValue ) -> bool
     {

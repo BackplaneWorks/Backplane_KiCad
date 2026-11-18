@@ -19,6 +19,9 @@
  */
 
 #include <algorithm>
+#include <cmath>
+#include <functional>
+#include <set>
 #include <fstream>
 #include <iomanip>
 #include <utility>
@@ -314,6 +317,10 @@ bool JSON_SETTINGS::LoadFromFile( const wxString& aDirectory )
                 disk ? *disk : *static_cast<nlohmann::json*>( m_internals.get() ) );
     }
 
+    // Backplane embedding (#1185): an embedded frame starts with the geometry it saved, not the stock one.
+    if( KeepWindowGeometry() )
+        UnstashWindowGeometry( *static_cast<nlohmann::json*>( m_internals.get() ) );
+
     // Now that we have new data in the JSON structure, load the params again
     Load();
 
@@ -515,6 +522,18 @@ bool JSON_SETTINGS::SaveToFile( const wxString& aDirectory, bool aForce )
 
     bool modified = flushToStore();
 
+    // Backplane embedding (#1185): the stock window geometry stays as the person's file has it.
+    if( KeepWindowGeometry() )
+    {
+        std::optional<nlohmann::json> disk;
+
+        if( path.FileExists() )
+            disk = readDiskJson( path.GetFullPath() );
+
+        // An unreadable file leaves the stock geometry out rather than writing the embedded frame's.
+        StashWindowGeometry( *static_cast<nlohmann::json*>( m_internals.get() ), disk ? &*disk : nullptr );
+    }
+
     m_lastSyncMerged = false;
 
     // Co-editing: another writer changed the file since we read it.  Merge instead of
@@ -628,6 +647,261 @@ bool JSON_SETTINGS::SaveToFile( const wxString& aDirectory, bool aForce )
     m_lastSaveFailed = !success;
 
     return success;
+}
+
+
+namespace
+{
+bool s_keepWindowGeometry = false;
+
+// Embedded geometry's own sub-object, beside the stock keys of a window object and of "aui".
+const char* const EMBED_KEY = "embed";
+
+// No screen layout puts a window or a panel edge this far out (embedded frames park at -30000).
+constexpr double GEOMETRY_LIMIT = 20000;
+
+bool endsWith( const std::string& aText, const char* aSuffix )
+{
+    const size_t n = std::char_traits<char>::length( aSuffix );
+    return aText.size() >= n && aText.compare( aText.size() - n, n, aSuffix ) == 0;
+}
+
+bool isAuiSizeKey( const std::string& aKey )
+{
+    return endsWith( aKey, "_width" ) || endsWith( aKey, "_height" ) || endsWith( aKey, "_size" )
+           || endsWith( aKey, "_pos" ) || endsWith( aKey, "_proportion" );
+}
+
+const char* const WINDOW_GEOMETRY_KEYS[] = { "pos_x",   "pos_y",       "size_x",   "size_y",
+                                             "maximized", "display", "perspective", "aui_state" };
+
+bool isWindow( const nlohmann::json& aObj )
+{
+    return aObj.is_object() && aObj.contains( "size_x" ) && aObj.contains( "size_y" );
+}
+
+// A value an embedded frame may keep: no position or size out of range.  An aui_state's dock
+// "proportion" is a weight (often 100000) and "index"/"version"/"layer"/"row" are counts, so only
+// pixel members count there.
+bool sane( const nlohmann::json& aValue, const std::string& aKey = std::string() )
+{
+    if( aValue.is_number() )
+    {
+        if( aKey == "proportion" || aKey == "index" || aKey == "version" )
+            return true;
+
+        return std::abs( aValue.get<double>() ) < GEOMETRY_LIMIT;
+    }
+
+    // wx 3.2's perspective string: "...;bestw=1239146100;prop=100000|dock_size(4,0,0)=788723092|"
+    if( aValue.is_string() && aKey == "perspective" )
+    {
+        const std::string text = aValue.get<std::string>();
+
+        for( size_t eq = text.find( '=' ); eq != std::string::npos; eq = text.find( '=', eq + 1 ) )
+        {
+            size_t      sep = text.find_last_of( ";|", eq );
+            size_t      nameStart = sep == std::string::npos ? 0 : sep + 1;
+            std::string name = text.substr( nameStart, eq - nameStart );
+            size_t      end = text.find_first_of( ";|", eq );
+            std::string number = text.substr( eq + 1, end == std::string::npos ? std::string::npos : end - eq - 1 );
+
+            // a pane's pixel items and dock sizes; "state" is a bit field and "prop" a weight
+            static const std::set<std::string> sizes = { "bestw", "besth", "minw",   "minh",   "maxw",
+                                                         "maxh",  "floatx", "floaty", "floatw", "floath" };
+
+            if( ( !sizes.count( name ) && name.rfind( "dock_size(", 0 ) != 0 ) || number.empty() || number.find_first_not_of( "-0123456789" ) != std::string::npos
+                || number.find_first_of( "0123456789" ) == std::string::npos )
+                continue;
+
+            if( number.size() > 9 || std::abs( std::stod( number ) ) >= GEOMETRY_LIMIT )
+                return false;
+        }
+
+        return true;
+    }
+
+    if( aValue.is_object() )
+    {
+        for( auto it = aValue.begin(); it != aValue.end(); ++it )
+        {
+            if( !sane( it.value(), it.key() ) )
+                return false;
+        }
+    }
+    else if( aValue.is_array() )
+    {
+        for( const nlohmann::json& item : aValue )
+        {
+            if( !sane( item, aKey ) )
+                return false;
+        }
+    }
+
+    return true;
+}
+
+const nlohmann::json* member( const nlohmann::json* aObj, const std::string& aKey )
+{
+    if( aObj && aObj->is_object() && aObj->contains( aKey ) )
+        return &( *aObj )[aKey];
+
+    return nullptr;
+}
+
+// Save: aStore's value of each key goes to aStore.embed (when sane); the stock key gets aDisk's
+// value back, or is removed when aDisk lacks it.
+void stash( nlohmann::json& aStore, const nlohmann::json* aDisk, const std::vector<std::string>& aKeys )
+{
+    nlohmann::json embed = nlohmann::json::object();
+
+    // The file's embed object is the newer one (another embedded session may have saved since).
+    if( const nlohmann::json* diskEmbed = member( aDisk, EMBED_KEY ); diskEmbed && diskEmbed->is_object() )
+        embed = *diskEmbed;
+    else if( aStore.contains( EMBED_KEY ) && aStore[EMBED_KEY].is_object() )
+        embed = aStore[EMBED_KEY];
+
+    for( const std::string& key : aKeys )
+    {
+        if( aStore.contains( key ) && sane( aStore[key], key ) )
+            embed[key] = aStore[key];
+
+        if( const nlohmann::json* diskValue = member( aDisk, key ) )
+            aStore[key] = *diskValue;
+        else
+            aStore.erase( key );
+    }
+
+    if( embed.empty() )
+        aStore.erase( EMBED_KEY );
+    else
+        aStore[EMBED_KEY] = embed;
+}
+
+// Load: the stock keys take the embed object's (sane) values.
+void unstash( nlohmann::json& aStore )
+{
+    if( !aStore.contains( EMBED_KEY ) || !aStore[EMBED_KEY].is_object() )
+        return;
+
+    const nlohmann::json embed = aStore[EMBED_KEY];
+
+    for( auto it = embed.begin(); it != embed.end(); ++it )
+    {
+        if( sane( it.value(), it.key() ) )
+            aStore[it.key()] = it.value();
+    }
+}
+
+std::vector<std::string> windowKeys( const nlohmann::json& aStore, const nlohmann::json* aDisk )
+{
+    std::vector<std::string> keys;
+
+    for( const char* key : WINDOW_GEOMETRY_KEYS )
+    {
+        if( aStore.contains( key ) || member( aDisk, key ) )
+            keys.emplace_back( key );
+    }
+
+    return keys;
+}
+
+std::vector<std::string> auiKeys( const nlohmann::json& aStore, const nlohmann::json* aDisk )
+{
+    std::vector<std::string> keys;
+
+    for( const nlohmann::json* obj : { &aStore, aDisk } )
+    {
+        if( !obj || !obj->is_object() )
+            continue;
+
+        for( auto it = obj->begin(); it != obj->end(); ++it )
+        {
+            if( isAuiSizeKey( it.key() ) && std::find( keys.begin(), keys.end(), it.key() ) == keys.end() )
+                keys.push_back( it.key() );
+        }
+    }
+
+    return keys;
+}
+
+// What a geometry object is: a window's, the top-level "aui" panel sizes, or a library chooser's
+// (design_block_chooser is also the design-blocks panel docked in the frame).
+enum class GEOMETRY_KIND { WINDOW, AUI, CHOOSER };
+
+using GEOMETRY_FUNC = std::function<void( nlohmann::json&, const nlohmann::json*, GEOMETRY_KIND )>;
+
+const char* const CHOOSER_SIZE_KEYS[] = { "width", "height", "sash_h", "sash_v", "sash_pos_h", "sash_pos_v" };
+
+std::vector<std::string> chooserKeys( const nlohmann::json& aStore, const nlohmann::json* aDisk )
+{
+    std::vector<std::string> keys;
+
+    for( const char* key : CHOOSER_SIZE_KEYS )
+    {
+        if( aStore.contains( key ) || member( aDisk, key ) )
+            keys.emplace_back( key );
+    }
+
+    return keys;
+}
+
+// Every window object under aStore (and "aui" at the top), with aDisk's object at the same path.
+void forEachGeometry( nlohmann::json& aStore, const nlohmann::json* aDisk, bool aTop, const GEOMETRY_FUNC& aFunc )
+{
+    if( !aStore.is_object() )
+        return;
+
+    if( isWindow( aStore ) )
+        aFunc( aStore, aDisk, GEOMETRY_KIND::WINDOW );
+
+    for( auto it = aStore.begin(); it != aStore.end(); ++it )
+    {
+        if( it.key() == EMBED_KEY || !it.value().is_object() )
+            continue;
+
+        if( aTop && it.key() == "aui" )
+            aFunc( it.value(), member( aDisk, "aui" ), GEOMETRY_KIND::AUI );
+        else if( aTop && endsWith( it.key(), "_chooser" ) )
+            aFunc( it.value(), member( aDisk, it.key() ), GEOMETRY_KIND::CHOOSER );
+        else
+            forEachGeometry( it.value(), member( aDisk, it.key() ), false, aFunc );
+    }
+}
+} // namespace
+
+
+void JSON_SETTINGS::SetKeepWindowGeometry( bool aKeep )
+{
+    s_keepWindowGeometry = aKeep;
+}
+
+
+bool JSON_SETTINGS::KeepWindowGeometry()
+{
+    return s_keepWindowGeometry;
+}
+
+
+void JSON_SETTINGS::StashWindowGeometry( nlohmann::json& aStore, const nlohmann::json* aDisk )
+{
+    forEachGeometry( aStore, aDisk, true,
+                     []( nlohmann::json& aObj, const nlohmann::json* aDiskObj, GEOMETRY_KIND aKind )
+                     {
+                         switch( aKind )
+                         {
+                         case GEOMETRY_KIND::WINDOW:  stash( aObj, aDiskObj, windowKeys( aObj, aDiskObj ) ); break;
+                         case GEOMETRY_KIND::AUI:     stash( aObj, aDiskObj, auiKeys( aObj, aDiskObj ) ); break;
+                         case GEOMETRY_KIND::CHOOSER: stash( aObj, aDiskObj, chooserKeys( aObj, aDiskObj ) ); break;
+                         }
+                     } );
+}
+
+
+void JSON_SETTINGS::UnstashWindowGeometry( nlohmann::json& aStore )
+{
+    forEachGeometry( aStore, nullptr, true,
+                     []( nlohmann::json& aObj, const nlohmann::json*, GEOMETRY_KIND ) { unstash( aObj ); } );
 }
 
 
