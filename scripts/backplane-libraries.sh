@@ -34,9 +34,9 @@ KICAD_TEMPLATES_COMMIT=3ed4538b0f965d821df63a5fffc4441e723cfe7f
 # ${BACKPLANE_KICAD_LIBRARY}: the Linux launchers, and KiCad itself when the variable is
 # unset (global-tables-seeded), point it at share/kicad/backplane-library.
 BACKPLANE_LIBRARY_REPOSITORY=https://github.com/BackplaneWorks/Backplane_KiCad_Library.git
-BACKPLANE_LIBRARY_COMMIT=f1922c4cce4cb7c9bd2ac731b2e531fce2fb254d
+BACKPLANE_LIBRARY_COMMIT=80e296356dcde21e5453b44bb4ea7aac811c0295
 # The bundle's label (not a tag in that repository): the commit is the pin
-BACKPLANE_LIBRARY_VERSION=2026.11.13
+BACKPLANE_LIBRARY_VERSION=2026.11.17
 
 usage() { echo "usage: $0 <stage> [--with-3d] [--sources <dir>]" >&2; exit 2; }
 [ $# -ge 1 ] || usage
