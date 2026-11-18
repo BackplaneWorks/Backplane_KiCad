@@ -117,7 +117,10 @@ uint64_t QUEUE::Submit( OP aOp )
     std::lock_guard<std::mutex> lock( m_mutex );
     uint64_t                    seq = m_next++;
     aOp.seq = seq;
-    m_slots[seq] = SLOT{ true, aOp };
+    SLOT slot;
+    slot.done = true;
+    slot.op = aOp;
+    m_slots[seq] = slot;
     return seq;
 }
 
