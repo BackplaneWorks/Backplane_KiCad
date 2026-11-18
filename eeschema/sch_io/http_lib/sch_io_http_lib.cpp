@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <optional>
 #include <string_view>
 
 #include <bs_thread_pool.hpp>
@@ -458,13 +459,17 @@ LIB_SYMBOL* SCH_IO_HTTP_LIB::LoadSymbol( const wxString& aLibraryPath, const wxS
         return nullptr;
     }
 
-    const HTTP_LIB_CATEGORY* foundCategory = nullptr;
+    // getCategories() answers a copy: the category is kept by value, never as a pointer into that
+    // temporary, which is gone once the loop ends: its name was read from freed memory after it (std::bad_alloc
+    // from PlaceSymbolFromLibrary, #1192). Since a part whose symbol is missing is fetched again here, every
+    // such placement came this way; before, only a cache miss of a known part.
+    std::optional<HTTP_LIB_CATEGORY> foundCategory;
 
     for( const HTTP_LIB_CATEGORY& category : m_conn->getCategories() )
     {
         if( category.id == categoryId )
         {
-            foundCategory = &category;
+            foundCategory = category;
             break;
         }
     }
