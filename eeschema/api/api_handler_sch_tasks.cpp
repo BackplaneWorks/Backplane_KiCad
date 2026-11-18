@@ -106,7 +106,8 @@ public:
             {
                 for( SCH_ITEM* item : path.LastScreen()->Items().OfType( SCH_SYMBOL_T ) )
                 {
-                    const wxString nickname = static_cast<SCH_SYMBOL*>( item )->GetLibId().GetLibNickname();
+                    const wxString nickname =
+                            static_cast<SCH_SYMBOL*>( item )->GetLibId().GetLibNickname().wx_str();
 
                     if( !nickname.IsEmpty() )
                         used.insert( nickname );
