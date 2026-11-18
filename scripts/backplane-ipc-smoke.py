@@ -88,6 +88,14 @@ def main():
                 with pynng.Req0(dial=f"ipc://{socket_path}", block_on_dial=(os.name != "nt"),
                                 send_timeout=(30000 if os.name == "nt" else 15000), recv_timeout=15000) as connection:
                     token = ""
+                    # The first OpenDocument of each type also pays the server's one-time setup for
+                    # that type (loading its kiface). On the windows-2022 image 20261116.370.1 that
+                    # took 11.6 s and over 15 s (runs 44353010937, 44377783957) against 3.6-8.0 s on
+                    # 20261112.366.7, with no code change, so it gets its own limit and a warning
+                    # past 10 s. Every other request keeps the 15 s limit.
+                    first_open_seconds = 60
+                    first_open_warn_seconds = 10
+                    first_opened = set()
 
                     def request(command, response_type):
                         nonlocal token
@@ -95,8 +103,25 @@ def main():
                         message.header.client_name = "works.backplane.release-smoke"
                         message.header.kicad_token = token
                         message.message.Pack(command)
+                        first_open = (isinstance(command, project.OpenDocument)
+                                      and command.type not in first_opened)
+                        if first_open:
+                            first_opened.add(command.type)
+                            connection.recv_timeout = first_open_seconds * 1000
+                        started = time.monotonic()
                         connection.send(message.SerializeToString())
-                        response = envelope.ApiResponse.FromString(connection.recv())
+                        try:
+                            reply = connection.recv()
+                        finally:
+                            if first_open:
+                                connection.recv_timeout = 15000
+                                elapsed = time.monotonic() - started
+                                name = types.DocumentType.Name(command.type)
+                                print(f"First OpenDocument({name}): {elapsed:.1f} s", flush=True)
+                                if elapsed > first_open_warn_seconds:
+                                    print(f"WARN: first OpenDocument({name}) took {elapsed:.1f} s, "
+                                          f"over {first_open_warn_seconds} s", flush=True)
+                        response = envelope.ApiResponse.FromString(reply)
                         if response.status.status != envelope.AS_OK:
                             raise RuntimeError(f"{command.DESCRIPTOR.full_name}: {response.status}")
                         token = response.header.kicad_token
