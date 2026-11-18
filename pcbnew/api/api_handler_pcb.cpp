@@ -23,6 +23,8 @@
 #include <kiplatform/io.h>
 #include <backplane_coedit.h>
 #include <backplane_merge.h>
+#include <algorithm>
+
 #include <backplane_embed.h>
 #include <backplane_embed_proto.h>
 #include <backplane_comment.h>
@@ -2147,15 +2149,65 @@ HANDLER_RESULT<std::vector<ZONE*>> API_HANDLER_PCB::resolveZonesToFill(
 
 namespace
 {
-/// A progress reporter that shows nothing and never yields: a fill run inside an API request
-/// must not serve events (the request's co-editing actor and its reply order depend on it).
-class NO_UI_PROGRESS_REPORTER : public PROGRESS_REPORTER_BASE
+/// The progress of a fill run inside an API request: shown nowhere and never yielding (the
+/// request's co-editing actor and its reply order depend on it), but reported to an embedding
+/// host as the bp.12 progress contract has it (ET_PROGRESS, ending done), as the fill's hidden
+/// progress dialog did when the fill ran after the reply.  Not cancellable: the request answers
+/// only when the fill is done.  Updates go out from updateUI(), which only the main thread calls
+/// (KeepRefreshing); the fill's worker threads touch only the base's counters.  The job ends with
+/// the reporter, so every way out of the request (done, a failed fill, an exception) ends it.
+class IN_REQUEST_PROGRESS_REPORTER : public PROGRESS_REPORTER_BASE
 {
 public:
-    NO_UI_PROGRESS_REPORTER() : PROGRESS_REPORTER_BASE( 1 ) {}
+    // Five phases, as Fill All Zones' own progress dialog has (FillAllZones): the fill advances
+    // phases (islands, overlapping zones, the commit), and with fewer CurrentProgress() runs
+    // past 1000
+    IN_REQUEST_PROGRESS_REPORTER( wxFrame* aFrame, const wxString& aTitle ) :
+            PROGRESS_REPORTER_BASE( 5 )
+    {
+        BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+        if( aFrame && embed.Enabled() && embed.IsEmbedded( aFrame ) )
+            m_job = embed.ProgressBegin( aFrame, aTitle, false );
+    }
+
+    ~IN_REQUEST_PROGRESS_REPORTER() override
+    {
+        if( m_job )
+            BACKPLANE_EMBED::Get().ProgressEnd( m_job );
+    }
 
 protected:
-    bool updateUI() override { return true; }
+    bool updateUI() override
+    {
+        if( !m_job )
+            return true;
+
+        // CurrentProgress() divides by the phase's maximum: none set yet is indeterminate (-1).
+        // Clamped, never reset, so the host's bar never goes back.
+        double fraction = -1.0;
+
+        if( m_maxProgress.load() > 0 )
+            fraction = std::clamp( CurrentProgress(), 0, 1000 ) / 1000.0;
+
+        wxString message;   // empty: unchanged
+
+        {
+            std::lock_guard<std::mutex> guard( m_mutex );
+
+            if( m_messageChanged.exchange( false ) )
+                message = m_rptMessage;
+        }
+
+        if( !message.empty() && message.Last() == '\n' )
+            message.RemoveLast();
+
+        BACKPLANE_EMBED::Get().ProgressUpdate( m_job, fraction, message );
+        return true;
+    }
+
+private:
+    uint64_t m_job = 0;
 };
 } // namespace
 
@@ -2185,8 +2237,9 @@ HANDLER_RESULT<Empty> API_HANDLER_PCB::handleRefillZones( const HANDLER_CONTEXT<
             // checkForBusy above has refused already if a tool other than the idle selection or
             // point editor is current, a fill runs or undo is blocked, so nothing of the person's
             // is interrupted.  The same fill as Edit > Fill All Zones (teardrops, generators),
-            // without its progress dialog: nothing yields inside the request.
-            NO_UI_PROGRESS_REPORTER reporter;
+            // without its progress dialog: nothing yields inside the request.  Its progress still
+            // reaches an embedding host as ET_PROGRESS (#1224 fix-forward).
+            IN_REQUEST_PROGRESS_REPORTER reporter( frame(), _( "Fill All Zones" ) );
 
             if( !mgr->GetTool<ZONE_FILLER_TOOL>()->FillAllZones( frame(), &reporter ) )
             {

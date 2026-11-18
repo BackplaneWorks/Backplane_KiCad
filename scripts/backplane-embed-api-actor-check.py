@@ -9,6 +9,8 @@ sent right behind them.  Each discriminating case fails before the fix:
 (a) an agent's RefillZones{} is recorded as the agent's (ET_DOCUMENT_EDITED actor agent:check)
     and the person's undo leaves the fill;
 (c) RefillZones{} then an immediate SaveDocument: the saved board has the fills;
+- the fill's progress reaches the host as ET_PROGRESS ending done (the bp.12 contract, as the
+  hidden progress dialog of the deferred fill reported it);
 (d) SetBoardOrigin grid and drill from an agent, sent raw as kicad_edit's ipc op does: read back
     right after the reply, kept by an immediate SaveDocument, and the drill origin's undo entry
     the agent's (the person's undo leaves it).  KiCad keeps no undo entry for a grid origin set
@@ -214,7 +216,18 @@ def main():
                   f"{'%.0f ms' % done_ms if done_ms is not None else 'not seen'} after the request; "
                   f"longest main-thread read latency {worst[1]:.0f} ms (sent at +{worst[0]:.0f} ms), "
                   f"{len(during)} reads, every 50 ms", flush=True)
-            return reply, at_reply
+            # Keep listening a moment for the progress job's end (it ends with the request)
+            with IpcSession(args.kicad_cli, api_socket=events_sock, timeout=60000) as ev2:
+                seen += ev2.request(embed.NextEvents(since=max([mark] + [e.seq for e in seen])),
+                                    embed.NextEventsResponse).events
+            return reply, at_reply, seen
+
+        def zone_progress_done(evts):
+            jobs = {}
+            for e in evts:
+                if e.type == embed.ET_PROGRESS:
+                    jobs.setdefault(e.progress.id, []).append(e.progress)
+            return [js for js in jobs.values() if "zone" in js[0].title.lower() and js[-1].done]
 
         # Raw, as kicad_edit's ipc op sends them: the agent's client
         def set_origin(kind, x_mm, y_mm):
@@ -297,7 +310,7 @@ def main():
 
         if args.timing_only:
             check(not zones_filled(), "the open board has no zone fills")
-            reply, _ = timed_fill(f"{args.project.name}")
+            reply, _, _ = timed_fill(f"{args.project.name}")
             check(reply.status.status == 1 and zones_filled(), "the fill completed")
             print(f"{len(FAILURES)} failed" if FAILURES else "ALL PASSED", flush=True)
             return 1 if FAILURES else 0
@@ -353,7 +366,17 @@ def main():
 
         # (c) fill then an immediate save: the saved board has the fills
         focus_before = focus_to_host()
-        reply, at_reply = timed_fill("complex_hierarchy, the agent's RefillZones{}")
+        reply, at_reply, fill_events = timed_fill("complex_hierarchy, the agent's RefillZones{}")
+        done_jobs = zone_progress_done(fill_events)
+        fractions = [p.fraction for js in done_jobs for p in js]
+        known = [f for f in fractions if f != -1.0]
+        sane = all(f == -1.0 or 0.0 <= f <= 1.0 for f in fractions) and all(
+            a <= b for a, b in zip(known, known[1:]))
+        check(bool(done_jobs) and sane,
+              f"(c) the fill reports ET_PROGRESS to the host, ending done, its fractions within 0..1 "
+              f"(or -1) and never going back (the bp.12 contract; jobs "
+              f"{[(js[0].title, len(js), js[-1].done) for js in done_jobs]}, fractions "
+              f"{[round(f, 3) for f in fractions]})")
         report_focus("(c) the agent's RefillZones{}", focus_before)
         fill_at_reply = any(e.type == embed.ET_DOCUMENT_EDITED and "Fill" in e.detail for e in at_reply)
         check(fill_at_reply, f"(c) the fill is done when RefillZones{{}} answers (its ET_DOCUMENT_EDITED is "
