@@ -698,6 +698,11 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
                                                       return aEvent;
 
                                                   wxKeyEvent ke( wxEVT_CHAR_HOOK );
+                                                  // Cmd+= zooms in as on every Mac app: KiCad binds Ctrl++
+                                                  // (Shift+= on a US layout), so plain Cmd+= is handed on as +
+                                                  if( ch == '=' && !( m & NSEventModifierFlagShift ) )
+                                                      ch = '+';
+
                                                   ke.m_keyCode = std::toupper( (int) ch );
                                                   ke.m_uniChar = ch;
                                                   ke.m_controlDown = true;   // Cmd: wx's Ctrl on macOS
