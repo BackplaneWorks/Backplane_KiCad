@@ -101,6 +101,77 @@ std::set<int> ITEM::RelevantShapeLayers( const ITEM* aOther ) const
 }
 
 
+int ITEM::CollisionClearance( const ITEM* aHead, const NODE* aNode,
+                              const COLLISION_SEARCH_OPTIONS* aOptions ) const
+{
+    const bool runPhysicalOnly = aNode->GetRuleResolver()->HasUserDefinedPhysicalConstraint();
+
+    // fixme: this f***ing singleton must go...
+    ROUTER*       router = ROUTER::GetInstance();
+    ROUTER_IFACE* iface = router ? router->GetInterface() : nullptr;
+    bool          differentNetsOnly = true;
+    bool          enforce = false;
+    int           clearance;
+
+    if( aOptions )
+        differentNetsOnly = aOptions->m_differentNetsOnly;
+
+    // Hole-to-hole collisions don't have anything to do with nets
+    if( Kind() == HOLE_T && aHead->Kind() == HOLE_T )
+        differentNetsOnly = false;
+
+    // Same-net items and free-pad items normally skip clearance, but physical rules are
+    // net-blind so when one is defined we fall through to the resolver (see runPhysicalOnly
+    // computed at the top of this function).
+    if( differentNetsOnly && Net() == aHead->Net() && aHead->Net() && !runPhysicalOnly )
+    {
+        // same nets? no clearance!
+        clearance = -1;
+    }
+    else if( differentNetsOnly && ( IsFreePad() || aHead->IsFreePad() ) && !runPhysicalOnly )
+    {
+        // a pad associated with a "free" pin (NIC) doesn't have a net until it has been used
+        clearance = -1;
+    }
+    else if( aNode->GetRuleResolver()->IsKeepout( this, aHead, &enforce )
+             || aNode->GetRuleResolver()->IsKeepout( aHead, this, &enforce ) )
+    {
+        if( enforce )
+            clearance = 0;    // keepouts are exact boundary; no clearance
+        else
+            clearance = -1;
+    }
+    else if( iface && !iface->IsFlashedOnLayer( this, aHead->Layers() ) )
+    {
+        clearance = -1;
+    }
+    else if( iface && !iface->IsFlashedOnLayer( aHead, Layers() ) )
+    {
+        clearance = -1;
+    }
+    else
+    {
+        const COLLISION_SEARCH_OPTIONS defaultOptions;
+        if( aOptions )
+        {
+            clearance = aNode->GetClearance( this, aHead, aOptions->m_useClearanceEpsilon, *aOptions );
+        }
+        else
+        {
+            clearance = aNode->GetClearance( this, aHead, false, defaultOptions );
+        }
+    }
+
+    return clearance;
+}
+
+
+bool ITEM::CollisionCandidate( const ITEM* aHead ) const
+{
+    return this != aHead && shouldWeConsiderHoleCollisions( this, aHead );
+}
+
+
 bool ITEM::collideSimple( const ITEM* aHead, const NODE* aNode, int aLayer,
                           COLLISION_SEARCH_CONTEXT* aCtx ) const
 {
@@ -168,61 +239,9 @@ bool ITEM::collideSimple( const ITEM* aHead, const NODE* aNode, int aLayer,
     if( !m_layers.Overlaps( aHead->m_layers ) )
         return false;
 
-    // fixme: this f***ing singleton must go...
-    ROUTER*       router = ROUTER::GetInstance();
-    ROUTER_IFACE* iface = router ? router->GetInterface() : nullptr;
-    bool          differentNetsOnly = true;
-    bool          enforce = false;
-    int           clearance;
-
-    if( aCtx )
-        differentNetsOnly = aCtx->options.m_differentNetsOnly;
-
-    // Hole-to-hole collisions don't have anything to do with nets
-    if( Kind() == HOLE_T && aHead->Kind() == HOLE_T )
-        differentNetsOnly = false;
-
-    // Same-net items and free-pad items normally skip clearance, but physical rules are
-    // net-blind so when one is defined we fall through to the resolver (see runPhysicalOnly
-    // computed at the top of this function).
-    if( differentNetsOnly && Net() == aHead->Net() && aHead->Net() && !runPhysicalOnly )
-    {
-        // same nets? no clearance!
-        clearance = -1;
-    }
-    else if( differentNetsOnly && ( IsFreePad() || aHead->IsFreePad() ) && !runPhysicalOnly )
-    {
-        // a pad associated with a "free" pin (NIC) doesn't have a net until it has been used
-        clearance = -1;
-    }
-    else if( aNode->GetRuleResolver()->IsKeepout( this, aHead, &enforce )
-             || aNode->GetRuleResolver()->IsKeepout( aHead, this, &enforce ) )
-    {
-        if( enforce )
-            clearance = 0;    // keepouts are exact boundary; no clearance
-        else
-            clearance = -1;
-    }
-    else if( iface && !iface->IsFlashedOnLayer( this, aHead->Layers() ) )
-    {
-        clearance = -1;
-    }
-    else if( iface && !iface->IsFlashedOnLayer( aHead, Layers() ) )
-    {
-        clearance = -1;
-    }
-    else
-    {
-        const COLLISION_SEARCH_OPTIONS defaultOptions;
-        if ( aCtx )
-        {
-            clearance = aNode->GetClearance( this, aHead, aCtx->options.m_useClearanceEpsilon, aCtx->options );
-        }
-        else
-        {
-            clearance = aNode->GetClearance( this, aHead, false, defaultOptions );
-        }
-    }
+    // Backplane: the clearance decision is CollisionClearance(), which the sketch router's
+    // obstacle field asks once per obstacle instead of once per probe
+    const int clearance = CollisionClearance( aHead, aNode, aCtx ? &aCtx->options : nullptr );
 
     if( clearance >= 0 )
     {

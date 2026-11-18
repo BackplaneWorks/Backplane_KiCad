@@ -27,7 +27,13 @@
 #include <drc/drc_engine.h>
 #include <netinfo.h>
 #include <pcb_track.h>
+#include <cstdlib>
+#include <map>
+#include <memory>
+#include <string>
+
 #include <wx/filename.h>
+#include <wx/log.h>
 
 #include "pns_arc.h"
 #include "pns_kicad_iface.h"
@@ -100,11 +106,85 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
     PNS::SKETCH_ROUTER          sketch( &router );
     PNS::SKETCH_ROUTER_OPTIONS& options = sketch.Options();
 
-    options.m_layers = PNS::SKETCH_ROUTER::RoutableLayers( aBoard, &iface );
+    PNS::SKETCH_ROUTER::BoardConventions( aBoard, &iface, options );
     options.m_boundary = aBoard->GetBoardEdgesBoundingBox();
     options.m_guide = aRequest.m_guide;
     options.m_allowVias = aRequest.m_allowVias;
     options.m_trackWidth = aRequest.m_trackWidth;
+    options.m_minTrackWidth = aRequest.m_minTrackWidth;
+
+    // The board's rules may hold a via to a size by where it is (a smaller laser via only
+    // inside a fine-pitch part's fanout): ask them for each kind where the search would put one
+    std::map<const PNS::SKETCH_VIA_KIND*, std::unique_ptr<PCB_VIA>> probes;
+
+    options.m_viaAllowed =
+            [&]( const PNS::SKETCH_VIA_KIND& aKind, PNS::NET_HANDLE aNet, const VECTOR2I& aPos ) -> bool
+            {
+                std::unique_ptr<PCB_VIA>& probe = probes[&aKind];
+
+                if( !probe )
+                {
+                    if( aKind.m_like && aKind.m_like->Type() == PCB_VIA_T )
+                    {
+                        probe.reset( static_cast<PCB_VIA*>( aKind.m_like->Clone() ) );
+                    }
+                    else
+                    {
+                        probe = std::make_unique<PCB_VIA>( aBoard );
+                        probe->SetViaType( (VIATYPE) aKind.m_type );
+                        probe->SetLayerPair( iface.GetBoardLayerFromPNSLayer( aKind.m_layerStart ),
+                                             iface.GetBoardLayerFromPNSLayer( aKind.m_layerEnd ) );
+                        probe->SetWidth( PADSTACK::TEMP_ALL_LAYERS, aKind.m_diameter );
+                        probe->SetDrill( aKind.m_drill );
+                    }
+
+                    probe->SetParent( aBoard );
+
+                    // It moves: nothing the rules work out about it may be kept
+                    probe->SetFlags( ROUTER_TRANSIENT );
+                }
+
+                probe->SetPosition( aPos );
+
+                if( NETINFO_ITEM* net = static_cast<NETINFO_ITEM*>( aNet ) )
+                    probe->SetNet( net );
+
+                DRC_ENGINE& engine = *bds.m_DRCEngine;
+
+                auto within =
+                        [&]( DRC_CONSTRAINT_T aType, PCB_LAYER_ID aLayer, int aValue )
+                        {
+                            DRC_CONSTRAINT c = engine.EvalRules( aType, probe.get(), nullptr, aLayer );
+
+                            if( c.IsNull() || c.GetSeverity() == RPT_SEVERITY_IGNORE )
+                                return true;
+
+                            return ( !c.GetValue().HasMin() || aValue >= c.GetValue().Min() )
+                                   && ( !c.GetValue().HasMax() || aValue <= c.GetValue().Max() );
+                        };
+
+                // On the layers the design rule checks themselves ask about
+                bool ok = within( HOLE_SIZE_CONSTRAINT, UNDEFINED_LAYER, aKind.m_drill );
+
+                probe->Padstack().ForEachUniqueLayer(
+                        [&]( PCB_LAYER_ID aLayer )
+                        {
+                            if( !ok || probe->IsGhostLayer( aLayer ) )
+                                return;
+
+                            ok = within( VIA_DIAMETER_CONSTRAINT, aLayer, probe->GetWidth( aLayer ) )
+                                 && within( ANNULAR_WIDTH_CONSTRAINT, aLayer,
+                                            ( probe->GetWidth( aLayer ) - probe->GetDrillValue() ) / 2 );
+                        } );
+
+                if( !ok )
+                    return false;
+
+                DRC_CONSTRAINT disallow = engine.EvalRules( DISALLOW_CONSTRAINT, probe.get(), nullptr,
+                                                            UNDEFINED_LAYER );
+
+                return !disallow.m_DisallowFlags || disallow.GetSeverity() == RPT_SEVERITY_IGNORE;
+            };
 
     if( aRequest.m_timeLimitMs > 0 )
         options.m_timeLimitMs = aRequest.m_timeLimitMs;
@@ -114,6 +194,31 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
 
     if( aRequest.m_progress )
         sketch.SetProgressCallback( aRequest.m_progress );
+
+    // For comparing the router with and without a piece of itself (the routing benchmark)
+    if( const char* off = std::getenv( "BACKPLANE_SKETCH_OFF" ) )
+    {
+        const std::string list( off );
+
+        if( list.find( "field" ) != std::string::npos )
+            options.m_obstacleField = false;
+
+        if( list.find( "viaf" ) != std::string::npos )
+            options.m_viaField = false;
+
+        if( list.find( "freeexits" ) != std::string::npos )
+            options.m_freeExits = false;
+
+        if( list.find( "ripup" ) != std::string::npos )
+            options.m_ripUp = false;
+
+        if( list.find( "conventions" ) != std::string::npos )
+        {
+            options.m_layers = PNS::SKETCH_ROUTER::RoutableLayers( aBoard, &iface );
+            options.m_transitLayers.clear();
+            options.m_viaKinds.clear();
+        }
+    }
 
     if( aRequest.m_configure )
         aRequest.m_configure( options );
@@ -202,7 +307,32 @@ SKETCH_ROUTE_RESULT RouteSketchOnBoard( BOARD* aBoard, const SKETCH_ROUTE_REQUES
         case PNS::ITEM::VIA_T:
         {
             PNS::VIA* via = static_cast<PNS::VIA*>( item );
-            PCB_VIA*  pcbVia = new PCB_VIA( aBoard );
+            PCB_VIA*  pcbVia = nullptr;
+
+            // Made like the board's own vias of its kind where it has them
+            for( const PNS::SKETCH_VIA_KIND& kind : options.m_viaKinds )
+            {
+                if( kind.m_like && kind.m_like->Type() == PCB_VIA_T && (VIATYPE) kind.m_type == via->ViaType()
+                        && kind.m_layerStart == via->Layers().Start() && kind.m_layerEnd == via->Layers().End()
+                        && kind.m_diameter == via->Diameter( via->Layers().Start() ) && kind.m_drill == via->Drill() )
+                {
+                    pcbVia = static_cast<PCB_VIA*>( kind.m_like->Duplicate( false ) );
+                    pcbVia->SetLocked( false );
+                    pcbVia->ClearFlags();
+                    break;
+                }
+            }
+
+            if( pcbVia )
+            {
+                pcbVia->SetPosition( via->Pos() );
+                pcbVia->SetNet( net );
+                pcbVia->SetIsFree( via->IsFree() );
+                boardItem = pcbVia;
+                break;
+            }
+
+            pcbVia = new PCB_VIA( aBoard );
             pcbVia->SetPosition( via->Pos() );
             pcbVia->SetWidth( PADSTACK::TEMP_ALL_LAYERS, via->Diameter( 0 ) );
             pcbVia->SetDrill( via->Drill() );

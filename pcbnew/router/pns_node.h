@@ -23,6 +23,7 @@
 #ifndef __PNS_NODE_H
 #define __PNS_NODE_H
 
+#include <functional>
 #include <vector>
 #include <list>
 #include <set>
@@ -412,6 +413,14 @@ public:
     bool Add( std::unique_ptr<ARC>     aArc, bool aAllowRedundant = false );
 
     void Add( LINE& aLine, bool aAllowRedundant = false );
+
+    /**
+     * Backplane: call \a aVisitor on every item of this branch (its own, and its root's that it
+     * has not replaced) on PNS layer \a aLayer whose bounding box is within \a aDistance of
+     * \a aBox.  The candidates of a collision search, without the search.
+     */
+    void VisitNearby( int aLayer, const BOX2I& aBox, int aDistance,
+                      const std::function<void( ITEM* )>& aVisitor ) const;
 
     void AddEdgeExclusion( std::unique_ptr<SHAPE> aShape );
     bool QueryEdgeExclusions( const VECTOR2I& aPos ) const;

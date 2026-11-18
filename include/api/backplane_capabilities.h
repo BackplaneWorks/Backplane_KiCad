@@ -69,6 +69,10 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     "global-tables-seeded", // a config home with no global library table gets the runtime's default
                             // (<stock data>/<table>) at first start, never over an existing one;
                             // ${BACKPLANE_KICAD_LIBRARY} defaults to <stock data>/backplane-library
+    "sketch-route-2",  // SketchRoute routes with the board's own kinds of via (laser micro vias, stacked,
+                       // made like the board's), keeps tracks off plane layers, holds to rules that
+                       // depend on the place, leaves a boxed-in pad any free way, takes routes up and
+                       // tries again, and takes min_track_width (answers narrowed)
     // Runtime traits the host keys an update on before installing (in the manifest on purpose:
     // they describe the runtime, not a session; GetFrames advertises them too):
     "embed-autopanels",  // embedded side panels follow the frame's width (EmbedAutoPanels)

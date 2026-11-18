@@ -73,6 +73,11 @@ message SketchRoute
   // the design rules, as the interactive router takes it (net classes changed in the same server
   // are honoured).
   kiapi.common.types.Distance track_width = 8;
+
+  // A connection that has no way at its width may be routed as narrow as this where the board's
+  // rules allow it (between the pads of a fine-pitch part, as its designer would neck a track
+  // down).  Unset (or 0): no track is narrower than its net asks.
+  kiapi.common.types.Distance min_track_width = 9;
 }
 
 
@@ -116,4 +121,7 @@ message SketchRouteResponse
 
   // One per connection that could not be routed (failed of them).
   repeated SketchRouteFailure failures = 9;
+
+  // Connections routed narrower than their net asks (see min_track_width).
+  int32 narrowed = 10;
 }

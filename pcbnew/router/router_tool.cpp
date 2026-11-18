@@ -2772,7 +2772,7 @@ int ROUTER_TOOL::SketchRoute( const TOOL_EVENT& aEvent )
     PNS::SKETCH_ROUTER          sketchRouter( m_router );
     PNS::SKETCH_ROUTER_OPTIONS& options = sketchRouter.Options();
 
-    options.m_layers = PNS::SKETCH_ROUTER::RoutableLayers( board(), m_iface );
+    PNS::SKETCH_ROUTER::BoardConventions( board(), m_iface, options );
     options.m_boundary = board()->GetBoardEdgesBoundingBox();
     options.m_guide = sketch;
 

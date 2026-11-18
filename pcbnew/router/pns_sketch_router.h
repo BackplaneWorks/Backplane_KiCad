@@ -22,6 +22,11 @@
 
 #include <algorithm>
 #include <functional>
+#include <map>
+#include <memory>
+#include <tuple>
+#include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 #include <math/box2.h>
@@ -33,11 +38,13 @@
 
 class BOARD;
 class BOARD_CONNECTED_ITEM;
+class BOARD_ITEM;
 
 namespace PNS {
 
 class NODE;
 class ROUTER_IFACE;
+class SKETCH_FIELD;
 class VIA;
 
 /**
@@ -73,10 +80,42 @@ struct SKETCH_EXIT
 };
 
 
+/**
+ * A kind of via the router may place: the layers it joins, its size, and what one costs.
+ */
+struct SKETCH_VIA_KIND
+{
+    int    m_type = 0;          ///< a VIATYPE
+    int    m_layerStart = 0;    ///< PNS layers
+    int    m_layerEnd = 0;
+    int    m_diameter = 0;
+    int    m_drill = 0;
+    double m_cost = 0.0;        ///< as a length of track (nm)
+
+    ///< The board stands vias of this kind in pads of their net (filled and capped): so may the
+    ///< router.  A laser micro via always may.
+    bool m_inPad = false;
+
+    ///< One of the board's own vias of this kind: a new one is made like it (filled, capped
+    ///< and tented as the board's are, which a stack of micro vias has to be), or nullptr
+    const BOARD_ITEM* m_like = nullptr;
+};
+
+
 struct SKETCH_ROUTER_OPTIONS
 {
     ///< PNS layers the router may put tracks on.  Empty means every copper layer.
     std::vector<int> m_layers;
+
+    ///< PNS layers that carry planes: no track goes there, but a stack of vias may pass
+    std::vector<int> m_transitLayers;
+
+    ///< The vias to change layer with.  Empty: a through via of each net's own size.
+    std::vector<SKETCH_VIA_KIND> m_viaKinds;
+
+    ///< Whether the board's rules allow a via of this kind, on this net, at this place (its
+    ///< diameter, hole and annular ring, a disallow rule).  Unset: anywhere.
+    std::function<bool( const SKETCH_VIA_KIND&, NET_HANDLE, const VECTOR2I& )> m_viaAllowed;
 
     ///< PNS layer the routes should run on where they can (usually the active layer), or -1.
     int m_preferredLayer = -1;
@@ -94,6 +133,10 @@ struct SKETCH_ROUTER_OPTIONS
 
     ///< Track width for every route (nm); 0 takes each net's own (its net class or rules).
     int m_trackWidth = 0;
+
+    ///< A connection with no way at its net's width may be routed this narrow (nm), or as
+    ///< narrow as the board's rules allow where it runs if that is wider.  0: never narrower.
+    int m_minTrackWidth = 0;
 
     ///< Cost of a via, as an equivalent length of track (nm).
     double m_viaCost = 3000000.0;
@@ -125,6 +168,18 @@ struct SKETCH_ROUTER_OPTIONS
     ///< Run the PNS optimizer over each finished route.
     bool m_optimize = true;
 
+    ///< When no route leaves and enters the pads straight, let it leave and enter them any way
+    bool m_freeExits = true;
+
+    ///< When a connection has no way, take up the routes of this call that are in its way,
+    ///< route it, and route those again
+    bool m_ripUp = true;
+
+    ///< Keep each net's obstacles by place (SKETCH_FIELD) instead of asking the node about every
+    ///< probe.  The routes are the same; off only to compare.
+    bool m_obstacleField = true;
+    bool m_viaField = true;     ///< and about vias
+
     ///< Without a sketch, route groups of connections between the same two footprints as
     ///< bundles along a path found for the whole group.
     bool m_autoBundle = true;
@@ -136,6 +191,7 @@ struct SKETCH_ROUTER_STATS
     int              m_connections = 0;
     int              m_routed = 0;
     int              m_vias = 0;
+    int              m_narrowed = 0;      ///< Connections routed narrower than their net asks
     int              m_passes = 0;
     long long        m_length = 0;
     long long        m_expansions = 0;
@@ -212,6 +268,15 @@ public:
     static std::vector<int> RoutableLayers( BOARD* aBoard, ROUTER_IFACE* aIface );
 
     /**
+     * Take the board's own conventions into \a aOptions: the layers it routes on (m_layers),
+     * the inner layers it keeps as planes (m_transitLayers: a pour and next to no track) and
+     * the kinds of via it uses (m_viaKinds: laser micro vias between neighbouring layers on a
+     * board that has them, each at the size the board mostly uses).  A board with no via yet
+     * leaves m_viaKinds empty, and each net's own through via is used.
+     */
+    static void BoardConventions( BOARD* aBoard, ROUTER_IFACE* aIface, SKETCH_ROUTER_OPTIONS& aOptions );
+
+    /**
      * Return the ways a track may leave \a aItem from \a aAnchor.  Pads are left square to one
      * of their edges, preferably along the long axis of elongated pads, and never back under
      * their own footprint; round pads may also be left diagonally.  Each exit runs straight until the track is clear of the
@@ -231,7 +296,7 @@ private:
 
     bool routeConnection( NODE* aNode, const SKETCH_CONNECTION& aConn, int aBundleSize,
                           double aLaneOffset, double& aCost, int& aVias, long long& aLength,
-                          bool& aDetoured );
+                          bool& aDetoured, int aNarrowWidth = 0 );
 
     /**
      * Connections routed together along one sketch.  Every member gets a lane beside the
@@ -294,7 +359,7 @@ private:
 
     bool commitPath( NODE* aNode, const SKETCH_CONNECTION& aConn, int aWidth, int aClearance,
                      const std::vector<SHAPE_LINE_CHAIN>& aRuns, const std::vector<int>& aRunLayers,
-                     const std::vector<VECTOR2I>& aVias, const VIA& aViaProto,
+                     const std::vector<VECTOR2I>& aVias, const std::vector<VIA>& aViaProtos,
                      const std::vector<SKETCH_EXIT>& aStartExits,
                      const std::vector<SKETCH_EXIT>& aEndExits, int aHoleToHole, int& aViaCount,
                      long long& aLength );
@@ -313,11 +378,42 @@ private:
 
     bool cancelled();
 
+    ///< The obstacle field of a net and track width, made on first use
+    SKETCH_FIELD* field( NODE* aNode, NET_HANDLE aNet, int aWidth );
+
+    ///< Tell the fields that an item is about to be added to or taken from the node
+    void fieldsChanged( const ITEM* aItem );
+
+    struct FIELD_CHANGE
+    {
+        BOX2I m_box;
+        int   m_layerStart;
+        int   m_layerEnd;
+    };
+
     ///< Report progress from within a search; false once the user has cancelled
     bool keepGoing();
 
     SKETCH_ROUTER_OPTIONS            m_options;
     SKETCH_ROUTER_STATS              m_stats;
+
+    std::map<std::pair<NET_HANDLE, int>, std::unique_ptr<SKETCH_FIELD>> m_fields;
+    std::vector<FIELD_CHANGE>        m_passChanges;   ///< copper the current pass added
+    int                              m_narrowed = 0;  ///< see SKETCH_ROUTER_STATS
+
+    ///< Take the copper a connection made in this pass off the node again
+    void ripUp( NODE* aNode, int aConnection );
+
+    std::vector<std::vector<ITEM*>>        m_routeItems;  ///< what each connection made, this pass
+    std::unordered_map<const ITEM*, int>   m_itemOwner;   ///< and whose each of those (and its hole) is
+    std::vector<int>                       m_ripCount;    ///< times each connection was taken up
+    std::unordered_set<const ITEM*>        m_soft;        ///< copper that may be taken up now
+    std::vector<int>                       m_victims;     ///< connections the last search took up
+    bool                                   m_softMode = false;
+    int                                    m_current = -1; ///< the connection being routed
+
+    ///< By net, kind of via and tile: 1 the rules allow it there, 0 not, -1 it depends where
+    std::map<std::tuple<NET_HANDLE, int, int, int>, int8_t> m_viaAllowedTiles;
     std::function<bool( int, int )>  m_progressCallback;
     std::vector<int>                 m_layers;
     DIRECTION_45::CORNER_MODE        m_cornerMode;

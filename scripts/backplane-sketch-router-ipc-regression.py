@@ -81,6 +81,19 @@ def main():
         print(f"PASS SketchRoute in a dropped commit: {routed.routed}/{routed.connections} "
               f"routed, {routed.vias} vias in {routed.elapsed_ms:.0f} ms", flush=True)
 
+        # min_track_width only narrows a connection that has no way at its width: none here
+        transaction = api.request(editor.BeginCommit(header=header), editor.BeginCommitResponse)
+        necked = sketch_route(items=parts, min_track_width=types.Distance(value_nm=90000))
+        assert necked.routed == 30 and necked.narrowed == 0, necked
+        api.request(editor.EndCommit(header=header, id=transaction.id, action=editor.CMA_DROP),
+                    editor.EndCommitResponse)
+        assert not copper_ids()
+        out_of_range = api.request_raw(sketch_route_commands.SketchRoute(
+            board=document, items=parts, min_track_width=types.Distance(value_nm=-1)))
+        assert out_of_range.status.status == api.envelope.AS_BAD_REQUEST, out_of_range
+        print("PASS SketchRoute min_track_width: nothing narrowed where the width fits; "
+              "a negative width is refused", flush=True)
+
         # Bad requests leave the board alone
         missing = api.request_raw(sketch_route_commands.SketchRoute(
             board=document, items=[types.KIID(value="00000000-0000-0000-0000-000000000001")]))
