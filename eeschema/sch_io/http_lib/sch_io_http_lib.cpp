@@ -257,6 +257,7 @@ void SCH_IO_HTTP_LIB::materializeCache( const wxString& aLibraryPath,
     std::map<wxString, std::unique_ptr<LIB_SYMBOL>>         newSymbolCache;
     std::map<wxString, std::pair<std::string, std::string>> newPartIdMap;
     std::set<wxString>                                      newCustomFields;
+    std::set<wxString>                                      newSourceMissing;
 
     for( const HTTP_LIB_CATEGORY& category : aCategoryData | std::views::values )
     {
@@ -265,10 +266,15 @@ void SCH_IO_HTTP_LIB::materializeCache( const wxString& aLibraryPath,
             wxString symbolName( part.name );
             newPartIdMap[symbolName] = { part.id, category.id };
 
-            LIB_SYMBOL* symbol = loadSymbolFromPart( aLibraryPath, symbolName, category, part, newCustomFields );
+            bool        missing = false;
+            LIB_SYMBOL* symbol = loadSymbolFromPart( aLibraryPath, symbolName, category, part, newCustomFields,
+                                                     &missing );
 
             if( symbol )
                 newSymbolCache[symbolName] = std::unique_ptr<LIB_SYMBOL>( symbol );
+
+            if( missing )
+                newSourceMissing.insert( symbolName );
         }
     }
 
@@ -276,6 +282,7 @@ void SCH_IO_HTTP_LIB::materializeCache( const wxString& aLibraryPath,
         std::unique_lock lock( m_cacheMutex );
 
         m_symbolCache = std::move( newSymbolCache );
+        m_sourceMissing = std::move( newSourceMissing );
         m_partIdMap = std::move( newPartIdMap );
         m_customFields = std::move( newCustomFields );
 
@@ -422,8 +429,12 @@ LIB_SYMBOL* SCH_IO_HTTP_LIB::LoadSymbol( const wxString& aLibraryPath, const wxS
     {
         std::shared_lock lock( m_cacheMutex );
 
-        if( auto it = m_symbolCache.find( aAliasName ); it != m_symbolCache.end() )
+        // A part cached without its symbol (it was not loaded then) is fetched again below
+        if( auto it = m_symbolCache.find( aAliasName );
+            it != m_symbolCache.end() && !m_sourceMissing.contains( aAliasName ) )
+        {
             return it->second->Duplicate();
+        }
     }
 
     // Cache miss: fall back to a direct per-part fetch.  In the steady state every known part
@@ -480,8 +491,29 @@ LIB_SYMBOL* SCH_IO_HTTP_LIB::LoadSymbol( const wxString& aLibraryPath, const wxS
     // This transient symbol is not placed in the shared cache; collect its custom fields into a
     // local set so the background materializer's m_customFields is never mutated off-thread.
     std::set<wxString> transientFields;
+    bool               missing = false;
 
-    return loadSymbolFromPart( aLibraryPath, aAliasName, *foundCategory, result, transientFields );
+    LIB_SYMBOL* symbol = loadSymbolFromPart( aLibraryPath, aAliasName, *foundCategory, result, transientFields,
+                                             &missing );
+
+    // Its symbol cannot be had: an error, never a symbol of fields alone placed as the part (#1192).
+    // Nothing is cached, so the part loads once its symbol's library does.
+    if( missing )
+    {
+        delete symbol;
+        THROW_IO_ERROR( wxString::Format( _( "HTTP library part '%s': its symbol '%s' could not be loaded" ),
+                                          aAliasName, wxString( result.symbolIdStr ) ) );
+    }
+
+    if( symbol )
+    {
+        std::unique_lock lock( m_cacheMutex );
+
+        if( m_sourceMissing.erase( aAliasName ) )
+            m_symbolCache[aAliasName] = std::unique_ptr<LIB_SYMBOL>( symbol->Duplicate() );
+    }
+
+    return symbol;
 }
 
 
@@ -641,7 +673,8 @@ LIB_SYMBOL* SCH_IO_HTTP_LIB::loadSymbolFromPart( const wxString& aLibraryPath,
                                                  const wxString& aSymbolName,
                                                  const HTTP_LIB_CATEGORY& aCategory,
                                                  const HTTP_LIB_PART& aPart,
-                                                 std::set<wxString>& aCustomFields )
+                                                 std::set<wxString>& aCustomFields,
+                                                 bool* aSourceMissing )
 {
     LIB_SYMBOL* symbol = nullptr;
     LIB_SYMBOL* originalSymbol = nullptr;
@@ -692,7 +725,27 @@ LIB_SYMBOL* SCH_IO_HTTP_LIB::loadSymbolFromPart( const wxString& aLibraryPath,
             }
             else
             {
+                // The symbol's own library may not be loaded yet: the headless KiCad (kicad-cli
+                // api-server) loads libraries when they are asked for, and only this one was (#1192).
+                // It is loaded now, alone: a plain symbol library only, never this one (it is the one
+                // loading) or another HTTP or database library, which would resolve into others in turn.
+                const wxString sourceNickname = symbolId.GetLibNickname().wx_str();
+                std::optional<LIBRARY_TABLE_ROW*> sourceRow = m_adapter->GetRow( sourceNickname );
+                SCH_IO_MGR::SCH_FILE_T sourceType = sourceRow ? SCH_IO_MGR::EnumFromStr( ( *sourceRow )->Type() )
+                                                              : SCH_IO_MGR::SCH_FILE_UNKNOWN;
+
+                if( sourceRow && sourceNickname != libNickname && sourceType != SCH_IO_MGR::SCH_HTTP
+                    && sourceType != SCH_IO_MGR::SCH_DATABASE && !m_adapter->IsLibraryLoaded( sourceNickname ) )
+                {
+                    wxLogTrace( traceHTTPLib, wxT( "loadSymbolFromPart: loading library '%s' for '%s'" ),
+                                sourceNickname, aSymbolName );
+                    m_adapter->LoadOne( sourceNickname );
+                }
+
                 originalSymbol = m_adapter->LoadSymbol( symbolId );
+
+                if( !originalSymbol && aSourceMissing )
+                    *aSourceMissing = true;
             }
         }
 

@@ -123,7 +123,8 @@ private:
 
     LIB_SYMBOL* loadSymbolFromPart( const wxString& aLibraryPath, const wxString& aSymbolName,
                                     const HTTP_LIB_CATEGORY& aCategory, const HTTP_LIB_PART& aPart,
-                                    std::set<wxString>& aCustomFields );
+                                    std::set<wxString>& aCustomFields,
+                                    bool* aSourceMissing = nullptr );
 
     void cacheLib( const wxString& aLibraryPath );
 
@@ -162,6 +163,11 @@ private:
 
     std::map<wxString, std::unique_ptr<LIB_SYMBOL>> m_symbolCache;
 
+    /// Parts whose symbol (symbolIdStr) could not be loaded when the cache was made: their cached copy
+    /// holds the part's fields only.  It is listed (the chooser shows the part and its error) but never
+    /// returned by LoadSymbol, which fetches the part again and fails if its symbol is still missing.
+    std::set<wxString> m_sourceMissing;
+
     /// Symbol name -> (part id, category id); used for the SelectOne fallback in LoadSymbol.
     std::map<wxString, std::pair<std::string, std::string>> m_partIdMap;
 
@@ -169,7 +175,7 @@ private:
     size_t m_cacheSignature = 0;
     int m_modifyHash = 0;
 
-    /// Protects m_symbolCache, m_partIdMap, and m_customFields.
+    /// Protects m_symbolCache, m_sourceMissing, m_partIdMap, and m_customFields.
     std::shared_mutex m_cacheMutex;
 
     /// Serializes loadSymbolFromPart calls
