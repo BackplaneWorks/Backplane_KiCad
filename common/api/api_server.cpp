@@ -49,6 +49,7 @@
 #include <api/common/commands/editor_commands.pb.h>
 #include <api/common/types/base_types.pb.h>
 #include <api/backplane/embed.pb.h>
+#include <api/backplane/plan.pb.h>
 
 #ifdef __UNIX__
 #include <sys/file.h>
@@ -526,6 +527,21 @@ bool KICAD_API_SERVER::IsReadServedDuringTask( const std::string& aType )
 }
 
 
+bool KICAD_API_SERVER::IsReadServedDuringTask( const std::string& aType, const google::protobuf::Any& aMessage )
+{
+    if( IsReadServedDuringTask( aType ) )
+        return true;
+
+    if( aType == "kiapi.backplane.plan.GetPlan" )
+    {
+        kiapi::backplane::plan::GetPlan getPlan;
+        return aMessage.UnpackTo( &getPlan ) && !getPlan.derived();
+    }
+
+    return false;
+}
+
+
 void KICAD_API_SERVER::ServeDuringTask()
 {
     if( !wxThread::IsMain() )
@@ -634,7 +650,7 @@ void KICAD_API_SERVER::handleApiRequestString( std::string& aRequestString )
         std::string requestType;
         google::protobuf::Any::ParseAnyTypeUrl( request.message().type_url(), &requestType );
 
-        if( !IsReadServedDuringTask( requestType ) )
+        if( !IsReadServedDuringTask( requestType, request.message() ) )
         {
             ApiResponse error;
             error.mutable_header()->set_kicad_token( m_token );

@@ -35,6 +35,7 @@
 
 #include <kicommon.h>
 #include <api/common/types/base_types.pb.h>
+#include <google/protobuf/any.pb.h>
 
 class API_HANDLER;
 class KINNG_REQUEST_SERVER;
@@ -80,6 +81,11 @@ public:
     /// The full request type names answered while an API task runs (an explicit allow-list of
     /// reads); every other request is answered AS_BUSY naming the task.
     static bool IsReadServedDuringTask( const std::string& aType );
+
+    /// IsReadServedDuringTask, deciding by the request body for the one type whose body makes it
+    /// a read or not: GetPlan is a read without `derived` (the plan as stored); with it, it builds
+    /// the audit from connectivity, which a running DRC is in the middle of.
+    static bool IsReadServedDuringTask( const std::string& aType, const google::protobuf::Any& aMessage );
 
     KICAD_API_SERVER( bool aAutoStart = true );
 
