@@ -701,6 +701,10 @@ private:
     wxFrame*                 m_manager = nullptr;
     EMBED_FRAME_OPS          m_managerOps;
     uint64_t                 m_managerWindow = 0;
+    /// A dialog was mapped (aMapped) or went away: ET_DIALOG_OPENED/CLOSED once per change, whichever
+    /// path saw it (the toolkit's native hook or wx's own show/destroy), keyed by native window id
+    void noteDialog( uint64_t aWindow, bool aMapped, const wxString& aTitle );
+
     std::map<uint64_t, wxString> m_openDialogs;
     std::set<uint64_t>           m_parked;
 
