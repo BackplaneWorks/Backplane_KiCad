@@ -182,6 +182,11 @@ namespace EMBED
     /// the canvas).  Elsewhere the same as TakeFocus( aFrame ).
     void TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked );
 
+    /// Trace only (#1198 diagnosis): a button went down in embedded aFrame; aHasFocus is what
+    /// HasFocus() said.  macOS writes the app's and the frame's key state to the embed trace;
+    /// elsewhere nothing.
+    void TraceClick( wxWindow* aFrame, bool aHasFocus );
+
     /// After a click was handled: a mouse capture the frame itself still holds with no button
     /// down is released (Windows; elsewhere nothing).  False if there was none.
     bool ReleaseStrayCapture( wxWindow* aFrame );

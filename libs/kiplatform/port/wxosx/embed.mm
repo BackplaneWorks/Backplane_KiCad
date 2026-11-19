@@ -38,6 +38,7 @@
 #include <mutex>
 #include <set>
 #include <string>
+#include <unistd.h>
 
 #include <wx/app.h>
 #include <wx/event.h>
@@ -117,6 +118,24 @@ FRAME* frameOf( NSWindow* aWindow )
 void trace( const std::string& aLine )
 {
     KIPLATFORM::EMBED::TraceLine( aLine );
+}
+
+
+/// #1198 diagnosis (trace only): the app's activation and window number aNumber's key state, and
+/// which window is key and who holds wx's focus
+std::string keyState( NSInteger aNumber )
+{
+    NSWindow* w = aNumber ? [NSApp windowWithWindowNumber:aNumber] : nil;
+    NSWindow* key = NSApp.keyWindow;
+    wxWindow* focus = wxWindow::FindFocus();
+    NSRunningApplication* front = NSWorkspace.sharedWorkspace.frontmostApplication;
+
+    return std::string( "NSApp.active=" ) + ( NSApp.active ? "1" : "0" )
+           + " frame.isKeyWindow=" + ( w && w.keyWindow ? "1" : "0" )
+           + " NSApp.keyWindow=" + std::to_string( key ? (long) key.windowNumber : 0 )
+           + " frontmost=" + ( front ? std::to_string( front.processIdentifier ) : std::string( "?" ) )
+           + " (us " + std::to_string( getpid() ) + ")"
+           + " wxFocus=" + ( focus ? focus->GetClassInfo()->GetClassName() : wxString( "none" ) ).ToStdString();
 }
 
 
@@ -771,6 +790,11 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
                                 [NSApp yieldActivationToApplication:host];
                         }
                     }];
+    // #1198 diagnosis (trace only): when KiCad becomes and stops being the active app
+    [centre addObserverForName:NSApplicationDidBecomeActiveNotification object:nil queue:nil
+                    usingBlock:^( NSNotification* ) { trace( "macos: app did become active: " + keyState( 0 ) ); }];
+    [centre addObserverForName:NSApplicationDidResignActiveNotification object:nil queue:nil
+                    usingBlock:^( NSNotification* ) { trace( "macos: app did resign active: " + keyState( 0 ) ); }];
     [centre addObserverForName:NSWindowDidChangeOcclusionStateNotification object:nil queue:nil
                     usingBlock:^( NSNotification* aNote ) { dialogChanged( (NSWindow*) aNote.object, false ); }];
     [centre addObserverForName:NSWindowWillCloseNotification object:nil queue:nil
@@ -987,9 +1011,22 @@ void KIPLATFORM::EMBED::TakeFocus( wxWindow* aFrame )
 }
 
 
+
+
+void KIPLATFORM::EMBED::TraceClick( wxWindow* aFrame, bool aHasFocus )
+{
+    NSWindow* w = nsWindowOf( aFrame );
+    NSInteger number = w ? w.windowNumber : 0;
+    trace( "macos: click on frame " + std::to_string( (long) number ) + ": HasFocus=" + ( aHasFocus ? "1" : "0" ) + " "
+           + keyState( number ) + ( aHasFocus ? " (TakeFocusForClick not called)" : "" ) );
+}
+
+
 void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked )
 {
     NSWindow* w = nsWindowOf( aFrame );
+    trace( "macos: TakeFocusForClick entered for frame " + std::to_string( w ? (long) w.windowNumber : 0 ) + ": "
+           + keyState( w ? w.windowNumber : 0 ) );
 
     if( !w || !keyAllowed( w, "TakeFocus" ) )
         return;
@@ -1013,6 +1050,19 @@ void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked 
         [NSApp activateIgnoringOtherApps:YES];
 
     [w makeKeyWindow];
+
+    // #1198 diagnosis (trace only): activation is asynchronous; what it is now, one run-loop turn
+    // later, and 250 ms later
+    {
+        NSInteger number = w.windowNumber;
+        trace( "macos: TakeFocusForClick after activate+makeKeyWindow: " + keyState( number ) );
+        dispatch_async( dispatch_get_main_queue(), ^{
+            trace( "macos: TakeFocusForClick one run-loop turn later: " + keyState( number ) );
+        } );
+        dispatch_after( dispatch_time( DISPATCH_TIME_NOW, 250 * NSEC_PER_MSEC ), dispatch_get_main_queue(), ^{
+            trace( "macos: TakeFocusForClick 250 ms later: " + keyState( number ) );
+        } );
+    }
 
     // The keyboard to what was clicked (ShowFrame{focus} passes the canvas, where KiCad's hotkeys
     // are served): makeKeyWindow alone gives back the frame's last focus, which can be a toolbar
