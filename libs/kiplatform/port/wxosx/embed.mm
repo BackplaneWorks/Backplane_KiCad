@@ -44,6 +44,7 @@
 #include <wx/event.h>
 #include <wx/nonownedwnd.h>
 #include <wx/toplevel.h>
+#include <wx/weakref.h>
 #include <wx/window.h>
 
 namespace
@@ -74,6 +75,26 @@ std::map<NSWindow*, wxWindow*> s_byWindow;  ///< the same frames by their NSWind
 std::set<NSInteger>            s_numbers;   ///< windowNumbers of embedded frames
 
 dispatch_source_t s_ownerWatch = nullptr;
+
+/// #1198: a click's activation of KiCad still on its way.  [NSApp activate] is asynchronous, and
+/// makeKeyWindow on a window of an app that is not yet active does nothing: KiCad became active with
+/// no key window and the person's keys went nowhere until a second click.  The frame to make key and
+/// what was clicked, done when the app becomes active (only within KEY_PENDING_S of the click; a later
+/// click, or another app becoming active first, drops it), so no later activation takes the key.
+struct PENDING_KEY
+{
+    NSInteger           window = 0;
+    wxWeakRef<wxWindow> clicked;
+    double              at = 0;
+};
+
+PENDING_KEY            s_pendingKey;
+constexpr double       KEY_PENDING_S = 1.0;
+
+double nowS()
+{
+    return [NSDate date].timeIntervalSince1970;
+}
 
 
 /// On show as far as the frame and wx are concerned: mapped by us, not parked for a prewarm, and shown
@@ -790,6 +811,56 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
                                 [NSApp yieldActivationToApplication:host];
                         }
                     }];
+    // #1198: the key window a click asked for while KiCad was not yet active (TakeFocusForClick)
+    [centre addObserverForName:NSApplicationDidBecomeActiveNotification object:nil queue:nil
+                    usingBlock:^( NSNotification* ) {
+                        PENDING_KEY pending = s_pendingKey;
+                        s_pendingKey = PENDING_KEY();
+
+                        if( !pending.window )
+                            return;
+
+                        std::string number = std::to_string( (long) pending.window );
+
+                        if( nowS() - pending.at > KEY_PENDING_S )
+                        {
+                            trace( "macos: key window for frame " + number + " dropped: the activation came too late" );
+                            return;
+                        }
+
+                        NSWindow* w = [NSApp windowWithWindowNumber:pending.window];
+                        auto      byWindow = w ? s_byWindow.find( w ) : s_byWindow.end();
+                        wxWindow* frame = byWindow != s_byWindow.end() ? byWindow->second : nullptr;
+                        auto      state = frame ? s_frames.find( frame ) : s_frames.end();
+
+                        // gone, hidden, parked or refused the keyboard since the click: nothing made key
+                        if( state == s_frames.end() || !onShow( frame, state->second ) || !keyAllowed( w, "key on activation" ) )
+                        {
+                            trace( "macos: key window for frame " + number + " dropped: the frame is not on show" );
+                            return;
+                        }
+
+                        if( !w.keyWindow )
+                            [w makeKeyWindow];
+
+                        // and the keyboard back to what was clicked (makeKeyWindow restores the frame's last focus)
+                        if( wxWindow* clicked = pending.clicked.get(); clicked && clicked->AcceptsFocus() )
+                        {
+                            for( wxWindow* p = clicked; p; p = p->GetParent() )
+                            {
+                                if( p == frame )
+                                {
+                                    clicked->SetFocus();
+                                    break;
+                                }
+                            }
+                        }
+
+                        trace( "macos: key window set on activation: " + keyState( pending.window ) );
+                    }];
+    // another app became active before KiCad did: the click's request is no longer the person's
+    [centre addObserverForName:NSApplicationDidResignActiveNotification object:nil queue:nil
+                    usingBlock:^( NSNotification* ) { s_pendingKey = PENDING_KEY(); }];
     // #1198 diagnosis (trace only): when KiCad becomes and stops being the active app
     [centre addObserverForName:NSApplicationDidBecomeActiveNotification object:nil queue:nil
                     usingBlock:^( NSNotification* ) { trace( "macos: app did become active: " + keyState( 0 ) ); }];
@@ -1025,6 +1096,7 @@ void KIPLATFORM::EMBED::TraceClick( wxWindow* aFrame, bool aHasFocus )
 void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked )
 {
     NSWindow* w = nsWindowOf( aFrame );
+    s_pendingKey = PENDING_KEY();   // a new click replaces any request still waiting
     trace( "macos: TakeFocusForClick entered for frame " + std::to_string( w ? (long) w.windowNumber : 0 ) + ": "
            + keyState( w ? w.windowNumber : 0 ) );
 
@@ -1050,6 +1122,15 @@ void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked 
         [NSApp activateIgnoringOtherApps:YES];
 
     [w makeKeyWindow];
+
+    // Not active yet (the activation is asynchronous): makeKeyWindow did nothing; done again on activation
+    if( !NSApp.active )
+    {
+        s_pendingKey.window = w.windowNumber;
+        s_pendingKey.clicked = aClicked;
+        s_pendingKey.at = nowS();
+        trace( "macos: key window waits for the activation: frame " + std::to_string( (long) w.windowNumber ) );
+    }
 
     // #1198 diagnosis (trace only): activation is asynchronous; what it is now, one run-loop turn
     // later, and 250 ms later
