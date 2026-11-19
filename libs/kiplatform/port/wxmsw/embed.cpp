@@ -1043,6 +1043,11 @@ void KIPLATFORM::EMBED::TakeFocus( wxWindow* aFrame )
 }
 
 
+void KIPLATFORM::EMBED::TraceClick( wxWindow*, bool )
+{
+}
+
+
 void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked )
 {
     if( !aFrame )

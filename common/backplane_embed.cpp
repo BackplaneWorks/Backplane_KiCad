@@ -1365,7 +1365,10 @@ int BACKPLANE_EMBED::FilterEvent( wxEvent& aEvent )
     {
         // No window manager hands an embedded frame the keyboard on a click, so take it.  The
         // click itself still goes to KiCad.
-        if( !KIPLATFORM::EMBED::HasFocus( frame ) )
+        bool hasFocus = KIPLATFORM::EMBED::HasFocus( frame );
+        KIPLATFORM::EMBED::TraceClick( frame, hasFocus );   // #1198 diagnosis: trace only
+
+        if( !hasFocus )
         {
             KIPLATFORM::EMBED::TakeFocusForClick( frame, window );
             sendFocusMessage( frame );
