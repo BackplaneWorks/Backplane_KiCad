@@ -90,6 +90,13 @@ struct PENDING_KEY
 
 PENDING_KEY            s_pendingKey;
 constexpr double       KEY_PENDING_S = 1.0;
+/// Which key request is current: a click and the app resigning active bump it, so an older request's
+/// retries (applyKey) stop
+unsigned               s_keyGen = 0;
+/// AppKit can ignore makeKeyWindow on a frame ordered in a moment before (Edit's first focused show:
+/// still not key 250 ms after, while the same call 4 s later took): asked again this often, this many times
+constexpr int          KEY_RETRY_MS = 50;
+constexpr int          KEY_RETRIES = 10;
 
 double nowS()
 {
@@ -263,6 +270,69 @@ bool keyAllowed( NSWindow* aWindow, const char* aWhat )
 
     trace( std::string( "macos: refused " ) + aWhat + " for window " + std::to_string( number ) + ": " + why );
     return false;
+}
+
+
+/// #1198: make the frame of a key request key once KiCad is active, and give what was clicked wx's
+/// focus back; asked again every KEY_RETRY_MS while AppKit has not made it key, up to KEY_RETRIES
+/// times, for as long as the request is current, the frame on show and no other window of ours key
+void applyKey( NSInteger aNumber, wxWeakRef<wxWindow> aClicked, unsigned aGen, int aAttempt )
+{
+    std::string number = std::to_string( (long) aNumber );
+
+    if( aGen != s_keyGen )
+        return;   // a newer click, or KiCad resigned active
+
+    NSWindow* w = [NSApp windowWithWindowNumber:aNumber];
+    auto      byWindow = w ? s_byWindow.find( w ) : s_byWindow.end();
+    wxWindow* frame = byWindow != s_byWindow.end() ? byWindow->second : nullptr;
+    auto      state = frame ? s_frames.find( frame ) : s_frames.end();
+
+    // gone, hidden, parked or refused the keyboard since the click: nothing made key
+    if( !NSApp.active || state == s_frames.end() || !onShow( frame, state->second ) || !keyAllowed( w, "key on activation" ) )
+    {
+        trace( "macos: key window for frame " + number + " dropped: the frame is not on show (or KiCad not active)" );
+        return;
+    }
+
+    // another window of ours took the key meanwhile (a dialog): it keeps it
+    if( NSApp.keyWindow && NSApp.keyWindow != w )
+    {
+        trace( "macos: key window for frame " + number + " left: window " + std::to_string( (long) NSApp.keyWindow.windowNumber ) + " is key" );
+        return;
+    }
+
+    if( !w.keyWindow )
+        [w makeKeyWindow];
+
+    if( !w.keyWindow )
+    {
+        if( aAttempt >= KEY_RETRIES )
+        {
+            trace( "macos: key window for frame " + number + " not taken after " + std::to_string( aAttempt + 1 ) + " tries: " + keyState( aNumber ) );
+            return;
+        }
+
+        dispatch_after( dispatch_time( DISPATCH_TIME_NOW, (int64_t) KEY_RETRY_MS * NSEC_PER_MSEC ), dispatch_get_main_queue(), ^{
+            applyKey( aNumber, aClicked, aGen, aAttempt + 1 );
+        } );
+        return;
+    }
+
+    // and the keyboard back to what was clicked (makeKeyWindow restores the frame's last focus)
+    if( wxWindow* clicked = aClicked.get(); clicked && clicked->AcceptsFocus() )
+    {
+        for( wxWindow* p = clicked; p; p = p->GetParent() )
+        {
+            if( p == frame )
+            {
+                clicked->SetFocus();
+                break;
+            }
+        }
+    }
+
+    trace( "macos: key window set on activation (try " + std::to_string( aAttempt + 1 ) + "): " + keyState( aNumber ) );
 }
 
 
@@ -828,39 +898,11 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
                             return;
                         }
 
-                        NSWindow* w = [NSApp windowWithWindowNumber:pending.window];
-                        auto      byWindow = w ? s_byWindow.find( w ) : s_byWindow.end();
-                        wxWindow* frame = byWindow != s_byWindow.end() ? byWindow->second : nullptr;
-                        auto      state = frame ? s_frames.find( frame ) : s_frames.end();
-
-                        // gone, hidden, parked or refused the keyboard since the click: nothing made key
-                        if( state == s_frames.end() || !onShow( frame, state->second ) || !keyAllowed( w, "key on activation" ) )
-                        {
-                            trace( "macos: key window for frame " + number + " dropped: the frame is not on show" );
-                            return;
-                        }
-
-                        if( !w.keyWindow )
-                            [w makeKeyWindow];
-
-                        // and the keyboard back to what was clicked (makeKeyWindow restores the frame's last focus)
-                        if( wxWindow* clicked = pending.clicked.get(); clicked && clicked->AcceptsFocus() )
-                        {
-                            for( wxWindow* p = clicked; p; p = p->GetParent() )
-                            {
-                                if( p == frame )
-                                {
-                                    clicked->SetFocus();
-                                    break;
-                                }
-                            }
-                        }
-
-                        trace( "macos: key window set on activation: " + keyState( pending.window ) );
+                        applyKey( pending.window, pending.clicked, s_keyGen, 0 );
                     }];
     // another app became active before KiCad did: the click's request is no longer the person's
     [centre addObserverForName:NSApplicationDidResignActiveNotification object:nil queue:nil
-                    usingBlock:^( NSNotification* ) { s_pendingKey = PENDING_KEY(); }];
+                    usingBlock:^( NSNotification* ) { s_pendingKey = PENDING_KEY(); s_keyGen++; }];
     // #1198 diagnosis (trace only): when KiCad becomes and stops being the active app
     [centre addObserverForName:NSApplicationDidBecomeActiveNotification object:nil queue:nil
                     usingBlock:^( NSNotification* ) { trace( "macos: app did become active: " + keyState( 0 ) ); }];
@@ -1097,6 +1139,7 @@ void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked 
 {
     NSWindow* w = nsWindowOf( aFrame );
     s_pendingKey = PENDING_KEY();   // a new click replaces any request still waiting
+    s_keyGen++;
     trace( "macos: TakeFocusForClick entered for frame " + std::to_string( w ? (long) w.windowNumber : 0 ) + ": "
            + keyState( w ? w.windowNumber : 0 ) );
 
