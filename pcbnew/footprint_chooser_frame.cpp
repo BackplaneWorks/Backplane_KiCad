@@ -348,6 +348,8 @@ void FOOTPRINT_CHOOSER_FRAME::quiescePreview()
 
         if( viewerPanel )
         {
+            viewerPanel->CancelPendingDisplay();
+
             if( FOOTPRINT_PREVIEW_PANEL* previewPanel =
                     static_cast<FOOTPRINT_PREVIEW_PANEL*>( viewerPanel->GetPreviewPanel() ) )
             {

@@ -19,6 +19,7 @@
  */
 
 #include <widgets/footprint_preview_widget.h>
+#include <footprint_library_query.h>
 #include <lib_id.h>
 #include <class_draw_panel_gal.h>
 #include <wx/stattext.h>
@@ -33,7 +34,14 @@ FOOTPRINT_PREVIEW_WIDGET::FOOTPRINT_PREVIEW_WIDGET( wxWindow* aParent, KIWAY& aK
         m_status( nullptr ),
         m_statusPanel( nullptr ),
         m_statusSizer( nullptr ),
-        m_outerSizer( nullptr )
+        m_outerSizer( nullptr ),
+        m_kiway( &aKiway ),
+        m_loadRetry(
+                [this]()
+                {
+                    retryPendingDisplay();
+                },
+                250 )
 {
     m_prev_panel = FOOTPRINT_PREVIEW_PANEL_BASE::Create( this, aKiway );
 
@@ -68,7 +76,27 @@ FOOTPRINT_PREVIEW_WIDGET::FOOTPRINT_PREVIEW_WIDGET( wxWindow* aParent, KIWAY& aK
 }
 
 
+FOOTPRINT_PREVIEW_WIDGET::~FOOTPRINT_PREVIEW_WIDGET()
+{
+    CancelPendingDisplay();
+}
+
+
+void FOOTPRINT_PREVIEW_WIDGET::CancelPendingDisplay()
+{
+    m_loadRetry.Cancel();
+    m_pendingId.clear();
+}
+
+
 void FOOTPRINT_PREVIEW_WIDGET::SetStatusText( wxString const& aText )
+{
+    CancelPendingDisplay();
+    showStatus( aText );
+}
+
+
+void FOOTPRINT_PREVIEW_WIDGET::showStatus( wxString const& aText )
 {
     m_status->SetLabel( aText );
     m_statusPanel->Show();
@@ -82,6 +110,7 @@ void FOOTPRINT_PREVIEW_WIDGET::SetStatusText( wxString const& aText )
 
 void FOOTPRINT_PREVIEW_WIDGET::ClearStatus()
 {
+    CancelPendingDisplay();
     m_status->SetLabel( wxEmptyString );
     m_statusPanel->Hide();
 
@@ -111,17 +140,65 @@ void FOOTPRINT_PREVIEW_WIDGET::DisplayFootprint( const LIB_ID& aFPID )
     if( !m_prev_panel || m_libid == aFPID )
         return;
 
+    CancelPendingDisplay();
+
     wxBusyCursor busy;
 
+    // The footprint libraries load in the background (they are no longer waited for on the UI
+    // thread): a footprint asked for before its library is in is shown once it is.  Sampled
+    // before the attempt, so a load that ends during it still gets one more try.
+    bool loading = m_kiway && GetFootprintLibrariesLoadProgress( *m_kiway ) < 1.0f;
+
+    if( tryDisplay( aFPID ) )
+        return;
+
+    if( loading )
+    {
+        showStatus( _( "Loading footprint libraries..." ) );
+        m_pendingId = aFPID;
+        m_loadRetry.Restart();
+    }
+    else
+    {
+        showStatus( _( "Footprint not found." ) );
+    }
+}
+
+
+bool FOOTPRINT_PREVIEW_WIDGET::tryDisplay( const LIB_ID& aFPID )
+{
     if( m_prev_panel->DisplayFootprint( aFPID ) )
     {
         ClearStatus();
         m_libid = aFPID;
+        return true;
+    }
+
+    m_libid.clear();
+    return false;
+}
+
+
+void FOOTPRINT_PREVIEW_WIDGET::retryPendingDisplay()
+{
+    if( !m_prev_panel || !m_pendingId.IsValid() )
+        return;
+
+    // Asked again before the load ends (one library may be in before the rest); a footprint
+    // still missing once nothing is loading is not there
+    bool loading = m_kiway && GetFootprintLibrariesLoadProgress( *m_kiway ) < 1.0f;
+
+    if( tryDisplay( m_pendingId ) )
+        return;
+
+    if( loading )
+    {
+        m_loadRetry.Restart();
     }
     else
     {
-        SetStatusText( _( "Footprint not found." ) );
-        m_libid.clear();
+        m_pendingId.clear();
+        showStatus( _( "Footprint not found." ) );
     }
 }
 
@@ -129,7 +206,7 @@ void FOOTPRINT_PREVIEW_WIDGET::DisplayFootprint( const LIB_ID& aFPID )
 void FOOTPRINT_PREVIEW_WIDGET::DisplayFootprints( std::shared_ptr<FOOTPRINT> aFootprintA,
                                                   std::shared_ptr<FOOTPRINT> aFootprintB )
 {
-    ClearStatus();
+    ClearStatus();   // (drops a pending DisplayFootprint retry)
 
     if( m_prev_panel )
         m_prev_panel->DisplayFootprints( aFootprintA, aFootprintB );

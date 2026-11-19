@@ -577,6 +577,7 @@ void PANEL_SYMBOL_CHOOSER::ShutdownCanvases()
 
     if( m_fp_preview )
     {
+        m_fp_preview->CancelPendingDisplay();
         m_fp_preview->GetPreviewPanel()->GetCanvas()->SetEvtHandlerEnabled( false );
         m_fp_preview->GetPreviewPanel()->GetCanvas()->StopDrawing();
     }
