@@ -377,31 +377,42 @@ std::set<NSInteger> s_dialogs;   ///< KiCad's dialogs reported open (hooks.dialo
 
 
 /// A dialog of KiCad's (any titled wx top-level that is not an embedded frame) centred on the
-/// host's window and ordered above the frontmost of KiCad's windows over it; bounds from the window list (no permission).
+/// host's container (the pane, SetHostRect) or, before the host has sent it, on the host's window
+/// (its bounds from the window list, no permission); ordered above the frontmost of KiCad's
+/// windows over the host.
 void centreOnHost( NSWindow* aWindow )
 {
     if( !s_parent )
         return;
 
-    CFArrayRef list = CGWindowListCopyWindowInfo( kCGWindowListOptionIncludingWindow, (CGWindowID) s_parent );
+    // Top-left origin of the primary display, as the window list and SetHostRect count
+    CGRect host = CGRectNull;
 
-    if( list && CFArrayGetCount( list ) )
+    if( s_hostKnown )
     {
-        CGRect        host;
-        NSDictionary* info = (NSDictionary*) CFArrayGetValueAtIndex( list, 0 );
-
-        if( CGRectMakeWithDictionaryRepresentation( (CFDictionaryRef)[info objectForKey:(NSString*) kCGWindowBounds], &host ) )
+        host = CGRectMake( s_hostX, s_hostY, s_hostW, s_hostH );
+    }
+    else if( CFArrayRef list = CGWindowListCopyWindowInfo( kCGWindowListOptionIncludingWindow, (CGWindowID) s_parent ) )
+    {
+        if( CFArrayGetCount( list ) )
         {
-            // window-list coordinates count from the primary display's top-left; Cocoa's from its bottom-left
-            double H = NSScreen.screens[0].frame.size.height;
-            NSSize size = aWindow.frame.size;
-            [aWindow setFrameOrigin:NSMakePoint( host.origin.x + ( host.size.width - size.width ) / 2,
-                                                 H - ( host.origin.y + ( host.size.height + size.height ) / 2 ) )];
+            NSDictionary* info = (NSDictionary*) CFArrayGetValueAtIndex( list, 0 );
+
+            if( !CGRectMakeWithDictionaryRepresentation( (CFDictionaryRef)[info objectForKey:(NSString*) kCGWindowBounds], &host ) )
+                host = CGRectNull;
         }
+
+        CFRelease( list );
     }
 
-    if( list )
-        CFRelease( list );
+    if( !CGRectIsNull( host ) )
+    {
+        // Cocoa counts from the primary display's bottom-left
+        double H = NSScreen.screens[0].frame.size.height;
+        NSSize size = aWindow.frame.size;
+        [aWindow setFrameOrigin:NSMakePoint( host.origin.x + ( host.size.width - size.width ) / 2,
+                                             H - ( host.origin.y + ( host.size.height + size.height ) / 2 ) )];
+    }
 
     // Above the frontmost of KiCad's own windows over the host (the frame on show, a dialog already open), never just above the
     // host: there it went between the host and the frame, under the frame, and the host's re-stacking (its window kept just below
@@ -1099,9 +1110,38 @@ void KIPLATFORM::EMBED::SetHostRect( int aX, int aY, int aWidth, int aHeight, bo
             orderIn( frame, state );
     }
 
+    // A dialog shown before the host's first rect (the recover prompt at a project's open, an
+    // NSAlert run before the API answers), or while the host was hidden, was centred on the host's
+    // whole window or not at all: now on the pane, and above the frames just ordered in
+    if( ( !wasKnown || visibilityChanged ) && s_hostKnown && s_hostVisible )
+    {
+        for( NSInteger number : std::set<NSInteger>( s_dialogs ) )
+        {
+            if( NSWindow* dialog = [NSApp windowWithWindowNumber:number] )
+            {
+                if( dialog.visible )
+                    centreOnHost( dialog );
+            }
+        }
+    }
+
     // Commit now: this runs from a dispatched block, not a run-loop pass, and the frame change
     // otherwise waited (a resize lagged ~126 ms in the prototype)
     [CATransaction flush];
+}
+
+
+bool KIPLATFORM::EMBED::PostToMainModal( std::function<void()> aFunc )
+{
+    if( !aFunc )
+        return false;
+
+    // Only the modal panel mode ([NSApp runModalForWindow:], which [NSAlert runModal] runs): not
+    // the default mode wx's own loop runs, nor event tracking (menus, live resize)
+    CFRunLoopRef main = CFRunLoopGetMain();
+    CFRunLoopPerformBlock( main, (CFStringRef) NSModalPanelRunLoopMode, ^{ aFunc(); } );
+    CFRunLoopWakeUp( main );
+    return true;
 }
 
 

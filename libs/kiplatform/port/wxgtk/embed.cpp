@@ -1110,6 +1110,13 @@ bool KIPLATFORM::EMBED::SetPreferDark( int aMode )
 }
 
 
+bool KIPLATFORM::EMBED::PostToMainModal( std::function<void()> /*aFunc*/ )
+{
+    // wx's CallAfter is the only post here
+    return false;
+}
+
+
 bool KIPLATFORM::EMBED::NativeModalTitle( wxString& aTitle )
 {
     GList* toplevels = gtk_window_list_toplevels();

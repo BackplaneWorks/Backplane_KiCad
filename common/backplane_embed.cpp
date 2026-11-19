@@ -503,6 +503,30 @@ bool BACKPLANE_EMBED::isUnmanaged( uint64_t aWindow ) const
 }
 
 
+BACKPLANE_EMBED::MODAL_TITLE_SCOPE::MODAL_TITLE_SCOPE( const wxString& aTitle )
+{
+    BACKPLANE_EMBED&            embed = BACKPLANE_EMBED::Get();
+    std::lock_guard<std::mutex> lock( embed.m_modalTitleMutex );
+    m_previous = embed.m_modalTitleFallback;
+    embed.m_modalTitleFallback = aTitle;
+}
+
+
+BACKPLANE_EMBED::MODAL_TITLE_SCOPE::~MODAL_TITLE_SCOPE()
+{
+    BACKPLANE_EMBED&            embed = BACKPLANE_EMBED::Get();
+    std::lock_guard<std::mutex> lock( embed.m_modalTitleMutex );
+    embed.m_modalTitleFallback = m_previous;
+}
+
+
+wxString BACKPLANE_EMBED::modalTitleFallback() const
+{
+    std::lock_guard<std::mutex> lock( m_modalTitleMutex );
+    return m_modalTitleFallback.Clone();
+}
+
+
 void BACKPLANE_EMBED::noteDialog( uint64_t aWindow, bool aMapped, const wxString& aTitle )
 {
     if( aMapped )
@@ -510,8 +534,10 @@ void BACKPLANE_EMBED::noteDialog( uint64_t aWindow, bool aMapped, const wxString
         if( m_openDialogs.count( aWindow ) )
             return;
 
-        m_openDialogs[aWindow] = aTitle;
-        PushEvent( EMBED_EVENT_TYPE::DIALOG_OPENED, {}, aTitle.ToStdString( wxConvUTF8 ) );
+        // An untitled native modal (macOS NSAlert) takes the title its caller gave it
+        wxString title = aTitle.IsEmpty() ? modalTitleFallback() : aTitle;
+        m_openDialogs[aWindow] = title;
+        PushEvent( EMBED_EVENT_TYPE::DIALOG_OPENED, {}, title.ToStdString( wxConvUTF8 ) );
     }
     else
     {
@@ -1497,7 +1523,12 @@ std::optional<wxString> BACKPLANE_EMBED::ModalBlocker( bool aNestedLoops )
     wxString nativeTitle;
 
     if( KIPLATFORM::EMBED::NativeModalTitle( nativeTitle ) )
+    {
+        if( nativeTitle.IsEmpty() )
+            nativeTitle = Get().modalTitleFallback();
+
         return nativeTitle;
+    }
 
     if( !aNestedLoops )
         return std::nullopt;
@@ -2504,9 +2535,31 @@ void BACKPLANE_EMBED::SetHostGeometryLater( int aX, int aY, int aWidth, int aHei
     op.geometry = { aX, aY, aWidth, aHeight, aVisible, aRaise };
     m_hostQueue.Submit( op );
 
+    if( !wxTheApp )
+        return;
+
+    // macOS: also a drain for a native modal AppKit runs ("Recover Unsaved Changes" at a
+    // project's open, a message, file or folder dialog later), so the container's rect still
+    // reaches KiCad and centreOnHost places the modal on the pane.  CallAfter waits there:
+    // wxMessageDialog, wxFileDialog and wxDirDialog::ShowModal hold a wxCFEventLoopPauseIdleEvents,
+    // and wx's common-mode observer skips ProcessPendingEvents while paused (wx 3.2.8, 3.3.4);
+    // before OnRun there is no wx loop at all.  It runs only in a modal session, one waits at a
+    // time, and DrainHost applies geometry and visibility only (SetHostRect); outside a modal
+    // CallAfter below drains as before.
+    if( !m_hostModalDrainPosted.exchange( true )
+        && !KIPLATFORM::EMBED::PostToMainModal(
+                [this]()
+                {
+                    m_hostModalDrainPosted = false;
+                    DrainHost();
+                } ) )
+    {
+        m_hostModalDrainPosted = false;
+    }
+
     // One pending drain at a time; a running task's pumps drain too (ServeDuringTask), since they
     // do not run wx's queues
-    if( !wxTheApp || m_hostDrainPosted.exchange( true ) )
+    if( m_hostDrainPosted.exchange( true ) )
         return;
 
     wxTheApp->CallAfter(
