@@ -20,7 +20,10 @@
 
 #include <config.h>
 #include <gestfich.h>
+#include <wx/arrstr.h>
+#include <wx/filename.h>
 #include <wx/process.h>
+#include <wx/utils.h>
 #include <wx/textfile.h>
 
 #include <future>
@@ -249,6 +252,53 @@ long PYTHON_MANAGER::ExecuteSync( const std::vector<wxString>& aArgs,
 }
 
 
+namespace
+{
+/**
+ * The first executable `aName` in the directories of PATH, in PATH's order, as `which` (Unix) and
+ * `where` (Windows) find it, without starting either: a child process at start-up hung kicad-cli
+ * on macOS, its exit never seen (Backplane #1160).  Empty entries are skipped.
+ */
+wxString findOnPath( const wxString& aName )
+{
+    wxString path;
+
+    if( !wxGetEnv( wxS( "PATH" ), &path ) )
+        return wxEmptyString;
+
+#ifdef _WIN32
+    const wxString sep = wxS( ";" );
+#else
+    const wxString sep = wxS( ":" );
+#endif
+
+    for( wxString dir : wxSplit( path, sep[0], '\0' ) )
+    {
+#ifdef _WIN32
+        // a quoted entry ("C:\Program Files\Python312") is a folder too, as `where` reads it
+        if( dir.length() >= 2 && dir.StartsWith( wxS( "\"" ) ) && dir.EndsWith( wxS( "\"" ) ) )
+            dir = dir.Mid( 1, dir.length() - 2 );
+#endif
+
+        if( dir.IsEmpty() )
+            continue;
+
+        wxFileName candidate( dir, aName );
+
+#ifdef _WIN32
+        // `where` lists App Execution Aliases (WindowsApps reparse points) as files too
+        if( candidate.FileExists() )
+#else
+        if( candidate.FileExists() && candidate.IsFileExecutable() )
+#endif
+            return candidate.GetFullPath();
+    }
+
+    return wxEmptyString;
+}
+} // namespace
+
+
 wxString PYTHON_MANAGER::FindPythonInterpreter()
 {
     // First, attempt to use a Python we distribute with KiCad
@@ -267,33 +317,19 @@ wxString PYTHON_MANAGER::FindPythonInterpreter()
     if( pythonExe.IsFileExecutable() )
         return pythonExe.GetFullPath();
 
-    // Fall back on finding any Python in the user's path
+    // Fall back on finding any Python in the user's path: what `where pythonw.exe` (Windows) or
+    // `which -a python3`, then `which -a python` listed first, searched here (no process started)
 
 #ifdef _WIN32
-    wxArrayString output;
-
-    if( 0 == wxExecute( wxS( "where pythonw.exe" ), output, wxEXEC_SYNC ) )
-    {
-        if( !output.IsEmpty() )
-            return output[0];
-    }
+    return findOnPath( wxS( "pythonw.exe" ) );
 #else
-    wxArrayString output;
+    wxString found = findOnPath( wxS( "python3" ) );
 
-    if( 0 == wxExecute( wxS( "which -a python3" ), output, wxEXEC_SYNC ) )
-    {
-        if( !output.IsEmpty() )
-            return output[0];
-    }
+    if( found.IsEmpty() )
+        found = findOnPath( wxS( "python" ) );
 
-    if( 0 == wxExecute( wxS( "which -a python" ), output, wxEXEC_SYNC ) )
-    {
-        if( !output.IsEmpty() )
-            return output[0];
-    }
+    return found;
 #endif
-
-    return wxEmptyString;
 }
 
 

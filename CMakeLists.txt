@@ -980,6 +980,13 @@ find_package( PythonInterp ${PythonInterp_FIND_VERSION} )
 
 check_find_package_result( PYTHONINTERP_FOUND "Python Interpreter" )
 
+# The interpreter KiCad prefers at run time (PYTHON_MANAGER::FindPythonInterpreter, after a bundled
+# one), baked into config.h: by default the build's own.  A relocatable build sets it empty so a
+# path of the build machine (macOS: its Homebrew python3) is never what a person's KiCad looks for;
+# KiCad then searches PATH (Backplane #1160).
+set( KICAD_RUNTIME_PYTHON_EXECUTABLE "${PYTHON_EXECUTABLE}" CACHE STRING
+     "Python interpreter KiCad prefers at run time (empty: search PATH)" )
+
 #
 # Find wxWidgets library, required
 #

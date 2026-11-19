@@ -489,8 +489,11 @@ bool PGM_BASE::InitPgm( bool aHeadless, bool aIsUnitTest )
     // Load common settings from disk after setting up env vars
     GetSettingsManager().Load( commonSettings );
 
-    // If user doesn't have a saved Python interpreter, try (potentially again) to find one
-    if( commonSettings->m_Api.python_interpreter.IsEmpty() )
+    // If user doesn't have a saved Python interpreter, try (potentially again) to find one.
+    // Only the GUI uses it (API plugins and their environments, the BOM generators, Preferences >
+    // Plugins); kicad-cli, its api-server included, never does, so it neither looks one up nor
+    // saves a guess into the person's settings (Backplane #1160).
+    if( IsGUI() && commonSettings->m_Api.python_interpreter.IsEmpty() )
         commonSettings->m_Api.python_interpreter = PYTHON_MANAGER::FindPythonInterpreter();
 
     // Init user language *before* calling loadSettings, because
@@ -511,7 +514,9 @@ bool PGM_BASE::InitPgm( bool aHeadless, bool aIsUnitTest )
     // Need to create a project early for now (it can have an empty path for the moment)
     GetSettingsManager().LoadProject( "" );
 
-    if( commonSettings->m_Api.enable_server )
+    // API plugins are the GUI's (its toolbars and menus run them); outside it their Python
+    // environments would be set up with no interpreter looked up (above)
+    if( IsGUI() && commonSettings->m_Api.enable_server )
         m_plugin_manager->ReloadPlugins();
 
     // This sets the maximum tooltip display duration to 10s (up from 5) but only affects
