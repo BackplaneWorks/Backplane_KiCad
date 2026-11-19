@@ -22,14 +22,20 @@
 #ifndef FP_TREE_MODEL_ADAPTER_H
 #define FP_TREE_MODEL_ADAPTER_H
 
+#include <memory>
+#include <set>
+
 #include <lib_tree_model_adapter.h>
 
 class FOOTPRINT_LIBRARY_ADAPTER;
 class PCB_BASE_FRAME;
+class wxTimer;
 
 class FP_TREE_MODEL_ADAPTER : public LIB_TREE_MODEL_ADAPTER
 {
 public:
+    ~FP_TREE_MODEL_ADAPTER();
+
     /**
      * Factory function: create a model adapter in a reference-counting container.
      *
@@ -40,6 +46,8 @@ public:
                                                            FOOTPRINT_LIBRARY_ADAPTER* aLibs );
 
     void AddLibraries( EDA_BASE_FRAME* aParent );
+
+    void StopLazyLoad();
 
     wxString GenerateInfo( LIB_ID const& aLibId, int aUnit ) override;
 
@@ -53,6 +61,11 @@ protected:
 
 protected:
     FOOTPRINT_LIBRARY_ADAPTER* m_libs;
+
+private:
+    std::set<wxString>       m_pending_load_libraries;
+    std::unique_ptr<wxTimer> m_check_pending_libraries_timer;
+    std::shared_ptr<bool>    m_alive = std::make_shared<bool>( true );
 };
 
 #endif // FP_TREE_MODEL_ADAPTER_H

@@ -121,6 +121,8 @@ private:
     // A command event sent by a PANEL_FOOTPRINT_CHOOSER will fire this event:
     void onFpChanged( wxCommandEvent& event );
 
+    void onLazyLoadUpdate();
+
     void build3DCanvas();
 
     DECLARE_EVENT_TABLE()
@@ -129,6 +131,7 @@ private:
 
 private:
     PANEL_FOOTPRINT_CHOOSER* m_chooserPanel;
+    wxString                 m_originalTitle;
     wxPanel*                 m_bottomPanel;
     inline static bool       m_showDescription = true; // Init true to show the m_details panel
     inline static bool       m_showFpMode = true;  // Init true to show the footprint
