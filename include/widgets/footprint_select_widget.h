@@ -22,6 +22,7 @@
 
 #include <wx/arrstr.h>
 #include <wx/panel.h>
+#include <wx/timer.h>
 
 #include <vector>
 
@@ -51,9 +52,7 @@ public:
      */
     FOOTPRINT_SELECT_WIDGET( EDA_DRAW_FRAME* aFrame, wxWindow* aParent, int aMaxItems = 400 );
 
-    virtual ~FOOTPRINT_SELECT_WIDGET()
-    {
-    }
+    virtual ~FOOTPRINT_SELECT_WIDGET();
 
     /**
      * Initialize the widget with a KIWAY for cross-module communication.
@@ -133,8 +132,13 @@ private:
     std::vector<LIB_ID> m_always_included;
 
     KIWAY*            m_kiway;
+    wxTimer           m_load_timer;
+    bool              m_load_pending;
 
     void OnComboBox( wxCommandEvent& aEvent );
+    void OnDropDown( wxCommandEvent& aEvent );
+    void OnLoadTimer( wxTimerEvent& aEvent );
+    void refreshPreservingSelection();
 };
 
 

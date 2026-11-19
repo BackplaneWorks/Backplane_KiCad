@@ -33,7 +33,9 @@ FOOTPRINT_SELECT_WIDGET::FOOTPRINT_SELECT_WIDGET( EDA_DRAW_FRAME* aFrame, wxWind
         m_max_items( aMaxItems ),
         m_pin_count( 0 ),
         m_zero_filter( true ),
-        m_kiway( nullptr )
+        m_kiway( nullptr ),
+        m_load_timer( this ),
+        m_load_pending( false )
 {
     m_sizer = new wxBoxSizer( wxVERTICAL );
     m_fp_sel_ctrl = new FOOTPRINT_CHOICE( this, wxID_ANY );
@@ -44,6 +46,15 @@ FOOTPRINT_SELECT_WIDGET::FOOTPRINT_SELECT_WIDGET( EDA_DRAW_FRAME* aFrame, wxWind
     m_sizer->Fit( this );
 
     m_fp_sel_ctrl->Bind( wxEVT_COMBOBOX, &FOOTPRINT_SELECT_WIDGET::OnComboBox, this );
+    m_fp_sel_ctrl->Bind( wxEVT_COMBOBOX_DROPDOWN, &FOOTPRINT_SELECT_WIDGET::OnDropDown, this );
+    Bind( wxEVT_TIMER, &FOOTPRINT_SELECT_WIDGET::OnLoadTimer, this, m_load_timer.GetId() );
+}
+
+
+FOOTPRINT_SELECT_WIDGET::~FOOTPRINT_SELECT_WIDGET()
+{
+    m_load_timer.Stop();
+    Unbind( wxEVT_TIMER, &FOOTPRINT_SELECT_WIDGET::OnLoadTimer, this, m_load_timer.GetId() );
 }
 
 
@@ -144,6 +155,8 @@ bool FOOTPRINT_SELECT_WIDGET::UpdateList()
     // If zero_filter is set and we have no filters, show only the always-included footprints
     if( m_zero_filter && m_filters.IsEmpty() && m_pin_count == 0 )
     {
+        m_load_pending = false;
+        m_load_timer.Stop();
         SelectDefault();
         return true;
     }
@@ -154,6 +167,8 @@ bool FOOTPRINT_SELECT_WIDGET::UpdateList()
     query.m_MaxResults = m_max_items;
     query.m_ZeroFilters = m_zero_filter;
 
+    // Sampled before the query too: libraries that finish loading during it may have missed it
+    const bool             wasLoading = GetFootprintLibrariesLoadProgress( *m_kiway ) < 1.0f;
     FOOTPRINT_MATCH_RESULT matchResult = QueryMatchingFootprints( *m_kiway, query );
 
     // The query fails when the PCB kiface is unavailable. Then the list is just the default.
@@ -168,10 +183,87 @@ bool FOOTPRINT_SELECT_WIDGET::UpdateList()
 
             m_fp_sel_ctrl->Append( fpName, new wxStringClientData( fpName ) );
         }
+
+        // If footprint libraries are still loading in the background, refresh once they finish
+        // (or on dropdown) instead of blocking the UI thread.
+        m_load_pending = wasLoading || GetFootprintLibrariesLoadProgress( *m_kiway ) < 1.0f;
+
+        if( m_load_pending )
+        {
+            if( !m_load_timer.IsRunning() )
+                m_load_timer.Start( 500 );
+        }
+        else
+        {
+            m_load_timer.Stop();
+        }
+    }
+    else
+    {
+        m_load_pending = false;
+        m_load_timer.Stop();
     }
 
     SelectDefault();
     return true;
+}
+
+
+void FOOTPRINT_SELECT_WIDGET::OnDropDown( wxCommandEvent& aEvent )
+{
+    if( m_load_pending && m_kiway )
+        refreshPreservingSelection();
+
+    aEvent.Skip();
+}
+
+
+void FOOTPRINT_SELECT_WIDGET::OnLoadTimer( wxTimerEvent& aEvent )
+{
+    if( !m_kiway || !m_load_pending )
+    {
+        m_load_timer.Stop();
+        return;
+    }
+
+    if( GetFootprintLibrariesLoadProgress( *m_kiway ) < 1.0f )
+        return;
+
+    // Don't rebuild the list while the user has the dropdown open; retry on the next tick.
+    if( m_fp_sel_ctrl->IsPopupShown() )
+        return;
+
+    m_load_timer.Stop();
+    m_load_pending = false;
+    refreshPreservingSelection();
+}
+
+
+void FOOTPRINT_SELECT_WIDGET::refreshPreservingSelection()
+{
+    wxString selectedFp;
+    int      sel = m_fp_sel_ctrl->GetSelection();
+
+    if( sel > 0 )
+    {
+        if( auto* data = static_cast<wxStringClientData*>( m_fp_sel_ctrl->GetClientObject( sel ) ) )
+            selectedFp = data->GetData();
+    }
+
+    UpdateList();
+
+    if( !selectedFp.IsEmpty() )
+    {
+        for( unsigned int i = 1; i < m_fp_sel_ctrl->GetCount(); ++i )
+        {
+            if( auto* data = static_cast<wxStringClientData*>( m_fp_sel_ctrl->GetClientObject( i ) );
+                data && data->GetData() == selectedFp )
+            {
+                m_fp_sel_ctrl->SetSelection( i );
+                break;
+            }
+        }
+    }
 }
 
 

@@ -192,8 +192,14 @@ FOOTPRINT_CHOOSER_FRAME::FOOTPRINT_CHOOSER_FRAME( KIWAY* aKiway, wxWindow* aPare
 
     SetSizer( frameSizer );
 
-    SetTitle( GetTitle() + wxString::Format( _( " (%d items loaded)" ),
-                                             m_chooserPanel->GetItemCount() ) );
+    m_originalTitle = GetTitle();
+    SetTitle( m_originalTitle + wxString::Format( _( " (%d items loaded)" ),
+                                                  m_chooserPanel->GetItemCount() ) );
+    m_chooserPanel->Adapter()->RegisterLazyLoadHandler(
+            [this]()
+            {
+                onLazyLoadUpdate();
+            } );
 
     Layout();
     m_chooserPanel->FinishSetup();
@@ -336,6 +342,8 @@ void FOOTPRINT_CHOOSER_FRAME::quiescePreview()
 
     if( m_chooserPanel )
     {
+        m_chooserPanel->StopLazyLoad();
+
         FOOTPRINT_PREVIEW_WIDGET* viewerPanel = m_chooserPanel->GetViewerPanel();
 
         if( viewerPanel )
@@ -915,6 +923,14 @@ void FOOTPRINT_CHOOSER_FRAME::updateViews()
 
     m_chooserPanel->m_RightPanel->Layout();
     m_chooserPanel->m_RightPanel->Refresh();
+}
+
+
+void FOOTPRINT_CHOOSER_FRAME::onLazyLoadUpdate()
+{
+    SetTitle( m_originalTitle + wxString::Format( _( " (%d items loaded)" ),
+                                                  m_chooserPanel->GetItemCount() ) );
+    m_chooserPanel->Regenerate();
 }
 
 

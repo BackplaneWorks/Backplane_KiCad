@@ -64,10 +64,11 @@ PANEL_FOOTPRINT_CHOOSER::PANEL_FOOTPRINT_CHOOSER( PCB_BASE_FRAME* aFrame, wxTopL
     m_CurrFootprint = nullptr;
     FOOTPRINT_LIBRARY_ADAPTER* footprints = PROJECT_PCB::FootprintLibAdapter( &aFrame->Prj() );
 
-    // Ensure libraries are loaded before building the tree. This is necessary when the footprint
-    // chooser is opened from contexts that don't preload libraries (e.g., from Eeschema).
-    footprints->AsyncLoad();
-    footprints->BlockUntilLoaded();
+    // Kick off background loading if needed without blocking the UI thread; FP_TREE_MODEL_ADAPTER
+    // populates libraries incrementally as they finish loading.
+    if( !footprints->StartDeferredFullLoad() && !footprints->FullLoadDeferred() )
+        footprints->AsyncLoad();
+
     footprints->RefreshChangedLibraries();
 
     m_adapter = FP_TREE_MODEL_ADAPTER::Create( aFrame, footprints );
@@ -182,6 +183,8 @@ PANEL_FOOTPRINT_CHOOSER::PANEL_FOOTPRINT_CHOOSER( PCB_BASE_FRAME* aFrame, wxTopL
 
 PANEL_FOOTPRINT_CHOOSER::~PANEL_FOOTPRINT_CHOOSER()
 {
+    StopLazyLoad();
+
     m_frame->Unbind( wxEVT_MENU_OPEN, &PANEL_FOOTPRINT_CHOOSER::onMenuOpen, this );
     m_frame->Unbind( wxEVT_MENU_CLOSE, &PANEL_FOOTPRINT_CHOOSER::onMenuClose, this );
     Unbind( wxEVT_TIMER, &PANEL_FOOTPRINT_CHOOSER::onCloseTimer, this );
@@ -210,6 +213,16 @@ PANEL_FOOTPRINT_CHOOSER::~PANEL_FOOTPRINT_CHOOSER()
             cfg->m_FootprintChooser.sash_v = m_vsplitter->GetSashPosition();
 
         cfg->m_FootprintChooser.sort_mode = m_tree->GetSortMode();
+    }
+}
+
+
+void PANEL_FOOTPRINT_CHOOSER::StopLazyLoad()
+{
+    if( m_adapter )
+    {
+        m_adapter->RegisterLazyLoadHandler( nullptr );
+        static_cast<FP_TREE_MODEL_ADAPTER*>( m_adapter.get() )->StopLazyLoad();
     }
 }
 

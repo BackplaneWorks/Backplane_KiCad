@@ -76,6 +76,10 @@ public:
 
     wxSizer* GetFiltersSizer() const { return m_tree->GetFiltersSizer(); }
 
+    wxObjectDataPtr<LIB_TREE_MODEL_ADAPTER> Adapter() const { return m_adapter; }
+
+    void StopLazyLoad();
+
     void Regenerate() { m_tree->Regenerate( true ); }
 
     FOOTPRINT_PREVIEW_WIDGET* GetViewerPanel() const { return m_preview_ctrl; }

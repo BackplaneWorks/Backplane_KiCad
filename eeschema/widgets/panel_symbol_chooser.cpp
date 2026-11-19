@@ -709,6 +709,7 @@ void PANEL_SYMBOL_CHOOSER::populateFootprintSelector( LIB_ID const& aLibId )
     }
     else
     {
+        m_fp_sel_ctrl->FilterByFootprintFilters( {}, true );
         m_fp_sel_ctrl->UpdateList();
         m_fp_sel_ctrl->Disable();
     }

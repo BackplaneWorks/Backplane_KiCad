@@ -188,8 +188,8 @@ static wxString filterFootprints( const wxString& aFilterJson )
         if( !adapter )
             return result.ToJsonStr();
 
-        adapter->AsyncLoad();
-        adapter->BlockUntilLoaded();
+        if( !adapter->StartDeferredFullLoad() && !adapter->FullLoadDeferred() )
+            adapter->AsyncLoad();
 
         for( const wxString& nickname : adapter->GetLibraryNames() )
         {
@@ -274,7 +274,9 @@ static bool startFootprintLibraryLoad()
 
     if( adapter )
     {
-        adapter->AsyncLoad();
+        if( !adapter->StartDeferredFullLoad() && !adapter->FullLoadDeferred() )
+            adapter->AsyncLoad();
+
         return true;
     }
 
@@ -286,7 +288,7 @@ static bool startFootprintLibraryLoad()
  * Return how far a background load has got.
  *
  * Never blocks: callers can poll this while showing a loading indication, and only run
- * #filterFootprints() (which does wait for the load) after it returns 1.0.
+ * #filterFootprints() after it returns 1.0 (or refresh when it reaches 1.0).
  */
 static float footprintLibraryLoadProgress()
 {
@@ -294,6 +296,12 @@ static float footprintLibraryLoadProgress()
 
     if( !adapter )
         return 1.0f;
+
+    if( adapter->FullLoadDeferred() )
+    {
+        if( !adapter->StartDeferredFullLoad() )
+            return 0.0f;
+    }
 
     // Nothing to report means there is nothing to wait for.
     if( std::optional<float> progress = adapter->AsyncLoadProgress() )
