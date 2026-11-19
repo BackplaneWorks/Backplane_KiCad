@@ -27,6 +27,7 @@
 #include <lib_id.h>
 #include <eda_units.h>
 #include <gal/color4d.h>
+#include <widgets/wx_debounced_action.h>
 
 class FOOTPRINT_PREVIEW_PANEL_BASE;
 class BOARD;
@@ -49,6 +50,8 @@ public:
      * @param aKiway - an active Kiway instance
      */
     FOOTPRINT_PREVIEW_WIDGET( wxWindow* aParent, KIWAY& aKiway );
+
+    ~FOOTPRINT_PREVIEW_WIDGET() override;
 
     /**
      * Return whether the widget initialized properly. This could return false if Kiway is
@@ -79,10 +82,14 @@ public:
     void SetPinFunctions( const std::map<wxString, wxString>& aPinFunctions );
 
     /**
-     * Set the currently displayed footprint. Any footprint passed in here *MUST* have been
-     * passed to CacheFootprint before.
+     * Set the currently displayed footprint.  While the footprint libraries are still loading
+     * in the background and the footprint cannot be loaded yet, say so and try again until the
+     * load ends; only then is it "not found".  Any other display or status call drops the retry.
      */
     void DisplayFootprint( const LIB_ID& aFPID );
+
+    /// Drop a pending retry of DisplayFootprint(); call before the canvas stops drawing.
+    void CancelPendingDisplay();
 
     /**
      * Display a pair of footprints.  (Normally used for diff'ing.)
@@ -98,6 +105,15 @@ public:
     FOOTPRINT_PREVIEW_PANEL_BASE* GetPreviewPanel() { return m_prev_panel; }
 
 protected:
+    /// Show aText in the status label, keeping a pending retry.
+    void showStatus( const wxString& aText );
+
+    /// Try to show aFPID; false if it could not be loaded.
+    bool tryDisplay( const LIB_ID& aFPID );
+
+    /// Retry the pending footprint, or give up on it once the libraries have loaded.
+    void retryPendingDisplay();
+
     FOOTPRINT_PREVIEW_PANEL_BASE* m_prev_panel;
 
     wxStaticText*                 m_status;
@@ -105,6 +121,10 @@ protected:
     wxSizer*                      m_statusSizer;
     wxSizer*                      m_outerSizer;
     LIB_ID                        m_libid;
+
+    KIWAY*                        m_kiway;
+    LIB_ID                        m_pendingId;   ///< asked for while its library was loading
+    WX_DEBOUNCED_ACTION           m_loadRetry;
 };
 
 
