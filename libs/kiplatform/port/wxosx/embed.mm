@@ -135,7 +135,7 @@ std::string keyState( NSInteger aNumber )
            + " NSApp.keyWindow=" + std::to_string( key ? (long) key.windowNumber : 0 )
            + " frontmost=" + ( front ? std::to_string( front.processIdentifier ) : std::string( "?" ) )
            + " (us " + std::to_string( getpid() ) + ")"
-           + " wxFocus=" + ( focus ? focus->GetClassInfo()->GetClassName() : wxString( "none" ) ).ToStdString();
+           + " wxFocus=" + ( focus ? wxString( focus->GetClassInfo()->GetClassName() ) : wxString( "none" ) ).ToStdString();
 }
 
 
