@@ -33,6 +33,7 @@ cmake -S . -B "$build" -G Ninja \
   -DSQLite3_ROOT="$(brew --prefix sqlite)" \
   -DKICAD_BUILD_QA_TESTS=OFF -DKICAD_BUILD_I18N=OFF \
   -DKICAD_USE_SENTRY=OFF -DKICAD_USE_PCH=OFF \
+  -DKICAD_RUNTIME_PYTHON_EXECUTABLE= \
   -DKICAD_VERSION_EXTRA="$version_extra" -DBACKPLANE_FORK_VERSION="$version" \
   -DBACKPLANE_UPSTREAM_COMMIT="$(cat BACKPLANE_UPSTREAM)"
 grep -Fqx "KICAD_VERSION_EXTRA:STRING=$version_extra" "$build/CMakeCache.txt" || {
