@@ -1240,6 +1240,13 @@ void KIPLATFORM::EMBED::ReturnFocusFrom( wxWindow* aFrame, uint64_t aBefore )
 }
 
 
+bool KIPLATFORM::EMBED::PostToMainModal( std::function<void()> /*aFunc*/ )
+{
+    // wx's CallAfter is the only post here
+    return false;
+}
+
+
 bool KIPLATFORM::EMBED::NativeModalTitle( wxString& aTitle )
 {
     // The UI thread's windows, asked from whichever thread wants to name what holds KiCad up

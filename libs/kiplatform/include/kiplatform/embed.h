@@ -208,6 +208,14 @@ namespace EMBED
     void SetHostRect( int aX, int aY, int aWidth, int aHeight, bool aVisible, bool aRaise );
 
     /**
+     * macOS: run aFunc on the main thread the next time the main run loop runs a modal session
+     * (NSModalPanelRunLoopMode: [NSAlert runModal], the open and save panels), where wx's
+     * CallAfter waits for the session to end; it waits for one until then.  Callable from any
+     * thread.  Returns false elsewhere (nothing posted).
+     */
+    bool PostToMainModal( std::function<void()> aFunc );
+
+    /**
      * True if the toolkit shows a modal window that wx does not track (for example a native
      * message box run by the toolkit's own loop); aTitle gets its title.
      */

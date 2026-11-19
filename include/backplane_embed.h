@@ -582,6 +582,23 @@ public:
         ~SELECTION_SCOPE() { --BACKPLANE_EMBED::Get().m_hostSelecting; }
     };
 
+    /**
+     * While alive, a dialog reported with no title of its own (macOS: the NSAlert a
+     * KICAD_MESSAGE_DIALOG runs has an empty window title) is named aTitle in
+     * ET_DIALOG_OPENED/CLOSED and ModalBlocker.  Scopes nest; each restores the one before.
+     */
+    struct KICOMMON_API MODAL_TITLE_SCOPE
+    {
+        explicit MODAL_TITLE_SCOPE( const wxString& aTitle );
+        ~MODAL_TITLE_SCOPE();
+
+        MODAL_TITLE_SCOPE( const MODAL_TITLE_SCOPE& ) = delete;
+        MODAL_TITLE_SCOPE& operator=( const MODAL_TITLE_SCOPE& ) = delete;
+
+    private:
+        wxString m_previous;
+    };
+
     // ---- Comments (bp.10) ----
 
     /// The API socket given with --api-socket (a Backplane host is there even if not embedded).
@@ -762,6 +779,11 @@ private:
     void noteDialog( uint64_t aWindow, bool aMapped, const wxString& aTitle );
 
     std::map<uint64_t, wxString> m_openDialogs;
+
+    /// MODAL_TITLE_SCOPE's title (empty: none); ModalBlocker reads it from any thread
+    wxString           modalTitleFallback() const;
+    mutable std::mutex m_modalTitleMutex;
+    wxString           m_modalTitleFallback;
     std::set<uint64_t>           m_parked;
 
     EMBED_CHROME m_chrome;
@@ -808,6 +830,7 @@ private:
     std::map<uint64_t, std::chrono::steady_clock::time_point> m_hostHeld;
     bool                    m_hostDraining = false;
     std::atomic<bool>       m_hostDrainPosted{ false };
+    std::atomic<bool>       m_hostModalDrainPosted{ false };   ///< macOS: PostToMainModal's drain
 
     void applyHostOp( const EMBED_HOST_ORDER::OP& aOp );
     std::set<EMBED_FRAME_KIND>     m_prewarmOpening;  ///< kinds a prewarm is opening

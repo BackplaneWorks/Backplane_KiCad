@@ -1022,10 +1022,11 @@ bool KICAD_MANAGER_FRAME::LoadProject( const wxFileName& aProjectFileName )
             && Kiway().LocalHistory().HeadNewerThanLastSave( Prj().GetProjectPath() ) )
     {
         wxString head = Kiway().LocalHistory().GetHeadHash( Prj().GetProjectPath() );
+        wxString caption = _( "Recover Unsaved Changes" );
 
         KICAD_MESSAGE_DIALOG dlg( this, _( "KiCad found unsaved changes from your last session that are newer than "
                                            "the saved project files." ),
-                                  _( "Recover Unsaved Changes" ), wxYES_NO | wxICON_QUESTION );
+                                  caption, wxYES_NO | wxICON_QUESTION );
 
         dlg.SetExtendedMessage( _( "This can happen if your previous session ended unexpectedly.\n\n"
                                    "Choose 'Restore' to recover those changes, or 'Discard' to keep the "
@@ -1033,7 +1034,16 @@ bool KICAD_MANAGER_FRAME::LoadProject( const wxFileName& aProjectFileName )
 
         dlg.SetYesNoLabels( _( "Restore" ), _( "Discard" ) );
 
-        if( dlg.ShowModal() == wxID_YES )
+        int answer;
+
+        {
+            // macOS runs it as an NSAlert with an untitled window: name it to an embedding host
+            // (ET_DIALOG_OPENED, what KiCad waits on) for as long as it is up
+            BACKPLANE_EMBED::MODAL_TITLE_SCOPE title( caption );
+            answer = dlg.ShowModal();
+        }
+
+        if( answer == wxID_YES )
         {
             // The dialog above is the confirmation, skip RestoreCommit's own prompt.
             Kiway().LocalHistory().RestoreCommit( Prj().GetProjectPath(), head, this, false );
