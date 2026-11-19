@@ -1162,6 +1162,11 @@ void KIPLATFORM::EMBED::MakeTransientFor( wxWindow* aDialog, uint64_t aToplevel 
 }
 
 
+void KIPLATFORM::EMBED::TraceClick( wxWindow*, bool )
+{
+}
+
+
 void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* )
 {
     TakeFocus( aFrame );
