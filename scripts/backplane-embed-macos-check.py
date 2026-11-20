@@ -186,10 +186,13 @@ def main():
     work = Path(tempfile.mkdtemp(prefix="bpem-", dir="/tmp"))
     started = time.time()
     env = dict(os.environ)
-    for variable, directory in (("HOME", "home"), ("KICAD_CONFIG_HOME", "config"), ("TMPDIR", "tmp")):
+    for variable, directory in (("HOME", "home"), ("KICAD_CONFIG_HOME", "config"), ("TMPDIR", "tmp"), ("KICAD_DOCUMENTS_HOME", "home/Documents")):
         path = work / directory
         path.mkdir(parents=True, exist_ok=True, mode=0o700)
         env[variable] = str(path)
+    # KICAD_DOCUMENTS_HOME in the work folder too, as the hub sets it for every KiCad it starts (proc.rs kicad_documents): KiCad's
+    # default, ~/Documents/KiCad, makes macOS ask "KiCad would like to access files in your Documents folder" and KiCad's UI thread waits
+    # on the answer (the Mac mini, Nov 19: a check stalled 40 min at "not ready to reply", the prompt left on screen)
     # KiCad on macOS keeps its settings in ~/Library/Preferences/kicad (KICAD_CONFIG_HOME aside):
     # empty tables in both, so no first-run library dialog stops the UI thread
     for version in [d / v for d in (Path("config"), Path("home/Library/Preferences/kicad")) for v in ("", "10.0", "10.99")]:
