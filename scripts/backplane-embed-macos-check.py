@@ -612,8 +612,10 @@ def main():
                 host_geometry(raise_=True)
                 wait_for(lambda: directly_above(pcb, hid), 3)
                 import AppKit   # pyobjc-framework-Cocoa: a dependency of the Quartz framework the check already uses
-                front = lambda: AppKit.NSWorkspace.sharedWorkspace().frontmostApplication()   # noqa: E731
-                resigned = wait_for(lambda: front() is not None and front().processIdentifier() != kicad.pid
+                # KiCad's own activation (NSRunningApplication.isActive, as mac_pane_e2e.py's active()): never "frontmost", which is the
+                # menu-bar owner, and an embedded KiCad is an accessory app, never that
+                kicad_app = AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(kicad.pid)
+                resigned = wait_for(lambda: kicad_app is not None and not kicad_app.isActive()
                                     and not frames()[embed.FK_PCB].focused, 3)
                 return check(bool(resigned), f"1j {case}: before it, KiCad is not the active app and its frame has no focus")
 
