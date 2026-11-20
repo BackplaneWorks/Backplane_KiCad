@@ -663,8 +663,8 @@ def main():
                 box = api.request(editor.GetBoundingBox(header=header, items=[fp.id], mode=editor.BBM_ITEM_ONLY), editor.GetBoundingBoxResponse)
                 if box.boxes:
                     area = box.boxes[0].size.x_nm * box.boxes[0].size.y_nm
-                    if area > best and fp.reference_field.text.text:
-                        target, best = fp.reference_field.text.text, area
+                    if area > best and fp.reference_field.text.text.text:
+                        target, best = fp.reference_field.text.text.text, area
             RESULTS["1j_target"] = target
 
             empty = find_empty()
