@@ -152,7 +152,7 @@ python scripts/backplane-glb-concurrency-test.py "$root/bin/kicad-cli" | tee "$r
 # source at the bundled version), each under its own folder; LIBRARIES.tsv says where each text came from, BUNDLED.tsv what every
 # Mach-O in the app was built from. The check fails the build if a bundled library ends with no licence file.
 python scripts/backplane-macos-licences.py "$root" --prefix "$prefix" --nng "$nng" --build "$build" --build "$stage" \
-  --cache "$RUNNER_TEMP/licence-sources" | tee "$release/licences.log"
+  --source "$PWD" --cache "$RUNNER_TEMP/licence-sources" | tee "$release/licences.log"
 python scripts/backplane-licence-package-check.py "$root" | tee -a "$release/licences.log"
 archive="$(basename "$root").tar.gz"
 # The manifest the release checks: this version, this exact source, this platform

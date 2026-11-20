@@ -3,9 +3,9 @@
 
   - every Mach-O in KiCad.app is in licenses/BUNDLED.tsv, with what it was built from (a Homebrew formula, nng or KiCad), and none is
     of unknown origin;
-  - every Homebrew formula named there has a row in licenses/homebrew/LIBRARIES.tsv, and every row's files are in the package and not
-    empty: no bundled library without its licence;
-  - nng has licenses/nng/LICENSE.txt; KiCad has its own licence files in licenses/.
+  - every library in licenses/LIBRARIES.tsv that is in the package (a dylib, static, header-only, a vendored library compiled in, nng,
+    KiCad) has its licence files in the package, not empty; every Homebrew formula BUNDLED.tsv names has a row;
+  - licenses/vendor/thirdparty is there.
 
 usage: backplane-licence-package-check.py PACKAGE_ROOT     (exit 1 on any problem, each one printed)
 """
@@ -32,11 +32,14 @@ def main():
     root = Path(sys.argv[1]).resolve(strict=True)
     lic = root / 'licenses'
     problems = []
-    for need in (lic / 'BUNDLED.tsv', lic / 'homebrew' / 'LIBRARIES.tsv'):
+    for need in (lic / 'BUNDLED.tsv', lic / 'LIBRARIES.tsv'):
         if not need.is_file():
             sys.exit(f'FAIL licences: {need.relative_to(root)} is missing')
+    if not (lic / 'vendor' / 'thirdparty').is_dir():
+        problems.append('licenses/vendor/thirdparty is missing (KiCad\'s vendored libraries\' notices)')
     bundled = {r['path']: r['built from'] for r in tsv(lic / 'BUNDLED.tsv')}
-    libs = {r['library']: r for r in tsv(lic / 'homebrew' / 'LIBRARIES.tsv')}
+    rows = tsv(lic / 'LIBRARIES.tsv')
+    libs = {r['library']: r for r in rows}
     machos = sorted(p.relative_to(root).as_posix() for p in (root / 'KiCad.app').rglob('*') if is_macho(p))
     for m in machos:
         origin = bundled.get(m)
@@ -47,30 +50,28 @@ def main():
     for m in bundled:
         if not (root / m).exists():
             problems.append(f'{m}: in BUNDLED.tsv but not in the package')
-    formulas = sorted({o.split()[0].split(':', 1)[1] for o in bundled.values() if o.startswith('homebrew:')})
-    for f in formulas:
-        r = libs.get(f)
-        if r is None:
+    for f in sorted({o.split()[0].split(':', 1)[1] for o in bundled.values() if o.startswith('homebrew:')}):
+        if 'homebrew:' + f not in libs:
             problems.append(f'{f}: bundled, but no row in LIBRARIES.tsv')
-            continue
+    if any(o == 'nng' for o in bundled.values()) and 'nng' not in libs:
+        problems.append('nng: bundled, but no row in LIBRARIES.tsv')
+    shipped = [r for r in rows if r.get('linked as', '') not in ('not compiled in', 'vendored')]
+    for r in shipped:
         files = [x for x in r.get('files', '').split() if x != '-']
         if not files:
-            problems.append(f'{f} {r.get("version")}: no licence file')
+            problems.append(f'{r["library"]} {r.get("version", "")} ({r.get("linked as")}): no licence file')
         for x in files:
             p = lic / x
             if not p.is_file() or p.stat().st_size == 0:
-                problems.append(f'{f}: {x} missing or empty')
-    if any(o == 'nng' for o in bundled.values()) and not (lic / 'nng' / 'LICENSE.txt').is_file():
-        problems.append('nng: licenses/nng/LICENSE.txt missing')
-    if not any(p.name.upper().startswith(('LICENSE', 'COPYING')) for p in lic.iterdir() if p.is_file()):
-        problems.append('KiCad: no LICENSE*/COPYING* in licenses/')
-    print(f'licences: {len(machos)} Mach-O files ({sum(1 for o in bundled.values() if o == "kicad")} KiCad, '
-          f'{sum(1 for o in bundled.values() if o == "nng")} nng, {sum(1 for o in bundled.values() if o.startswith("homebrew:"))} from '
-          f'{len(formulas)} Homebrew formulas); {len(libs)} formulas with licence text')
+                problems.append(f'{r["library"]}: {x} missing or empty')
+    count = lambda pre, la=None: sum(1 for r in rows if r['library'].startswith(pre) and (la is None or r.get('linked as', '').startswith(la)))
+    print(f'licences: {len(machos)} Mach-O files; Homebrew formulas {count("homebrew:")} ({count("homebrew:", "dylib")} dylib, '
+          f'{count("homebrew:", "static")} static, {count("homebrew:", "header-only")} header-only); vendored compiled in '
+          f'{count("vendored:", "compiled in")}; {len(shipped)} libraries in the package, each checked for its licence text')
     if problems:
         print('FAIL licences:\n  ' + '\n  '.join(problems))
         sys.exit(1)
-    print('PASS licences: every bundled library has its licence in the package')
+    print('PASS licences: every library in the package has its licence text')
 
 
 if __name__ == '__main__':
