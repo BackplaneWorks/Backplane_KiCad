@@ -114,7 +114,29 @@ int main(int argc, char **argv) { @autoreleasepool {
 KEY = {"a": 0, "s": 1, "z": 6, "c": 8, "v": 9, "k": 40, "escape": 53, "`": 50}
 
 
+# CHECK_INPUT_SOCK=<path>: input and pictures through a Screen Sharing relay (the Mac mini gate's vnc_relay.py, JSON lines on a Unix
+# socket, screen points) instead of CGEventPost and screencapture: a process without the Accessibility and Screen Recording grants
+# (a LaunchAgent on a headless Mac) posts events nobody receives and captures nothing
+INPUT_SOCK = os.environ.get("CHECK_INPUT_SOCK")
+
+
+def relay(request):
+    import json as _json, socket as _socket
+    c = _socket.socket(_socket.AF_UNIX)
+    c.connect(INPUT_SOCK)
+    c.sendall((_json.dumps(request) + "\n").encode())
+    answer = _json.loads(c.makefile().readline() or "{}")
+    c.close()
+    if not answer.get("ok"):
+        raise RuntimeError(f"input relay: {request.get('op')}: {answer}")
+    return answer
+
+
 def key(name, command=True, control=False):
+    if INPUT_SOCK:
+        relay({"op": "chord", "combo": "+".join([*(["cmd"] if command else []), *(["ctrl"] if control else []), name])})
+        time.sleep(0.06)
+        return
     for down in (True, False):
         event = Quartz.CGEventCreateKeyboardEvent(None, KEY[name], down)
         Quartz.CGEventSetFlags(event, (Quartz.kCGEventFlagMaskCommand if command else 0) | (Quartz.kCGEventFlagMaskControl if control else 0))
@@ -123,6 +145,10 @@ def key(name, command=True, control=False):
 
 
 def click(x, y):
+    if INPUT_SOCK:
+        relay({"op": "click", "x": x, "y": y})
+        time.sleep(0.15)
+        return
     point = Quartz.CGPointMake(x, y)
     for kind in (Quartz.kCGEventMouseMoved, Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp):
         event = Quartz.CGEventCreateMouseEvent(None, kind, point, Quartz.kCGMouseButtonLeft)
@@ -132,6 +158,10 @@ def click(x, y):
 
 def press(x, y, hold, button="left"):
     """A click whose button is held `hold` seconds (the activation of an inactive KiCad lands inside it)."""
+    if INPUT_SOCK:
+        relay({"op": "press", "x": x, "y": y, "button": 1 if button == "left" else 3, "seconds": hold})
+        time.sleep(0.05)
+        return
     point = Quartz.CGPointMake(x, y)
     down, up, which = ((Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp, Quartz.kCGMouseButtonLeft) if button == "left"
                        else (Quartz.kCGEventRightMouseDown, Quartz.kCGEventRightMouseUp, Quartz.kCGMouseButtonRight))
@@ -145,6 +175,10 @@ def press(x, y, hold, button="left"):
 
 def drag(x1, y1, x2, y2, seconds, steps=30):
     """A left-button drag from (x1, y1) to (x2, y2) over `seconds`."""
+    if INPUT_SOCK:
+        relay({"op": "drag", "x0": x1, "y0": y1, "x1": x2, "y1": y2, "seconds": seconds})
+        time.sleep(0.05)
+        return
     start = Quartz.CGPointMake(x1, y1)
     Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventMouseMoved, start, Quartz.kCGMouseButtonLeft))
     time.sleep(0.05)
@@ -216,6 +250,13 @@ def main():
 
     def shot(label, box=None):
         path = args.out / f"{label}.png"
+        if INPUT_SOCK:
+            # the relay saves the box only (never the whole screen): the spread is measured on its middle half
+            if not box:
+                return path, None
+            relay({"op": "png", "path": str(path.resolve()), "rect": list(box)})
+            image = Image.open(path).convert("L"); w, h = image.size
+            return path, ImageStat.Stat(image.crop((w // 4, h // 4, 3 * w // 4, 3 * h // 4))).stddev[0]
         subprocess.run(["screencapture", "-x", str(path)], check=False)
         if box and path.exists():
             image = Image.open(path)
@@ -596,9 +637,12 @@ def main():
                 return [w for w in Quartz.CGWindowListCopyWindowInfo(Quartz.kCGWindowListOptionOnScreenOnly, Quartz.kCGNullWindowID)
                         if w.get("kCGWindowOwnerPID") == kicad.pid and w.get("kCGWindowLayer", 0) > 0]
             point = Quartz.CGPointMake(hx + px + pw * 0.1, hy + py + ph * 0.86)
-            for kind in (Quartz.kCGEventRightMouseDown, Quartz.kCGEventRightMouseUp):
-                Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, kind, point, Quartz.kCGMouseButtonRight))
-                time.sleep(0.1)
+            if INPUT_SOCK:
+                press(point.x, point.y, 0.1, button="right")
+            else:
+                for kind in (Quartz.kCGEventRightMouseDown, Quartz.kCGEventRightMouseUp):
+                    Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, kind, point, Quartz.kCGMouseButtonRight))
+                    time.sleep(0.1)
             menu = wait_for(popups, 3, 0.1)
             shot("04-context-menu")
             check(bool(menu), f"a right click opens KiCad's context menu above everything (layer {menu and menu[0].get('kCGWindowLayer')})")
