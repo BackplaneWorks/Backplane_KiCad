@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Check a macOS package's licences (what scripts/backplane-macos-licences.py put in it), on the package alone.
+"""Check a package's licences (what scripts/backplane-{macos,linux,windows}-licences put in it), on the package alone.
 
-  - every Mach-O in KiCad.app is in licenses/BUNDLED.tsv, with what it was built from (a Homebrew formula, nng or KiCad), and none is
-    of unknown origin;
+  - every native object in it (macOS: the Mach-Os in KiCad.app; Linux: the ELF files; Windows: the DLLs and EXEs) is in
+    licenses/BUNDLED.tsv, with what it was built from (a Homebrew formula, a Debian package, a vcpkg port, nng or KiCad), and none is of
+    unknown origin;
   - every library in licenses/LIBRARIES.tsv that is in the package (a dylib, static, header-only, a vendored library compiled in, nng,
     KiCad) has its licence files in the package, not empty; every Homebrew formula BUNDLED.tsv names has a row;
   - licenses/vendor/thirdparty is there.
@@ -12,14 +13,22 @@ usage: backplane-licence-package-check.py PACKAGE_ROOT     (exit 1 on any proble
 import sys
 from pathlib import Path
 
+ELF_MAGIC = b'\x7fELF'
 MACHO_MAGIC = {b'\xfe\xed\xfa\xce', b'\xce\xfa\xed\xfe', b'\xfe\xed\xfa\xcf', b'\xcf\xfa\xed\xfe', b'\xca\xfe\xba\xbe', b'\xbe\xba\xfe\xca'}
 
 
-def is_macho(p):
-    if p.is_symlink() or not p.is_file():
-        return False
-    with open(p, 'rb') as f:
-        return f.read(4) in MACHO_MAGIC
+def native(root):
+    """The package's native objects: Mach-O in KiCad.app (macOS), ELF files (Linux), DLL/EXE files (Windows)."""
+    app = root / 'KiCad.app'
+    out = []
+    for p in (app if app.is_dir() else root).rglob('*'):
+        if p.is_symlink() or not p.is_file():
+            continue
+        with open(p, 'rb') as f:
+            head = f.read(4)
+        if head in MACHO_MAGIC or head == ELF_MAGIC or (head[:2] == b'MZ' and p.suffix.lower() in ('.dll', '.exe', '.pyd')):
+            out.append(p.relative_to(root).as_posix())
+    return sorted(out)
 
 
 def tsv(path):
@@ -40,18 +49,18 @@ def main():
     bundled = {r['path']: r['built from'] for r in tsv(lic / 'BUNDLED.tsv')}
     rows = tsv(lic / 'LIBRARIES.tsv')
     libs = {r['library']: r for r in rows}
-    machos = sorted(p.relative_to(root).as_posix() for p in (root / 'KiCad.app').rglob('*') if is_macho(p))
+    machos = native(root)
     for m in machos:
         origin = bundled.get(m)
         if origin is None:
-            problems.append(f'{m}: a Mach-O not in BUNDLED.tsv')
+            problems.append(f'{m}: a native object not in BUNDLED.tsv')
         elif origin == 'unknown':
             problems.append(f'{m}: of unknown origin')
     for m in bundled:
         if not (root / m).exists():
             problems.append(f'{m}: in BUNDLED.tsv but not in the package')
-    for f in sorted({o.split()[0].split(':', 1)[1] for o in bundled.values() if o.startswith('homebrew:')}):
-        if 'homebrew:' + f not in libs:
+    for f in sorted({o.split()[0] for o in bundled.values() if ':' in o}):
+        if f not in libs:
             problems.append(f'{f}: bundled, but no row in LIBRARIES.tsv')
     if any(o == 'nng' for o in bundled.values()) and 'nng' not in libs:
         problems.append('nng: bundled, but no row in LIBRARIES.tsv')
@@ -64,10 +73,11 @@ def main():
             p = lic / x
             if not p.is_file() or p.stat().st_size == 0:
                 problems.append(f'{r["library"]}: {x} missing or empty')
-    count = lambda pre, la=None: sum(1 for r in rows if r['library'].startswith(pre) and (la is None or r.get('linked as', '').startswith(la)))
-    print(f'licences: {len(machos)} Mach-O files; Homebrew formulas {count("homebrew:")} ({count("homebrew:", "dylib")} dylib, '
-          f'{count("homebrew:", "static")} static, {count("homebrew:", "header-only")} header-only); vendored compiled in '
-          f'{count("vendored:", "compiled in")}; {len(shipped)} libraries in the package, each checked for its licence text')
+    kinds = {}
+    for r in shipped:
+        kinds[r.get('linked as', '').split(' (')[0]] = kinds.get(r.get('linked as', '').split(' (')[0], 0) + 1
+    print(f'licences: {len(machos)} native objects; {len(shipped)} libraries in the package ('
+          + ', '.join(f'{v} {k}' for k, v in sorted(kinds.items())) + '), each checked for its licence text')
     if problems:
         print('FAIL licences:\n  ' + '\n  '.join(problems))
         sys.exit(1)
