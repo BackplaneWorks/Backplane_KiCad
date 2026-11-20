@@ -690,7 +690,8 @@ def main():
             def trace_mark():
                 return trace_path.stat().st_size if trace_path.exists() else 0
             def click_path(mark):
-                lines = (trace_path.read_text(errors="replace")[mark:] if trace_path.exists() else "").splitlines()
+                # (mark is a byte offset: the bytes after it, decoded, never a character slice of the decoded text)
+                lines = (trace_path.read_bytes()[mark:].decode(errors="replace") if trace_path.exists() else "").splitlines()
                 for i, line in enumerate(lines):
                     if "TakeFocusForClick entered" in line:
                         return "fix" if "NSApp.active=0" in line else "active"
@@ -747,7 +748,8 @@ def main():
                 menu = wait_for(popups, 3, 0.1)
                 time.sleep(1.0)
                 path = click_path(m)
-                check(path in ("fix", "appkit"), f"1j the held right click reached an inactive KiCad (KiCad's trace: {path})")
+                # the case the first-click fix is for: its own path is required (AppKit activating KiCad first would pass untested)
+                check(path == "fix", f"1j the held right click took the first-click fix's path (KiCad's trace: {path})")
                 check(bool(menu) and bool(popups()), "1j a held right click on an inactive KiCad opens the context menu, and it stays open")
                 key("escape", command=False)
                 check(wait_for(lambda: not popups(), 3), "1j Escape closes it")
