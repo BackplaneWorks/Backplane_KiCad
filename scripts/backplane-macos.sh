@@ -148,14 +148,12 @@ MANIFEST
 python scripts/backplane-ipc-smoke.py "$root/bin/kicad-cli" --expected-version "$version" | tee "$release/ipc.log"
 python scripts/backplane-document-ipc-regression.py "$root/bin/kicad-cli" | tee "$release/documents.log"
 python scripts/backplane-glb-concurrency-test.py "$root/bin/kicad-cli" | tee "$release/glb-concurrency.log"
-# Preserve library licenses alongside every dependency from Homebrew.
-brew info --json=v2 --installed > "$root/licenses/homebrew-packages.json"
-for formula in "$prefix/Cellar"/*; do
-  [ -d "$formula" ] || continue
-  name=$(basename "$formula")
-  mkdir -p "$root/licenses/homebrew/$name"
-  find "$formula" -type f \( -iname '*license*' -o -iname '*copying*' -o -path '*/.brew/*.rb' \) -exec cp {} "$root/licenses/homebrew/$name/" \;
-done
+# The licence of every library the app bundles, from the Homebrew keg it was linked from (or, where the keg has none, that formula's
+# source at the bundled version), each under its own folder; LIBRARIES.tsv says where each text came from, BUNDLED.tsv what every
+# Mach-O in the app was built from. The check fails the build if a bundled library ends with no licence file.
+python scripts/backplane-macos-licences.py "$root" --prefix "$prefix" --nng "$nng" --build "$build" --build "$stage" \
+  --cache "$RUNNER_TEMP/licence-sources" | tee "$release/licences.log"
+python scripts/backplane-licence-package-check.py "$root" | tee -a "$release/licences.log"
 archive="$(basename "$root").tar.gz"
 # The manifest the release checks: this version, this exact source, this platform
 python - "$root/manifest.json" "$version" "$(git rev-parse HEAD)" "darwin-$(uname -m)" <<'CHECK'
@@ -195,6 +193,7 @@ assert manifest.get('backplaneLibrary', {}).get('commit'), 'manifest has no back
 print(f"PASS manifest: minOs {want} (highest of {len(seen)} Mach-O build versions), backplaneLibrary {manifest['backplaneLibrary']['commit'][:10]}")
 MINOS
 python scripts/backplane-library-package-check.py "$unpacked/$(basename "$root")" | tee "$release/libraries.log"
+python scripts/backplane-licence-package-check.py "$unpacked/$(basename "$root")" | tee -a "$release/libraries.log"
 python scripts/backplane-ngspice-package-check.py "$unpacked/$(basename "$root")" | tee -a "$release/libraries.log"
 python scripts/backplane-global-tables-regression.py "$unpacked/$(basename "$root")/bin/kicad-cli" | tee -a "$release/libraries.log"
 rm -rf "$unpacked" "$libraries"
