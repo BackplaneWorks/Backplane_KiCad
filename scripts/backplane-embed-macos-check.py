@@ -91,6 +91,10 @@ int main(int argc, char **argv) { @autoreleasepool {
         else if ([v isEqual:@"demini"]) { [w deminiaturize:nil]; [NSApp activateIgnoringOtherApps:YES]; }
         else if ([v isEqual:@"full"]) [w toggleFullScreen:nil];
         else if ([v isEqual:@"front"]) { [NSApp activateIgnoringOtherApps:YES]; [w makeKeyAndOrderFront:nil]; }
+        // as the client does on a reserved chord from KiCad (#1399): its own cooperative activate, honoured only with KiCad's consent
+        else if ([v isEqual:@"self"]) {
+          if (@available(macOS 14.0, *)) [NSApp activate]; else [NSApp activateIgnoringOtherApps:YES];
+          [w makeKeyAndOrderFront:nil]; }
         else if ([v isEqual:@"rect"]) {
           double H = NSScreen.screens[0].frame.size.height; NSRect c = [w contentRectForFrameRect:w.frame];
           printf("rect %.0f %.0f %.0f %.0f %d\n", c.origin.x, H - (c.origin.y + c.size.height), c.size.width, c.size.height,
@@ -107,13 +111,13 @@ int main(int argc, char **argv) { @autoreleasepool {
 }}
 """
 
-KEY = {"a": 0, "s": 1, "z": 6, "c": 8, "v": 9, "k": 40, "escape": 53}
+KEY = {"a": 0, "s": 1, "z": 6, "c": 8, "v": 9, "k": 40, "escape": 53, "`": 50}
 
 
-def key(name, command=True):
+def key(name, command=True, control=False):
     for down in (True, False):
         event = Quartz.CGEventCreateKeyboardEvent(None, KEY[name], down)
-        Quartz.CGEventSetFlags(event, Quartz.kCGEventFlagMaskCommand if command else 0)
+        Quartz.CGEventSetFlags(event, (Quartz.kCGEventFlagMaskCommand if command else 0) | (Quartz.kCGEventFlagMaskControl if control else 0))
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
         time.sleep(0.03)
 
@@ -789,6 +793,39 @@ def main():
                 check(names_footprint(got, target), f"1j a held left click on an inactive KiCad selects footprint {target} ({got and selected(got)[:4]})")
                 check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard")
                 clear_selection()
+
+            # #1399: KiCad made active by the person's own click in its frame (not by a ShowFrame{focus} the host consented to), then
+            # keys in it, then a reserved chord: KiCad hands the chord to the host and consents to its activation at that moment, so
+            # the host's own activate (the client's, on the chord) takes. Before: the consent from KiCad's activation no longer counted,
+            # macOS ignored the host's activate, and neither Cmd+K nor the escape chord brought the host forward (0/3 each, the mini)
+            import AppKit
+            host_app = AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(host.pid)
+            kicad_app = AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(kicad.pid)
+            api.request(embed.SetReservedKeys(chords=["Ctrl+K", "RawCtrl+`"]), embed.SetReservedKeysResponse)
+            for name, chord in (("Cmd+K", dict(name="k")), ("the escape chord (Ctrl+`)", dict(name="`", command=False, control=True))):
+                if not kicad_inactive(f"1399 {name}"):
+                    continue
+                click(hx + px + pw // 2, hy + py + ph // 2)   # the person's own click in KiCad's canvas: KiCad activates itself
+                check(wait_for(lambda: kicad_app.isActive() and frames()[embed.FK_PCB].focused, 3),
+                      f"1399 {name}: KiCad is active by its own click, its frame has the keyboard")
+                key("escape", command=False)   # a key in KiCad after the click (the person's keys)
+                time.sleep(0.5)
+                pump(0)
+                m = trace_mark()
+                key(**chord)
+                got = None
+                deadline = time.monotonic() + 3
+                while time.monotonic() < deadline and not got:
+                    got = next((e for e in pump(200) if e.type == embed.ET_RESERVED_KEY), None)
+                check(got is not None, f"1399 {name} arrives as ET_RESERVED_KEY ({got and got.reserved_key})")
+                time.sleep(0.2)
+                yielded = trace_path.exists() and b"activation yielded to the host" in trace_path.read_bytes()[m:]
+                check(yielded, f"1399 {name}: KiCad's trace says it yielded activation to the host for the chord")
+                tell_host("self")   # what the client does on the chord: its own activate
+                came = wait_for(lambda: host_app.isActive() and not kicad_app.isActive(), 3)
+                RESULTS[f"1399_{name}"] = {"host_active": bool(came), "yield_traced": yielded}
+                check(bool(came), f"1399 {name}: the host's own activate takes, KiCad resigns ({RESULTS[f'1399_{name}']})")
+            api.request(embed.SetReservedKeys(chords=["Ctrl+K"]), embed.SetReservedKeysResponse)
 
             # The host's process ends: every frame leaves the screen at once
             t0 = time.monotonic()
