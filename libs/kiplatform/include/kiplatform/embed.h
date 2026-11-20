@@ -214,8 +214,9 @@ namespace EMBED
     /// A reserved chord is being handed to the host (#1399): macOS 14+ activation is cooperative,
     /// so KiCad, the active app, consents now for the host's app to activate itself (the host does,
     /// on the chord).  The consent given when KiCad became active no longer counts once the person
-    /// has clicked and typed in KiCad, and the host's activate was ignored.  Nothing is activated
-    /// here.  Elsewhere nothing.
+    /// has clicked and typed in KiCad, and the host's activate was ignored; on macOS 26 the consent
+    /// alone is not enough either, so KiCad also activates the host itself.  Only on a reserved
+    /// chord the person pressed.  Elsewhere nothing.
     void YieldActivationToHost();
 
     /// After a click was handled: a mouse capture the frame itself still holds with no button

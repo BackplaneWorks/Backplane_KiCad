@@ -1167,7 +1167,13 @@ void KIPLATFORM::EMBED::YieldActivationToHost()
         if( NSRunningApplication* host = [NSRunningApplication runningApplicationWithProcessIdentifier:s_owner] )
         {
             [NSApp yieldActivationToApplication:host];
-            trace( "macos: activation yielded to the host for a reserved chord" );
+            // the host's own activate on the chord is refused on macOS 26 even with this consent (only
+            // the person's own interaction with an app lets it activate itself; the chord's key went to
+            // KiCad): KiCad, the active app now, activates the host, as the host activates KiCad on a
+            // hand-in.  Only here, for a reserved chord the person pressed (#1399)
+            bool ok = [host activateWithOptions:0];
+            trace( std::string( "macos: activation yielded to the host for a reserved chord, host activated: " )
+                   + ( ok ? "yes" : "no" ) );
         }
     }
 }
