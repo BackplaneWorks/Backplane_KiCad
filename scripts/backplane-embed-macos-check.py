@@ -602,46 +602,112 @@ def main():
                 return [*got.selection.references, *got.selection.nets, *got.selection.pins] if got is not None else None
 
             def clear_selection():
-                key("escape", command=False)
-                time.sleep(0.3)
+                """Escape in the canvas (KiCad has the keyboard), and its own ET_SELECTION_CHANGED waited for: a late one must
+                never be taken for the next case's click."""
                 pump(0)
+                key("escape", command=False)
+                selection_event(1.0)
+                pump(300)
 
-            canvas_empty = (hx + px + pw * 0.1, hy + py + ph * 0.86)   # below the board (the right click's place)
-            canvas_part = (hx + px + pw * 0.35, hy + py + ph * 0.45)   # a part (the first click's place)
+            def names_footprint(got, ref):
+                return got is not None and (ref in got.selection.references or any(p.startswith(ref + ".") for p in got.selection.pins))
+
+            # Every point a case clicks is aimed and asserted first, with KiCad active: a probe click there must give the selection
+            # the case needs (KiCad's own hit test, at whatever size and zoom the pane has here), never a fraction of the pane taken
+            # on trust (the mini's pane put 35%/45% on empty board)
+            def find_empty():
+                for fx, fy in ((0.1, 0.86), (0.08, 0.92), (0.15, 0.8), (0.05, 0.6), (0.5, 0.92)):
+                    pt = (hx + px + pw * fx, hy + py + ph * fy)
+                    pump(0)
+                    key("a")
+                    if not selected(selection_event()):
+                        continue
+                    click(*pt)
+                    got = selection_event()
+                    if got is not None and not selected(got):
+                        return pt
+                    clear_selection()
+                return None
+
+            def find_on(ref):
+                """The board zoomed to footprint `ref` (SelectItems), then a point on it found by probe clicks."""
+                api.request(embed.SelectItems(kind=embed.FK_PCB, references=[ref], zoom=True), embed.SelectItemsResponse)
+                time.sleep(0.8)
+                clear_selection()
+                for fx, fy in ((0.4, 0.5), (0.35, 0.5), (0.3, 0.5), (0.45, 0.5), (0.35, 0.45), (0.35, 0.55), (0.25, 0.5)):
+                    pt = (hx + px + pw * fx, hy + py + ph * fy)
+                    pump(0)
+                    click(*pt)
+                    got = selection_event()
+                    if names_footprint(got, ref):
+                        clear_selection()
+                        return pt
+                    if got is not None:
+                        clear_selection()
+                return None
+
+            def footprint_places():
+                out = {}
+                for any_item in api.request(editor.GetItems(header=header, types=[enums.KOT_PCB_FOOTPRINT]), editor.GetItemsResponse).items:
+                    fp = board.FootprintInstance()
+                    any_item.Unpack(fp)
+                    out[fp.id.value] = (fp.position.x_nm, fp.position.y_nm)
+                return out
+
+            # the largest footprint (its body is the easiest target), by its bounding box
+            footprints = api.request(editor.GetItems(header=header, types=[enums.KOT_PCB_FOOTPRINT]), editor.GetItemsResponse).items
+            target, best = None, -1
+            for any_item in footprints:
+                fp = board.FootprintInstance()
+                any_item.Unpack(fp)
+                box = api.request(editor.GetBoundingBox(header=header, items=[fp.id], mode=editor.BBM_ITEM_ONLY), editor.GetBoundingBoxResponse)
+                if box.boxes:
+                    area = box.boxes[0].size.x_nm * box.boxes[0].size.y_nm
+                    if area > best and fp.reference_field.text.text:
+                        target, best = fp.reference_field.text.text, area
+            RESULTS["1j_target"] = target
+
+            empty = find_empty()
+            check(empty is not None, f"1j aim: a point of empty canvas found and proved by a probe click ({empty})")
 
             # the right click again, held: the menu opens, stays open until dismissed, and once it is closed the frame is key
-            kicad_inactive("held right click")
-            press(*canvas_empty, 0.3, button="right")
-            menu = wait_for(popups, 3, 0.1)
-            time.sleep(1.0)
-            check(bool(menu) and bool(popups()), "1j a held right click on an inactive KiCad opens the context menu, and it stays open")
-            key("escape", command=False)
-            check(wait_for(lambda: not popups(), 3), "1j Escape closes it")
-            pump(0)
-            key("a")
-            got = selection_event()
-            check(bool(selected(got)), f"1j after the menu, the frame has the keyboard: Cmd+A selects ({got and len(selected(got))})")
-            clear_selection()
+            if empty:
+                kicad_inactive("held right click")
+                press(*empty, 0.3, button="right")
+                menu = wait_for(popups, 3, 0.1)
+                time.sleep(1.0)
+                check(bool(menu) and bool(popups()), "1j a held right click on an inactive KiCad opens the context menu, and it stays open")
+                key("escape", command=False)
+                check(wait_for(lambda: not popups(), 3), "1j Escape closes it")
+                pump(0)
+                key("a")
+                got = selection_event()
+                check(bool(selected(got)), f"1j after the menu, the frame has the keyboard: Cmd+A selects ({got and len(selected(got))})")
+                clear_selection()
 
-            # a held left click on a part selects it (the tool's click is not lost to the activation)
-            kicad_inactive("held left click")
-            pump(0)
-            press(*canvas_part, 0.3)
-            got = selection_event()
-            # (the selection was cleared just before: any ET_SELECTION_CHANGED is the click's new selection, as the first-click check
-            # counts it; a track, a zone or a drawing under the point names no reference)
-            check(got is not None, f"1j a held left click on an inactive KiCad selects what is under it ({got and selected(got)[:3]})")
-            check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard")
-            clear_selection()
+            # a drag begun on an inactive KiCad (a selection box from empty canvas, 1 s) completes as a drag, and moves nothing
+            if empty:
+                kicad_inactive("drag")
+                places = footprint_places()
+                pump(0)
+                drag(*empty, hx + px + pw * 0.6, hy + py + ph * 0.5, 1.0)
+                got = selection_event()
+                check(bool(selected(got)), f"1j a 1 s drag begun on an inactive KiCad selects with its box ({got and len(selected(got))} names)")
+                check(footprint_places() == places, "1j and moved nothing (every footprint where it was)")
+                check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard after the drag")
+                clear_selection()
 
-            # a drag begun on an inactive KiCad (a selection box, 1 s) completes as a drag
-            kicad_inactive("drag")
-            pump(0)
-            drag(*canvas_empty, hx + px + pw * 0.6, hy + py + ph * 0.5, 1.0)
-            got = selection_event()
-            check(got is not None, f"1j a 1 s drag begun on an inactive KiCad selects with its box ({got and len(selected(got))} names)")
-            check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard after the drag")
-            clear_selection()
+            # a held left click on a footprint selects that footprint (the tool's click is not lost to the activation)
+            on = find_on(target) if target else None
+            check(on is not None, f"1j aim: a point on footprint {target} found and proved by a probe click ({on})")
+            if on:
+                kicad_inactive("held left click")
+                pump(0)
+                press(*on, 0.3)
+                got = selection_event()
+                check(names_footprint(got, target), f"1j a held left click on an inactive KiCad selects footprint {target} ({got and selected(got)[:4]})")
+                check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard")
+                clear_selection()
 
             # The host's process ends: every frame leaves the screen at once
             t0 = time.monotonic()
