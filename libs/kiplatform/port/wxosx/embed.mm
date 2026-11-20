@@ -1157,6 +1157,22 @@ void KIPLATFORM::EMBED::TakeFocus( wxWindow* aFrame )
 
 
 
+void KIPLATFORM::EMBED::YieldActivationToHost()
+{
+    if( s_owner <= 0 )
+        return;
+
+    if( @available( macOS 14.0, * ) )
+    {
+        if( NSRunningApplication* host = [NSRunningApplication runningApplicationWithProcessIdentifier:s_owner] )
+        {
+            [NSApp yieldActivationToApplication:host];
+            trace( "macos: activation yielded to the host for a reserved chord" );
+        }
+    }
+}
+
+
 void KIPLATFORM::EMBED::TraceClick( wxWindow* aFrame, bool aHasFocus )
 {
     NSWindow* w = nsWindowOf( aFrame );
