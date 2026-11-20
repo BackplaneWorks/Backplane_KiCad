@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <map>
+#include <algorithm>
 #include <mutex>
 #include <set>
 #include <string>
@@ -97,8 +98,10 @@ unsigned               s_keyGen = 0;
 /// still not key 250 ms after, while the same call 4 s later took): asked again this often, this many times
 constexpr int          KEY_RETRY_MS = 50;
 constexpr int          KEY_RETRIES = 10;
-/// A menu of ours is tracking (NSMenuDidBeginTracking..EndTracking: a context menu the click opened)
-bool                   s_menuTracking = false;
+/// Menus of ours tracking (NSMenuDidBeginTracking +1, ..EndTracking -1, never below 0; back to 0 when
+/// KiCad resigns active, which no menu outlives): a context menu the click opened.  A count, so a nested
+/// submenu's end does not end the outer menu's wait, and a missed end cannot hold key requests for good
+int                    s_menuDepth = 0;
 
 double nowS()
 {
@@ -291,11 +294,11 @@ void applyKey( NSInteger aNumber, wxWeakRef<wxWindow> aClicked, unsigned aGen, i
     // dispatcher's buttons: the up had no down (bp.13.3 b2: no context menu).  No limit while it lasts;
     // the retries below count only once it has ended.  A newer click or KiCad resigning active still
     // cancels it (aGen); a dialog the click opened is key when it ends, and keeps the key (below).
-    if( KIPLATFORM::EMBED::KeyWaitsForGesture( [NSEvent pressedMouseButtons], s_menuTracking ) )
+    if( KIPLATFORM::EMBED::KeyWaitsForGesture( [NSEvent pressedMouseButtons], s_menuDepth > 0 ) )
     {
         if( !aWaited )
             trace( "macos: key window for frame " + number + " waits for the click to end"
-                   + ( s_menuTracking ? std::string( " (a menu is open)" ) : std::string() ) );
+                   + ( s_menuDepth > 0 ? std::string( " (a menu is open)" ) : std::string() ) );
 
         dispatch_after( dispatch_time( DISPATCH_TIME_NOW, (int64_t) KEY_RETRY_MS * NSEC_PER_MSEC ), dispatch_get_main_queue(), ^{
             applyKey( aNumber, aClicked, aGen, aAttempt, true );
@@ -925,12 +928,12 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
                     }];
     // a menu of ours tracking (a context menu the click opened): a key request waits for it to close
     [centre addObserverForName:NSMenuDidBeginTrackingNotification object:nil queue:nil
-                    usingBlock:^( NSNotification* ) { s_menuTracking = true; }];
+                    usingBlock:^( NSNotification* ) { s_menuDepth++; trace( "macos: menu tracking begins (depth " + std::to_string( s_menuDepth ) + ")" ); }];
     [centre addObserverForName:NSMenuDidEndTrackingNotification object:nil queue:nil
-                    usingBlock:^( NSNotification* ) { s_menuTracking = false; }];
+                    usingBlock:^( NSNotification* ) { s_menuDepth = std::max( 0, s_menuDepth - 1 ); trace( "macos: menu tracking ends (depth " + std::to_string( s_menuDepth ) + ")" ); }];
     // another app became active before KiCad did: the click's request is no longer the person's
     [centre addObserverForName:NSApplicationDidResignActiveNotification object:nil queue:nil
-                    usingBlock:^( NSNotification* ) { s_pendingKey = PENDING_KEY(); s_keyGen++; }];
+                    usingBlock:^( NSNotification* ) { s_pendingKey = PENDING_KEY(); s_keyGen++; s_menuDepth = 0; }];
     // #1198 diagnosis (trace only): when KiCad becomes and stops being the active app
     [centre addObserverForName:NSApplicationDidBecomeActiveNotification object:nil queue:nil
                     usingBlock:^( NSNotification* ) { trace( "macos: app did become active: " + keyState( 0 ) ); }];
