@@ -138,7 +138,9 @@ Get-ChildItem (Join-Path $installed 'share') -Directory | ForEach-Object {
         Copy-Item $notice $destination
     }
 }
-Copy-Item LICENSE.README,LICENSE.GPLv3,BACKPLANE_UPSTREAM,vcpkg.json,vcpkg-configuration.json $licenses
+# KiCad's own licence set, as the Linux and macOS packages carry it (LICENSE.*, AUTHORS.txt, COPYING*)
+Get-ChildItem -File | Where-Object { $_.Name -match '^(LICENSE|COPYING|AUTHORS)' } | Copy-Item -Destination $licenses
+Copy-Item BACKPLANE_UPSTREAM,vcpkg.json,vcpkg-configuration.json $licenses
 Get-ChildItem thirdparty -Recurse -File | Where-Object {
     $_.Name -match '^(LICENSE|COPYING|NOTICE|COPYRIGHT)'
 } | ForEach-Object {
@@ -149,6 +151,16 @@ Get-ChildItem thirdparty -Recurse -File | Where-Object {
 }
 Copy-Item (Join-Path $build 'vcpkg_installed\vcpkg\status') (Join-Path $licenses 'VCPKG_PACKAGES.txt')
 Set-Content (Join-Path $licenses 'VCPKG_TOOL_COMMIT') $vcpkgCommit
+# Licences: every DLL/EXE traced to its vcpkg port, KiCad or Microsoft's runtime; header-only and static ports from the build's inputs
+# (ninja's deps log, build.ninja's .lib); the vendored README/header notices; licenses\LIBRARIES.tsv (library, version, licence, text
+# from, linked as) and BUNDLED.tsv. The check fails the build on any library in the runtime without its text.
+$buildInputs = Join-Path $root 'build-inputs.txt'
+python scripts/backplane-windows-licences.py --gather $build | Set-Content $buildInputs -Encoding utf8NoBOM
+if ($LASTEXITCODE -ne 0) { throw 'gathering the build''s inputs failed' }
+python scripts/backplane-windows-licences.py $stage --installed $installed --build $build --source $source --inputs $buildInputs
+if ($LASTEXITCODE -ne 0) { throw 'licences: a library in the runtime has no licence text (see above)' }
+python scripts/backplane-licence-package-check.py $stage
+if ($LASTEXITCODE -ne 0) { throw 'licences: the package check failed' }
 # Remove the build and dependency directories from runtime lookup. The package
 # must run using its own bin, not a separately installed KiCad/dependency DLL.
 $cleanPath = ($env:PATH -split ';' | Where-Object {
@@ -227,6 +239,8 @@ if ($libraryStage) {
     Expand-Archive -Path (Join-Path $release "$archive.zip") -DestinationPath $unpacked
     $unpackedRoot = Join-Path $unpacked $archive
     python scripts/backplane-library-package-check.py $unpackedRoot
+    python scripts/backplane-licence-package-check.py $unpackedRoot
+    if ($LASTEXITCODE -ne 0) { throw 'licences: the package check failed on the unpacked zip' }
     # ngspice.dll and bin\ngspice\*.cm are in the zip a person unpacks
     python scripts/backplane-ngspice-package-check.py $unpackedRoot
     python scripts/backplane-global-tables-regression.py (Join-Path $unpackedRoot 'bin\kicad-cli.exe')

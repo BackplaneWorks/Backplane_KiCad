@@ -23,40 +23,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-VENDOR_EXTRA = {
-    'glad': [('include/glad/gl.h', 'head')],
-    'lemon': [('README.md', 'whole')],
-    'planegcs': [('README.kicad.md', 'whole')],
-    '3dxware_sdk': [('README.txt', 'whole')],
-    'vma': [('vk_mem_alloc.h', 'head')],
-}
-VENDOR_NAME = re.compile(r'^(license|licence|copying|notice|copyright)', re.I)
-
-
-def gather(build):
-    seen = set()
-    p = subprocess.Popen(['ninja', '-C', str(build), '-t', 'deps'], text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-    for line in p.stdout:
-        if line.startswith('    '):
-            f = line.strip()
-            seen.add(f if os.path.isabs(f) else os.path.normpath(os.path.join(str(build), f)))
-    p.wait()
-    bn = build / 'build.ninja'
-    if bn.is_file():
-        seen.update(re.findall(r'(?<![\w/.-])(/[^\s:$]+\.a)\b', bn.read_text(errors='replace')))
-    for f in sorted(seen):
-        print(f)
-
-
-def leading_comment(path):
-    out = []
-    for line in path.read_text(errors='replace').splitlines():
-        t = line.strip()
-        if t.startswith(('//', '/*', '*', '*/')) or (not t and out):
-            out.append(line)
-        elif out:
-            break
-    return '\n'.join(out).rstrip() + '\n'
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import backplane_licences as common  # noqa: E402
 
 
 def dpkg_index():
@@ -119,7 +87,8 @@ def main():
     ap.add_argument('--source', type=Path, default=Path.cwd())
     a = ap.parse_args()
     if a.gather:
-        return gather(a.gather)
+        print('\n'.join(common.gather(a.gather)))
+        return
     root = a.root.resolve(strict=True)
     lic = root / 'licenses'
     src = a.source.resolve()
@@ -190,29 +159,11 @@ def main():
         for rel_i, (rel, o) in enumerate(bundled):
             if o in e['pkgs']:
                 bundled[rel_i] = (rel, 'debian:' + s)
-    # vendored libraries: the README/header notices, and which the build compiled in
-    tp = src / 'thirdparty'
-    vend = lic / 'vendor' / 'thirdparty'
-    vend.mkdir(parents=True, exist_ok=True)
-    for d, extra in VENDOR_EXTRA.items():
-        for name, mode in extra:
-            f = tp / d / name
-            if f.is_file():
-                out = vend / d / (name if mode == 'whole' else name + '.NOTICE.txt')
-                out.parent.mkdir(parents=True, exist_ok=True)
-                out.write_text(f.read_text(errors='replace') if mode == 'whole' else leading_comment(f))
-    for d in sorted(p.name for p in tp.iterdir() if p.is_dir()):
-        files = sorted(x.relative_to(lic).as_posix() for x in (vend / d).rglob('*') if x.is_file()) if (vend / d).is_dir() else []
-        compiled = d in vendored_used
-        if compiled and not files:
-            problems.append(f'thirdparty/{d}: compiled in, with no notice')
-        rows.append(('vendored:' + d, '-', '-', 'thirdparty/' + d if files else '-',
-                     'compiled in' if compiled else ('not compiled in' if a.inputs else 'vendored'), ' '.join(files) or '-', '-'))
-    kicad_lic = sorted(f.name for f in lic.iterdir() if f.is_file() and f.name.upper().startswith(('LICENSE', 'COPYING')))
-    rows.append(('kicad', '-', 'GPL-3.0-or-later', 'this source', 'the program', ' '.join(kicad_lic) or '-', '-'))
-    (lic / 'LIBRARIES.tsv').write_text('library\tversion\tlicence\ttext from\tlinked as\tfiles\tbundled as\n'
-                                       + ''.join('\t'.join(r) + '\n' for r in rows))
-    (lic / 'BUNDLED.tsv').write_text('path\tbuilt from\n' + ''.join(f'{p}\t{o}\n' for p, o in bundled))
+    # vendored libraries: the README/header notices (every notice file, the README/header ones too), and which the build compiled in
+    inputs = a.inputs.read_text().splitlines() if a.inputs and a.inputs.is_file() else []
+    rows += common.vendored(lic, src, common.thirdparty_used(inputs, src), bool(a.inputs), problems)
+    rows.append(common.kicad_row(lic))
+    common.write_lists(lic, rows, bundled)
     deb = [r for r in rows if r[0].startswith('debian:')]
     for r in deb:
         if not r[4].startswith('shared object'):

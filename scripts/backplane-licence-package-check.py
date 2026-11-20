@@ -64,7 +64,7 @@ def main():
             problems.append(f'{f}: bundled, but no row in LIBRARIES.tsv')
     if any(o == 'nng' for o in bundled.values()) and 'nng' not in libs:
         problems.append('nng: bundled, but no row in LIBRARIES.tsv')
-    shipped = [r for r in rows if r.get('linked as', '') not in ('not compiled in', 'vendored')]
+    shipped = [r for r in rows if r.get('linked as', '') not in ('not compiled in', 'vendored', 'installed')]
     for r in shipped:
         files = [x for x in r.get('files', '').split() if x != '-']
         if not files:
