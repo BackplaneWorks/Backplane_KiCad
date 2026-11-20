@@ -819,12 +819,13 @@ def main():
                     got = next((e for e in pump(200) if e.type == embed.ET_RESERVED_KEY), None)
                 check(got is not None, f"1399 {name} arrives as ET_RESERVED_KEY ({got and got.reserved_key})")
                 time.sleep(0.2)
-                yielded = trace_path.exists() and b"activation yielded to the host" in trace_path.read_bytes()[m:]
-                check(yielded, f"1399 {name}: KiCad's trace says it yielded activation to the host for the chord")
-                tell_host("self")   # what the client does on the chord: its own activate
+                yielded = trace_path.exists() and b"host activated: yes" in trace_path.read_bytes()[m:]
+                check(yielded, f"1399 {name}: KiCad's trace says it yielded to the host and activated it for the chord")
+                # the host does NOT activate itself: it comes forward only by KiCad's activate on the chord (the client's own activate
+                # is refused on macOS 26 even with the consent; #1399)
                 came = wait_for(lambda: host_app.isActive() and not kicad_app.isActive(), 3)
                 RESULTS[f"1399_{name}"] = {"host_active": bool(came), "yield_traced": yielded}
-                check(bool(came), f"1399 {name}: the host's own activate takes, KiCad resigns ({RESULTS[f'1399_{name}']})")
+                check(bool(came), f"1399 {name}: the host comes forward (KiCad activated it), KiCad resigns ({RESULTS[f'1399_{name}']})")
             api.request(embed.SetReservedKeys(chords=["Ctrl+K"]), embed.SetReservedKeysResponse)
 
             # The host's process ends: every frame leaves the screen at once
