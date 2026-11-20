@@ -125,6 +125,33 @@ def click(x, y):
         time.sleep(0.05)
 
 
+def press(x, y, hold, button="left"):
+    """A click whose button is held `hold` seconds (the activation of an inactive KiCad lands inside it)."""
+    point = Quartz.CGPointMake(x, y)
+    down, up, which = ((Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp, Quartz.kCGMouseButtonLeft) if button == "left"
+                       else (Quartz.kCGEventRightMouseDown, Quartz.kCGEventRightMouseUp, Quartz.kCGMouseButtonRight))
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventMouseMoved, point, which))
+    time.sleep(0.05)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, down, point, which))
+    time.sleep(hold)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, up, point, which))
+    time.sleep(0.05)
+
+
+def drag(x1, y1, x2, y2, seconds, steps=30):
+    """A left-button drag from (x1, y1) to (x2, y2) over `seconds`."""
+    start = Quartz.CGPointMake(x1, y1)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventMouseMoved, start, Quartz.kCGMouseButtonLeft))
+    time.sleep(0.05)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventLeftMouseDown, start, Quartz.kCGMouseButtonLeft))
+    for i in range(1, steps + 1):
+        time.sleep(seconds / steps)
+        point = Quartz.CGPointMake(x1 + (x2 - x1) * i / steps, y1 + (y2 - y1) * i / steps)
+        Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventLeftMouseDragged, point, Quartz.kCGMouseButtonLeft))
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventLeftMouseUp, Quartz.CGPointMake(x2, y2), Quartz.kCGMouseButtonLeft))
+    time.sleep(0.05)
+
+
 def windows():
     """On-screen windows of layer 0, front to back: [(number, pid, (x, y, w, h))]."""
     out = []
@@ -545,6 +572,64 @@ def main():
             check(bool(menu), f"a right click opens KiCad's context menu above everything (layer {menu and menu[0].get('kCGWindowLayer')})")
             key("escape", command=False)
             check(wait_for(lambda: not popups(), 3), "Escape closes it")
+
+            # Row 1j (#1198, bp.13.3 b2): the click that activates an inactive KiCad acts as the click it was. Each case first gives the
+            # host the keyboard (a click in its own area: KiCad resigns active), then clicks KiCad with the button held long enough
+            # for the activation to land between the down and the up (b2: 19 ms after the down; the frame made key then reset the
+            # canvas's buttons, so the up had no down)
+            def kicad_inactive():
+                click(hx + 100, hy + 200)
+                time.sleep(0.5)
+                host_geometry(raise_=True)
+                wait_for(lambda: directly_above(pcb, hid), 3)
+
+            def selection_event(seconds=3):
+                deadline = time.monotonic() + seconds
+                while time.monotonic() < deadline:
+                    got = next((e for e in pump(200) if e.type == embed.ET_SELECTION_CHANGED), None)
+                    if got:
+                        return got
+                return None
+
+            def clear_selection():
+                key("escape", command=False)
+                time.sleep(0.3)
+                pump(0)
+
+            canvas_empty = (hx + px + pw * 0.1, hy + py + ph * 0.86)   # below the board (the right click's place)
+            canvas_part = (hx + px + pw * 0.35, hy + py + ph * 0.45)   # a part (the first click's place)
+
+            # the right click again, held: the menu opens, stays open until dismissed, and once it is closed the frame is key
+            kicad_inactive()
+            press(*canvas_empty, 0.3, button="right")
+            menu = wait_for(popups, 3, 0.1)
+            time.sleep(1.0)
+            check(bool(menu) and bool(popups()), "1j a held right click on an inactive KiCad opens the context menu, and it stays open")
+            key("escape", command=False)
+            check(wait_for(lambda: not popups(), 3), "1j Escape closes it")
+            pump(0)
+            key("a")
+            got = selection_event()
+            check(got is not None and len(got.selection.references) > 0, f"1j after the menu, the frame has the keyboard: Cmd+A selects ({got and len(got.selection.references)})")
+            clear_selection()
+
+            # a held left click on a part selects it (the tool's click is not lost to the activation)
+            kicad_inactive()
+            pump(0)
+            press(*canvas_part, 0.3)
+            got = selection_event()
+            check(got is not None and len(got.selection.references) > 0, f"1j a held left click on an inactive KiCad selects the part ({got and list(got.selection.references)[:3]})")
+            check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard")
+            clear_selection()
+
+            # a drag begun on an inactive KiCad (a selection box, 1 s) completes as a drag
+            kicad_inactive()
+            pump(0)
+            drag(*canvas_empty, hx + px + pw * 0.6, hy + py + ph * 0.5, 1.0)
+            got = selection_event()
+            check(got is not None and len(got.selection.references) > 0, f"1j a 1 s drag begun on an inactive KiCad selects with its box ({got and len(got.selection.references)})")
+            check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard after the drag")
+            clear_selection()
 
             # The host's process ends: every frame leaves the screen at once
             t0 = time.monotonic()
