@@ -103,6 +103,10 @@ static struct PGM_SINGLE_TOP : public PGM_BASE
         // Destroy PGM_BASE earlier than wxApp and static destruction would
         PGM_BASE::Destroy();
 
+        // and the settings manager with it, as kicad-cli's and the project manager's: the kiface's own
+        // settings destroyed in static teardown, after its statics, corrupted the heap at exit
+        m_settings_manager.reset();
+
         if( GIT_BACKEND* backend = GetGitBackend() )
         {
             backend->Shutdown();
