@@ -77,6 +77,12 @@ inline constexpr auto CAPABILITIES = std::to_array<const char*>( {
     // they describe the runtime, not a session; GetFrames advertises them too):
     "embed-autopanels",  // embedded side panels follow the frame's width (EmbedAutoPanels)
     "embed-gl-fallback", // no modal box for the OpenGL fallback: an ET_NOTICE of kind "graphics"
+#ifdef __APPLE__
+    // embedded (macOS): a focused show or click makes the frame key once KiCad is active (asked again
+    // until AppKit takes it), so ET_FOCUS_IN means the frame has the keyboard; without it an
+    // ET_FOCUS_IN can come from wx's focus with no key window (#1198).  The host trusts the event on it
+    "embed-key-on-activate",
+#endif
 #ifdef _WIN32
     // embedded: a prewarm never takes the keyboard or the activation (shown with SW_SHOWNA; a focus
     // it takes while built goes back).  Windows only: verified there; the host gates its
