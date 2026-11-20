@@ -11,7 +11,7 @@ metadata into licenses/debian/<package>/, and KiCad's thirdparty/ notices into l
   - licenses/LIBRARIES.tsv: library (debian:<source package>, vendored:<dir>, kicad), version, licence, where the text came from, how
     it is linked, the files, the shared objects; and licenses/BUNDLED.tsv: every ELF file in the package and what it was built from.
 
-usage: backplane-linux-licences.py ROOT --inputs FILE --stage STAGE_DIR --source SOURCE_DIR
+usage: backplane-linux-licences.py ROOT --inputs FILE --copied FILE --stage STAGE_DIR --source SOURCE_DIR
        backplane-linux-licences.py --gather BUILD_DIR > FILE      (the build's inputs from outside its tree, before it is removed)
 Then scripts/backplane-licence-package-check.py ROOT checks the result.
 """
@@ -40,6 +40,18 @@ def dpkg_index():
             elif line.startswith('/usr/lib'):
                 idx.setdefault(line[4:], pkg)
     return idx
+
+
+def package_of(name, copied, idx):
+    """The Debian package a bundled library came from, by the exact path the workflow copied it from (--copied; usrmerge's /lib and
+    /usr/lib both tried, then the real path). Nothing is guessed: (package, None), or (None, why) for the run to fail on."""
+    src = copied.get(name)
+    if not src:
+        return None, 'in lib/ but not in the workflow\'s list of the libraries it copied (--copied)'
+    for path in (src, os.path.realpath(src)):
+        if path in idx:
+            return idx[path], None
+    return None, f'copied from {src}, which no Debian package installed'
 
 
 def pkg_meta(pkg):
@@ -84,6 +96,7 @@ def main():
     ap.add_argument('--gather', type=Path)
     ap.add_argument('--inputs', type=Path)
     ap.add_argument('--stage', type=Path)
+    ap.add_argument('--copied', type=Path, help='name<TAB>source path of every library the workflow copied into lib/')
     ap.add_argument('--source', type=Path, default=Path.cwd())
     a = ap.parse_args()
     if a.gather:
@@ -111,6 +124,12 @@ def main():
     stage = a.stage.resolve() if a.stage else None
     staged = {p.name for p in stage.rglob('*')} if stage and stage.is_dir() else set()
     bundled, shared = [], {}
+    # name -> the path the workflow copied it from (its lddtree loop and the ngspice copies write them)
+    copied = {}
+    for line in (a.copied.read_text().splitlines() if a.copied and a.copied.is_file() else []):
+        n, _, path = line.partition('\t')
+        if n and path:
+            copied.setdefault(n, path)
     for p in sorted(root.rglob('*')):
         if p.is_symlink() or not p.is_file():
             continue
@@ -120,13 +139,13 @@ def main():
         rel = p.relative_to(root).as_posix()
         name = p.name
         real = p.name[:-5] if p.name.endswith('.real') else p.name
-        pkg = None
+        pkg, why = None, None
         if rel.startswith('lib/') and real not in staged:
-            for d in ('/usr/lib/x86_64-linux-gnu/', '/lib/x86_64-linux-gnu/', '/usr/lib/', '/lib/', '/usr/lib/x86_64-linux-gnu/ngspice/'):
-                pkg = idx.get(d + name)
-                if pkg:
-                    break
-        if pkg:
+            pkg, why = package_of(name, copied, idx)
+        if why:
+            bundled.append((rel, 'unknown'))
+            problems.append(f'{rel}: {why}')
+        elif pkg:
             shared.setdefault(pkg, []).append(name)
             bundled.append((rel, pkg))
         elif real in staged:

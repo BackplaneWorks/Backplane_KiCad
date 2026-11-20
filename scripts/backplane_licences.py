@@ -20,9 +20,18 @@ VENDOR_NAME = re.compile(r'licen[cs]e|copying|notice|copyright', re.I)
 NOTICE_SUFFIX = ('', '.txt', '.md', '.rst', '.markdown')
 
 
+SOURCE_SUFFIX = ('.c', '.cc', '.cpp', '.cxx', '.h', '.hh', '.hpp', '.hxx', '.inl', '.py', '.js', '.java', '.cmake', '.in', '.sh')
+
+
 def is_notice(f):
-    # LICENSE.BSD, COPYING.LIB: a name that starts so is a notice whatever its suffix; elsewhere in the name, only a text file
-    return VENDOR_NAME.match(f.name) is not None or (VENDOR_NAME.search(f.name) is not None and f.suffix.lower() in NOTICE_SUFFIX)
+    # LICENSE.BSD, COPYING.LIB: a name that starts so is a notice whatever its suffix (but not a source file: license.cpp);
+    # elsewhere in the name (BOOST.LICENSE_1_0.txt, APPLE_LICENSE), only a text file
+    suffix = f.suffix.lower()
+    if suffix in SOURCE_SUFFIX:
+        return False
+    return VENDOR_NAME.match(f.name) is not None or (VENDOR_NAME.search(f.name) is not None and suffix in NOTICE_SUFFIX)
+
+
 LIST_HEAD = 'library\tversion\tlicence\ttext from\tlinked as\tfiles\tbundled as\n'
 
 

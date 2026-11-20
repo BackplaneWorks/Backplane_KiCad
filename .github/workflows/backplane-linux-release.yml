@@ -214,6 +214,10 @@ jobs:
           mkdir -p "release/${archive_root}/lib/ngspice"
           cp -L /usr/lib/x86_64-linux-gnu/libngspice.so.0 "release/${archive_root}/lib/"
           cp -L /usr/lib/x86_64-linux-gnu/ngspice/*.cm "release/${archive_root}/lib/ngspice/"
+          # where every library in lib/ came from, for the licence list (exact paths: private subdirectories like pulseaudio/ too)
+          : > "$RUNNER_TEMP/copied-libraries.tsv"
+          printf 'libngspice.so.0\t/usr/lib/x86_64-linux-gnu/libngspice.so.0\n' >> "$RUNNER_TEMP/copied-libraries.tsv"
+          for cm in /usr/lib/x86_64-linux-gnu/ngspice/*.cm; do printf '%s\t%s\n' "$(basename "$cm")" "$cm" >> "$RUNNER_TEMP/copied-libraries.tsv"; done
           mapfile -d '' elf_files < <(find "release/${archive_root}" -type f \( -perm /111 -o -name '*.so*' -o -name '*.kiface' -o -name '*.cm' \) -print0)
           declare -A package_notices=()
           declare -A bundled_libraries=()
@@ -247,6 +251,7 @@ jobs:
                     cmp --silent "$library" "$destination" || { echo "Conflicting runtime library: $library" >&2; exit 1; }
                   else
                     cp -L "$library" "$destination"
+                    printf '%s\t%s\n' "$(basename "$library")" "$library" >> "$RUNNER_TEMP/copied-libraries.tsv"
                   fi
                   # usrmerge diversions precede the actual package owner in dpkg output.
                   package_id="$(dpkg-query -S "$library" "$(realpath "$library")" 2>/dev/null | sed -n -E '/^[a-z0-9][a-z0-9+.-]*(:[a-z0-9-]+)?: / { s/: .*//; p; q; }' || true)"
@@ -315,8 +320,9 @@ jobs:
           # Licences: header-only and static libraries' notices, the vendored libraries' README/header notices, licenses/LIBRARIES.tsv
           # (library, version, licence, text from, linked as) and licenses/BUNDLED.tsv; the check fails the build on any library in
           # the package without its text
+          /usr/bin/python3 scripts/backplane-licences-test.py
           /usr/bin/python3 scripts/backplane-linux-licences.py "release/${archive_root}" --inputs "$RUNNER_TEMP/build-inputs.txt" \
-            --stage stage --source "$PWD" | tee release/licences.log
+            --copied "$RUNNER_TEMP/copied-libraries.tsv" --stage stage --source "$PWD" | tee release/licences.log
           /usr/bin/python3 scripts/backplane-licence-package-check.py "release/${archive_root}" | tee -a release/licences.log
           {
             echo "Backplane KiCad Linux runtime"

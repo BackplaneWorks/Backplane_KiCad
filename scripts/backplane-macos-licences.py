@@ -141,6 +141,7 @@ VENDOR_EXTRA = {
 # a notice file: its name says licence/copying/notice/copyright anywhere (turtle's BOOST.LICENSE_1_0.txt), and it is no source file
 VENDOR_NAME = re.compile(r'licen[cs]e|copying|notice|copyright', re.I)
 NOTICE_SUFFIX = ('', '.txt', '.md', '.rst', '.markdown')
+SOURCE_SUFFIX = ('.c', '.cc', '.cpp', '.cxx', '.h', '.hh', '.hpp', '.hxx', '.inl', '.py', '.js', '.java', '.cmake', '.in', '.sh')
 
 
 def leading_comment(path):
@@ -304,7 +305,7 @@ def main():
         vend.mkdir(parents=True)
         per = {}
         for f in sorted(tp.rglob('*')):
-            if f.is_file() and (VENDOR_NAME.match(f.name) or (VENDOR_NAME.search(f.name) and f.suffix.lower() in NOTICE_SUFFIX)):
+            if f.is_file() and f.suffix.lower() not in SOURCE_SUFFIX and (VENDOR_NAME.match(f.name) or (VENDOR_NAME.search(f.name) and f.suffix.lower() in NOTICE_SUFFIX)):
                 out = vend / f.relative_to(tp)
                 out.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(f, out); out.chmod(0o644)

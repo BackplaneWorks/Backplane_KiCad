@@ -154,6 +154,8 @@ Set-Content (Join-Path $licenses 'VCPKG_TOOL_COMMIT') $vcpkgCommit
 # Licences: every DLL/EXE traced to its vcpkg port, KiCad or Microsoft's runtime; header-only and static ports from the build's inputs
 # (ninja's deps log, build.ninja's .lib); the vendored README/header notices; licenses\LIBRARIES.tsv (library, version, licence, text
 # from, linked as) and BUNDLED.tsv. The check fails the build on any library in the runtime without its text.
+python scripts/backplane-licences-test.py
+if ($LASTEXITCODE -ne 0) { throw 'licences: the lookup tests failed' }
 $buildInputs = Join-Path $root 'build-inputs.txt'
 python scripts/backplane-windows-licences.py --gather $build | Set-Content $buildInputs -Encoding utf8NoBOM
 if ($LASTEXITCODE -ne 0) { throw 'gathering the build''s inputs failed' }

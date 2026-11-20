@@ -151,6 +151,7 @@ python scripts/backplane-glb-concurrency-test.py "$root/bin/kicad-cli" | tee "$r
 # The licence of every library the app bundles, from the Homebrew keg it was linked from (or, where the keg has none, that formula's
 # source at the bundled version), each under its own folder; LIBRARIES.tsv says where each text came from, BUNDLED.tsv what every
 # Mach-O in the app was built from. The check fails the build if a bundled library ends with no licence file.
+python scripts/backplane-licences-test.py
 python scripts/backplane-macos-licences.py "$root" --prefix "$prefix" --nng "$nng" --build "$build" --build "$stage" \
   --source "$PWD" --cache "$RUNNER_TEMP/licence-sources" | tee "$release/licences.log"
 python scripts/backplane-licence-package-check.py "$root" | tee -a "$release/licences.log"
