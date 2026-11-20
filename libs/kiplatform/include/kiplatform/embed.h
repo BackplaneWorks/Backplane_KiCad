@@ -23,6 +23,7 @@
 #include <string>
 
 #include <wx/string.h>
+#include <wx/window.h>
 
 class wxWindow;
 
@@ -181,6 +182,29 @@ namespace EMBED
     /// click left the frame holding the mouse capture, so the next right click never reached
     /// the canvas).  Elsewhere the same as TakeFocus( aFrame ).
     void TakeFocusForClick( wxWindow* aFrame, wxWindow* aClicked );
+
+    /// #1198 (bp.13.3 b2): whether a key request made by a click must wait before it moves the key
+    /// window and wx's focus: while a mouse button is held (aButtonsDown, NSEvent.pressedMouseButtons)
+    /// or a menu is tracking.  Moving them between the click's down and its up made the draw panel lose
+    /// focus (EDA_DRAW_PANEL_GAL::onLostFocus resets the tool dispatcher's buttons), so the up had no
+    /// down: a right click opened no context menu and a left click did nothing but activate KiCad.
+    inline bool KeyWaitsForGesture( unsigned long aButtonsDown, bool aMenuTracking )
+    {
+        return aButtonsDown != 0 || aMenuTracking;
+    }
+
+    /// #1198: whether wx's focus stays where it is rather than going to aClicked after a click's
+    /// activation: already on aClicked, inside it (the GL canvas inside the draw panel), or aClicked
+    /// inside the focused window.  The same rule as the click's own focus on Windows
+    /// (BACKPLANE_EMBED::FilterEvent): moving it between the draw panel and its GL canvas cost the
+    /// canvas its focus mid-click.
+    inline bool FocusStays( wxWindow* aFocus, wxWindow* aClicked )
+    {
+        if( !aFocus || !aClicked )
+            return aFocus != nullptr;
+
+        return aFocus == aClicked || aClicked->IsDescendant( aFocus ) || aFocus->IsDescendant( aClicked );
+    }
 
     /// Trace only (#1198 diagnosis): a button went down in embedded aFrame; aHasFocus is what
     /// HasFocus() said.  macOS writes the app's and the frame's key state to the embed trace;

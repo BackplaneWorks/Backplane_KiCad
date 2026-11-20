@@ -63,6 +63,7 @@ set( QA_COMMON_SRCS
     test_wx_grid.cpp
     test_embedded_file_compress.cpp
     test_embed_host_order.cpp
+    test_embed_click_focus.cpp
     test_env_paths.cpp
     test_expand_text_vars.cpp
     test_text_var_dependency.cpp
