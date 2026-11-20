@@ -191,6 +191,16 @@ def drag(x1, y1, x2, y2, seconds, steps=30):
     time.sleep(0.05)
 
 
+def app_active(pid):
+    """Whether the app `pid` is the active one now. NSRunningApplication's properties change only as this process's run loop runs
+    (the check never runs one: an object fetched once kept its first answer), so the run loop is turned briefly and the app asked
+    afresh each time."""
+    import AppKit
+    AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.02))
+    app = AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(pid)
+    return bool(app is not None and app.isActive())
+
+
 def windows():
     """On-screen windows of layer 0, front to back: [(number, pid, (x, y, w, h))]."""
     out = []
@@ -663,7 +673,7 @@ def main():
                 # KiCad's own activation (NSRunningApplication.isActive, as mac_pane_e2e.py's active()): never "frontmost", which is the
                 # menu-bar owner, and an embedded KiCad is an accessory app, never that
                 kicad_app = AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(kicad.pid)
-                resigned = wait_for(lambda: kicad_app is not None and not kicad_app.isActive()
+                resigned = wait_for(lambda: not app_active(kicad.pid)
                                     and not frames()[embed.FK_PCB].focused, 3)
                 return check(bool(resigned), f"1j {case}: before it, KiCad is not the active app and its frame has no focus")
 
@@ -850,13 +860,13 @@ def main():
                 if not kicad_inactive(f"1399 {name}"):
                     continue
                 click(hx + px + pw // 2, hy + py + ph // 2)   # the person's own click in KiCad's canvas: KiCad activates itself
-                check(wait_for(lambda: kicad_app.isActive() and frames()[embed.FK_PCB].focused, 3),
+                check(wait_for(lambda: app_active(kicad.pid) and frames()[embed.FK_PCB].focused, 3),
                       f"1399 {name}: KiCad is active by its own click, its frame has the keyboard")
                 key("escape", command=False)   # a key in KiCad after the click (the person's keys)
                 key("a")   # Cmd+A: an ordinary chord KiCad keeps (not reserved)
                 time.sleep(0.5)
                 # the reverse: a key that is not a reserved chord never brings the host forward
-                check(kicad_app.isActive() and not host_app.isActive(),
+                check(app_active(kicad.pid) and not app_active(host.pid),
                       f"1399 {name}: keys that are not reserved chords leave KiCad active and the host behind")
                 pump(0)
                 m = trace_mark()
@@ -871,7 +881,7 @@ def main():
                 check(yielded, f"1399 {name}: KiCad's trace says it yielded to the host and activated it for the chord")
                 # the host does NOT activate itself: it comes forward only by KiCad's activate on the chord (the client's own activate
                 # is refused on macOS 26 even with the consent; #1399)
-                came = wait_for(lambda: host_app.isActive() and not kicad_app.isActive(), 3)
+                came = wait_for(lambda: app_active(host.pid) and not app_active(kicad.pid), 3)
                 RESULTS[f"1399_{name}"] = {"host_active": bool(came), "yield_traced": yielded}
                 check(bool(came), f"1399 {name}: the host comes forward (KiCad activated it), KiCad resigns ({RESULTS[f'1399_{name}']})")
             api.request(embed.SetReservedKeys(chords=["Ctrl+K"]), embed.SetReservedKeysResponse)
