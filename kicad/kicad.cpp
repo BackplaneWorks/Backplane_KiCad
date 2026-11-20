@@ -365,7 +365,7 @@ bool PGM_KICAD::OnPgmInit()
         }
 
         // We've been adding system (installed default) search paths so far, now for user paths
-        // The default user search path is inside KIPLATFORM::ENV::GetDocumentsPath()
+        // The default user search path is inside PATHS::GetUserDocumentsBase()
         m_bm.m_search.Insert( PATHS::GetUserTemplatesPath(), 0 );
 
         // ...but the user can override that default with the KICAD_USER_TEMPLATE_DIR env var.

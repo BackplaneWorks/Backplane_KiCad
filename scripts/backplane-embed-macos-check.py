@@ -21,6 +21,7 @@ import argparse
 import hashlib
 import json
 import os
+import pwd
 import shutil
 import signal
 import subprocess
@@ -186,7 +187,10 @@ def main():
     work = Path(tempfile.mkdtemp(prefix="bpem-", dir="/tmp"))
     started = time.time()
     env = dict(os.environ)
-    for variable, directory in (("HOME", "home"), ("KICAD_CONFIG_HOME", "config"), ("TMPDIR", "tmp")):
+    # every home KiCad has inside the test's own, as Backplane's hub gives each KiCad it starts (documents included: KiCad's
+    # start-up search reaches under the user's Documents, which macOS guards with a prompt)
+    for variable, directory in (("HOME", "home"), ("KICAD_CONFIG_HOME", "config"), ("KICAD_CACHE_HOME", "cache"),
+                                ("KICAD_DOCUMENTS_HOME", "documents"), ("TMPDIR", "tmp")):
         path = work / directory
         path.mkdir(parents=True, exist_ok=True, mode=0o700)
         env[variable] = str(path)
@@ -244,6 +248,16 @@ def main():
 
         socket = work / "tmp/api.sock"
         log = (args.out / "kicad.log").open("w")
+        # Every file access of KiCad's while it starts and opens the board, traced (fs_usage, root): with KICAD_DOCUMENTS_HOME set
+        # none may be under the account's real Documents. GitHub's image does not enforce macOS's prompt for it, so the check
+        # looks at the access itself, never at a prompt
+        real_documents = str(Path(pwd.getpwuid(os.getuid()).pw_dir) / "Documents")
+        fs_log_path = args.out / "fs_usage.log"
+        fs_watch = None
+        if subprocess.run(["sudo", "-n", "true"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+            fs_watch = subprocess.Popen(["sudo", "-n", "fs_usage", "-w", "-f", "pathname", "kicad"],
+                                        stdout=fs_log_path.open("w"), stderr=subprocess.STDOUT)
+            time.sleep(1.0)
         kicad = subprocess.Popen([str(args.kicad), "--embedded", "--parent-window", str(hid), "--toplevel-window", str(hid),
                                   "--api-socket", str(socket), "--parent-pid", str(os.getpid()), str(project)],
                                  env=env, stdout=subprocess.PIPE, stderr=log, text=True)
@@ -315,6 +329,20 @@ def main():
             pcb = shown.frame.window
             drawn = wait_event(embed.ET_FRAME_DRAWN, 60)
             RESULTS["pcb_first_show_drawn_ms"] = round((drawn - t0) * 1000) if drawn else None
+            # the start and the board's kiface are done: KiCad's file accesses so far, none under the real Documents
+            if fs_watch is not None:
+                fs_watch.send_signal(signal.SIGINT)
+                try:
+                    fs_watch.wait(10)
+                except subprocess.TimeoutExpired:
+                    fs_watch.kill()
+                traced = fs_log_path.read_text(errors="replace").splitlines()
+                touched = [line for line in traced if real_documents + "/" in line or line.rstrip().endswith(real_documents)]
+                RESULTS["documents_accesses"] = touched[:5]
+                check(len(traced) > 20 and not touched,
+                      f"with KICAD_DOCUMENTS_HOME set, KiCad's start touches nothing under {real_documents} ({len(traced)} accesses traced, {len(touched)} there: {touched[:2]})")
+            else:
+                check(False, "KiCad's file accesses at start traced (fs_usage needs passwordless sudo: not available here)")
             check(drawn is not None, f"ET_FRAME_DRAWN after the PCB's first ShowFrame ({RESULTS['pcb_first_show_drawn_ms']} ms)")
             placed = wait_for(lambda: on_screen(pcb), 5)
             expected = (hx + px, hy + py, pw, ph)

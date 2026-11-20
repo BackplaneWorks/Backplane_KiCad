@@ -75,7 +75,9 @@ void SystemDirsAppend( SEARCH_STACK* aSearchStack )
     // According to wxWidgets documentation:
     // Unix: ~/.appname
     // Windows: C:\Documents and Settings\username\Application Data\appname
-    maybe.AddPaths( KIPLATFORM::ENV::GetDocumentsPath() );
+    // (KICAD_DOCUMENTS_HOME when set: the search, and its readability checks of library/,
+    // modules/... below it, never touch the real Documents, which macOS guards with a prompt)
+    maybe.AddPaths( PATHS::GetUserDocumentsBase() );
 
     {
         // Should be full path to this program executable.
