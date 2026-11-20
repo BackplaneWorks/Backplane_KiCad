@@ -283,6 +283,14 @@ public:
      */
     static std::vector<wxString> GetToolDirectories( const wxString& aExecutableDir );
 
+    /**
+     * The folder the user's KiCad documents live under: KICAD_DOCUMENTS_HOME when it is set (an
+     * embedding host or a test gives each KiCad its own), else the platform's Documents folder.
+     * Every start-up search under the user's Documents goes through this, so a KiCad started with
+     * the variable set never touches the real one (macOS asks the person for access to it).
+     */
+    static wxString GetUserDocumentsBase();
+
 private:
     // we are a static helper
     PATHS() {}

@@ -32,14 +32,20 @@
 #include <wx_filename.h>
 
 
-void PATHS::getUserDocumentPath( wxFileName& aPath )
+wxString PATHS::GetUserDocumentsBase()
 {
     wxString envPath;
 
-    if( wxGetEnv( wxT( "KICAD_DOCUMENTS_HOME" ), &envPath ) )
-        aPath.AssignDir( envPath );
-    else
-        aPath.AssignDir( KIPLATFORM::ENV::GetDocumentsPath() );
+    if( wxGetEnv( wxT( "KICAD_DOCUMENTS_HOME" ), &envPath ) && !envPath.IsEmpty() )
+        return envPath;
+
+    return KIPLATFORM::ENV::GetDocumentsPath();
+}
+
+
+void PATHS::getUserDocumentPath( wxFileName& aPath )
+{
+    aPath.AssignDir( GetUserDocumentsBase() );
 
     aPath.AppendDir( KICAD_PATH_STR );
     aPath.AppendDir( GetMajorMinorVersion().ToStdString() );
