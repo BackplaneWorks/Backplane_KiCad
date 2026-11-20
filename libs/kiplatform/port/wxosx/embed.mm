@@ -678,6 +678,8 @@ void watchOwnerOf( uint64_t aParent )
                                        ^{
                                            trace( "macos: the host's process ended; frames hidden" );
                                            s_parent = 0;
+                                           // its pid may be reused: nothing is ever yielded to or activated under it (#1399)
+                                           s_owner = 0;
                                            orderOutAll();
                                        } );
     dispatch_resume( s_ownerWatch );

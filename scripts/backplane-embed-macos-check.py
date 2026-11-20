@@ -91,10 +91,9 @@ int main(int argc, char **argv) { @autoreleasepool {
         else if ([v isEqual:@"demini"]) { [w deminiaturize:nil]; [NSApp activateIgnoringOtherApps:YES]; }
         else if ([v isEqual:@"full"]) [w toggleFullScreen:nil];
         else if ([v isEqual:@"front"]) { [NSApp activateIgnoringOtherApps:YES]; [w makeKeyAndOrderFront:nil]; }
-        // as the client does on a reserved chord from KiCad (#1399): its own cooperative activate, honoured only with KiCad's consent
-        else if ([v isEqual:@"self"]) {
-          if (@available(macOS 14.0, *)) [NSApp activate]; else [NSApp activateIgnoringOtherApps:YES];
-          [w makeKeyAndOrderFront:nil]; }
+        // the person's Cmd+H on the host, and its undoing (#1399: a hidden host is never brought forward by KiCad)
+        else if ([v isEqual:@"hide"]) [NSApp hide:nil];
+        else if ([v isEqual:@"unhide"]) { [NSApp unhide:nil]; [NSApp activateIgnoringOtherApps:YES]; [w makeKeyAndOrderFront:nil]; }
         else if ([v isEqual:@"rect"]) {
           double H = NSScreen.screens[0].frame.size.height; NSRect c = [w contentRectForFrameRect:w.frame];
           printf("rect %.0f %.0f %.0f %.0f %d\n", c.origin.x, H - (c.origin.y + c.size.height), c.size.width, c.size.height,
@@ -892,6 +891,26 @@ def main():
                 came = wait_for(lambda: app_active(host.pid) and not app_active(kicad.pid), 3)
                 RESULTS[f"1399_{name}"] = {"host_active": bool(came), "yield_traced": yielded}
                 check(bool(came), f"1399 {name}: the host comes forward (KiCad activated it), KiCad resigns ({RESULTS[f'1399_{name}']})")
+            # the refusal the Lead calls "never": the host hidden (the person's Cmd+H) is not brought forward by KiCad on a chord
+            if kicad_inactive("1399 hidden host"):
+                click(hx + px + pw // 2, hy + py + ph // 2)
+                check(wait_for(lambda: app_active(kicad.pid), 3), "1399 hidden host: KiCad is active by its own click")
+                tell_host("hide")
+                time.sleep(0.8)
+                host_hidden = lambda: bool(AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(host.pid).isHidden())
+                AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
+                check(host_hidden(), "1399 hidden host: the host is hidden (Cmd+H)")
+                m = trace_mark()
+                key("k")
+                time.sleep(1.5)
+                AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
+                refused = trace_path.exists() and b"host activated: no (the host is hidden)" in trace_path.read_bytes()[m:]
+                check(refused and host_hidden() and not app_active(host.pid),
+                      f"1399 hidden host: Cmd+K leaves the host hidden and inactive (trace: refused={refused})")
+                tell_host("unhide")
+                time.sleep(0.8)
+            # (a key repeat and a chord reaching an inactive KiCad are refused by the same test in the code; neither can be made by real
+            # input here: a repeat needs a held key the relay cannot hold, and an inactive KiCad is not sent keys)
             api.request(embed.SetReservedKeys(chords=["Ctrl+K"]), embed.SetReservedKeysResponse)
 
             # The host's process ends: every frame leaves the screen at once
