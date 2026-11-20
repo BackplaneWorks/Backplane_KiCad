@@ -98,6 +98,14 @@ static struct PGM_SINGLE_TOP : public PGM_BASE
         {
             SaveCommonSettings();
             m_settings_manager->Save();
+
+            // its projects unloaded while the settings manager is still there (the reset below nulls
+            // GetSettingsManager() first), as kicad-cli does
+            for( const wxString& projectPath : m_settings_manager->GetOpenProjects() )
+            {
+                if( PROJECT* project = m_settings_manager->GetProject( projectPath ) )
+                    m_settings_manager->UnloadProject( project, false );
+            }
         }
 
         // Destroy PGM_BASE earlier than wxApp and static destruction would
