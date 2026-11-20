@@ -893,10 +893,11 @@ def main():
                 check(bool(came), f"1399 {name}: the host comes forward (KiCad activated it), KiCad resigns ({RESULTS[f'1399_{name}']})")
             # the refusal the Lead calls "never": the host hidden (the person's Cmd+H) is not brought forward by KiCad on a chord
             if kicad_inactive("1399 hidden host"):
-                click(hx + px + pw // 2, hy + py + ph // 2)
-                check(wait_for(lambda: app_active(kicad.pid), 3), "1399 hidden host: KiCad is active by its own click")
+                # the host hidden first (macOS then activates some other app), then the person's click makes KiCad the active app
                 tell_host("hide")
                 time.sleep(0.8)
+                click(hx + px + pw // 2, hy + py + ph // 2)
+                check(wait_for(lambda: app_active(kicad.pid), 3), "1399 hidden host: KiCad is active by its own click")
                 host_hidden = lambda: bool(AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(host.pid).isHidden())
                 AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
                 check(host_hidden(), "1399 hidden host: the host is hidden (Cmd+H)")
