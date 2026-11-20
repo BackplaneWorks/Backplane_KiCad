@@ -809,7 +809,11 @@ def main():
                 check(wait_for(lambda: kicad_app.isActive() and frames()[embed.FK_PCB].focused, 3),
                       f"1399 {name}: KiCad is active by its own click, its frame has the keyboard")
                 key("escape", command=False)   # a key in KiCad after the click (the person's keys)
+                key("a")   # Cmd+A: an ordinary chord KiCad keeps (not reserved)
                 time.sleep(0.5)
+                # the reverse: a key that is not a reserved chord never brings the host forward
+                check(kicad_app.isActive() and not host_app.isActive(),
+                      f"1399 {name}: keys that are not reserved chords leave KiCad active and the host behind")
                 pump(0)
                 m = trace_mark()
                 key(**chord)
