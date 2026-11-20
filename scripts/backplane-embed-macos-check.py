@@ -645,19 +645,58 @@ def main():
             # Every point a case clicks is aimed and asserted first, with KiCad active: a probe click there must give the selection
             # the case needs (KiCad's own hit test, at whatever size and zoom the pane has here), never a fraction of the pane taken
             # on trust (the mini's pane put 35%/45% on empty board)
-            def find_empty():
-                for fx, fy in ((0.1, 0.86), (0.08, 0.92), (0.15, 0.8), (0.05, 0.6), (0.5, 0.92)):
+            def find_empty(ref):
+                """A point of empty canvas at this pane's size: the board zoomed out to twice its size (empty canvas all round it, at any
+                pane size), then each candidate proved by a probe click: with footprint `ref` selected by the API (no keyboard needed), a
+                click there must clear the selection. Every candidate tried is said, with why it was rejected."""
+                boxes = [api.request(editor.GetBoundingBox(header=header, items=[fp_id], mode=editor.BBM_ITEM_ONLY), editor.GetBoundingBoxResponse).boxes
+                         for fp_id in footprint_ids()]
+                bs = [b[0] for b in boxes if b]
+                if bs:
+                    x0, y0 = min(b.position.x_nm for b in bs), min(b.position.y_nm for b in bs)
+                    x1, y1 = max(b.position.x_nm + b.size.x_nm for b in bs), max(b.position.y_nm + b.size.y_nm for b in bs)
+                    w, h = x1 - x0, y1 - y0
+                    zoom = types.Box2(position=types.Vector2(x_nm=x0 - w // 2, y_nm=y0 - h // 2), size=types.Vector2(x_nm=2 * w, y_nm=2 * h))
+                    api.request(embed.SelectItems(kind=embed.FK_PCB, zoom_box_nm=zoom), embed.SelectItemsResponse)
+                    time.sleep(0.8)
+                tried = []
+                for fx, fy in ((0.06, 0.94), (0.94, 0.94), (0.06, 0.08), (0.5, 0.95), (0.03, 0.5), (0.1, 0.86), (0.15, 0.8), (0.9, 0.5)):
                     pt = (hx + px + pw * fx, hy + py + ph * fy)
+                    api.request(embed.SelectItems(kind=embed.FK_PCB, references=[ref]), embed.SelectItemsResponse)
+                    time.sleep(0.3)
                     pump(0)
-                    key("a")
-                    if not selected(selection_event()):
-                        continue
                     click(*pt)
-                    got = selection_event()
+                    got = selection_event(2)
                     if got is not None and not selected(got):
+                        print(f"INFO 1j find_empty: ({fx}, {fy}) used; rejected before it: {tried}", flush=True)
                         return pt
+                    tried.append((fx, fy, "no selection change" if got is None else f"selects {selected(got)[:2]}"))
                     clear_selection()
+                print(f"INFO 1j find_empty: none of {tried}", flush=True)
                 return None
+
+            def footprint_ids():
+                out = []
+                for any_item in api.request(editor.GetItems(header=header, types=[enums.KOT_PCB_FOOTPRINT]), editor.GetItemsResponse).items:
+                    fp = board.FootprintInstance()
+                    any_item.Unpack(fp)
+                    out.append(fp.id)
+                return out
+
+            # Which way the click's activation went, from KiCad's own trace since `mark` (bytes): "fix" (TakeFocusForClick entered with
+            # NSApp.active=0: the fix's path), "appkit" (AppKit made KiCad active before wx saw the click: the fix's path not taken, as for
+            # a left click on macOS 15 and 26), or "active" (KiCad was active already: the case proves nothing)
+            trace_path = args.out / "embed-trace.log"
+            def trace_mark():
+                return trace_path.stat().st_size if trace_path.exists() else 0
+            def click_path(mark):
+                lines = (trace_path.read_text(errors="replace")[mark:] if trace_path.exists() else "").splitlines()
+                for i, line in enumerate(lines):
+                    if "TakeFocusForClick entered" in line:
+                        return "fix" if "NSApp.active=0" in line else "active"
+                    if "click on frame" in line and "HasFocus=1" in line:
+                        return "appkit" if any("app did become active" in x for x in lines[:i]) else "active"
+                return "none"
 
             def find_on(ref):
                 """The board zoomed to footprint `ref` (SelectItems), then a point on it found by probe clicks."""
@@ -697,15 +736,18 @@ def main():
                         target, best = fp.reference_field.text.text.text, area
             RESULTS["1j_target"] = target
 
-            empty = find_empty()
+            empty = find_empty(target) if target else None
             check(empty is not None, f"1j aim: a point of empty canvas found and proved by a probe click ({empty})")
 
             # the right click again, held: the menu opens, stays open until dismissed, and once it is closed the frame is key
             if empty:
                 kicad_inactive("held right click")
+                m = trace_mark()
                 press(*empty, 0.3, button="right")
                 menu = wait_for(popups, 3, 0.1)
                 time.sleep(1.0)
+                path = click_path(m)
+                check(path in ("fix", "appkit"), f"1j the held right click reached an inactive KiCad (KiCad's trace: {path})")
                 check(bool(menu) and bool(popups()), "1j a held right click on an inactive KiCad opens the context menu, and it stays open")
                 key("escape", command=False)
                 check(wait_for(lambda: not popups(), 3), "1j Escape closes it")
@@ -720,8 +762,11 @@ def main():
                 kicad_inactive("drag")
                 places = footprint_places()
                 pump(0)
+                m = trace_mark()
                 drag(*empty, hx + px + pw * 0.6, hy + py + ph * 0.5, 1.0)
                 got = selection_event()
+                path = click_path(m)
+                check(path in ("fix", "appkit"), f"1j the drag's press reached an inactive KiCad (KiCad's trace: {path})")
                 check(bool(selected(got)), f"1j a 1 s drag begun on an inactive KiCad selects with its box ({got and len(selected(got))} names)")
                 check(footprint_places() == places, "1j and moved nothing (every footprint where it was)")
                 check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard after the drag")
@@ -733,8 +778,12 @@ def main():
             if on:
                 kicad_inactive("held left click")
                 pump(0)
+                m = trace_mark()
                 press(*on, 0.3)
                 got = selection_event()
+                path = click_path(m)
+                check(path in ("fix", "appkit"), f"1j the held left click reached an inactive KiCad (KiCad's trace: {path})")
+                RESULTS["1j_paths"] = RESULTS.get("1j_paths", []) + [path]
                 check(names_footprint(got, target), f"1j a held left click on an inactive KiCad selects footprint {target} ({got and selected(got)[:4]})")
                 check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard")
                 clear_selection()
