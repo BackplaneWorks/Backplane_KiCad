@@ -155,6 +155,9 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 // is the host's CGWindowID, the host sends SetHostGeometry, and reserved chords
                 // and the comment key arrive as ET_RESERVED_KEY (bp.13)
                 reply.add_capabilities( "embed-macos" );
+                // A focused show or click makes the frame key once KiCad is active (retried until
+                // AppKit takes it): ET_FOCUS_IN then means the frame has the keyboard (#1198)
+                reply.add_capabilities( "embed-key-on-activate" );
                 reply.add_capabilities( "embed-host-geometry" );
                 reply.add_capabilities( "embed-reserved-key-event" );
                 // SetReservedKeys takes "RawCtrl+" for the Control key itself (Ctrl is Cmd here)
