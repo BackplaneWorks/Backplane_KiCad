@@ -597,6 +597,10 @@ def main():
                         return got
                 return None
 
+            def selected(got):
+                """What a selection event names: its references, nets and pins (a track or a zone has no reference, only its net)."""
+                return [*got.selection.references, *got.selection.nets, *got.selection.pins] if got is not None else None
+
             def clear_selection():
                 key("escape", command=False)
                 time.sleep(0.3)
@@ -616,7 +620,7 @@ def main():
             pump(0)
             key("a")
             got = selection_event()
-            check(got is not None and len(got.selection.references) > 0, f"1j after the menu, the frame has the keyboard: Cmd+A selects ({got and len(got.selection.references)})")
+            check(bool(selected(got)), f"1j after the menu, the frame has the keyboard: Cmd+A selects ({got and len(selected(got))})")
             clear_selection()
 
             # a held left click on a part selects it (the tool's click is not lost to the activation)
@@ -624,7 +628,9 @@ def main():
             pump(0)
             press(*canvas_part, 0.3)
             got = selection_event()
-            check(got is not None and len(got.selection.references) > 0, f"1j a held left click on an inactive KiCad selects the part ({got and list(got.selection.references)[:3]})")
+            # (the selection was cleared just before: any ET_SELECTION_CHANGED is the click's new selection, as the first-click check
+            # counts it; a track, a zone or a drawing under the point names no reference)
+            check(got is not None, f"1j a held left click on an inactive KiCad selects what is under it ({got and selected(got)[:3]})")
             check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard")
             clear_selection()
 
@@ -633,7 +639,7 @@ def main():
             pump(0)
             drag(*canvas_empty, hx + px + pw * 0.6, hy + py + ph * 0.5, 1.0)
             got = selection_event()
-            check(got is not None and len(got.selection.references) > 0, f"1j a 1 s drag begun on an inactive KiCad selects with its box ({got and len(got.selection.references)})")
+            check(got is not None, f"1j a 1 s drag begun on an inactive KiCad selects with its box ({got and len(selected(got))} names)")
             check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard after the drag")
             clear_selection()
 
