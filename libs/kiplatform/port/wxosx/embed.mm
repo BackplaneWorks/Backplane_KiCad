@@ -1192,8 +1192,16 @@ void KIPLATFORM::EMBED::YieldActivationToHost()
             why = "the host is hidden";
 
         bool activated = why.empty() && [host activateWithOptions:0];
+
+        // On macOS 26 the activate KiCad (an accessory app, never the menu bar's owner) asks for is
+        // accepted and not acted on (the mini: "yes", the host still inactive).  KiCad giving up its
+        // own activation hands it to the app that had it before KiCad's click: the host, which just
+        // had the keyboard and now has KiCad's consent.  Same conditions as the activate
+        if( why.empty() )
+            [NSApp deactivate];
+
         trace( std::string( "macos: activation yielded to the host for a reserved chord, host activated: " )
-               + ( activated ? "yes" : "no" ) + ( why.empty() ? "" : " (" + why + ")" ) );
+               + ( activated ? "yes" : "no" ) + ( why.empty() ? ", KiCad deactivated" : " (" + why + ")" ) );
     }
 }
 
