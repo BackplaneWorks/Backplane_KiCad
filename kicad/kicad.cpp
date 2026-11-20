@@ -700,6 +700,13 @@ void PGM_KICAD::OnPgmExit()
 
     // Destroy PGM_KICAD earlier than wxApp and static destruction would
     Destroy();
+
+    // The settings manager goes now, as kicad-cli's does: its projects and the kifaces' own settings
+    // (FOOTPRINT_EDITOR_SETTINGS, EDA_3D_VIEWER_SETTINGS, ...) destroyed in static teardown, after the
+    // kifaces' statics, corrupted the heap at exit (Backplane: an abort or a hang on about one Quit in
+    // two of the embedded KiCad on Linux, ~SETTINGS_MANAGER from ~PGM_BASE in the exit handlers)
+    m_settings_manager.reset();
+
     GetGitBackend()->Shutdown();
     delete GetGitBackend();
     SetGitBackend( nullptr );
