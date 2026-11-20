@@ -696,13 +696,32 @@ void PGM_KICAD::OnPgmExit()
     {
         SaveCommonSettings();
         m_settings_manager->Save();
+
+        // Unload projects while the settings manager is still there for their destructors, as
+        // kicad-cli does: its reset below nulls GetSettingsManager() before it destroys them
+        for( const wxString& projectPath : m_settings_manager->GetOpenProjects() )
+        {
+            if( PROJECT* project = m_settings_manager->GetProject( projectPath ) )
+                m_settings_manager->UnloadProject( project, false );
+        }
     }
 
     // Destroy PGM_KICAD earlier than wxApp and static destruction would
     Destroy();
-    GetGitBackend()->Shutdown();
-    delete GetGitBackend();
-    SetGitBackend( nullptr );
+
+    // The settings manager goes now, as kicad-cli's does: its projects and the kifaces' own settings
+    // (FOOTPRINT_EDITOR_SETTINGS, EDA_3D_VIEWER_SETTINGS, ...) destroyed in static teardown, after the
+    // kifaces' statics, corrupted the heap at exit (Backplane: an abort or a hang on about one Quit in
+    // two of the embedded KiCad on Linux, ~SETTINGS_MANAGER from ~PGM_BASE in the exit handlers)
+    m_settings_manager.reset();
+
+    // (a failed start runs OnPgmExit twice: the backend is gone the second time)
+    if( GIT_BACKEND* backend = GetGitBackend() )
+    {
+        backend->Shutdown();
+        delete backend;
+        SetGitBackend( nullptr );
+    }
 }
 
 
