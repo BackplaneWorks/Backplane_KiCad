@@ -497,6 +497,14 @@ def main():
             while time.monotonic() < deadline and not got:
                 got = next((e for e in pump(200) if e.type == embed.ET_RESERVED_KEY), None)
             check(got is not None and got.reserved_key.index == 0, f"Cmd+K arrives as ET_RESERVED_KEY ({got and got.reserved_key})")
+            # a reserved chord hands the keyboard to the host (#1399: KiCad activates it): KiCad given it back, as the client does for a
+            # focused show, before the prewarm checks that it keeps it
+            tell_host("yield")
+            api.request(embed.ShowFrame(kind=embed.FK_PCB, focus=True, x=0, y=0, width=pw, height=ph), embed.ShowFrameResponse)
+            if not wait_for(lambda: frames()[embed.FK_PCB].focused, 3):
+                tell_host("activate")
+                api.request(embed.ShowFrame(kind=embed.FK_PCB, focus=True, x=0, y=0, width=pw, height=ph), embed.ShowFrameResponse)
+            check(wait_for(lambda: frames()[embed.FK_PCB].focused, 5), "after the reserved chord the PCB frame takes the keyboard back on a focused show")
 
             # Prewarm the schematic, then show it: its first show must paint quickly (an occluded
             # transparent window may not be drawn by the window server)
