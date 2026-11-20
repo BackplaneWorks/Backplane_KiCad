@@ -577,11 +577,17 @@ def main():
             # host the keyboard (a click in its own area: KiCad resigns active), then clicks KiCad with the button held long enough
             # for the activation to land between the down and the up (b2: 19 ms after the down; the frame made key then reset the
             # canvas's buttons, so the up had no down)
-            def kicad_inactive():
+            def kicad_inactive(case):
+                """The host takes the keyboard; checked, as its own line: a case run on a KiCad still active proves nothing."""
                 click(hx + 100, hy + 200)
                 time.sleep(0.5)
                 host_geometry(raise_=True)
                 wait_for(lambda: directly_above(pcb, hid), 3)
+                import AppKit   # pyobjc-framework-Cocoa: a dependency of the Quartz framework the check already uses
+                front = lambda: AppKit.NSWorkspace.sharedWorkspace().frontmostApplication()   # noqa: E731
+                resigned = wait_for(lambda: front() is not None and front().processIdentifier() != kicad.pid
+                                    and not frames()[embed.FK_PCB].focused, 3)
+                return check(bool(resigned), f"1j {case}: before it, KiCad is not the active app and its frame has no focus")
 
             def selection_event(seconds=3):
                 deadline = time.monotonic() + seconds
@@ -600,7 +606,7 @@ def main():
             canvas_part = (hx + px + pw * 0.35, hy + py + ph * 0.45)   # a part (the first click's place)
 
             # the right click again, held: the menu opens, stays open until dismissed, and once it is closed the frame is key
-            kicad_inactive()
+            kicad_inactive("held right click")
             press(*canvas_empty, 0.3, button="right")
             menu = wait_for(popups, 3, 0.1)
             time.sleep(1.0)
@@ -614,7 +620,7 @@ def main():
             clear_selection()
 
             # a held left click on a part selects it (the tool's click is not lost to the activation)
-            kicad_inactive()
+            kicad_inactive("held left click")
             pump(0)
             press(*canvas_part, 0.3)
             got = selection_event()
@@ -623,7 +629,7 @@ def main():
             clear_selection()
 
             # a drag begun on an inactive KiCad (a selection box, 1 s) completes as a drag
-            kicad_inactive()
+            kicad_inactive("drag")
             pump(0)
             drag(*canvas_empty, hx + px + pw * 0.6, hy + py + ph * 0.5, 1.0)
             got = selection_event()
