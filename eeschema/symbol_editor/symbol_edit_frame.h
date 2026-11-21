@@ -31,6 +31,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <wx/timer.h>
 
 class SCH_EDIT_FRAME;
 class LIB_SYMBOL;
@@ -804,6 +805,12 @@ private:
     // accumulated while the app was busy).  Without this guard, opening the symbol library
     // table dialog from within an active SyncLibraries call corrupts the library tree.
     bool        m_syncLibrariesInProgress;
+
+    /// In embedded mode, refreshes the library tree as a deferred background load completes
+    /// instead of blocking the UI thread in SyncLibraries().
+    wxTimer m_deferredLibTimer;
+    bool    m_deferredLibTimerBound = false;
+    size_t  m_lastLoadedLibCount = 0;
 
     std::unique_ptr<API_HANDLER_SYMBOL>    m_apiHandler;
     std::unique_ptr<API_HANDLER_COMMON>    m_apiHandlerCommon;

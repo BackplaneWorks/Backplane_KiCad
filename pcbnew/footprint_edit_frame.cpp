@@ -21,6 +21,7 @@
  */
 
 #include <backplane_embed.h>
+#include <kiplatform/embed.h>
 #include <libraries/library_manager.h>
 #include "tool/embed_tool.h"
 #include "tools/convert_tool.h"
@@ -420,7 +421,12 @@ FOOTPRINT_EDIT_FRAME::FOOTPRINT_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
             {
                 // Ensure the controls on the toolbars all are correctly sized
                 UpdateToolbarControlSizes();
-                m_treePane->FocusSearchFieldIfExists();
+
+                if( !BACKPLANE_EMBED::Get().Enabled()
+                    || ( IsShown() && KIPLATFORM::EMBED::IsMapped( this ) ) )
+                {
+                    m_treePane->FocusSearchFieldIfExists();
+                }
 
                 // Update the angle snap mode toolbar button to reflect the current preference
                 GetToolManager()->RunAction( PCB_ACTIONS::angleSnapModeChanged );

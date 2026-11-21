@@ -36,6 +36,7 @@
 #include <wx/evtloop.h>
 #include <wx/frame.h>
 #include <wx/log.h>
+#include <wx/minifram.h>
 #include <wx/toplevel.h>
 #include <wx/filename.h>
 #include <wx/time.h>
@@ -267,7 +268,7 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
     hooks.buildingForPrewarm =
             [this]( uint64_t aWindow ) -> bool
             {
-                if( !m_enabled || m_prewarmOpening.empty() )
+                if( !m_enabled )
                     return false;
 
                 for( const FRAME_ENTRY& e : m_frames )
@@ -281,9 +282,12 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
                     if( KIPLATFORM::EMBED::WindowId( top ) != aWindow )
                         continue;
 
-                    // A frame (not a dialog, not the project manager) that no one has seen yet
+                    // Any unregistered, hidden frame (prewarm, Ctrl+E library editor, 3D viewer,
+                    // simulator still in its constructor before registerFrame embeds it) must
+                    // never steal focus or activation into a hidden window.
                     return wxDynamicCast( top, wxFrame ) && !wxDynamicCast( top, wxDialog )
-                           && top != m_manager;
+                           && !wxDynamicCast( top, wxMiniFrame ) && top != m_manager
+                           && !top->IsShown();
                 }
 
                 return false;

@@ -1573,8 +1573,79 @@ void SYMBOL_EDIT_FRAME::SyncLibraries( bool aShowProgress, bool aPreloadCancelle
     // Ensure any in-progress background library preloading is complete before syncing the
     // tree. Without this, libraries still in LOADING state get skipped by Sync(), resulting
     // in an incomplete tree that requires a manual refresh to fully populate.
+    //
+    // In embedded mode with lazy library loading (DeferFullLoad), blocking here stalls the UI
+    // thread for 10-29 s on Windows while ~200 standard symbol libraries parse, before the
+    // Symbol Editor can even finish opening the Ctrl+E symbol.  Instead, start the deferred
+    // full load in the background, sync the already-loaded libraries immediately, and let a
+    // timer refresh the tree as the rest arrive (matching SYMBOL_TREE_MODEL_ADAPTER).
     SYMBOL_LIBRARY_ADAPTER* adapter = PROJECT_SCH::SymbolLibAdapter( &Prj() );
-    adapter->BlockUntilLoaded();
+
+    if( BACKPLANE_EMBED::Get().Enabled()
+        && ( adapter->FullLoadDeferred() || adapter->AsyncLoadProgress().has_value() ) )
+    {
+        adapter->StartDeferredFullLoad();
+
+        if( !m_deferredLibTimerBound )
+        {
+            m_deferredLibTimerBound = true;
+            m_deferredLibTimer.SetOwner( this );
+
+            Bind( wxEVT_TIMER,
+                  [this]( wxTimerEvent& )
+                  {
+                      SYMBOL_LIBRARY_ADAPTER* a = PROJECT_SCH::SymbolLibAdapter( &Prj() );
+
+                      if( !a )
+                      {
+                          m_deferredLibTimer.Stop();
+                          return;
+                      }
+
+                      if( a->FullLoadDeferred() )
+                          a->StartDeferredFullLoad();
+
+                      size_t loadedCount = 0;
+
+                      for( const auto& [name, status] : a->GetLibraryStatuses() )
+                      {
+                          if( status.load_status == LOAD_STATUS::LOADED && !status.error )
+                              ++loadedCount;
+                      }
+
+                      bool stillLoading = a->FullLoadDeferred() || a->AsyncLoadProgress().has_value();
+
+                      if( !stillLoading )
+                          m_deferredLibTimer.Stop();
+
+                      if( !m_syncLibrariesInProgress
+                          && ( loadedCount != m_lastLoadedLibCount || !stillLoading ) )
+                      {
+                          SyncLibraries( false );
+                      }
+                  },
+                  m_deferredLibTimer.GetId() );
+        }
+
+        if( !m_deferredLibTimer.IsRunning() )
+            m_deferredLibTimer.Start( 1000 );
+    }
+    else
+    {
+        adapter->BlockUntilLoaded();
+    }
+
+    {
+        size_t loadedCount = 0;
+
+        for( const auto& [name, status] : adapter->GetLibraryStatuses() )
+        {
+            if( status.load_status == LOAD_STATUS::LOADED && !status.error )
+                ++loadedCount;
+        }
+
+        m_lastLoadedLibCount = loadedCount;
+    }
 
     if( aShowProgress )
     {
