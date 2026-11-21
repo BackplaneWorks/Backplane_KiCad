@@ -40,6 +40,15 @@ class wxWindow;
  * (Messages()), IsOK answers no.  A box in a task would hold the API for every client until
  * someone answers it, and in an embedded pane no one may see it.
  */
+class KIDIALOG;
+
+/**
+ * Backplane: an editor's own "Save changes?" KIDIALOG (the library editors' tabs and close), shown
+ * unless the host has given the answer (an embedded Close: BACKPLANE_EMBED::UnsavedChangesAnswer),
+ * as UnsavedChangesDialog takes it.  Returns wxID_YES (save), wxID_NO (discard) or wxID_CANCEL.
+ */
+KICOMMON_API int ShowUnsavedChangesKIDialog( KIDIALOG& aDialog );
+
 class KICOMMON_API NO_MODALS_SCOPE
 {
 public:

@@ -20,6 +20,7 @@
 
 #include <backplane_embed.h>
 #include <confirm.h>
+#include <kidialog.h>
 
 #include <functional>
 #include <nlohmann/json.hpp>
@@ -383,3 +384,12 @@ int SelectSingleOption( wxWindow* aParent, const wxString& aTitle,
     return dlg.GetSelection();
 }
 
+
+
+int ShowUnsavedChangesKIDialog( KIDIALOG& aDialog )
+{
+    if( std::optional<int> answer = BACKPLANE_EMBED::Get().UnsavedChangesAnswer() )
+        return *answer;
+
+    return aDialog.ShowModal();
+}
