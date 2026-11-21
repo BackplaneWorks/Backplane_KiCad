@@ -306,6 +306,9 @@ void PCB_IO_KICAD_SEXPR::SaveBoard( const wxString& aFileName, BOARD& aBoard,
                                aBoard.GetBoardStructure().Empty() ? nlohmann::json()
                                                                  : aBoard.GetBoardStructure().ToJson() );
     metadata.Save( aFileName );
+
+    // The routing plan travels with the board (docs/backplane/floorplanner.md).
+    aBoard.GetPlan().SaveFor( aFileName );
 }
 
 
@@ -3850,6 +3853,18 @@ void PCB_IO_KICAD_SEXPR::loadBoard( const wxString& aFileName, BOARD& aBoard, bo
             properties.try_emplace( name, value );
         aBoard.SetProperties( properties );
         const auto structure = metadata.ReadExtension( wxS( "root" ), "board_structure" );
+
+        try
+        {
+            aBoard.GetPlan() = BOARD_PLAN::LoadFor( aFileName );
+        }
+        catch( const std::exception& error )
+        {
+            aBoard.GetPlan() = BOARD_PLAN();
+            aBoard.GetPlan().loadError = error.what();
+            wxLogWarning( wxS( "Routing plan %s not loaded: %s" ), BOARD_PLAN::PathFor( aFileName ),
+                          wxString::FromUTF8( error.what() ) );
+        }
 
         try
         {

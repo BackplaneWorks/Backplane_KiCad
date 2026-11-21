@@ -78,7 +78,11 @@ enum class EMBED_EVENT_TYPE : int
     RELOAD_CONFLICT = 16,
     THEME_CHANGED = 17,
     ATTACHED = 18,
-    COMMENT = 19
+    COMMENT = 19,
+    DOCUMENT_EDITED = 20,
+    AGENT_NOTICE = 21,
+    PLAN_CHANGED = 22,
+    AGENT_CONTROL = 23
 };
 
 /// Values match kiapi.backplane.embed.ThemeMode.
@@ -131,6 +135,7 @@ struct EMBED_FRAME_OPS
     std::function<bool()>                      reload;           ///< reload, keeping the view
     std::function<void( const wxString& )>     showConflict;     ///< infobar; empty hides it
     std::function<bool()>                      busy;             ///< a dialog or tool is active
+    std::function<void()>                      syncSideFiles;    ///< merge external project/rules changes
 };
 
 struct EMBED_FRAME_INFO

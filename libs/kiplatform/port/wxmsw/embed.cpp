@@ -18,17 +18,259 @@
 #include <kiplatform/embed.h>
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdarg>
+#include <string>
 
+#include <wx/app.h>
 #include <wx/window.h>
 #include <windows.h>
 
-// Windows: frames become WS_CHILD windows of the host's container HWND (no separate holder;
-// the container is the holder).  Dialogs are owned by the host's top-level HWND.
-// Untested on hardware in bp.8: the X11 path is the verified one.
+// Windows: as on X11, the frames are WS_CHILD windows of a holder window KiCad owns, and the
+// holder is a child of the host's container HWND (or, parked, a hidden off-screen popup).
+// AttachToParent moves only the holder.  The holder follows its parent's client size and
+// notices the host moving it or its parent going away.  Dialogs are owned by the host's
+// top-level HWND.
 
 namespace
 {
 KIPLATFORM::EMBED::HOOKS s_hooks;
+HWND                     s_holder = nullptr;
+HWND                     s_parent = nullptr;   ///< the container the holder belongs in, or null
+
+constexpr UINT_PTR HOLDER_TIMER = 1;
+
+
+/// BACKPLANE_KICAD_EMBED_TRACE: "1" (a log in %TEMP%) or a file path.  Each line also goes to
+/// OutputDebugString.  A GUI-subsystem KiCad often has no usable stderr, hence the file.
+FILE* traceFile()
+{
+    static FILE* file = []() -> FILE*
+    {
+        const wchar_t* value = _wgetenv( L"BACKPLANE_KICAD_EMBED_TRACE" );
+
+        if( !value || !*value )
+            return nullptr;
+
+        std::wstring path = value;
+
+        if( path == L"1" )
+        {
+            wchar_t dir[MAX_PATH] = {};
+            GetTempPathW( MAX_PATH, dir );
+            path = std::wstring( dir ) + L"backplane-kicad-embed-trace.log";
+        }
+
+        return _wfopen( path.c_str(), L"a" );
+    }();
+
+    return file;
+}
+
+
+void trace( const char* aFormat, ... )
+{
+    FILE* file = traceFile();
+
+    if( !file )
+        return;
+
+    char    line[512];
+    va_list args;
+    va_start( args, aFormat );
+    vsnprintf( line, sizeof( line ), aFormat, args );
+    va_end( args );
+
+    fprintf( file, "%lu embed: %s\n", GetTickCount(), line );
+    fflush( file );
+    OutputDebugStringA( ( std::string( "embed: " ) + line + "\n" ).c_str() );
+}
+
+
+/// The window, its class and its process, for trace lines
+std::string describe( HWND aWindow )
+{
+    if( !aWindow )
+        return "null";
+
+    char  cls[64] = {};
+    DWORD pid = 0;
+    GetClassNameA( aWindow, cls, sizeof( cls ) );
+    GetWindowThreadProcessId( aWindow, &pid );
+
+    char text[160];
+    snprintf( text, sizeof( text ), "0x%llx(%s pid %lu%s)", (unsigned long long) (uintptr_t) aWindow,
+              cls, pid, pid == GetCurrentProcessId() ? " ours" : "" );
+    return text;
+}
+
+
+void clearNoActivate( HWND aHolder )
+{
+    LONG_PTR exStyle = GetWindowLongPtrW( aHolder, GWL_EXSTYLE );
+
+    if( exStyle & ( WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE ) )
+    {
+        SetWindowLongPtrW( aHolder, GWL_EXSTYLE, exStyle & ~( WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE ) );
+        trace( "holder ex-style 0x%llx cleared of TOOLWINDOW|NOACTIVATE", (unsigned long long) exStyle );
+    }
+}
+constexpr int      PARK_X = -32000;
+constexpr int      PARK_Y = -32000;
+
+
+void fitToParent( HWND aHolder, HWND aParent )
+{
+    RECT client;
+
+    if( !aParent || !GetClientRect( aParent, &client ) )
+        return;
+
+    RECT now;
+    GetWindowRect( aHolder, &now );
+    MapWindowPoints( HWND_DESKTOP, aParent, reinterpret_cast<POINT*>( &now ), 2 );
+
+    if( now.left != 0 || now.top != 0 || now.right - now.left != client.right
+        || now.bottom - now.top != client.bottom )
+    {
+        SetWindowPos( aHolder, nullptr, 0, 0, client.right, client.bottom,
+                      SWP_NOZORDER | SWP_NOACTIVATE );
+    }
+}
+
+
+void becomeChildOf( HWND aHolder, HWND aParent )
+{
+    LONG_PTR style = GetWindowLongPtrW( aHolder, GWL_STYLE );
+    style = ( style & ~WS_POPUP ) | WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+    SetWindowLongPtrW( aHolder, GWL_STYLE, style );
+
+    // The parked popup's WS_EX_NOACTIVATE would answer every click inside with MA_NOACTIVATE:
+    // no focus, no activation for menus and mouse capture.  Only the parked holder has them.
+    clearNoActivate( aHolder );
+    SetParent( aHolder, aParent );
+    SetWindowPos( aHolder, HWND_TOP, 0, 0, 0, 0,
+                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED );
+    fitToParent( aHolder, aParent );
+    ShowWindow( aHolder, SW_SHOWNA );
+    trace( "holder %s now in %s", describe( aHolder ).c_str(), describe( aParent ).c_str() );
+}
+
+
+void park( HWND aHolder )
+{
+    // Hidden and off-screen, owned by nobody: the frames inside keep running, and a later
+    // AttachToParent moves them back in one SetParent
+    ShowWindow( aHolder, SW_HIDE );
+    SetParent( aHolder, nullptr );
+    LONG_PTR style = GetWindowLongPtrW( aHolder, GWL_STYLE );
+    style = ( style & ~WS_CHILD ) | WS_POPUP | WS_CLIPCHILDREN;
+    SetWindowLongPtrW( aHolder, GWL_STYLE, style );
+
+    // Never in the taskbar or Alt+Tab, never activated while parked
+    LONG_PTR exStyle = GetWindowLongPtrW( aHolder, GWL_EXSTYLE );
+    SetWindowLongPtrW( aHolder, GWL_EXSTYLE, exStyle | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE );
+    SetWindowPos( aHolder, nullptr, PARK_X, PARK_Y, 0, 0,
+                  SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED );
+    trace( "holder %s parked", describe( aHolder ).c_str() );
+}
+
+
+LRESULT CALLBACK holderProc( HWND aHwnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam )
+{
+    if( aMsg == WM_MOUSEACTIVATE && s_parent )
+    {
+        // A click inside activates the host's window as a click on its own child would.  Not
+        // asked of the container: a host's container may be WS_EX_NOACTIVATE itself.
+        trace( "WM_MOUSEACTIVATE hit %d msg 0x%x -> MA_ACTIVATE (fg %s, focus %s)",
+               (int) (short) LOWORD( aLParam ), (unsigned) HIWORD( aLParam ),
+               describe( GetForegroundWindow() ).c_str(), describe( GetFocus() ).c_str() );
+        return MA_ACTIVATE;
+    }
+
+    if( traceFile()
+        && ( aMsg == WM_SETCURSOR || aMsg == WM_CONTEXTMENU || aMsg == WM_PARENTNOTIFY
+             || aMsg == WM_CAPTURECHANGED || aMsg == WM_ACTIVATE || aMsg == WM_SETFOCUS
+             || aMsg == WM_KILLFOCUS || aMsg == WM_CANCELMODE ) )
+    {
+        LRESULT result = DefWindowProcW( aHwnd, aMsg, aWParam, aLParam );
+
+        if( aMsg != WM_SETCURSOR || HIWORD( aLParam ) != WM_MOUSEMOVE )
+        {
+            trace( "holder msg 0x%04x wparam 0x%llx lparam 0x%llx -> 0x%llx (capture %s)", aMsg,
+                   (unsigned long long) aWParam, (unsigned long long) aLParam,
+                   (unsigned long long) result, describe( GetCapture() ).c_str() );
+        }
+
+        return result;
+    }
+
+    if( aMsg == WM_TIMER && aWParam == HOLDER_TIMER && aHwnd == s_holder )
+    {
+        HWND actual = GetParent( aHwnd );
+
+        if( s_parent && !IsWindow( s_parent ) )
+        {
+            // The host's container is gone: park, and tell the host when it comes back
+            s_parent = nullptr;
+            park( aHwnd );
+
+            if( s_hooks.detached )
+                s_hooks.detached();
+        }
+        else if( s_parent && actual && actual != s_parent )
+        {
+            // The host moved the holder into another of its windows itself
+            s_parent = actual;
+            fitToParent( aHwnd, actual );
+
+            if( s_hooks.reparented )
+                s_hooks.reparented( reinterpret_cast<uint64_t>( actual ) );
+        }
+        else if( s_parent && !actual )
+        {
+            // The host took it out (SetParent(holder, NULL)): treated as a detach
+            s_parent = nullptr;
+            park( aHwnd );
+
+            if( s_hooks.detached )
+                s_hooks.detached();
+        }
+        else if( s_parent )
+        {
+            fitToParent( aHwnd, s_parent );
+            clearNoActivate( aHwnd );
+        }
+
+        return 0;
+    }
+
+    if( aMsg == WM_ERASEBKGND )
+        return 1;   // the frames cover it; no flash of the class brush
+
+    return DefWindowProcW( aHwnd, aMsg, aWParam, aLParam );
+}
+
+
+const wchar_t* holderClass()
+{
+    static const wchar_t* name = L"BackplaneKiCadEmbedHolder";
+    static bool           registered = false;
+
+    if( !registered )
+    {
+        WNDCLASSEXW wc = {};
+        wc.cbSize = sizeof( wc );
+        wc.lpfnWndProc = holderProc;
+        wc.hInstance = GetModuleHandleW( nullptr );
+        wc.lpszClassName = name;
+        wc.hCursor = LoadCursor( nullptr, IDC_ARROW );
+        registered = RegisterClassExW( &wc ) != 0 || GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
+    }
+
+    return name;
+}
 }
 
 
@@ -46,13 +288,48 @@ void KIPLATFORM::EMBED::Install( const HOOKS& aHooks )
 
 uint64_t KIPLATFORM::EMBED::CreateHolder( uint64_t aParent )
 {
-    return aParent;
+    HWND parent = reinterpret_cast<HWND>( aParent );
+
+    if( parent && !IsWindow( parent ) )
+        return 0;
+
+    // Created parked (a hidden popup that never shows in the taskbar), then moved in
+    HWND holder = CreateWindowExW( WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, holderClass(), L"",
+                                   WS_POPUP | WS_CLIPCHILDREN, PARK_X, PARK_Y, 800, 600, nullptr,
+                                   nullptr, GetModuleHandleW( nullptr ), nullptr );
+
+    if( !holder )
+        return 0;
+
+    s_holder = holder;
+    s_parent = parent;
+
+    if( parent )
+        becomeChildOf( holder, parent );
+
+    SetTimer( holder, HOLDER_TIMER, 100, nullptr );
+    trace( "tracing on; holder %s created, parent %s", describe( holder ).c_str(),
+           describe( parent ).c_str() );
+    return reinterpret_cast<uint64_t>( holder );
 }
 
 
-bool KIPLATFORM::EMBED::AttachHolder( uint64_t, uint64_t aParent )
+bool KIPLATFORM::EMBED::AttachHolder( uint64_t aHolder, uint64_t aParent )
 {
-    return aParent == 0 || IsWindow( reinterpret_cast<HWND>( aParent ) );
+    HWND holder = reinterpret_cast<HWND>( aHolder );
+    HWND parent = reinterpret_cast<HWND>( aParent );
+
+    if( !holder || !IsWindow( holder ) || ( parent && !IsWindow( parent ) ) )
+        return false;
+
+    s_parent = parent;
+
+    if( parent )
+        becomeChildOf( holder, parent );
+    else
+        park( holder );
+
+    return true;
 }
 
 
@@ -76,9 +353,19 @@ uint64_t KIPLATFORM::EMBED::PrepareFrame( wxWindow* aFrame, uint64_t aHolder )
     exStyle &= ~( WS_EX_APPWINDOW | WS_EX_WINDOWEDGE );
     SetWindowLongPtr( hwnd, GWL_EXSTYLE, exStyle );
 
-    SetParent( hwnd, reinterpret_cast<HWND>( aHolder ) );
-    SetWindowPos( hwnd, nullptr, 0, 0, 0, 0,
-                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED );
+    HWND holder = reinterpret_cast<HWND>( aHolder );
+    SetParent( hwnd, holder );
+
+    // Fill the holder from the start (its client area is the container's): a new frame must
+    // not show at its own default position and size until the host resizes it
+    RECT client = { 0, 0, 0, 0 };
+    GetClientRect( holder, &client );
+    UINT flags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
+
+    if( client.right <= 0 || client.bottom <= 0 )
+        flags |= SWP_NOSIZE;
+
+    SetWindowPos( hwnd, nullptr, 0, 0, client.right, client.bottom, flags );
 
     return reinterpret_cast<uint64_t>( hwnd );
 }
@@ -101,8 +388,16 @@ bool KIPLATFORM::EMBED::HasFocus( wxWindow* aFrame )
 
 void KIPLATFORM::EMBED::TakeFocus( wxWindow* aFrame )
 {
-    if( aFrame )
-        SetFocus( static_cast<HWND>( aFrame->GetHWND() ) );
+    if( !aFrame )
+        return;
+
+    HWND frame = static_cast<HWND>( aFrame->GetHWND() );
+    HWND before = GetFocus();
+    HWND result = SetFocus( frame );
+    trace( "TakeFocus %s: focus was %s, SetFocus -> %s (error %lu), focus now %s, fg %s",
+           describe( frame ).c_str(), describe( before ).c_str(), describe( result ).c_str(),
+           result ? 0 : GetLastError(), describe( GetFocus() ).c_str(),
+           describe( GetForegroundWindow() ).c_str() );
 }
 
 
@@ -111,8 +406,10 @@ void KIPLATFORM::EMBED::SendHostMessage( uint64_t aTarget, const char*, int aWin
 {
     if( aTarget )
     {
-        PostMessage( reinterpret_cast<HWND>( aTarget ), WM_APP + aWinMsgOffset,
-                     static_cast<WPARAM>( aData[3] ), static_cast<LPARAM>( aData[0] ) );
+        BOOL posted = PostMessage( reinterpret_cast<HWND>( aTarget ), WM_APP + aWinMsgOffset,
+                                   static_cast<WPARAM>( aData[3] ), static_cast<LPARAM>( aData[0] ) );
+        trace( "host message WM_APP+0x%x to %s: %s", aWinMsgOffset,
+               describe( reinterpret_cast<HWND>( aTarget ) ).c_str(), posted ? "posted" : "failed" );
     }
 }
 
@@ -127,7 +424,18 @@ void KIPLATFORM::EMBED::SetFrameGeometry( wxWindow* aFrame, int aX, int aY, int 
 
 bool KIPLATFORM::EMBED::SetPreferDark( int aMode )
 {
-    return aMode == 2;
+    // wxMSW's dark mode (3.3+) applies to windows created after it is enabled, so --theme dark
+    // (before any frame exists) gives dark chrome throughout; a live change after startup
+    // reaches only windows opened later (dialogs, new frames).  It cannot be turned off again.
+#if wxCHECK_VERSION( 3, 3, 0 )
+    if( aMode == 2 )
+        return wxTheApp && wxTheApp->MSWEnableDarkMode( wxApp::DarkMode_Always );
+
+    if( aMode == 0 )
+        return wxTheApp && wxTheApp->MSWEnableDarkMode( wxApp::DarkMode_Auto );
+#endif
+
+    return false;
 }
 
 
@@ -138,7 +446,11 @@ void KIPLATFORM::EMBED::InstallLoopTimer( std::function<void( double, double )> 
 
 bool KIPLATFORM::EMBED::IsMapped( wxWindow* aFrame )
 {
-    return aFrame && IsWindowVisible( static_cast<HWND>( aFrame->GetHWND() ) );
+    // The frame's own visibility, as X11's map_state: IsWindowVisible() is false whenever an
+    // ancestor (the host's container) is hidden, and a host may keep it hidden until a frame
+    // reports shown
+    HWND hwnd = aFrame ? static_cast<HWND>( aFrame->GetHWND() ) : nullptr;
+    return hwnd && ( GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_VISIBLE ) != 0;
 }
 
 

@@ -18,6 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_coedit.h>
 #include <algorithm>
 #include <api/api_handler_sch.h>
 #include <api/api_server.h>
@@ -828,7 +829,7 @@ void SCH_EDIT_FRAME::setupUIConditions()
                 if( SCH_LINE_WIRE_BUS_TOOL::IsDrawingLineWireOrBus( aSel ) )
                     return true;
 
-                return GetUndoCommandCount() > 0;
+                return HasUndoFor( COEDIT::CurrentActor() );
             };
 
     auto groupWithDesignBlockLink =
@@ -3644,6 +3645,31 @@ bool SCH_EDIT_FRAME::interactiveOperationInProgress() const
         return pointEditor && pointEditor->IsDragging();
 
     return currentTool != mgr->GetTool<SCH_SELECTION_TOOL>();
+}
+
+
+std::vector<KIID> SCH_EDIT_FRAME::SelectedItemIds() const
+{
+    std::vector<KIID> ids;
+    TOOL_MANAGER*     mgr = GetToolManager();
+
+    if( !mgr )
+        return ids;
+
+    SCH_SELECTION_TOOL* selTool = mgr->GetTool<SCH_SELECTION_TOOL>();
+
+    if( !selTool )
+        return ids;
+
+    for( EDA_ITEM* item : selTool->GetSelection() )
+    {
+        ids.push_back( item->m_Uuid );
+
+        if( EDA_ITEM* parent = item->GetParent(); parent && parent->Type() != SCH_SCREEN_T )
+            ids.push_back( parent->m_Uuid );
+    }
+
+    return ids;
 }
 
 

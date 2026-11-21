@@ -22,7 +22,7 @@
 namespace BACKPLANE
 {
 
-inline constexpr std::array<const char*, 14> CAPABILITIES = {
+inline constexpr std::array<const char*, 17> CAPABILITIES = {
     "api-server",
     "headless-pcb",
     "headless-sch",
@@ -37,6 +37,9 @@ inline constexpr std::array<const char*, 14> CAPABILITIES = {
     "api-descriptor",
     "symbol-from-libid",
     "footprint-partial-update",
+    "coedit",          // docs/backplane/coedit.md: live co-editing, per-actor undo, deferral
+    "rules-merge",     // project settings and custom rules merge, never overwrite
+    "routing-plan",    // docs/backplane/floorplanner.md: kiapi.backplane.plan
 };
 
 } // namespace BACKPLANE

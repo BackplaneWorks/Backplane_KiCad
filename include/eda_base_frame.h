@@ -148,6 +148,10 @@ public:
     EMBED_FRAME_OPS embedOps();
 
     /// Files whose external changes reload this frame (embedded mode).  Default: none.
+    /// Co-editing: merge changes other writers made to the files beside the document (the
+    /// project file, the custom rules) into the open editor.  Polled by the embed layer.
+    virtual void EmbedSyncSideFiles() {}
+
     virtual std::vector<wxString> EmbedWatchedFiles() const;
 
     /// Reload the document from disk keeping the view, layer, selection and sheet.  The caller
@@ -636,6 +640,14 @@ public:
     virtual PICKED_ITEMS_LIST* PopCommandFromRedoList();
 
     virtual int GetUndoCommandCount() const { return m_undoList.m_CommandsList.size(); }
+
+    /// Co-editing: the person's Undo/Redo only act on the person's own changes.
+    /// Co-editing: the undo list, read-only (the person's undo copies are the base an agent's
+    /// stale update is merged from).
+    const UNDO_REDO_CONTAINER& GetUndoListForCoedit() const { return m_undoList; }
+
+    bool HasUndoFor( const std::string& aActor ) const { return m_undoList.FindNewest( aActor ) >= 0; }
+    bool HasRedoFor( const std::string& aActor ) const { return m_redoList.FindNewest( aActor ) >= 0; }
     virtual int GetRedoCommandCount() const { return m_redoList.m_CommandsList.size(); }
 
     virtual wxString GetUndoActionDescription() const;

@@ -209,6 +209,11 @@ enum ItemStatusCode
   ISC_NONEXISTENT  = 4; // The item to be updated did not exist in the given document
   ISC_IMMUTABLE    = 5; // The item to be updated is not allowed to be modified by the API
   ISC_INVALID_DATA = 7; // The item to be created does not have valid data for the given document
+
+  // Backplane fork (docs/backplane/coedit.md): the person is editing this item right now.  The
+  // update is queued and applied when their edit ends, rebased onto it field by field (fields
+  // both changed keep the person's value); a notice reports the outcome.
+  ISC_DEFERRED     = 100;
 }
 
 // Per-item status feedback for creation and update calls
@@ -315,6 +320,11 @@ enum ItemDeletionStatus
   IDS_OK           = 1;
   IDS_NONEXISTENT  = 2; // The item did not exist in the given document
   IDS_IMMUTABLE    = 3; // The item is not allowed to be modified by the API
+
+  // Backplane fork (docs/backplane/coedit.md): the person is editing this item (or an
+  // interactive tool is running); the deletion is applied when that ends, if the item still
+  // exists.  A notice reports the outcome.
+  IDS_DEFERRED     = 100;
 }
 
 message ItemDeletionResult

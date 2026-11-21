@@ -57,6 +57,12 @@ protected:
 
     std::unique_ptr<COMMIT> createCommit() override;
 
+    COEDIT::HOLDS currentHolds() override;
+
+    EDA_ITEM* resolveLiveItem( const KIID& aId ) override;
+
+    std::string coeditDocKind() const override { return "sch"; }
+
     kiapi::common::types::DocumentType thisDocumentType() const override
     {
         return kiapi::common::types::DOCTYPE_SCHEMATIC;

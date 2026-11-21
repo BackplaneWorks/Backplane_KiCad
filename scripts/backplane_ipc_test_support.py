@@ -22,7 +22,8 @@ def resolve_stock_cli(path):
 
 
 class IpcSession:
-    def __init__(self, cli, timeout=180000, api_socket=None, server_args=None):
+    def __init__(self, cli, timeout=180000, api_socket=None, server_args=None,
+                 client_name="works.backplane.ipc-regression"):
         """Create an isolated session, or attach to an existing API socket.
 
         ``api_socket`` is useful for GUI regressions: the caller owns the GUI
@@ -35,6 +36,7 @@ class IpcSession:
         self.timeout = timeout
         self.server_args = list(server_args or [])
         self.token = ""
+        self.client_name = client_name
         self.server = None
         self.connection = None
         self.log = None
@@ -95,7 +97,7 @@ class IpcSession:
         if os.environ.get("BACKPLANE_IPC_TRACE"):
             print(f"IPC {command.DESCRIPTOR.full_name}", flush=True)
         request = self.envelope.ApiRequest()
-        request.header.client_name = "works.backplane.ipc-regression"
+        request.header.client_name = self.client_name
         request.header.kicad_token = self.token
         request.message.Pack(command)
         if type_url is not None:
