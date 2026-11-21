@@ -1735,7 +1735,7 @@ bool BACKPLANE_EMBED::StartEventServer( const std::string& aUrl, const std::stri
     }
 
     nng_socket_set_ms( socket, NNG_OPT_RECVTIMEO, 500 );
-    nng_socket_set_ms( socket, NNG_OPT_SENDTIMEO, 3000 );  // a reader gone quiet cannot hold the event thread (and its join at exit)
+    nng_socket_set_ms( socket, NNG_OPT_SENDTIMEO, 500 );  // a reader gone quiet cannot hold the event thread (and its join at exit)
 
     if( nng_listener_start( listener, 0 ) != 0 )
     {

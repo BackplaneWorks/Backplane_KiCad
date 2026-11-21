@@ -136,8 +136,9 @@ void KINNG_REQUEST_SERVER::listenThread( std::promise<bool>* aStarted )
 
     nng_socket_set_ms( socket, NNG_OPT_RECVTIMEO, 500 );
 
-    // a client alive but not reading cannot hold the reply's send (and with it m_mutex, Stop and the exit) for ever
-    nng_socket_set_ms( socket, NNG_OPT_SENDTIMEO, 3000 );
+    // a client alive but not reading cannot hold the reply's send (and with it m_mutex, Stop and the exit) for ever; 500 ms, under the
+    // hub's shortest request timeout (700 ms)
+    nng_socket_set_ms( socket, NNG_OPT_SENDTIMEO, 500 );
 
     retCode = nng_listener_start( listener, 0 );
 
