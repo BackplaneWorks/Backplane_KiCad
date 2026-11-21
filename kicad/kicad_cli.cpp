@@ -707,11 +707,10 @@ void PGM_KICAD::OnPgmExit()
 
     if( m_settings_manager && m_settings_manager->IsOK() )
     {
-        SaveCommonSettings();
-        m_settings_manager->Save();
-
+        // kicad-cli never edits user preferences or GUI view state, so it must not create or
+        // rewrite user settings files (pcbnew.json, 3d_viewer.json, cvpcb.json, ...) on exit.
         // Unload projects while the kiface DRC/ERC severity tables their PROJECT_FILE serializes
-        // against are still alive; deferring to static teardown crashes
+        // against are still alive; deferring to static teardown crashes.
         for( const wxString& projectPath : m_settings_manager->GetOpenProjects() )
         {
             if( PROJECT* project = m_settings_manager->GetProject( projectPath ) )
