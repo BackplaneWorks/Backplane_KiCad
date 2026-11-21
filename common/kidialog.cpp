@@ -19,6 +19,7 @@
  */
 
 #include <kidialog.h>
+#include <confirm.h>
 #include <unordered_map>
 
 
@@ -93,6 +94,14 @@ int KIDIALOG::ShowModal()
 
     if( it != g_doNotShowAgainDlgs.end() )
         return it->second;
+
+    // Backplane: no box in an API task or an embedded Close (NO_MODALS_SCOPE): its text is kept for the
+    // request's answer, and the question is cancelled (no one is there to answer it)
+    if( NO_MODALS_SCOPE::Active() )
+    {
+        NO_MODALS_SCOPE::Record( GetMessage() );
+        return wxID_CANCEL;
+    }
 
     int ret = KIDIALOG_BASE::ShowModal();
 

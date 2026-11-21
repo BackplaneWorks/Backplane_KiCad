@@ -861,7 +861,7 @@ bool SYMBOL_EDIT_FRAME::canCloseWindow( wxCloseEvent& aEvent )
         KIDIALOG dlg( this, msg, _( "Confirmation" ), wxYES_NO | wxCANCEL | wxICON_WARNING );
         dlg.SetYesNoCancelLabels( _( "Save" ), _( "Discard Changes" ), _( "Cancel" ) );
 
-        switch( dlg.ShowModal() )
+        switch( ShowUnsavedChangesKIDialog( dlg ) )
         {
         case wxID_YES:
             if( !saveCurrentSymbol() )

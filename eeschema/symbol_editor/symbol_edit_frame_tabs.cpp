@@ -27,6 +27,7 @@
 #include <sch_render_settings.h>
 #include <symbol_edit_frame.h>
 
+#include <confirm.h>
 #include <kidialog.h>
 #include <lib_symbol.h>
 #include <lib_symbol_library_manager.h>
@@ -578,7 +579,7 @@ bool SYMBOL_EDIT_FRAME::promptToSaveInactiveInstanceTabs()
         KIDIALOG dlg( this, msg, _( "Confirmation" ), wxYES_NO | wxCANCEL | wxICON_WARNING );
         dlg.SetYesNoCancelLabels( _( "Save" ), _( "Discard Changes" ), _( "Cancel" ) );
 
-        const int answer = dlg.ShowModal();
+        const int answer = ShowUnsavedChangesKIDialog( dlg );
 
         if( answer == wxID_YES )
         {
