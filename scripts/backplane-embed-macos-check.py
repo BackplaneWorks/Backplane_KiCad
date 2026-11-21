@@ -891,32 +891,40 @@ def main():
                 came = wait_for(lambda: app_active(host.pid) and not app_active(kicad.pid), 3)
                 RESULTS[f"1399_{name}"] = {"host_active": bool(came), "yield_traced": yielded}
                 check(bool(came), f"1399 {name}: the host comes forward (KiCad activated it), KiCad resigns ({RESULTS[f'1399_{name}']})")
-            # the refusal the Lead calls "never": the host hidden (the person's Cmd+H) is not brought forward by KiCad on a chord
-            if kicad_inactive("1399 hidden host"):
-                # the host hidden first (macOS then activates some other app), then the person's click makes KiCad the active app
+            # a hidden host (the person's Cmd+H) comes forward on the person's chord in KiCad (the KiCad lead, b2: the chord means "take me
+            # to Backplane"), and a key that is not a reserved chord leaves it hidden. The escape chord: with the host hidden another app owns
+            # the menu bar, and its own Cmd+K (Finder's Connect to Server) takes that key first (macos-15, b1); Cmd+K is recorded, not judged
+            def hidden_host_case(name, chord, judged):
+                if not kicad_inactive(f"1399 hidden host, {name}"):
+                    return
                 tell_host("hide")
                 time.sleep(0.8)
                 click(hx + px + pw // 2, hy + py + ph // 2)
-                check(wait_for(lambda: app_active(kicad.pid), 3), "1399 hidden host: KiCad is active by its own click")
+                check(wait_for(lambda: app_active(kicad.pid), 3), f"1399 hidden host, {name}: KiCad is active by its own click")
                 host_hidden = lambda: bool(AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(host.pid).isHidden())
                 AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
-                check(host_hidden(), "1399 hidden host: the host is hidden (Cmd+H)")
-                m = trace_mark()
-                key("k")
-                time.sleep(1.5)
+                check(host_hidden(), f"1399 hidden host, {name}: the host is hidden (Cmd+H)")
+                key("escape", command=False)
+                time.sleep(0.5)
                 AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
+                check(host_hidden() and not app_active(host.pid), f"1399 hidden host, {name}: a key that is not a reserved chord leaves it hidden")
+                m = trace_mark()
+                key(**chord)
+                came = wait_for(lambda: (AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.02)) or True)
+                                and not host_hidden() and app_active(host.pid), 3)
                 after = trace_path.read_bytes()[m:] if trace_path.exists() else b""
-                reached = b"Cmd+K handed to wx" in after
-                refused = b"host activated: no (the host is hidden)" in after
-                RESULTS["1399_hidden_host"] = {"chord_reached_kicad": reached, "refused_traced": refused}
-                # the rule: whatever the chord did, the hidden host is neither shown nor activated
-                check(host_hidden() and not app_active(host.pid), f"1399 hidden host: after Cmd+K the host is still hidden and inactive ({RESULTS['1399_hidden_host']})")
-                # and when the chord reached KiCad, KiCad said why it did not bring the host forward (macOS 15: with the host hidden the
-                # chord did not reach KiCad at all, another app being frontmost; then there is nothing to refuse)
-                if reached:
-                    check(refused, f"1399 hidden host: KiCad's trace says the hidden host was refused ({RESULTS['1399_hidden_host']})")
+                RESULTS[f"1399_hidden_host_{name}"] = {"came_forward": bool(came), "chord_reached_kicad": b"handed to wx" in after,
+                                                        "host_activated": b"host activated: yes" in after}
+                if judged:
+                    check(bool(came), f"1399 hidden host, {name}: the chord brings the host back, un-hidden and active ({RESULTS[f'1399_hidden_host_{name}']})")
+                else:
+                    print(f"INFO 1399 hidden host, {name} (not judged): {RESULTS[f'1399_hidden_host_{name}']}")
                 tell_host("unhide")
                 time.sleep(0.8)
+            hidden_host_case("the escape chord", dict(name="`", command=False, control=True), True)
+            hidden_host_case("Cmd+K", dict(name="k"), False)
+            print("INFO known limit (#1399): macOS: with Backplane hidden and another application owning the menu bar, a chord that "
+                  "application's menu claims (Cmd+K in Finder) does not reach KiCad; the escape chord does.")
             # (a key repeat and a chord reaching an inactive KiCad are refused by the same test in the code; neither can be made by real
             # input here: a repeat needs a held key the relay cannot hold, and an inactive KiCad is not sent keys)
             api.request(embed.SetReservedKeys(chords=["Ctrl+K"]), embed.SetReservedKeysResponse)
