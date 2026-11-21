@@ -57,6 +57,7 @@ bool KINNG_REQUEST_SERVER::Start()
 
     m_shutdown.store( false );
     m_pendingReply.clear();
+    m_hasReply = false;
 
     std::promise<bool> started;
     std::future<bool>  result = started.get_future();
@@ -86,6 +87,9 @@ void KINNG_REQUEST_SERVER::Stop()
         m_shutdown.store( true );
     }
 
+    if( m_stopHookForTest )
+        m_stopHookForTest();
+
     m_replyReady.notify_all();
     m_thread.join();
 }
@@ -95,6 +99,7 @@ void KINNG_REQUEST_SERVER::Reply( const std::string& aReply )
 {
     std::lock_guard<std::mutex> lock( m_mutex );
     m_pendingReply = aReply;
+    m_hasReply = true;
     m_replyReady.notify_all();
 }
 
@@ -130,6 +135,9 @@ void KINNG_REQUEST_SERVER::listenThread( std::promise<bool>* aStarted )
     }
 
     nng_socket_set_ms( socket, NNG_OPT_RECVTIMEO, 500 );
+
+    // a client alive but not reading cannot hold the reply's send (and with it m_mutex, Stop and the exit) for ever
+    nng_socket_set_ms( socket, NNG_OPT_SENDTIMEO, 3000 );
 
     retCode = nng_listener_start( listener, 0 );
 
@@ -174,7 +182,7 @@ void KINNG_REQUEST_SERVER::listenThread( std::promise<bool>* aStarted )
             m_callback( &m_sharedMessage );
 
         std::unique_lock<std::mutex> lock( m_mutex );
-        m_replyReady.wait( lock, [&]() { return m_shutdown.load() || !m_pendingReply.empty(); } );
+        m_replyReady.wait( lock, [&]() { return m_shutdown.load() || m_hasReply; } );
 
         if( m_shutdown.load() )
             break;
@@ -188,6 +196,7 @@ void KINNG_REQUEST_SERVER::listenThread( std::promise<bool>* aStarted )
                         wxString::Format( wxS( "Got error code %d from nng_send!" ), retCode ) );
         }
         m_pendingReply.clear();
+        m_hasReply = false;
     }
 
     wxLogTrace( TraceNng, wxS( "KINNG_REQUEST_SERVER shutting down" ) );
