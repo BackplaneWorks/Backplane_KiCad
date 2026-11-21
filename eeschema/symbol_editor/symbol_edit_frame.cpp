@@ -397,6 +397,8 @@ SYMBOL_EDIT_FRAME::SYMBOL_EDIT_FRAME( KIWAY* aKiway, wxWindow* aParent ) :
 
 SYMBOL_EDIT_FRAME::~SYMBOL_EDIT_FRAME()
 {
+    m_deferredLibTimer.Stop();
+
     // Ensure that teardowns without doCloseWindow() are fully unregistered
     Pgm().GetApiServer().DeregisterHandler( m_apiHandler.get() );
 
@@ -1613,16 +1615,16 @@ void SYMBOL_EDIT_FRAME::SyncLibraries( bool aShowProgress, bool aPreloadCancelle
                               ++loadedCount;
                       }
 
+                      if( m_syncLibrariesInProgress )
+                          return;
+
                       bool stillLoading = a->FullLoadDeferred() || a->AsyncLoadProgress().has_value();
 
                       if( !stillLoading )
                           m_deferredLibTimer.Stop();
 
-                      if( !m_syncLibrariesInProgress
-                          && ( loadedCount != m_lastLoadedLibCount || !stillLoading ) )
-                      {
+                      if( loadedCount != m_lastLoadedLibCount || !stillLoading )
                           SyncLibraries( false );
-                      }
                   },
                   m_deferredLibTimer.GetId() );
         }
