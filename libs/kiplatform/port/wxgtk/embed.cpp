@@ -1167,7 +1167,7 @@ void KIPLATFORM::EMBED::TraceClick( wxWindow*, bool )
 }
 
 
-void KIPLATFORM::EMBED::YieldActivationToHost()
+void KIPLATFORM::EMBED::YieldActivationToHost( int, int )
 {
 }
 

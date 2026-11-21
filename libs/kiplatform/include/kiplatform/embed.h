@@ -217,7 +217,10 @@ namespace EMBED
     /// has clicked and typed in KiCad, and the host's activate was ignored; on macOS 26 the consent
     /// alone is not enough either, so KiCad also activates the host itself, hidden or not.  Only
     /// on a reserved chord the person pressed.  Elsewhere nothing.
-    void YieldActivationToHost();
+    ///
+    /// aKeyCode and aModifiers are the chord as matched (a wx key code, wx modifiers): the host is
+    /// activated only when the key AppKit is dispatching now is that chord.
+    void YieldActivationToHost( int aKeyCode, int aModifiers );
 
     /// After a click was handled: a mouse capture the frame itself still holds with no button
     /// down is released (Windows; elsewhere nothing).  False if there was none.
