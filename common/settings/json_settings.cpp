@@ -29,6 +29,7 @@
 
 #include <kiplatform/io.h>
 #include <locale_io.h>
+#include <pgm_base.h>
 #include <gal/color4d.h>
 #include <settings/json_settings.h>
 #include <backplane_merge.h>
@@ -493,6 +494,12 @@ bool JSON_SETTINGS::SaveToFile( const wxString& aDirectory, bool aForce )
     m_lastSaveFailed = false;
 
     if( !m_writeFile )
+        return false;
+
+    // A non-GUI CLI process (kicad-cli) never edits user preferences or GUI view state, so it
+    // must not create or rewrite files in the person's user settings folder (from OnPgmExit,
+    // BIN_MOD::End/FlushAndRelease, or schema migration during LoadFromFile).
+    if( GetLocation() == SETTINGS_LOC::USER && PgmOrNull() && !PgmOrNull()->IsGUI() )
         return false;
 
     // Default PROJECT won't have a filename set
