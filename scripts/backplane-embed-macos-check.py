@@ -900,14 +900,16 @@ def main():
                 tell_host("hide")
                 time.sleep(0.8)
                 click(hx + px + pw // 2, hy + py + ph // 2)
-                check(wait_for(lambda: app_active(kicad.pid), 3), f"1399 hidden host, {name}: KiCad is active by its own click")
+                kicad_active = check(wait_for(lambda: app_active(kicad.pid), 3), f"1399 hidden host, {name}: KiCad is active by its own click")
                 host_hidden = lambda: bool(AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(host.pid).isHidden())
                 AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
                 check(host_hidden(), f"1399 hidden host, {name}: the host is hidden (Cmd+H)")
-                key("escape", command=False)
-                time.sleep(0.5)
-                AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
-                check(host_hidden() and not app_active(host.pid), f"1399 hidden host, {name}: a key that is not a reserved chord leaves it hidden")
+                # the negative case means something only with KiCad active (its keys reaching KiCad, not another app)
+                if kicad_active:
+                    key("escape", command=False)
+                    time.sleep(0.5)
+                    AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
+                    check(host_hidden() and not app_active(host.pid), f"1399 hidden host, {name}: a key that is not a reserved chord leaves it hidden")
                 m = trace_mark()
                 key(**chord)
                 came = wait_for(lambda: (AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.02)) or True)
@@ -915,16 +917,21 @@ def main():
                 after = trace_path.read_bytes()[m:] if trace_path.exists() else b""
                 RESULTS[f"1399_hidden_host_{name}"] = {"came_forward": bool(came), "chord_reached_kicad": b"handed to wx" in after,
                                                         "host_activated": b"host activated: yes" in after}
+                r = RESULTS[f"1399_hidden_host_{name}"]
                 if judged:
-                    check(bool(came), f"1399 hidden host, {name}: the chord brings the host back, un-hidden and active ({RESULTS[f'1399_hidden_host_{name}']})")
+                    check(bool(came) and r["host_activated"], f"1399 hidden host, {name}: the chord brings the host back, un-hidden and active, by KiCad's activate ({r})")
                 else:
-                    print(f"INFO 1399 hidden host, {name} (not judged): {RESULTS[f'1399_hidden_host_{name}']}")
+                    print(f"INFO 1399 hidden host, {name} (not judged): {r}")
+                    if not r["chord_reached_kicad"]:
+                        print("INFO known limit (#1399): macOS: with Backplane hidden and another application owning the menu bar, a chord that "
+                              "application's menu claims (Cmd+K in Finder) does not reach KiCad; the escape chord does.")
+                        # the menu bar's owner took the chord (Finder: Connect to Server): its window closed again
+                        key("escape", command=False)
+                        time.sleep(0.5)
                 tell_host("unhide")
                 time.sleep(0.8)
             hidden_host_case("the escape chord", dict(name="`", command=False, control=True), True)
             hidden_host_case("Cmd+K", dict(name="k"), False)
-            print("INFO known limit (#1399): macOS: with Backplane hidden and another application owning the menu bar, a chord that "
-                  "application's menu claims (Cmd+K in Finder) does not reach KiCad; the escape chord does.")
             # (a key repeat and a chord reaching an inactive KiCad are refused by the same test in the code; neither can be made by real
             # input here: a repeat needs a held key the relay cannot hold, and an inactive KiCad is not sent keys)
             api.request(embed.SetReservedKeys(chords=["Ctrl+K"]), embed.SetReservedKeysResponse)
