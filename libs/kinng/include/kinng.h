@@ -50,6 +50,10 @@ public:
 
     void Reply( const std::string& aReply );
 
+    /// Tests only: called inside Stop() after the shutdown flag is set and before the listener is woken (a test holds Stop there to
+    /// show the listener's wait cannot miss the flag)
+    void SetStopHookForTest( std::function<void()> aHook ) { m_stopHookForTest = std::move( aHook ); }
+
     const std::string& SocketPath() const { return m_socketUrl; }
 
 private:
@@ -66,6 +70,11 @@ private:
     std::string m_sharedMessage;
 
     std::string m_pendingReply;
+
+    /// A reply is waiting to be sent (an empty reply is one too: Reply("") wakes the listener)
+    bool m_hasReply = false;
+
+    std::function<void()> m_stopHookForTest;
 
     std::condition_variable m_replyReady;
 
