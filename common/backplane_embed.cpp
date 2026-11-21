@@ -284,10 +284,11 @@ bool BACKPLANE_EMBED::Enable( uint64_t aParent, uint64_t aToplevel )
 
                     // Any unregistered, hidden frame (prewarm, Ctrl+E library editor, 3D viewer,
                     // simulator still in its constructor before registerFrame embeds it) must
-                    // never steal focus or activation into a hidden window.
+                    // never steal focus or activation into a hidden window.  During a prewarm,
+                    // keep blocking even if ShowWindow flipped IsShown() before registerFrame.
                     return wxDynamicCast( top, wxFrame ) && !wxDynamicCast( top, wxDialog )
                            && !wxDynamicCast( top, wxMiniFrame ) && top != m_manager
-                           && !top->IsShown();
+                           && ( !m_prewarmOpening.empty() || !top->IsShown() );
                 }
 
                 return false;
