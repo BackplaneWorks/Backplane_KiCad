@@ -27,6 +27,8 @@
 #include <wx/string.h>
 
 #include <functional>
+#include <memory>
+#include <vector>
 #include <optional>
 #include <nlohmann/json_fwd.hpp>
 #include <json_conversions.h>
@@ -164,6 +166,24 @@ public:
      *         by loading an existing file or by a successful save
      */
     bool IsFileSynced() const { return m_fileSynced; }
+
+    /**
+     * Co-editing (docs/backplane/coedit.md): when another writer (an agent, the headless server)
+     * changed the backing file since it was last read or written, merge its changes into this
+     * in-memory copy (three-way, per key and per named entry; on a real conflict the in-memory
+     * value stays and the conflict is kept in LastMergeConflicts()).  Only for settings that
+     * opt in (the project file).  Returns true when the file had changed.
+     */
+    bool MergeFromDisk( const wxString& aDirectory = "" );
+
+    /// The save or MergeFromDisk merged another writer's changes in (the store changed).
+    bool LastSyncMerged() const { return m_lastSyncMerged; }
+
+    /// Conflicting paths of the last merge (both sides changed them), with both values as JSON.
+    const std::vector<std::pair<std::string, std::string>>& LastMergeConflicts() const
+    {
+        return m_lastMergeConflicts;
+    }
 
     /**
      * SaveToFile() also returns false when it had nothing to write, so its result cannot tell a
@@ -399,6 +419,20 @@ protected:
 
     /// True once the store has been synchronized with an on-disk file (loaded or saved)
     bool m_fileSynced;
+
+    /// Co-editing: merge with the backing file instead of overwriting it (project file).
+    virtual bool mergesWithDisk() const { return false; }
+
+    /// The backing file's JSON as last read or written: the base of the three-way merge.
+    std::unique_ptr<nlohmann::json> m_diskBase;
+    bool                            m_lastSyncMerged = false;
+    std::vector<std::pair<std::string, std::string>> m_lastMergeConflicts;
+
+    /// Read the backing file as JSON (nullopt if missing or unreadable).
+    std::optional<nlohmann::json> readDiskJson( const wxString& aPath ) const;
+
+    /// Merge aDisk into the in-memory store (which holds our current values) from m_diskBase.
+    void mergeDisk( const nlohmann::json& aDisk );
 
     /// True if the most recent SaveToFile() had changes to write and could not write them
     bool m_lastSaveFailed;

@@ -219,6 +219,29 @@ public:
     static const TOOL_ACTION& DrawArcForMode( ARC_DRAW_MODE aMode );
     static TOOL_ACTION drawBezier;
 
+
+    // Routing plan (docs/backplane/floorplanner.md)
+    static TOOL_ACTION planToggleView;
+    static TOOL_ACTION planToggleShow;
+    static TOOL_ACTION planEdit;
+    static TOOL_ACTION planAccept;
+    static TOOL_ACTION planReject;
+    static TOOL_ACTION planToggleLock;
+    static TOOL_ACTION planRouteEarlier;
+    static TOOL_ACTION planRouteLater;
+    static TOOL_ACTION planWider;
+    static TOOL_ACTION planNarrower;
+    static TOOL_ACTION planMoveToLayer;
+    static TOOL_ACTION planMergeGroups;
+    static TOOL_ACTION planSplitGroup;
+    static TOOL_ACTION planAddNote;
+    static TOOL_ACTION planDelete;
+    static TOOL_ACTION planDrawCorridor;
+    static TOOL_ACTION planDrawPlane;
+    static TOOL_ACTION planApproveLayer;
+    static TOOL_ACTION planRejectLayer;
+    static TOOL_ACTION planRequestReplan;
+
     /// Draw a board-structure region polygon directly on the canvas.
     static TOOL_ACTION editBoardStructureFeature;
     /// Draw an Edge.Cuts construction boundary and rebuild regions from it.

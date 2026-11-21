@@ -26,14 +26,19 @@
 #include <eda_item.h>
 #include <eda_group.h>
 #include <macros.h>
+#include <backplane_coedit.h>
 
-COMMIT::COMMIT()
+COMMIT::COMMIT() :
+        m_actor( COEDIT::CurrentActor() )
 {
+    COEDIT::RegisterCommit( this );
 }
 
 
 COMMIT::~COMMIT()
 {
+    COEDIT::UnregisterCommit( this );
+
     for( COMMIT_LINE& ent : m_entries )
         delete ent.m_copy;
 }
@@ -194,6 +199,25 @@ void COMMIT::Unstage( EDA_ITEM* aItem, BASE_SCREEN* aScreen )
 
     // Otherwise a later item allocated at the same address is taken as already added
     m_addedItems.erase( { aItem, aScreen } );
+}
+
+
+void COMMIT::UnstageRemoval( EDA_ITEM* aItem, BASE_SCREEN* aScreen )
+{
+    std::erase_if( m_entries,
+                   [&]( COMMIT_LINE& line )
+                   {
+                       if( line.m_item == aItem && line.m_screen == aScreen
+                           && ( line.m_type & CHT_TYPE ) == CHT_REMOVE )
+                       {
+                           delete line.m_copy;
+                           return true;
+                       }
+
+                       return false;
+                   } );
+
+    m_deletedItems.erase( { aItem, aScreen } );
 }
 
 

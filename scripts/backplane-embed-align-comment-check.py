@@ -19,6 +19,8 @@ import subprocess
 import sys
 import time
 
+from Xlib import X
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from backplane_embed_test_support import (FAILURES, IpcSession, Session, check,  # noqa: E402
                                           viewable, wait_for)
@@ -77,6 +79,26 @@ def main():
             time.sleep(wait)
             host.pump(0.1)
             return reply.frame.window
+
+        def canvas_centre(kind):
+            """The centre of the frame's drawing canvas on screen: where SelectItems' zoom puts the
+            selection.  Not the pane's centre: the side panels and toolbars make the two differ, and
+            a right-click outside the selection's box selects what is under it instead."""
+            frame = disp.create_resource_object("window", frames()[kind].window)
+            best = None
+            for child in frame.query_tree().children:
+                try:
+                    if child.get_attributes().map_state != X.IsViewable:
+                        continue
+                    g = child.get_geometry()
+                except Exception:
+                    continue
+                if best is None or g.width * g.height > best[2] * best[3]:
+                    best = (g.x, g.y, g.width, g.height)
+            if best is None:
+                return w // 2, h // 2
+            origin = host.root.translate_coords(frame, best[0], best[1])
+            return origin.x + best[2] // 2, origin.y + best[3] // 2
 
         def wait_event(kind, seconds=8):
             found = []
@@ -202,7 +224,8 @@ def main():
             events()
             before_windows = set(s.watcher.current())
             # Right-click on the canvas keeps the selection; Up from a fresh GTK menu is its last item
-            s.xdotool("mousemove", str(w // 2), str(h // 2), "click", "3")
+            cx, cy = canvas_centre(kind)
+            s.xdotool("mousemove", str(cx), str(cy), "click", "3")
             time.sleep(1.5)
             s.shot(f"{label}-10-comment-menu")
             s.xdotool("key", "Up")
@@ -267,7 +290,7 @@ def main():
 
             # Cancel: nothing is sent
             before_windows = set(s.watcher.current())
-            s.xdotool("mousemove", str(w // 2), str(h // 2), "click", "3")
+            s.xdotool("mousemove", str(cx), str(cy), "click", "3")
             time.sleep(1.2)
             s.xdotool("key", "Up")
             s.xdotool("key", "Return")

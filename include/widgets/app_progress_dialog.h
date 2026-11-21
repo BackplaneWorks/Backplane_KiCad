@@ -22,13 +22,12 @@
 
 #include <wx/progdlg.h>
 #include <wx/appprogress.h>
+#include <cstdint>
 
-#if defined( _WIN32 ) && wxCHECK_VERSION(3,3,0)
-// In order to get a dark mode compatible progress dialog on Windows with wx 3.3
+// The generic dialog everywhere (see WX_PROGRESS_REPORTER_BASE): in --embedded it is created and
+// never shown, and its progress goes to the host as ET_PROGRESS.
+#include <wx/generic/progdlgg.h>
 #define APP_PROGRESS_DIALOG_BASE wxGenericProgressDialog
-#else
-#define APP_PROGRESS_DIALOG_BASE wxProgressDialog
-#endif
 
 /**
  * wxProgressDialog with the option to also update the application progress on the taskbar
@@ -40,13 +39,21 @@ public:
                          wxWindow* aParent = nullptr, bool aIndeterminateTaskBarStatus = false,
                          int aStyle = wxPD_APP_MODAL | wxPD_AUTO_HIDE );
 
+    ~APP_PROGRESS_DIALOG() override;
+
     virtual bool Update( int aValue, const wxString& aNewMsg = wxEmptyString,
                          bool* aSkip = nullptr ) override;
+
+    bool Pulse( const wxString& aNewMsg = wxEmptyString, bool* aSkip = nullptr ) override;
+
+    bool Show( bool aShow = true ) override;
 
 
 private:
     wxAppProgressIndicator m_appProgressIndicator;
     bool m_indeterminateTaskBarStatus;
+    int  m_maximum;
+    uint64_t m_embedJob = 0;   ///< the host's ET_PROGRESS job, when embedded
 };
 
 #endif

@@ -245,6 +245,14 @@ SCHEMATIC* EESCHEMA_HELPERS::LoadSchematic( const wxString& aFileName,
                 return nullptr;
             }
 
+            // Its sub-sheets' instance paths start at this UUID: the project's, as the editor
+            // loads it, or a headless save writes paths the editor must "repair" on every load.
+            if( namedSheet && namedSheet->uuid != niluuid && !rootSheet->IsVirtualRootSheet()
+                && rootSheet != &schematic->Root() )
+            {
+                const_cast<KIID&>( rootSheet->m_Uuid ) = namedSheet->uuid;
+            }
+
             std::vector<SCH_SHEET*> topLevelSheets = schematic->GetTopLevelSheets();
             bool rootIsTopLevel = std::find( topLevelSheets.begin(), topLevelSheets.end(),
                                              rootSheet ) != topLevelSheets.end();

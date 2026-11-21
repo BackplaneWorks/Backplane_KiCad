@@ -27,6 +27,8 @@
 #include <functional>
 #include <kiid.h>
 #include <vector>
+#include <string>
+#include <cstdint>
 #include <wx/string.h>
 
 class EDA_ITEM;
@@ -66,7 +68,8 @@ enum class UNDO_REDO {
     PAGESETTINGS,       // page settings or title block changes
     REPEAT_ITEM,        // storage entry for the editor's global repeatItems list
     VARIANTS,           // one or more variants were added, deleted, or changed
-    BOARD_STRUCTURE    // fork-only physical construction snapshot; never serialized
+    BOARD_STRUCTURE,   // fork-only physical construction snapshot; never serialized
+    BOARD_PLAN         // fork-only routing plan snapshot (docs/backplane/floorplanner.md)
 };
 
 
@@ -275,8 +278,23 @@ public:
     wxString GetDescription() const                     { return m_description; }
     void SetDescription( const wxString& aDescription ) { m_description = aDescription; }
 
+    /// Who made this change (docs/backplane/coedit.md): empty for the person, else the API
+    /// client.  Set from COEDIT::CurrentActor() when the list is created.
+    const std::string& GetActor() const                 { return m_actor; }
+    void SetActor( const std::string& aActor )          { m_actor = aActor; }
+    bool IsAgent() const                                { return !m_actor.empty(); }
+
+    /// The change-log seq of this change once pushed (0 before).
+    uint64_t GetSeq() const                             { return m_seq; }
+    void SetSeq( uint64_t aSeq )                        { m_seq = aSeq; }
+
+    /// True when any of this list's items (top-level pointers, or their KIIDs) is in aOther.
+    bool Overlaps( const PICKED_ITEMS_LIST& aOther ) const;
+
 private:
     wxString                 m_description;
+    std::string              m_actor;
+    uint64_t                 m_seq = 0;
     std::vector<ITEM_PICKER> m_ItemsList;
 };
 
@@ -298,6 +316,19 @@ public:
     void PushCommand( PICKED_ITEMS_LIST* aCommand );
 
     PICKED_ITEMS_LIST* PopCommand();
+
+    /// Index of the newest command made by aActor (empty = the person), or -1.
+    int FindNewest( const std::string& aActor ) const;
+
+    /**
+     * Indices (ascending) of the commands after aIndex that touch its items, directly or
+     * through each other: the commands that must be taken back with it so the rest of the
+     * stack stays valid (docs/backplane/coedit.md).
+     */
+    std::vector<int> DependentsAfter( int aIndex ) const;
+
+    /// Removes and returns the command at aIndex.
+    PICKED_ITEMS_LIST* Extract( int aIndex );
 
     void ClearCommandList();
 

@@ -66,6 +66,9 @@ private:
     HANDLER_RESULT<kiapi::backplane::embed::ResolveConflictResponse> handleResolveConflict(
             const HANDLER_CONTEXT<kiapi::backplane::embed::ResolveConflict>& aCtx );
 
+    HANDLER_RESULT<kiapi::backplane::embed::CancelProgressResponse> handleCancelProgress(
+            const HANDLER_CONTEXT<kiapi::backplane::embed::CancelProgress>& aCtx );
+
     KIWAY& m_kiway;
 };
 

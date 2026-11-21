@@ -405,7 +405,10 @@ set( KICOMMON_SRCS
     singleton.cpp
     pgm_base.cpp
     backplane_embed.cpp
+    backplane_coedit.cpp
+    backplane_merge.cpp
     backplane_embed_comment.cpp
+    backplane_embed_progress.cpp
 
     io/kicad/kicad_io_utils.cpp    # needed by richio
     io/io_base.cpp
@@ -417,6 +420,7 @@ set( KICOMMON_SRCS
     api/api_plugin.cpp
     api/api_plugin_manager.cpp
     api/api_server.cpp
+    api/proto_merge.cpp
     api/api_task_scheduler.cpp
     api/api_utils.cpp
     api/cross_probe_client.cpp
@@ -1290,6 +1294,8 @@ set( PCB_COMMON_SRCS
     ${CMAKE_SOURCE_DIR}/pcbnew/netlist_reader/legacy_netlist_reader.cpp
     ${CMAKE_SOURCE_DIR}/pcbnew/netlist_reader/netlist_reader.cpp
     ${CMAKE_SOURCE_DIR}/pcbnew/board_structure_view_item.cpp
+    ${CMAKE_SOURCE_DIR}/pcbnew/backplane/board_plan.cpp
+    ${CMAKE_SOURCE_DIR}/pcbnew/backplane/plan_view_item.cpp
     ${CMAKE_SOURCE_DIR}/pcbnew/pcb_draw_panel_gal.cpp
     ${CMAKE_SOURCE_DIR}/pcbnew/netlist_reader/pcb_netlist.cpp
     ${CMAKE_SOURCE_DIR}/pcbnew/pcb_origin_transforms.cpp

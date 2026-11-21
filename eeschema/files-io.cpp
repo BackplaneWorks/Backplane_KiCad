@@ -168,6 +168,15 @@ bool SCH_EDIT_FRAME::EmbedReload()
     if( !ReloadFromDisk() )
         return false;
 
+    // A clean frame was reloaded: anything modified now is a load-time fix of what another writer saved
+    // (repaired instance paths, pruned orphans), made again on every load and not the person's edit.  Left
+    // modified, the next change on disk would ask the person instead of reloading.
+    if( IsContentModified() )
+    {
+        Schematic().Hierarchy().ClearModifyStatus();
+        updateTitle();
+    }
+
     auto restore =
             [this, center, scale, sheetPath, selected]()
             {
@@ -219,6 +228,10 @@ bool SCH_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
 
     // implement the pseudo code from KIWAY_PLAYER.h:
     wxString msg;
+
+    // Embedded: a load-time repair is told in the infobar, never a modal (a pre-warm loads hidden), and
+    // is not the person's edit.
+    bool embedLoadRepaired = false;
 
     EESCHEMA_SETTINGS* cfg = dynamic_cast<EESCHEMA_SETTINGS*>( Kiface().KifaceSettings() );
 
@@ -586,10 +599,32 @@ bool SCH_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
         // fixed (modified).
         if( sheetList.IsModified() || repairedPageNumbers )
         {
-            DisplayInfoMessage( this, _( "An error was found when loading the schematic that has been "
-                                         "automatically fixed.  Please save the schematic to repair the "
-                                         "broken file or it may not be usable with other versions of "
-                                         "KiCad." ) );
+            BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+            if( embed.Enabled() )
+            {
+                // Embedded (a first load, a hidden pre-warm, a reload after another writer saved the
+                // files): never a modal, which would block a frame nobody sees; said once in the infobar,
+                // which shows with the frame.  Not the person's edit either (cleared at the end).
+                embedLoadRepaired = true;
+
+                if( !m_embedRepairNoticeShown )
+                {
+                    m_embedRepairNoticeShown = true;
+                    m_infoBar->RemoveAllButtons();
+                    m_infoBar->AddCloseButton();
+                    m_infoBar->ShowMessage( _( "This schematic had errors that KiCad fixed on loading.  "
+                                               "Save the schematic to keep the fixes in its files." ),
+                                            wxICON_INFORMATION, WX_INFOBAR::MESSAGE_TYPE::GENERIC );
+                }
+            }
+            else
+            {
+                DisplayInfoMessage( this, _( "An error was found when loading the schematic that has been "
+                                             "automatically fixed.  Please save the schematic to repair the "
+                                             "broken file or it may not be usable with other versions of "
+                                             "KiCad." ) );
+            }
         }
 
         UpdateFileHistory( fullFileName );
@@ -964,6 +999,12 @@ bool SCH_EDIT_FRAME::OpenProjectFiles( const std::vector<wxString>& aFileSet, in
 
     // A standalone editor has no project manager to attach the git session for it.
     RefreshGitCommitPane();
+
+    if( embedLoadRepaired && IsContentModified() )
+    {
+        Schematic().Hierarchy().ClearModifyStatus();
+        updateTitle();
+    }
 
     return true;
 }

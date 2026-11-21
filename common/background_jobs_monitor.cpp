@@ -31,6 +31,9 @@
 #include <wx/string.h>
 
 #include <background_jobs_monitor.h>
+#include <backplane_embed.h>
+#include <chrono>
+#include <wx/app.h>
 #include <widgets/kistatusbar.h>
 
 
@@ -223,12 +226,60 @@ BACKGROUND_JOBS_MONITOR::BACKGROUND_JOBS_MONITOR()
 }
 
 
+namespace
+{
+/// Background jobs (library loads) as ET_PROGRESS in --embedded.  Their reporters run on worker
+/// threads; the embed progress calls are UI-thread only, so they go through CallAfter, in order.
+void embedProgress( const std::shared_ptr<BACKGROUND_JOB>& aJob, bool aEnd )
+{
+    if( !wxTheApp || !BACKPLANE_EMBED::Get().Enabled() )
+        return;
+
+    int64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::steady_clock::now().time_since_epoch() )
+                          .count();
+
+    if( !aEnd && now - aJob->m_embedLastPost.load() < 100 )
+        return;
+
+    aJob->m_embedLastPost.store( now );
+
+    wxTheApp->CallAfter(
+            [aJob, aEnd]()
+            {
+                BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+
+                if( !aJob->m_embedProgress.load() )
+                {
+                    if( aEnd )
+                        return;
+
+                    aJob->m_embedProgress.store( embed.ProgressBegin( nullptr, aJob->m_name, false ) );
+                }
+
+                uint64_t id = aJob->m_embedProgress.load();
+
+                if( aEnd )
+                {
+                    embed.ProgressEnd( id );
+                    return;
+                }
+
+                int max = aJob->m_maxProgress.load();
+                embed.ProgressUpdate( id, max > 0 ? double( aJob->m_currentProgress.load() ) / max : -1.0,
+                                      aJob->GetStatus() );
+            } );
+}
+} // namespace
+
+
 std::shared_ptr<BACKGROUND_JOB> BACKGROUND_JOBS_MONITOR::Create( const wxString& aName )
 {
     std::shared_ptr<BACKGROUND_JOB> job = std::make_shared<BACKGROUND_JOB>();
 
     job->m_name = aName;
     job->m_reporter = std::make_shared<BACKGROUND_JOB_REPORTER>( this, job );
+    embedProgress( job, false );
 
     std::lock_guard<std::shared_mutex> lock( m_mutex );
     m_jobs.push_back( job );
@@ -255,6 +306,7 @@ void BACKGROUND_JOBS_MONITOR::Remove( std::shared_ptr<BACKGROUND_JOB> aJob )
         std::lock_guard<std::shared_mutex> lock( m_mutex );
 
         m_jobs.erase( std::remove( m_jobs.begin(), m_jobs.end(), aJob ), m_jobs.end() );
+        embedProgress( aJob, true );
 
         for( BACKGROUND_JOB_LIST* list : m_shownDialogs )
         {
@@ -345,6 +397,8 @@ void BACKGROUND_JOBS_MONITOR::ShowList( wxWindow* aParent, wxPoint aPos )
 
 void BACKGROUND_JOBS_MONITOR::jobUpdated( std::shared_ptr<BACKGROUND_JOB> aJob )
 {
+    embedProgress( aJob, false );
+
     // Reporters call this from other threads so all UI work goes through CallAfter
     // Keep the lock during those calls or a status bar can close and free the pointer
     std::shared_lock<std::shared_mutex> lock( m_mutex );

@@ -310,7 +310,9 @@ bool PGM_KICAD::OnPgmInit()
     GetSettingsManager().SetKiway( &Kiway );
     m_bm.Init();
 
-    if( const COMMON_SETTINGS* cfg = Pgm().GetCommonSettings() )
+    // An embedding host's --theme decides the toolkit theme (BACKPLANE_EMBED::SetTheme above)
+    if( const COMMON_SETTINGS* cfg = Pgm().GetCommonSettings();
+        cfg && BACKPLANE_EMBED::Get().Theme() == EMBED_THEME::OWN_SETTINGS )
     {
         if( cfg->m_Appearance.app_theme == APP_THEME::DARK )
             KIPLATFORM::APP::EnableDarkMode( true );

@@ -24,6 +24,7 @@
 #include <kicommon.h>
 #include <widgets/progress_reporter_base.h>
 #include <atomic>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -94,6 +95,10 @@ public:
 
     std::atomic<int> m_maxProgress;
     std::atomic<int> m_currentProgress;
+
+    /// Its ET_PROGRESS job in --embedded (BACKPLANE_EMBED), 0 until begun on the UI thread
+    std::atomic<uint64_t> m_embedProgress{ 0 };
+    std::atomic<int64_t>  m_embedLastPost{ 0 };   ///< ms: updates to the host at most 10 Hz
 
 private:
     mutable std::mutex m_statusMutex;

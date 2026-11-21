@@ -31,6 +31,7 @@
 #include <drill/drill_symbol_assigner.h>
 #include <drill/drill_symbol_profile.h>
 #include <board_structure.h>
+#include <backplane/board_plan.h>
 #include <embedded_files.h>
 #include <convert_shape_list_to_polygon.h> // for OUTLINE_ERROR_HANDLER
 #include <geometry/shape_poly_set.h>
@@ -535,6 +536,10 @@ public:
 
     const std::map<wxString, wxString>& GetProperties() const { return m_properties; }
     void SetProperties( const std::map<wxString, wxString>& aProps ) { m_properties = aProps; }
+
+    /// The routing plan (docs/backplane/floorplanner.md), stored beside the board file.
+    BOARD_PLAN&            GetPlan() { return m_plan; }
+    const BOARD_PLAN&      GetPlan() const { return m_plan; }
 
     BOARD_STRUCTURE&       GetBoardStructure() { return m_boardStructure; }
     const BOARD_STRUCTURE& GetBoardStructure() const { return m_boardStructure; }
@@ -1939,6 +1944,7 @@ private:
     std::map<wxString, wxString>       m_variantDescriptions;   // Descriptions for each variant
 
     BOARD_STRUCTURE m_boardStructure;
+    BOARD_PLAN      m_plan;
 
     /**
      * All of the board design settings are stored as a JSON object inside the project file.  The

@@ -21,8 +21,21 @@
  */
 
 #include <thread>
+#include <wx/evtloop.h>
+#include <wx/utils.h>
+#include <backplane_embed.h>
 #include <widgets/wx_event_utils.h>
 #include <widgets/wx_progress_reporters.h>
+
+
+/// What wxGenericProgressDialog::Update() does after each update and the hidden dialog no longer
+/// does: let pending UI events (sizes, layout, paints) run, but no user input.  A load relies on
+/// it: a frame being laid out during it gets its real size before the load's zoom-to-fit.
+static void yieldLikeTheDialog()
+{
+    if( wxEventLoopBase* loop = wxEventLoopBase::GetActive() )
+        loop->YieldFor( wxEVT_CATEGORY_UI );
+}
 
 
 static wxString getPlaceholderText()
@@ -36,20 +49,28 @@ static wxString getPlaceholderText()
 WX_PROGRESS_REPORTER::WX_PROGRESS_REPORTER( wxWindow* aParent, const wxString& aTitle, int aNumPhases, int aCanAbort,
                                             bool aReserveSpaceForMessage ) :
         PROGRESS_REPORTER_BASE( aNumPhases ),
-        WX_PROGRESS_REPORTER_BASE( aTitle, aReserveSpaceForMessage ? getPlaceholderText() : wxString( wxEmptyString ),
-                                   1, aParent,
-                                   // wxPD_APP_MODAL |   // Don't use; messes up OSX when called from
-                                   // quasi-modal dialog
-                                   wxPD_AUTO_HIDE | // *MUST* use; otherwise wxWidgets will spin
-                                                    // up another event loop on completion which
-                                                    // causes all sorts of grief
-                                           aCanAbort | wxPD_ELAPSED_TIME ),
+        WX_PROGRESS_REPORTER_BASE(),
         m_appProgressIndicator( aParent ),
         m_reservedSize( aReserveSpaceForMessage ),
         m_updateThrottle( std::chrono::milliseconds( 100 ) ),
         m_lastUpdateResult( true ),
         m_indeterminate( false )
 {
+    // Embedded, the job is the host's to draw: the dialog is created (Create() shows it, which
+    // Show() vetoes) and never maps.  Before Create(), so that veto already holds.
+    if( BACKPLANE_EMBED::Get().Enabled() && !wxGetEnv( wxS( "BACKPLANE_KICAD_PROGRESS_DIALOGS" ), nullptr ) )
+        m_embedJob = BACKPLANE_EMBED::Get().ProgressBegin( aParent, aTitle, aCanAbort != 0 );
+
+    WX_PROGRESS_REPORTER_BASE::Create( aTitle,
+                                       aReserveSpaceForMessage ? getPlaceholderText() : wxString( wxEmptyString ),
+                                       1, aParent,
+                                       // wxPD_APP_MODAL |   // Don't use; messes up OSX when called from
+                                       // quasi-modal dialog
+                                       wxPD_AUTO_HIDE | // *MUST* use; otherwise wxWidgets will spin
+                                                        // up another event loop on completion which
+                                                        // causes all sorts of grief
+                                               aCanAbort | wxPD_ELAPSED_TIME );
+
     // wxAppProgressIndicator doesn't like value > max, ever. However there are some risks
     // with multithreaded setting of those values making a mess
     // the cop out is just to set the progress to "indeterminate"
@@ -59,6 +80,26 @@ WX_PROGRESS_REPORTER::WX_PROGRESS_REPORTER( wxWindow* aParent, const wxString& a
 
 WX_PROGRESS_REPORTER::~WX_PROGRESS_REPORTER()
 {
+    if( m_embedJob )
+        BACKPLANE_EMBED::Get().ProgressEnd( m_embedJob );
+}
+
+
+void WX_PROGRESS_REPORTER::SetTitle( const wxString& aTitle )
+{
+    WX_PROGRESS_REPORTER_BASE::SetTitle( aTitle );
+
+    if( m_embedJob )
+        BACKPLANE_EMBED::Get().ProgressUpdate( m_embedJob, -1.0, wxEmptyString, aTitle );
+}
+
+
+bool WX_PROGRESS_REPORTER::Show( bool aShow )
+{
+    if( aShow && m_embedJob )
+        return false;
+
+    return WX_PROGRESS_REPORTER_BASE::Show( aShow );
 }
 
 
@@ -89,6 +130,23 @@ bool WX_PROGRESS_REPORTER::updateUI()
     // Remove trailing newline
     if( !message.empty() && message.Last() == '\n' )
         message.RemoveLast();
+
+    if( m_embedJob )
+    {
+        // The host draws it; nothing here is shown.  The UI keeps handling events as before.
+        BACKPLANE_EMBED& embed = BACKPLANE_EMBED::Get();
+        embed.ProgressUpdate( m_embedJob, m_indeterminate.load() ? -1.0 : cur / 1000.0, message );
+        yieldLikeTheDialog();
+        DrainPendingEvents();
+
+        bool keepGoing = !embed.ProgressCancelled( m_embedJob );
+
+        if( !keepGoing )
+            m_cancelled.store( true );
+
+        m_lastUpdateResult.store( keepGoing );
+        return keepGoing;
+    }
 
     if( m_reservedSize && !message.empty() )
     {

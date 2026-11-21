@@ -19,6 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane/agent_edit_flash.h>
 #include <kiface_base.h>
 #include <kiplatform/ui.h>
 #include <background_jobs_monitor.h>
@@ -96,6 +97,7 @@ PCB_BASE_EDIT_FRAME::~PCB_BASE_EDIT_FRAME()
 
     Pgm().GetBackgroundJobMonitor().UnregisterStatusBar( static_cast<KISTATUSBAR*>( GetStatusBar() ) );
     CloseVertexEditor();
+    m_agentFlash.reset();
     GetCanvas()->GetView()->Clear();
 }
 
