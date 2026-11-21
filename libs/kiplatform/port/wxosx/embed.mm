@@ -1180,8 +1180,9 @@ void KIPLATFORM::EMBED::YieldActivationToHost()
         // activates itself only after the person's own interaction with it, and the chord's key went
         // to KiCad): KiCad, the active app now, activates the host, as the host activates KiCad on a
         // hand-in (#1399).  Only for the person's own key: a key-down AppKit is dispatching now (the
-        // chord's), not a repeat, with KiCad the active app; never a hidden host (Cmd+H: un-hiding it
-        // is the person's to do), and never from anything else (no API path posts a reserved key).
+        // chord's), not a repeat, with KiCad the active app, and never from anything else (no API path
+        // posts a reserved key).  A hidden host comes forward too: the chord means "take me to
+        // Backplane", and the person typed it (the KiCad lead, b2).
         NSEvent* ev = NSApp.currentEvent;
         bool     typed = ev && ev.type == NSEventTypeKeyDown && !ev.isARepeat;
         std::string why;
@@ -1190,8 +1191,6 @@ void KIPLATFORM::EMBED::YieldActivationToHost()
             why = "not the person's key-down";
         else if( !NSApp.active )
             why = "KiCad is not the active app";
-        else if( host.hidden )
-            why = "the host is hidden";
 
         bool activated = why.empty() && [host activateWithOptions:0];
         trace( std::string( "macos: activation yielded to the host for a reserved chord, host activated: " )
