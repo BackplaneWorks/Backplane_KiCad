@@ -666,6 +666,7 @@ HANDLER_RESULT<CloseResponse> API_HANDLER_EMBED::handleClose( const HANDLER_CONT
                     [manager]()
                     {
                         BACKPLANE_EMBED::Get().SetUnsavedChangesAnswer( wxID_NO );
+                        BACKPLANE_EMBED::Get().SetHostClosing( true );
                         manager->Close( true );
                     } );
         }

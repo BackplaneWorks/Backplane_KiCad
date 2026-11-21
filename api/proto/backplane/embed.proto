@@ -243,6 +243,11 @@ enum EventType
                              // comment key pressed in KiCad; Event.reserved_key.  Where the host
                              // has a container window the chord arrives as _BACKPLANE_KEY / WM_APP
                              // instead (bp.13)
+  ET_QUIT_REQUESTED    = 31; // KiCad is quitting: KICAD_MANAGER_FRAME's close was accepted (all
+                             // editors closed, nothing vetoed) and the process is exiting.
+                             // detail = "host" when initiated by Close{window=0}; "" when KiCad
+                             // or the person quit (File -> Quit, Cmd+Q, Dock Quit, OS close).
+                             // Capability embed-quit-requested (bp.13.5)
 }
 
 message Event
