@@ -1159,7 +1159,33 @@ void KIPLATFORM::EMBED::TakeFocus( wxWindow* aFrame )
 
 
 
-void KIPLATFORM::EMBED::YieldActivationToHost()
+// Whether key-down aEvent is the reserved chord aKeyCode/aModifiers (wx's, as FilterEvent matched it): its
+// key (` is key code 50; otherwise the character without modifiers, upper-cased) and exactly its modifiers
+// (wx's Ctrl is Command here, RawCtrl the Control key).  The host is activated only for that key (#1399).
+static bool isTheChord( NSEvent* aEvent, int aKeyCode, int aModifiers )
+{
+    NSEventModifierFlags m = aEvent.modifierFlags;
+    int mods = ( ( m & NSEventModifierFlagCommand ) ? wxMOD_CONTROL : 0 )
+               | ( ( m & NSEventModifierFlagControl ) ? wxMOD_RAW_CONTROL : 0 )
+               | ( ( m & NSEventModifierFlagShift ) ? wxMOD_SHIFT : 0 )
+               | ( ( m & NSEventModifierFlagOption ) ? wxMOD_ALT : 0 );
+
+    if( mods != ( aModifiers & ( wxMOD_CONTROL | wxMOD_RAW_CONTROL | wxMOD_SHIFT | wxMOD_ALT ) ) )
+        return false;
+
+    if( aKeyCode == '`' )
+        return aEvent.keyCode == 50;
+
+    NSString* chars = aEvent.charactersIgnoringModifiers;
+
+    if( chars.length != 1 )
+        return false;
+
+    return std::toupper( (int) [chars characterAtIndex:0] ) == std::toupper( aKeyCode );
+}
+
+
+void KIPLATFORM::EMBED::YieldActivationToHost( int aKeyCode, int aModifiers )
 {
     if( s_owner <= 0 )
         return;
@@ -1184,11 +1210,11 @@ void KIPLATFORM::EMBED::YieldActivationToHost()
         // posts a reserved key).  A hidden host comes forward too: the chord means "take me to
         // Backplane", and the person typed it (the KiCad lead, b2).
         NSEvent* ev = NSApp.currentEvent;
-        bool     typed = ev && ev.type == NSEventTypeKeyDown && !ev.isARepeat;
+        bool     typed = ev && ev.type == NSEventTypeKeyDown && !ev.isARepeat && isTheChord( ev, aKeyCode, aModifiers );
         std::string why;
 
         if( !typed )
-            why = "not the person's key-down";
+            why = "not the person's key-down of this chord";
         else if( !NSApp.active )
             why = "KiCad is not the active app";
 
