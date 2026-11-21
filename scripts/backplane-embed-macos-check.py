@@ -905,9 +905,16 @@ def main():
                 key("k")
                 time.sleep(1.5)
                 AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
-                refused = trace_path.exists() and b"host activated: no (the host is hidden)" in trace_path.read_bytes()[m:]
-                check(refused and host_hidden() and not app_active(host.pid),
-                      f"1399 hidden host: Cmd+K leaves the host hidden and inactive (trace: refused={refused})")
+                after = trace_path.read_bytes()[m:] if trace_path.exists() else b""
+                reached = b"Cmd+K handed to wx" in after
+                refused = b"host activated: no (the host is hidden)" in after
+                RESULTS["1399_hidden_host"] = {"chord_reached_kicad": reached, "refused_traced": refused}
+                # the rule: whatever the chord did, the hidden host is neither shown nor activated
+                check(host_hidden() and not app_active(host.pid), f"1399 hidden host: after Cmd+K the host is still hidden and inactive ({RESULTS['1399_hidden_host']})")
+                # and when the chord reached KiCad, KiCad said why it did not bring the host forward (macOS 15: with the host hidden the
+                # chord did not reach KiCad at all, another app being frontmost; then there is nothing to refuse)
+                if reached:
+                    check(refused, f"1399 hidden host: KiCad's trace says the hidden host was refused ({RESULTS['1399_hidden_host']})")
                 tell_host("unhide")
                 time.sleep(0.8)
             # (a key repeat and a chord reaching an inactive KiCad are refused by the same test in the code; neither can be made by real
