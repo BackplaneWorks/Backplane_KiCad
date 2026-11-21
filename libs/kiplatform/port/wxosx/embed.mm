@@ -678,6 +678,8 @@ void watchOwnerOf( uint64_t aParent )
                                        ^{
                                            trace( "macos: the host's process ended; frames hidden" );
                                            s_parent = 0;
+                                           // its pid may be reused: nothing is ever yielded to or activated under it (#1399)
+                                           s_owner = 0;
                                            orderOutAll();
                                        } );
     dispatch_resume( s_ownerWatch );
@@ -1155,6 +1157,46 @@ void KIPLATFORM::EMBED::TakeFocus( wxWindow* aFrame )
 }
 
 
+
+
+void KIPLATFORM::EMBED::YieldActivationToHost()
+{
+    if( s_owner <= 0 )
+        return;
+
+    if( @available( macOS 14.0, * ) )
+    {
+        NSRunningApplication* host = [NSRunningApplication runningApplicationWithProcessIdentifier:s_owner];
+
+        if( !host || host.terminated )
+        {
+            trace( "macos: reserved chord: no host to yield to (gone or terminating)" );
+            return;
+        }
+
+        [NSApp yieldActivationToApplication:host];
+
+        // The host's own activate on the chord is refused on macOS 26 even with this consent (an app
+        // activates itself only after the person's own interaction with it, and the chord's key went
+        // to KiCad): KiCad, the active app now, activates the host, as the host activates KiCad on a
+        // hand-in (#1399).  Only for the person's own key: a key-down AppKit is dispatching now (the
+        // chord's), not a repeat, with KiCad the active app, and never from anything else (no API path
+        // posts a reserved key).  A hidden host comes forward too: the chord means "take me to
+        // Backplane", and the person typed it (the KiCad lead, b2).
+        NSEvent* ev = NSApp.currentEvent;
+        bool     typed = ev && ev.type == NSEventTypeKeyDown && !ev.isARepeat;
+        std::string why;
+
+        if( !typed )
+            why = "not the person's key-down";
+        else if( !NSApp.active )
+            why = "KiCad is not the active app";
+
+        bool activated = why.empty() && [host activateWithOptions:0];
+        trace( std::string( "macos: activation yielded to the host for a reserved chord, host activated: " )
+               + ( activated ? "yes" : "no" ) + ( why.empty() ? "" : " (" + why + ")" ) );
+    }
+}
 
 
 void KIPLATFORM::EMBED::TraceClick( wxWindow* aFrame, bool aHasFocus )

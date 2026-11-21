@@ -1229,6 +1229,8 @@ std::vector<std::string> BACKPLANE_EMBED::ReservedKeys() const
 void BACKPLANE_EMBED::postReservedKey( uint64_t aWindow, size_t aIndex, int aKeyCode, int aModifiers )
 {
 #ifdef __WXOSX__
+    // KiCad, the active app, consents and brings the host forward for the person's chord (#1399)
+    KIPLATFORM::EMBED::YieldActivationToHost();
     PushReservedKey( aWindow, static_cast<int>( aIndex ), aKeyCode, aModifiers,
                      aIndex < m_reserved.size() ? m_reserved[aIndex].text : std::string() );
     return;

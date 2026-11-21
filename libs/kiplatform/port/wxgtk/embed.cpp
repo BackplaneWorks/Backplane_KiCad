@@ -1167,6 +1167,11 @@ void KIPLATFORM::EMBED::TraceClick( wxWindow*, bool )
 }
 
 
+void KIPLATFORM::EMBED::YieldActivationToHost()
+{
+}
+
+
 void KIPLATFORM::EMBED::TakeFocusForClick( wxWindow* aFrame, wxWindow* )
 {
     TakeFocus( aFrame );

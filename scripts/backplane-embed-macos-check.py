@@ -91,6 +91,9 @@ int main(int argc, char **argv) { @autoreleasepool {
         else if ([v isEqual:@"demini"]) { [w deminiaturize:nil]; [NSApp activateIgnoringOtherApps:YES]; }
         else if ([v isEqual:@"full"]) [w toggleFullScreen:nil];
         else if ([v isEqual:@"front"]) { [NSApp activateIgnoringOtherApps:YES]; [w makeKeyAndOrderFront:nil]; }
+        // the person's Cmd+H on the host, and its undoing (#1399: a hidden host is never brought forward by KiCad)
+        else if ([v isEqual:@"hide"]) [NSApp hide:nil];
+        else if ([v isEqual:@"unhide"]) { [NSApp unhide:nil]; [NSApp activateIgnoringOtherApps:YES]; [w makeKeyAndOrderFront:nil]; }
         else if ([v isEqual:@"rect"]) {
           double H = NSScreen.screens[0].frame.size.height; NSRect c = [w contentRectForFrameRect:w.frame];
           printf("rect %.0f %.0f %.0f %.0f %d\n", c.origin.x, H - (c.origin.y + c.size.height), c.size.width, c.size.height,
@@ -107,18 +110,44 @@ int main(int argc, char **argv) { @autoreleasepool {
 }}
 """
 
-KEY = {"a": 0, "s": 1, "z": 6, "c": 8, "v": 9, "k": 40, "escape": 53}
+KEY = {"a": 0, "s": 1, "z": 6, "c": 8, "v": 9, "k": 40, "escape": 53, "`": 50}
 
 
-def key(name, command=True):
+# CHECK_INPUT_SOCK=<path>: input and pictures through a Screen Sharing relay (the Mac mini gate's vnc_relay.py, JSON lines on a Unix
+# socket, screen points) instead of CGEventPost and screencapture: a process without the Accessibility and Screen Recording grants
+# (a LaunchAgent on a headless Mac) posts events nobody receives and captures nothing
+INPUT_SOCK = os.environ.get("CHECK_INPUT_SOCK")
+
+
+def relay(request):
+    import json as _json, socket as _socket
+    c = _socket.socket(_socket.AF_UNIX)
+    c.connect(INPUT_SOCK)
+    c.sendall((_json.dumps(request) + "\n").encode())
+    answer = _json.loads(c.makefile().readline() or "{}")
+    c.close()
+    if not answer.get("ok"):
+        raise RuntimeError(f"input relay: {request.get('op')}: {answer}")
+    return answer
+
+
+def key(name, command=True, control=False):
+    if INPUT_SOCK:
+        relay({"op": "chord", "combo": "+".join([*(["cmd"] if command else []), *(["ctrl"] if control else []), name])})
+        time.sleep(0.06)
+        return
     for down in (True, False):
         event = Quartz.CGEventCreateKeyboardEvent(None, KEY[name], down)
-        Quartz.CGEventSetFlags(event, Quartz.kCGEventFlagMaskCommand if command else 0)
+        Quartz.CGEventSetFlags(event, (Quartz.kCGEventFlagMaskCommand if command else 0) | (Quartz.kCGEventFlagMaskControl if control else 0))
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
         time.sleep(0.03)
 
 
 def click(x, y):
+    if INPUT_SOCK:
+        relay({"op": "click", "x": x, "y": y})
+        time.sleep(0.15)
+        return
     point = Quartz.CGPointMake(x, y)
     for kind in (Quartz.kCGEventMouseMoved, Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp):
         event = Quartz.CGEventCreateMouseEvent(None, kind, point, Quartz.kCGMouseButtonLeft)
@@ -128,6 +157,10 @@ def click(x, y):
 
 def press(x, y, hold, button="left"):
     """A click whose button is held `hold` seconds (the activation of an inactive KiCad lands inside it)."""
+    if INPUT_SOCK:
+        relay({"op": "press", "x": x, "y": y, "button": 1 if button == "left" else 3, "seconds": hold})
+        time.sleep(0.05)
+        return
     point = Quartz.CGPointMake(x, y)
     down, up, which = ((Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp, Quartz.kCGMouseButtonLeft) if button == "left"
                        else (Quartz.kCGEventRightMouseDown, Quartz.kCGEventRightMouseUp, Quartz.kCGMouseButtonRight))
@@ -141,6 +174,10 @@ def press(x, y, hold, button="left"):
 
 def drag(x1, y1, x2, y2, seconds, steps=30):
     """A left-button drag from (x1, y1) to (x2, y2) over `seconds`."""
+    if INPUT_SOCK:
+        relay({"op": "drag", "x0": x1, "y0": y1, "x1": x2, "y1": y2, "seconds": seconds})
+        time.sleep(0.05)
+        return
     start = Quartz.CGPointMake(x1, y1)
     Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventMouseMoved, start, Quartz.kCGMouseButtonLeft))
     time.sleep(0.05)
@@ -151,6 +188,16 @@ def drag(x1, y1, x2, y2, seconds, steps=30):
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventLeftMouseDragged, point, Quartz.kCGMouseButtonLeft))
     Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventLeftMouseUp, Quartz.CGPointMake(x2, y2), Quartz.kCGMouseButtonLeft))
     time.sleep(0.05)
+
+
+def app_active(pid):
+    """Whether the app `pid` is the active one now. NSRunningApplication's properties change only as this process's run loop runs
+    (the check never runs one: an object fetched once kept its first answer), so the run loop is turned briefly and the app asked
+    afresh each time."""
+    import AppKit
+    AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.02))
+    app = AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(pid)
+    return bool(app is not None and app.isActive())
 
 
 def windows():
@@ -212,6 +259,13 @@ def main():
 
     def shot(label, box=None):
         path = args.out / f"{label}.png"
+        if INPUT_SOCK:
+            # the relay saves the box only (never the whole screen): the spread is measured on its middle half
+            if not box:
+                return path, None
+            relay({"op": "png", "path": str(path.resolve()), "rect": list(box)})
+            image = Image.open(path).convert("L"); w, h = image.size
+            return path, ImageStat.Stat(image.crop((w // 4, h // 4, 3 * w // 4, 3 * h // 4))).stddev[0]
         subprocess.run(["screencapture", "-x", str(path)], check=False)
         if box and path.exists():
             image = Image.open(path)
@@ -442,6 +496,14 @@ def main():
             while time.monotonic() < deadline and not got:
                 got = next((e for e in pump(200) if e.type == embed.ET_RESERVED_KEY), None)
             check(got is not None and got.reserved_key.index == 0, f"Cmd+K arrives as ET_RESERVED_KEY ({got and got.reserved_key})")
+            # a reserved chord hands the keyboard to the host (#1399: KiCad activates it): KiCad given it back, as the client does for a
+            # focused show, before the prewarm checks that it keeps it
+            tell_host("yield")
+            api.request(embed.ShowFrame(kind=embed.FK_PCB, focus=True, x=0, y=0, width=pw, height=ph), embed.ShowFrameResponse)
+            if not wait_for(lambda: frames()[embed.FK_PCB].focused, 3):
+                tell_host("activate")
+                api.request(embed.ShowFrame(kind=embed.FK_PCB, focus=True, x=0, y=0, width=pw, height=ph), embed.ShowFrameResponse)
+            check(wait_for(lambda: frames()[embed.FK_PCB].focused, 5), "after the reserved chord the PCB frame takes the keyboard back on a focused show")
 
             # Prewarm the schematic, then show it: its first show must paint quickly (an occluded
             # transparent window may not be drawn by the window server)
@@ -592,9 +654,12 @@ def main():
                 return [w for w in Quartz.CGWindowListCopyWindowInfo(Quartz.kCGWindowListOptionOnScreenOnly, Quartz.kCGNullWindowID)
                         if w.get("kCGWindowOwnerPID") == kicad.pid and w.get("kCGWindowLayer", 0) > 0]
             point = Quartz.CGPointMake(hx + px + pw * 0.1, hy + py + ph * 0.86)
-            for kind in (Quartz.kCGEventRightMouseDown, Quartz.kCGEventRightMouseUp):
-                Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, kind, point, Quartz.kCGMouseButtonRight))
-                time.sleep(0.1)
+            if INPUT_SOCK:
+                press(point.x, point.y, 0.1, button="right")
+            else:
+                for kind in (Quartz.kCGEventRightMouseDown, Quartz.kCGEventRightMouseUp):
+                    Quartz.CGEventPost(Quartz.kCGHIDEventTap, Quartz.CGEventCreateMouseEvent(None, kind, point, Quartz.kCGMouseButtonRight))
+                    time.sleep(0.1)
             menu = wait_for(popups, 3, 0.1)
             shot("04-context-menu")
             check(bool(menu), f"a right click opens KiCad's context menu above everything (layer {menu and menu[0].get('kCGWindowLayer')})")
@@ -615,7 +680,7 @@ def main():
                 # KiCad's own activation (NSRunningApplication.isActive, as mac_pane_e2e.py's active()): never "frontmost", which is the
                 # menu-bar owner, and an embedded KiCad is an accessory app, never that
                 kicad_app = AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(kicad.pid)
-                resigned = wait_for(lambda: kicad_app is not None and not kicad_app.isActive()
+                resigned = wait_for(lambda: not app_active(kicad.pid)
                                     and not frames()[embed.FK_PCB].focused, 3)
                 return check(bool(resigned), f"1j {case}: before it, KiCad is not the active app and its frame has no focus")
 
@@ -789,6 +854,80 @@ def main():
                 check(names_footprint(got, target), f"1j a held left click on an inactive KiCad selects footprint {target} ({got and selected(got)[:4]})")
                 check(wait_for(lambda: frames()[embed.FK_PCB].focused, 3), "1j and KiCad has the keyboard")
                 clear_selection()
+
+            # #1399: KiCad made active by the person's own click in its frame (not by a ShowFrame{focus} the host consented to), then
+            # keys in it, then a reserved chord: KiCad hands the chord to the host and consents to its activation at that moment, so
+            # the host's own activate (the client's, on the chord) takes. Before: the consent from KiCad's activation no longer counted,
+            # macOS ignored the host's activate, and neither Cmd+K nor the escape chord brought the host forward (0/3 each, the mini)
+            import AppKit
+            host_app = AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(host.pid)
+            kicad_app = AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(kicad.pid)
+            api.request(embed.SetReservedKeys(chords=["Ctrl+K", "RawCtrl+`"]), embed.SetReservedKeysResponse)
+            for name, chord in (("Cmd+K", dict(name="k")), ("the escape chord (Ctrl+`)", dict(name="`", command=False, control=True))):
+                if not kicad_inactive(f"1399 {name}"):
+                    continue
+                click(hx + px + pw // 2, hy + py + ph // 2)   # the person's own click in KiCad's canvas: KiCad activates itself
+                check(wait_for(lambda: app_active(kicad.pid) and frames()[embed.FK_PCB].focused, 3),
+                      f"1399 {name}: KiCad is active by its own click, its frame has the keyboard")
+                key("escape", command=False)   # a key in KiCad after the click (the person's keys)
+                key("a")   # Cmd+A: an ordinary chord KiCad keeps (not reserved)
+                time.sleep(0.5)
+                # the reverse: a key that is not a reserved chord never brings the host forward
+                check(app_active(kicad.pid) and not app_active(host.pid),
+                      f"1399 {name}: keys that are not reserved chords leave KiCad active and the host behind")
+                pump(0)
+                m = trace_mark()
+                key(**chord)
+                got = None
+                deadline = time.monotonic() + 3
+                while time.monotonic() < deadline and not got:
+                    got = next((e for e in pump(200) if e.type == embed.ET_RESERVED_KEY), None)
+                check(got is not None, f"1399 {name} arrives as ET_RESERVED_KEY ({got and got.reserved_key})")
+                time.sleep(0.2)
+                yielded = trace_path.exists() and b"host activated: yes" in trace_path.read_bytes()[m:]
+                check(yielded, f"1399 {name}: KiCad's trace says it yielded to the host and activated it for the chord")
+                # the host does NOT activate itself: it comes forward only by KiCad's activate on the chord (the client's own activate
+                # is refused on macOS 26 even with the consent; #1399)
+                came = wait_for(lambda: app_active(host.pid) and not app_active(kicad.pid), 3)
+                RESULTS[f"1399_{name}"] = {"host_active": bool(came), "yield_traced": yielded}
+                check(bool(came), f"1399 {name}: the host comes forward (KiCad activated it), KiCad resigns ({RESULTS[f'1399_{name}']})")
+            # a hidden host (the person's Cmd+H) comes forward on the person's chord in KiCad (the KiCad lead, b2: the chord means "take me
+            # to Backplane"), and a key that is not a reserved chord leaves it hidden. The escape chord: with the host hidden another app owns
+            # the menu bar, and its own Cmd+K (Finder's Connect to Server) takes that key first (macos-15, b1); Cmd+K is recorded, not judged
+            def hidden_host_case(name, chord, judged):
+                if not kicad_inactive(f"1399 hidden host, {name}"):
+                    return
+                tell_host("hide")
+                time.sleep(0.8)
+                click(hx + px + pw // 2, hy + py + ph // 2)
+                check(wait_for(lambda: app_active(kicad.pid), 3), f"1399 hidden host, {name}: KiCad is active by its own click")
+                host_hidden = lambda: bool(AppKit.NSRunningApplication.runningApplicationWithProcessIdentifier_(host.pid).isHidden())
+                AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
+                check(host_hidden(), f"1399 hidden host, {name}: the host is hidden (Cmd+H)")
+                key("escape", command=False)
+                time.sleep(0.5)
+                AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.05))
+                check(host_hidden() and not app_active(host.pid), f"1399 hidden host, {name}: a key that is not a reserved chord leaves it hidden")
+                m = trace_mark()
+                key(**chord)
+                came = wait_for(lambda: (AppKit.NSRunLoop.currentRunLoop().runUntilDate_(AppKit.NSDate.dateWithTimeIntervalSinceNow_(0.02)) or True)
+                                and not host_hidden() and app_active(host.pid), 3)
+                after = trace_path.read_bytes()[m:] if trace_path.exists() else b""
+                RESULTS[f"1399_hidden_host_{name}"] = {"came_forward": bool(came), "chord_reached_kicad": b"handed to wx" in after,
+                                                        "host_activated": b"host activated: yes" in after}
+                if judged:
+                    check(bool(came), f"1399 hidden host, {name}: the chord brings the host back, un-hidden and active ({RESULTS[f'1399_hidden_host_{name}']})")
+                else:
+                    print(f"INFO 1399 hidden host, {name} (not judged): {RESULTS[f'1399_hidden_host_{name}']}")
+                tell_host("unhide")
+                time.sleep(0.8)
+            hidden_host_case("the escape chord", dict(name="`", command=False, control=True), True)
+            hidden_host_case("Cmd+K", dict(name="k"), False)
+            print("INFO known limit (#1399): macOS: with Backplane hidden and another application owning the menu bar, a chord that "
+                  "application's menu claims (Cmd+K in Finder) does not reach KiCad; the escape chord does.")
+            # (a key repeat and a chord reaching an inactive KiCad are refused by the same test in the code; neither can be made by real
+            # input here: a repeat needs a held key the relay cannot hold, and an inactive KiCad is not sent keys)
+            api.request(embed.SetReservedKeys(chords=["Ctrl+K"]), embed.SetReservedKeysResponse)
 
             # The host's process ends: every frame leaves the screen at once
             t0 = time.monotonic()
