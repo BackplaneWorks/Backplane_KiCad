@@ -22,6 +22,7 @@
 #include <wx/frame.h>
 
 #include <backplane_embed.h>
+#include <confirm.h>
 #include <backplane_embed_proto.h>
 #include <kiplatform/embed.h>
 #include <kiway.h>
@@ -640,19 +641,34 @@ HANDLER_RESULT<CloseResponse> API_HANDLER_EMBED::handleClose( const HANDLER_CONT
     // changes?" prompts are answered silently with the host's choice.
     embed.SetUnsavedChangesAnswer( aCtx.Request.mode() == CM_SAVE ? wxID_YES : wxID_NO );
 
-    bool closed = false;
+    bool          closed = false;
+    wxArrayString notShown;
 
-    if( everything )
-        closed = m_kiway.PlayersClose( false );
-    else
-        closed = single->Close( false );
+    {
+        // No box during the host's Close: a save that fails (a read-only file, a sheet that cannot
+        // be written) or a prompt KiCad would raise (a locked file) becomes this request's error,
+        // instead of a modal that held the answer and every other API request until the person
+        // answered it (the frame stays open, still modified)
+        NO_MODALS_SCOPE noModals;
+
+        if( everything )
+            closed = m_kiway.PlayersClose( false );
+        else
+            closed = single->Close( false );
+
+        notShown = noModals.Messages();
+    }
 
     embed.SetUnsavedChangesAnswer( std::nullopt );
 
     if( !closed )
     {
-        return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST,
-                                        "KiCad did not close (a save failed or a frame is busy)" ) );
+        std::string why = "KiCad did not close (a save failed or a frame is busy)";
+
+        for( const wxString& text : notShown )
+            why += ": " + text.ToStdString( wxConvUTF8 );
+
+        return tl::unexpected( failure( ApiStatusCode::AS_BAD_REQUEST, why ) );
     }
 
     if( everything )
