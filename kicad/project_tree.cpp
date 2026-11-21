@@ -143,7 +143,9 @@ void PROJECT_TREE::LoadIcons()
 
     // KiCad for macOS currently has backported SetStateImages for this control
     // that is otherwise available since wxWidgets 3.3 on other platforms.
-#if wxCHECK_VERSION( 3, 3, 0 ) || defined( __WXMAC__ )
+// KiCad's macOS wxWidgets 3.2 backports SetStateImages; a stock 3.2 on macOS
+// (Backplane's Homebrew build sets KICAD_STOCK_WX_MAC) uses the image list
+#if wxCHECK_VERSION( 3, 3, 0 ) || ( defined( __WXMAC__ ) && !defined( KICAD_STOCK_WX_MAC ) )
     wxVector<wxBitmapBundle> stateImages;
     stateImages.push_back( wxBitmapBundle( wxBitmap( c_gitDefSize, c_gitDefSize ) ) );      // GIT_STATUS_UNTRACKED
     stateImages.push_back( KiBitmapBundleDef( BITMAPS::git_good_check, c_gitDefSize ) );    // GIT_STATUS_CURRENT

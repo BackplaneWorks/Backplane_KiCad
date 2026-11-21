@@ -1,4 +1,4 @@
-name: Backplane KiCad Linux release
+name: Backplane KiCad release
 
 on:
   workflow_dispatch:
@@ -401,9 +401,84 @@ jobs:
             release/SHA256SUMS
           if-no-files-found: error
 
+  # The same runtime for Apple-silicon Macs: KiCad.app built against Homebrew
+  # and made self-contained, with the launchers, libraries and manifest laid
+  # out as on Linux (scripts/backplane-macos-*.sh).
+  macos-runtime:
+    runs-on: macos-15
+    timeout-minutes: 300
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 1
+
+      - name: Install KiCad build dependencies
+        run: |
+          brew install boost cairo ccache cmake curl eigen git-lfs glew glm harfbuzz \
+            libgit2 libngspice ninja nng opencascade openssl@3 pkgconf poppler \
+            protobuf python@3.12 rapidjson swig unixodbc wxwidgets@3.2 yaml-cpp zstd
+
+      - name: Fetch pinned official KiCad libraries
+        run: scripts/backplane-fetch-libraries.sh "$RUNNER_TEMP"
+
+      - name: Restore compiler cache
+        id: compiler-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: kicad-ccache-${{ runner.os }}-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            kicad-ccache-${{ runner.os }}-
+
+      - name: Configure
+        run: |
+          ccache --max-size=2G
+          scripts/backplane-macos-build.sh configure
+
+      - name: Build and install KiCad runtime
+        run: scripts/backplane-macos-build.sh build
+
+      - name: Preserve compiler cache after build attempts
+        if: always() && steps.compiler-cache.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ${{ steps.compiler-cache.outputs.cache-primary-key }}
+
+      # the tests generate bindings with Homebrew's protoc; the Python runtime
+      # must be the one released with it (protoc 36.2 -> protobuf 7.36.2)
+      - name: Install IPC smoke test dependencies
+        run: |
+          venv="$RUNNER_TEMP/ipc-smoke-venv"
+          "$(brew --prefix python@3.12)/bin/python3.12" -m venv "$venv"
+          pv="$(protoc --version | awk '{print $2}')"
+          pb="$("$venv/bin/pip" index versions protobuf 2>/dev/null | tr ',' ' ' | tr ' ' '\n' | grep -E "^[0-9]+\.${pv//./\\.}$" | head -n 1)"
+          test -n "$pb" || { echo "no protobuf runtime for protoc $pv" >&2; exit 1; }
+          "$venv/bin/pip" install "protobuf==$pb" pynng==0.9.0
+
+      - name: Assemble runtime archive
+        run: |
+          rm -rf build/backplane-macos
+          LIBRARY_STAGE="$RUNNER_TEMP/kicad-library-stage" \
+          IPC_PYTHON="$RUNNER_TEMP/ipc-smoke-venv/bin/python" \
+            scripts/backplane-macos-package.sh
+
+      - name: Upload runtime archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: backplane-kicad-macos-arm64
+          compression-level: 0
+          retention-days: 1
+          path: |
+            release/backplane-kicad-macos-arm64-*.tar.gz
+            release/SHA256SUMS-macos-arm64
+          if-no-files-found: error
+
   draft-release:
     if: startsWith(github.ref, 'refs/tags/backplane-kicad-v')
-    needs: linux-runtime
+    needs: [linux-runtime, macos-runtime]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -411,8 +486,15 @@ jobs:
       - name: Download release assets
         uses: actions/download-artifact@v4
         with:
-          name: backplane-kicad-linux-x86_64
+          pattern: backplane-kicad-*
           path: release
+          merge-multiple: true
+      # one SHA256SUMS for every archive (Backplane checks its download against it)
+      - name: Combine checksums
+        run: |
+          cat release/SHA256SUMS-macos-arm64 >> release/SHA256SUMS
+          rm release/SHA256SUMS-macos-arm64
+          cat release/SHA256SUMS
       - name: Create draft GitHub release
         uses: softprops/action-gh-release@v2
         with:

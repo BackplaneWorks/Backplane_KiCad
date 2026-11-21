@@ -304,7 +304,12 @@ bool PCB_PLOTTER::Plot( const wxString& aOutputPath, const LSEQ& aLayersToPlot,
 
         pageNum++;
 
-        wxSafeYield(); // displays report message.
+        // Headless (kicad-cli, its api-server) has no window to repaint. On macOS
+        // wxSafeYield also opens a modal session on the active event loop, which
+        // there is a console loop: it overwrites the loop's dispatcher and the next
+        // turn of the loop crashes.
+        if( Pgm().IsGUI() )
+            wxSafeYield(); // displays report message.
     }
 
     if( jobfile_writer && m_plotOpts.GetCreateGerberJobFile() )
