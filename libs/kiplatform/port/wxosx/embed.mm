@@ -1173,15 +1173,17 @@ static bool isTheChord( NSEvent* aEvent, int aKeyCode, int aModifiers )
     if( mods != ( aModifiers & ( wxMOD_CONTROL | wxMOD_RAW_CONTROL | wxMOD_SHIFT | wxMOD_ALT ) ) )
         return false;
 
-    if( aKeyCode == '`' )
-        return aEvent.keyCode == 50;
-
     NSString* chars = aEvent.charactersIgnoringModifiers;
+
+    if( aKeyCode == '`' )
+        return aEvent.keyCode == 50 || ( chars.length == 1 && [chars characterAtIndex:0] == '`' );
 
     if( chars.length != 1 )
         return false;
 
-    return std::toupper( (int) [chars characterAtIndex:0] ) == std::toupper( aKeyCode );
+    unichar ch = [chars characterAtIndex:0];
+    return ch < 128 && aKeyCode >= 0 && aKeyCode < 128
+           && std::toupper( static_cast<int>( ch ) ) == std::toupper( aKeyCode );
 }
 
 
