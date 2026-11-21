@@ -1455,9 +1455,18 @@ bool SCH_EDIT_FRAME::SaveProject( bool aSaveAs )
                 msg += "\n" + lockedFile;
         }
 
-        wxRichMessageDialog dlg( this, wxString::Format( _( "Failed to save %s." ), Schematic().Root().GetFileName() ),
-                                 _( "Locked File Warning" ), wxOK | wxICON_WARNING | wxCENTER );
-        dlg.SetExtendedMessage( _( "You do not have write permissions to:\n\n" ) + msg );
+        wxString failed = wxString::Format( _( "Failed to save %s." ), Schematic().Root().GetFileName() );
+        wxString why = _( "You do not have write permissions to:\n\n" ) + msg;
+
+        // Backplane: no box in an embedded Close or an API task (the request answers with this text)
+        if( NO_MODALS_SCOPE::Active() )
+        {
+            NO_MODALS_SCOPE::Record( failed + wxS( " " ) + why );
+            return false;
+        }
+
+        wxRichMessageDialog dlg( this, failed, _( "Locked File Warning" ), wxOK | wxICON_WARNING | wxCENTER );
+        dlg.SetExtendedMessage( why );
 
         dlg.ShowModal();
         return false;
@@ -1471,6 +1480,13 @@ bool SCH_EDIT_FRAME::SaveProject( bool aSaveAs )
                 msg = overwrittenFile;
             else
                 msg += "\n" + overwrittenFile;
+        }
+
+        // Backplane: no box in an embedded Close or an API task: the save is not made (nothing overwritten unasked)
+        if( NO_MODALS_SCOPE::Active() )
+        {
+            NO_MODALS_SCOPE::Record( _( "Saving will overwrite existing files:" ) + wxS( " " ) + msg );
+            return false;
         }
 
         wxRichMessageDialog dlg( this, _( "Saving will overwrite existing files." ), _( "Save Warning" ),
