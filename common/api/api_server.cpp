@@ -249,10 +249,6 @@ void KICAD_API_SERVER::Stop()
     stopWatchdog();
     Unbind( API_REQUEST_EVENT, &KICAD_API_SERVER::handleApiEvent, this );
 
-    // a request queued for the main thread while stopping would be handled later against m_sharedMessage of a server already gone
-    // (after a stop and re-enable from Preferences)
-    DeletePendingEvents();
-
     m_server->Stop();
     m_server.reset( nullptr );
 }
