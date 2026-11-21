@@ -78,12 +78,15 @@ void KINNG_REQUEST_SERVER::Stop()
     if( !m_thread.joinable() )
         return;
 
+    // The flag under the lock, then the wake-up: the listener waiting for a reply tests m_shutdown under the same lock, so it either
+    // sees it or is woken after it is set. Set after the notify (as before), a request received during the exit left the listener
+    // waiting for a reply the main thread, here in join(), never gives: the process never ended (Windows, 2 in 30 closes, bp.13.3)
     {
         std::lock_guard<std::mutex> lock( m_mutex );
-        m_replyReady.notify_all();
+        m_shutdown.store( true );
     }
 
-    m_shutdown.store( true );
+    m_replyReady.notify_all();
     m_thread.join();
 }
 
