@@ -43,8 +43,12 @@
 using namespace kiapi;
 using namespace kiapi::common;
 
+// These specializations are compiled into kicommon (built with hidden visibility) and called from
+// the kifaces. Without APIVISIBLE, clang keeps them local because their protobuf enum arguments
+// are hidden, and macOS links fail.
+
 template<>
-KICAD_T FromProtoEnum( types::KiCadObjectType aValue )
+APIVISIBLE KICAD_T FromProtoEnum( types::KiCadObjectType aValue )
 {
     switch( aValue )
     {
@@ -105,7 +109,7 @@ KICAD_T FromProtoEnum( types::KiCadObjectType aValue )
 
 
 template<>
-types::KiCadObjectType ToProtoEnum( KICAD_T aValue )
+APIVISIBLE types::KiCadObjectType ToProtoEnum( KICAD_T aValue )
 {
     switch( aValue )
     {
@@ -164,7 +168,7 @@ types::KiCadObjectType ToProtoEnum( KICAD_T aValue )
 
 
 template<>
-PCB_LAYER_ID FromProtoEnum( board::types::BoardLayer aValue )
+APIVISIBLE PCB_LAYER_ID FromProtoEnum( board::types::BoardLayer aValue )
 {
     switch( aValue )
     {
@@ -276,7 +280,7 @@ PCB_LAYER_ID FromProtoEnum( board::types::BoardLayer aValue )
 
 
 template<>
-board::types::BoardLayer ToProtoEnum( PCB_LAYER_ID aValue )
+APIVISIBLE board::types::BoardLayer ToProtoEnum( PCB_LAYER_ID aValue )
 {
     switch( aValue )
     {
@@ -386,7 +390,7 @@ board::types::BoardLayer ToProtoEnum( PCB_LAYER_ID aValue )
 
 
 template<>
-JOB_PAGE_SIZE FromProtoEnum( schematic::jobs::SchematicJobPageSize aValue )
+APIVISIBLE JOB_PAGE_SIZE FromProtoEnum( schematic::jobs::SchematicJobPageSize aValue )
 {
     switch( aValue )
     {
@@ -402,7 +406,7 @@ JOB_PAGE_SIZE FromProtoEnum( schematic::jobs::SchematicJobPageSize aValue )
 
 
 template<>
-schematic::jobs::SchematicJobPageSize ToProtoEnum( JOB_PAGE_SIZE aValue )
+APIVISIBLE schematic::jobs::SchematicJobPageSize ToProtoEnum( JOB_PAGE_SIZE aValue )
 {
     switch( aValue )
     {
@@ -417,7 +421,7 @@ schematic::jobs::SchematicJobPageSize ToProtoEnum( JOB_PAGE_SIZE aValue )
 
 
 template<>
-JOB_EXPORT_SCH_NETLIST::FORMAT FromProtoEnum( schematic::jobs::SchematicNetlistFormat aValue )
+APIVISIBLE JOB_EXPORT_SCH_NETLIST::FORMAT FromProtoEnum( schematic::jobs::SchematicNetlistFormat aValue )
 {
     switch( aValue )
     {
@@ -446,7 +450,7 @@ JOB_EXPORT_SCH_NETLIST::FORMAT FromProtoEnum( schematic::jobs::SchematicNetlistF
 
 
 template<>
-schematic::jobs::SchematicNetlistFormat ToProtoEnum( JOB_EXPORT_SCH_NETLIST::FORMAT aValue )
+APIVISIBLE schematic::jobs::SchematicNetlistFormat ToProtoEnum( JOB_EXPORT_SCH_NETLIST::FORMAT aValue )
 {
     switch( aValue )
     {
@@ -474,7 +478,7 @@ schematic::jobs::SchematicNetlistFormat ToProtoEnum( JOB_EXPORT_SCH_NETLIST::FOR
 
 
 template<>
-GR_TEXT_H_ALIGN_T FromProtoEnum( types::HorizontalAlignment aValue )
+APIVISIBLE GR_TEXT_H_ALIGN_T FromProtoEnum( types::HorizontalAlignment aValue )
 {
     switch( aValue )
     {
@@ -492,7 +496,7 @@ GR_TEXT_H_ALIGN_T FromProtoEnum( types::HorizontalAlignment aValue )
 
 
 template<>
-types::HorizontalAlignment ToProtoEnum( GR_TEXT_H_ALIGN_T aValue )
+APIVISIBLE types::HorizontalAlignment ToProtoEnum( GR_TEXT_H_ALIGN_T aValue )
 {
     switch( aValue )
     {
@@ -508,7 +512,7 @@ types::HorizontalAlignment ToProtoEnum( GR_TEXT_H_ALIGN_T aValue )
 
 
 template<>
-GR_TEXT_V_ALIGN_T FromProtoEnum( types::VerticalAlignment aValue )
+APIVISIBLE GR_TEXT_V_ALIGN_T FromProtoEnum( types::VerticalAlignment aValue )
 {
     switch( aValue )
     {
@@ -526,7 +530,7 @@ GR_TEXT_V_ALIGN_T FromProtoEnum( types::VerticalAlignment aValue )
 
 
 template<>
-types::VerticalAlignment ToProtoEnum( GR_TEXT_V_ALIGN_T aValue )
+APIVISIBLE types::VerticalAlignment ToProtoEnum( GR_TEXT_V_ALIGN_T aValue )
 {
     switch( aValue )
     {
@@ -542,7 +546,7 @@ types::VerticalAlignment ToProtoEnum( GR_TEXT_V_ALIGN_T aValue )
 
 
 template<>
-LINE_STYLE FromProtoEnum( types::StrokeLineStyle aValue )
+APIVISIBLE LINE_STYLE FromProtoEnum( types::StrokeLineStyle aValue )
 {
     switch( aValue )
     {
@@ -562,7 +566,7 @@ LINE_STYLE FromProtoEnum( types::StrokeLineStyle aValue )
 
 
 template<>
-types::StrokeLineStyle ToProtoEnum( LINE_STYLE aValue )
+APIVISIBLE types::StrokeLineStyle ToProtoEnum( LINE_STYLE aValue )
 {
     switch( aValue )
     {
@@ -580,7 +584,7 @@ types::StrokeLineStyle ToProtoEnum( LINE_STYLE aValue )
 
 
 template<>
-FILL_T FromProtoEnum( types::GraphicFillType aValue )
+APIVISIBLE FILL_T FromProtoEnum( types::GraphicFillType aValue )
 {
     switch( aValue )
     {
@@ -600,7 +604,7 @@ FILL_T FromProtoEnum( types::GraphicFillType aValue )
 
 
 template<>
-types::GraphicFillType ToProtoEnum( FILL_T aValue )
+APIVISIBLE types::GraphicFillType ToProtoEnum( FILL_T aValue )
 {
     switch( aValue )
     {
@@ -619,7 +623,7 @@ types::GraphicFillType ToProtoEnum( FILL_T aValue )
 
 
 template<>
-ELECTRICAL_PINTYPE FromProtoEnum( types::ElectricalPinType aValue )
+APIVISIBLE ELECTRICAL_PINTYPE FromProtoEnum( types::ElectricalPinType aValue )
 {
     switch( aValue )
     {
@@ -644,7 +648,7 @@ ELECTRICAL_PINTYPE FromProtoEnum( types::ElectricalPinType aValue )
 
 
 template<>
-types::ElectricalPinType ToProtoEnum( ELECTRICAL_PINTYPE aValue )
+APIVISIBLE types::ElectricalPinType ToProtoEnum( ELECTRICAL_PINTYPE aValue )
 {
     switch( aValue )
     {
@@ -670,7 +674,7 @@ types::ElectricalPinType ToProtoEnum( ELECTRICAL_PINTYPE aValue )
 
 
 template<>
-types::RuleSeverity ToProtoEnum( SEVERITY aValue )
+APIVISIBLE types::RuleSeverity ToProtoEnum( SEVERITY aValue )
 {
     switch( aValue )
     {
@@ -690,7 +694,7 @@ types::RuleSeverity ToProtoEnum( SEVERITY aValue )
 
 
 template<>
-SEVERITY FromProtoEnum( types::RuleSeverity aValue )
+APIVISIBLE SEVERITY FromProtoEnum( types::RuleSeverity aValue )
 {
     switch( aValue )
     {
@@ -709,7 +713,7 @@ SEVERITY FromProtoEnum( types::RuleSeverity aValue )
 
 
 template<>
-PAGE_SIZE_TYPE FromProtoEnum( types::PageSize aValue )
+APIVISIBLE PAGE_SIZE_TYPE FromProtoEnum( types::PageSize aValue )
 {
     switch( aValue )
     {
@@ -739,7 +743,7 @@ PAGE_SIZE_TYPE FromProtoEnum( types::PageSize aValue )
 
 
 template<>
-types::PageSize ToProtoEnum( PAGE_SIZE_TYPE aValue )
+APIVISIBLE types::PageSize ToProtoEnum( PAGE_SIZE_TYPE aValue )
 {
     switch( aValue )
     {
