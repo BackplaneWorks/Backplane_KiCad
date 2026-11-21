@@ -10,8 +10,10 @@ on:
   push:
     branches:
       - 'backplane/master'
-    tags:
-      - 'backplane-kicad-v*'
+    # Do not trigger on backplane-kicad-v* release tags: releases are built on our own
+    # machines and published explicitly; a tag-triggered run would overwrite an already-
+    # published release's SHA256SUMS/assets or flip prerelease: true. Use workflow_dispatch
+    # for manual fallback builds.
   pull_request:
     branches:
       - 'backplane/master'
@@ -505,12 +507,25 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Check if release already exists
+        id: check-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "::notice::Release ${{ github.ref_name }} already exists; skipping draft-release to avoid clobbering assets/SHA256SUMS or prerelease state."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Download release assets
+        if: steps.check-release.outputs.exists != 'true'
         uses: actions/download-artifact@v4
         with:
           name: backplane-kicad-linux-x86_64
           path: release
       - name: Create draft GitHub release
+        if: steps.check-release.outputs.exists != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
