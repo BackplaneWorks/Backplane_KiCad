@@ -2,9 +2,9 @@ name: Backplane KiCad macOS
 on:
   push:
     # every batch on the release line and ci/** (a macOS break fails the batch like Linux and
-    # Windows), and every release tag (the integrator attaches the package from this run)
+    # Windows). Do not trigger on backplane-kicad-v* tags (releases are built on our Mac mini
+    # and published explicitly); use workflow_dispatch for manual fallback builds.
     branches: ['release/bp.13', 'ci/**']
-    tags: ['backplane-kicad-v*']
   workflow_dispatch:
 permissions:
   contents: read
