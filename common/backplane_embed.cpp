@@ -1735,6 +1735,7 @@ bool BACKPLANE_EMBED::StartEventServer( const std::string& aUrl, const std::stri
     }
 
     nng_socket_set_ms( socket, NNG_OPT_RECVTIMEO, 500 );
+    nng_socket_set_ms( socket, NNG_OPT_SENDTIMEO, 500 );  // a reader gone quiet cannot hold the event thread (and its join at exit)
 
     if( nng_listener_start( listener, 0 ) != 0 )
     {
@@ -1755,7 +1756,13 @@ void BACKPLANE_EMBED::StopEventServer()
     if( !m_eventThread.joinable() )
         return;
 
-    m_eventShutdown.store( true );
+    // the flag under the waiters' own lock (NextEvents tests it under m_eventMutex), then the wake-up: stored outside the lock, a waiter
+    // between its test and its wait missed the notify and slept out its wait_for (up to 60 s) before the join could end
+    {
+        std::lock_guard<std::mutex> lock( m_eventMutex );
+        m_eventShutdown.store( true );
+    }
+
     m_eventCv.notify_all();
     m_eventThread.join();
     nng_close( s_eventSocket );
