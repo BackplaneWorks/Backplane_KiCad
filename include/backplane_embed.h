@@ -94,7 +94,8 @@ enum class EMBED_EVENT_TYPE : int
     CHECKS_DONE = 27,
     FRAME_DRAWN = 28,
     NOTICE = 29,
-    RESERVED_KEY = 30
+    RESERVED_KEY = 30,
+    QUIT_REQUESTED = 31
 };
 
 /// Values match kiapi.backplane.embed.ThemeMode.
@@ -535,6 +536,13 @@ public:
     void PushReservedKey( uint64_t aWindow, int aIndex, int aKeyCode, int aModifiers,
                           const std::string& aChord );
 
+    /// Mark that the upcoming KICAD_MANAGER_FRAME close was initiated by the host's Close IPC.
+    void SetHostClosing( bool aClosing ) { m_hostClosing = aClosing; }
+
+    /// Post ET_QUIT_REQUESTED once when KICAD_MANAGER_FRAME::doCloseWindow commits to exit.
+    /// detail is "host" when SetHostClosing(true) was called, else "".  UI thread.
+    void NotifyQuit();
+
     /// Events with seq > aSince, waiting up to aWaitMs for the first.  aLost is set when some
     /// were dropped.  Returns the seq to pass next time.
     uint64_t NextEvents( uint64_t aSince, int aWaitMs, size_t aMax,
@@ -870,6 +878,8 @@ private:
     std::thread       m_eventThread;
     std::atomic<bool> m_eventShutdown{ false };
     int               m_awaitingDrawn = 0;   ///< frames shown but not yet drawn (UI thread)
+    bool              m_hostClosing = false; ///< Close{window=0} initiated the manager close
+    bool              m_quitNotified = false; ///< ET_QUIT_REQUESTED already posted
 };
 
 #endif // BACKPLANE_EMBED_H_

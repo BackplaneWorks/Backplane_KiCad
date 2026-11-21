@@ -786,6 +786,9 @@ void KICAD_MANAGER_FRAME::doCloseWindow()
     m_projectTreePane->Show( false );
     Pgm().m_Quitting = true;
 
+    if( BACKPLANE_EMBED::Get().Enabled() )
+        BACKPLANE_EMBED::Get().NotifyQuit();
+
     Destroy();
 
 #ifdef _WINDOWS_

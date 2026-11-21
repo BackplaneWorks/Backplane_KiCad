@@ -1666,6 +1666,16 @@ void BACKPLANE_EMBED::PushReservedKey( uint64_t aWindow, int aIndex, int aKeyCod
 }
 
 
+void BACKPLANE_EMBED::NotifyQuit()
+{
+    if( m_quitNotified )
+        return;
+
+    m_quitNotified = true;
+    PushEvent( EMBED_EVENT_TYPE::QUIT_REQUESTED, {}, m_hostClosing ? "host" : "" );
+}
+
+
 uint64_t BACKPLANE_EMBED::NextEvents( uint64_t aSince, int aWaitMs, size_t aMax,
                                       std::vector<EMBED_EVENT>& aEvents, bool& aLost )
 {

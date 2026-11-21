@@ -150,6 +150,9 @@ API_HANDLER_COMMON::handleGetCapabilities( const HANDLER_CONTEXT<kiapi::backplan
                 // below 60% canvas, shown again only if KiCad hid them; a pane the person toggles is
                 // theirs for the session (bp.13)
                 reply.add_capabilities( "embed-autopanels" );
+                // ET_QUIT_REQUESTED posted once from KICAD_MANAGER_FRAME::doCloseWindow before
+                // Destroy() (detail = "host" for host Close, "" for KiCad/user quit; bp.13.5)
+                reply.add_capabilities( "embed-quit-requested" );
 #ifdef __WXOSX__
                 // Frames are borderless top-levels placed over the host's pane: --parent-window
                 // is the host's CGWindowID, the host sends SetHostGeometry, and reserved chords
