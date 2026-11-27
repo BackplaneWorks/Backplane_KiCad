@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <backplane_embed.h>
 #include <pgm_base.h>
 #include <design_block.h>
 #include <design_block_pane.h>
@@ -55,17 +56,61 @@ PANEL_DESIGN_BLOCK_CHOOSER::PANEL_DESIGN_BLOCK_CHOOSER( EDA_DRAW_FRAME* aFrame, 
         m_dbl_click_timer( nullptr ),
         m_open_libs_timer( nullptr ),
         m_vsplitter( nullptr ),
+        m_detailsPanel( nullptr ),
+        m_detailsSizer( nullptr ),
         m_tree( nullptr ),
         m_preview( nullptr ),
         m_parent( aParent ),
         m_frame( aFrame ),
         m_selectHandler( std::move( aSelectHandler ) ),
-        m_historyList( aHistoryList )
+        m_historyList( aHistoryList ),
+        m_contextMenuTool( aContextMenuTool )
 {
+    if( BACKPLANE_EMBED::Get().Enabled() )
+    {
+        Bind( wxEVT_SHOW, &PANEL_DESIGN_BLOCK_CHOOSER::onShow, this );
+        Bind( wxEVT_PAINT, &PANEL_DESIGN_BLOCK_CHOOSER::onFirstPaint, this );
+        return;
+    }
+
+    ensureInitialized();
+}
+
+
+void PANEL_DESIGN_BLOCK_CHOOSER::onShow( wxShowEvent& aEvent )
+{
+    if( aEvent.IsShown() && !m_initialized )
+        CallAfter( &PANEL_DESIGN_BLOCK_CHOOSER::ensureInitialized );
+
+    aEvent.Skip();
+}
+
+
+void PANEL_DESIGN_BLOCK_CHOOSER::onFirstPaint( wxPaintEvent& aEvent )
+{
+    if( !m_initialized )
+    {
+        Unbind( wxEVT_PAINT, &PANEL_DESIGN_BLOCK_CHOOSER::onFirstPaint, this );
+        CallAfter( &PANEL_DESIGN_BLOCK_CHOOSER::ensureInitialized );
+    }
+
+    aEvent.Skip();
+}
+
+
+void PANEL_DESIGN_BLOCK_CHOOSER::ensureInitialized()
+{
+    if( m_initialized )
+        return;
+
+    m_initialized = true;
+    Unbind( wxEVT_SHOW, &PANEL_DESIGN_BLOCK_CHOOSER::onShow, this );
+    Unbind( wxEVT_PAINT, &PANEL_DESIGN_BLOCK_CHOOSER::onFirstPaint, this );
+
     DESIGN_BLOCK_LIBRARY_ADAPTER* libs = m_frame->Prj().DesignBlockLibs();
 
     m_adapter = DESIGN_BLOCK_TREE_MODEL_ADAPTER::Create(
-            m_frame, libs, m_frame->config()->m_DesignBlockChooserPanel.tree, aContextMenuTool );
+            m_frame, libs, m_frame->config()->m_DesignBlockChooserPanel.tree, m_contextMenuTool );
 
     // -------------------------------------------------------------------------------------
     // Construct the actual panel
@@ -103,7 +148,7 @@ PANEL_DESIGN_BLOCK_CHOOSER::PANEL_DESIGN_BLOCK_CHOOSER( EDA_DRAW_FRAME* aFrame, 
     treePanel->Layout();
     treeSizer->Fit( treePanel );
 
-    RefreshLibs();
+    refreshLibsImpl( false );
     m_adapter->FinishTreeInitialization();
 
     m_tree->SetSearchString( g_designBlockSearchString );
@@ -124,26 +169,52 @@ PANEL_DESIGN_BLOCK_CHOOSER::PANEL_DESIGN_BLOCK_CHOOSER( EDA_DRAW_FRAME* aFrame, 
     // This is done on a timer because we need a gross hack to keep GTK from garbling the
     // display. Must be longer than the search debounce timer.
     m_open_libs_timer->StartOnce( 300 );
+
+    if( m_previewFactory )
+    {
+        auto factory = std::move( m_previewFactory );
+        SetPreviewWidgetFactory( std::move( factory ) );
+    }
+
+    if( m_finishSetupRequested )
+        applyFinishSetup();
+
+    if( m_preselect.IsValid() )
+        SetPreselect( m_preselect );
+
+    Layout();
 }
 
 
 PANEL_DESIGN_BLOCK_CHOOSER::~PANEL_DESIGN_BLOCK_CHOOSER()
 {
+    Unbind( wxEVT_SHOW, &PANEL_DESIGN_BLOCK_CHOOSER::onShow, this );
+    Unbind( wxEVT_PAINT, &PANEL_DESIGN_BLOCK_CHOOSER::onFirstPaint, this );
     Unbind( wxEVT_TIMER, &PANEL_DESIGN_BLOCK_CHOOSER::onCloseTimer, this );
     Unbind( EVT_LIBITEM_SELECTED, &PANEL_DESIGN_BLOCK_CHOOSER::onDesignBlockSelected, this );
     Unbind( EVT_LIBITEM_CHOSEN, &PANEL_DESIGN_BLOCK_CHOOSER::onDesignBlockChosen, this );
     Unbind( wxEVT_CHAR_HOOK, &PANEL_DESIGN_BLOCK_CHOOSER::OnChar, this );
 
     // Stop the timer during destruction early to avoid potential race conditions (that do happen)
-    m_dbl_click_timer->Stop();
-    m_open_libs_timer->Stop();
-    delete m_dbl_click_timer;
-    delete m_open_libs_timer;
+    if( m_dbl_click_timer )
+    {
+        m_dbl_click_timer->Stop();
+        delete m_dbl_click_timer;
+    }
+
+    if( m_open_libs_timer )
+    {
+        m_open_libs_timer->Stop();
+        delete m_open_libs_timer;
+    }
 }
 
 
 void PANEL_DESIGN_BLOCK_CHOOSER::SaveSettings()
 {
+    if( !m_initialized || !m_tree || !m_adapter )
+        return;
+
     g_designBlockSearchString = m_tree->GetSearchString();
 
     if( APP_SETTINGS_BASE* cfg = m_frame->config() )
@@ -170,6 +241,9 @@ void PANEL_DESIGN_BLOCK_CHOOSER::SetPreviewWidgetFactory(
         std::function<DESIGN_BLOCK_PREVIEW_WIDGET*( wxWindow* aParent )> aFactory )
 {
     m_previewFactory = std::move( aFactory );
+
+    if( !m_initialized )
+        return;
 
     // Only a modern canvas costs a render thread and GPU device. Others are built with the pane,
     // since creating them later reorders the startup of the editor's own canvas.
@@ -211,6 +285,12 @@ void PANEL_DESIGN_BLOCK_CHOOSER::createPreview()
 
 void PANEL_DESIGN_BLOCK_CHOOSER::OnChar( wxKeyEvent& aEvent )
 {
+    if( !m_initialized || !m_tree )
+    {
+        aEvent.Skip();
+        return;
+    }
+
     if( aEvent.GetKeyCode() == WXK_ESCAPE )
     {
         wxObject* eventSource = aEvent.GetEventObject();
@@ -233,6 +313,15 @@ void PANEL_DESIGN_BLOCK_CHOOSER::OnChar( wxKeyEvent& aEvent )
 
 
 void PANEL_DESIGN_BLOCK_CHOOSER::FinishSetup()
+{
+    m_finishSetupRequested = true;
+
+    if( m_initialized )
+        applyFinishSetup();
+}
+
+
+void PANEL_DESIGN_BLOCK_CHOOSER::applyFinishSetup()
 {
     if( APP_SETTINGS_BASE* cfg = m_frame->config() )
     {
@@ -277,6 +366,15 @@ void PANEL_DESIGN_BLOCK_CHOOSER::FinishSetup()
 
 void PANEL_DESIGN_BLOCK_CHOOSER::RefreshLibs( bool aProgress )
 {
+    if( !m_initialized )
+        return;
+
+    refreshLibsImpl( aProgress );
+}
+
+
+void PANEL_DESIGN_BLOCK_CHOOSER::refreshLibsImpl( bool aProgress )
+{
     // Unselect before syncing to avoid null reference in the adapter
     // if a selected item is removed during the sync
     LIB_ID savedSelection = GetSelectedLibId();
@@ -311,6 +409,10 @@ void PANEL_DESIGN_BLOCK_CHOOSER::RefreshLibs( bool aProgress )
 void PANEL_DESIGN_BLOCK_CHOOSER::SetPreselect( const LIB_ID& aPreselect )
 {
     m_preselect = aPreselect;
+
+    if( !m_initialized )
+        return;
+
     m_adapter->SetPreselectNode( aPreselect, 0 );
 
     if( m_tree && aPreselect.IsValid() )
@@ -320,12 +422,21 @@ void PANEL_DESIGN_BLOCK_CHOOSER::SetPreselect( const LIB_ID& aPreselect )
 
 LIB_ID PANEL_DESIGN_BLOCK_CHOOSER::GetSelectedLibId( int* aUnit ) const
 {
+    if( !m_initialized || !m_tree )
+    {
+        if( aUnit )
+            *aUnit = 0;
+
+        return LIB_ID();
+    }
+
     return m_tree->GetSelectedLibId( aUnit );
 }
 
 
 void PANEL_DESIGN_BLOCK_CHOOSER::SelectLibId( const LIB_ID& aLibId )
 {
+    ensureInitialized();
     m_tree->CenterLibId( aLibId );
     m_tree->SelectLibId( aLibId );
 }

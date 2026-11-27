@@ -32,6 +32,8 @@
 #include <wx/cmdline.h>
 
 #include <api/api_server.h>
+#include <api/api_plugin_manager.h>
+#include <api/python_manager.h>
 #include <backplane_embed.h>
 #include <settings/json_settings.h>
 #include <bitmaps/bitmap_types.h>
@@ -280,6 +282,9 @@ bool PGM_KICAD::OnPgmInit()
     }
 #endif
 
+    if( embedded )
+        BACKPLANE_EMBED::Get().SetStartingEmbedded( true );
+
     if( !InitPgm( false ) )
         return false;
 
@@ -439,8 +444,11 @@ bool PGM_KICAD::OnPgmInit()
     }
     else if( appType == KICAD_MAIN_FRAME_T )
     {
-        managerFrame = new KICAD_MANAGER_FRAME( nullptr, wxT( "KiCad" ), wxDefaultPosition,
-                                                wxWindow::FromDIP( wxSize( 775, -1 ), NULL ) );
+        {
+            BACKPLANE_EMBED::TRACE_SCOPE trace( "init:manager_frame" );
+            managerFrame = new KICAD_MANAGER_FRAME( nullptr, wxT( "KiCad" ), wxDefaultPosition,
+                                                    wxWindow::FromDIP( wxSize( 775, -1 ), NULL ) );
+        }
         frame = managerFrame;
 
         if( embedded )
@@ -484,7 +492,10 @@ bool PGM_KICAD::OnPgmInit()
 
     KICAD_SETTINGS* settings = static_cast<KICAD_SETTINGS*>( PgmSettings() );
 
-    GetLibraryManager().LoadGlobalTables();
+    {
+        BACKPLANE_EMBED::TRACE_SCOPE trace( "init:global_tables" );
+        GetLibraryManager().LoadGlobalTables();
+    }
 
     wxString projToLoad;
 
@@ -586,7 +597,10 @@ bool PGM_KICAD::OnPgmInit()
                 fn.MakeAbsolute();
 
                 if( appType == KICAD_MAIN_FRAME_T )
+                {
+                    BACKPLANE_EMBED::TRACE_SCOPE trace( "init:load_project" );
                     loaded = managerFrame->LoadProject( fn );
+                }
             }
         }
 
@@ -637,6 +651,30 @@ bool PGM_KICAD::OnPgmInit()
     if( m_api_server )
         m_api_server->SetReadyToReply();
 
+    if( embedded )
+    {
+        BACKPLANE_EMBED::Get().SetStartingEmbedded( false );
+
+        if( COMMON_SETTINGS* cs = GetCommonSettings();
+            cs && ( cs->m_Api.enable_server || cs->m_Api.python_interpreter.IsEmpty() ) )
+        {
+            m_deferredInitTimer = std::make_unique<wxTimer>();
+            m_deferredInitTimer->Bind( wxEVT_TIMER,
+                    [this]( wxTimerEvent& )
+                    {
+                        if( COMMON_SETTINGS* commonCfg = GetCommonSettings() )
+                        {
+                            if( commonCfg->m_Api.python_interpreter.IsEmpty() )
+                                commonCfg->m_Api.python_interpreter = PYTHON_MANAGER::FindPythonInterpreter();
+
+                            if( commonCfg->m_Api.enable_server && m_plugin_manager )
+                                m_plugin_manager->ReloadPlugins();
+                        }
+                    } );
+            m_deferredInitTimer->StartOnce( 1500 );
+        }
+    }
+
     if( parentPid > 0 )
     {
         BACKPLANE_EMBED::Get().WatchParentPid(
@@ -678,6 +716,12 @@ int PGM_KICAD::OnPgmRun()
 
 void PGM_KICAD::OnPgmExit()
 {
+    if( m_deferredInitTimer )
+    {
+        m_deferredInitTimer->Stop();
+        m_deferredInitTimer.reset();
+    }
+
     // Signal all background library preloads to abort before waiting for the thread pool.
     // The design block preload runs on the global thread pool and checks this flag; without
     // setting it here the pool wait below can block for up to 120 seconds.
@@ -742,6 +786,12 @@ void PGM_KICAD::Destroy()
 {
     // unlike a normal destructor, this is designed to be called more
     // than once safely:
+
+    if( m_deferredInitTimer )
+    {
+        m_deferredInitTimer->Stop();
+        m_deferredInitTimer.reset();
+    }
 
     m_bm.End();
 

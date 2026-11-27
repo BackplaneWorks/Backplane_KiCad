@@ -469,6 +469,9 @@ protected:
     /** The refresh timer was armed by Refresh() for a repaint it postponed */
     bool                     m_refreshDeferred = false;
 
+    /// Caps rapid 8 ms startup retries in ForceRefresh() when embedded so a broken canvas backs off
+    int                      m_embedInitPolls = 0;
+
     /// Last cursor position sent to GAL for drawing
     VECTOR2D                 m_lastCursorPosition;
 

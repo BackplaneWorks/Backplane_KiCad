@@ -89,12 +89,22 @@ public:
     LIB_ID GetSelectedLibId( int* aUnit = nullptr ) const;
     void   SelectLibId( const LIB_ID& aLibId );
 
-    LIB_TREE* GetLibTree() { return m_tree; }
+    LIB_TREE* GetLibTree()
+    {
+        ensureInitialized();
+        return m_tree;
+    }
 
     void ShowChangedLanguage();
 
 protected:
     static constexpr int DBLCLICK_DELAY = 100; // milliseconds
+
+    void ensureInitialized();
+    void applyFinishSetup();
+    void refreshLibsImpl( bool aProgress );
+    void onShow( wxShowEvent& aEvent );
+    void onFirstPaint( wxPaintEvent& aEvent );
 
     void OnDetailsCharHook( wxKeyEvent& aEvt );
     void onCloseTimer( wxTimerEvent& aEvent );
@@ -140,6 +150,9 @@ protected:
 
     std::vector<LIB_ID>&  m_historyList;
     LIB_ID                m_preselect;
+    TOOL_INTERACTIVE*     m_contextMenuTool = nullptr;
+    bool                  m_initialized = false;
+    bool                  m_finishSetupRequested = false;
 };
 
 #endif /* PANEL_DESIGN_BLOCK_CHOOSER_H */

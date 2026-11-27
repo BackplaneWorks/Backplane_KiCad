@@ -27,6 +27,8 @@
 #include "api_handler_embed.h"
 #include <libraries/library_table.h>
 #include <bin_mod.h>
+#include <wx/timer.h>
+#include <memory>
 
 /**
  * PGM_KICAD
@@ -72,6 +74,7 @@ protected:
     std::unique_ptr<API_HANDLER_COMMON> m_api_common_handler;
     std::unique_ptr<API_HANDLER_LIBRARIES> m_api_libraries_handler;
     std::unique_ptr<API_HANDLER_EMBED> m_api_embed_handler;
+    std::unique_ptr<wxTimer>           m_deferredInitTimer;
 };
 
 
