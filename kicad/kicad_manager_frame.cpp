@@ -187,38 +187,43 @@ KICAD_MANAGER_FRAME::KICAD_MANAGER_FRAME( wxWindow* parent, const wxString& titl
     Pgm().RegisterLibraryLoadStatusBar( (KISTATUSBAR*) GetStatusBar() );
     GetStatusBar()->SetFont( KIUI::GetStatusFont( this ) );
 
-    // Give an icon
-    wxIcon icon;
-    wxIconBundle icon_bundle;
+    const bool embedded = BACKPLANE_EMBED::Get().Enabled();
 
-    if( IsNightlyVersion())
+    // Give an icon (not needed when running hidden inside an embedding host)
+    if( !embedded )
     {
-        icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_nightly, 48 ) );
-        icon_bundle.AddIcon( icon );
-        icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_nightly, 128 ) );
-        icon_bundle.AddIcon( icon );
-        icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_nightly, 256 ) );
-        icon_bundle.AddIcon( icon );
-        icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_nightly_32 ) );
-        icon_bundle.AddIcon( icon );
-        icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_nightly_16 ) );
-        icon_bundle.AddIcon( icon );
-    }
-    else
-    {
-        icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad, 48 ) );
-        icon_bundle.AddIcon( icon );
-        icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad, 128 ) );
-        icon_bundle.AddIcon( icon );
-        icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad, 256 ) );
-        icon_bundle.AddIcon( icon );
-        icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_32 ) );
-        icon_bundle.AddIcon( icon );
-        icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_16 ) );
-        icon_bundle.AddIcon( icon );
-    }
+        wxIcon icon;
+        wxIconBundle icon_bundle;
 
-    SetIcons( icon_bundle );
+        if( IsNightlyVersion() )
+        {
+            icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_nightly, 48 ) );
+            icon_bundle.AddIcon( icon );
+            icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_nightly, 128 ) );
+            icon_bundle.AddIcon( icon );
+            icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_nightly, 256 ) );
+            icon_bundle.AddIcon( icon );
+            icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_nightly_32 ) );
+            icon_bundle.AddIcon( icon );
+            icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_nightly_16 ) );
+            icon_bundle.AddIcon( icon );
+        }
+        else
+        {
+            icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad, 48 ) );
+            icon_bundle.AddIcon( icon );
+            icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad, 128 ) );
+            icon_bundle.AddIcon( icon );
+            icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad, 256 ) );
+            icon_bundle.AddIcon( icon );
+            icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_32 ) );
+            icon_bundle.AddIcon( icon );
+            icon.CopyFromBitmap( KiBitmap( BITMAPS::icon_kicad_16 ) );
+            icon_bundle.AddIcon( icon );
+        }
+
+        SetIcons( icon_bundle );
+    }
 
     // Load the settings
     LoadSettings( config() );
@@ -230,14 +235,19 @@ KICAD_MANAGER_FRAME::KICAD_MANAGER_FRAME( wxWindow* parent, const wxString& titl
     setupUIConditions();
 
     m_toolbarSettings = GetToolbarSettings<KICAD_MANAGER_TOOLBAR_SETTINGS>( "kicad-toolbars" );
-    configureToolbars();
-    RecreateToolbars();
-    ReCreateMenuBar();
+
+    if( !embedded )
+    {
+        configureToolbars();
+        RecreateToolbars();
+        ReCreateMenuBar();
+    }
 
     m_auimgr.SetManagedWindow( this );
     m_auimgr.SetFlags( wxAUI_MGR_LIVE_RESIZE );
 
-    m_auimgr.AddPane( m_tbLeft, EDA_PANE().VToolbar().Name( "TopMainToolbar" ).Left().Layer( 2 ) );
+    if( m_tbLeft )
+        m_auimgr.AddPane( m_tbLeft, EDA_PANE().VToolbar().Name( "TopMainToolbar" ).Left().Layer( 2 ) );
 
     // There is no wxAUIPaneInfo::SetSize(), but a trick is to use MinSize() to set the required pane width,
     // and after give a reasonable MinSize value.
@@ -246,32 +256,35 @@ KICAD_MANAGER_FRAME::KICAD_MANAGER_FRAME( wxWindow* parent, const wxString& titl
                                 .Caption( PROJECT_FILES_CAPTION ).PaneBorder( false )
                                 .MinSize( m_leftWinWidth, -1 ).Floatable( false ).Movable( false ) );
 
-    m_historyPane = new LOCAL_HISTORY_PANE( this );
-    m_auimgr.AddPane( m_historyPane,
-                      EDA_PANE().Palette().Name( "LocalHistory" ).Left().Layer( 1 ).Position( 1 )
-                                .Caption( _( "Local History" ) ).PaneBorder( false )
-                                .Floatable( false ).Movable( false ).CloseButton( true ).Hide() );
+    if( !embedded )
+    {
+        m_historyPane = new LOCAL_HISTORY_PANE( this );
+        m_auimgr.AddPane( m_historyPane,
+                          EDA_PANE().Palette().Name( "LocalHistory" ).Left().Layer( 1 ).Position( 1 )
+                                    .Caption( _( "Local History" ) ).PaneBorder( false )
+                                    .Floatable( false ).Movable( false ).CloseButton( true ).Hide() );
 
-    if( m_showHistoryPanel )
-        m_auimgr.GetPane( m_historyPane ).Show();
+        if( m_showHistoryPanel )
+            m_auimgr.GetPane( m_historyPane ).Show();
 
-    m_gitCommitPane = new GIT_COMMIT_PANE( this );
-    m_auimgr.AddPane( m_gitCommitPane, EDA_PANE()
-                                               .Palette()
-                                               .Name( GitCommitPaneName() )
-                                               .Left()
-                                               .Layer( 1 )
-                                               .Position( 2 )
-                                               .Caption( _( "Version Control" ) )
-                                               .MinSize( wxSize( m_gitCommitPane->GetMinDockWidth(), -1 ) )
-                                               .PaneBorder( false )
-                                               .Floatable( false )
-                                               .Movable( false )
-                                               .CloseButton( true )
-                                               .Hide() );
+        m_gitCommitPane = new GIT_COMMIT_PANE( this );
+        m_auimgr.AddPane( m_gitCommitPane, EDA_PANE()
+                                                   .Palette()
+                                                   .Name( GitCommitPaneName() )
+                                                   .Left()
+                                                   .Layer( 1 )
+                                                   .Position( 2 )
+                                                   .Caption( _( "Version Control" ) )
+                                                   .MinSize( wxSize( m_gitCommitPane->GetMinDockWidth(), -1 ) )
+                                                   .PaneBorder( false )
+                                                   .Floatable( false )
+                                                   .Movable( false )
+                                                   .CloseButton( true )
+                                                   .Hide() );
 
-    if( m_showGitCommitPanel )
-        m_auimgr.GetPane( m_gitCommitPane ).Show();
+        if( m_showGitCommitPanel )
+            m_auimgr.GetPane( m_gitCommitPane ).Show();
+    }
 
     // Refresh the changed-file list when the user returns to the project manager, since
     // edits are made in the separate editor windows.
@@ -296,13 +309,16 @@ KICAD_MANAGER_FRAME::KICAD_MANAGER_FRAME( wxWindow* parent, const wxString& titl
 
     m_notebook->Bind( wxEVT_AUINOTEBOOK_PAGE_CLOSE, &KICAD_MANAGER_FRAME::onNotebookPageCloseRequest, this );
     m_notebook->Bind( wxEVT_AUINOTEBOOK_PAGE_CLOSED, &KICAD_MANAGER_FRAME::onNotebookPageCountChanged, this );
-    m_launcher = new PANEL_KICAD_LAUNCHER( m_notebook );
+    if( !embedded )
+    {
+        m_launcher = new PANEL_KICAD_LAUNCHER( m_notebook );
 
-    m_notebook->Freeze();
-    m_launcher->SetClosable( false );
-    m_notebook->AddPage( m_launcher, EDITORS_CAPTION, false );
-    m_notebook->SetTabCtrlHeight( 0 );
-    m_notebook->Thaw();
+        m_notebook->Freeze();
+        m_launcher->SetClosable( false );
+        m_notebook->AddPage( m_launcher, EDITORS_CAPTION, false );
+        m_notebook->SetTabCtrlHeight( 0 );
+        m_notebook->Thaw();
+    }
 
     m_auimgr.AddPane( m_notebook, EDA_PANE().Canvas().Name( "Editors" ).Center().Caption( EDITORS_CAPTION )
                                             .PaneBorder( false ).MinSize( m_notebook->GetBestSize() ) );
@@ -585,6 +601,9 @@ KICAD_SETTINGS* KICAD_MANAGER_FRAME::kicadSettings() const
 
 void KICAD_MANAGER_FRAME::PreloadAllLibraries()
 {
+    if( BACKPLANE_EMBED::Get().Enabled() )
+        return;
+
     CallAfter(
             [&]()
             {
@@ -1065,30 +1084,33 @@ bool KICAD_MANAGER_FRAME::LoadProject( const wxFileName& aProjectFileName )
     SaveSettings( settings );
     settings->SaveToFile( Pgm().GetSettingsManager().GetPathForSettingsFile( settings ) );
 
-    m_projectTreePane->ReCreateTreePrj();
-    m_historyPane->RefreshHistory( Prj().GetProjectPath() );
-
-    if( GitCommitPaneShown() )
-        m_gitCommitPane->RefreshFileList();
-
-    for( const wxString& jobset : Prj().GetLocalSettings().m_OpenJobSets )
+    if( !BACKPLANE_EMBED::Get().Enabled() )
     {
-        wxFileName jobsetFn( jobset );
-        jobsetFn.MakeAbsolute( Prj().GetProjectPath() );
+        m_projectTreePane->ReCreateTreePrj();
+        m_historyPane->RefreshHistory( Prj().GetProjectPath() );
 
-        if( jobsetFn.Exists() )
-            OpenJobsFile( jobsetFn.GetFullPath(), false, false );
+        if( GitCommitPaneShown() )
+            m_gitCommitPane->RefreshFileList();
+
+        for( const wxString& jobset : Prj().GetLocalSettings().m_OpenJobSets )
+        {
+            wxFileName jobsetFn( jobset );
+            jobsetFn.MakeAbsolute( Prj().GetProjectPath() );
+
+            if( jobsetFn.Exists() )
+                OpenJobsFile( jobsetFn.GetFullPath(), false, false );
+        }
+
+        // Always start with the apps page
+        m_notebook->SetSelection( 0 );
+
+        // Rebuild the list of watched paths.
+        // however this is possible only when the main loop event handler is running,
+        // so we use it to run the rebuild function.
+        wxCommandEvent cmd( wxEVT_COMMAND_MENU_SELECTED, ID_INIT_WATCHED_PATHS );
+
+        wxPostEvent( this, cmd );
     }
-
-    // Always start with the apps page
-    m_notebook->SetSelection( 0 );
-
-    // Rebuild the list of watched paths.
-    // however this is possible only when the main loop event handler is running,
-    // so we use it to run the rebuild function.
-    wxCommandEvent cmd( wxEVT_COMMAND_MENU_SELECTED, ID_INIT_WATCHED_PATHS );
-
-    wxPostEvent( this, cmd );
 
     PrintPrjInfo();
 
@@ -1287,14 +1309,18 @@ void KICAD_MANAGER_FRAME::ShowChangedLanguage()
     EDA_BASE_FRAME::ShowChangedLanguage();
 
     // tooltips in toolbars
-    RecreateToolbars();
-    m_launcher->CreateLaunchers();
+    if( m_tbLeft )
+        RecreateToolbars();
+    if( m_launcher )
+    {
+        m_launcher->CreateLaunchers();
 
-    // update captions
-    int pageId = m_notebook->FindPage( m_launcher );
+        // update captions
+        int pageId = m_notebook->FindPage( m_launcher );
 
-    if( pageId != wxNOT_FOUND )
-        m_notebook->SetPageText( pageId, EDITORS_CAPTION );
+        if( pageId != wxNOT_FOUND )
+            m_notebook->SetPageText( pageId, EDITORS_CAPTION );
+    }
 
     m_auimgr.GetPane( m_projectTreePane ).Caption( PROJECT_FILES_CAPTION );
     m_auimgr.Update();
@@ -1314,8 +1340,9 @@ void KICAD_MANAGER_FRAME::CommonSettingsChanged( int aFlags )
 
     COMMON_SETTINGS* settings = Pgm().GetCommonSettings();
 
-    if( m_lastToolbarIconSize == 0
-        || m_lastToolbarIconSize != settings->m_Appearance.toolbar_icon_size )
+    if( m_tbLeft
+        && ( m_lastToolbarIconSize == 0
+             || m_lastToolbarIconSize != settings->m_Appearance.toolbar_icon_size ) )
     {
         onToolbarSizeChanged();
         m_lastToolbarIconSize = settings->m_Appearance.toolbar_icon_size;
@@ -1569,6 +1596,9 @@ void KICAD_MANAGER_FRAME::updatePcmButtonBadge()
 
 void KICAD_MANAGER_FRAME::onToolbarSizeChanged()
 {
+    if( !m_tbLeft )
+        return;
+
     // No idea why, but the same mechanism used in EDA_DRAW_FRAME doesn't work here
     // the only thing that seems to work is to blow it all up and start from scratch.
     m_auimgr.DetachPane( m_tbLeft );
@@ -1583,6 +1613,9 @@ void KICAD_MANAGER_FRAME::onToolbarSizeChanged()
 
 void KICAD_MANAGER_FRAME::ToggleLocalHistory()
 {
+    if( !m_historyPane )
+        return;
+
     wxAuiPaneInfo& pane = m_auimgr.GetPane( m_historyPane );
     bool show = !pane.IsShown();
     pane.Show( show );
@@ -1606,7 +1639,9 @@ void KICAD_MANAGER_FRAME::RestoreCommitFromHistory( const wxString& aHash )
 
     m_projectTreePane->ReCreateTreePrj();
     m_openSavedWindows = true;
-    m_historyPane->RefreshHistory( Prj().GetProjectPath() );
+
+    if( m_historyPane )
+        m_historyPane->RefreshHistory( Prj().GetProjectPath() );
 }
 
 
@@ -1618,6 +1653,9 @@ bool KICAD_MANAGER_FRAME::HistoryPanelShown()
 
 void KICAD_MANAGER_FRAME::ToggleGitCommitPane()
 {
+    if( !m_gitCommitPane )
+        return;
+
     wxAuiPaneInfo& pane = m_auimgr.GetPane( m_gitCommitPane );
     bool           show = !pane.IsShown();
 

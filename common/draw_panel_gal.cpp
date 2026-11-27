@@ -485,9 +485,13 @@ bool EDA_DRAW_PANEL_GAL::recoverFromGalError( const std::exception& aError )
         if( handleContextLoss() )
             return true;
 
+        const bool firstFrameFailure = BACKPLANE_EMBED::Get().Enabled()
+                                         && ( failedBackend == GAL_TYPE_OPENGL )
+                                         && ( m_lastRepaintEnd == std::chrono::steady_clock::time_point{} );
+
         // Sleep/wake and GPU resets can invalidate the entire GL/device context.
-        // Try a full reinit of the current backend before falling back.
-        if( !gpuOutOfMemory && !m_recoveryAttempted )
+        // Try a full reinit of the current backend before falling back (skip retry on first-frame init failure).
+        if( !gpuOutOfMemory && !firstFrameFailure && !m_recoveryAttempted )
         {
             m_recoveryAttempted = true;
             m_backend = GAL_TYPE_NONE;
@@ -523,6 +527,12 @@ bool EDA_DRAW_PANEL_GAL::recoverFromGalError( const std::exception& aError )
             }
             else
             {
+                if( firstFrameFailure )
+                {
+                    EDA_DRAW_FRAME::SetCanvasFailed( GAL_TYPE_OPENGL );
+                    BACKPLANE_EMBED::Get().SetOpenGLFailed();
+                }
+
                 showMessageLater( _( "Could not use OpenGL, falling back to software rendering" ),
                                   wxString( aError.what() ), false );
             }
@@ -1387,11 +1397,13 @@ void EDA_DRAW_PANEL_GAL::ForceRefresh()
             Connect( wxEVT_IDLE, wxIdleEventHandler( EDA_DRAW_PANEL_GAL::onIdle ), nullptr, this );
 
             m_drawingEnabled = true;
+            m_embedInitPolls = 0;
         }
         else
         {
             // Try again soon
-            m_refreshTimer.StartOnce( 100 );
+            const int delayMs = ( BACKPLANE_EMBED::Get().Enabled() && m_embedInitPolls++ < 30 ) ? 8 : 100;
+            m_refreshTimer.StartOnce( delayMs );
             return;
         }
     }
@@ -1442,8 +1454,9 @@ void EDA_DRAW_PANEL_GAL::StartDrawing()
 {
     wxLogTrace( traceRhi, wxS( "DrawPanel: StartDrawing windowId=%u" ), m_windowId );
 
+    m_embedInitPolls = 0;
     // Start querying GAL if it is ready
-    m_refreshTimer.StartOnce( 100 );
+    m_refreshTimer.StartOnce( BACKPLANE_EMBED::Get().Enabled() ? 8 : 100 );
 }
 
 
@@ -1451,6 +1464,7 @@ void EDA_DRAW_PANEL_GAL::StopDrawing()
 {
     m_refreshTimer.Stop();
     m_drawingEnabled = false;
+    m_embedInitPolls = 0;
 
     Disconnect( wxEVT_PAINT, wxPaintEventHandler( EDA_DRAW_PANEL_GAL::onPaint ), nullptr, this );
     Disconnect( wxEVT_IDLE, wxIdleEventHandler( EDA_DRAW_PANEL_GAL::onIdle ), nullptr, this );
@@ -1527,7 +1541,12 @@ bool EDA_DRAW_PANEL_GAL::SwitchBackend( GAL_TYPE aGalType )
                 break;
             }
 
-            wxString errormsg = KIGFX::OPENGL_GAL::CheckFeatures( m_options );
+            // Embedded startup skips the throwaway CheckFeatures probe (which creates a hidden
+            // frame, runs wxYield() mid-ctor, and compiles/links shaders only to discard them);
+            // constructor and first-frame init failures fall back directly to GAL_FALLBACK.
+            wxString errormsg = BACKPLANE_EMBED::Get().Enabled()
+                                    ? wxString()
+                                    : KIGFX::OPENGL_GAL::CheckFeatures( m_options );
 
             if( errormsg.empty() )
             {
@@ -1929,6 +1948,8 @@ void EDA_DRAW_PANEL_GAL::onShowEvent( wxShowEvent& aEvent )
         OnShow();
     }
 
+    if( BACKPLANE_EMBED::Get().Enabled() && aEvent.IsShown() && !m_drawingEnabled && m_gal )
+        m_refreshTimer.StartOnce( 1 );
 }
 
 

@@ -43,6 +43,7 @@
 #include <api/api_server.h>
 #include <api/python_manager.h>
 #include <app_monitor.h>
+#include <backplane_embed.h>
 #include <background_jobs_monitor.h>
 #include <bitmaps.h>
 #include <build_version.h>
@@ -489,11 +490,15 @@ bool PGM_BASE::InitPgm( bool aHeadless, bool aIsUnitTest )
     // Load common settings from disk after setting up env vars
     GetSettingsManager().Load( commonSettings );
 
+    const bool startingEmbedded = BACKPLANE_EMBED::Get().StartingEmbedded();
+
     // If user doesn't have a saved Python interpreter, try (potentially again) to find one.
     // Only the GUI uses it (API plugins and their environments, the BOM generators, Preferences >
     // Plugins); kicad-cli, its api-server included, never does, so it neither looks one up nor
     // saves a guess into the person's settings (Backplane #1160).
-    if( IsGUI() && commonSettings->m_Api.python_interpreter.IsEmpty() )
+    // Embedded startup defers interpreter discovery and plugin loading until after the initial
+    // frame has been shown so startup latency stays minimal.
+    if( IsGUI() && !startingEmbedded && commonSettings->m_Api.python_interpreter.IsEmpty() )
         commonSettings->m_Api.python_interpreter = PYTHON_MANAGER::FindPythonInterpreter();
 
     // Init user language *before* calling loadSettings, because
@@ -515,8 +520,9 @@ bool PGM_BASE::InitPgm( bool aHeadless, bool aIsUnitTest )
     GetSettingsManager().LoadProject( "" );
 
     // API plugins are the GUI's (its toolbars and menus run them); outside it their Python
-    // environments would be set up with no interpreter looked up (above)
-    if( IsGUI() && commonSettings->m_Api.enable_server )
+    // environments would be set up with no interpreter looked up (above).
+    // Embedded startup runs this on a post-startup timer so it cannot preempt cold-start frames.
+    if( IsGUI() && !startingEmbedded && commonSettings->m_Api.enable_server )
         m_plugin_manager->ReloadPlugins();
 
     // This sets the maximum tooltip display duration to 10s (up from 5) but only affects
@@ -531,7 +537,7 @@ bool PGM_BASE::InitPgm( bool aHeadless, bool aIsUnitTest )
         wxUpdateUIEvent::SetUpdateInterval( ADVANCED_CFG::GetCfg().m_UpdateUIEventInterval );
 
     // Now the application can safely start, show the splash screen
-    if( !aHeadless )
+    if( !aHeadless && !startingEmbedded )
         ShowSplash();
 
     return true;

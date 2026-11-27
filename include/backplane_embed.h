@@ -318,6 +318,8 @@ public:
                  const wxString& aDetail, bool aError );
 
     bool Enabled() const { return m_enabled; }
+    void SetStartingEmbedded( bool aStarting ) { m_startingEmbedded = aStarting; }
+    bool StartingEmbedded() const { return m_startingEmbedded; }
 
     /// OpenGL failed in this process (embedded): every canvas, in every kiface, takes the fallback
     /// without trying it again.  EDA_DRAW_FRAME's failed-canvas set is per kiface (libcommon is
@@ -769,6 +771,7 @@ private:
     int         m_commentCounter = 0;
 
     bool     m_enabled = false;
+    bool     m_startingEmbedded = false;
 
     mutable std::mutex m_markMutex;
     std::string        m_lastMark;

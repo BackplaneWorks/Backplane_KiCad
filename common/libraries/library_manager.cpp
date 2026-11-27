@@ -674,6 +674,9 @@ void LIBRARY_MANAGER::LoadGlobalTables( std::initializer_list<LIBRARY_TABLE_TYPE
     const ENV_VAR_MAP& vars = Pgm().GetLocalEnvVariables();
     std::optional<wxString> packagesPath = ENV_VAR::GetVersionedEnvVarValue( vars, wxT( "3RD_PARTY" ) );
 
+    if( BACKPLANE_EMBED::Get().StartingEmbedded() )
+        return;
+
     if( packagesPath && settings->m_PcmLibAutoAdd )
     {
         // Scan for libraries in PCM packages directory
